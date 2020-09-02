@@ -11,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Contribute to Model Analyzer
+# Contributing
 
 Model Analyzer follows similar contributing guidelines to Triton Inference Server. Please see [the Triton Inference Server contributing document].
 
