@@ -32,7 +32,7 @@ Model Analyzer supports the following products and environments:
 - All Maxwell and newer non-Tesla GPUs
 - CUDA 7.5+ and NVIDIA Driver R384+
 
-Model Analyzer requires [NVIDIA-Docker], a supported Tesla Recommend Driver, and a supported CUDA toolkit. The CLI also requires a .NET Core SDK.
+Model Analyzer requires [NVIDIA-Docker], a supported Tesla Recommend Driver, and a supported [CUDA toolkit].
 
 Ports 8000, 8001, and 8002 on your network need to be available for the Triton server. Model Analyzer supports Triton Inference Server version 20.02-py3. If you do not have the Triton server image locally, the first run will take a couple of minutes to pull it.
 
@@ -117,6 +117,7 @@ Please start by reviewing the [docs] folder and searching the current project is
 
 [.NET SDK]: https://dotnet.microsoft.com/download
 [Contributing]: CONTRIBUTING.md
+[CUDA toolkit]: https://developer.nvidia.com/cuda-toolkit
 [docs]: docs
 [NVIDIA-Docker]: https://github.com/NVIDIA/nvidia-docker
 [this NVIDIA Developer Blog post]: https://developer.nvidia.com/blog/maximizing-deep-learning-inference-performance-with-nvidia-model-analyzer/
