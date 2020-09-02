@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <Optimize>true</Optimize>
+    <OutputType>Exe</OutputType>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.13.0" />
+    <PackageReference Include="Grpc" Version="2.31.0" />
+    <PackageReference Include="Nvidia.Dcgm.Client-Linux64" Version="1.7.2" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,63 @@
+# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-model-analyzer
+  labels:
+    app: {{ .Release.Name }}-model-analyzer
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+spec:
+  backoffLimit: 4
+  activeDeadlineSeconds: {{ .Values.jobTimeout }}
+  template:
+    spec:
+      shareProcessNamespace: true
+      containers:
+      - name: analyzer
+        image: {{ .Values.images.analyzer.image }}
+        imagePullPolicy: IfNotPresent
+        securityContext:
+            privileged: true
+        args: [
+          "kubernetes",
+          "--base-duration", "{{ .Values.baseDuration }}",
+          "--batch", "{{ .Values.batch }}",
+          "--concurrency", "{{ .Values.concurrency }}",
+          "--export-path", "/results/",
+          "--filename-model", "{{ .Release.Name }}-metrics-model.csv",
+          "--filename-server-only", "{{ .Release.Name }}-metrics-server-only.csv",
+          "--frequency-ms", "{{ .Values.frequencyMs }}",
+          "--max-retry", "{{ .Values.maxRetry }}",
+          "--model-names", "{{ .Values.modelName }}",
+          "--perf-buffer", "{{ .Values.perfBuffer }}",
+          "--triton-version", "{{ .Values.images.triton.tag }}",
+          "--export"]
+        volumeMounts:
+            - name: results
+              mountPath: /results
+      - name: triton
+        image: {{ .Values.images.triton.image }}:{{ .Values.images.triton.tag }}
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+            - name: model
+              mountPath: /model
+        args: ["./bin/trtserver", "--model-repository=/model", "--model-control-mode=explicit"]
+        resources:
+            limits:
+                nvidia.com/gpu: 1
+      restartPolicy: OnFailure
+      volumes:
+      - name: results
+        hostPath:
+            path:  {{ .Values.resultsPath }}
+      - name: model
+        hostPath:
+            path:  {{ .Values.modelPath }}

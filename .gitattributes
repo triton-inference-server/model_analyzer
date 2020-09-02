@@ -1,0 +1,203 @@
+###############################################################################
+# The is the Clara Project's root Git attribute file. It is organized with
+# defaults and common file types at the top and specialized file types
+# alphabetically sorted below that.
+# Please maintain the alphabetical sorting when this file in maintained.
+###############################################################################
+###############################################################################
+# Set default behavior to automatically normalize line endings.
+###############################################################################
+* -text
+###############################################################################
+# Git management files
+###############################################################################
+.gitattributes     eol=lf
+.gitignore         eol=lf
+**/.gitattributes  eol=lf
+**/.gitignore      eol=lf
+###############################################################################
+# Common binary file types
+###############################################################################
+*.a                         binary  diff=lfs  filter=lfs  merge=lfs
+*.[Bb][Ii][Nn]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Bb][Mm][Pp]              binary
+*.[Dd][Cc][Mm]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Dd][Aa][Tt][Aa]-*        binary  diff=lfs  filter=lfs  merge=lfs
+*.[Dd][Ll][Ll]              binary  diff=lfs  filter=lfs  merge=lfs
+*.dylib                     binary  diff=lfs  filter=lfs  merge=lfs
+*.[Gg][Ii][Ff]              binary
+*.[Gg][Zz]                  binary  diff=lfs  filter=lfs  merge=lfs
+*.[Ii][Cc][Oo]              binary
+*.[Ii][Mm][Gg]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Ii][Nn][Dd][Ee][Xx]      binary  diff=lfs  filter=lfs  merge=lfs
+*.[Jj][Aa][Rr]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Jj][Pp][Gg]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Jj][Pp][Ee][Gg]          binary
+*.[Ll][Ii][Bb]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Nn][Ee][Tt][Dd][Ee][Ff]  binary  diff=lfs  filter=lfs  merge=lfs
+*.[Nn][Ii][Ii]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Nn][Pp][Yy]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Nn][Rr][Rr][Dd]          binary  diff=lfs  filter=lfs  merge=lfs
+*.[Nn][Uu][Pp][Kk][Gg]      binary  diff=lfs  filter=lfs  merge=lfs
+*.[Oo]                      binary  diff=lfs  filter=lfs  merge=lfs
+*.[Oo][Bb][Jj]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Pp][Bb]                  binary  diff=lfs  filter=lfs  merge=lfs
+*.[Pp][Dd][Bb]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Pp][Nn][Gg]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Rr][Aa][Rr]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Rr][Aa][Ww]              binary  diff=lfs  filter=lfs  merge=lfs
+*.savedmodel                binary  diff=lfs  filter=lfs  merge=lfs
+*.graphdef                  binary  diff=lfs  filter=lfs  merge=lfs
+*.so                        binary  diff=lfs  filter=lfs  merge=lfs
+*.[Tt][Aa][Rr]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Tt][Ii][Ff]              binary
+*.[Tt][Ii][Ff][Ff]          binary
+*.[Ww][Hh][Ll]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Ww][Aa][Rr]              binary  diff=lfs  filter=lfs  merge=lfs
+*.[Xx][Zz]                  binary  diff=lfs  filter=lfs  merge=lfs
+*.[Zz][Ii][Pp]              binary  diff=lfs  filter=lfs  merge=lfs
+###############################################################################
+# Common text file types
+###############################################################################
+*.[Bb][Aa][Tt]      eol=crlf
+*.[Cc][Mm][Dd]      eol=crlf
+*.[Cc][Ss][Ss]      text
+*.[Hh][Tt][Mm]      text
+*.[Hh][Tt][Mm][Ll]  text
+*.[Jj][Ss]          text
+*.[Jj][Ss][Oo][Nn]  text
+*.jsp               text
+*.jspf              text
+*.jspx              text
+*.[Mm][Dd]          text
+*.[Nn][Uu][Ss][Pp][Ee][Cc]  text
+*.properties        text
+*.proto             text  merge=binary
+*.[Pp][Ss]1         text
+*.[Pp][Ss][Dd]1     text
+*.[Pp][Ss][Mm]1     text
+*.sh                text
+*.tld               text
+*.[Tt][Xx][Tt]      text
+*.tag               text
+*.tagx              text  merge=binary
+*.[Xx][Mm][Ll]      text  merge=binary
+*.[Yy][Aa][Mm][Ll]  text
+*.[Yy][Mm][Ll]      text
+###############################################################################
+# Common CUDA file types
+###############################################################################
+*.i
+*.ii
+*.gpu
+*.ptx
+*.cubin
+*.fatbin
+###############################################################################
+# Common Docker file types
+###############################################################################
+*.dockerignore      eol=lf
+*.text-prereqs      eol=lf
+Dockerfile-sdk      eol=lf
+**/Dockerfile-sdk   eol=lf
+###############################################################################
+# Common editor and IDE configuration file types
+###############################################################################
+.editorconfig     text
+.pylint           text
+.pylintcc         text
+.pylintrc
+**/.editorconfig  text
+**/.pylint        text
+**/.pylintcc      text
+**/.pylintrc      text
+###############################################################################
+# Common .NET and NET Core file types
+###############################################################################
+*.[Cc][Ss]  text
+*.[Ff][Ss]  text
+*.[Vv][Bb]  text
+###############################################################################
+# Common C/C++ file types
+###############################################################################
+*.[Cc]          text
+*.[Cc][Pp][Pp]  text
+*.[Hh]          text
+*.[Hh][Pp][Pp]  text
+*.[Pp][Cc][Hh]  text
+###############################################################################
+# Common Doxygen file types
+###############################################################################
+[Dd]oxy[Ff]ile      text
+**/[Dd]oxy[Ff]ile   text
+###############################################################################
+# Common Java file types
+###############################################################################
+*.class             binary
+*.ear               binary
+*.[Jj][Aa][Rr]      binary
+*.[Jj][Aa][Vv][Aa]  text
+*.war               binary
+###############################################################################
+# Common Jenkins file types
+###############################################################################
+[Jj]enkins[Ff]ile     eol=lf
+**/[Jj]enkins[Ff]ile  eol=lf
+###############################################################################
+# Common Microsoft document file types
+###############################################################################
+*.[Dd][Oo][Cc]      binary diff=astextplain  merge=binary
+*.[Dd][Oo][Cc][Xx]  binary diff=astextplain  merge=binary
+*.[Dd][Oo][Tt]      binary diff=astextplain  merge=binary
+*.[Pp][Dd][Ff]      binary diff=astextplain  merge=binary
+*.[Rr][Tt][Ff]      binary diff=astextplain  merge=binary
+###############################################################################
+# Common MSBuild file types
+###############################################################################
+*.props   text
+*.targets text
+*.proj    eol=crlf
+###############################################################################
+# Common PERL source files.
+###############################################################################
+*.[Pp][Ee][Rr][Ll]  text  diff=perl
+*.[Pp][Ll]          text  diff=perl
+*.[Pp][Mm]          text  diff=perl
+###############################################################################
+# Python file types
+###############################################################################
+*.db           binary
+*.npy          binary
+*.p            binary
+*.pkl          binary
+*.pyc          binary
+*.pxd          text  diff=python
+*.pyd          binary
+*.pyo          binary
+*.[Pp][Yy]     text  diff=python
+*.[Pp][Yy]3    text  diff=python
+*.pyw          text  diff=python
+*.pyx          text  diff=python
+[Pp]ipfile     eol=lf
+**/[Pp]ipfile  eol=lf
+###############################################################################
+# Visual Studio Project & Solution file types
+###############################################################################
+*.sln             eol=crlf  merge=binary
+*.csproj          eol=crlf  merge=binary
+*.dbproj          eol=crlf  merge=binary
+*.fsproj          eol=crlf  merge=binary
+*.lsproj          eol=crlf  merge=binary
+*.[Mm][Aa][Pp]    binary
+*.modelproj       eol=crlf  merge=binary
+*.[Rr][Cc]        eol=crlf  merge=binary
+*.[Rr][Cc]2       eol=crlf  merge=binary
+*.source          binary
+*.sqlproj         eol=crlf  merge=binary
+*.vbproj          eol=crlf  merge=binary
+*.vcproj          eol=crlf  merge=binary
+*.vcproj.filters  eol=crlf  merge=binary
+*.vcxitems        eol=crlf  merge=binary
+*.vcxproj         eol=crlf  merge=binary
+*.wixproj         eol=crlf  merge=binary
+*.wwaproj         eol=crlf  merge=binary

@@ -1,0 +1,58 @@
+# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+
+# Values for Model Analyzer
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# The mandatory fields to update are modelPath, resultsPath, and modelName
+
+# Job timeout value specified in seconds
+jobTimeout: 900
+
+## Configurations for mounting volumes
+
+# Local path to model directory
+modelPath: /home/model
+
+# Local path to export data
+resultsPath: /home/results
+
+## Arguments
+
+#Specifies how long to gather server-only metrics
+baseDuration: 6
+
+#Specifies list of model batch sizes 
+batch: 1,2
+
+#Specifies comma-delimited list of concurrency values
+concurrency: 1,2
+
+#Specifies frequency of metric gathering in milliseconds
+frequencyMs: 100
+
+#Specifies the max duration of any retry attempt in seconds
+maxRetry: 15
+
+#Specifies the model name
+#This should match the name Triton is expecting, based on the model's configuration file.
+modelName: classification_chestxray_v1
+
+#Specifies the number of seconds perf client runs model before gathering metrics (default: 3)
+perfBuffer: 3
+
+## Images
+images:
+
+  analyzer:
+    image: model-analyzer
+
+  triton:
+    image: nvcr.io/nvidia/tensorrtserver
+    tag: 20.02-py3
