@@ -23,7 +23,20 @@ These metrics will be listed for each batch size and concurrency value. Baseline
 
 See [this NVIDIA Developer Blog post] for potential use cases.
 
-### Metrics
+
+## Requirements
+
+Model Analyzer supports the following products and environments:
+- All K80 and newer Tesla GPUs
+- NVSwitch on DGX-2 and HGX-2
+- All Maxwell and newer non-Tesla GPUs
+- CUDA 7.5+ and NVIDIA Driver R384+
+
+Model Analyzer requires [NVIDIA-Docker], a supported Tesla Recommend Driver, and a supported CUDA toolkit. The CLI also requires a .NET Core SDK.
+
+Ports 8000, 8001, and 8002 on your network need to be available for the Triton server. Model Analyzer supports Triton Inference Server version 20.02-py3. If you do not have the Triton server image locally, the first run will take a couple of minutes to pull it.
+
+## Metrics
 
 The metrics collected by Model Analyzer are listed below:
 
@@ -31,7 +44,6 @@ The metrics collected by Model Analyzer are listed below:
 - **Maximum Memory Utilization**: Maximum percentage of time during which global (device) memory was being read or written
 - **Maximum GPU Utilization**: Maximum percentage of time during which one or more kernels was executing on the GPU
 - **Maximum GPU Memory**: Maximum MB of GPU memory in use
-
 
 ## Documentation
 
