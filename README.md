@@ -1,6 +1,6 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
 
-![NVIDIA Logo](../images/NVIDIA-logo.png?raw=true)
+![NVIDIA Logo](images/NVIDIA-logo.png?raw=true)
 
 # Model Analyzer
 
@@ -8,7 +8,7 @@ Model Analyzer is used for gathering compute and memory requirements of models u
 
 These metrics will be listed for each batch size and concurrency value. Baseline metrics for the server running with no models will also be provided. These values can be used for optimizing the loading and running of models.
 
-![Interface](../images/interface-preview.png?raw=true "Model Analyzer Interface")
+![Interface](images/interface-preview.png?raw=true "Model Analyzer Interface")
 
 See [NVIDIA Developer Blog post] for potential use cases.
 
