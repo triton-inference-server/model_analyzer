@@ -45,11 +45,10 @@ If you want to use Model Analyzer right away, there are two options:
 ##### You have supported hardware and drivers, [NVIDIA-Docker], and [.NET SDK].
 
 ```
-cd src
 git clone https://github.com/NVIDIA/model-analyzer
-cd ModelAnalyzer
+cd src
 dotnet publish -c Release
-./ModelAnalyzer -m MODELS \
+./model-analyzer -m MODELS \
         --model-folder /ABSOLUTE/PATH/TO/MODELS \
         -e /PATH/TO/EXPORT/DIRECTORY \
         --export -b BATCH-SIZES \
@@ -61,7 +60,7 @@ dotnet publish -c Release
 
 ```
 git clone https://github.com/NVIDIA/model-analyzer
-cd ModelAnalyzer
+cd src
 docker build -f Dockerfile -t model-analyzer .
 docker run -v /var/run/docker.sock:/var/run/docker.sock \
         -v /ABSOLUTE/PATH/TO/MODELS:ABSOLUTE/PATH/TO/MODELS \
