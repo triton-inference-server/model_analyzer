@@ -8,7 +8,7 @@ These metrics will be listed for each batch size and concurrency value. Baseline
 
 ![Interface](images/interface-preview.png?raw=true "Model Analyzer Interface")
 
-See [NVIDIA Developer Blog post] for potential use cases.
+See [this NVIDIA Developer Blog post] for potential use cases.
 
 ### Metrics
 
@@ -96,5 +96,5 @@ Please start by reviewing the [docs] folder and searching the current project is
 [.NET SDK]: https://dotnet.microsoft.com/download
 [Contributing]: CONTRIBUTING.md
 [docs]: docs
-[NVIDIA Developer Blog post]: https://developer.nvidia.com/blog/maximizing-deep-learning-inference-performance-with-nvidia-model-analyzer/
 [NVIDIA-Docker]: https://github.com/NVIDIA/nvidia-docker
+[this NVIDIA Developer Blog post]: https://developer.nvidia.com/blog/maximizing-deep-learning-inference-performance-with-nvidia-model-analyzer/
