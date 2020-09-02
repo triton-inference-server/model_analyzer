@@ -1,24 +1,23 @@
+<!--
+Copyright 2020, NVIDIA CORPORATION.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+[![License](https://img.shields.io/badge/License-Apache_2.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
+
 # Model Analyzer Helm Chart
-
-## Overview
-
-The Model Analyzer is responsible for gathering compute metrics on a model.
-
-Model Analyzer runs the selected model on Triton Inference Server with the given batch sizes and concurrency values. As the configurations run, Model Analyzer will capture and export the metrics in CSV format to your chosen directory.
-
-These metrics will be listed for each batch size and concurrency value. Baseline metrics for the server running with no models will also be provided. These values can be used for optimizing the loading and running of models.
-
-Model Analyzer supports Triton Inference Server version 20.02-py3. Please note that this version of Model Analyzer supports analyzing one model per job. If you would like to import a list of models, please use the standalone Docker container or command line interface.
 
 ## Requirements
 
-Model Analyzer supports the following products and environments:
-- All K80 and newer Tesla GPUs
-- NVSwitch on DGX-2 and HGX-2
-- All Maxwell and newer non-Tesla GPUs
-- CUDA 7.5+ and NVIDIA Driver R384+
-
-Model Analyzer requires a supported Tesla Recommend Driver, a supported CUDA toolkit, and NVIDIA-Docker. The Helm version also requires Kubernetes and Helm.
+In additiom to the base requirements, the Helm version also requires Kubernetes and Helm.
 
 ## Procedure
 
@@ -45,12 +44,3 @@ A sample `config.yaml` file is below:
 6. You can view the exported metrics, which will be in the directory specified in the values file.
 
 If the pod status is not "pending" or "running", you can use the command `kubectl describe pod <pod-name>` to see more details about the pod.
-
-## Metrics
-
-The metrics collected by Model Analyzer are listed below:
-
-- **Throughput**: Number of inference requests per second
-- **Maximum Memory Utilization**: Maximum percentage of time during which global (device) memory was being read or written
-- **Maximum GPU Utilization**: Maximum percentage of time during which one or more kernels was executing on the GPU
-- **Maximum GPU Memory**: Maximum MB of GPU memory in use
