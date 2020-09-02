@@ -44,10 +44,8 @@ If you want to use Model Analyzer right away, there are two options:
 
 ##### You have supported hardware and drivers, [NVIDIA-Docker], and [.NET SDK].
 
-Navigate to the ModelAnalyzer folder, then:
-
-
 ```
+cd src
 git clone https://github.com/NVIDIA/model-analyzer
 cd ModelAnalyzer
 dotnet publish -c Release
