@@ -15,4 +15,4 @@ limitations under the License.
 
 Model Analyzer follows similar contributing guidelines to Triton Inference Server. Please see [the Triton Inference Server contributing document].
 
-[the Triton Inference Server contributing document]: https://github.com/triton-inference-server/server/edit/master/CONTRIBUTING.md
+[the Triton Inference Server contributing document]: https://github.com/triton-inference-server/server/blob/master/CONTRIBUTING.md
