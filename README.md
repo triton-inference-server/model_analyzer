@@ -1,7 +1,5 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
 
-![NVIDIA Logo](images/NVIDIA-logo.png?raw=true)
-
 # Model Analyzer
 
 Model Analyzer is used for gathering compute and memory requirements of models used with NVIDIA Triton Inference Server. It runs each selected model on Triton Inference Server with the given batch sizes and concurrency values. As the configurations run, Model Analyzer will capture and export the metrics in CSV format to your chosen directory.
