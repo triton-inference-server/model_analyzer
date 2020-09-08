@@ -31,7 +31,7 @@ using System.Collections.Generic;
 
 using static System.StringComparer;
 
-namespace ModelAnalyzer.Client
+namespace Triton.MemoryAnalyzer.Client
 {
     /// <summary>
     /// Interface to an object which defines the inference server status returned by making a

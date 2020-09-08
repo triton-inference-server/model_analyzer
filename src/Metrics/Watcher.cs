@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Text;
 using static System.Threading.Interlocked;
 
-namespace ModelAnalyzer.Metrics
+namespace Triton.MemoryAnalyzer.Metrics
 {
     /// <summary>
     /// Represents field data values.

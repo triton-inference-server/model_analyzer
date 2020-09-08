@@ -9,7 +9,7 @@ using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using pbr = global::Google.Protobuf.Reflection;
 using scg = global::System.Collections.Generic;
-namespace ModelAnalyzer.Client
+namespace Triton.MemoryAnalyzer.Client
 {
 
   /// <summary>Holder for reflection information generated from model_config.proto</summary>
@@ -143,27 +143,27 @@ namespace ModelAnalyzer.Client
             "VFlQRV9TVFJJTkcQDWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
-          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::ModelAnalyzer.Client.DataType), }, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelInstanceGroup), global::ModelAnalyzer.Client.ModelInstanceGroup.Parser, new[]{ "Name", "Kind", "Count", "Gpus", "Profile" }, null, new[]{ typeof(global::ModelAnalyzer.Client.ModelInstanceGroup.Types.Kind) }, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelTensorReshape), global::ModelAnalyzer.Client.ModelTensorReshape.Parser, new[]{ "Shape" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelInput), global::ModelAnalyzer.Client.ModelInput.Parser, new[]{ "Name", "DataType", "Format", "Dims", "Reshape" }, null, new[]{ typeof(global::ModelAnalyzer.Client.ModelInput.Types.Format) }, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelOutput), global::ModelAnalyzer.Client.ModelOutput.Parser, new[]{ "Name", "DataType", "Dims", "Reshape", "LabelFilename" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelVersionPolicy), global::ModelAnalyzer.Client.ModelVersionPolicy.Parser, new[]{ "Latest", "All", "Specific" }, new[]{ "PolicyChoice" }, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Latest), global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Latest.Parser, new[]{ "NumVersions" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelVersionPolicy.Types.All), global::ModelAnalyzer.Client.ModelVersionPolicy.Types.All.Parser, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Specific), global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Specific.Parser, new[]{ "Versions" }, null, null, null)}),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelOptimizationPolicy), global::ModelAnalyzer.Client.ModelOptimizationPolicy.Parser, new[]{ "Graph", "Priority", "Cuda", "ExecutionAccelerators" }, null, new[]{ typeof(global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ModelPriority) }, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Graph), global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Graph.Parser, new[]{ "Level" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda), global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda.Parser, new[]{ "Graphs" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators), global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Parser, new[]{ "GpuExecutionAccelerator", "CpuExecutionAccelerator" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator), global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator.Parser, new[]{ "Name", "Parameters" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, })})}),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelDynamicBatching), global::ModelAnalyzer.Client.ModelDynamicBatching.Parser, new[]{ "PreferredBatchSize", "MaxQueueDelayMicroseconds", "PreserveOrdering" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelSequenceBatching), global::ModelAnalyzer.Client.ModelSequenceBatching.Parser, new[]{ "Direct", "Oldest", "MaxSequenceIdleMicroseconds", "ControlInput" }, new[]{ "StrategyChoice" }, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelSequenceBatching.Types.Control), global::ModelAnalyzer.Client.ModelSequenceBatching.Types.Control.Parser, new[]{ "Kind", "Int32FalseTrue", "Fp32FalseTrue", "DataType" }, null, new[]{ typeof(global::ModelAnalyzer.Client.ModelSequenceBatching.Types.Control.Types.Kind) }, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelSequenceBatching.Types.ControlInput), global::ModelAnalyzer.Client.ModelSequenceBatching.Types.ControlInput.Parser, new[]{ "Name", "Control" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect), global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect.Parser, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest), global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest.Parser, new[]{ "MaxCandidateSequences", "PreferredBatchSize", "MaxQueueDelayMicroseconds" }, null, null, null)}),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelEnsembling), global::ModelAnalyzer.Client.ModelEnsembling.Parser, new[]{ "Step" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelEnsembling.Types.Step), global::ModelAnalyzer.Client.ModelEnsembling.Types.Step.Parser, new[]{ "ModelName", "ModelVersion", "InputMap", "OutputMap" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, null, })}),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelParameter), global::ModelAnalyzer.Client.ModelParameter.Parser, new[]{ "StringValue" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelWarmup), global::ModelAnalyzer.Client.ModelWarmup.Parser, new[]{ "Name", "BatchSize", "Inputs" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelWarmup.Types.Input), global::ModelAnalyzer.Client.ModelWarmup.Types.Input.Parser, new[]{ "DataType", "Dims", "ZeroData", "RandomData", "InputDataFile" }, new[]{ "InputDataType" }, null, null),
+          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Triton.MemoryAnalyzer.Client.DataType), }, new pbr::GeneratedClrTypeInfo[] {
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelInstanceGroup), global::Triton.MemoryAnalyzer.Client.ModelInstanceGroup.Parser, new[]{ "Name", "Kind", "Count", "Gpus", "Profile" }, null, new[]{ typeof(global::Triton.MemoryAnalyzer.Client.ModelInstanceGroup.Types.Kind) }, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelTensorReshape), global::Triton.MemoryAnalyzer.Client.ModelTensorReshape.Parser, new[]{ "Shape" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelInput), global::Triton.MemoryAnalyzer.Client.ModelInput.Parser, new[]{ "Name", "DataType", "Format", "Dims", "Reshape" }, null, new[]{ typeof(global::Triton.MemoryAnalyzer.Client.ModelInput.Types.Format) }, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelOutput), global::Triton.MemoryAnalyzer.Client.ModelOutput.Parser, new[]{ "Name", "DataType", "Dims", "Reshape", "LabelFilename" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy), global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Parser, new[]{ "Latest", "All", "Specific" }, new[]{ "PolicyChoice" }, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Latest), global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Latest.Parser, new[]{ "NumVersions" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.All), global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.All.Parser, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Specific), global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Specific.Parser, new[]{ "Versions" }, null, null, null)}),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy), global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Parser, new[]{ "Graph", "Priority", "Cuda", "ExecutionAccelerators" }, null, new[]{ typeof(global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ModelPriority) }, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Graph), global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Graph.Parser, new[]{ "Level" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda), global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda.Parser, new[]{ "Graphs" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators), global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Parser, new[]{ "GpuExecutionAccelerator", "CpuExecutionAccelerator" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator), global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator.Parser, new[]{ "Name", "Parameters" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, })})}),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelDynamicBatching), global::Triton.MemoryAnalyzer.Client.ModelDynamicBatching.Parser, new[]{ "PreferredBatchSize", "MaxQueueDelayMicroseconds", "PreserveOrdering" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching), global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Parser, new[]{ "Direct", "Oldest", "MaxSequenceIdleMicroseconds", "ControlInput" }, new[]{ "StrategyChoice" }, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.Control), global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.Control.Parser, new[]{ "Kind", "Int32FalseTrue", "Fp32FalseTrue", "DataType" }, null, new[]{ typeof(global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.Control.Types.Kind) }, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.ControlInput), global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.ControlInput.Parser, new[]{ "Name", "Control" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect), global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect.Parser, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest), global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest.Parser, new[]{ "MaxCandidateSequences", "PreferredBatchSize", "MaxQueueDelayMicroseconds" }, null, null, null)}),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelEnsembling), global::Triton.MemoryAnalyzer.Client.ModelEnsembling.Parser, new[]{ "Step" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelEnsembling.Types.Step), global::Triton.MemoryAnalyzer.Client.ModelEnsembling.Types.Step.Parser, new[]{ "ModelName", "ModelVersion", "InputMap", "OutputMap" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, null, })}),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelParameter), global::Triton.MemoryAnalyzer.Client.ModelParameter.Parser, new[]{ "StringValue" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelWarmup), global::Triton.MemoryAnalyzer.Client.ModelWarmup.Parser, new[]{ "Name", "BatchSize", "Inputs" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelWarmup.Types.Input), global::Triton.MemoryAnalyzer.Client.ModelWarmup.Types.Input.Parser, new[]{ "DataType", "Dims", "ZeroData", "RandomData", "InputDataFile" }, new[]{ "InputDataType" }, null, null),
             null, }),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelConfig), global::ModelAnalyzer.Client.ModelConfig.Parser, new[]{ "Name", "Platform", "VersionPolicy", "MaxBatchSize", "Input", "Output", "Optimization", "DynamicBatching", "SequenceBatching", "EnsembleScheduling", "InstanceGroup", "DefaultModelFilename", "CcModelFilenames", "MetricTags", "Parameters", "ModelWarmup" }, new[]{ "SchedulingChoice" }, null, new pbr::GeneratedClrTypeInfo[] { null, null, null, })
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelConfig), global::Triton.MemoryAnalyzer.Client.ModelConfig.Parser, new[]{ "Name", "Platform", "VersionPolicy", "MaxBatchSize", "Input", "Output", "Optimization", "DynamicBatching", "SequenceBatching", "EnsembleScheduling", "InstanceGroup", "DefaultModelFilename", "CcModelFilenames", "MetricTags", "Parameters", "ModelWarmup" }, new[]{ "SchedulingChoice" }, null, new pbr::GeneratedClrTypeInfo[] { null, null, null, })
           }));
     }
     #endregion
@@ -255,7 +255,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[0]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[0]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -307,7 +307,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "kind" field.</summary>
     public const int KindFieldNumber = 4;
-    private global::ModelAnalyzer.Client.ModelInstanceGroup.Types.Kind kind_ = 0;
+    private global::Triton.MemoryAnalyzer.Client.ModelInstanceGroup.Types.Kind kind_ = 0;
     /// <summary>
     ///@@  .. cpp:var:: Kind kind
     ///@@
@@ -318,7 +318,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelInstanceGroup.Types.Kind Kind {
+    public global::Triton.MemoryAnalyzer.Client.ModelInstanceGroup.Types.Kind Kind {
       get { return kind_; }
       set {
         kind_ = value;
@@ -506,7 +506,7 @@ namespace ModelAnalyzer.Client
             break;
           }
           case 32: {
-            Kind = (global::ModelAnalyzer.Client.ModelInstanceGroup.Types.Kind) input.ReadEnum();
+            Kind = (global::Triton.MemoryAnalyzer.Client.ModelInstanceGroup.Types.Kind) input.ReadEnum();
             break;
           }
           case 42: {
@@ -588,7 +588,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[1]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[1]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -723,7 +723,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[2]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[2]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -772,7 +772,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "data_type" field.</summary>
     public const int DataTypeFieldNumber = 2;
-    private global::ModelAnalyzer.Client.DataType dataType_ = 0;
+    private global::Triton.MemoryAnalyzer.Client.DataType dataType_ = 0;
     /// <summary>
     ///@@  .. cpp:var:: DataType data_type
     ///@@
@@ -780,7 +780,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.DataType DataType {
+    public global::Triton.MemoryAnalyzer.Client.DataType DataType {
       get { return dataType_; }
       set {
         dataType_ = value;
@@ -789,7 +789,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "format" field.</summary>
     public const int FormatFieldNumber = 3;
-    private global::ModelAnalyzer.Client.ModelInput.Types.Format format_ = 0;
+    private global::Triton.MemoryAnalyzer.Client.ModelInput.Types.Format format_ = 0;
     /// <summary>
     ///@@  .. cpp:var:: Format format
     ///@@
@@ -797,7 +797,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelInput.Types.Format Format {
+    public global::Triton.MemoryAnalyzer.Client.ModelInput.Types.Format Format {
       get { return format_; }
       set {
         format_ = value;
@@ -823,7 +823,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "reshape" field.</summary>
     public const int ReshapeFieldNumber = 5;
-    private global::ModelAnalyzer.Client.ModelTensorReshape reshape_;
+    private global::Triton.MemoryAnalyzer.Client.ModelTensorReshape reshape_;
     /// <summary>
     ///@@  .. cpp:var:: ModelTensorReshape reshape
     ///@@
@@ -834,7 +834,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelTensorReshape Reshape {
+    public global::Triton.MemoryAnalyzer.Client.ModelTensorReshape Reshape {
       get { return reshape_; }
       set {
         reshape_ = value;
@@ -944,7 +944,7 @@ namespace ModelAnalyzer.Client
       dims_.Add(other.dims_);
       if (other.reshape_ != null) {
         if (reshape_ == null) {
-          Reshape = new global::ModelAnalyzer.Client.ModelTensorReshape();
+          Reshape = new global::Triton.MemoryAnalyzer.Client.ModelTensorReshape();
         }
         Reshape.MergeFrom(other.Reshape);
       }
@@ -964,11 +964,11 @@ namespace ModelAnalyzer.Client
             break;
           }
           case 16: {
-            DataType = (global::ModelAnalyzer.Client.DataType) input.ReadEnum();
+            DataType = (global::Triton.MemoryAnalyzer.Client.DataType) input.ReadEnum();
             break;
           }
           case 24: {
-            Format = (global::ModelAnalyzer.Client.ModelInput.Types.Format) input.ReadEnum();
+            Format = (global::Triton.MemoryAnalyzer.Client.ModelInput.Types.Format) input.ReadEnum();
             break;
           }
           case 34:
@@ -978,7 +978,7 @@ namespace ModelAnalyzer.Client
           }
           case 42: {
             if (reshape_ == null) {
-              Reshape = new global::ModelAnalyzer.Client.ModelTensorReshape();
+              Reshape = new global::Triton.MemoryAnalyzer.Client.ModelTensorReshape();
             }
             input.ReadMessage(Reshape);
             break;
@@ -1050,7 +1050,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[3]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[3]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1099,7 +1099,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "data_type" field.</summary>
     public const int DataTypeFieldNumber = 2;
-    private global::ModelAnalyzer.Client.DataType dataType_ = 0;
+    private global::Triton.MemoryAnalyzer.Client.DataType dataType_ = 0;
     /// <summary>
     ///@@  .. cpp:var:: DataType data_type
     ///@@
@@ -1107,7 +1107,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.DataType DataType {
+    public global::Triton.MemoryAnalyzer.Client.DataType DataType {
       get { return dataType_; }
       set {
         dataType_ = value;
@@ -1132,7 +1132,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "reshape" field.</summary>
     public const int ReshapeFieldNumber = 5;
-    private global::ModelAnalyzer.Client.ModelTensorReshape reshape_;
+    private global::Triton.MemoryAnalyzer.Client.ModelTensorReshape reshape_;
     /// <summary>
     ///@@  .. cpp:var:: ModelTensorReshape reshape
     ///@@
@@ -1143,7 +1143,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelTensorReshape Reshape {
+    public global::Triton.MemoryAnalyzer.Client.ModelTensorReshape Reshape {
       get { return reshape_; }
       set {
         reshape_ = value;
@@ -1268,7 +1268,7 @@ namespace ModelAnalyzer.Client
       dims_.Add(other.dims_);
       if (other.reshape_ != null) {
         if (reshape_ == null) {
-          Reshape = new global::ModelAnalyzer.Client.ModelTensorReshape();
+          Reshape = new global::Triton.MemoryAnalyzer.Client.ModelTensorReshape();
         }
         Reshape.MergeFrom(other.Reshape);
       }
@@ -1291,7 +1291,7 @@ namespace ModelAnalyzer.Client
             break;
           }
           case 16: {
-            DataType = (global::ModelAnalyzer.Client.DataType) input.ReadEnum();
+            DataType = (global::Triton.MemoryAnalyzer.Client.DataType) input.ReadEnum();
             break;
           }
           case 26:
@@ -1305,7 +1305,7 @@ namespace ModelAnalyzer.Client
           }
           case 42: {
             if (reshape_ == null) {
-              Reshape = new global::ModelAnalyzer.Client.ModelTensorReshape();
+              Reshape = new global::Triton.MemoryAnalyzer.Client.ModelTensorReshape();
             }
             input.ReadMessage(Reshape);
             break;
@@ -1332,7 +1332,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[4]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[4]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1378,8 +1378,8 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Latest Latest {
-      get { return policyChoiceCase_ == PolicyChoiceOneofCase.Latest ? (global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Latest) policyChoice_ : null; }
+    public global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Latest Latest {
+      get { return policyChoiceCase_ == PolicyChoiceOneofCase.Latest ? (global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Latest) policyChoice_ : null; }
       set {
         policyChoice_ = value;
         policyChoiceCase_ = value == null ? PolicyChoiceOneofCase.None : PolicyChoiceOneofCase.Latest;
@@ -1395,8 +1395,8 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelVersionPolicy.Types.All All {
-      get { return policyChoiceCase_ == PolicyChoiceOneofCase.All ? (global::ModelAnalyzer.Client.ModelVersionPolicy.Types.All) policyChoice_ : null; }
+    public global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.All All {
+      get { return policyChoiceCase_ == PolicyChoiceOneofCase.All ? (global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.All) policyChoice_ : null; }
       set {
         policyChoice_ = value;
         policyChoiceCase_ = value == null ? PolicyChoiceOneofCase.None : PolicyChoiceOneofCase.All;
@@ -1412,8 +1412,8 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Specific Specific {
-      get { return policyChoiceCase_ == PolicyChoiceOneofCase.Specific ? (global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Specific) policyChoice_ : null; }
+    public global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Specific Specific {
+      get { return policyChoiceCase_ == PolicyChoiceOneofCase.Specific ? (global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Specific) policyChoice_ : null; }
       set {
         policyChoice_ = value;
         policyChoiceCase_ = value == null ? PolicyChoiceOneofCase.None : PolicyChoiceOneofCase.Specific;
@@ -1523,19 +1523,19 @@ namespace ModelAnalyzer.Client
       switch (other.PolicyChoiceCase) {
         case PolicyChoiceOneofCase.Latest:
           if (Latest == null) {
-            Latest = new global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Latest();
+            Latest = new global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Latest();
           }
           Latest.MergeFrom(other.Latest);
           break;
         case PolicyChoiceOneofCase.All:
           if (All == null) {
-            All = new global::ModelAnalyzer.Client.ModelVersionPolicy.Types.All();
+            All = new global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.All();
           }
           All.MergeFrom(other.All);
           break;
         case PolicyChoiceOneofCase.Specific:
           if (Specific == null) {
-            Specific = new global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Specific();
+            Specific = new global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Specific();
           }
           Specific.MergeFrom(other.Specific);
           break;
@@ -1553,7 +1553,7 @@ namespace ModelAnalyzer.Client
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 10: {
-            global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Latest subBuilder = new global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Latest();
+            global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Latest subBuilder = new global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Latest();
             if (policyChoiceCase_ == PolicyChoiceOneofCase.Latest) {
               subBuilder.MergeFrom(Latest);
             }
@@ -1562,7 +1562,7 @@ namespace ModelAnalyzer.Client
             break;
           }
           case 18: {
-            global::ModelAnalyzer.Client.ModelVersionPolicy.Types.All subBuilder = new global::ModelAnalyzer.Client.ModelVersionPolicy.Types.All();
+            global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.All subBuilder = new global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.All();
             if (policyChoiceCase_ == PolicyChoiceOneofCase.All) {
               subBuilder.MergeFrom(All);
             }
@@ -1571,7 +1571,7 @@ namespace ModelAnalyzer.Client
             break;
           }
           case 26: {
-            global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Specific subBuilder = new global::ModelAnalyzer.Client.ModelVersionPolicy.Types.Specific();
+            global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Specific subBuilder = new global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Types.Specific();
             if (policyChoiceCase_ == PolicyChoiceOneofCase.Specific) {
               subBuilder.MergeFrom(Specific);
             }
@@ -1602,7 +1602,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelVersionPolicy.Descriptor.NestedTypes[0]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Descriptor.NestedTypes[0]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1746,7 +1746,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelVersionPolicy.Descriptor.NestedTypes[1]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Descriptor.NestedTypes[1]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1853,7 +1853,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelVersionPolicy.Descriptor.NestedTypes[2]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy.Descriptor.NestedTypes[2]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1995,7 +1995,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[5]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[5]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2026,7 +2026,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "graph" field.</summary>
     public const int GraphFieldNumber = 1;
-    private global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Graph graph_;
+    private global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Graph graph_;
     /// <summary>
     ///@@  .. cpp:var:: Graph graph
     ///@@
@@ -2034,7 +2034,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Graph Graph {
+    public global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Graph Graph {
       get { return graph_; }
       set {
         graph_ = value;
@@ -2043,7 +2043,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "priority" field.</summary>
     public const int PriorityFieldNumber = 2;
-    private global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ModelPriority priority_ = 0;
+    private global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ModelPriority priority_ = 0;
     /// <summary>
     ///@@  .. cpp:var:: ModelPriority priority
     ///@@
@@ -2051,7 +2051,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ModelPriority Priority {
+    public global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ModelPriority Priority {
       get { return priority_; }
       set {
         priority_ = value;
@@ -2060,7 +2060,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "cuda" field.</summary>
     public const int CudaFieldNumber = 3;
-    private global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda cuda_;
+    private global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda cuda_;
     /// <summary>
     ///@@  .. cpp:var:: Cuda cuda
     ///@@
@@ -2068,7 +2068,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda Cuda {
+    public global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda Cuda {
       get { return cuda_; }
       set {
         cuda_ = value;
@@ -2077,7 +2077,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "execution_accelerators" field.</summary>
     public const int ExecutionAcceleratorsFieldNumber = 4;
-    private global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators executionAccelerators_;
+    private global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators executionAccelerators_;
     /// <summary>
     ///@@  .. cpp:var:: ExecutionAccelerators execution_accelerators
     ///@@
@@ -2085,7 +2085,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators ExecutionAccelerators {
+    public global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators ExecutionAccelerators {
       get { return executionAccelerators_; }
       set {
         executionAccelerators_ = value;
@@ -2181,7 +2181,7 @@ namespace ModelAnalyzer.Client
       }
       if (other.graph_ != null) {
         if (graph_ == null) {
-          Graph = new global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Graph();
+          Graph = new global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Graph();
         }
         Graph.MergeFrom(other.Graph);
       }
@@ -2190,13 +2190,13 @@ namespace ModelAnalyzer.Client
       }
       if (other.cuda_ != null) {
         if (cuda_ == null) {
-          Cuda = new global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda();
+          Cuda = new global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda();
         }
         Cuda.MergeFrom(other.Cuda);
       }
       if (other.executionAccelerators_ != null) {
         if (executionAccelerators_ == null) {
-          ExecutionAccelerators = new global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators();
+          ExecutionAccelerators = new global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators();
         }
         ExecutionAccelerators.MergeFrom(other.ExecutionAccelerators);
       }
@@ -2213,25 +2213,25 @@ namespace ModelAnalyzer.Client
             break;
           case 10: {
             if (graph_ == null) {
-              Graph = new global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Graph();
+              Graph = new global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Graph();
             }
             input.ReadMessage(Graph);
             break;
           }
           case 16: {
-            Priority = (global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ModelPriority) input.ReadEnum();
+            Priority = (global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ModelPriority) input.ReadEnum();
             break;
           }
           case 26: {
             if (cuda_ == null) {
-              Cuda = new global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda();
+              Cuda = new global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.Cuda();
             }
             input.ReadMessage(Cuda);
             break;
           }
           case 34: {
             if (executionAccelerators_ == null) {
-              ExecutionAccelerators = new global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators();
+              ExecutionAccelerators = new global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators();
             }
             input.ReadMessage(ExecutionAccelerators);
             break;
@@ -2295,7 +2295,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelOptimizationPolicy.Descriptor.NestedTypes[0]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Descriptor.NestedTypes[0]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2442,7 +2442,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelOptimizationPolicy.Descriptor.NestedTypes[1]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Descriptor.NestedTypes[1]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2597,7 +2597,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelOptimizationPolicy.Descriptor.NestedTypes[2]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Descriptor.NestedTypes[2]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2626,9 +2626,9 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "gpu_execution_accelerator" field.</summary>
         public const int GpuExecutionAcceleratorFieldNumber = 1;
-        private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> _repeated_gpuExecutionAccelerator_codec
-            = pb::FieldCodec.ForMessage(10, global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator.Parser);
-        private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> gpuExecutionAccelerator_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator>();
+        private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> _repeated_gpuExecutionAccelerator_codec
+            = pb::FieldCodec.ForMessage(10, global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator.Parser);
+        private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> gpuExecutionAccelerator_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator>();
         /// <summary>
         ///@@    .. cpp:var:: Accelerator gpu_execution_accelerator (repeated)
         ///@@
@@ -2665,15 +2665,15 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public pbc::RepeatedField<global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> GpuExecutionAccelerator {
+        public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> GpuExecutionAccelerator {
           get { return gpuExecutionAccelerator_; }
         }
 
         /// <summary>Field number for the "cpu_execution_accelerator" field.</summary>
         public const int CpuExecutionAcceleratorFieldNumber = 2;
-        private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> _repeated_cpuExecutionAccelerator_codec
-            = pb::FieldCodec.ForMessage(18, global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator.Parser);
-        private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> cpuExecutionAccelerator_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator>();
+        private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> _repeated_cpuExecutionAccelerator_codec
+            = pb::FieldCodec.ForMessage(18, global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator.Parser);
+        private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> cpuExecutionAccelerator_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator>();
         /// <summary>
         ///@@    .. cpp:var:: Accelerator cpu_execution_accelerator (repeated)
         ///@@
@@ -2685,7 +2685,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public pbc::RepeatedField<global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> CpuExecutionAccelerator {
+        public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Types.Accelerator> CpuExecutionAccelerator {
           get { return cpuExecutionAccelerator_; }
         }
 
@@ -2794,7 +2794,7 @@ namespace ModelAnalyzer.Client
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public static pbr::MessageDescriptor Descriptor {
-              get { return global::ModelAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Descriptor.NestedTypes[0]; }
+              get { return global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy.Types.ExecutionAccelerators.Descriptor.NestedTypes[0]; }
             }
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2973,7 +2973,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[6]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[6]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3190,7 +3190,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[7]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[7]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3235,8 +3235,8 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect Direct {
-      get { return strategyChoiceCase_ == StrategyChoiceOneofCase.Direct ? (global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect) strategyChoice_ : null; }
+    public global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect Direct {
+      get { return strategyChoiceCase_ == StrategyChoiceOneofCase.Direct ? (global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect) strategyChoice_ : null; }
       set {
         strategyChoice_ = value;
         strategyChoiceCase_ = value == null ? StrategyChoiceOneofCase.None : StrategyChoiceOneofCase.Direct;
@@ -3252,8 +3252,8 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest Oldest {
-      get { return strategyChoiceCase_ == StrategyChoiceOneofCase.Oldest ? (global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest) strategyChoice_ : null; }
+    public global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest Oldest {
+      get { return strategyChoiceCase_ == StrategyChoiceOneofCase.Oldest ? (global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest) strategyChoice_ : null; }
       set {
         strategyChoice_ = value;
         strategyChoiceCase_ = value == null ? StrategyChoiceOneofCase.None : StrategyChoiceOneofCase.Oldest;
@@ -3285,9 +3285,9 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "control_input" field.</summary>
     public const int ControlInputFieldNumber = 2;
-    private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.ModelSequenceBatching.Types.ControlInput> _repeated_controlInput_codec
-        = pb::FieldCodec.ForMessage(18, global::ModelAnalyzer.Client.ModelSequenceBatching.Types.ControlInput.Parser);
-    private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.ModelSequenceBatching.Types.ControlInput> controlInput_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.ModelSequenceBatching.Types.ControlInput>();
+    private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.ControlInput> _repeated_controlInput_codec
+        = pb::FieldCodec.ForMessage(18, global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.ControlInput.Parser);
+    private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.ControlInput> controlInput_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.ControlInput>();
     /// <summary>
     ///@@  .. cpp:var:: ControlInput control_input (repeated)
     ///@@
@@ -3297,7 +3297,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::ModelAnalyzer.Client.ModelSequenceBatching.Types.ControlInput> ControlInput {
+    public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.ControlInput> ControlInput {
       get { return controlInput_; }
     }
 
@@ -3411,13 +3411,13 @@ namespace ModelAnalyzer.Client
       switch (other.StrategyChoiceCase) {
         case StrategyChoiceOneofCase.Direct:
           if (Direct == null) {
-            Direct = new global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect();
+            Direct = new global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect();
           }
           Direct.MergeFrom(other.Direct);
           break;
         case StrategyChoiceOneofCase.Oldest:
           if (Oldest == null) {
-            Oldest = new global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest();
+            Oldest = new global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest();
           }
           Oldest.MergeFrom(other.Oldest);
           break;
@@ -3443,7 +3443,7 @@ namespace ModelAnalyzer.Client
             break;
           }
           case 26: {
-            global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect subBuilder = new global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect();
+            global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect subBuilder = new global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyDirect();
             if (strategyChoiceCase_ == StrategyChoiceOneofCase.Direct) {
               subBuilder.MergeFrom(Direct);
             }
@@ -3452,7 +3452,7 @@ namespace ModelAnalyzer.Client
             break;
           }
           case 34: {
-            global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest subBuilder = new global::ModelAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest();
+            global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest subBuilder = new global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.StrategyOldest();
             if (strategyChoiceCase_ == StrategyChoiceOneofCase.Oldest) {
               subBuilder.MergeFrom(Oldest);
             }
@@ -3483,7 +3483,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelSequenceBatching.Descriptor.NestedTypes[0]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Descriptor.NestedTypes[0]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3514,7 +3514,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "kind" field.</summary>
         public const int KindFieldNumber = 1;
-        private global::ModelAnalyzer.Client.ModelSequenceBatching.Types.Control.Types.Kind kind_ = 0;
+        private global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.Control.Types.Kind kind_ = 0;
         /// <summary>
         ///@@    .. cpp:var:: Kind kind
         ///@@
@@ -3522,7 +3522,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.ModelSequenceBatching.Types.Control.Types.Kind Kind {
+        public global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.Control.Types.Kind Kind {
           get { return kind_; }
           set {
             kind_ = value;
@@ -3571,7 +3571,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "data_type" field.</summary>
         public const int DataTypeFieldNumber = 4;
-        private global::ModelAnalyzer.Client.DataType dataType_ = 0;
+        private global::Triton.MemoryAnalyzer.Client.DataType dataType_ = 0;
         /// <summary>
         ///@@    .. cpp:var:: DataType data_type
         ///@@
@@ -3579,7 +3579,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.DataType DataType {
+        public global::Triton.MemoryAnalyzer.Client.DataType DataType {
           get { return dataType_; }
           set {
             dataType_ = value;
@@ -3683,7 +3683,7 @@ namespace ModelAnalyzer.Client
                 _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
                 break;
               case 8: {
-                Kind = (global::ModelAnalyzer.Client.ModelSequenceBatching.Types.Control.Types.Kind) input.ReadEnum();
+                Kind = (global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.Control.Types.Kind) input.ReadEnum();
                 break;
               }
               case 18:
@@ -3697,7 +3697,7 @@ namespace ModelAnalyzer.Client
                 break;
               }
               case 32: {
-                DataType = (global::ModelAnalyzer.Client.DataType) input.ReadEnum();
+                DataType = (global::Triton.MemoryAnalyzer.Client.DataType) input.ReadEnum();
                 break;
               }
             }
@@ -3781,7 +3781,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelSequenceBatching.Descriptor.NestedTypes[1]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Descriptor.NestedTypes[1]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3827,9 +3827,9 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "control" field.</summary>
         public const int ControlFieldNumber = 2;
-        private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.ModelSequenceBatching.Types.Control> _repeated_control_codec
-            = pb::FieldCodec.ForMessage(18, global::ModelAnalyzer.Client.ModelSequenceBatching.Types.Control.Parser);
-        private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.ModelSequenceBatching.Types.Control> control_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.ModelSequenceBatching.Types.Control>();
+        private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.Control> _repeated_control_codec
+            = pb::FieldCodec.ForMessage(18, global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.Control.Parser);
+        private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.Control> control_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.Control>();
         /// <summary>
         ///@@    .. cpp:var:: Control control (repeated)
         ///@@
@@ -3838,7 +3838,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public pbc::RepeatedField<global::ModelAnalyzer.Client.ModelSequenceBatching.Types.Control> Control {
+        public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Types.Control> Control {
           get { return control_; }
         }
 
@@ -3953,7 +3953,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelSequenceBatching.Descriptor.NestedTypes[2]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Descriptor.NestedTypes[2]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4067,7 +4067,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelSequenceBatching.Descriptor.NestedTypes[3]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching.Descriptor.NestedTypes[3]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4285,7 +4285,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[8]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[8]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4313,9 +4313,9 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "step" field.</summary>
     public const int StepFieldNumber = 1;
-    private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.ModelEnsembling.Types.Step> _repeated_step_codec
-        = pb::FieldCodec.ForMessage(10, global::ModelAnalyzer.Client.ModelEnsembling.Types.Step.Parser);
-    private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.ModelEnsembling.Types.Step> step_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.ModelEnsembling.Types.Step>();
+    private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.ModelEnsembling.Types.Step> _repeated_step_codec
+        = pb::FieldCodec.ForMessage(10, global::Triton.MemoryAnalyzer.Client.ModelEnsembling.Types.Step.Parser);
+    private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelEnsembling.Types.Step> step_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelEnsembling.Types.Step>();
     /// <summary>
     ///@@  .. cpp:var:: Step step (repeated)
     ///@@
@@ -4323,7 +4323,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::ModelAnalyzer.Client.ModelEnsembling.Types.Step> Step {
+    public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelEnsembling.Types.Step> Step {
       get { return step_; }
     }
 
@@ -4422,7 +4422,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelEnsembling.Descriptor.NestedTypes[0]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelEnsembling.Descriptor.NestedTypes[0]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4664,7 +4664,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[9]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[9]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4806,7 +4806,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[10]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[10]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -4873,9 +4873,9 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "inputs" field.</summary>
     public const int InputsFieldNumber = 3;
-    private static readonly pbc::MapField<string, global::ModelAnalyzer.Client.ModelWarmup.Types.Input>.Codec _map_inputs_codec
-        = new pbc::MapField<string, global::ModelAnalyzer.Client.ModelWarmup.Types.Input>.Codec(pb::FieldCodec.ForString(10), pb::FieldCodec.ForMessage(18, global::ModelAnalyzer.Client.ModelWarmup.Types.Input.Parser), 26);
-    private readonly pbc::MapField<string, global::ModelAnalyzer.Client.ModelWarmup.Types.Input> inputs_ = new pbc::MapField<string, global::ModelAnalyzer.Client.ModelWarmup.Types.Input>();
+    private static readonly pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelWarmup.Types.Input>.Codec _map_inputs_codec
+        = new pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelWarmup.Types.Input>.Codec(pb::FieldCodec.ForString(10), pb::FieldCodec.ForMessage(18, global::Triton.MemoryAnalyzer.Client.ModelWarmup.Types.Input.Parser), 26);
+    private readonly pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelWarmup.Types.Input> inputs_ = new pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelWarmup.Types.Input>();
     /// <summary>
     ///@@  .. cpp:var:: map&lt;string, Input> inputs
     ///@@
@@ -4884,7 +4884,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::MapField<string, global::ModelAnalyzer.Client.ModelWarmup.Types.Input> Inputs {
+    public pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelWarmup.Types.Input> Inputs {
       get { return inputs_; }
     }
 
@@ -5014,7 +5014,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.ModelWarmup.Descriptor.NestedTypes[0]; }
+          get { return global::Triton.MemoryAnalyzer.Client.ModelWarmup.Descriptor.NestedTypes[0]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5055,7 +5055,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "data_type" field.</summary>
         public const int DataTypeFieldNumber = 1;
-        private global::ModelAnalyzer.Client.DataType dataType_ = 0;
+        private global::Triton.MemoryAnalyzer.Client.DataType dataType_ = 0;
         /// <summary>
         ///@@    .. cpp:var:: DataType data_type
         ///@@
@@ -5063,7 +5063,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.DataType DataType {
+        public global::Triton.MemoryAnalyzer.Client.DataType DataType {
           get { return dataType_; }
           set {
             dataType_ = value;
@@ -5286,7 +5286,7 @@ namespace ModelAnalyzer.Client
                 _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
                 break;
               case 8: {
-                DataType = (global::ModelAnalyzer.Client.DataType) input.ReadEnum();
+                DataType = (global::Triton.MemoryAnalyzer.Client.DataType) input.ReadEnum();
                 break;
               }
               case 18:
@@ -5332,7 +5332,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[11]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor.MessageTypes[11]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -5421,7 +5421,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "version_policy" field.</summary>
     public const int VersionPolicyFieldNumber = 3;
-    private global::ModelAnalyzer.Client.ModelVersionPolicy versionPolicy_;
+    private global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy versionPolicy_;
     /// <summary>
     ///@@  .. cpp:var:: ModelVersionPolicy version_policy
     ///@@
@@ -5429,7 +5429,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelVersionPolicy VersionPolicy {
+    public global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy VersionPolicy {
       get { return versionPolicy_; }
       set {
         versionPolicy_ = value;
@@ -5468,9 +5468,9 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "input" field.</summary>
     public const int InputFieldNumber = 5;
-    private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.ModelInput> _repeated_input_codec
-        = pb::FieldCodec.ForMessage(42, global::ModelAnalyzer.Client.ModelInput.Parser);
-    private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.ModelInput> input_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.ModelInput>();
+    private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.ModelInput> _repeated_input_codec
+        = pb::FieldCodec.ForMessage(42, global::Triton.MemoryAnalyzer.Client.ModelInput.Parser);
+    private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelInput> input_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelInput>();
     /// <summary>
     ///@@  .. cpp:var:: ModelInput input (repeated)
     ///@@
@@ -5478,15 +5478,15 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::ModelAnalyzer.Client.ModelInput> Input {
+    public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelInput> Input {
       get { return input_; }
     }
 
     /// <summary>Field number for the "output" field.</summary>
     public const int OutputFieldNumber = 6;
-    private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.ModelOutput> _repeated_output_codec
-        = pb::FieldCodec.ForMessage(50, global::ModelAnalyzer.Client.ModelOutput.Parser);
-    private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.ModelOutput> output_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.ModelOutput>();
+    private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.ModelOutput> _repeated_output_codec
+        = pb::FieldCodec.ForMessage(50, global::Triton.MemoryAnalyzer.Client.ModelOutput.Parser);
+    private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelOutput> output_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelOutput>();
     /// <summary>
     ///@@  .. cpp:var:: ModelOutput output (repeated)
     ///@@
@@ -5494,13 +5494,13 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::ModelAnalyzer.Client.ModelOutput> Output {
+    public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelOutput> Output {
       get { return output_; }
     }
 
     /// <summary>Field number for the "optimization" field.</summary>
     public const int OptimizationFieldNumber = 12;
-    private global::ModelAnalyzer.Client.ModelOptimizationPolicy optimization_;
+    private global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy optimization_;
     /// <summary>
     ///@@  .. cpp:var:: ModelOptimizationPolicy optimization
     ///@@
@@ -5509,7 +5509,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelOptimizationPolicy Optimization {
+    public global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy Optimization {
       get { return optimization_; }
       set {
         optimization_ = value;
@@ -5528,8 +5528,8 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelDynamicBatching DynamicBatching {
-      get { return schedulingChoiceCase_ == SchedulingChoiceOneofCase.DynamicBatching ? (global::ModelAnalyzer.Client.ModelDynamicBatching) schedulingChoice_ : null; }
+    public global::Triton.MemoryAnalyzer.Client.ModelDynamicBatching DynamicBatching {
+      get { return schedulingChoiceCase_ == SchedulingChoiceOneofCase.DynamicBatching ? (global::Triton.MemoryAnalyzer.Client.ModelDynamicBatching) schedulingChoice_ : null; }
       set {
         schedulingChoice_ = value;
         schedulingChoiceCase_ = value == null ? SchedulingChoiceOneofCase.None : SchedulingChoiceOneofCase.DynamicBatching;
@@ -5550,8 +5550,8 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelSequenceBatching SequenceBatching {
-      get { return schedulingChoiceCase_ == SchedulingChoiceOneofCase.SequenceBatching ? (global::ModelAnalyzer.Client.ModelSequenceBatching) schedulingChoice_ : null; }
+    public global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching SequenceBatching {
+      get { return schedulingChoiceCase_ == SchedulingChoiceOneofCase.SequenceBatching ? (global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching) schedulingChoice_ : null; }
       set {
         schedulingChoice_ = value;
         schedulingChoiceCase_ = value == null ? SchedulingChoiceOneofCase.None : SchedulingChoiceOneofCase.SequenceBatching;
@@ -5572,8 +5572,8 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.ModelEnsembling EnsembleScheduling {
-      get { return schedulingChoiceCase_ == SchedulingChoiceOneofCase.EnsembleScheduling ? (global::ModelAnalyzer.Client.ModelEnsembling) schedulingChoice_ : null; }
+    public global::Triton.MemoryAnalyzer.Client.ModelEnsembling EnsembleScheduling {
+      get { return schedulingChoiceCase_ == SchedulingChoiceOneofCase.EnsembleScheduling ? (global::Triton.MemoryAnalyzer.Client.ModelEnsembling) schedulingChoice_ : null; }
       set {
         schedulingChoice_ = value;
         schedulingChoiceCase_ = value == null ? SchedulingChoiceOneofCase.None : SchedulingChoiceOneofCase.EnsembleScheduling;
@@ -5582,9 +5582,9 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "instance_group" field.</summary>
     public const int InstanceGroupFieldNumber = 7;
-    private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.ModelInstanceGroup> _repeated_instanceGroup_codec
-        = pb::FieldCodec.ForMessage(58, global::ModelAnalyzer.Client.ModelInstanceGroup.Parser);
-    private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.ModelInstanceGroup> instanceGroup_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.ModelInstanceGroup>();
+    private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.ModelInstanceGroup> _repeated_instanceGroup_codec
+        = pb::FieldCodec.ForMessage(58, global::Triton.MemoryAnalyzer.Client.ModelInstanceGroup.Parser);
+    private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelInstanceGroup> instanceGroup_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelInstanceGroup>();
     /// <summary>
     ///@@  .. cpp:var:: ModelInstanceGroup instance_group (repeated)
     ///@@
@@ -5593,7 +5593,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::ModelAnalyzer.Client.ModelInstanceGroup> InstanceGroup {
+    public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelInstanceGroup> InstanceGroup {
       get { return instanceGroup_; }
     }
 
@@ -5656,9 +5656,9 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "parameters" field.</summary>
     public const int ParametersFieldNumber = 14;
-    private static readonly pbc::MapField<string, global::ModelAnalyzer.Client.ModelParameter>.Codec _map_parameters_codec
-        = new pbc::MapField<string, global::ModelAnalyzer.Client.ModelParameter>.Codec(pb::FieldCodec.ForString(10), pb::FieldCodec.ForMessage(18, global::ModelAnalyzer.Client.ModelParameter.Parser), 114);
-    private readonly pbc::MapField<string, global::ModelAnalyzer.Client.ModelParameter> parameters_ = new pbc::MapField<string, global::ModelAnalyzer.Client.ModelParameter>();
+    private static readonly pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelParameter>.Codec _map_parameters_codec
+        = new pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelParameter>.Codec(pb::FieldCodec.ForString(10), pb::FieldCodec.ForMessage(18, global::Triton.MemoryAnalyzer.Client.ModelParameter.Parser), 114);
+    private readonly pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelParameter> parameters_ = new pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelParameter>();
     /// <summary>
     ///@@  .. cpp:var:: map&lt;string,ModelParameter> parameters
     ///@@
@@ -5667,15 +5667,15 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::MapField<string, global::ModelAnalyzer.Client.ModelParameter> Parameters {
+    public pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelParameter> Parameters {
       get { return parameters_; }
     }
 
     /// <summary>Field number for the "model_warmup" field.</summary>
     public const int ModelWarmupFieldNumber = 16;
-    private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.ModelWarmup> _repeated_modelWarmup_codec
-        = pb::FieldCodec.ForMessage(130, global::ModelAnalyzer.Client.ModelWarmup.Parser);
-    private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.ModelWarmup> modelWarmup_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.ModelWarmup>();
+    private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.ModelWarmup> _repeated_modelWarmup_codec
+        = pb::FieldCodec.ForMessage(130, global::Triton.MemoryAnalyzer.Client.ModelWarmup.Parser);
+    private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelWarmup> modelWarmup_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelWarmup>();
     /// <summary>
     ///@@  .. cpp:var:: ModelWarmup model_warmup (repeated)
     ///@@
@@ -5687,7 +5687,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::ModelAnalyzer.Client.ModelWarmup> ModelWarmup {
+    public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelWarmup> ModelWarmup {
       get { return modelWarmup_; }
     }
 
@@ -5881,7 +5881,7 @@ namespace ModelAnalyzer.Client
       }
       if (other.versionPolicy_ != null) {
         if (versionPolicy_ == null) {
-          VersionPolicy = new global::ModelAnalyzer.Client.ModelVersionPolicy();
+          VersionPolicy = new global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy();
         }
         VersionPolicy.MergeFrom(other.VersionPolicy);
       }
@@ -5892,7 +5892,7 @@ namespace ModelAnalyzer.Client
       output_.Add(other.output_);
       if (other.optimization_ != null) {
         if (optimization_ == null) {
-          Optimization = new global::ModelAnalyzer.Client.ModelOptimizationPolicy();
+          Optimization = new global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy();
         }
         Optimization.MergeFrom(other.Optimization);
       }
@@ -5907,19 +5907,19 @@ namespace ModelAnalyzer.Client
       switch (other.SchedulingChoiceCase) {
         case SchedulingChoiceOneofCase.DynamicBatching:
           if (DynamicBatching == null) {
-            DynamicBatching = new global::ModelAnalyzer.Client.ModelDynamicBatching();
+            DynamicBatching = new global::Triton.MemoryAnalyzer.Client.ModelDynamicBatching();
           }
           DynamicBatching.MergeFrom(other.DynamicBatching);
           break;
         case SchedulingChoiceOneofCase.SequenceBatching:
           if (SequenceBatching == null) {
-            SequenceBatching = new global::ModelAnalyzer.Client.ModelSequenceBatching();
+            SequenceBatching = new global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching();
           }
           SequenceBatching.MergeFrom(other.SequenceBatching);
           break;
         case SchedulingChoiceOneofCase.EnsembleScheduling:
           if (EnsembleScheduling == null) {
-            EnsembleScheduling = new global::ModelAnalyzer.Client.ModelEnsembling();
+            EnsembleScheduling = new global::Triton.MemoryAnalyzer.Client.ModelEnsembling();
           }
           EnsembleScheduling.MergeFrom(other.EnsembleScheduling);
           break;
@@ -5946,7 +5946,7 @@ namespace ModelAnalyzer.Client
           }
           case 26: {
             if (versionPolicy_ == null) {
-              VersionPolicy = new global::ModelAnalyzer.Client.ModelVersionPolicy();
+              VersionPolicy = new global::Triton.MemoryAnalyzer.Client.ModelVersionPolicy();
             }
             input.ReadMessage(VersionPolicy);
             break;
@@ -5980,7 +5980,7 @@ namespace ModelAnalyzer.Client
             break;
           }
           case 90: {
-            global::ModelAnalyzer.Client.ModelDynamicBatching subBuilder = new global::ModelAnalyzer.Client.ModelDynamicBatching();
+            global::Triton.MemoryAnalyzer.Client.ModelDynamicBatching subBuilder = new global::Triton.MemoryAnalyzer.Client.ModelDynamicBatching();
             if (schedulingChoiceCase_ == SchedulingChoiceOneofCase.DynamicBatching) {
               subBuilder.MergeFrom(DynamicBatching);
             }
@@ -5990,13 +5990,13 @@ namespace ModelAnalyzer.Client
           }
           case 98: {
             if (optimization_ == null) {
-              Optimization = new global::ModelAnalyzer.Client.ModelOptimizationPolicy();
+              Optimization = new global::Triton.MemoryAnalyzer.Client.ModelOptimizationPolicy();
             }
             input.ReadMessage(Optimization);
             break;
           }
           case 106: {
-            global::ModelAnalyzer.Client.ModelSequenceBatching subBuilder = new global::ModelAnalyzer.Client.ModelSequenceBatching();
+            global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching subBuilder = new global::Triton.MemoryAnalyzer.Client.ModelSequenceBatching();
             if (schedulingChoiceCase_ == SchedulingChoiceOneofCase.SequenceBatching) {
               subBuilder.MergeFrom(SequenceBatching);
             }
@@ -6009,7 +6009,7 @@ namespace ModelAnalyzer.Client
             break;
           }
           case 122: {
-            global::ModelAnalyzer.Client.ModelEnsembling subBuilder = new global::ModelAnalyzer.Client.ModelEnsembling();
+            global::Triton.MemoryAnalyzer.Client.ModelEnsembling subBuilder = new global::Triton.MemoryAnalyzer.Client.ModelEnsembling();
             if (schedulingChoiceCase_ == SchedulingChoiceOneofCase.EnsembleScheduling) {
               subBuilder.MergeFrom(EnsembleScheduling);
             }

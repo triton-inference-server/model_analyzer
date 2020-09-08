@@ -34,7 +34,7 @@
 
 using grpc = global::Grpc.Core;
 
-namespace ModelAnalyzer.Client
+namespace Triton.MemoryAnalyzer.Client
 {
     /// <summary>
     ///@@
@@ -47,62 +47,62 @@ namespace ModelAnalyzer.Client
   {
     static readonly string __ServiceName = "nvidia.inferenceserver.GRPCService";
 
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.StatusRequest> __Marshaller_nvidia_inferenceserver_StatusRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.StatusRequest.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.StatusResponse> __Marshaller_nvidia_inferenceserver_StatusResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.StatusResponse.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.HealthRequest> __Marshaller_nvidia_inferenceserver_HealthRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.HealthRequest.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.HealthResponse> __Marshaller_nvidia_inferenceserver_HealthResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.HealthResponse.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.InferRequest> __Marshaller_nvidia_inferenceserver_InferRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.InferRequest.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.InferResponse> __Marshaller_nvidia_inferenceserver_InferResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.InferResponse.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.ModelControlRequest> __Marshaller_nvidia_inferenceserver_ModelControlRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.ModelControlRequest.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.ModelControlResponse> __Marshaller_nvidia_inferenceserver_ModelControlResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.ModelControlResponse.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.SharedMemoryControlRequest> __Marshaller_nvidia_inferenceserver_SharedMemoryControlRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.SharedMemoryControlRequest.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.SharedMemoryControlResponse> __Marshaller_nvidia_inferenceserver_SharedMemoryControlResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.SharedMemoryControlResponse.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.RepositoryRequest> __Marshaller_nvidia_inferenceserver_RepositoryRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.RepositoryRequest.Parser.ParseFrom);
-    static readonly grpc::Marshaller<global::ModelAnalyzer.Client.RepositoryResponse> __Marshaller_nvidia_inferenceserver_RepositoryResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::ModelAnalyzer.Client.RepositoryResponse.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.StatusRequest> __Marshaller_nvidia_inferenceserver_StatusRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.StatusRequest.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.StatusResponse> __Marshaller_nvidia_inferenceserver_StatusResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.StatusResponse.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.HealthRequest> __Marshaller_nvidia_inferenceserver_HealthRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.HealthRequest.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.HealthResponse> __Marshaller_nvidia_inferenceserver_HealthResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.HealthResponse.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.InferRequest> __Marshaller_nvidia_inferenceserver_InferRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.InferRequest.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.InferResponse> __Marshaller_nvidia_inferenceserver_InferResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.InferResponse.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.ModelControlRequest> __Marshaller_nvidia_inferenceserver_ModelControlRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.ModelControlRequest.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.ModelControlResponse> __Marshaller_nvidia_inferenceserver_ModelControlResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.ModelControlResponse.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequest> __Marshaller_nvidia_inferenceserver_SharedMemoryControlRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequest.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.SharedMemoryControlResponse> __Marshaller_nvidia_inferenceserver_SharedMemoryControlResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.SharedMemoryControlResponse.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.RepositoryRequest> __Marshaller_nvidia_inferenceserver_RepositoryRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.RepositoryRequest.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::Triton.MemoryAnalyzer.Client.RepositoryResponse> __Marshaller_nvidia_inferenceserver_RepositoryResponse = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::Triton.MemoryAnalyzer.Client.RepositoryResponse.Parser.ParseFrom);
 
-    static readonly grpc::Method<global::ModelAnalyzer.Client.StatusRequest, global::ModelAnalyzer.Client.StatusResponse> __Method_Status = new grpc::Method<global::ModelAnalyzer.Client.StatusRequest, global::ModelAnalyzer.Client.StatusResponse>(
+    static readonly grpc::Method<global::Triton.MemoryAnalyzer.Client.StatusRequest, global::Triton.MemoryAnalyzer.Client.StatusResponse> __Method_Status = new grpc::Method<global::Triton.MemoryAnalyzer.Client.StatusRequest, global::Triton.MemoryAnalyzer.Client.StatusResponse>(
         grpc::MethodType.Unary,
         __ServiceName,
         "Status",
         __Marshaller_nvidia_inferenceserver_StatusRequest,
         __Marshaller_nvidia_inferenceserver_StatusResponse);
 
-    static readonly grpc::Method<global::ModelAnalyzer.Client.HealthRequest, global::ModelAnalyzer.Client.HealthResponse> __Method_Health = new grpc::Method<global::ModelAnalyzer.Client.HealthRequest, global::ModelAnalyzer.Client.HealthResponse>(
+    static readonly grpc::Method<global::Triton.MemoryAnalyzer.Client.HealthRequest, global::Triton.MemoryAnalyzer.Client.HealthResponse> __Method_Health = new grpc::Method<global::Triton.MemoryAnalyzer.Client.HealthRequest, global::Triton.MemoryAnalyzer.Client.HealthResponse>(
         grpc::MethodType.Unary,
         __ServiceName,
         "Health",
         __Marshaller_nvidia_inferenceserver_HealthRequest,
         __Marshaller_nvidia_inferenceserver_HealthResponse);
 
-    static readonly grpc::Method<global::ModelAnalyzer.Client.InferRequest, global::ModelAnalyzer.Client.InferResponse> __Method_Infer = new grpc::Method<global::ModelAnalyzer.Client.InferRequest, global::ModelAnalyzer.Client.InferResponse>(
+    static readonly grpc::Method<global::Triton.MemoryAnalyzer.Client.InferRequest, global::Triton.MemoryAnalyzer.Client.InferResponse> __Method_Infer = new grpc::Method<global::Triton.MemoryAnalyzer.Client.InferRequest, global::Triton.MemoryAnalyzer.Client.InferResponse>(
         grpc::MethodType.Unary,
         __ServiceName,
         "Infer",
         __Marshaller_nvidia_inferenceserver_InferRequest,
         __Marshaller_nvidia_inferenceserver_InferResponse);
 
-    static readonly grpc::Method<global::ModelAnalyzer.Client.InferRequest, global::ModelAnalyzer.Client.InferResponse> __Method_StreamInfer = new grpc::Method<global::ModelAnalyzer.Client.InferRequest, global::ModelAnalyzer.Client.InferResponse>(
+    static readonly grpc::Method<global::Triton.MemoryAnalyzer.Client.InferRequest, global::Triton.MemoryAnalyzer.Client.InferResponse> __Method_StreamInfer = new grpc::Method<global::Triton.MemoryAnalyzer.Client.InferRequest, global::Triton.MemoryAnalyzer.Client.InferResponse>(
         grpc::MethodType.DuplexStreaming,
         __ServiceName,
         "StreamInfer",
         __Marshaller_nvidia_inferenceserver_InferRequest,
         __Marshaller_nvidia_inferenceserver_InferResponse);
 
-    static readonly grpc::Method<global::ModelAnalyzer.Client.ModelControlRequest, global::ModelAnalyzer.Client.ModelControlResponse> __Method_ModelControl = new grpc::Method<global::ModelAnalyzer.Client.ModelControlRequest, global::ModelAnalyzer.Client.ModelControlResponse>(
+    static readonly grpc::Method<global::Triton.MemoryAnalyzer.Client.ModelControlRequest, global::Triton.MemoryAnalyzer.Client.ModelControlResponse> __Method_ModelControl = new grpc::Method<global::Triton.MemoryAnalyzer.Client.ModelControlRequest, global::Triton.MemoryAnalyzer.Client.ModelControlResponse>(
         grpc::MethodType.Unary,
         __ServiceName,
         "ModelControl",
         __Marshaller_nvidia_inferenceserver_ModelControlRequest,
         __Marshaller_nvidia_inferenceserver_ModelControlResponse);
 
-    static readonly grpc::Method<global::ModelAnalyzer.Client.SharedMemoryControlRequest, global::ModelAnalyzer.Client.SharedMemoryControlResponse> __Method_SharedMemoryControl = new grpc::Method<global::ModelAnalyzer.Client.SharedMemoryControlRequest, global::ModelAnalyzer.Client.SharedMemoryControlResponse>(
+    static readonly grpc::Method<global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequest, global::Triton.MemoryAnalyzer.Client.SharedMemoryControlResponse> __Method_SharedMemoryControl = new grpc::Method<global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequest, global::Triton.MemoryAnalyzer.Client.SharedMemoryControlResponse>(
         grpc::MethodType.Unary,
         __ServiceName,
         "SharedMemoryControl",
         __Marshaller_nvidia_inferenceserver_SharedMemoryControlRequest,
         __Marshaller_nvidia_inferenceserver_SharedMemoryControlResponse);
 
-    static readonly grpc::Method<global::ModelAnalyzer.Client.RepositoryRequest, global::ModelAnalyzer.Client.RepositoryResponse> __Method_Repository = new grpc::Method<global::ModelAnalyzer.Client.RepositoryRequest, global::ModelAnalyzer.Client.RepositoryResponse>(
+    static readonly grpc::Method<global::Triton.MemoryAnalyzer.Client.RepositoryRequest, global::Triton.MemoryAnalyzer.Client.RepositoryResponse> __Method_Repository = new grpc::Method<global::Triton.MemoryAnalyzer.Client.RepositoryRequest, global::Triton.MemoryAnalyzer.Client.RepositoryResponse>(
         grpc::MethodType.Unary,
         __ServiceName,
         "Repository",
@@ -112,7 +112,7 @@ namespace ModelAnalyzer.Client
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
     {
-      get { return global::ModelAnalyzer.Client.GrpcServiceReflection.Descriptor.Services[0]; }
+      get { return global::Triton.MemoryAnalyzer.Client.GrpcServiceReflection.Descriptor.Services[0]; }
     }
 
     /// <summary>Base class for server-side implementations of GRPCService</summary>
@@ -127,7 +127,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
-      public virtual global::System.Threading.Tasks.Task<global::ModelAnalyzer.Client.StatusResponse> Status(global::ModelAnalyzer.Client.StatusRequest request, grpc::ServerCallContext context)
+      public virtual global::System.Threading.Tasks.Task<global::Triton.MemoryAnalyzer.Client.StatusResponse> Status(global::Triton.MemoryAnalyzer.Client.StatusRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -141,7 +141,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
-      public virtual global::System.Threading.Tasks.Task<global::ModelAnalyzer.Client.HealthResponse> Health(global::ModelAnalyzer.Client.HealthRequest request, grpc::ServerCallContext context)
+      public virtual global::System.Threading.Tasks.Task<global::Triton.MemoryAnalyzer.Client.HealthResponse> Health(global::Triton.MemoryAnalyzer.Client.HealthRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -157,7 +157,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
-      public virtual global::System.Threading.Tasks.Task<global::ModelAnalyzer.Client.InferResponse> Infer(global::ModelAnalyzer.Client.InferRequest request, grpc::ServerCallContext context)
+      public virtual global::System.Threading.Tasks.Task<global::Triton.MemoryAnalyzer.Client.InferResponse> Infer(global::Triton.MemoryAnalyzer.Client.InferRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -175,7 +175,7 @@ namespace ModelAnalyzer.Client
       /// <param name="responseStream">Used for sending responses back to the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>A task indicating completion of the handler.</returns>
-      public virtual global::System.Threading.Tasks.Task StreamInfer(grpc::IAsyncStreamReader<global::ModelAnalyzer.Client.InferRequest> requestStream, grpc::IServerStreamWriter<global::ModelAnalyzer.Client.InferResponse> responseStream, grpc::ServerCallContext context)
+      public virtual global::System.Threading.Tasks.Task StreamInfer(grpc::IAsyncStreamReader<global::Triton.MemoryAnalyzer.Client.InferRequest> requestStream, grpc::IServerStreamWriter<global::Triton.MemoryAnalyzer.Client.InferResponse> responseStream, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -190,7 +190,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
-      public virtual global::System.Threading.Tasks.Task<global::ModelAnalyzer.Client.ModelControlResponse> ModelControl(global::ModelAnalyzer.Client.ModelControlRequest request, grpc::ServerCallContext context)
+      public virtual global::System.Threading.Tasks.Task<global::Triton.MemoryAnalyzer.Client.ModelControlResponse> ModelControl(global::Triton.MemoryAnalyzer.Client.ModelControlRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -205,7 +205,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
-      public virtual global::System.Threading.Tasks.Task<global::ModelAnalyzer.Client.SharedMemoryControlResponse> SharedMemoryControl(global::ModelAnalyzer.Client.SharedMemoryControlRequest request, grpc::ServerCallContext context)
+      public virtual global::System.Threading.Tasks.Task<global::Triton.MemoryAnalyzer.Client.SharedMemoryControlResponse> SharedMemoryControl(global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -219,7 +219,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request received from the client.</param>
       /// <param name="context">The context of the server-side call handler being invoked.</param>
       /// <returns>The response to send back to the client (wrapped by a task).</returns>
-      public virtual global::System.Threading.Tasks.Task<global::ModelAnalyzer.Client.RepositoryResponse> Repository(global::ModelAnalyzer.Client.RepositoryRequest request, grpc::ServerCallContext context)
+      public virtual global::System.Threading.Tasks.Task<global::Triton.MemoryAnalyzer.Client.RepositoryResponse> Repository(global::Triton.MemoryAnalyzer.Client.RepositoryRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -260,7 +260,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.StatusResponse Status(global::ModelAnalyzer.Client.StatusRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual global::Triton.MemoryAnalyzer.Client.StatusResponse Status(global::Triton.MemoryAnalyzer.Client.StatusRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return Status(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -273,7 +273,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.StatusResponse Status(global::ModelAnalyzer.Client.StatusRequest request, grpc::CallOptions options)
+      public virtual global::Triton.MemoryAnalyzer.Client.StatusResponse Status(global::Triton.MemoryAnalyzer.Client.StatusRequest request, grpc::CallOptions options)
       {
         return CallInvoker.BlockingUnaryCall(__Method_Status, null, options, request);
       }
@@ -288,7 +288,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.StatusResponse> StatusAsync(global::ModelAnalyzer.Client.StatusRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.StatusResponse> StatusAsync(global::Triton.MemoryAnalyzer.Client.StatusRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return StatusAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -301,7 +301,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.StatusResponse> StatusAsync(global::ModelAnalyzer.Client.StatusRequest request, grpc::CallOptions options)
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.StatusResponse> StatusAsync(global::Triton.MemoryAnalyzer.Client.StatusRequest request, grpc::CallOptions options)
       {
         return CallInvoker.AsyncUnaryCall(__Method_Status, null, options, request);
       }
@@ -316,7 +316,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.HealthResponse Health(global::ModelAnalyzer.Client.HealthRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual global::Triton.MemoryAnalyzer.Client.HealthResponse Health(global::Triton.MemoryAnalyzer.Client.HealthRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return Health(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -329,7 +329,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.HealthResponse Health(global::ModelAnalyzer.Client.HealthRequest request, grpc::CallOptions options)
+      public virtual global::Triton.MemoryAnalyzer.Client.HealthResponse Health(global::Triton.MemoryAnalyzer.Client.HealthRequest request, grpc::CallOptions options)
       {
         return CallInvoker.BlockingUnaryCall(__Method_Health, null, options, request);
       }
@@ -344,7 +344,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.HealthResponse> HealthAsync(global::ModelAnalyzer.Client.HealthRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.HealthResponse> HealthAsync(global::Triton.MemoryAnalyzer.Client.HealthRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return HealthAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -357,7 +357,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.HealthResponse> HealthAsync(global::ModelAnalyzer.Client.HealthRequest request, grpc::CallOptions options)
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.HealthResponse> HealthAsync(global::Triton.MemoryAnalyzer.Client.HealthRequest request, grpc::CallOptions options)
       {
         return CallInvoker.AsyncUnaryCall(__Method_Health, null, options, request);
       }
@@ -374,7 +374,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.InferResponse Infer(global::ModelAnalyzer.Client.InferRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual global::Triton.MemoryAnalyzer.Client.InferResponse Infer(global::Triton.MemoryAnalyzer.Client.InferRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return Infer(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -389,7 +389,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.InferResponse Infer(global::ModelAnalyzer.Client.InferRequest request, grpc::CallOptions options)
+      public virtual global::Triton.MemoryAnalyzer.Client.InferResponse Infer(global::Triton.MemoryAnalyzer.Client.InferRequest request, grpc::CallOptions options)
       {
         return CallInvoker.BlockingUnaryCall(__Method_Infer, null, options, request);
       }
@@ -406,7 +406,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.InferResponse> InferAsync(global::ModelAnalyzer.Client.InferRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.InferResponse> InferAsync(global::Triton.MemoryAnalyzer.Client.InferRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return InferAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -421,7 +421,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.InferResponse> InferAsync(global::ModelAnalyzer.Client.InferRequest request, grpc::CallOptions options)
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.InferResponse> InferAsync(global::Triton.MemoryAnalyzer.Client.InferRequest request, grpc::CallOptions options)
       {
         return CallInvoker.AsyncUnaryCall(__Method_Infer, null, options, request);
       }
@@ -438,7 +438,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncDuplexStreamingCall<global::ModelAnalyzer.Client.InferRequest, global::ModelAnalyzer.Client.InferResponse> StreamInfer(grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncDuplexStreamingCall<global::Triton.MemoryAnalyzer.Client.InferRequest, global::Triton.MemoryAnalyzer.Client.InferResponse> StreamInfer(grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return StreamInfer(new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -453,7 +453,7 @@ namespace ModelAnalyzer.Client
       /// </summary>
       /// <param name="options">The options for the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncDuplexStreamingCall<global::ModelAnalyzer.Client.InferRequest, global::ModelAnalyzer.Client.InferResponse> StreamInfer(grpc::CallOptions options)
+      public virtual grpc::AsyncDuplexStreamingCall<global::Triton.MemoryAnalyzer.Client.InferRequest, global::Triton.MemoryAnalyzer.Client.InferResponse> StreamInfer(grpc::CallOptions options)
       {
         return CallInvoker.AsyncDuplexStreamingCall(__Method_StreamInfer, null, options);
       }
@@ -469,7 +469,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.ModelControlResponse ModelControl(global::ModelAnalyzer.Client.ModelControlRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual global::Triton.MemoryAnalyzer.Client.ModelControlResponse ModelControl(global::Triton.MemoryAnalyzer.Client.ModelControlRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return ModelControl(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -483,7 +483,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.ModelControlResponse ModelControl(global::ModelAnalyzer.Client.ModelControlRequest request, grpc::CallOptions options)
+      public virtual global::Triton.MemoryAnalyzer.Client.ModelControlResponse ModelControl(global::Triton.MemoryAnalyzer.Client.ModelControlRequest request, grpc::CallOptions options)
       {
         return CallInvoker.BlockingUnaryCall(__Method_ModelControl, null, options, request);
       }
@@ -499,7 +499,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.ModelControlResponse> ModelControlAsync(global::ModelAnalyzer.Client.ModelControlRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.ModelControlResponse> ModelControlAsync(global::Triton.MemoryAnalyzer.Client.ModelControlRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return ModelControlAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -513,7 +513,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.ModelControlResponse> ModelControlAsync(global::ModelAnalyzer.Client.ModelControlRequest request, grpc::CallOptions options)
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.ModelControlResponse> ModelControlAsync(global::Triton.MemoryAnalyzer.Client.ModelControlRequest request, grpc::CallOptions options)
       {
         return CallInvoker.AsyncUnaryCall(__Method_ModelControl, null, options, request);
       }
@@ -529,7 +529,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.SharedMemoryControlResponse SharedMemoryControl(global::ModelAnalyzer.Client.SharedMemoryControlRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual global::Triton.MemoryAnalyzer.Client.SharedMemoryControlResponse SharedMemoryControl(global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return SharedMemoryControl(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -543,7 +543,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.SharedMemoryControlResponse SharedMemoryControl(global::ModelAnalyzer.Client.SharedMemoryControlRequest request, grpc::CallOptions options)
+      public virtual global::Triton.MemoryAnalyzer.Client.SharedMemoryControlResponse SharedMemoryControl(global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequest request, grpc::CallOptions options)
       {
         return CallInvoker.BlockingUnaryCall(__Method_SharedMemoryControl, null, options, request);
       }
@@ -559,7 +559,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.SharedMemoryControlResponse> SharedMemoryControlAsync(global::ModelAnalyzer.Client.SharedMemoryControlRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.SharedMemoryControlResponse> SharedMemoryControlAsync(global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return SharedMemoryControlAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -573,7 +573,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.SharedMemoryControlResponse> SharedMemoryControlAsync(global::ModelAnalyzer.Client.SharedMemoryControlRequest request, grpc::CallOptions options)
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.SharedMemoryControlResponse> SharedMemoryControlAsync(global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequest request, grpc::CallOptions options)
       {
         return CallInvoker.AsyncUnaryCall(__Method_SharedMemoryControl, null, options, request);
       }
@@ -588,7 +588,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.RepositoryResponse Repository(global::ModelAnalyzer.Client.RepositoryRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual global::Triton.MemoryAnalyzer.Client.RepositoryResponse Repository(global::Triton.MemoryAnalyzer.Client.RepositoryRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return Repository(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -601,7 +601,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The response received from the server.</returns>
-      public virtual global::ModelAnalyzer.Client.RepositoryResponse Repository(global::ModelAnalyzer.Client.RepositoryRequest request, grpc::CallOptions options)
+      public virtual global::Triton.MemoryAnalyzer.Client.RepositoryResponse Repository(global::Triton.MemoryAnalyzer.Client.RepositoryRequest request, grpc::CallOptions options)
       {
         return CallInvoker.BlockingUnaryCall(__Method_Repository, null, options, request);
       }
@@ -616,7 +616,7 @@ namespace ModelAnalyzer.Client
       /// <param name="deadline">An optional deadline for the call. The call will be cancelled if deadline is hit.</param>
       /// <param name="cancellationToken">An optional token for canceling the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.RepositoryResponse> RepositoryAsync(global::ModelAnalyzer.Client.RepositoryRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.RepositoryResponse> RepositoryAsync(global::Triton.MemoryAnalyzer.Client.RepositoryRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
       {
         return RepositoryAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
       }
@@ -629,7 +629,7 @@ namespace ModelAnalyzer.Client
       /// <param name="request">The request to send to the server.</param>
       /// <param name="options">The options for the call.</param>
       /// <returns>The call object.</returns>
-      public virtual grpc::AsyncUnaryCall<global::ModelAnalyzer.Client.RepositoryResponse> RepositoryAsync(global::ModelAnalyzer.Client.RepositoryRequest request, grpc::CallOptions options)
+      public virtual grpc::AsyncUnaryCall<global::Triton.MemoryAnalyzer.Client.RepositoryResponse> RepositoryAsync(global::Triton.MemoryAnalyzer.Client.RepositoryRequest request, grpc::CallOptions options)
       {
         return CallInvoker.AsyncUnaryCall(__Method_Repository, null, options, request);
       }
@@ -660,13 +660,13 @@ namespace ModelAnalyzer.Client
     /// <param name="serviceImpl">An object implementing the server-side handling logic.</param>
     public static void BindService(grpc::ServiceBinderBase serviceBinder, GRPCServiceBase serviceImpl)
     {
-      serviceBinder.AddMethod(__Method_Status, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::ModelAnalyzer.Client.StatusRequest, global::ModelAnalyzer.Client.StatusResponse>(serviceImpl.Status));
-      serviceBinder.AddMethod(__Method_Health, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::ModelAnalyzer.Client.HealthRequest, global::ModelAnalyzer.Client.HealthResponse>(serviceImpl.Health));
-      serviceBinder.AddMethod(__Method_Infer, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::ModelAnalyzer.Client.InferRequest, global::ModelAnalyzer.Client.InferResponse>(serviceImpl.Infer));
-      serviceBinder.AddMethod(__Method_StreamInfer, serviceImpl == null ? null : new grpc::DuplexStreamingServerMethod<global::ModelAnalyzer.Client.InferRequest, global::ModelAnalyzer.Client.InferResponse>(serviceImpl.StreamInfer));
-      serviceBinder.AddMethod(__Method_ModelControl, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::ModelAnalyzer.Client.ModelControlRequest, global::ModelAnalyzer.Client.ModelControlResponse>(serviceImpl.ModelControl));
-      serviceBinder.AddMethod(__Method_SharedMemoryControl, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::ModelAnalyzer.Client.SharedMemoryControlRequest, global::ModelAnalyzer.Client.SharedMemoryControlResponse>(serviceImpl.SharedMemoryControl));
-      serviceBinder.AddMethod(__Method_Repository, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::ModelAnalyzer.Client.RepositoryRequest, global::ModelAnalyzer.Client.RepositoryResponse>(serviceImpl.Repository));
+      serviceBinder.AddMethod(__Method_Status, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Triton.MemoryAnalyzer.Client.StatusRequest, global::Triton.MemoryAnalyzer.Client.StatusResponse>(serviceImpl.Status));
+      serviceBinder.AddMethod(__Method_Health, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Triton.MemoryAnalyzer.Client.HealthRequest, global::Triton.MemoryAnalyzer.Client.HealthResponse>(serviceImpl.Health));
+      serviceBinder.AddMethod(__Method_Infer, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Triton.MemoryAnalyzer.Client.InferRequest, global::Triton.MemoryAnalyzer.Client.InferResponse>(serviceImpl.Infer));
+      serviceBinder.AddMethod(__Method_StreamInfer, serviceImpl == null ? null : new grpc::DuplexStreamingServerMethod<global::Triton.MemoryAnalyzer.Client.InferRequest, global::Triton.MemoryAnalyzer.Client.InferResponse>(serviceImpl.StreamInfer));
+      serviceBinder.AddMethod(__Method_ModelControl, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Triton.MemoryAnalyzer.Client.ModelControlRequest, global::Triton.MemoryAnalyzer.Client.ModelControlResponse>(serviceImpl.ModelControl));
+      serviceBinder.AddMethod(__Method_SharedMemoryControl, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequest, global::Triton.MemoryAnalyzer.Client.SharedMemoryControlResponse>(serviceImpl.SharedMemoryControl));
+      serviceBinder.AddMethod(__Method_Repository, serviceImpl == null ? null : new grpc::UnaryServerMethod<global::Triton.MemoryAnalyzer.Client.RepositoryRequest, global::Triton.MemoryAnalyzer.Client.RepositoryResponse>(serviceImpl.Repository));
     }
 
   }

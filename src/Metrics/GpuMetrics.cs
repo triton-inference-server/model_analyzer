@@ -16,7 +16,7 @@ limitations under the License.
 
 using System;
 
-namespace ModelAnalyzer.Metrics
+namespace Triton.MemoryAnalyzer.Metrics
 {
     /// <summary>
     /// GPU metrics interface
