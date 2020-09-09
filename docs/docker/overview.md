@@ -21,7 +21,7 @@ limitations under the License.
 2. Run the below command, replacing the capitalized arguments:
 
         docker run -v /var/run/docker.sock:/var/run/docker.sock \
-        -v /ABSOLUTE/PATH/TO/MODELS:ABSOLUTE/PATH/TO/MODELS \
+        -v /ABSOLUTE/PATH/TO/MODELS:/ABSOLUTE/PATH/TO/MODELS \
         -v /ABSOLUTE/PATH/TO/EXPORT/DIRECTORY:/results --net=host \
         model-analyzer:ANALYZER-VERSION \
         --batch BATCH-SIZES --concurrency CONCURRENCY-VALUES \
@@ -33,13 +33,13 @@ limitations under the License.
 Please reference the below sample command:
 
         docker run -v /var/run/docker.sock:/var/run/docker.sock \
-        -v /home/user/models:/home/user/models \
-        -v /home/user/results:/results --net=host \
+        -v /home/user1/models:/home/user1/models \
+        -v /home/user1/results:/results --net=host \
         model-analyzer:0.7.3-2008.1 \
         --batch 1,4,8 --concurrency 2,4,8 \
         --model-names chest_xray,covid19_xray\
         --triton-version 20.02-py3 \
-        --model-folder /home/user/models \
+        --model-folder /home/user1/models \
         --export --export-path /results/
 
 3. When the container completes running, you will see the results output to the screen. If you enabled the `--export` flag, navigate to your specified export directory to find the exported results in CSV format.
