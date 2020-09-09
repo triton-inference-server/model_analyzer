@@ -72,7 +72,6 @@ dotnet publish -c Release
 
 ```
 git clone https://github.com/NVIDIA/model-analyzer
-cd src
 docker build -f Dockerfile -t model-analyzer .
 docker run -v /var/run/docker.sock:/var/run/docker.sock \
         -v /ABSOLUTE/PATH/TO/MODELS:ABSOLUTE/PATH/TO/MODELS \
@@ -85,7 +84,6 @@ docker run -v /var/run/docker.sock:/var/run/docker.sock \
         --export --export-path /results/
 ```
 
-If you need a Triton-ready model to try out Model Analyzer, you can download and unzip just the model folder from a Clara pipeline on NGC. Make sure the model name specified matches the one provided in the configuration file (config.pbtxt). For example, you can use [this chest x-ray pipeline]. The model name is classification_chestxray_v1.
 
 ## Contributing
 
@@ -121,5 +119,4 @@ Please start by reviewing the [docs] folder and searching the current project is
 [CUDA toolkit]: https://developer.nvidia.com/cuda-toolkit
 [docs]: docs
 [NVIDIA-Docker]: https://github.com/NVIDIA/nvidia-docker
-[this chest x-ray pipeline]: https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_ai_chestxray_pipeline
 [this NVIDIA Developer Blog post]: https://developer.nvidia.com/blog/maximizing-deep-learning-inference-performance-with-nvidia-model-analyzer/

@@ -21,7 +21,7 @@ In additiom to the base requirements, the Helm version also requires Kubernetes 
 
 ## Procedure
 
-1. Build the Docker container by navigating to the `src` folder and running `docker build -f Dockerfile -t model-analyzer .'
+1. Build the Docker container by navigating to the root folder and running `docker build -f Dockerfile -t model-analyzer .'
 2. Change directories into `helm-chart` folder.
 3. Create the below text file as `config.yaml`, updating the field values:
 
