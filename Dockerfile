@@ -14,7 +14,8 @@
 
 FROM nvcr.io/nvidia/tensorrtserver:20.02-py3-clientsdk AS base
 #Install Docker for starting server in standalone Docker container
-RUN apt-get update && \
+RUN apt-get clean && \
+  apt-get update && \
   apt install docker.io -y
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
