@@ -57,8 +57,8 @@ If you want to use Model Analyzer right away, there are two options:
 ##### You have supported hardware and drivers, [NVIDIA-Docker], and [.NET SDK].
 
 ```
-git clone https://github.com/NVIDIA/model-analyzer
-cd src
+git clone https://github.com/triton-inference-server/model_analyzer
+cd model_analyzer/src
 dotnet publish -c Release
 ./model-analyzer -m MODELS \
         --model-folder /ABSOLUTE/PATH/TO/MODELS \
@@ -71,8 +71,9 @@ dotnet publish -c Release
 ##### You have supported hardware and drivers and [NVIDIA-Docker].
 
 ```
-git clone https://github.com/NVIDIA/model-analyzer
-docker build -f Dockerfile -t model-analyzer .
+git clone https://github.com/triton-inference-server/model_analyzer
+cd model_analyzer
+docker build -t model-analyzer .
 docker run -v /var/run/docker.sock:/var/run/docker.sock \
         -v /ABSOLUTE/PATH/TO/MODELS:ABSOLUTE/PATH/TO/MODELS \
         -v /ABSOLUTE/PATH/TO/EXPORT/DIRECTORY:/results --net=host \
