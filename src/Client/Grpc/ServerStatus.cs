@@ -8,7 +8,7 @@
 using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using pbr = global::Google.Protobuf.Reflection;
-namespace ModelAnalyzer.Client
+namespace Triton.MemoryAnalyzer.Client
 {
 
     /// <summary>Holder for reflection information generated from server_status.proto</summary>
@@ -95,23 +95,23 @@ namespace ModelAnalyzer.Client
                   "VElBTElaSU5HEAESEAoMU0VSVkVSX1JFQURZEAISEgoOU0VSVkVSX0VYSVRJ",
                   "TkcQAxIfChtTRVJWRVJfRkFJTEVEX1RPX0lOSVRJQUxJWkUQCmIGcHJvdG8z"));
             descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-                new pbr::FileDescriptor[] { global::ModelAnalyzer.Client.ModelConfigReflection.Descriptor, },
-                new pbr::GeneratedClrTypeInfo(new[] { typeof(global::ModelAnalyzer.Client.ModelReadyState), typeof(global::ModelAnalyzer.Client.ServerReadyState), }, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.StatDuration), global::ModelAnalyzer.Client.StatDuration.Parser, new[]{ "Count", "TotalTimeNs" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.StatusRequestStats), global::ModelAnalyzer.Client.StatusRequestStats.Parser, new[]{ "Success" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.HealthRequestStats), global::ModelAnalyzer.Client.HealthRequestStats.Parser, new[]{ "Success" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelControlRequestStats), global::ModelAnalyzer.Client.ModelControlRequestStats.Parser, new[]{ "Success" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.SharedMemoryControlRequestStats), global::ModelAnalyzer.Client.SharedMemoryControlRequestStats.Parser, new[]{ "Success" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.RepositoryRequestStats), global::ModelAnalyzer.Client.RepositoryRequestStats.Parser, new[]{ "Success" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.InferRequestStats), global::ModelAnalyzer.Client.InferRequestStats.Parser, new[]{ "Success", "Failed", "Compute", "Queue" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelReadyStateReason), global::ModelAnalyzer.Client.ModelReadyStateReason.Parser, new[]{ "Message" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelVersionStatus), global::ModelAnalyzer.Client.ModelVersionStatus.Parser, new[]{ "ReadyState", "ReadyStateReason", "InferStats", "ModelExecutionCount", "ModelInferenceCount", "LastInferenceTimestampMilliseconds" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelStatus), global::ModelAnalyzer.Client.ModelStatus.Parser, new[]{ "Config", "VersionStatus" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.SharedMemoryRegion), global::ModelAnalyzer.Client.SharedMemoryRegion.Parser, new[]{ "Name", "SystemSharedMemory", "CudaSharedMemory", "ByteSize" }, new[]{ "SharedMemoryTypes" }, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory), global::ModelAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory.Parser, new[]{ "SharedMemoryKey", "Offset" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory), global::ModelAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory.Parser, new[]{ "DeviceId" }, null, null, null)}),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ServerStatus), global::ModelAnalyzer.Client.ServerStatus.Parser, new[]{ "Id", "Version", "ReadyState", "UptimeNs", "ModelStatus", "StatusStats", "HealthStats", "ModelControlStats", "ShmControlStats", "RepositoryStats" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.SharedMemoryStatus), global::ModelAnalyzer.Client.SharedMemoryStatus.Parser, new[]{ "SharedMemoryRegion" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelRepositoryIndex), global::ModelAnalyzer.Client.ModelRepositoryIndex.Parser, new[]{ "Models" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry), global::ModelAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry.Parser, new[]{ "Name" }, null, null, null)})
+                new pbr::FileDescriptor[] { global::Triton.MemoryAnalyzer.Client.ModelConfigReflection.Descriptor, },
+                new pbr::GeneratedClrTypeInfo(new[] { typeof(global::Triton.MemoryAnalyzer.Client.ModelReadyState), typeof(global::Triton.MemoryAnalyzer.Client.ServerReadyState), }, new pbr::GeneratedClrTypeInfo[] {
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.StatDuration), global::Triton.MemoryAnalyzer.Client.StatDuration.Parser, new[]{ "Count", "TotalTimeNs" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.StatusRequestStats), global::Triton.MemoryAnalyzer.Client.StatusRequestStats.Parser, new[]{ "Success" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.HealthRequestStats), global::Triton.MemoryAnalyzer.Client.HealthRequestStats.Parser, new[]{ "Success" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelControlRequestStats), global::Triton.MemoryAnalyzer.Client.ModelControlRequestStats.Parser, new[]{ "Success" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequestStats), global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequestStats.Parser, new[]{ "Success" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.RepositoryRequestStats), global::Triton.MemoryAnalyzer.Client.RepositoryRequestStats.Parser, new[]{ "Success" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.InferRequestStats), global::Triton.MemoryAnalyzer.Client.InferRequestStats.Parser, new[]{ "Success", "Failed", "Compute", "Queue" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelReadyStateReason), global::Triton.MemoryAnalyzer.Client.ModelReadyStateReason.Parser, new[]{ "Message" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelVersionStatus), global::Triton.MemoryAnalyzer.Client.ModelVersionStatus.Parser, new[]{ "ReadyState", "ReadyStateReason", "InferStats", "ModelExecutionCount", "ModelInferenceCount", "LastInferenceTimestampMilliseconds" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelStatus), global::Triton.MemoryAnalyzer.Client.ModelStatus.Parser, new[]{ "Config", "VersionStatus" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion), global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Parser, new[]{ "Name", "SystemSharedMemory", "CudaSharedMemory", "ByteSize" }, new[]{ "SharedMemoryTypes" }, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory), global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory.Parser, new[]{ "SharedMemoryKey", "Offset" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory), global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory.Parser, new[]{ "DeviceId" }, null, null, null)}),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ServerStatus), global::Triton.MemoryAnalyzer.Client.ServerStatus.Parser, new[]{ "Id", "Version", "ReadyState", "UptimeNs", "ModelStatus", "StatusStats", "HealthStats", "ModelControlStats", "ShmControlStats", "RepositoryStats" }, null, null, new pbr::GeneratedClrTypeInfo[] { null, }),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.SharedMemoryStatus), global::Triton.MemoryAnalyzer.Client.SharedMemoryStatus.Parser, new[]{ "SharedMemoryRegion" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelRepositoryIndex), global::Triton.MemoryAnalyzer.Client.ModelRepositoryIndex.Parser, new[]{ "Models" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry), global::Triton.MemoryAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry.Parser, new[]{ "Name" }, null, null, null)})
                 }));
         }
         #endregion
@@ -236,7 +236,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[0]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[0]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -446,7 +446,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[1]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[1]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -478,7 +478,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "success" field.</summary>
         public const int SuccessFieldNumber = 1;
-        private global::ModelAnalyzer.Client.StatDuration success_;
+        private global::Triton.MemoryAnalyzer.Client.StatDuration success_;
         /// <summary>
         ///@@  .. cpp:var:: StatDuration success
         ///@@
@@ -487,7 +487,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.StatDuration Success
+        public global::Triton.MemoryAnalyzer.Client.StatDuration Success
         {
             get { return success_; }
             set
@@ -575,7 +575,7 @@ namespace ModelAnalyzer.Client
             {
                 if (success_ == null)
                 {
-                    Success = new global::ModelAnalyzer.Client.StatDuration();
+                    Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                 }
                 Success.MergeFrom(other.Success);
             }
@@ -597,7 +597,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (success_ == null)
                             {
-                                Success = new global::ModelAnalyzer.Client.StatDuration();
+                                Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                             }
                             input.ReadMessage(Success);
                             break;
@@ -625,7 +625,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[2]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[2]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -657,7 +657,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "success" field.</summary>
         public const int SuccessFieldNumber = 1;
-        private global::ModelAnalyzer.Client.StatDuration success_;
+        private global::Triton.MemoryAnalyzer.Client.StatDuration success_;
         /// <summary>
         ///@@  .. cpp:var:: StatDuration success
         ///@@
@@ -666,7 +666,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.StatDuration Success
+        public global::Triton.MemoryAnalyzer.Client.StatDuration Success
         {
             get { return success_; }
             set
@@ -754,7 +754,7 @@ namespace ModelAnalyzer.Client
             {
                 if (success_ == null)
                 {
-                    Success = new global::ModelAnalyzer.Client.StatDuration();
+                    Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                 }
                 Success.MergeFrom(other.Success);
             }
@@ -776,7 +776,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (success_ == null)
                             {
-                                Success = new global::ModelAnalyzer.Client.StatDuration();
+                                Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                             }
                             input.ReadMessage(Success);
                             break;
@@ -804,7 +804,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[3]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[3]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -836,7 +836,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "success" field.</summary>
         public const int SuccessFieldNumber = 1;
-        private global::ModelAnalyzer.Client.StatDuration success_;
+        private global::Triton.MemoryAnalyzer.Client.StatDuration success_;
         /// <summary>
         ///@@  .. cpp:var:: StatDuration success
         ///@@
@@ -845,7 +845,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.StatDuration Success
+        public global::Triton.MemoryAnalyzer.Client.StatDuration Success
         {
             get { return success_; }
             set
@@ -933,7 +933,7 @@ namespace ModelAnalyzer.Client
             {
                 if (success_ == null)
                 {
-                    Success = new global::ModelAnalyzer.Client.StatDuration();
+                    Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                 }
                 Success.MergeFrom(other.Success);
             }
@@ -955,7 +955,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (success_ == null)
                             {
-                                Success = new global::ModelAnalyzer.Client.StatDuration();
+                                Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                             }
                             input.ReadMessage(Success);
                             break;
@@ -983,7 +983,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[4]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[4]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1015,7 +1015,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "success" field.</summary>
         public const int SuccessFieldNumber = 1;
-        private global::ModelAnalyzer.Client.StatDuration success_;
+        private global::Triton.MemoryAnalyzer.Client.StatDuration success_;
         /// <summary>
         ///@@  .. cpp:var:: StatDuration success
         ///@@
@@ -1024,7 +1024,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.StatDuration Success
+        public global::Triton.MemoryAnalyzer.Client.StatDuration Success
         {
             get { return success_; }
             set
@@ -1112,7 +1112,7 @@ namespace ModelAnalyzer.Client
             {
                 if (success_ == null)
                 {
-                    Success = new global::ModelAnalyzer.Client.StatDuration();
+                    Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                 }
                 Success.MergeFrom(other.Success);
             }
@@ -1134,7 +1134,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (success_ == null)
                             {
-                                Success = new global::ModelAnalyzer.Client.StatDuration();
+                                Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                             }
                             input.ReadMessage(Success);
                             break;
@@ -1162,7 +1162,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[5]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[5]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1194,7 +1194,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "success" field.</summary>
         public const int SuccessFieldNumber = 1;
-        private global::ModelAnalyzer.Client.StatDuration success_;
+        private global::Triton.MemoryAnalyzer.Client.StatDuration success_;
         /// <summary>
         ///@@  .. cpp:var:: StatDuration success
         ///@@
@@ -1203,7 +1203,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.StatDuration Success
+        public global::Triton.MemoryAnalyzer.Client.StatDuration Success
         {
             get { return success_; }
             set
@@ -1291,7 +1291,7 @@ namespace ModelAnalyzer.Client
             {
                 if (success_ == null)
                 {
-                    Success = new global::ModelAnalyzer.Client.StatDuration();
+                    Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                 }
                 Success.MergeFrom(other.Success);
             }
@@ -1313,7 +1313,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (success_ == null)
                             {
-                                Success = new global::ModelAnalyzer.Client.StatDuration();
+                                Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                             }
                             input.ReadMessage(Success);
                             break;
@@ -1341,7 +1341,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[6]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[6]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1376,7 +1376,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "success" field.</summary>
         public const int SuccessFieldNumber = 1;
-        private global::ModelAnalyzer.Client.StatDuration success_;
+        private global::Triton.MemoryAnalyzer.Client.StatDuration success_;
         /// <summary>
         ///@@  .. cpp:var:: StatDuration success
         ///@@
@@ -1385,7 +1385,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.StatDuration Success
+        public global::Triton.MemoryAnalyzer.Client.StatDuration Success
         {
             get { return success_; }
             set
@@ -1396,7 +1396,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "failed" field.</summary>
         public const int FailedFieldNumber = 2;
-        private global::ModelAnalyzer.Client.StatDuration failed_;
+        private global::Triton.MemoryAnalyzer.Client.StatDuration failed_;
         /// <summary>
         ///@@  .. cpp:var:: StatDuration failed
         ///@@
@@ -1405,7 +1405,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.StatDuration Failed
+        public global::Triton.MemoryAnalyzer.Client.StatDuration Failed
         {
             get { return failed_; }
             set
@@ -1416,7 +1416,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "compute" field.</summary>
         public const int ComputeFieldNumber = 3;
-        private global::ModelAnalyzer.Client.StatDuration compute_;
+        private global::Triton.MemoryAnalyzer.Client.StatDuration compute_;
         /// <summary>
         ///@@  .. cpp:var:: StatDuration compute
         ///@@
@@ -1427,7 +1427,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.StatDuration Compute
+        public global::Triton.MemoryAnalyzer.Client.StatDuration Compute
         {
             get { return compute_; }
             set
@@ -1438,7 +1438,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "queue" field.</summary>
         public const int QueueFieldNumber = 4;
-        private global::ModelAnalyzer.Client.StatDuration queue_;
+        private global::Triton.MemoryAnalyzer.Client.StatDuration queue_;
         /// <summary>
         ///@@  .. cpp:var:: StatDuration queue
         ///@@
@@ -1447,7 +1447,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.StatDuration Queue
+        public global::Triton.MemoryAnalyzer.Client.StatDuration Queue
         {
             get { return queue_; }
             set
@@ -1568,7 +1568,7 @@ namespace ModelAnalyzer.Client
             {
                 if (success_ == null)
                 {
-                    Success = new global::ModelAnalyzer.Client.StatDuration();
+                    Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                 }
                 Success.MergeFrom(other.Success);
             }
@@ -1576,7 +1576,7 @@ namespace ModelAnalyzer.Client
             {
                 if (failed_ == null)
                 {
-                    Failed = new global::ModelAnalyzer.Client.StatDuration();
+                    Failed = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                 }
                 Failed.MergeFrom(other.Failed);
             }
@@ -1584,7 +1584,7 @@ namespace ModelAnalyzer.Client
             {
                 if (compute_ == null)
                 {
-                    Compute = new global::ModelAnalyzer.Client.StatDuration();
+                    Compute = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                 }
                 Compute.MergeFrom(other.Compute);
             }
@@ -1592,7 +1592,7 @@ namespace ModelAnalyzer.Client
             {
                 if (queue_ == null)
                 {
-                    Queue = new global::ModelAnalyzer.Client.StatDuration();
+                    Queue = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                 }
                 Queue.MergeFrom(other.Queue);
             }
@@ -1614,7 +1614,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (success_ == null)
                             {
-                                Success = new global::ModelAnalyzer.Client.StatDuration();
+                                Success = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                             }
                             input.ReadMessage(Success);
                             break;
@@ -1623,7 +1623,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (failed_ == null)
                             {
-                                Failed = new global::ModelAnalyzer.Client.StatDuration();
+                                Failed = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                             }
                             input.ReadMessage(Failed);
                             break;
@@ -1632,7 +1632,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (compute_ == null)
                             {
-                                Compute = new global::ModelAnalyzer.Client.StatDuration();
+                                Compute = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                             }
                             input.ReadMessage(Compute);
                             break;
@@ -1641,7 +1641,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (queue_ == null)
                             {
-                                Queue = new global::ModelAnalyzer.Client.StatDuration();
+                                Queue = new global::Triton.MemoryAnalyzer.Client.StatDuration();
                             }
                             input.ReadMessage(Queue);
                             break;
@@ -1669,7 +1669,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[7]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[7]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1840,7 +1840,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[8]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[8]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1877,7 +1877,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "ready_state" field.</summary>
         public const int ReadyStateFieldNumber = 1;
-        private global::ModelAnalyzer.Client.ModelReadyState readyState_ = 0;
+        private global::Triton.MemoryAnalyzer.Client.ModelReadyState readyState_ = 0;
         /// <summary>
         ///@@  .. cpp:var:: ModelReadyState ready_state
         ///@@
@@ -1885,7 +1885,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.ModelReadyState ReadyState
+        public global::Triton.MemoryAnalyzer.Client.ModelReadyState ReadyState
         {
             get { return readyState_; }
             set
@@ -1896,7 +1896,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "ready_state_reason" field.</summary>
         public const int ReadyStateReasonFieldNumber = 5;
-        private global::ModelAnalyzer.Client.ModelReadyStateReason readyStateReason_;
+        private global::Triton.MemoryAnalyzer.Client.ModelReadyStateReason readyStateReason_;
         /// <summary>
         ///@@  .. cpp:var:: ModelReadyStateReason ready_state_reason
         ///@@
@@ -1904,7 +1904,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.ModelReadyStateReason ReadyStateReason
+        public global::Triton.MemoryAnalyzer.Client.ModelReadyStateReason ReadyStateReason
         {
             get { return readyStateReason_; }
             set
@@ -1915,9 +1915,9 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "infer_stats" field.</summary>
         public const int InferStatsFieldNumber = 2;
-        private static readonly pbc::MapField<uint, global::ModelAnalyzer.Client.InferRequestStats>.Codec _map_inferStats_codec
-            = new pbc::MapField<uint, global::ModelAnalyzer.Client.InferRequestStats>.Codec(pb::FieldCodec.ForUInt32(8), pb::FieldCodec.ForMessage(18, global::ModelAnalyzer.Client.InferRequestStats.Parser), 18);
-        private readonly pbc::MapField<uint, global::ModelAnalyzer.Client.InferRequestStats> inferStats_ = new pbc::MapField<uint, global::ModelAnalyzer.Client.InferRequestStats>();
+        private static readonly pbc::MapField<uint, global::Triton.MemoryAnalyzer.Client.InferRequestStats>.Codec _map_inferStats_codec
+            = new pbc::MapField<uint, global::Triton.MemoryAnalyzer.Client.InferRequestStats>.Codec(pb::FieldCodec.ForUInt32(8), pb::FieldCodec.ForMessage(18, global::Triton.MemoryAnalyzer.Client.InferRequestStats.Parser), 18);
+        private readonly pbc::MapField<uint, global::Triton.MemoryAnalyzer.Client.InferRequestStats> inferStats_ = new pbc::MapField<uint, global::Triton.MemoryAnalyzer.Client.InferRequestStats>();
         /// <summary>
         ///@@  .. cpp:var:: map&lt;uint32, InferRequestStats> infer_stats
         ///@@
@@ -1928,7 +1928,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public pbc::MapField<uint, global::ModelAnalyzer.Client.InferRequestStats> InferStats
+        public pbc::MapField<uint, global::Triton.MemoryAnalyzer.Client.InferRequestStats> InferStats
         {
             get { return inferStats_; }
         }
@@ -2127,7 +2127,7 @@ namespace ModelAnalyzer.Client
             {
                 if (readyStateReason_ == null)
                 {
-                    ReadyStateReason = new global::ModelAnalyzer.Client.ModelReadyStateReason();
+                    ReadyStateReason = new global::Triton.MemoryAnalyzer.Client.ModelReadyStateReason();
                 }
                 ReadyStateReason.MergeFrom(other.ReadyStateReason);
             }
@@ -2160,7 +2160,7 @@ namespace ModelAnalyzer.Client
                         break;
                     case 8:
                         {
-                            ReadyState = (global::ModelAnalyzer.Client.ModelReadyState)input.ReadEnum();
+                            ReadyState = (global::Triton.MemoryAnalyzer.Client.ModelReadyState)input.ReadEnum();
                             break;
                         }
                     case 18:
@@ -2182,7 +2182,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (readyStateReason_ == null)
                             {
-                                ReadyStateReason = new global::ModelAnalyzer.Client.ModelReadyStateReason();
+                                ReadyStateReason = new global::Triton.MemoryAnalyzer.Client.ModelReadyStateReason();
                             }
                             input.ReadMessage(ReadyStateReason);
                             break;
@@ -2215,7 +2215,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[9]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[9]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2248,7 +2248,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "config" field.</summary>
         public const int ConfigFieldNumber = 1;
-        private global::ModelAnalyzer.Client.ModelConfig config_;
+        private global::Triton.MemoryAnalyzer.Client.ModelConfig config_;
         /// <summary>
         ///@@  .. cpp:var:: ModelConfig config
         ///@@
@@ -2256,7 +2256,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.ModelConfig Config
+        public global::Triton.MemoryAnalyzer.Client.ModelConfig Config
         {
             get { return config_; }
             set
@@ -2267,9 +2267,9 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "version_status" field.</summary>
         public const int VersionStatusFieldNumber = 2;
-        private static readonly pbc::MapField<long, global::ModelAnalyzer.Client.ModelVersionStatus>.Codec _map_versionStatus_codec
-            = new pbc::MapField<long, global::ModelAnalyzer.Client.ModelVersionStatus>.Codec(pb::FieldCodec.ForInt64(8), pb::FieldCodec.ForMessage(18, global::ModelAnalyzer.Client.ModelVersionStatus.Parser), 18);
-        private readonly pbc::MapField<long, global::ModelAnalyzer.Client.ModelVersionStatus> versionStatus_ = new pbc::MapField<long, global::ModelAnalyzer.Client.ModelVersionStatus>();
+        private static readonly pbc::MapField<long, global::Triton.MemoryAnalyzer.Client.ModelVersionStatus>.Codec _map_versionStatus_codec
+            = new pbc::MapField<long, global::Triton.MemoryAnalyzer.Client.ModelVersionStatus>.Codec(pb::FieldCodec.ForInt64(8), pb::FieldCodec.ForMessage(18, global::Triton.MemoryAnalyzer.Client.ModelVersionStatus.Parser), 18);
+        private readonly pbc::MapField<long, global::Triton.MemoryAnalyzer.Client.ModelVersionStatus> versionStatus_ = new pbc::MapField<long, global::Triton.MemoryAnalyzer.Client.ModelVersionStatus>();
         /// <summary>
         ///@@  .. cpp:var:: map&lt;int64, ModelVersionStatus> version_status
         ///@@
@@ -2281,7 +2281,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public pbc::MapField<long, global::ModelAnalyzer.Client.ModelVersionStatus> VersionStatus
+        public pbc::MapField<long, global::Triton.MemoryAnalyzer.Client.ModelVersionStatus> VersionStatus
         {
             get { return versionStatus_; }
         }
@@ -2369,7 +2369,7 @@ namespace ModelAnalyzer.Client
             {
                 if (config_ == null)
                 {
-                    Config = new global::ModelAnalyzer.Client.ModelConfig();
+                    Config = new global::Triton.MemoryAnalyzer.Client.ModelConfig();
                 }
                 Config.MergeFrom(other.Config);
             }
@@ -2392,7 +2392,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (config_ == null)
                             {
-                                Config = new global::ModelAnalyzer.Client.ModelConfig();
+                                Config = new global::Triton.MemoryAnalyzer.Client.ModelConfig();
                             }
                             input.ReadMessage(Config);
                             break;
@@ -2425,7 +2425,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[10]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[10]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2496,9 +2496,9 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory SystemSharedMemory
+        public global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory SystemSharedMemory
         {
-            get { return sharedMemoryTypesCase_ == SharedMemoryTypesOneofCase.SystemSharedMemory ? (global::ModelAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory)sharedMemoryTypes_ : null; }
+            get { return sharedMemoryTypesCase_ == SharedMemoryTypesOneofCase.SystemSharedMemory ? (global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory)sharedMemoryTypes_ : null; }
             set
             {
                 sharedMemoryTypes_ = value;
@@ -2516,9 +2516,9 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory CudaSharedMemory
+        public global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory CudaSharedMemory
         {
-            get { return sharedMemoryTypesCase_ == SharedMemoryTypesOneofCase.CudaSharedMemory ? (global::ModelAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory)sharedMemoryTypes_ : null; }
+            get { return sharedMemoryTypesCase_ == SharedMemoryTypesOneofCase.CudaSharedMemory ? (global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory)sharedMemoryTypes_ : null; }
             set
             {
                 sharedMemoryTypes_ = value;
@@ -2690,14 +2690,14 @@ namespace ModelAnalyzer.Client
                 case SharedMemoryTypesOneofCase.SystemSharedMemory:
                     if (SystemSharedMemory == null)
                     {
-                        SystemSharedMemory = new global::ModelAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory();
+                        SystemSharedMemory = new global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory();
                     }
                     SystemSharedMemory.MergeFrom(other.SystemSharedMemory);
                     break;
                 case SharedMemoryTypesOneofCase.CudaSharedMemory:
                     if (CudaSharedMemory == null)
                     {
-                        CudaSharedMemory = new global::ModelAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory();
+                        CudaSharedMemory = new global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory();
                     }
                     CudaSharedMemory.MergeFrom(other.CudaSharedMemory);
                     break;
@@ -2724,7 +2724,7 @@ namespace ModelAnalyzer.Client
                         }
                     case 18:
                         {
-                            global::ModelAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory subBuilder = new global::ModelAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory();
+                            global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory subBuilder = new global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.SystemSharedMemory();
                             if (sharedMemoryTypesCase_ == SharedMemoryTypesOneofCase.SystemSharedMemory)
                             {
                                 subBuilder.MergeFrom(SystemSharedMemory);
@@ -2735,7 +2735,7 @@ namespace ModelAnalyzer.Client
                         }
                     case 26:
                         {
-                            global::ModelAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory subBuilder = new global::ModelAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory();
+                            global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory subBuilder = new global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Types.CudaSharedMemory();
                             if (sharedMemoryTypesCase_ == SharedMemoryTypesOneofCase.CudaSharedMemory)
                             {
                                 subBuilder.MergeFrom(CudaSharedMemory);
@@ -2768,7 +2768,7 @@ namespace ModelAnalyzer.Client
                 [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
                 public static pbr::MessageDescriptor Descriptor
                 {
-                    get { return global::ModelAnalyzer.Client.SharedMemoryRegion.Descriptor.NestedTypes[0]; }
+                    get { return global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Descriptor.NestedTypes[0]; }
                 }
 
                 [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2974,7 +2974,7 @@ namespace ModelAnalyzer.Client
                 [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
                 public static pbr::MessageDescriptor Descriptor
                 {
-                    get { return global::ModelAnalyzer.Client.SharedMemoryRegion.Descriptor.NestedTypes[1]; }
+                    get { return global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Descriptor.NestedTypes[1]; }
                 }
 
                 [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3149,7 +3149,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[11]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[11]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3228,7 +3228,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "ready_state" field.</summary>
         public const int ReadyStateFieldNumber = 7;
-        private global::ModelAnalyzer.Client.ServerReadyState readyState_ = 0;
+        private global::Triton.MemoryAnalyzer.Client.ServerReadyState readyState_ = 0;
         /// <summary>
         ///@@  .. cpp:var:: ServerReadyState ready_state
         ///@@
@@ -3236,7 +3236,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.ServerReadyState ReadyState
+        public global::Triton.MemoryAnalyzer.Client.ServerReadyState ReadyState
         {
             get { return readyState_; }
             set
@@ -3266,9 +3266,9 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "model_status" field.</summary>
         public const int ModelStatusFieldNumber = 4;
-        private static readonly pbc::MapField<string, global::ModelAnalyzer.Client.ModelStatus>.Codec _map_modelStatus_codec
-            = new pbc::MapField<string, global::ModelAnalyzer.Client.ModelStatus>.Codec(pb::FieldCodec.ForString(10), pb::FieldCodec.ForMessage(18, global::ModelAnalyzer.Client.ModelStatus.Parser), 34);
-        private readonly pbc::MapField<string, global::ModelAnalyzer.Client.ModelStatus> modelStatus_ = new pbc::MapField<string, global::ModelAnalyzer.Client.ModelStatus>();
+        private static readonly pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelStatus>.Codec _map_modelStatus_codec
+            = new pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelStatus>.Codec(pb::FieldCodec.ForString(10), pb::FieldCodec.ForMessage(18, global::Triton.MemoryAnalyzer.Client.ModelStatus.Parser), 34);
+        private readonly pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelStatus> modelStatus_ = new pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelStatus>();
         /// <summary>
         ///@@  .. cpp:var:: map&lt;string, ModelStatus> model_status
         ///@@
@@ -3277,14 +3277,14 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public pbc::MapField<string, global::ModelAnalyzer.Client.ModelStatus> ModelStatus
+        public pbc::MapField<string, global::Triton.MemoryAnalyzer.Client.ModelStatus> ModelStatus
         {
             get { return modelStatus_; }
         }
 
         /// <summary>Field number for the "status_stats" field.</summary>
         public const int StatusStatsFieldNumber = 5;
-        private global::ModelAnalyzer.Client.StatusRequestStats statusStats_;
+        private global::Triton.MemoryAnalyzer.Client.StatusRequestStats statusStats_;
         /// <summary>
         ///@@  .. cpp:var:: StatusRequestStats status_stats
         ///@@
@@ -3292,7 +3292,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.StatusRequestStats StatusStats
+        public global::Triton.MemoryAnalyzer.Client.StatusRequestStats StatusStats
         {
             get { return statusStats_; }
             set
@@ -3303,7 +3303,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "health_stats" field.</summary>
         public const int HealthStatsFieldNumber = 8;
-        private global::ModelAnalyzer.Client.HealthRequestStats healthStats_;
+        private global::Triton.MemoryAnalyzer.Client.HealthRequestStats healthStats_;
         /// <summary>
         ///@@  .. cpp:var:: HealthRequestStats health_stats
         ///@@
@@ -3311,7 +3311,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.HealthRequestStats HealthStats
+        public global::Triton.MemoryAnalyzer.Client.HealthRequestStats HealthStats
         {
             get { return healthStats_; }
             set
@@ -3322,7 +3322,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "model_control_stats" field.</summary>
         public const int ModelControlStatsFieldNumber = 9;
-        private global::ModelAnalyzer.Client.ModelControlRequestStats modelControlStats_;
+        private global::Triton.MemoryAnalyzer.Client.ModelControlRequestStats modelControlStats_;
         /// <summary>
         ///@@  .. cpp:var:: ModelControlRequestStats model_control_stats
         ///@@
@@ -3330,7 +3330,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.ModelControlRequestStats ModelControlStats
+        public global::Triton.MemoryAnalyzer.Client.ModelControlRequestStats ModelControlStats
         {
             get { return modelControlStats_; }
             set
@@ -3341,7 +3341,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "shm_control_stats" field.</summary>
         public const int ShmControlStatsFieldNumber = 10;
-        private global::ModelAnalyzer.Client.SharedMemoryControlRequestStats shmControlStats_;
+        private global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequestStats shmControlStats_;
         /// <summary>
         ///@@  .. cpp:var:: SharedMemoryControlRequestStats shm_control_stats
         ///@@
@@ -3349,7 +3349,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.SharedMemoryControlRequestStats ShmControlStats
+        public global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequestStats ShmControlStats
         {
             get { return shmControlStats_; }
             set
@@ -3360,7 +3360,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "repository_stats" field.</summary>
         public const int RepositoryStatsFieldNumber = 11;
-        private global::ModelAnalyzer.Client.RepositoryRequestStats repositoryStats_;
+        private global::Triton.MemoryAnalyzer.Client.RepositoryRequestStats repositoryStats_;
         /// <summary>
         ///@@  .. cpp:var:: RepositoryRequestStats repository_stats
         ///@@
@@ -3368,7 +3368,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.RepositoryRequestStats RepositoryStats
+        public global::Triton.MemoryAnalyzer.Client.RepositoryRequestStats RepositoryStats
         {
             get { return repositoryStats_; }
             set
@@ -3565,7 +3565,7 @@ namespace ModelAnalyzer.Client
             {
                 if (statusStats_ == null)
                 {
-                    StatusStats = new global::ModelAnalyzer.Client.StatusRequestStats();
+                    StatusStats = new global::Triton.MemoryAnalyzer.Client.StatusRequestStats();
                 }
                 StatusStats.MergeFrom(other.StatusStats);
             }
@@ -3573,7 +3573,7 @@ namespace ModelAnalyzer.Client
             {
                 if (healthStats_ == null)
                 {
-                    HealthStats = new global::ModelAnalyzer.Client.HealthRequestStats();
+                    HealthStats = new global::Triton.MemoryAnalyzer.Client.HealthRequestStats();
                 }
                 HealthStats.MergeFrom(other.HealthStats);
             }
@@ -3581,7 +3581,7 @@ namespace ModelAnalyzer.Client
             {
                 if (modelControlStats_ == null)
                 {
-                    ModelControlStats = new global::ModelAnalyzer.Client.ModelControlRequestStats();
+                    ModelControlStats = new global::Triton.MemoryAnalyzer.Client.ModelControlRequestStats();
                 }
                 ModelControlStats.MergeFrom(other.ModelControlStats);
             }
@@ -3589,7 +3589,7 @@ namespace ModelAnalyzer.Client
             {
                 if (shmControlStats_ == null)
                 {
-                    ShmControlStats = new global::ModelAnalyzer.Client.SharedMemoryControlRequestStats();
+                    ShmControlStats = new global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequestStats();
                 }
                 ShmControlStats.MergeFrom(other.ShmControlStats);
             }
@@ -3597,7 +3597,7 @@ namespace ModelAnalyzer.Client
             {
                 if (repositoryStats_ == null)
                 {
-                    RepositoryStats = new global::ModelAnalyzer.Client.RepositoryRequestStats();
+                    RepositoryStats = new global::Triton.MemoryAnalyzer.Client.RepositoryRequestStats();
                 }
                 RepositoryStats.MergeFrom(other.RepositoryStats);
             }
@@ -3639,21 +3639,21 @@ namespace ModelAnalyzer.Client
                         {
                             if (statusStats_ == null)
                             {
-                                StatusStats = new global::ModelAnalyzer.Client.StatusRequestStats();
+                                StatusStats = new global::Triton.MemoryAnalyzer.Client.StatusRequestStats();
                             }
                             input.ReadMessage(StatusStats);
                             break;
                         }
                     case 56:
                         {
-                            ReadyState = (global::ModelAnalyzer.Client.ServerReadyState)input.ReadEnum();
+                            ReadyState = (global::Triton.MemoryAnalyzer.Client.ServerReadyState)input.ReadEnum();
                             break;
                         }
                     case 66:
                         {
                             if (healthStats_ == null)
                             {
-                                HealthStats = new global::ModelAnalyzer.Client.HealthRequestStats();
+                                HealthStats = new global::Triton.MemoryAnalyzer.Client.HealthRequestStats();
                             }
                             input.ReadMessage(HealthStats);
                             break;
@@ -3662,7 +3662,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (modelControlStats_ == null)
                             {
-                                ModelControlStats = new global::ModelAnalyzer.Client.ModelControlRequestStats();
+                                ModelControlStats = new global::Triton.MemoryAnalyzer.Client.ModelControlRequestStats();
                             }
                             input.ReadMessage(ModelControlStats);
                             break;
@@ -3671,7 +3671,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (shmControlStats_ == null)
                             {
-                                ShmControlStats = new global::ModelAnalyzer.Client.SharedMemoryControlRequestStats();
+                                ShmControlStats = new global::Triton.MemoryAnalyzer.Client.SharedMemoryControlRequestStats();
                             }
                             input.ReadMessage(ShmControlStats);
                             break;
@@ -3680,7 +3680,7 @@ namespace ModelAnalyzer.Client
                         {
                             if (repositoryStats_ == null)
                             {
-                                RepositoryStats = new global::ModelAnalyzer.Client.RepositoryRequestStats();
+                                RepositoryStats = new global::Triton.MemoryAnalyzer.Client.RepositoryRequestStats();
                             }
                             input.ReadMessage(RepositoryStats);
                             break;
@@ -3708,7 +3708,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[12]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[12]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3740,9 +3740,9 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "shared_memory_region" field.</summary>
         public const int SharedMemoryRegionFieldNumber = 2;
-        private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.SharedMemoryRegion> _repeated_sharedMemoryRegion_codec
-            = pb::FieldCodec.ForMessage(18, global::ModelAnalyzer.Client.SharedMemoryRegion.Parser);
-        private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.SharedMemoryRegion> sharedMemoryRegion_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.SharedMemoryRegion>();
+        private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion> _repeated_sharedMemoryRegion_codec
+            = pb::FieldCodec.ForMessage(18, global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion.Parser);
+        private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion> sharedMemoryRegion_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion>();
         /// <summary>
         ///@@
         ///@@  .. cpp:var:: SharedMemoryRegion shared_memory_region (repeated)
@@ -3751,7 +3751,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public pbc::RepeatedField<global::ModelAnalyzer.Client.SharedMemoryRegion> SharedMemoryRegion
+        public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.SharedMemoryRegion> SharedMemoryRegion
         {
             get { return sharedMemoryRegion_; }
         }
@@ -3867,7 +3867,7 @@ namespace ModelAnalyzer.Client
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor
         {
-            get { return global::ModelAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[13]; }
+            get { return global::Triton.MemoryAnalyzer.Client.ServerStatusReflection.Descriptor.MessageTypes[13]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -3899,9 +3899,9 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "models" field.</summary>
         public const int ModelsFieldNumber = 1;
-        private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry> _repeated_models_codec
-            = pb::FieldCodec.ForMessage(10, global::ModelAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry.Parser);
-        private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry> models_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry>();
+        private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry> _repeated_models_codec
+            = pb::FieldCodec.ForMessage(10, global::Triton.MemoryAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry.Parser);
+        private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry> models_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry>();
         /// <summary>
         ///@@
         ///@@  .. cpp:var:: ModelEntry models (repeated)
@@ -3910,7 +3910,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public pbc::RepeatedField<global::ModelAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry> Models
+        public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.ModelRepositoryIndex.Types.ModelEntry> Models
         {
             get { return models_; }
         }
@@ -4029,7 +4029,7 @@ namespace ModelAnalyzer.Client
                 [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
                 public static pbr::MessageDescriptor Descriptor
                 {
-                    get { return global::ModelAnalyzer.Client.ModelRepositoryIndex.Descriptor.NestedTypes[0]; }
+                    get { return global::Triton.MemoryAnalyzer.Client.ModelRepositoryIndex.Descriptor.NestedTypes[0]; }
                 }
 
                 [global::System.Diagnostics.DebuggerNonUserCodeAttribute]

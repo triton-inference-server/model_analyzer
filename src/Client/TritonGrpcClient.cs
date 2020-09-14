@@ -26,13 +26,13 @@ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *****************************************************************************/
 
-using Grpc.Core;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using Grpc.Core;
 
-namespace ModelAnalyzer.Client
+namespace Triton.MemoryAnalyzer.Client
 {
     /// <summary>
     /// Interface to an object which abstracts the client calls to the Inference Server.
@@ -116,7 +116,7 @@ namespace ModelAnalyzer.Client
 
             try
             {
-                var grpcClient = new GRPCService.GRPCServiceClient(channel);
+                var grpcClient = new MemoryAnalyzer.Client.GRPCService.GRPCServiceClient(channel);
 
                 foreach (var modelName in models)
                 {

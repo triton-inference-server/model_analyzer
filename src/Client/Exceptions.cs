@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using System;
 using System.Net;
 
-namespace ModelAnalyzer.Client
+namespace Triton.MemoryAnalyzer.Client
 {
     /// <summary>
     /// Exception Class to define exceptions to be thrown when an error is encountered

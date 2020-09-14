@@ -19,7 +19,7 @@ using System.Diagnostics;
 using System.Xml;
 using Xunit;
 
-namespace ModelAnalyzer.Metrics
+namespace Triton.MemoryAnalyzer.Metrics
 {
     public class GpuMetricsTest
     {

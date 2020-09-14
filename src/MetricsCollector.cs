@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 *****************************************************************************/
 
-using ModelAnalyzer.Metrics;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using Triton.MemoryAnalyzer.Metrics;
 
-namespace ModelAnalyzer
+namespace Triton.MemoryAnalyzer
 {
     /// <summary>
     /// Class used to store configuration of Metrics Collector

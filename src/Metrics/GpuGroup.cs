@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using static System.Threading.Interlocked;
 
-namespace ModelAnalyzer.Metrics
+namespace Triton.MemoryAnalyzer.Metrics
 {
     /// <summary>
     /// GPU group information.

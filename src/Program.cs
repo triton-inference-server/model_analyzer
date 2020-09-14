@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 *****************************************************************************/
 
-using CommandLine;
-using ModelAnalyzer.Client;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using CommandLine;
+using Triton.MemoryAnalyzer.Client;
 
-namespace ModelAnalyzer
+namespace Triton.MemoryAnalyzer
 {
     /// <summary>
     /// Class for launching Model Analyzer
