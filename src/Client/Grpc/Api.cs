@@ -8,7 +8,7 @@
 using pb = global::Google.Protobuf;
 using pbc = global::Google.Protobuf.Collections;
 using pbr = global::Google.Protobuf.Reflection;
-namespace ModelAnalyzer.Client
+namespace Triton.MemoryAnalyzer.Client
 {
 
     /// <summary>Holder for reflection information generated from api.proto</summary>
@@ -55,12 +55,12 @@ namespace ModelAnalyzer.Client
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.InferSharedMemory), global::ModelAnalyzer.Client.InferSharedMemory.Parser, new[]{ "Name", "Offset", "ByteSize" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.InferRequestHeader), global::ModelAnalyzer.Client.InferRequestHeader.Parser, new[]{ "Id", "Flags", "CorrelationId", "BatchSize", "Input", "Output" }, null, new[]{ typeof(global::ModelAnalyzer.Client.InferRequestHeader.Types.Flag) }, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.InferRequestHeader.Types.Input), global::ModelAnalyzer.Client.InferRequestHeader.Types.Input.Parser, new[]{ "Name", "Dims", "BatchByteSize", "SharedMemory" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.InferRequestHeader.Types.Output), global::ModelAnalyzer.Client.InferRequestHeader.Types.Output.Parser, new[]{ "Name", "Cls", "SharedMemory" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class), global::ModelAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class.Parser, new[]{ "Count" }, null, null, null)})}),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.InferResponseHeader), global::ModelAnalyzer.Client.InferResponseHeader.Parser, new[]{ "Id", "ModelName", "ModelVersion", "BatchSize", "Output" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.InferResponseHeader.Types.Output), global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Parser, new[]{ "Name", "Raw", "BatchClasses" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw), global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw.Parser, new[]{ "Dims", "BatchByteSize" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class), global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class.Parser, new[]{ "Idx", "Value", "Label" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes), global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes.Parser, new[]{ "Cls" }, null, null, null)})})
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.InferSharedMemory), global::Triton.MemoryAnalyzer.Client.InferSharedMemory.Parser, new[]{ "Name", "Offset", "ByteSize" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.InferRequestHeader), global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Parser, new[]{ "Id", "Flags", "CorrelationId", "BatchSize", "Input", "Output" }, null, new[]{ typeof(global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Flag) }, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Input), global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Input.Parser, new[]{ "Name", "Dims", "BatchByteSize", "SharedMemory" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output), global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output.Parser, new[]{ "Name", "Cls", "SharedMemory" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class), global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class.Parser, new[]{ "Count" }, null, null, null)})}),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.InferResponseHeader), global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Parser, new[]{ "Id", "ModelName", "ModelVersion", "BatchSize", "Output" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output), global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Parser, new[]{ "Name", "Raw", "BatchClasses" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw), global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw.Parser, new[]{ "Dims", "BatchByteSize" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class), global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class.Parser, new[]{ "Idx", "Value", "Label" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes), global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes.Parser, new[]{ "Cls" }, null, null, null)})})
           }));
     }
     #endregion
@@ -82,7 +82,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ApiReflection.Descriptor.MessageTypes[0]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ApiReflection.Descriptor.MessageTypes[0]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -296,7 +296,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ApiReflection.Descriptor.MessageTypes[1]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ApiReflection.Descriptor.MessageTypes[1]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -405,9 +405,9 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "input" field.</summary>
     public const int InputFieldNumber = 2;
-    private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.InferRequestHeader.Types.Input> _repeated_input_codec
-        = pb::FieldCodec.ForMessage(18, global::ModelAnalyzer.Client.InferRequestHeader.Types.Input.Parser);
-    private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.InferRequestHeader.Types.Input> input_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.InferRequestHeader.Types.Input>();
+    private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Input> _repeated_input_codec
+        = pb::FieldCodec.ForMessage(18, global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Input.Parser);
+    private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Input> input_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Input>();
     /// <summary>
     ///@@  .. cpp:var:: Input input (repeated)
     ///@@
@@ -416,15 +416,15 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::ModelAnalyzer.Client.InferRequestHeader.Types.Input> Input {
+    public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Input> Input {
       get { return input_; }
     }
 
     /// <summary>Field number for the "output" field.</summary>
     public const int OutputFieldNumber = 3;
-    private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.InferRequestHeader.Types.Output> _repeated_output_codec
-        = pb::FieldCodec.ForMessage(26, global::ModelAnalyzer.Client.InferRequestHeader.Types.Output.Parser);
-    private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.InferRequestHeader.Types.Output> output_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.InferRequestHeader.Types.Output>();
+    private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output> _repeated_output_codec
+        = pb::FieldCodec.ForMessage(26, global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output.Parser);
+    private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output> output_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output>();
     /// <summary>
     ///@@  .. cpp:var:: Output output (repeated)
     ///@@
@@ -433,7 +433,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::ModelAnalyzer.Client.InferRequestHeader.Types.Output> Output {
+    public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output> Output {
       get { return output_; }
     }
 
@@ -636,7 +636,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.InferRequestHeader.Descriptor.NestedTypes[0]; }
+          get { return global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Descriptor.NestedTypes[0]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -722,7 +722,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "shared_memory" field.</summary>
         public const int SharedMemoryFieldNumber = 4;
-        private global::ModelAnalyzer.Client.InferSharedMemory sharedMemory_;
+        private global::Triton.MemoryAnalyzer.Client.InferSharedMemory sharedMemory_;
         /// <summary>
         ///@@    .. cpp:var:: InferSharedMemory shared_memory
         ///@@
@@ -732,7 +732,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.InferSharedMemory SharedMemory {
+        public global::Triton.MemoryAnalyzer.Client.InferSharedMemory SharedMemory {
           get { return sharedMemory_; }
           set {
             sharedMemory_ = value;
@@ -830,7 +830,7 @@ namespace ModelAnalyzer.Client
           }
           if (other.sharedMemory_ != null) {
             if (sharedMemory_ == null) {
-              SharedMemory = new global::ModelAnalyzer.Client.InferSharedMemory();
+              SharedMemory = new global::Triton.MemoryAnalyzer.Client.InferSharedMemory();
             }
             SharedMemory.MergeFrom(other.SharedMemory);
           }
@@ -860,7 +860,7 @@ namespace ModelAnalyzer.Client
               }
               case 34: {
                 if (sharedMemory_ == null) {
-                  SharedMemory = new global::ModelAnalyzer.Client.InferSharedMemory();
+                  SharedMemory = new global::Triton.MemoryAnalyzer.Client.InferSharedMemory();
                 }
                 input.ReadMessage(SharedMemory);
                 break;
@@ -886,7 +886,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.InferRequestHeader.Descriptor.NestedTypes[1]; }
+          get { return global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Descriptor.NestedTypes[1]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -933,7 +933,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "cls" field.</summary>
         public const int ClsFieldNumber = 3;
-        private global::ModelAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class cls_;
+        private global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class cls_;
         /// <summary>
         ///@@    .. cpp:var:: Class cls
         ///@@
@@ -944,7 +944,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class Cls {
+        public global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class Cls {
           get { return cls_; }
           set {
             cls_ = value;
@@ -953,7 +953,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "shared_memory" field.</summary>
         public const int SharedMemoryFieldNumber = 4;
-        private global::ModelAnalyzer.Client.InferSharedMemory sharedMemory_;
+        private global::Triton.MemoryAnalyzer.Client.InferSharedMemory sharedMemory_;
         /// <summary>
         ///@@    .. cpp:var:: InferSharedMemory shared_memory
         ///@@
@@ -963,7 +963,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.InferSharedMemory SharedMemory {
+        public global::Triton.MemoryAnalyzer.Client.InferSharedMemory SharedMemory {
           get { return sharedMemory_; }
           set {
             sharedMemory_ = value;
@@ -1053,13 +1053,13 @@ namespace ModelAnalyzer.Client
           }
           if (other.cls_ != null) {
             if (cls_ == null) {
-              Cls = new global::ModelAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class();
+              Cls = new global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class();
             }
             Cls.MergeFrom(other.Cls);
           }
           if (other.sharedMemory_ != null) {
             if (sharedMemory_ == null) {
-              SharedMemory = new global::ModelAnalyzer.Client.InferSharedMemory();
+              SharedMemory = new global::Triton.MemoryAnalyzer.Client.InferSharedMemory();
             }
             SharedMemory.MergeFrom(other.SharedMemory);
           }
@@ -1080,14 +1080,14 @@ namespace ModelAnalyzer.Client
               }
               case 26: {
                 if (cls_ == null) {
-                  Cls = new global::ModelAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class();
+                  Cls = new global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output.Types.Class();
                 }
                 input.ReadMessage(Cls);
                 break;
               }
               case 34: {
                 if (sharedMemory_ == null) {
-                  SharedMemory = new global::ModelAnalyzer.Client.InferSharedMemory();
+                  SharedMemory = new global::Triton.MemoryAnalyzer.Client.InferSharedMemory();
                 }
                 input.ReadMessage(SharedMemory);
                 break;
@@ -1114,7 +1114,7 @@ namespace ModelAnalyzer.Client
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public static pbr::MessageDescriptor Descriptor {
-              get { return global::ModelAnalyzer.Client.InferRequestHeader.Types.Output.Descriptor.NestedTypes[0]; }
+              get { return global::Triton.MemoryAnalyzer.Client.InferRequestHeader.Types.Output.Descriptor.NestedTypes[0]; }
             }
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1270,7 +1270,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.ApiReflection.Descriptor.MessageTypes[2]; }
+      get { return global::Triton.MemoryAnalyzer.Client.ApiReflection.Descriptor.MessageTypes[2]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1374,9 +1374,9 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "output" field.</summary>
     public const int OutputFieldNumber = 4;
-    private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output> _repeated_output_codec
-        = pb::FieldCodec.ForMessage(34, global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Parser);
-    private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output> output_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output>();
+    private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output> _repeated_output_codec
+        = pb::FieldCodec.ForMessage(34, global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Parser);
+    private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output> output_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output>();
     /// <summary>
     ///@@  .. cpp:var:: Output output (repeated)
     ///@@
@@ -1385,7 +1385,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output> Output {
+    public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output> Output {
       get { return output_; }
     }
 
@@ -1547,7 +1547,7 @@ namespace ModelAnalyzer.Client
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
         public static pbr::MessageDescriptor Descriptor {
-          get { return global::ModelAnalyzer.Client.InferResponseHeader.Descriptor.NestedTypes[0]; }
+          get { return global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Descriptor.NestedTypes[0]; }
         }
 
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1594,7 +1594,7 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "raw" field.</summary>
         public const int RawFieldNumber = 2;
-        private global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw raw_;
+        private global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw raw_;
         /// <summary>
         ///@@    .. cpp:var:: Raw raw
         ///@@
@@ -1605,7 +1605,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw Raw {
+        public global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw Raw {
           get { return raw_; }
           set {
             raw_ = value;
@@ -1614,9 +1614,9 @@ namespace ModelAnalyzer.Client
 
         /// <summary>Field number for the "batch_classes" field.</summary>
         public const int BatchClassesFieldNumber = 3;
-        private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes> _repeated_batchClasses_codec
-            = pb::FieldCodec.ForMessage(26, global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes.Parser);
-        private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes> batchClasses_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes>();
+        private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes> _repeated_batchClasses_codec
+            = pb::FieldCodec.ForMessage(26, global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes.Parser);
+        private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes> batchClasses_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes>();
         /// <summary>
         ///@@    .. cpp:var:: Classes batch_classes (repeated)
         ///@@
@@ -1627,7 +1627,7 @@ namespace ModelAnalyzer.Client
         ///@@
         /// </summary>
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-        public pbc::RepeatedField<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes> BatchClasses {
+        public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Classes> BatchClasses {
           get { return batchClasses_; }
         }
 
@@ -1709,7 +1709,7 @@ namespace ModelAnalyzer.Client
           }
           if (other.raw_ != null) {
             if (raw_ == null) {
-              Raw = new global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw();
+              Raw = new global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw();
             }
             Raw.MergeFrom(other.Raw);
           }
@@ -1731,7 +1731,7 @@ namespace ModelAnalyzer.Client
               }
               case 18: {
                 if (raw_ == null) {
-                  Raw = new global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw();
+                  Raw = new global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Raw();
                 }
                 input.ReadMessage(Raw);
                 break;
@@ -1762,7 +1762,7 @@ namespace ModelAnalyzer.Client
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public static pbr::MessageDescriptor Descriptor {
-              get { return global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Descriptor.NestedTypes[0]; }
+              get { return global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Descriptor.NestedTypes[0]; }
             }
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1932,7 +1932,7 @@ namespace ModelAnalyzer.Client
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public static pbr::MessageDescriptor Descriptor {
-              get { return global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Descriptor.NestedTypes[1]; }
+              get { return global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Descriptor.NestedTypes[1]; }
             }
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2143,7 +2143,7 @@ namespace ModelAnalyzer.Client
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
             public static pbr::MessageDescriptor Descriptor {
-              get { return global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Descriptor.NestedTypes[2]; }
+              get { return global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Descriptor.NestedTypes[2]; }
             }
 
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -2171,9 +2171,9 @@ namespace ModelAnalyzer.Client
 
             /// <summary>Field number for the "cls" field.</summary>
             public const int ClsFieldNumber = 1;
-            private static readonly pb::FieldCodec<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class> _repeated_cls_codec
-                = pb::FieldCodec.ForMessage(10, global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class.Parser);
-            private readonly pbc::RepeatedField<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class> cls_ = new pbc::RepeatedField<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class>();
+            private static readonly pb::FieldCodec<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class> _repeated_cls_codec
+                = pb::FieldCodec.ForMessage(10, global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class.Parser);
+            private readonly pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class> cls_ = new pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class>();
             /// <summary>
             ///@@      .. cpp:var:: Class cls (repeated)
             ///@@
@@ -2181,7 +2181,7 @@ namespace ModelAnalyzer.Client
             ///@@
             /// </summary>
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-            public pbc::RepeatedField<global::ModelAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class> Cls {
+            public pbc::RepeatedField<global::Triton.MemoryAnalyzer.Client.InferResponseHeader.Types.Output.Types.Class> Cls {
               get { return cls_; }
             }
 

@@ -17,7 +17,7 @@ limitations under the License.
 using System;
 using static System.Threading.Interlocked;
 
-namespace ModelAnalyzer.Metrics
+namespace Triton.MemoryAnalyzer.Metrics
 {
     public struct FieldGroupInfo
     {

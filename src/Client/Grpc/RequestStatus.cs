@@ -7,7 +7,7 @@
 
 using pb = global::Google.Protobuf;
 using pbr = global::Google.Protobuf.Reflection;
-namespace ModelAnalyzer.Client
+namespace Triton.MemoryAnalyzer.Client
 {
 
     /// <summary>Holder for reflection information generated from request_status.proto</summary>
@@ -33,8 +33,8 @@ namespace ModelAnalyzer.Client
             "Cg5BTFJFQURZX0VYSVNUUxAIYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
-          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::ModelAnalyzer.Client.RequestStatusCode), }, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::ModelAnalyzer.Client.RequestStatus), global::ModelAnalyzer.Client.RequestStatus.Parser, new[]{ "Code", "Msg", "ServerId", "RequestId" }, null, null, null)
+          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Triton.MemoryAnalyzer.Client.RequestStatusCode), }, new pbr::GeneratedClrTypeInfo[] {
+            new pbr::GeneratedClrTypeInfo(typeof(global::Triton.MemoryAnalyzer.Client.RequestStatus), global::Triton.MemoryAnalyzer.Client.RequestStatus.Parser, new[]{ "Code", "Msg", "ServerId", "RequestId" }, null, null, null)
           }));
     }
     #endregion
@@ -138,7 +138,7 @@ namespace ModelAnalyzer.Client
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::ModelAnalyzer.Client.RequestStatusReflection.Descriptor.MessageTypes[0]; }
+      get { return global::Triton.MemoryAnalyzer.Client.RequestStatusReflection.Descriptor.MessageTypes[0]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -169,7 +169,7 @@ namespace ModelAnalyzer.Client
 
     /// <summary>Field number for the "code" field.</summary>
     public const int CodeFieldNumber = 1;
-    private global::ModelAnalyzer.Client.RequestStatusCode code_ = 0;
+    private global::Triton.MemoryAnalyzer.Client.RequestStatusCode code_ = 0;
     /// <summary>
     ///@@  .. cpp:var:: RequestStatusCode code
     ///@@
@@ -177,7 +177,7 @@ namespace ModelAnalyzer.Client
     ///@@
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::ModelAnalyzer.Client.RequestStatusCode Code {
+    public global::Triton.MemoryAnalyzer.Client.RequestStatusCode Code {
       get { return code_; }
       set {
         code_ = value;
@@ -348,7 +348,7 @@ namespace ModelAnalyzer.Client
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 8: {
-            Code = (global::ModelAnalyzer.Client.RequestStatusCode) input.ReadEnum();
+            Code = (global::Triton.MemoryAnalyzer.Client.RequestStatusCode) input.ReadEnum();
             break;
           }
           case 18: {

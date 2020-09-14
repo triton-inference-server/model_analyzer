@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 *****************************************************************************/
 
-using ModelAnalyzer.Client;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,8 +21,9 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Triton.MemoryAnalyzer.Client;
 
-namespace ModelAnalyzer
+namespace Triton.MemoryAnalyzer
 {
     /// <summary>
     /// Class used to store configuration of Model Analyzer

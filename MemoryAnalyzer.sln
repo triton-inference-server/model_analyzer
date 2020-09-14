@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30104.148
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "model-analyzer", "src\model-analyzer.csproj", "{7822DC00-5D0E-497B-91EF-3F012FBC1BC7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemoryAnalyzer", "src\Triton.MemoryAnalyzer.csproj", "{7822DC00-5D0E-497B-91EF-3F012FBC1BC7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "model-analyzer.UnitTests", "tests\model-analyzer.UnitTests.csproj", "{E35A1BFA-97E4-4F24-84E4-FC04F3E1A917}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MemoryAnalyzer.Tests", "tests\Triton.MemoryAnalyzer.Tests.csproj", "{E35A1BFA-97E4-4F24-84E4-FC04F3E1A917}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

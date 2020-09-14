@@ -13,6 +13,6 @@ limitations under the License.
 
 # Contributing
 
-Model Analyzer follows similar contributing guidelines to Triton Inference Server. Please see [the Triton Inference Server contributing document].
+Triton Memory Analyzer follows similar contributing guidelines to Triton Inference Server. Please see [the Triton Inference Server contributing document].
 
 [the Triton Inference Server contributing document]: https://github.com/triton-inference-server/server/blob/master/CONTRIBUTING.md

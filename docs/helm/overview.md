@@ -13,15 +13,15 @@ limitations under the License.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
 
-# Model Analyzer Helm Chart
+# Triton Memory Analyzer Helm Chart
 
 ## Requirements
 
-In additiom to the base requirements, the Helm version also requires Kubernetes and Helm.
+In addition to the base requirements, the Helm version also requires Kubernetes and Helm.
 
 ## Procedure
 
-1. Build the Docker container by navigating to the root folder and running `docker build -f Dockerfile -t model-analyzer .'
+1. Build the Docker container by navigating to the root folder and running `docker build -f Dockerfile -t memory-analyzer .'
 2. Change directories into `helm-chart` folder.
 3. Create the below text file as `config.yaml`, updating the field values:
 

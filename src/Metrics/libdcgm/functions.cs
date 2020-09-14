@@ -17,7 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.InteropServices;
 
-namespace ModelAnalyzer.Metrics
+namespace Triton.MemoryAnalyzer.Metrics
 {
     static unsafe partial class libdcgm
     {

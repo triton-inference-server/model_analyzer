@@ -13,17 +13,17 @@ limitations under the License.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
 
-# Model Analyzer Docker Container
+# Triton Memory Analyzer Docker Container
 
 ## Procedure
 
-1. Build the Docker container by navigating to the root folder and running `docker build -f Dockerfile -t model-analyzer .'
+1. Build the Docker container by navigating to the root folder and running `docker build -f Dockerfile -t memory-analyzer .'
 2. Run the below command, replacing the capitalized arguments:
 
         docker run -v /var/run/docker.sock:/var/run/docker.sock \
         -v /ABSOLUTE/PATH/TO/MODELS:/ABSOLUTE/PATH/TO/MODELS \
         -v /ABSOLUTE/PATH/TO/EXPORT/DIRECTORY:/results --net=host \
-        model-analyzer:ANALYZER-VERSION \
+        memory-analyzer:ANALYZER-VERSION \
         --batch BATCH-SIZES --concurrency CONCURRENCY-VALUES \
         --model-names MODEL-NAMES \
         --triton-version TRITON-VERSION \
@@ -35,7 +35,7 @@ Please reference the below sample command:
         docker run -v /var/run/docker.sock:/var/run/docker.sock \
         -v /home/user1/models:/home/user1/models \
         -v /home/user1/results:/results --net=host \
-        model-analyzer:0.7.3-2008.1 \
+        memory-analyzer:0.7.3-2008.1 \
         --batch 1,4,8 --concurrency 2,4,8 \
         --model-names chest_xray,covid19_xray\
         --triton-version 20.02-py3 \

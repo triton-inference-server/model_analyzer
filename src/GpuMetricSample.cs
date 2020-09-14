@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 *****************************************************************************/
 
-using ModelAnalyzer.Metrics;
 using System;
+using Triton.MemoryAnalyzer.Metrics;
 
-namespace ModelAnalyzer
+namespace Triton.MemoryAnalyzer
 {
     /// <summary>
     /// Class to store an instance of Gpu Metrics

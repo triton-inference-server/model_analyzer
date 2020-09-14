@@ -13,7 +13,7 @@ limitations under the License.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
 
-# Model Analyzer Command Line Interface (CLI)
+# Triton Memory Analyzer Command Line Interface (CLI)
 
 ## Requirements
 
@@ -22,10 +22,10 @@ In addition to the base requirements, the CLI requires .NET Core SDK.
 ## Procedure
 
 1. Compile the CLI by navigating to the `src` folder and running `dotnet publish -c Release'
-2. Then, change directories into the folder where Model Analyzer was published: `cd bin/Release/netcoreapp3.1/linux-x64/publish/`
-3. You can type `./model-analyzer` to see command line argument options. You can also run the below command, replacing the capitalized arguments:
+2. Then, change directories into the folder where Triton Memory Analyzer was published: `cd bin/Release/netcoreapp3.1/linux-x64/publish/`
+3. You can type `./memory-analyzer` to see command line argument options. You can also run the below command, replacing the capitalized arguments:
 
-        ./model-analyzer -m MODELS \
+        ./memory-analyzer -m MODELS \
         --model-folder /ABSOLUTE/PATH/TO/MODELS \
         -e /PATH/TO/EXPORT/DIRECTORY \
         --export -b BATCH-SIZES \
@@ -34,7 +34,7 @@ In addition to the base requirements, the CLI requires .NET Core SDK.
 
 Please reference the below sample command:
 
-        ./model-analyzer -m chest_xray,covid19_xray \
+        ./memory-analyzer -m chest_xray,covid19_xray \
         --model-folder /home/user/models \
         -e /home/user/results \
         --export -b 1,4,8 \
