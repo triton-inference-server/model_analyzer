@@ -72,8 +72,8 @@ dotnet publish -c Release
 
 ```
 git clone https://github.com/triton-inference-server/model_analyzer.git
-cd model_analyzer/src
-docker build -f Dockerfile -t memory-analyzer .
+cd model_analyzer
+docker build -t memory-analyzer .
 docker run -v /var/run/docker.sock:/var/run/docker.sock \
         -v /ABSOLUTE/PATH/TO/MODELS:ABSOLUTE/PATH/TO/MODELS \
         -v /ABSOLUTE/PATH/TO/EXPORT/DIRECTORY:/results --net=host \
