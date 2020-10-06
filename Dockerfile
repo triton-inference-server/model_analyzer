@@ -21,8 +21,8 @@ RUN apt-get clean && \
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
 COPY src .
-RUN dotnet restore "MemoryAnalyzer.csproj"
-RUN dotnet publish "MemoryAnalyzer.csproj" -c Release -o /app/publish
+RUN dotnet restore "Triton.MemoryAnalyzer.csproj"
+RUN dotnet publish "Triton.MemoryAnalyzer.csproj" -c Release -o /app/publish
 
 FROM base
 WORKDIR /app
