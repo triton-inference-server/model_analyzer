@@ -27,6 +27,9 @@ from model_analyzer.record.record import Record
 
 
 class RecordCollector:
+    """
+    Stores a collection of Record objects.
+    """
 
     def __init__(self):
         self._records = []
