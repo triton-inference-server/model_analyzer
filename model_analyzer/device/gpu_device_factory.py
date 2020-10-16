@@ -30,6 +30,9 @@ from model_analyzer.device.gpu_device import GPUDevice
 
 
 class GPUDeviceFactory:
+    """
+    Factory class for creating GPUDevices
+    """
 
     @staticmethod
     def create_device_by_bus_id(bus_id):
