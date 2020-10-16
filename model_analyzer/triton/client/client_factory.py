@@ -24,13 +24,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from abc import ABC, abstractmethod
 
-class TritonClientFactory:
+class TritonClientFactory(ABC):
     """
     Base client creator class that declares
     a factory method
     """
 
+    @abstractmethod
     def create_client(self, config):
         """
         Parameters
@@ -42,4 +44,3 @@ class TritonClientFactory:
         -------
         TritonClient
         """
-        raise NotImplementedError()

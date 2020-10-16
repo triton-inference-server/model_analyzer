@@ -33,7 +33,7 @@ from model_analyzer.triton.client.http_client_factory import TritonHTTPClientFac
 from model_analyzer.triton.client.grpc_client_factory import TritonGRPCClientFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.client.client_config import TritonClientConfig
-
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 # Test parameters
 MODEL_LOCAL_PATH = '/model_analyzer/models'
@@ -78,9 +78,10 @@ class TestTritonClientMethods(unittest.TestCase):
                             msg=f"{CONFIG_TEST_ARG} was not set")
         
         # Try to set an unsupported config argument, expect failure
-        with self.assertRaises(Exception, msg="Expected ValueError on trying to set "
-                                         "unsupported argument in Triton server "
-                                         "config"): 
+        with self.assertRaises(TritonModelAnalyzerException, 
+                                msg="Expected ValueError on trying to set "
+                                    "unsupported argument in Triton server "
+                                    "config"): 
             client_config['dummy'] = 1
         
     def test_create_client(self):
@@ -93,11 +94,11 @@ class TestTritonClientMethods(unittest.TestCase):
             client = factory.create_client(config=client_config)
 
         # Try to create a client without specifying url and expect error
-        with self.assertRaises(Exception, msg="Expected AssertionError for trying to "
-                                              "create client without specifying url."):
-            factory = TritonGRPCClientFactory()
-            client_config['url'] = None
-            client = factory.create_client(config=client_config)
+            with self.assertRaises(AssertionError, 
+                                    msg="Expected AssertionError for trying to "
+                                        "create client without specifying url."):
+                client_config['url'] = None
+                client = factory.create_client(config=client_config)
 
     def test_wait_for_ready(self):
         # Create a TritonClientConfig
@@ -111,7 +112,9 @@ class TestTritonClientMethods(unittest.TestCase):
         # Wait for the server when it hasnt been started
         expected_string = "Could not determine server readiness. Number of retries exceeded."
         failure_message = "Expected exception waiting for server which is not running"
-        with self.assertRaisesRegex(Exception, expected_regex=expected_string, msg=failure_message):
+        with self.assertRaisesRegex(TritonModelAnalyzerException, 
+                                    expected_regex=expected_string, 
+                                    msg=failure_message):
             client.wait_for_server_ready(num_retries=10)
         
         # Start the server
@@ -136,8 +139,9 @@ class TestTritonClientMethods(unittest.TestCase):
         client.wait_for_server_ready()
 
         # Try to load a dummy model and expect error
-        with self.assertRaises(Exception, msg="Expected Exception trying"
-                                              " to load dummy model"):
+        with self.assertRaises(TritonModelAnalyzerException, 
+                                msg="Expected Exception trying"
+                                    " to load dummy model"):
             client.load_model('dummy')
         
         # Load the test model

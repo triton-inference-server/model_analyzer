@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 class TritonServerConfig:
     """
@@ -40,19 +41,15 @@ class TritonServerConfig:
             'log-warning' : None,
             'log-error' : None,
             'id' : None,
-        
             # Model Repository
             'model-store' : None,
             'model-repository' : None,
-            
             # Exit
             'exit-timeout-secs' : None,
             'exit-on-error' : None,
-
             # Strictness
             'strict-model-config' : None,
             'strict-readiness' : None,
-            
             # API Servers
             'allow-http' : None,
             'http-port' : None,
@@ -67,26 +64,21 @@ class TritonServerConfig:
             'allow-metrics' : None,
             'allow-gpu-metrics' : None,
             'metrics-port' : None,
-            
             # Tracing
             'trace-file' : None,
             'trace-level' : None,
             'trace-rate' : None,
-            
             # Model control
             'model-control-mode' : None,
             'repository-poll-secs' : None,
             'load-model' : None,
-
             # Memory and GPU
             'pinned-memory-pool-byte-size' : None,
             'cuda-memory-pool-byte-size' : None,
             'min-supported-compute-capability' : None,
-            
             # Backend config
             'backend-directory' : None,
             'backend-config' : None,
-            
             'allow-soft-placement' : None,
             'gpu-memory-fraction' : None,
             'tensorflow-version' : None
@@ -108,7 +100,8 @@ class TritonServerConfig:
                         for key,val in self._server_args.items()])
 
     def __getitem__(self, key):
-        """Gets an arguments value in config
+        """
+        Gets an arguments value in config
 
         Parameters
         ----------
@@ -122,7 +115,8 @@ class TritonServerConfig:
         return self._server_args[key]
     
     def __setitem__(self, key, value):
-        """Sets an arguments value in config
+        """
+        Sets an arguments value in config
         after checking if defined/supported.
 
         Parameters
@@ -134,12 +128,12 @@ class TritonServerConfig:
         
         Raises
         ------
-        Exception
+        TritonModelAnalyzerException
             If key is unsupported or undefined in the
             config class
         """
         if key in self._server_args:
             self._server_args[key] = value
         else:
-            raise Exception(f"The argument '{key}' to the Triton Inference "
+            raise TritonModelAnalyzerException(f"The argument '{key}' to the Triton Inference "
                              "Server is not supported by the model analyzer.")

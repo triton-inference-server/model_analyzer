@@ -24,14 +24,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 class PerfAnalyzerConfig:
-    """A config class to set arguments to the perf_analyzer. 
+    """
+    A config class to set arguments to the perf_analyzer. 
     An argument set to None will use the perf_analyzer's default.
     """
     
     def __init__(self):
-
         self._args = {
             'async' : None,
             'sync' : None,
@@ -87,7 +88,8 @@ class PerfAnalyzerConfig:
         }
 
     def to_cli_string(self):
-        """Utility function to convert a config into a
+        """
+        Utility function to convert a config into a
         string of arguments to the perf_analyzer with CLI.
 
         Returns
@@ -105,7 +107,8 @@ class PerfAnalyzerConfig:
         return ' '.join(args)
 
     def __getitem__(self, key):
-        """Gets an arguments value in config
+        """
+        Gets an arguments value in config
 
         Parameters
         ----------
@@ -118,7 +121,7 @@ class PerfAnalyzerConfig:
         
         Raises
         ------
-        Exception
+        TritonModelAnalyzerException
             If argument not found in the config
         """
         if key in self._args:
@@ -128,10 +131,11 @@ class PerfAnalyzerConfig:
         elif key in self._input_to_verbose:
             self._verbose[self._input_to_verbose[key]] = value
         else:
-            raise Exception(f"'{key}' Key not found in config")
+            raise TritonModelAnalyzerException(f"'{key}' Key not found in config")
     
     def __setitem__(self, key, value):
-        """Sets an arguments value in config
+        """
+        Sets an arguments value in config
         after checking if defined/supported.
 
         Parameters
@@ -143,7 +147,7 @@ class PerfAnalyzerConfig:
         
         Raises
         ------
-        Exception
+        TritonModelAnalyzerException
             If key is unsupported or undefined in the
             config class
         """
@@ -151,8 +155,8 @@ class PerfAnalyzerConfig:
             self._args[key] = value
         elif key in self._input_to_options:
             self._options[self._input_to_options[key]] = value
-        elif key in verbose:
+        elif key in self._verbose:
             self._verbose[self._input_to_verbose[key]] = value
         else:
-            raise Exception(f"The argument '{key}' to the perf_analyzer "
-                             "is not supported by the model analyzer.")
+            raise TritonModelAnalyzerException(f"The argument '{key}' to the perf_analyzer "
+                                                "is not supported by the model analyzer.")

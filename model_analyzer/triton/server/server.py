@@ -26,28 +26,31 @@
 
 import requests
 import time
+from abc import ABC, abstractmethod
+
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 WAIT_FOR_READY_NUM_RETRIES = 100    
 SERVER_HTTP_PORT = 8000
 
-class TritonServer:
+class TritonServer(ABC):
     """
     Defines the interface for the objects created by 
     TritonServerFactory
     """
     
+    @abstractmethod
     def start(self):
         """
         Starts the tritonserver
         """
-        raise NotImplementedError()
     
+    @abstractmethod
     def stop(self):
         """
         Stops and cleans up after the server
         """
-        raise NotImplementedError()
-
+    
     def wait_for_ready(self, num_retries=WAIT_FOR_READY_NUM_RETRIES):
         """
         Parameters
@@ -59,19 +62,19 @@ class TritonServer:
         
         Raises
         ------
-        Exception
+        TritonModelAnalyzerException
             1)  If config doesn't allow http 
                 requests       
             2)  If server readiness could not be 
                 determined in given num_retries.
         """
-        # FIXME this should not really be a server function
+        # TODO this should not really be a server function
         if self._server_config['allow-http'] is not False:
             http_port = self._server_config['http-port'] or SERVER_HTTP_PORT
             url = f"http://localhost:{http_port}/v2/health/ready"
         else:
-            # FIXME to use GRPC to check for ready also
-            raise Exception('allow-http must be True in order to use wait_for_server_ready')
+            # TODO to use GRPC to check for ready also
+            raise TritonModelAnalyzerException('allow-http must be True in order to use wait_for_server_ready')
         
         retries = num_retries
         
@@ -87,4 +90,4 @@ class TritonServer:
             retries -= 1
         
         # If num_retries is exceeded return an exception
-        raise Exception(f"Server not ready : num_retries : {num_retries}")
+        raise TritonModelAnalyzerException(f"Server not ready : num_retries : {num_retries}")

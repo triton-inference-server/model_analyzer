@@ -31,6 +31,7 @@ import sys
 from model_analyzer.triton.server.server_local_factory import TritonServerLocalFactory
 from model_analyzer.triton.server.server_docker_factory import TritonServerDockerFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 # Test parameters
 MODEL_LOCAL_PATH = '/model_analyzer/models'
@@ -70,9 +71,10 @@ class TestTritonServerMethods(unittest.TestCase):
                             msg=f"{CONFIG_TEST_ARG} was not set")
         
         # Try to set an unsupported config argument, expect failure
-        with self.assertRaises(Exception, msg="Expected exception on trying to set"
-                                              "unsupported argument in Triton server"
-                                              "config"):
+        with self.assertRaises(TritonModelAnalyzerException, 
+                                msg="Expected exception on trying to set"
+                                    "unsupported argument in Triton server"
+                                    "config"):
             server_config['dummy'] = 1
         
         # Reset test arg

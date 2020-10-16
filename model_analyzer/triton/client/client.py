@@ -27,6 +27,7 @@
 import time
 
 from tritonclient.utils import InferenceServerException
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 WAIT_FOR_READY_NUM_RETRIES = 100
 
@@ -36,10 +37,6 @@ class TritonClient:
     Defines the interface for the objects created by 
     TritonClientFactory
     """
-    def __init__(self, config):
-        self._client_config = config
-        assert self._client_config['url'], \
-            "Must specify url in client config."
 
     def wait_for_server_ready(self, num_retries=WAIT_FOR_READY_NUM_RETRIES):
         """
@@ -52,7 +49,7 @@ class TritonClient:
         
         Raises
         ------
-        Exception
+        TritonModelAnalyzerException
             If server readiness could not be
             determined in given num_retries
         """
@@ -67,8 +64,8 @@ class TritonClient:
                 time.sleep(0.1)
                 num_retries -= 1
                 pass
-        raise Exception("Could not determine server readiness. "
-                        "Number of retries exceeded.")
+        raise TritonModelAnalyzerException("Could not determine server readiness. "
+                                           "Number of retries exceeded.")
     
     def load_model(self, model_name):
         """
@@ -83,14 +80,14 @@ class TritonClient:
         
         Raises
         ------
-        Exception
+        TritonModelAnalyzerException
             If server throws InferenceServerException
         """
         try:
             self._client.load_model(model_name)
         except InferenceServerException as e:
-            raise Exception(f"Unable to load the model : {e}")
-
+            raise TritonModelAnalyzerException(f"Unable to load the model : {e}")
+    
     def unload_model(self, model_name):
         """
         Request the inference server to unload
@@ -104,13 +101,13 @@ class TritonClient:
         
         Raises
         ------
-        Exception
+        TritonModelAnalyzerException
             If server throws InferenceServerException
         """
         try:
             self._client.unload_model(model_name)
         except InferenceServerException as e:
-            raise Exception(f"Unable to unload the model : {e}")
+            raise TritonModelAnalyzerException(f"Unable to unload the model : {e}")
     
     def wait_for_model_ready(self, model_name, num_retries=WAIT_FOR_READY_NUM_RETRIES):
         """
@@ -128,7 +125,7 @@ class TritonClient:
         
         Raises
         ------
-        Exception
+        TritonModelAnalyzerException
             If could not determine model readiness 
             in given num_retries
         """
@@ -143,5 +140,5 @@ class TritonClient:
                 time.sleep(0.05)
                 num_retries -= 1
                 pass
-        raise Exception("Could not determine model readiness. "
-                        "Number of retries exceeded.")
+        raise TritonModelAnalyzerException("Could not determine model readiness. "
+                                           "Number of retries exceeded.")

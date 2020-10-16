@@ -27,11 +27,13 @@
 from itertools import product
 from subprocess import check_output, CalledProcessError, STDOUT
 
+from model_analyzer.analyzer.perf_analyzer.perf_record import PerfRecord
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 class PerfAnalyzer:
-    """A wrapper class for the perf_analyzer. This
-    class provides an interface for running workloads 
-    with perf_analyzer
+    """
+    This class provides an interface for running workloads 
+    with perf_analyzer.
     """
 
     def __init__(self, config):
@@ -46,7 +48,8 @@ class PerfAnalyzer:
         self._outputs = []
 
     def run_job(self, sweep_params):
-        """Parses the parameters to sweep over and runs
+        """
+        Parses the parameters to sweep over and runs
         the perf_analyzer once per configuration.
 
         Parameters
@@ -60,9 +63,13 @@ class PerfAnalyzer:
         List of tuples 
             (params, output) where params are the set of 
             parameters provided for that run and output is 
-            the stdout from the perf_analyzer.
+            the PerfRecord for the perf_analyzer run
+        
+        Raises
+        ------
+        TritonModelAnalyzerException
+            If _run_perf_analyzer throws this exception
         """
-
         # Create a config for each combination of parameters
         combos = list(product(*tuple(sweep_params.values())))
         run_configs = [dict(zip(sweep_params.keys(), vals)) for vals in combos]
@@ -78,21 +85,26 @@ class PerfAnalyzer:
                 self._config[key] = val
             
             # Run perf_analyzer
-            run_output = self._run_perf_analyzer()
-            run_outputs.append((run_config, run_output))
+            run_record = self._run_perf_analyzer()
+            run_outputs.append((run_config, run_record))
         
         return run_outputs
 
     def _run_perf_analyzer(self):
-        """Runs the perf_analyzer tool locally 
+        """
+        Runs the perf_analyzer tool locally 
         and synchronously
         
         Returns
         -------
-        str
+        PerfRecord
             output from the subprocess call to 
             the perf_analyzer
-
+        
+        Raises
+        ------
+        TritonModelAnalyzerException
+            If subprocess throws CalledProcessError
         """
         cmd = ['perf_analyzer']
         cmd += self._config.to_cli_string().replace('=', ' ').split()
@@ -102,7 +114,7 @@ class PerfAnalyzer:
         try:    
             out = check_output(cmd, stderr=STDOUT, encoding='utf-8')
         except CalledProcessError as e:
-            raise Exception(f"perf analyzer returned with exit" 
-                            " status {e.returncode} : {e.output}")
+            raise TritonModelAnalyzerException(f"perf analyzer returned with exit" 
+                                                " status {e.returncode} : {e.output}")
 
-        return out
+        return PerfRecord(out)

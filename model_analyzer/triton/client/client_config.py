@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 class TritonClientConfig:
     """
@@ -36,7 +37,8 @@ class TritonClientConfig:
         }
 
     def __getitem__(self, key):
-        """Gets an arguments value in config
+        """
+        Gets an arguments value in config
 
         Parameters
         ----------
@@ -50,7 +52,8 @@ class TritonClientConfig:
         return self._client_args[key]
     
     def __setitem__(self, key, value):
-        """Sets an arguments value in config
+        """
+        Sets an arguments value in config
         after checking if defined/supported.
 
         Parameters
@@ -62,12 +65,12 @@ class TritonClientConfig:
         
         Raises
         ------
-        Exception
+        TritonModelAnalyzerException
             If key is unsupported or undefined in the
             config class
         """
         if key in self._client_args:
             self._client_args[key] = value
         else:
-            raise Exception(f"The argument '{key}' to the client is "
-                             "not supported by the model analyzer.")
+            raise TritonModelAnalyzerException(f"The argument '{key}' to the client is "
+                                                "not supported by the model analyzer.")

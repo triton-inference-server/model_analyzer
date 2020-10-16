@@ -30,7 +30,10 @@ from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.server.server_local_factory import TritonServerLocalFactory
 from model_analyzer.analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.analyzer.perf_analyzer.perf_record import PerfRecord
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
+# Test Parameters
 MODEL_LOCAL_PATH = '/model_analyzer/models'
 MODEL_REPOSITORY_PATH = '/model_analyzer/models'
 TRITON_VERSION = '20.09'
@@ -40,6 +43,25 @@ TEST_RUN_PARAMS = {
     'batch-size' : [1,2],
     'concurrency-range' : [2,4]
 }
+PERF_RECORD_EXAMPLE = ("*** Measurement Settings ***\n"
+                      "  Batch size: 1\n"
+                      "  Measurement window: 5000 msec\n\n"
+                      "Request concurrency: 4\n"
+                      "  Client:\n"
+                      "    Request count: 100\n"
+                      "    Throughput: 40.8 infer/sec\n"
+                      "    Avg latency: 2000 usec\n"
+                      "    p50 latency: 2000 usec\n"
+                      "    p90 latency: 2000 usec\n"
+                      "    p95 latency: 2000 usec\n"
+                      "    p99 latency: 2000 usec\n"
+                      "  Server:\n"
+                      "    Inference count: 100\n"
+                      "    Execution count: 100\n"
+                      "    Successful request count: 100\n"
+                      "    Avg request latency: 2000 usec\n\n"
+                      "Inferences/Second vs. Client Average Batch Latency\n"
+                      "Concurrency: 1, throughput: 45 infer/sec, latency 22222 usec\n")
 
 class TestPerfAnalyzerMethods(unittest.TestCase):
 
@@ -64,9 +86,10 @@ class TestPerfAnalyzerMethods(unittest.TestCase):
                             msg=f"{CONFIG_TEST_ARG} was not set")
                 
         # Try to set an unsupported config argument, expect failure
-        with self.assertRaises(Exception, msg="Expected exception on trying to set"
-                                              "unsupported argument in perf_analyzer"
-                                              "config"):
+        with self.assertRaises(TritonModelAnalyzerException, 
+                                msg="Expected exception on trying to set"
+                                    "unsupported argument in perf_analyzer"
+                                    "config"):
             self.config['dummy'] = 1
 
     def test_run(self):
@@ -92,6 +115,13 @@ class TestPerfAnalyzerMethods(unittest.TestCase):
         self.assertEqual(len(outputs), 4)
 
         self.server.stop()
+
+    def test_perf_record(self):
+        # Create a perf record from the example
+        record = PerfRecord(PERF_RECORD_EXAMPLE)
+
+        # Now check that the output was correctly parsed
+        self.assertEqual(str(record), PERF_RECORD_EXAMPLE.rsplit('\n',3)[0])
 
     def tearDown(self):
         # In case test raises exception

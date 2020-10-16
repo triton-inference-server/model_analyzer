@@ -24,15 +24,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from abc import ABC, abstractmethod
+
 from .server_docker import TritonServerDocker
 from .server_local import TritonServerLocal
 
 
-class TritonServerFactory:
+class TritonServerFactory(ABC):
     """
     A factory for creating TritonServer instances
     """
 
+    @abstractmethod
     def create_server(self, run_type, model_path, version, config):
         """
         Parameters
@@ -49,4 +52,3 @@ class TritonServerFactory:
         config : TritonServerConfig
             the config object containing arguments for this server instance
         """
-        raise NotImplementedError()
