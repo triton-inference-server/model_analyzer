@@ -27,106 +27,15 @@
 from itertools import product
 from subprocess import check_output, CalledProcessError, STDOUT
 
-class PerfAnalyzerConfig:
-    """A config class to set arguments to the perf_analyzer. 
-    An argument set to None will use the perf_analyzer's default.
-    """
-    
-    def __init__(self):
-        self._args = {
-
-            # Measurement parameters
-            'async' : None,
-            'sync' : None,
-            'measurement-interval' : None,
-            'concurrency-range' : None,
-            'request-rate-range' : None,
-            'request-distribution' : None,
-            'request-intervals' : None,
-            'binary-search' : None,
-            'num-of-sequence' : None,
-            'latency-threshold' : None,
-            'max-threads' : None,
-            'stability-percentage' : None,
-            'max-trials' : None,
-            'percentile' : None,
-        
-            'input-data' : None,
-            'shared-memory' : None,
-            'output-shared-memory-size' : None,
-            'shape' : None,
-            'sequence-length' : None,
-            'string-length' : None,
-            'string-data' : None,
-        }
-
-        self._options = {
-            
-            # options
-            '-m' : None,
-            '-x' : None,
-            '-b' : None,
-            '-u' : None,
-            '-i' : None,
-            '-f' : None,
-            '-H' : None
-        }
-
-        self._verbose = {
-            # verbose flags
-            '-v' : None,
-            '-v -v' : None
-        }
-
-    def to_cli_string(self):
-        """Utility function to convert a config into a
-        string of arguments to the perf_analyzer with CLI.
-        """
-        args = ['{} {}'.format(k,v) for k,v in self._options.items() if v]
-        
-        args += [k for k, v in self._verbose.items() if v]
-        
-        args += ['--{}={}'.format(k,v) for k,v in self._args.items() if v]
-
-        return ' '.join(args)
-
-    def __getitem__(self, key):
-        return self._args[key]
-    
-    def __setitem__(self, key, value):
-        input_to_options = {    
-            'model-name' : '-m',
-            'model-version' : '-x',
-            'batch-size' : '-b',
-            'url' : '-u',
-            'protocol' : '-i',
-            'latency-report-file' : '-f',
-            'streaming' : '-H'
-        }
-
-        verbose = {
-            'verbose' : '-v',
-            'extra-verbose' : '-v -v'
-        }
-
-        if key in self._args:
-            self._args[key] = value
-        elif key in input_to_options:
-            self._options[input_to_options[key]] = value
-        elif key in verbose:
-            self._verbose[verbose[key]] = value
-        else:
-            raise Exception("The argument '{}' to the perf_analyzer "
-                             "is not supported by the model analyzer.".format(key))
 
 class PerfAnalyzer:
     """A wrapper class for the perf_analyzer. This
     class provides an interface for running workloads 
     with perf_analyzer
     """
+
     def __init__(self, config):
         """
-
         Parameters
         ----------
         config : PerfAnalyzerConfig
@@ -138,7 +47,7 @@ class PerfAnalyzer:
 
     def run_job(self, sweep_params):
         """Parses the parameters to sweep over and runs
-           the perf_analyzer once per configuration.
+        the perf_analyzer once per configuration.
 
         Parameters
         ----------
@@ -148,9 +57,10 @@ class PerfAnalyzer:
         
         Returns
         -------
-        List of tuples of (params, output) where params are the 
-        set of parameters provided for that run and output is the 
-        stdout from the perf_analyzer.
+        List of tuples 
+            (params, output) where params are the set of 
+            parameters provided for that run and output is 
+            the stdout from the perf_analyzer.
         """
 
         # Create a config for each combination of parameters
@@ -169,14 +79,20 @@ class PerfAnalyzer:
             
             # Run perf_analyzer
             run_output = self._run_perf_analyzer()
-
             run_outputs.append((run_config, run_output))
         
         return run_outputs
 
     def _run_perf_analyzer(self):
         """Runs the perf_analyzer tool locally 
-            and synchronously
+        and synchronously
+        
+        Returns
+        -------
+        str
+            output from the subprocess call to 
+            the perf_analyzer
+
         """
         cmd = ['perf_analyzer']
         cmd += self._config.to_cli_string().replace('=', ' ').split()
@@ -186,7 +102,7 @@ class PerfAnalyzer:
         try:    
             out = check_output(cmd, stderr=STDOUT, encoding='utf-8')
         except CalledProcessError as e:
-            raise Exception("perf analyzer returned with exit status {} : {}"
-                                        .format(e.returncode, e.output))
+            raise Exception(f"perf analyzer returned with exit" 
+                            " status {e.returncode} : {e.output}")
 
         return out

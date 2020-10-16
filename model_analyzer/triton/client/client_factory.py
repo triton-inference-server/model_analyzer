@@ -23,3 +23,23 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+class TritonClientFactory:
+    """
+    Base client creator class that declares
+    a factory method
+    """
+
+    def create_client(self, config):
+        """
+        Parameters
+        ----------
+        config : TritonClientConfig
+            A config for the the relevant client options
+        
+        Returns
+        -------
+        TritonClient
+        """
+        raise NotImplementedError()

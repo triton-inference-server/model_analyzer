@@ -28,13 +28,15 @@ import os
 import unittest
 import sys
 
-from model_analyzer.triton.server import TritonServerConfig, TritonServerFactory
+from model_analyzer.triton.server.server_local_factory import TritonServerLocalFactory
+from model_analyzer.triton.server.server_docker_factory import TritonServerDockerFactory
+from model_analyzer.triton.server.server_config import TritonServerConfig
 
 # Test parameters
 MODEL_LOCAL_PATH = '/model_analyzer/models'
 MODEL_REPOSITORY_PATH = '/model_analyzer/models'
 TRITON_VERSION = '20.09'
-SERVER_RUN_ENVIRONMENTS = ['docker', 'local']
+SERVER_FACTORIES = [TritonServerDockerFactory(), TritonServerLocalFactory()]
 CONFIG_TEST_ARG = 'exit-on-error'
 CLI_TO_STRING_TEST_ARGS = {
     'allow-grpc' : True,
@@ -47,8 +49,7 @@ class TestTritonServerMethods(unittest.TestCase):
 
     def setUp(self):
         
-        # Create a factory
-        self.server_factory = TritonServerFactory()
+        # server setup
         self.server = None
         
     def test_server_config(self):
@@ -60,22 +61,19 @@ class TestTritonServerMethods(unittest.TestCase):
         # Check config initializations
         self.assertIsNone(server_config[CONFIG_TEST_ARG], 
                             msg="Server config had unexpected initial"
-                                "value for {}".format(CONFIG_TEST_ARG))
+                                f"value for {CONFIG_TEST_ARG}")
         # Set value
         server_config[CONFIG_TEST_ARG] = True
 
         # Test get again
         self.assertTrue(server_config[CONFIG_TEST_ARG], 
-                            msg="{} was not set".format(CONFIG_TEST_ARG))
+                            msg=f"{CONFIG_TEST_ARG} was not set")
         
         # Try to set an unsupported config argument, expect failure
-        try:
+        with self.assertRaises(Exception, msg="Expected exception on trying to set"
+                                              "unsupported argument in Triton server"
+                                              "config"):
             server_config['dummy'] = 1
-            self.fail("Expected exception on trying to set"
-                      "unsupported argument in Triton server"
-                      "config")
-        except Exception as e:
-            pass
         
         # Reset test arg
         server_config[CONFIG_TEST_ARG] = None
@@ -94,12 +92,12 @@ class TestTritonServerMethods(unittest.TestCase):
 
             # Make sure each parsed arg was in test dict
             self.assertIn(arg, CLI_TO_STRING_TEST_ARGS,
-                        msg="CLI string contained unknown argument: {}".format(arg))
+                        msg=f"CLI string contained unknown argument: {arg}")
 
             # Make sure parsed value is the one from dict, check type too
             test_value = CLI_TO_STRING_TEST_ARGS[arg]
             self.assertEqual(test_value, type(test_value)(value),
-                             msg="CLI string contained unknown value: {}".format(value))
+                             msg=f"CLI string contained unknown value: {value}")
 
 
     def test_create_server(self):
@@ -109,39 +107,21 @@ class TestTritonServerMethods(unittest.TestCase):
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
 
         # Run for both types of environments
-        for run_type in SERVER_RUN_ENVIRONMENTS:
-            try:    
-                self.server = self.server_factory.create_server(
-                            run_type=run_type,
+        for factory in SERVER_FACTORIES:  
+            self.server = factory.create_server(
                             model_path=MODEL_LOCAL_PATH, 
                             version=TRITON_VERSION,
                             config=server_config)
 
-            except Exception as e:
-                self.fail(e)
-
-        # Run dummy environment and expect exception
-        try:
-            self.server = self.server_factory.create_server(
-                            run_type='dummy',
-                            model_path=MODEL_LOCAL_PATH,
-                            version=TRITON_VERSION,
-                            config=server_config)
-            self.fail("Expected exception for dummy server run environment.")
-        except Exception as e:
-            pass
-
         # Try to create a server without specifying model repository and expect error
-        try:
-            self.server = self.server_factory.create_server(
-                            run_type='docker',
-                            model_path=MODEL_LOCAL_PATH,
-                            version=TRITON_VERSION,
-                            config=server_config)
-            self.fail("Expected AssertionError for trying to create"
-                      "server without specifying model repository.")
-        except Exception as e:
-            pass
+        with self.assertRaises(AssertionError, msg="Expected AssertionError for trying to create"
+                                                   "server without specifying model repository."):  
+            factory = TritonServerDockerFactory()
+            server_config['model-repository'] = None
+            self.server = factory.create_server(
+                                model_path=MODEL_LOCAL_PATH,
+                                version=TRITON_VERSION,
+                                config=server_config)
 
     def test_start_wait_stop_gpus(self):
 
@@ -149,22 +129,16 @@ class TestTritonServerMethods(unittest.TestCase):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
 
-        # Create a server to run in docker 
-        for run_type in SERVER_RUN_ENVIRONMENTS:    
-            try:
-                self.server = self.server_factory.create_server(
-                                run_type=run_type,
+        # Create server, start , wait, and stop 
+        for factory in SERVER_FACTORIES:    
+            self.server = factory.create_server(
                                 model_path=MODEL_LOCAL_PATH, 
                                 version=TRITON_VERSION,
                                 config=server_config)
                 
-            except Exception as e:
-                self.fail(e)
-            
             # Set CUDA_VISIBLE_DEVICES and start the server
             os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-            # Now start the server
             self.server.start()
             self.server.wait_for_ready()
             self.server.stop()

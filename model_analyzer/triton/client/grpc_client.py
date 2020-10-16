@@ -23,3 +23,17 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+from .client import TritonClient
+import tritonclient.grpc as grpcclient
+
+
+class TritonGRPCClient(TritonClient):
+    """
+    Concrete implementation of TritonClient
+    for GRPC
+    """
+    def __init__(self, config):
+        super().__init__(config=config)
+        self._client = grpcclient.InferenceServerClient(
+            url=self._client_config['url'])

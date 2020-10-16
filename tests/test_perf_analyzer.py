@@ -26,8 +26,10 @@
 
 import unittest
 
-from model_analyzer.triton.server import TritonServerConfig, TritonServerFactory
-from model_analyzer.analyzer.perf_analyzer import PerfAnalyzerConfig, PerfAnalyzer
+from model_analyzer.triton.server.server_config import TritonServerConfig
+from model_analyzer.triton.server.server_local_factory import TritonServerLocalFactory
+from model_analyzer.analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
+from model_analyzer.analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 MODEL_LOCAL_PATH = '/model_analyzer/models'
 MODEL_REPOSITORY_PATH = '/model_analyzer/models'
@@ -42,8 +44,7 @@ TEST_RUN_PARAMS = {
 class TestPerfAnalyzerMethods(unittest.TestCase):
 
     def setUp(self):
-        
-        # Create a config
+        # PerfAnalyzer config for all tests
         self.config = PerfAnalyzerConfig()
         self.config['model-name'] = TEST_MODEL_NAME
 
@@ -51,50 +52,36 @@ class TestPerfAnalyzerMethods(unittest.TestCase):
         self.server = None
 
     def test_perf_analyzer_config(self):
-        
-        
-        
         # Check config initializations
         self.assertIsNone(self.config[CONFIG_TEST_ARG], 
-                            msg="Server config had unexpected initial"
-                                "value for {}".format(CONFIG_TEST_ARG))
+                            msg= "Server config had unexpected initial" 
+                                  f" value for {CONFIG_TEST_ARG}")
         # Set value
         self.config[CONFIG_TEST_ARG] = True
 
         # Test get again
         self.assertTrue(self.config[CONFIG_TEST_ARG], 
-                            msg="{} was not set".format(CONFIG_TEST_ARG))
-        
+                            msg=f"{CONFIG_TEST_ARG} was not set")
+                
         # Try to set an unsupported config argument, expect failure
-        try:
+        with self.assertRaises(Exception, msg="Expected exception on trying to set"
+                                              "unsupported argument in perf_analyzer"
+                                              "config"):
             self.config['dummy'] = 1
-            self.fail("Expected exception on trying to set"
-                      "unsupported argument in perf analyzer"
-                      "config")
-        except Exception as e:
-            pass
 
     def test_run(self):
-
         # Now create a server config
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
         
-        # Create server
-        factory = TritonServerFactory()
-        try:
-            self.server = factory.create_server(
-                run_type='local',
-                model_path=MODEL_LOCAL_PATH,
-                version=TRITON_VERSION,
-                config=server_config)
-        except Exception as e:
-            self.fail(e)
-        
-        # Create perf analyzer
+        # Create server, PerfAnalyzer, and wait for server ready
+        factory = TritonServerLocalFactory()
+        self.server = factory.create_server(
+            model_path=MODEL_LOCAL_PATH,
+            version=TRITON_VERSION,
+            config=server_config)
         client = PerfAnalyzer(config=self.config)
 
-        # Start server and wait for ready
         self.server.start()
         self.server.wait_for_ready(num_retries=10)
         
@@ -104,11 +91,9 @@ class TestPerfAnalyzerMethods(unittest.TestCase):
         # Ensure correct number of runs 
         self.assertEqual(len(outputs), 4)
 
-        # Stop the server
         self.server.stop()
 
     def tearDown(self):
-
         # In case test raises exception
         if self.server is not None:
             self.server.stop()

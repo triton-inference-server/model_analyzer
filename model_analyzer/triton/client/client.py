@@ -26,55 +26,10 @@
 
 import time
 
-import tritonclient.grpc as grpcclient
-import tritonclient.http as httpclient
 from tritonclient.utils import InferenceServerException
 
 WAIT_FOR_READY_NUM_RETRIES = 100
 
-class TritonClientConfig:
-    def __init__(self):
-        self._client_args = {
-            'url' : None
-        }
-
-    def __getitem__(self, key):
-        return self._client_args[key]
-    
-    def __setitem__(self, key, value):
-        if key in self._client_args:
-            self._client_args[key] = value
-        else:
-            raise Exception("The argument '{}' to the Triton Inference Server"
-                             " is not supported by the model analyzer.".format(key))
-
-class TritonClientFactory:
-    """
-    A factory for creating Triton Client instances
-    """
-    def __init__(self):
-        pass
-
-    def create_client(self, protocol, config):
-        """Create function that dispatches the 
-            correct server implementation based 
-            on the protocol
-
-        Parameters
-        ----------
-        protocol: str
-            The protocol that the client uses to 
-            communicate with the server
-        
-        config: TritonClientCnfig
-        """
-        if protocol is 'grpc':
-            return TritonGRPCClient(config=config)
-        elif protocol is 'http':
-            return TritonHTTPClient(config=config)
-        else:
-            raise Exception("The protocol '{}' for Triton Inference Server"
-                            " is not supported by the model analyzer.".format(protocol))
 
 class TritonClient:
     """
@@ -88,7 +43,18 @@ class TritonClient:
 
     def wait_for_server_ready(self, num_retries=WAIT_FOR_READY_NUM_RETRIES):
         """
-        Returns when server is ready
+        Parameters
+        ----------
+        num_retries : int
+            number of times to send a ready status
+            request to the server before raising
+            an exception
+        
+        Raises
+        ------
+        Exception
+            If server readiness could not be
+            determined in given num_retries
         """
         while num_retries > 0:
             try:
@@ -108,28 +74,63 @@ class TritonClient:
         """
         Request the inference server to load
         a particular model in explicit model
-        control mode
+        control mode.
+
+        Parameters
+        ----------
+        model_name : str
+            name of the model to load from repository
+        
+        Raises
+        ------
+        Exception
+            If server throws InferenceServerException
         """
         try:
             self._client.load_model(model_name)
         except InferenceServerException as e:
-            raise Exception("Unable to load the model : {}".format(e))
+            raise Exception(f"Unable to load the model : {e}")
 
     def unload_model(self, model_name):
         """
         Request the inference server to unload
         a particular model in explicit model
-        control mode
+        control mode.
+
+        Parameters
+        ----------
+        model_name : str
+            name of the model to unload from repository
+        
+        Raises
+        ------
+        Exception
+            If server throws InferenceServerException
         """
         try:
             self._client.unload_model(model_name)
         except InferenceServerException as e:
-            raise Exception("Unable to unload the model : {}".format(e))
+            raise Exception(f"Unable to unload the model : {e}")
     
     def wait_for_model_ready(self, model_name, num_retries=WAIT_FOR_READY_NUM_RETRIES):
         """
         Returns when model with name model_name
-        is ready
+        is ready.
+
+        Parameters
+        ----------
+        model_name : str
+            name of the model to load from repository
+        num_retries : int
+            number of times to send a ready status
+            request to the server before raising
+            an exception
+        
+        Raises
+        ------
+        Exception
+            If could not determine model readiness 
+            in given num_retries
         """
         while num_retries > 0:
             try:
@@ -144,23 +145,3 @@ class TritonClient:
                 pass
         raise Exception("Could not determine model readiness. "
                         "Number of retries exceeded.")
-        
-class TritonHTTPClient(TritonClient):
-    """
-    Concrete implementation of TritonClient
-    for HTTP
-    """
-    def __init__(self, config):
-        super().__init__(config=config)
-        self._client = httpclient.InferenceServerClient(
-                url=self._client_config['url'])
-
-class TritonGRPCClient(TritonClient):
-    """
-    Concrete implementation of TritonClient
-    for GRPC
-    """
-    def __init__(self, config):
-        super().__init__(config=config)
-        self._client = grpcclient.InferenceServerClient(
-            url=self._client_config['url'])
