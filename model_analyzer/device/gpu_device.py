@@ -27,18 +27,25 @@ from model_analyzer.device.model import Device
 
 
 class GPUDevice(Device):
+    """
+    Representing a GPU device
+    """
 
     def __init__(self, device_id, pci_bus_id, device_uuid):
         """
         Parameters
         ----------
-            device_id : str
+            device_id : int
                 Device id according to the `nvidia-smi` output
-            pci_bus_id : str
+            pci_bus_id : bytes
                 PCI bus id
             device_uuid : str
                 Device UUID
         """
+        assert type(device_id) is int
+        assert type(pci_bus_id) is bytes
+        assert type(device_uuid) is str
+
         self._device_id = device_id
         self._pci_bus_id = pci_bus_id
         self._device_uuid = device_uuid

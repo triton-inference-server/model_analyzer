@@ -23,48 +23,44 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
 import unittest
-import time
-import sys
 from unittest.mock import patch, MagicMock, Mock
-from tests.mock_nvml import MockNVML
-
-import model_analyzer
-from model_analyzer.monitor.nvml import NVMLMonitor
-from model_analyzer.record.gpu_memory_record import GPUMemoryRecord
-from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 
 
-class TestNVMLMonitor(unittest.TestCase):
+class MockNVML:
+    def __init__(self, test_case):
+        self.test_case = test_case
 
     def setUp(self):
-        mock_nvml = MockNVML(self)
-        mock_nvml.setUp()
+        memory_info = Mock()
+        memory_info.used = 1000
+        memory_info.free = 250
+        memory_info.total = 123
 
-    def test_record_memory(self):
-        self.assertIsInstance(model_analyzer.monitor.nvml.nvmlInit, Mock)
-        self.assertIsInstance(
-            model_analyzer.monitor.nvml.nvmlDeviceGetMemoryInfo, Mock)
-        self.assertIsInstance(model_analyzer.monitor.nvml.
-                              nvmlDeviceGetHandleByPciBusId, Mock)
+        pci_bus_info = {
+            'pci_bus_id': 101,
+            'device_id': 0,
+            'bus_id': 0
+        }
 
-        # One measurement every 0.01 seconds
-        frequency = 0.01
-        monitoring_time = 10
-        nvml_monitor = NVMLMonitor(frequency)
-        nvml_monitor.start_recording_metrics(['memory'])
-        time.sleep(monitoring_time)
-        metrics = nvml_monitor.stop_recording_metrics()
-        nvml_monitor.destroy()
+        patcher_monitor = patch.multiple(
+            'model_analyzer.monitor.nvml',
+            nvmlInit=MagicMock(),
+            nvmlDeviceGetMemoryInfo=Mock(return_value=memory_info),
+            nvmlDeviceGetHandleByPciBusId=MagicMock()
+        )
 
-        # Assert instance types
-        for i in range(metrics.size()):
-            metric = metrics.get(i)
-            self.assertIsInstance(metric, GPUMemoryRecord)
-            self.assertIsInstance(metric.device, GPUDevice)
+        patcher_device = patch.multiple(
+            'model_analyzer.device.gpu_device_factory',
+            nvmlInit=MagicMock(),
+            nvmlDeviceGetHandleByPciBusId=MagicMock(),
+            nvmlDeviceGetUUID=Mock(return_value='UUID'),
+            nvmlDeviceGetIndex=Mock(return_value=0),
+            nvmlShutdown=MagicMock()
+        )
 
+        patcher_monitor.start()
+        patcher_device.start()
 
-if __name__ == '__main__':
-    unittest.main()
+        self.test_case.addCleanup(patcher_monitor.stop)
+        self.test_case.addCleanup(patcher_device.stop)

@@ -23,48 +23,49 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-import unittest
-import time
-import sys
-from unittest.mock import patch, MagicMock, Mock
-from tests.mock_nvml import MockNVML
-
-import model_analyzer
-from model_analyzer.monitor.nvml import NVMLMonitor
-from model_analyzer.record.gpu_memory_record import GPUMemoryRecord
-from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
+from model_analyzer.record.record import Record
 
 
-class TestNVMLMonitor(unittest.TestCase):
+class RecordCollector:
 
-    def setUp(self):
-        mock_nvml = MockNVML(self)
-        mock_nvml.setUp()
+    def __init__(self):
+        self._records = []
 
-    def test_record_memory(self):
-        self.assertIsInstance(model_analyzer.monitor.nvml.nvmlInit, Mock)
-        self.assertIsInstance(
-            model_analyzer.monitor.nvml.nvmlDeviceGetMemoryInfo, Mock)
-        self.assertIsInstance(model_analyzer.monitor.nvml.
-                              nvmlDeviceGetHandleByPciBusId, Mock)
+    def insert(self, record):
+        """
+        Insert a record into the RecordCollector
 
-        # One measurement every 0.01 seconds
-        frequency = 0.01
-        monitoring_time = 10
-        nvml_monitor = NVMLMonitor(frequency)
-        nvml_monitor.start_recording_metrics(['memory'])
-        time.sleep(monitoring_time)
-        metrics = nvml_monitor.stop_recording_metrics()
-        nvml_monitor.destroy()
+        Parameters
+        ----------
+        record : Record
+            A record to be inserted
+        """
+        if isinstance(record, Record):
+            self._records.append(record)
 
-        # Assert instance types
-        for i in range(metrics.size()):
-            metric = metrics.get(i)
-            self.assertIsInstance(metric, GPUMemoryRecord)
-            self.assertIsInstance(metric.device, GPUDevice)
+    def get(self, index):
+        """
+        Get record in the index
 
+        Parameters
+        ----------
+        index : int
+            index of the record to be returned
 
-if __name__ == '__main__':
-    unittest.main()
+        Returns
+        -------
+        Record
+            Record at location index
+        """
+        return self._records[index]
+
+    def size(self):
+        """
+        Get the size of the RecordCollector
+
+        Returns
+        -------
+        int
+            Size of the RecordCollector
+        """
+        return len(self._records)

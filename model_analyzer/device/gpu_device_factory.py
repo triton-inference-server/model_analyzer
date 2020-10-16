@@ -33,6 +33,22 @@ class GPUDeviceFactory:
 
     @staticmethod
     def create_device_by_bus_id(bus_id):
+        """
+        Create a GPU device by using its bus ID.
+
+        Parameters
+        ----------
+        bus_id : bytes
+            Bus id corresponding to the GPU. The bus id should be created by
+            converting the colon separated hex notation into a bytes type
+            using ascii encoding. The bus id before conversion to bytes
+            should look like "00:65:00".
+
+        Returns
+        -------
+        Device
+            The device associated with this bus id.
+        """
         nvmlInit()
         handle = nvmlDeviceGetHandleByPciBusId(bus_id)
         device_uuid = nvmlDeviceGetUUID(handle)
@@ -44,6 +60,25 @@ class GPUDeviceFactory:
 
     @staticmethod
     def create_device_by_cuda_index(index):
+        """
+        Create a GPU device using the CUDA index. This includes the index
+        provided by CUDA visible devices.
+
+        Parameters
+        ----------
+        index : int
+            index of the device in the list of visible CUDA devices.
+
+        Returns
+        -------
+        Device
+            The device associated with the index provided.
+
+        Raises
+        ------
+        IndexError
+            If the index is out of bound.
+        """
         devices = numba.cuda.list_devices()
         if index > len(devices) - 1:
             raise IndexError

@@ -23,48 +23,45 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from abc import ABC, abstractmethod
+import numba.cuda
 
-import unittest
-import time
-import sys
-from unittest.mock import patch, MagicMock, Mock
-from tests.mock_nvml import MockNVML
-
-import model_analyzer
-from model_analyzer.monitor.nvml import NVMLMonitor
-from model_analyzer.record.gpu_memory_record import GPUMemoryRecord
-from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 
 
-class TestNVMLMonitor(unittest.TestCase):
+class Monitor(ABC):
+    """
+    Monitor abstract class is a parent class used for monitoring devices.
+    """
 
-    def setUp(self):
-        mock_nvml = MockNVML(self)
-        mock_nvml.setUp()
+    def __init__(self, frequency):
+        """
+        Parameters
+        ----------
+        frequency : float
+            How often the metrics should be monitored.
+        """
+        self._frequency = frequency
+        self._gpus = []
+        for gpu in numba.cuda.list_devices():
+            gpu_device = GPUDeviceFactory.create_device_by_cuda_index(gpu.id)
+            self._gpus.append(gpu_device)
 
-    def test_record_memory(self):
-        self.assertIsInstance(model_analyzer.monitor.nvml.nvmlInit, Mock)
-        self.assertIsInstance(
-            model_analyzer.monitor.nvml.nvmlDeviceGetMemoryInfo, Mock)
-        self.assertIsInstance(model_analyzer.monitor.nvml.
-                              nvmlDeviceGetHandleByPciBusId, Mock)
+    @abstractmethod
+    def start_recording_metrics(self, tags):
+        """
+        Start recording the metrics in `tags`.
 
-        # One measurement every 0.01 seconds
-        frequency = 0.01
-        monitoring_time = 10
-        nvml_monitor = NVMLMonitor(frequency)
-        nvml_monitor.start_recording_metrics(['memory'])
-        time.sleep(monitoring_time)
-        metrics = nvml_monitor.stop_recording_metrics()
-        nvml_monitor.destroy()
+        Paramters
+        ---------
+        tags : list
+            List of metrics to start watching for
+        """
+        return
 
-        # Assert instance types
-        for i in range(metrics.size()):
-            metric = metrics.get(i)
-            self.assertIsInstance(metric, GPUMemoryRecord)
-            self.assertIsInstance(metric.device, GPUDevice)
-
-
-if __name__ == '__main__':
-    unittest.main()
+    @abstractmethod
+    def stop_recording_metrics(self):
+        """
+        Stop recording metrics. This will stop monitring all the metrics.
+        """
+        return
