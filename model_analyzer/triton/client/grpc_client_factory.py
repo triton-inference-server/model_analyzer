@@ -23,3 +23,27 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+from .client_factory import TritonClientFactory
+from .client import TritonClient
+from .grpc_client import TritonGRPCClient
+
+
+class TritonGRPCClientFactory(TritonClientFactory):
+    """
+    Concrete creator class that creates
+    TritonGRPCClients
+    """
+
+    def create_client(self, config) -> TritonClient:
+        """
+        Parameters
+        ----------
+        config : TritonClientConfig
+            A config with the relevant client options
+
+        Returns
+        -------
+        TritonGRPCClient
+        """
+        return TritonGRPCClient(config=config)

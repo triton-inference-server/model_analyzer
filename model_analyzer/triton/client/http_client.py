@@ -23,3 +23,26 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+from .client import TritonClient
+import tritonclient.http as httpclient
+
+
+class TritonHTTPClient(TritonClient):
+    """
+    Concrete implementation of TritonClient
+    for HTTP
+    """
+
+    def __init__(self, config):
+        """
+        Parameters
+        ----------
+        config : TritonClientConfig
+            A config with the relevant client options
+        """
+        self._client_config = config
+        assert self._client_config['url'], \
+            "Must specify url in client config."
+        self._client = httpclient.InferenceServerClient(
+            url=self._client_config['url'])
