@@ -26,65 +26,66 @@
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
+
 class PerfAnalyzerConfig:
     """
-    A config class to set arguments to the perf_analyzer. 
+    A config class to set arguments to the perf_analyzer.
     An argument set to None will use the perf_analyzer's default.
     """
-    
+
     def __init__(self):
         self._args = {
-            'async' : None,
-            'sync' : None,
-            'measurement-interval' : None,
-            'concurrency-range' : None,
-            'request-rate-range' : None,
-            'request-distribution' : None,
-            'request-intervals' : None,
-            'binary-search' : None,
-            'num-of-sequence' : None,
-            'latency-threshold' : None,
-            'max-threads' : None,
-            'stability-percentage' : None,
-            'max-trials' : None,
-            'percentile' : None,
-            'input-data' : None,
-            'shared-memory' : None,
-            'output-shared-memory-size' : None,
-            'shape' : None,
-            'sequence-length' : None,
-            'string-length' : None,
-            'string-data' : None,
+            'async': None,
+            'sync': None,
+            'measurement-interval': None,
+            'concurrency-range': None,
+            'request-rate-range': None,
+            'request-distribution': None,
+            'request-intervals': None,
+            'binary-search': None,
+            'num-of-sequence': None,
+            'latency-threshold': None,
+            'max-threads': None,
+            'stability-percentage': None,
+            'max-trials': None,
+            'percentile': None,
+            'input-data': None,
+            'shared-memory': None,
+            'output-shared-memory-size': None,
+            'shape': None,
+            'sequence-length': None,
+            'string-length': None,
+            'string-data': None,
         }
 
         self._options = {
-            '-m' : None,
-            '-x' : None,
-            '-b' : None,
-            '-u' : None,
-            '-i' : None,
-            '-f' : None,
-            '-H' : None
+            '-m': None,
+            '-x': None,
+            '-b': None,
+            '-u': None,
+            '-i': None,
+            '-f': None,
+            '-H': None
         }
 
         self._verbose = {
-            '-v' : None,
-            '-v -v' : None
+            '-v': None,
+            '-v -v': None
         }
 
-        self._input_to_options = {    
-            'model-name' : '-m',
-            'model-version' : '-x',
-            'batch-size' : '-b',
-            'url' : '-u',
-            'protocol' : '-i',
-            'latency-report-file' : '-f',
-            'streaming' : '-H'
+        self._input_to_options = {
+            'model-name': '-m',
+            'model-version': '-x',
+            'batch-size': '-b',
+            'url': '-u',
+            'protocol': '-i',
+            'latency-report-file': '-f',
+            'streaming': '-H'
         }
 
         self._input_to_verbose = {
-            'verbose' : '-v',
-            'extra-verbose' : '-v -v'
+            'verbose': '-v',
+            'extra-verbose': '-v -v'
         }
 
     def to_cli_string(self):
@@ -100,9 +101,9 @@ class PerfAnalyzerConfig:
             the executable name.
         """
         # single dashed options, then verbose flags, then main args
-        args = [f'{k} {v}' for k,v in self._options.items() if v]
+        args = [f'{k} {v}' for k, v in self._options.items() if v]
         args += [k for k, v in self._verbose.items() if v]
-        args += [f'--{k}={v}' for k,v in self._args.items() if v]
+        args += [f'--{k}={v}' for k, v in self._args.items() if v]
 
         return ' '.join(args)
 
@@ -114,11 +115,11 @@ class PerfAnalyzerConfig:
         ----------
         key : str
             The name of the argument to the tritonserver
-        
+
         Returns
         -------
             The value that the argument is set to in this config
-        
+
         Raises
         ------
         TritonModelAnalyzerException
@@ -131,8 +132,9 @@ class PerfAnalyzerConfig:
         elif key in self._input_to_verbose:
             self._verbose[self._input_to_verbose[key]] = value
         else:
-            raise TritonModelAnalyzerException(f"'{key}' Key not found in config")
-    
+            raise TritonModelAnalyzerException(
+                f"'{key}' Key not found in config")
+
     def __setitem__(self, key, value):
         """
         Sets an arguments value in config
@@ -144,7 +146,7 @@ class PerfAnalyzerConfig:
             The name of the argument to the tritonserver
         value : (any)
             The value to which the argument is being set
-        
+
         Raises
         ------
         TritonModelAnalyzerException
@@ -158,5 +160,6 @@ class PerfAnalyzerConfig:
         elif key in self._verbose:
             self._verbose[self._input_to_verbose[key]] = value
         else:
-            raise TritonModelAnalyzerException(f"The argument '{key}' to the perf_analyzer "
-                                                "is not supported by the model analyzer.")
+            raise TritonModelAnalyzerException(
+                f"The argument '{key}' to the perf_analyzer "
+                "is not supported by the model analyzer.")

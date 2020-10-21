@@ -27,6 +27,7 @@
 from .server_factory import TritonServerFactory
 from .server_docker import TritonServerDocker
 
+
 class TritonServerDockerFactory(TritonServerFactory):
     """
     A factory for creating TritonServerDocker instances
@@ -49,4 +50,5 @@ class TritonServerDockerFactory(TritonServerFactory):
         -------
         TritonServerDocker
         """
-        return TritonServerDocker(model_path=model_path, version=version, config=config)
+        return TritonServerDocker(
+            model_path=model_path, version=version, config=config)

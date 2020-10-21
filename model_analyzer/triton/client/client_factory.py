@@ -26,6 +26,7 @@
 
 from abc import ABC, abstractmethod
 
+
 class TritonClientFactory(ABC):
     """
     Base client creator class that declares
@@ -39,7 +40,7 @@ class TritonClientFactory(ABC):
         ----------
         config : TritonClientConfig
             A config for the the relevant client options
-        
+
         Returns
         -------
         TritonClient

@@ -31,7 +31,7 @@ from .http_client import TritonHTTPClient
 
 class TritonHTTPClientFactory(TritonClientFactory):
     """
-    Concrete creator class that creates 
+    Concrete creator class that creates
     TritonHTTPClients
     """
 
@@ -41,7 +41,7 @@ class TritonHTTPClientFactory(TritonClientFactory):
         ----------
         config : TritonClientConfig
             A config for the the relevant client options
-        
+
         Returns
         -------
         TritonHTTPClient

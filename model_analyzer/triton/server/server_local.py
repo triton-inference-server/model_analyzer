@@ -28,7 +28,7 @@ from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
 
 from .server import TritonServer
 
-SERVER_OUTPUT_TIMEOUT_SECS=5
+SERVER_OUTPUT_TIMEOUT_SECS = 5
 
 
 class TritonServerLocal(TritonServer):
@@ -36,6 +36,7 @@ class TritonServerLocal(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     tritonserver locally as as subprocess.
     """
+
     def __init__(self, version, config):
         """
         Parameters
@@ -51,7 +52,7 @@ class TritonServerLocal(TritonServer):
 
         assert self._server_config['model-repository'], \
             "Triton Server requires --model-repository argument to be set."
-        
+
     def start(self):
         """
         Starts the tritonserver container locally
@@ -59,9 +60,9 @@ class TritonServerLocal(TritonServer):
         # Create command list and run subprocess
         cmd = ['/opt/tritonserver/bin/tritonserver']
         cmd += self._server_config.to_cli_string().replace('=', ' ').split()
-        
-        self._tritonserver_process = \
-             Popen(cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+
+        self._tritonserver_process = Popen(
+            cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
 
     def stop(self):
         """

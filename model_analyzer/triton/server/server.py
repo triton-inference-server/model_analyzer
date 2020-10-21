@@ -30,27 +30,28 @@ from abc import ABC, abstractmethod
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-WAIT_FOR_READY_NUM_RETRIES = 100    
+WAIT_FOR_READY_NUM_RETRIES = 100
 SERVER_HTTP_PORT = 8000
+
 
 class TritonServer(ABC):
     """
-    Defines the interface for the objects created by 
+    Defines the interface for the objects created by
     TritonServerFactory
     """
-    
+
     @abstractmethod
     def start(self):
         """
         Starts the tritonserver
         """
-    
+
     @abstractmethod
     def stop(self):
         """
         Stops and cleans up after the server
         """
-    
+
     def wait_for_ready(self, num_retries=WAIT_FOR_READY_NUM_RETRIES):
         """
         Parameters
@@ -59,13 +60,13 @@ class TritonServer(ABC):
             number of times to send a ready status
             request to the server before raising
             an exception
-        
+
         Raises
         ------
         TritonModelAnalyzerException
-            1)  If config doesn't allow http 
-                requests       
-            2)  If server readiness could not be 
+            1)  If config doesn't allow http
+                requests
+            2)  If server readiness could not be
                 determined in given num_retries.
         """
         # TODO this should not really be a server function
@@ -74,10 +75,11 @@ class TritonServer(ABC):
             url = f"http://localhost:{http_port}/v2/health/ready"
         else:
             # TODO to use GRPC to check for ready also
-            raise TritonModelAnalyzerException('allow-http must be True in order to use wait_for_server_ready')
-        
+            raise TritonModelAnalyzerException(
+                'allow-http must be True in order to use wait_for_server_ready')
+
         retries = num_retries
-        
+
         # poll ready endpoint for number of retries
         while num_retries > 0:
             try:
@@ -88,6 +90,7 @@ class TritonServer(ABC):
                 pass
             time.sleep(0.1)
             retries -= 1
-        
+
         # If num_retries is exceeded return an exception
-        raise TritonModelAnalyzerException(f"Server not ready : num_retries : {num_retries}")
+        raise TritonModelAnalyzerException(
+            f"Server not ready : num_retries : {num_retries}")

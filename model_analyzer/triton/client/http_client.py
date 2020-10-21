@@ -27,7 +27,7 @@
 from .client import TritonClient
 import tritonclient.http as httpclient
 
-        
+
 class TritonHTTPClient(TritonClient):
     """
     Concrete implementation of TritonClient
@@ -45,4 +45,4 @@ class TritonHTTPClient(TritonClient):
         assert self._client_config['url'], \
             "Must specify url in client config."
         self._client = httpclient.InferenceServerClient(
-                url=self._client_config['url'])
+            url=self._client_config['url'])

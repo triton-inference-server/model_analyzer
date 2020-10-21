@@ -45,7 +45,7 @@ class TritonServerLocalFactory(TritonServerFactory):
             Current version of Triton Inference Server
         config : TritonServerConfig
             the config object containing arguments for this server instance
-        
+
         Returns
         -------
         TritonServerLocal

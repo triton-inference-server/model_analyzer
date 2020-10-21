@@ -30,9 +30,10 @@ from subprocess import check_output, CalledProcessError, STDOUT
 from model_analyzer.analyzer.perf_analyzer.perf_record import PerfRecord
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
+
 class PerfAnalyzer:
     """
-    This class provides an interface for running workloads 
+    This class provides an interface for running workloads
     with perf_analyzer.
     """
 
@@ -55,16 +56,16 @@ class PerfAnalyzer:
         Parameters
         ----------
         sweep_params : dictionary of lists
-            keys are arguments to perf_analyzer, values are 
+            keys are arguments to perf_analyzer, values are
             list of argument values to run perf_analyzer with.
-        
+
         Returns
         -------
-        List of tuples 
-            (params, output) where params are the set of 
-            parameters provided for that run and output is 
+        List of tuples
+            (params, output) where params are the set of
+            parameters provided for that run and output is
             the PerfRecord for the perf_analyzer run
-        
+
         Raises
         ------
         TritonModelAnalyzerException
@@ -83,24 +84,24 @@ class PerfAnalyzer:
             # update perf_analyzer config
             for key, val in run_config.items():
                 self._config[key] = val
-            
+
             # Run perf_analyzer
             run_record = self._run_perf_analyzer()
             run_outputs.append((run_config, run_record))
-        
+
         return run_outputs
 
     def _run_perf_analyzer(self):
         """
-        Runs the perf_analyzer tool locally 
+        Runs the perf_analyzer tool locally
         and synchronously
-        
+
         Returns
         -------
         PerfRecord
-            output from the subprocess call to 
+            output from the subprocess call to
             the perf_analyzer
-        
+
         Raises
         ------
         TritonModelAnalyzerException
@@ -111,10 +112,11 @@ class PerfAnalyzer:
 
         # Synchronously start and finish run
 
-        try:    
+        try:
             out = check_output(cmd, stderr=STDOUT, encoding='utf-8')
         except CalledProcessError as e:
-            raise TritonModelAnalyzerException(f"perf analyzer returned with exit" 
-                                                " status {e.returncode} : {e.output}")
+            raise TritonModelAnalyzerException(
+                f"perf analyzer returned with exit"
+                " status {e.returncode} : {e.output}")
 
         return PerfRecord(out)

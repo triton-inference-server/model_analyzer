@@ -24,10 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#from model_analyzer.record.record import Record
+from model_analyzer.record.record import Record
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-class PerfRecord:#(Record):
+
+class PerfRecord(Record):
     """
     A record for perf_analyzer
     metrics
@@ -38,9 +39,9 @@ class PerfRecord:#(Record):
         Parameters
         ----------
         perf_out : str
-            The raw stdout string from 
+            The raw stdout string from
             a run of the perf_analyzer
-        
+
         Raises
         ------
         TritonModelAnalyzerException
@@ -64,7 +65,7 @@ class PerfRecord:#(Record):
         ----------
         out : str
             The raw output from the subprocess
-            call to perf_analyzer 
+            call to perf_analyzer
         """
         # Split output into lines and ignore last 3 lines
         perf_out_lines = perf_out.split('\n')
@@ -79,21 +80,23 @@ class PerfRecord:#(Record):
                 self._data['Measurement window'] = int(line.split()[2])
             # Get first and last word in lines with count
             elif 'count:' in line:
-                [key,val] = line.split(' count: ')
-                self._data[key.strip()+' count'] = int(val)
-            # Get first word and first word after 'latency:' in lines with latency
+                [key, val] = line.split(' count: ')
+                self._data[key.strip() + ' count'] = int(val)
+            # Get first word and first word after 'latency:' in lines with
+            # latency
             elif 'latency:' in line:
                 latency_tags = line.split(' latency: ')
-                self._data[latency_tags[0].strip() + ' latency'] = int(latency_tags[1].split()[0])
+                self._data[latency_tags[0].strip(
+                ) + ' latency'] = int(latency_tags[1].split()[0])
             # Get first word after Throughput
             elif 'Throughput:' in line:
                 self._data['Throughput'] = float(line.split()[1])
-        
+
     def __str__(self):
         """
         Prints a PerfRecord
         """
-        
+
         out_str = f"*** Measurement Settings ***\n"
         out_str += f"  Batch size: {self._data['Batch size']}\n"
         out_str += f"  Measurement window: {self._data['Measurement window']} msec\n\n"

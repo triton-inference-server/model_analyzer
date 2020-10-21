@@ -45,4 +45,4 @@ class TritonGRPCClient(TritonClient):
         assert self._client_config['url'], \
             "Must specify url in client config."
         self._client = grpcclient.InferenceServerClient(
-                url=self._client_config['url'])
+            url=self._client_config['url'])

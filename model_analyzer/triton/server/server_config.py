@@ -26,62 +26,63 @@
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
+
 class TritonServerConfig:
     """
     A config class to set arguments to the Triton Inference
     Server. An argument set to None will use the server default.
     """
-    
+
     def __init__(self):
         # Args will be a dict with the string representation as key
         self._server_args = {
             # Logging
-            'log-verbose' : None,
-            'log-info' : None,
-            'log-warning' : None,
-            'log-error' : None,
-            'id' : None,
+            'log-verbose': None,
+            'log-info': None,
+            'log-warning': None,
+            'log-error': None,
+            'id': None,
             # Model Repository
-            'model-store' : None,
-            'model-repository' : None,
+            'model-store': None,
+            'model-repository': None,
             # Exit
-            'exit-timeout-secs' : None,
-            'exit-on-error' : None,
+            'exit-timeout-secs': None,
+            'exit-on-error': None,
             # Strictness
-            'strict-model-config' : None,
-            'strict-readiness' : None,
+            'strict-model-config': None,
+            'strict-readiness': None,
             # API Servers
-            'allow-http' : None,
-            'http-port' : None,
-            'http-thread-count' : None,
-            'allow-grpc' : None,
-            'grpc-port' : None,
-            'grpc-infer-allocation-pool-size' : None,
-            'grpc-use-ssl' : None,
-            'grpc-server-cert' : None,
-            'grpc-server-key' : None,
-            'grpc-root-cert' : None,
-            'allow-metrics' : None,
-            'allow-gpu-metrics' : None,
-            'metrics-port' : None,
+            'allow-http': None,
+            'http-port': None,
+            'http-thread-count': None,
+            'allow-grpc': None,
+            'grpc-port': None,
+            'grpc-infer-allocation-pool-size': None,
+            'grpc-use-ssl': None,
+            'grpc-server-cert': None,
+            'grpc-server-key': None,
+            'grpc-root-cert': None,
+            'allow-metrics': None,
+            'allow-gpu-metrics': None,
+            'metrics-port': None,
             # Tracing
-            'trace-file' : None,
-            'trace-level' : None,
-            'trace-rate' : None,
+            'trace-file': None,
+            'trace-level': None,
+            'trace-rate': None,
             # Model control
-            'model-control-mode' : None,
-            'repository-poll-secs' : None,
-            'load-model' : None,
+            'model-control-mode': None,
+            'repository-poll-secs': None,
+            'load-model': None,
             # Memory and GPU
-            'pinned-memory-pool-byte-size' : None,
-            'cuda-memory-pool-byte-size' : None,
-            'min-supported-compute-capability' : None,
+            'pinned-memory-pool-byte-size': None,
+            'cuda-memory-pool-byte-size': None,
+            'min-supported-compute-capability': None,
             # Backend config
-            'backend-directory' : None,
-            'backend-config' : None,
-            'allow-soft-placement' : None,
-            'gpu-memory-fraction' : None,
-            'tensorflow-version' : None
+            'backend-directory': None,
+            'backend-config': None,
+            'allow-soft-placement': None,
+            'gpu-memory-fraction': None,
+            'tensorflow-version': None
         }
 
     def to_cli_string(self):
@@ -92,12 +93,12 @@ class TritonServerConfig:
         Returns
         -------
         str
-            the command consisting of all set arguments to 
+            the command consisting of all set arguments to
             the tritonserver.
             e.g. '--model-repository=/models --log-verbos=True'
         """
-        return ' '.join([f'--{key}={val}' if val else '' \
-                        for key,val in self._server_args.items()])
+        return ' '.join([f'--{key}={val}' if val else ''
+                         for key, val in self._server_args.items()])
 
     def __getitem__(self, key):
         """
@@ -107,13 +108,13 @@ class TritonServerConfig:
         ----------
         key : str
             The name of the argument to the tritonserver
-        
+
         Returns
         -------
             The value that the argument is set to in this config
         """
         return self._server_args[key]
-    
+
     def __setitem__(self, key, value):
         """
         Sets an arguments value in config
@@ -125,7 +126,7 @@ class TritonServerConfig:
             The name of the argument to the tritonserver
         value : (any)
             The value to which the argument is being set
-        
+
         Raises
         ------
         TritonModelAnalyzerException
@@ -136,4 +137,4 @@ class TritonServerConfig:
             self._server_args[key] = value
         else:
             raise TritonModelAnalyzerException(f"The argument '{key}' to the Triton Inference "
-                             "Server is not supported by the model analyzer.")
+                                               "Server is not supported by the model analyzer.")

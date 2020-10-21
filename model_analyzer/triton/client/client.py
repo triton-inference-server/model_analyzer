@@ -34,7 +34,7 @@ WAIT_FOR_READY_NUM_RETRIES = 100
 
 class TritonClient:
     """
-    Defines the interface for the objects created by 
+    Defines the interface for the objects created by
     TritonClientFactory
     """
 
@@ -46,7 +46,7 @@ class TritonClient:
             number of times to send a ready status
             request to the server before raising
             an exception
-        
+
         Raises
         ------
         TritonModelAnalyzerException
@@ -64,10 +64,11 @@ class TritonClient:
                 time.sleep(0.1)
                 num_retries -= 1
                 pass
-        raise TritonModelAnalyzerException("Could not determine server readiness. "
-                                           "Number of retries exceeded.")
-    
-    def load_model(self, model_name):
+        raise TritonModelAnalyzerException(
+            "Could not determine server readiness. "
+            "Number of retries exceeded.")
+
+    def load_model(self, model):
         """
         Request the inference server to load
         a particular model in explicit model
@@ -75,20 +76,21 @@ class TritonClient:
 
         Parameters
         ----------
-        model_name : str
-            name of the model to load from repository
-        
+        model : Model
+            model to load from repository
+
         Raises
         ------
         TritonModelAnalyzerException
             If server throws InferenceServerException
         """
         try:
-            self._client.load_model(model_name)
+            self._client.load_model(model.name())
         except InferenceServerException as e:
-            raise TritonModelAnalyzerException(f"Unable to load the model : {e}")
-    
-    def unload_model(self, model_name):
+            raise TritonModelAnalyzerException(
+                f"Unable to load the model : {e}")
+
+    def unload_model(self, model):
         """
         Request the inference server to unload
         a particular model in explicit model
@@ -96,42 +98,45 @@ class TritonClient:
 
         Parameters
         ----------
-        model_name : str
-            name of the model to unload from repository
-        
+        model : Model
+            model to unload from repository
+
         Raises
         ------
         TritonModelAnalyzerException
             If server throws InferenceServerException
         """
         try:
-            self._client.unload_model(model_name)
+            self._client.unload_model(model.name())
         except InferenceServerException as e:
-            raise TritonModelAnalyzerException(f"Unable to unload the model : {e}")
-    
-    def wait_for_model_ready(self, model_name, num_retries=WAIT_FOR_READY_NUM_RETRIES):
+            raise TritonModelAnalyzerException(
+                f"Unable to unload the model : {e}")
+
+    def wait_for_model_ready(
+            self,
+            model,
+            num_retries=WAIT_FOR_READY_NUM_RETRIES):
         """
-        Returns when model with name model_name
-        is ready.
+        Returns when model is ready.
 
         Parameters
         ----------
-        model_name : str
+        model : str
             name of the model to load from repository
         num_retries : int
             number of times to send a ready status
             request to the server before raising
             an exception
-        
+
         Raises
         ------
         TritonModelAnalyzerException
-            If could not determine model readiness 
+            If could not determine model readiness
             in given num_retries
         """
         while num_retries > 0:
             try:
-                if self._client.is_model_ready(model_name):
+                if self._client.is_model_ready(model.name()):
                     return
                 else:
                     time.sleep(0.05)
@@ -140,5 +145,6 @@ class TritonClient:
                 time.sleep(0.05)
                 num_retries -= 1
                 pass
-        raise TritonModelAnalyzerException("Could not determine model readiness. "
-                                           "Number of retries exceeded.")
+        raise TritonModelAnalyzerException(
+            "Could not determine model readiness. "
+            "Number of retries exceeded.")

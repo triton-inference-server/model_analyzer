@@ -31,7 +31,7 @@ from .grpc_client import TritonGRPCClient
 
 class TritonGRPCClientFactory(TritonClientFactory):
     """
-    Concrete creator class that creates 
+    Concrete creator class that creates
     TritonGRPCClients
     """
 
@@ -41,7 +41,7 @@ class TritonGRPCClientFactory(TritonClientFactory):
         ----------
         config : TritonClientConfig
             A config with the relevant client options
-        
+
         Returns
         -------
         TritonGRPCClient

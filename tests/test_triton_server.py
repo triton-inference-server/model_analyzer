@@ -40,48 +40,49 @@ TRITON_VERSION = '20.09'
 SERVER_FACTORIES = [TritonServerDockerFactory(), TritonServerLocalFactory()]
 CONFIG_TEST_ARG = 'exit-on-error'
 CLI_TO_STRING_TEST_ARGS = {
-    'allow-grpc' : True,
-    'min-supported-compute-capability' : 7.5,
-    'metrics-port' : 8000,
-    'model-repository' : MODEL_REPOSITORY_PATH
+    'allow-grpc': True,
+    'min-supported-compute-capability': 7.5,
+    'metrics-port': 8000,
+    'model-repository': MODEL_REPOSITORY_PATH
 }
+
 
 class TestTritonServerMethods(unittest.TestCase):
 
     def setUp(self):
-        
+
         # server setup
         self.server = None
-        
+
     def test_server_config(self):
 
         # Create a TritonServerConfig
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
-        
+
         # Check config initializations
-        self.assertIsNone(server_config[CONFIG_TEST_ARG], 
-                            msg="Server config had unexpected initial"
-                                f"value for {CONFIG_TEST_ARG}")
+        self.assertIsNone(server_config[CONFIG_TEST_ARG],
+                          msg="Server config had unexpected initial"
+                          f"value for {CONFIG_TEST_ARG}")
         # Set value
         server_config[CONFIG_TEST_ARG] = True
 
         # Test get again
-        self.assertTrue(server_config[CONFIG_TEST_ARG], 
-                            msg=f"{CONFIG_TEST_ARG} was not set")
-        
+        self.assertTrue(server_config[CONFIG_TEST_ARG],
+                        msg=f"{CONFIG_TEST_ARG} was not set")
+
         # Try to set an unsupported config argument, expect failure
-        with self.assertRaises(TritonModelAnalyzerException, 
-                                msg="Expected exception on trying to set"
-                                    "unsupported argument in Triton server"
-                                    "config"):
+        with self.assertRaises(TritonModelAnalyzerException,
+                               msg="Expected exception on trying to set"
+                               "unsupported argument in Triton server"
+                               "config"):
             server_config['dummy'] = 1
-        
+
         # Reset test arg
         server_config[CONFIG_TEST_ARG] = None
-        
+
         # Finally set a couple of args and then check the cli string
-        for arg,value in CLI_TO_STRING_TEST_ARGS.items():
+        for arg, value in CLI_TO_STRING_TEST_ARGS.items():
             server_config[arg] = value
 
         cli_string = server_config.to_cli_string()
@@ -94,36 +95,38 @@ class TestTritonServerMethods(unittest.TestCase):
 
             # Make sure each parsed arg was in test dict
             self.assertIn(arg, CLI_TO_STRING_TEST_ARGS,
-                        msg=f"CLI string contained unknown argument: {arg}")
+                          msg=f"CLI string contained unknown argument: {arg}")
 
             # Make sure parsed value is the one from dict, check type too
             test_value = CLI_TO_STRING_TEST_ARGS[arg]
-            self.assertEqual(test_value, type(test_value)(value),
-                             msg=f"CLI string contained unknown value: {value}")
-
+            self.assertEqual(
+                test_value,
+                type(test_value)(value),
+                msg=f"CLI string contained unknown value: {value}")
 
     def test_create_server(self):
-        
+
         # Create a TritonServerConfig
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
 
         # Run for both types of environments
-        for factory in SERVER_FACTORIES:  
+        for factory in SERVER_FACTORIES:
             self.server = factory.create_server(
-                            model_path=MODEL_LOCAL_PATH, 
-                            version=TRITON_VERSION,
-                            config=server_config)
+                model_path=MODEL_LOCAL_PATH,
+                version=TRITON_VERSION,
+                config=server_config)
 
-        # Try to create a server without specifying model repository and expect error
+        # Try to create a server without specifying model repository and expect
+        # error
         with self.assertRaises(AssertionError, msg="Expected AssertionError for trying to create"
-                                                   "server without specifying model repository."):  
+                                                   "server without specifying model repository."):
             factory = TritonServerDockerFactory()
             server_config['model-repository'] = None
             self.server = factory.create_server(
-                                model_path=MODEL_LOCAL_PATH,
-                                version=TRITON_VERSION,
-                                config=server_config)
+                model_path=MODEL_LOCAL_PATH,
+                version=TRITON_VERSION,
+                config=server_config)
 
     def test_start_wait_stop_gpus(self):
 
@@ -131,13 +134,13 @@ class TestTritonServerMethods(unittest.TestCase):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
 
-        # Create server, start , wait, and stop 
-        for factory in SERVER_FACTORIES:    
+        # Create server, start , wait, and stop
+        for factory in SERVER_FACTORIES:
             self.server = factory.create_server(
-                                model_path=MODEL_LOCAL_PATH, 
-                                version=TRITON_VERSION,
-                                config=server_config)
-                
+                model_path=MODEL_LOCAL_PATH,
+                version=TRITON_VERSION,
+                config=server_config)
+
             # Set CUDA_VISIBLE_DEVICES and start the server
             os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
@@ -150,6 +153,7 @@ class TestTritonServerMethods(unittest.TestCase):
         # In case test raises exception
         if self.server is not None:
             self.server.stop()
+
 
 if __name__ == '__main__':
     unittest.main()
