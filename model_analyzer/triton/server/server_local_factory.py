@@ -23,3 +23,31 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+from .server_factory import TritonServerFactory
+from .server_local import TritonServerLocal
+
+
+class TritonServerLocalFactory(TritonServerFactory):
+    """
+    A factory for creating TritonServerLocal instances
+    """
+
+    def create_server(self, model_path, version, config):
+        """
+        Parameters
+        ----------
+        model_path : str
+            The absolute path to the local directory containing the models.
+            In the case of locally running server, this may be the same as
+            the model repository path
+        version : str
+            Current version of Triton Inference Server
+        config : TritonServerConfig
+            the config object containing arguments for this server instance
+
+        Returns
+        -------
+        TritonServerLocal
+        """
+        return TritonServerLocal(version=version, config=config)
