@@ -23,3 +23,21 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+class Model:
+    """
+    A class that encapsulates
+    all the metadata about
+    a model.
+    """
+
+    def __init__(self, name):
+        self._name = name
+
+    def name(self):
+        """
+        Returns
+        -------
+        The name of this model
+        """
+        return self._name

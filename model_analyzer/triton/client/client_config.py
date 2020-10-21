@@ -23,3 +23,56 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
+
+class TritonClientConfig:
+    """
+    A config class to set arguments to a TritonClient.
+    """
+
+    def __init__(self):
+        self._client_args = {
+            'url': None
+        }
+
+    def __getitem__(self, key):
+        """
+        Gets an arguments value in config
+
+        Parameters
+        ----------
+        key : str
+            The name of the argument to the client
+
+        Returns
+        -------
+            The value that the argument is set to in this config
+        """
+        return self._client_args[key]
+
+    def __setitem__(self, key, value):
+        """
+        Sets an arguments value in config
+        after checking if defined/supported.
+
+        Parameters
+        ----------
+        key : str
+            The name of the argument to the client
+        value : (any)
+            The value to which the argument is being set
+
+        Raises
+        ------
+        TritonModelAnalyzerException
+            If key is unsupported or undefined in the
+            config class
+        """
+        if key in self._client_args:
+            self._client_args[key] = value
+        else:
+            raise TritonModelAnalyzerException(
+                f"The argument '{key}' to the client is "
+                "not supported by the model analyzer.")
