@@ -30,8 +30,8 @@ import time
 
 from model_analyzer.monitor.model import Monitor
 
-from .gpu_free_memory import GPUFreeMemory
-from .gpu_used_memory import GPUUsedMemory
+from model_analyzer.record.gpu_free_memory import GPUFreeMemory
+from model_analyzer.record.gpu_used_memory import GPUUsedMemory
 
 
 class NVMLMonitor(Monitor):

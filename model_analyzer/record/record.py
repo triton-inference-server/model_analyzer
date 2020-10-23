@@ -8,7 +8,7 @@
 #  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in the
 #    documentation and/or other materials provided with the distribution.
-#  * Neither the record_type of NVIDIA CORPORATION nor the record_types of its
+#  * Neither the name of NVIDIA CORPORATION nor the names of its
 #    contributors may be used to endorse or promote products derived
 #    from this software without specific prior written permission.
 #
@@ -23,7 +23,7 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import time
+
 from abc import ABC, abstractmethod
 
 
@@ -32,7 +32,6 @@ class Record(ABC):
     This class is used for representing monitoring
     records
     """
-
     @abstractmethod
     def header(self):
         """
@@ -52,6 +51,20 @@ class Record(ABC):
 
         Returns
         -------
-        (any)
+        float
             value of the metric
+        """
+
+    @abstractmethod
+    def timestamp(self):
+        """
+        This method should
+        return the time
+        at which the record
+        was created.
+
+        Returns
+        -------
+        float
+            time in seconds since epoch
         """

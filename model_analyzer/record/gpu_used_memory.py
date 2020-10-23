@@ -23,18 +23,28 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from model_analyzer.record.record import Record
+
+import time
 from model_analyzer.record.gpu_record import GPURecord
 
 
-class GPUUsedMemory(Record, GPURecord):
+class GPUUsedMemory(GPURecord):
     """
     The used memory in the GPU.
     """
-
     def __init__(self, device, used_mem):
         self._used_mem = used_mem
         self._device = device
+        self._timestamp = time.time()
+
+    def device(self):
+        """
+        Returns
+        -------
+        GPUDevice
+            handle for this metric
+        """
+        return self._device
 
     def header(self):
         """
@@ -50,17 +60,21 @@ class GPUUsedMemory(Record, GPURecord):
         """
         Returns
         -------
-        dict
-            keys are column names,
-            values are record contents
+        float
+            amount of gpu used memory [MB]
         """
         return self._used_mem
 
-    def device(self):
+    def timestamp(self):
         """
+        This method should
+        return the time
+        at which the record
+        was created.
+
         Returns
         -------
-        GPUDevice
-            handle for this metric
+        float
+            time in seconds since epoch
         """
-        return self._device
+        return self._timestamp

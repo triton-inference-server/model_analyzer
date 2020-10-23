@@ -32,6 +32,8 @@ from tests.mock_nvml import MockNVML
 
 import model_analyzer
 from model_analyzer.monitor.nvml import NVMLMonitor
+from model_analyzer.record.gpu_free_memory import GPUFreeMemory
+from model_analyzer.record.gpu_used_memory import GPUUsedMemory
 
 
 class TestNVMLMonitor(unittest.TestCase):
