@@ -32,13 +32,9 @@ from tests.mock_nvml import MockNVML
 
 import model_analyzer
 from model_analyzer.monitor.nvml import NVMLMonitor
-from model_analyzer.record.gpu_memory_record import GPUMemoryRecord
-from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 
 
 class TestNVMLMonitor(unittest.TestCase):
-
     def setUp(self):
         mock_nvml = MockNVML(self)
         mock_nvml.setUp()
@@ -47,8 +43,8 @@ class TestNVMLMonitor(unittest.TestCase):
         self.assertIsInstance(model_analyzer.monitor.nvml.nvmlInit, Mock)
         self.assertIsInstance(
             model_analyzer.monitor.nvml.nvmlDeviceGetMemoryInfo, Mock)
-        self.assertIsInstance(model_analyzer.monitor.nvml.
-                              nvmlDeviceGetHandleByPciBusId, Mock)
+        self.assertIsInstance(
+            model_analyzer.monitor.nvml.nvmlDeviceGetHandleByPciBusId, Mock)
 
         # One measurement every 0.01 seconds
         frequency = 0.01
@@ -56,14 +52,16 @@ class TestNVMLMonitor(unittest.TestCase):
         nvml_monitor = NVMLMonitor(frequency)
         nvml_monitor.start_recording_metrics(['memory'])
         time.sleep(monitoring_time)
-        metrics = nvml_monitor.stop_recording_metrics()
+        records = nvml_monitor.stop_recording_metrics()
         nvml_monitor.destroy()
 
         # Assert instance types
-        for i in range(metrics.size()):
-            metric = metrics.get(i)
-            self.assertIsInstance(metric, GPUMemoryRecord)
-            self.assertIsInstance(metric.device, GPUDevice)
+        num_used_records = sum(
+            [isinstance(record, GPUUsedMemory) for record in records])
+        num_free_records = sum(
+            [isinstance(record, GPUFreeMemory) for record in records])
+
+        self.assertEqual(num_free_records, num_used_records)
 
 
 if __name__ == '__main__':

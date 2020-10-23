@@ -23,17 +23,44 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from model_analyzer.record.record import Record
 from model_analyzer.record.gpu_record import GPURecord
 
 
-class GPUMemoryRecord(GPURecord):
+class GPUUsedMemory(Record, GPURecord):
     """
-    GPUMemoryRecord stores information related to
-    GPU memory usage
+    The used memory in the GPU.
     """
 
-    def __init__(self, device, used, total, free):
-        super().__init__('memory', device)
-        self.total = total
-        self.used = used
-        self.free = free
+    def __init__(self, device, used_mem):
+        self._used_mem = used_mem
+        self._device = device
+
+    def header(self):
+        """
+        Returns
+        -------
+        str
+            The full name of the
+            metric.
+        """
+        return "GPU Used Memory [MB]"
+
+    def value(self):
+        """
+        Returns
+        -------
+        dict
+            keys are column names,
+            values are record contents
+        """
+        return self._used_mem
+
+    def device(self):
+        """
+        Returns
+        -------
+        GPUDevice
+            handle for this metric
+        """
+        return self._device

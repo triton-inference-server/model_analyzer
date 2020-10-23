@@ -8,7 +8,7 @@
 #  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in the
 #    documentation and/or other materials provided with the distribution.
-#  * Neither the name of NVIDIA CORPORATION nor the names of its
+#  * Neither the record_type of NVIDIA CORPORATION nor the record_types of its
 #    contributors may be used to endorse or promote products derived
 #    from this software without specific prior written permission.
 #
@@ -24,14 +24,34 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import time
+from abc import ABC, abstractmethod
 
 
-class Record:
+class Record(ABC):
     """
     This class is used for representing monitoring
     records
     """
 
-    def __init__(self, name):
-        self.time = time.time()
-        self.name = name
+    @abstractmethod
+    def header(self):
+        """
+        Returns
+        -------
+        str
+            The full name of the
+            metric.
+        """
+
+    @abstractmethod
+    def value(self):
+        """
+        This method returns
+        the value of recorded
+        metric
+
+        Returns
+        -------
+        (any)
+            value of the metric
+        """

@@ -24,20 +24,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from pynvml import nvmlDeviceGetMemoryInfo, nvmlDeviceGetHandleByPciBusId,\
-     nvmlInit
+    nvmlInit
 from multiprocessing.pool import ThreadPool
 import time
 
-from model_analyzer.record.gpu_memory_record import GPUMemoryRecord
-from model_analyzer.record.record_collector import RecordCollector
 from model_analyzer.monitor.model import Monitor
+
+from .gpu_free_memory import GPUFreeMemory
+from .gpu_used_memory import GPUUsedMemory
 
 
 class NVMLMonitor(Monitor):
     """
     Use NVML to monitor GPU metrics
     """
-
     def __init__(self, frequency):
         """
         Parameters
@@ -66,7 +66,7 @@ class NVMLMonitor(Monitor):
         self._thread_active = True
         frequency = self._frequency
 
-        record_collector = RecordCollector()
+        records = []
         while self._thread_active:
             begin = time.time()
             for tag in tags:
@@ -74,15 +74,18 @@ class NVMLMonitor(Monitor):
                     for i, handle in enumerate(self._nvml_handles):
                         memory = nvmlDeviceGetMemoryInfo(handle)
                         gpu_device = self._gpus[i]
-                        memory_record = GPUMemoryRecord(
-                            gpu_device, memory.used, memory.total, memory.free)
-                        record_collector.insert(memory_record)
+                        records.append(
+                            GPUUsedMemory(device=gpu_device,
+                                          used_mem=memory.used))
+                        records.append(
+                            GPUFreeMemory(device=gpu_device,
+                                          free_mem=memory.free))
 
             duration = time.time() - begin
             if duration < frequency:
                 time.sleep(frequency - duration)
 
-        return record_collector
+        return records
 
     def start_recording_metrics(self, tags):
         """
@@ -95,7 +98,7 @@ class NVMLMonitor(Monitor):
             *memory* and *compute*.
         """
         self._thread = self._thread_pool.apply_async(self._monitoring_loop,
-                                                     (tags,))
+                                                     (tags, ))
 
     def stop_recording_metrics(self):
         """
@@ -103,14 +106,14 @@ class NVMLMonitor(Monitor):
 
         Returns
         -------
-        RecordCollector
-            A RecordCollector containing all the results
+        List of Records
+            GPUUsedMemory and GPUFreeMemory in this list
         """
         self._thread_active = False
-        record_collector = self._thread.get()
+        records = self._thread.get()
         self._thread = None
 
-        return record_collector
+        return records
 
     def destroy(self):
         """
