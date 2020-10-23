@@ -30,7 +30,6 @@ from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
-from model_analyzer.analyzer.perf_analyzer.perf_record import PerfRecord
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 # Test Parameters
@@ -40,26 +39,6 @@ TRITON_VERSION = '20.09'
 TEST_MODEL_NAME = 'classification_chestxray_v1'
 CONFIG_TEST_ARG = 'sync'
 TEST_RUN_PARAMS = {'batch-size': [1, 2], 'concurrency-range': [2, 4]}
-PERF_RECORD_EXAMPLE = (
-    "*** Measurement Settings ***\n"
-    "  Batch size: 1\n"
-    "  Measurement window: 5000 msec\n\n"
-    "Request concurrency: 4\n"
-    "  Client:\n"
-    "    Request count: 100\n"
-    "    Throughput: 40.8 infer/sec\n"
-    "    Avg latency: 2000 usec\n"
-    "    p50 latency: 2000 usec\n"
-    "    p90 latency: 2000 usec\n"
-    "    p95 latency: 2000 usec\n"
-    "    p99 latency: 2000 usec\n"
-    "  Server:\n"
-    "    Inference count: 100\n"
-    "    Execution count: 100\n"
-    "    Successful request count: 100\n"
-    "    Avg request latency: 2000 usec\n\n"
-    "Inferences/Second vs. Client Average Batch Latency\n"
-    "Concurrency: 1, throughput: 45 infer/sec, latency 22222 usec\n")
 
 
 class TestPerfAnalyzerMethods(unittest.TestCase):
@@ -103,20 +82,10 @@ class TestPerfAnalyzerMethods(unittest.TestCase):
         self.server.start()
         self.server.wait_for_ready(num_retries=50)
 
-        # run job with test sweep params
-        outputs = client.run_job(sweep_params=TEST_RUN_PARAMS)
-
-        # Ensure correct number of runs
-        self.assertEqual(len(outputs), 4)
+        # Run perf analyzer
+        throughput_record, latency_record = perf_client.run()
 
         self.server.stop()
-
-    def test_perf_record(self):
-        # Create a perf record from the example
-        record = PerfRecord(PERF_RECORD_EXAMPLE)
-
-        # Now check that the output was correctly parsed
-        self.assertEqual(str(record), PERF_RECORD_EXAMPLE.rsplit('\n', 3)[0])
 
     def tearDown(self):
         # In case test raises exception

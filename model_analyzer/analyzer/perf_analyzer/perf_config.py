@@ -32,7 +32,6 @@ class PerfAnalyzerConfig:
     A config class to set arguments to the perf_analyzer.
     An argument set to None will use the perf_analyzer's default.
     """
-
     def __init__(self):
         self._args = {
             'async': None,
@@ -68,10 +67,7 @@ class PerfAnalyzerConfig:
             '-H': None
         }
 
-        self._verbose = {
-            '-v': None,
-            '-v -v': None
-        }
+        self._verbose = {'-v': None, '-v -v': None}
 
         self._input_to_options = {
             'model-name': '-m',
@@ -83,10 +79,7 @@ class PerfAnalyzerConfig:
             'streaming': '-H'
         }
 
-        self._input_to_verbose = {
-            'verbose': '-v',
-            'extra-verbose': '-v -v'
-        }
+        self._input_to_verbose = {'verbose': '-v', 'extra-verbose': '-v -v'}
 
     def to_cli_string(self):
         """
