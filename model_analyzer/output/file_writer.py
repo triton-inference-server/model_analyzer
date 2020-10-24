@@ -69,7 +69,6 @@ class FileWriter(TableWriter):
                     with open(self._filename, write_mode) as f:
                         f.write(table)
                 except IOError as e:
-                    f.close()
                     raise TritonModelAnalyzerException(e)
             else:
                 raise TritonModelAnalyzerException(
