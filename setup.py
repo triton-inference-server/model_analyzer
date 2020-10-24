@@ -84,7 +84,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'model-analyzer = model_analyzer.entrypoints.main:main'
+            'model-analyzer = model_analyzer.cli.entrypoint:main'
         ]
     },
     install_requires=install_requires,

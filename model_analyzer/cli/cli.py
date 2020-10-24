@@ -23,6 +23,7 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from argparse import ArgumentParser
 
 
@@ -43,27 +44,30 @@ class CLI:
             required=True,
             help='Model repository location')
         self._parser.add_argument(
+            '-t',
             '--triton-version',
             type=str,
             help='Triton Server version')
         self._parser.add_argument(
+            '-n',
             '--model-names',
             type=str,
             required=True,
             help='Comma delimited list of the model names to be profiled')
         self._parser.add_argument(
             '-b',
+            '--batch-size',
             type=int,
             default=1,
             help='Batch size to use for the profiling')
         self._parser.add_argument(
+            '-e',
             '--export',
-            '--export-path',
             type=str,
             help='Export path to store the results')
         self._parser.add_argument(
-            '--concurrency-range',
             '-c',
+            '--concurrency-range',
             type=str,
             help='Concurrency range values <start:end:step>')
 
