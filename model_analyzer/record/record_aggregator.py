@@ -34,7 +34,7 @@ class RecordAggregator:
     def __init__(self):
         self._records = defaultdict(list)
 
-    def insert_record(self, record):
+    def insert(self, record):
         """
         Insert a record into the RecordAggregator
 
@@ -50,7 +50,7 @@ class RecordAggregator:
             raise TritonModelAnalyzerException(
                 "Can only add objects of type 'Record' to RecordAggregator")
 
-    def get_records(self, headers=None, filters=None):
+    def filter_records(self, headers=None, filters=None):
         """
         Get records that satisfy
         the given list of criteria.
@@ -67,7 +67,9 @@ class RecordAggregator:
             a given record should be returned.
             If no filters specified, all records
             of types specified by headers will be
-            returned
+            returned.
+            Note : This must be of the same length
+                   as the list of headers, or omitted.
 
         Returns
         -------
@@ -152,8 +154,10 @@ class RecordAggregator:
             keys are requested headers
             and values are the aggregated values
         """
-
-        return {
-            k: reduce_func([record.value() for record in self._records[k]])
-            for k in headers
-        }
+        aggregated_records = {}
+        for record_type in headers:
+            values = []
+            for record in self._records[record_type]:
+                values.append(record.value())
+            aggregated_records[record_type] = reduce_func(values)
+        return aggregated_records
