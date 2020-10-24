@@ -28,8 +28,8 @@ from itertools import product
 from subprocess import check_output, CalledProcessError, STDOUT
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from .perf_latency import PerfLatency
-from .perf_throughput import PerfThroughput
+from model_analyzer.record.perf_latency import PerfLatency
+from model_analyzer.record.perf_throughput import PerfThroughput
 
 
 class PerfAnalyzer:
@@ -93,29 +93,19 @@ class PerfAnalyzer:
         # Split output into lines and ignore last 3 lines
         perf_out_lines = perf_out.split('\n')
         for line in perf_out_lines[:-3]:
-            # Last word in line with Batch and concurrency
-            if 'Batch' in line:
-                data['Batch size'] = int(line.split()[-1])
-            elif 'concurrency:' in line:
-                data['Concurrency'] = int(line.split()[-1])
-            # Third word in measurement window line
-            elif 'window:' in line:
-                data['Measurement window'] = int(line.split()[2])
-            # Get first and last word in lines with count
-            elif 'count:' in line:
-                [key, val] = line.split(' count: ')
-                data[key.strip() + ' count'] = int(val)
             # Get first word and first word after 'latency:' in lines with
             # latency
-            elif 'latency:' in line:
+            if 'latency:' in line:
                 latency_tags = line.split(' latency: ')
-                data[latency_tags[0].strip() + ' latency'] = int(
+                data[latency_tags[0].strip() + ' latency'] = float(
                     latency_tags[1].split()[0])
             # Get first word after Throughput
             elif 'Throughput:' in line:
                 data['Throughput'] = float(line.split()[1])
 
         # Create and return the required records
-        throughput_record = PerfThroughput(data['Throughput'], self._config)
-        latency_record = PerfLatency(data['Avg latency'], self._config)
+        throughput_record = PerfThroughput(
+            data['Throughput']) if ('Throughput' in data) else None
+        latency_record = PerfLatency(
+            data['Avg latency']) if ('Avg latency' in data) else None
         return (throughput_record, latency_record)

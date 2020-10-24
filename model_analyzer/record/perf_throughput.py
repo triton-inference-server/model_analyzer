@@ -24,20 +24,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from model_analyzer.record.record import Record
-from model_analyzer.record.perf_record import PerfRecord
+import time
+
+from .record import Record
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
-class PerfLatency(Record, PerfRecord):
+class PerfThroughput(Record):
     """
     A record for perf_analyzer
-    metric 'Avg Latency'
+    metric 'Throughput'
     """
-
-    def __init__(self, latency, perf_config):
-        self._latency = latency
-        self._config = perf_config
+    def __init__(self, throughput):
+        self._throughput = throughput
+        self._timestamp = time.time()
 
     def header(self):
         """
@@ -47,7 +47,7 @@ class PerfLatency(Record, PerfRecord):
             The full name of the
             metric.
         """
-        return "Average Latency"
+        return "Throughput (infer/sec)"
 
     def value(self):
         """
@@ -60,16 +60,18 @@ class PerfLatency(Record, PerfRecord):
         (any)
             value of the metric
         """
-        return self._latency
+        return self._throughput
 
-    def config(self):
+    def timestamp(self):
         """
+        This method should
+        return the time
+        at which the record
+        was created.
+        
         Returns
         -------
-        PerfConfig
-            The perf config that
-            was used during the
-            run that this PerfRecord
-            was created.
+        float
+            time in seconds since epoch
         """
-        return self._config
+        return self._timestamp
