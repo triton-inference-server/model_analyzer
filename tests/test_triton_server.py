@@ -26,10 +26,8 @@
 
 import os
 import unittest
-import sys
 
-from model_analyzer.triton.server.server_local_factory import TritonServerLocalFactory
-from model_analyzer.triton.server.server_docker_factory import TritonServerDockerFactory
+from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
@@ -37,7 +35,6 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 MODEL_LOCAL_PATH = '/model_analyzer/models'
 MODEL_REPOSITORY_PATH = '/model_analyzer/models'
 TRITON_VERSION = '20.09'
-SERVER_FACTORIES = [TritonServerDockerFactory(), TritonServerLocalFactory()]
 CONFIG_TEST_ARG = 'exit-on-error'
 CLI_TO_STRING_TEST_ARGS = {
     'allow-grpc': True,
@@ -48,7 +45,6 @@ CLI_TO_STRING_TEST_ARGS = {
 
 
 class TestTritonServerMethods(unittest.TestCase):
-
     def setUp(self):
 
         # server setup
@@ -94,7 +90,8 @@ class TestTritonServerMethods(unittest.TestCase):
             arg = arg[2:]
 
             # Make sure each parsed arg was in test dict
-            self.assertIn(arg, CLI_TO_STRING_TEST_ARGS,
+            self.assertIn(arg,
+                          CLI_TO_STRING_TEST_ARGS,
                           msg=f"CLI string contained unknown argument: {arg}")
 
             # Make sure parsed value is the one from dict, check type too
@@ -111,42 +108,65 @@ class TestTritonServerMethods(unittest.TestCase):
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
 
         # Run for both types of environments
-        for factory in SERVER_FACTORIES:
-            self.server = factory.create_server(
-                model_path=MODEL_LOCAL_PATH,
-                version=TRITON_VERSION,
-                config=server_config)
+        self.server = TritonServerFactory.create_server_docker(
+            model_path=MODEL_LOCAL_PATH,
+            version=TRITON_VERSION,
+            config=server_config)
+
+        self.server = TritonServerFactory.create_server_local(
+            version=TRITON_VERSION, config=server_config)
 
         # Try to create a server without specifying model repository and expect
         # error
-        with self.assertRaises(AssertionError, msg="Expected AssertionError for trying to create"
-                                                   "server without specifying model repository."):
-            factory = TritonServerDockerFactory()
-            server_config['model-repository'] = None
-            self.server = factory.create_server(
+        server_config['model-repository'] = None
+        with self.assertRaises(
+                AssertionError,
+                msg="Expected AssertionError for trying to create"
+                "server without specifying model repository."):
+            self.server = TritonServerFactory.create_server_docker(
                 model_path=MODEL_LOCAL_PATH,
                 version=TRITON_VERSION,
                 config=server_config)
+        with self.assertRaises(
+                AssertionError,
+                msg="Expected AssertionError for trying to create"
+                "server without specifying model repository."):
+            self.server = TritonServerFactory.create_server_local(
+                version=TRITON_VERSION, config=server_config)
 
     def test_start_wait_stop_gpus(self):
 
         # Create a TritonServerConfig
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
+        os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-        # Create server, start , wait, and stop
-        for factory in SERVER_FACTORIES:
-            self.server = factory.create_server(
-                model_path=MODEL_LOCAL_PATH,
-                version=TRITON_VERSION,
-                config=server_config)
+        # Create server in docker, start , wait, and stop
+        self.server = TritonServerFactory.create_server_docker(
+            model_path=MODEL_LOCAL_PATH,
+            version=TRITON_VERSION,
+            config=server_config)
 
-            # Set CUDA_VISIBLE_DEVICES and start the server
-            os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
-            self.server.start()
+        # Set CUDA_VISIBLE_DEVICES and start the server
+        with self.assertRaises(TritonModelAnalyzerException,
+                               msg="Expected to exceed num_retries"):
             self.server.wait_for_ready()
-            self.server.stop()
+
+        self.server.start()
+        self.server.wait_for_ready()
+        self.server.stop()
+
+        # Create server locally, start , wait, and stop
+        self.server = TritonServerFactory.create_server_local(
+            version=TRITON_VERSION, config=server_config)
+
+        with self.assertRaises(TritonModelAnalyzerException,
+                               msg="Expected to exceed num_retries"):
+            self.server.wait_for_ready()
+
+        self.server.start()
+        self.server.wait_for_ready()
+        self.server.stop()
 
     def tearDown(self):
 

@@ -24,24 +24,39 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from abc import ABC, abstractmethod
+from .grpc_client import TritonGRPCClient
+from .http_client import TritonHTTPClient
 
 
-class TritonClientFactory(ABC):
+class TritonClientFactory:
     """
     Base client creator class that declares
     a factory method
     """
-
-    @abstractmethod
-    def create_client(self, config):
+    @staticmethod
+    def create_grpc_client(config):
         """
         Parameters
         ----------
         config : TritonClientConfig
-            A config for the the relevant client options
+            A config for the relevant client options
 
         Returns
         -------
-        TritonClient
+        TritonGRPCClient
         """
+        return TritonGRPCClient(config=config)
+
+    @staticmethod
+    def create_http_client(config):
+        """
+        Parameters
+        ----------
+        config : TritonClientConfig
+            A config for the relevant client options
+
+        Returns
+        -------
+        TritonHTTPClient
+        """
+        return TritonHTTPClient(config=config)
