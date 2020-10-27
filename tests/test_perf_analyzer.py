@@ -27,7 +27,7 @@
 import unittest
 
 from model_analyzer.triton.server.server_config import TritonServerConfig
-from model_analyzer.triton.server.server_local_factory import TritonServerLocalFactory
+from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.analyzer.perf_analyzer.perf_record import PerfRecord
@@ -39,10 +39,7 @@ MODEL_REPOSITORY_PATH = '/model_analyzer/models'
 TRITON_VERSION = '20.09'
 TEST_MODEL_NAME = 'classification_chestxray_v1'
 CONFIG_TEST_ARG = 'sync'
-TEST_RUN_PARAMS = {
-    'batch-size': [1, 2],
-    'concurrency-range': [2, 4]
-}
+TEST_RUN_PARAMS = {'batch-size': [1, 2], 'concurrency-range': [2, 4]}
 PERF_RECORD_EXAMPLE = (
     "*** Measurement Settings ***\n"
     "  Batch size: 1\n"
@@ -66,7 +63,6 @@ PERF_RECORD_EXAMPLE = (
 
 
 class TestPerfAnalyzerMethods(unittest.TestCase):
-
     def setUp(self):
         # PerfAnalyzer config for all tests
         self.config = PerfAnalyzerConfig()
@@ -100,15 +96,12 @@ class TestPerfAnalyzerMethods(unittest.TestCase):
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
 
         # Create server, PerfAnalyzer, and wait for server ready
-        factory = TritonServerLocalFactory()
-        self.server = factory.create_server(
-            model_path=MODEL_LOCAL_PATH,
-            version=TRITON_VERSION,
-            config=server_config)
-        client = PerfAnalyzer(config=self.config)
+        self.server = TritonServerFactory.create_server_local(
+            version=TRITON_VERSION, config=server_config)
+        perf_client = PerfAnalyzer(config=self.config)
 
         self.server.start()
-        self.server.wait_for_ready(num_retries=10)
+        self.server.wait_for_ready(num_retries=50)
 
         # run job with test sweep params
         outputs = client.run_job(sweep_params=TEST_RUN_PARAMS)
