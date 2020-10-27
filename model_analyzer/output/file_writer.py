@@ -33,17 +33,17 @@ class FileWriter(TableWriter):
     """
     Writes table to a file or stdout
     """
-    def __init__(self, filename=None):
+    def __init__(self, file_handle=None):
         """
         Parameters
         ----------
-        filename : str
-            The file or stream to write the output to. 
-            If filename is None print to stdout.
+        filename : File
+            The file or stream pointer to write the output to.
+            Writer to stdout if file_handle is None
         """
-        self._filename = filename
+        self._file_handle = file_handle
 
-    def write(self, table, write_mode=None):
+    def write(self, table):
         """
         Writes the output to a file or stdout
 
@@ -52,26 +52,17 @@ class FileWriter(TableWriter):
         table : str
             The formatted table constructed from 
             recorded metrics as a string.
-        
-        write_mode : str
-            How to open the file for writing
-        
+
         Raises
         ------
         TritonModelAnalyzerException
             If there is an error or exception while writing
             the output.
         """
-        allowed_write_modes = ['a', 'w', 'a+', 'w+', 'rw', 'ra']
-        if self._filename:
-            if write_mode in allowed_write_modes:
-                try:
-                    with open(self._filename, write_mode) as f:
-                        f.write(table)
-                except IOError as e:
-                    raise TritonModelAnalyzerException(e)
-            else:
-                raise TritonModelAnalyzerException(
-                    f"Write mode must be one of {allowed_write_modes}")
+        if self._file_handle:
+            try:
+                self._file_handle.write(table)
+            except IOError as e:
+                raise TritonModelAnalyzerException(e)
         else:
             print(table, end='')

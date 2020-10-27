@@ -27,50 +27,39 @@
 import unittest
 import sys
 import os
+from io import StringIO
+
 from model_analyzer.output.file_writer import FileWriter
 
 
 class TestFileWriterMethods(unittest.TestCase):
     def test_write(self):
-        filename = 'test_file'
-        writer = FileWriter(filename=filename)
+        test_handle = StringIO()
+        writer = FileWriter(file_handle=test_handle)
 
         # Write test using create if not exist mode
-        writer.write('test', write_mode='w+')
+        writer.write('test')
 
-        # open and read file
-        with open(filename, 'r') as f:
-            content = f.read()
-
-        self.assertEqual(content, 'test')
+        # read file
+        self.assertEqual(test_handle.getvalue(), 'test')
 
         # redirect stdout and create writer with no filename
+        test_handle = StringIO()
         old_stdout = sys.stdout
-        sys.stdout = open('test_file_stdout', 'w')
+        sys.stdout = test_handle
         writer = FileWriter()
         writer.write('test')
         sys.stdout.flush()
-        sys.stdout.close()
         sys.stdout = old_stdout
 
-        with open('test_file_stdout', 'r') as f:
-            content = f.read()
-
-        self.assertEqual(content, 'test')
+        self.assertEqual(test_handle.getvalue(), 'test')
+        test_handle.close()
 
         # Check for malformed calls
         err_str = "Expected TritonModelAnalyzerException on malformed input."
-        writer = FileWriter('file_that_does_not_exist')
+        writer = FileWriter(file_handle=test_handle)
         with self.assertRaises(Exception, msg=err_str):
-            writer.write('test', write_mode='rw')
-        with self.assertRaises(Exception, msg=err_str):
-            writer.write('test', write_mode='x+')
-
-        # Remove test files
-        if os.path.exists("test_file"):
-            os.remove("test_file")
-        if os.path.exists("test_file_stdout"):
-            os.remove("test_file_stdout")
+            writer.write('test')
 
 
 if __name__ == '__main__':
