@@ -28,9 +28,8 @@ import os
 import unittest
 import sys
 
-from model_analyzer.triton.server.server_docker_factory import TritonServerDockerFactory
-from model_analyzer.triton.client.http_client_factory import TritonHTTPClientFactory
-from model_analyzer.triton.client.grpc_client_factory import TritonGRPCClientFactory
+from model_analyzer.triton.server.server_factory import TritonServerFactory
+from model_analyzer.triton.client.client_factory import TritonClientFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.client.client_config import TritonClientConfig
 from model_analyzer.triton.model.model import Model
@@ -41,13 +40,12 @@ MODEL_LOCAL_PATH = '/model_analyzer/models'
 MODEL_REPOSITORY_PATH = '/model_analyzer/models'
 TRITON_VERSION = '20.09'
 CONFIG_TEST_ARG = 'url'
-CLIENT_TEST_PROTOCOLS = [(TritonHTTPClientFactory(), 'localhost:8000'),
-                         (TritonGRPCClientFactory(), 'localhost:8001')]
+GRPC_URL = 'localhost:8001'
+HTTP_URL = 'localhost:8000'
 TEST_MODEL_NAME = 'classification_chestxray_v1'
 
 
 class TestTritonClientMethods(unittest.TestCase):
-
     def setUp(self):
         # Create server config
         self.server_config = TritonServerConfig()
@@ -58,8 +56,7 @@ class TestTritonClientMethods(unittest.TestCase):
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
         # Create and start the server
-        factory = TritonServerDockerFactory()
-        self.server = factory.create_server(
+        self.server = TritonServerFactory.create_server_docker(
             model_path=MODEL_LOCAL_PATH,
             version=TRITON_VERSION,
             config=self.server_config)
@@ -90,26 +87,37 @@ class TestTritonClientMethods(unittest.TestCase):
         # Create a TritonServerConfig
         client_config = TritonClientConfig()
 
-        # Run for both types of protocols
-        for factory, url in CLIENT_TEST_PROTOCOLS:
-            client_config['url'] = url
-            client = factory.create_client(config=client_config)
+        # Create GRPC client
+        client_config['url'] = GRPC_URL
+        client = TritonClientFactory.create_grpc_client(config=client_config)
 
         # Try to create a client without specifying url and expect error
-            with self.assertRaises(AssertionError,
-                                   msg="Expected AssertionError for trying to "
-                                   "create client without specifying url."):
-                client_config['url'] = None
-                client = factory.create_client(config=client_config)
+        with self.assertRaises(AssertionError,
+                               msg="Expected AssertionError for trying to "
+                               "create client without specifying url."):
+            client_config['url'] = None
+            client = TritonClientFactory.create_grpc_client(
+                config=client_config)
+
+        # Create HTTP client
+        client_config['url'] = HTTP_URL
+        client = TritonClientFactory.create_http_client(config=client_config)
+
+        # Try to create a client without specifying url and expect error
+        with self.assertRaises(AssertionError,
+                               msg="Expected AssertionError for trying to "
+                               "create client without specifying url."):
+            client_config['url'] = None
+            client = TritonClientFactory.create_http_client(
+                config=client_config)
 
     def test_wait_for_ready(self):
         # Create a TritonClientConfig
         client_config = TritonClientConfig()
-        client_config['url'] = 'localhost:8000'
+        client_config['url'] = HTTP_URL
 
         # Create client
-        factory = TritonHTTPClientFactory()
-        client = factory.create_client(config=client_config)
+        client = TritonClientFactory.create_http_client(config=client_config)
 
         # Wait for the server when it hasnt been started
         expected_string = "Could not determine server readiness. Number of retries exceeded."
@@ -130,11 +138,10 @@ class TestTritonClientMethods(unittest.TestCase):
     def test_load_unload_model(self):
         # Create config
         client_config = TritonClientConfig()
-        client_config['url'] = 'localhost:8001'
+        client_config['url'] = GRPC_URL
 
         # Create client
-        factory = TritonGRPCClientFactory()
-        client = factory.create_client(config=client_config)
+        client = TritonClientFactory.create_grpc_client(config=client_config)
 
         # Start the server and wait till it is ready
         self.server.start()
@@ -160,8 +167,8 @@ class TestTritonClientMethods(unittest.TestCase):
 
     def tearDown(self):
         # In case test raises exception
-        self.server.stop()
-        pass
+        if self.server is not None:
+            self.server.stop()
 
 
 if __name__ == '__main__':

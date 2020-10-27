@@ -39,7 +39,6 @@ class TritonServer(ABC):
     Defines the interface for the objects created by
     TritonServerFactory
     """
-
     @abstractmethod
     def start(self):
         """
@@ -76,12 +75,13 @@ class TritonServer(ABC):
         else:
             # TODO to use GRPC to check for ready also
             raise TritonModelAnalyzerException(
-                'allow-http must be True in order to use wait_for_server_ready')
+                'allow-http must be True in order to use wait_for_server_ready'
+            )
 
         retries = num_retries
 
         # poll ready endpoint for number of retries
-        while num_retries > 0:
+        while retries > 0:
             try:
                 r = requests.get(url)
                 if r.status_code == 200:
