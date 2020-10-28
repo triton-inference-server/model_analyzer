@@ -32,6 +32,7 @@ class Record(ABC):
     This class is used for representing monitoring
     records
     """
+
     def __init__(self, value, timestamp):
         self._value = value
         self._timestamp = timestamp

@@ -32,6 +32,7 @@ class GPUFreeMemory(GPURecord):
     """
     The free memory in the GPU.
     """
+
     def __init__(self, device, free_mem, timestamp):
         """
         Parameters

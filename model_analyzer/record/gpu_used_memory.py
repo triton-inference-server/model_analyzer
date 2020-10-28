@@ -32,6 +32,7 @@ class GPUUsedMemory(GPURecord):
     """
     The used memory in the GPU.
     """
+
     def __init__(self, device, used_mem, timestamp):
         """
         Parameters

@@ -34,6 +34,7 @@ class GPURecord(Record):
     This is a base class for any
     GPU based record
     """
+
     def __init__(self, device, value, timestamp):
         super().__init__(value, timestamp)
         self._device = device

@@ -38,6 +38,7 @@ class NVMLMonitor(Monitor):
     """
     Use NVML to monitor GPU metrics
     """
+
     def __init__(self, frequency):
         """
         Parameters
