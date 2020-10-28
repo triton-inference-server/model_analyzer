@@ -46,6 +46,7 @@ class GPUUsedMemory(GPURecord):
         timestamp : float
             Elapsed time from start of program
         """
+
         super().__init__(device, used_mem, timestamp)
 
     def header(self):
@@ -56,4 +57,5 @@ class GPUUsedMemory(GPURecord):
             The full name of the
             metric.
         """
+
         return "GPU Used Memory [MB]"

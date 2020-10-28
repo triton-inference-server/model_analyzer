@@ -46,6 +46,7 @@ class GPUFreeMemory(GPURecord):
         timestamp : float
             Elapsed time from start of program
         """
+
         super().__init__(device, free_mem, timestamp)
 
     def header(self):
@@ -56,4 +57,5 @@ class GPUFreeMemory(GPURecord):
             The full name of the
             metric.
         """
+
         return "GPU Free Memory [MB]"

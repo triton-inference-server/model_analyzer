@@ -36,6 +36,18 @@ class GPURecord(Record):
     """
 
     def __init__(self, device, value, timestamp):
+        """
+        Parameters
+        ----------
+        device : GPUDevice
+            The  GPU device this metric is associated
+            with.
+        value : float
+            The value of the GPU metrtic
+        timestamp : float
+            Elapsed time from start of program
+        """
+
         super().__init__(value, timestamp)
         self._device = device
 
@@ -46,4 +58,5 @@ class GPURecord(Record):
         GPUDevice
             handle for this metric
         """
+
         return self._device

@@ -34,6 +34,15 @@ class Record(ABC):
     """
 
     def __init__(self, value, timestamp):
+        """
+        Parameters
+        ----------
+        value : float
+            The value of the GPU metrtic
+        timestamp : float
+            Elapsed time from start of program
+        """
+
         self._value = value
         self._timestamp = timestamp
 
@@ -58,6 +67,7 @@ class Record(ABC):
         float
             value of the metric
         """
+
         return self._value
 
     def timestamp(self):
@@ -73,4 +83,5 @@ class Record(ABC):
             timestamp passed in during
             record creation
         """
+
         return self._timestamp
