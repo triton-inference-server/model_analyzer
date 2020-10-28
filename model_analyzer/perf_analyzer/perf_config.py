@@ -94,6 +94,7 @@ class PerfAnalyzerConfig:
             to the perf_analyzer set in the config, without
             the executable name.
         """
+
         # single dashed options, then verbose flags, then main args
         args = [f'{k} {v}' for k, v in self._options.items() if v]
         args += [k for k, v in self._verbose.items() if v]
@@ -119,6 +120,7 @@ class PerfAnalyzerConfig:
         TritonModelAnalyzerException
             If argument not found in the config
         """
+
         if key in self._args:
             return self._args[key]
         elif key in self._input_to_options:
@@ -147,6 +149,7 @@ class PerfAnalyzerConfig:
             If key is unsupported or undefined in the
             config class
         """
+
         if key in self._args:
             self._args[key] = value
         elif key in self._input_to_options:

@@ -46,6 +46,7 @@ class PerfAnalyzer:
             keys are names of arguments to perf_analyzer,
             values are their values.
         """
+
         self._config = config
         self._outputs = []
 
@@ -64,6 +65,7 @@ class PerfAnalyzer:
         TritonModelAnalyzerException
             If subprocess throws CalledProcessError
         """
+
         cmd = ['perf_analyzer']
         cmd += self._config.to_cli_string().replace('=', ' ').split()
 
@@ -89,6 +91,7 @@ class PerfAnalyzer:
             The raw output from the subprocess
             call to perf_analyzer
         """
+
         data = {}
         # Split output into lines and ignore last 3 lines
         perf_out_lines = perf_out.split('\n')

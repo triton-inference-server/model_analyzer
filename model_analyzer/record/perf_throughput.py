@@ -46,6 +46,7 @@ class PerfThroughput(Record):
         timestamp : float
             Elapsed time from start of program
         """
+
         super().__init__(throughput, timestamp)
 
     def header(self):
@@ -56,4 +57,5 @@ class PerfThroughput(Record):
             The full name of the
             metric.
         """
+
         return "Throughput (infer/sec)"

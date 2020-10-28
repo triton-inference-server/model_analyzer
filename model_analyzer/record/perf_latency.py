@@ -46,6 +46,7 @@ class PerfLatency(Record):
         timestamp : float
             Elapsed time from start of program
         """
+
         super().__init__(latency, timestamp)
 
     def header(self):
@@ -56,4 +57,5 @@ class PerfLatency(Record):
             The full name of the
             metric.
         """
+
         return "Average Latency"
