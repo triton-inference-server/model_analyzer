@@ -23,3 +23,39 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import time
+
+from .record import Record
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
+
+class PerfThroughput(Record):
+    """
+    A record for perf_analyzer
+    metric 'Throughput'
+    """
+
+    def __init__(self, throughput, timestamp=0):
+        """
+        Parameters
+        ----------
+        throughput : float
+            The throughput value obtained from the
+            perf_analyzer
+        timestamp : float
+            Elapsed time from start of program
+        """
+
+        super().__init__(throughput, timestamp)
+
+    def header(self):
+        """
+        Returns
+        -------
+        str
+            The full name of the
+            metric.
+        """
+
+        return "Throughput (infer/sec)"
