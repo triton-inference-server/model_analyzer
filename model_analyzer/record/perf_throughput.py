@@ -35,9 +35,17 @@ class PerfThroughput(Record):
     A record for perf_analyzer
     metric 'Throughput'
     """
-    def __init__(self, throughput):
-        self._throughput = throughput
-        self._timestamp = time.time()
+    def __init__(self, throughput, timestamp=0):
+        """
+        Parameters
+        ----------
+        throughput : float
+            The throughput value obtained from the
+            perf_analyzer
+        timestamp : float
+            Elapsed time from start of program
+        """
+        super().__init__(throughput, timestamp)
 
     def header(self):
         """
@@ -48,30 +56,3 @@ class PerfThroughput(Record):
             metric.
         """
         return "Throughput (infer/sec)"
-
-    def value(self):
-        """
-        This method returns
-        the value of recorded
-        metric
-
-        Returns
-        -------
-        (any)
-            value of the metric
-        """
-        return self._throughput
-
-    def timestamp(self):
-        """
-        This method should
-        return the time
-        at which the record
-        was created.
-        
-        Returns
-        -------
-        float
-            time in seconds since epoch
-        """
-        return self._timestamp

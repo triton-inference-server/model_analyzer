@@ -63,7 +63,6 @@ class PerfAnalyzer:
         TritonModelAnalyzerException
             If subprocess throws CalledProcessError
         """
-
         cmd = ['perf_analyzer']
         cmd += self._config.to_cli_string().replace('=', ' ').split()
 

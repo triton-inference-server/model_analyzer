@@ -77,15 +77,8 @@ class TestPerfAnalyzerMethods(unittest.TestCase):
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
 
         # Create server, PerfAnalyzer, and wait for server ready
-<<<<<<< HEAD
         self.server = TritonServerFactory.create_server_local(
             version=TRITON_VERSION, config=server_config)
-=======
-        factory = TritonServerLocalFactory()
-        self.server = factory.create_server(model_path=MODEL_LOCAL_PATH,
-                                            version=TRITON_VERSION,
-                                            config=server_config)
->>>>>>> Review edits
         perf_client = PerfAnalyzer(config=self.config)
 
         self.server.start()

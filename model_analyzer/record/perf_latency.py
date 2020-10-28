@@ -35,9 +35,17 @@ class PerfLatency(Record):
     A record for perf_analyzer
     metric 'Avg Latency'
     """
-    def __init__(self, latency):
-        self._latency = latency
-        self._timestamp = time.time()
+    def __init__(self, latency, timestamp=0):
+        """
+        Parameters
+        ----------
+        latency : float
+            The avg latency value obtained from the
+            perf_analyzer
+        timestamp : float
+            Elapsed time from start of program
+        """
+        super().__init__(latency, timestamp)
 
     def header(self):
         """
@@ -48,31 +56,3 @@ class PerfLatency(Record):
             metric.
         """
         return "Average Latency"
-
-    def value(self):
-        """
-        This method returns
-        the value of recorded
-        metric
-
-        Returns
-        -------
-        float
-            latency for a run of 
-            perf_analyzer
-        """
-        return self._latency
-
-    def timestamp(self):
-        """
-        This method should
-        return the time
-        at which the record
-        was created.
-
-        Returns
-        -------
-        float
-            time in seconds since epoch
-        """
-        return self._timestamp
