@@ -23,11 +23,6 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-<<<<<<< HEAD:model_analyzer/triton/client/client_factory.py
-=======
-
-from model_analyzer.record.record import Record
->>>>>>> Moved records back into model_analyzer/record and other review edits:model_analyzer/record/record_collector.py
 
 from .grpc_client import TritonGRPCClient
 from .http_client import TritonHTTPClient
@@ -38,27 +33,8 @@ class TritonClientFactory:
     Base client creator class that declares
     a factory method
     """
-<<<<<<< HEAD:model_analyzer/triton/client/client_factory.py
     @staticmethod
     def create_grpc_client(config):
-=======
-    def __init__(self):
-        self._records = []
-
-    def insert(self, record):
-        """
-        Insert a record into the RecordCollector
-
-        Parameters
-        ----------
-        record : Record
-            A record to be inserted
-        """
-        if isinstance(record, Record):
-            self._records.append(record)
-
-    def get(self, index):
->>>>>>> Moved records back into model_analyzer/record and other review edits:model_analyzer/record/record_collector.py
         """
         Parameters
         ----------

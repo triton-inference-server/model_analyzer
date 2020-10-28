@@ -34,7 +34,10 @@ class GPURecord(Record):
     This is a base class for any
     GPU based record
     """
-    @abstractmethod
+    def __init__(self, device, value, timestamp):
+        super().__init__(value, timestamp)
+        self._device = device
+
     def device(self):
         """
         Returns
@@ -42,3 +45,4 @@ class GPURecord(Record):
         GPUDevice
             handle for this metric
         """
+        return self._device

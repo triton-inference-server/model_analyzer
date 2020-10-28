@@ -32,6 +32,10 @@ class Record(ABC):
     This class is used for representing monitoring
     records
     """
+    def __init__(self, value, timestamp):
+        self._value = value
+        self._timestamp = timestamp
+
     @abstractmethod
     def header(self):
         """
@@ -42,7 +46,6 @@ class Record(ABC):
             metric.
         """
 
-    @abstractmethod
     def value(self):
         """
         This method returns
@@ -54,8 +57,8 @@ class Record(ABC):
         float
             value of the metric
         """
+        return self._value
 
-    @abstractmethod
     def timestamp(self):
         """
         This method should
@@ -66,5 +69,7 @@ class Record(ABC):
         Returns
         -------
         float
-            time in seconds since epoch
+            timestamp passed in during
+            record creation
         """
+        return self._timestamp

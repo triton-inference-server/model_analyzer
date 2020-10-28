@@ -32,19 +32,20 @@ class GPUUsedMemory(GPURecord):
     """
     The used memory in the GPU.
     """
-    def __init__(self, device, used_mem):
-        self._used_mem = used_mem
-        self._device = device
-        self._timestamp = time.time()
-
-    def device(self):
+    def __init__(self, device, used_mem, timestamp):
         """
-        Returns
-        -------
-        GPUDevice
-            handle for this metric
+        Parameters
+        ----------
+        device : GPUDevice
+            The  GPU device this metric is associated
+            with.
+        used_mem : float
+            The used memory in the GPU obtained from
+            nvml
+        timestamp : float
+            Elapsed time from start of program
         """
-        return self._device
+        super().__init__(device, used_mem, timestamp)
 
     def header(self):
         """
@@ -55,26 +56,3 @@ class GPUUsedMemory(GPURecord):
             metric.
         """
         return "GPU Used Memory [MB]"
-
-    def value(self):
-        """
-        Returns
-        -------
-        float
-            amount of gpu used memory [MB]
-        """
-        return self._used_mem
-
-    def timestamp(self):
-        """
-        This method should
-        return the time
-        at which the record
-        was created.
-
-        Returns
-        -------
-        float
-            time in seconds since epoch
-        """
-        return self._timestamp

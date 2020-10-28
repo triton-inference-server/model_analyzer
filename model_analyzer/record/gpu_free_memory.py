@@ -32,19 +32,20 @@ class GPUFreeMemory(GPURecord):
     """
     The free memory in the GPU.
     """
-    def __init__(self, device, free_mem):
-        self._free_mem = free_mem
-        self._device = device
-        self._timestamp = time.time()
-
-    def device(self):
+    def __init__(self, device, free_mem, timestamp):
         """
-        Returns
-        -------
-        GPUDevice
-            handle for this metric
+        Parameters
+        ----------
+        device : GPUDevice
+            The  GPU device this metric is associated
+            with.
+        free_mem : float
+            The free memory in the GPU obtained from
+            nvml
+        timestamp : float
+            Elapsed time from start of program
         """
-        return self._device
+        super().__init__(device, free_mem, timestamp)
 
     def header(self):
         """
@@ -55,26 +56,3 @@ class GPUFreeMemory(GPURecord):
             metric.
         """
         return "GPU Free Memory [MB]"
-
-    def value(self):
-        """
-        Returns
-        -------
-        float
-            amount of gpu free memory [MB]
-        """
-        return self._free_mem
-
-    def timestamp(self):
-        """
-        This method should
-        return the time
-        at which the record
-        was created.
-
-        Returns
-        -------
-        float
-            time in seconds since epoch
-        """
-        return self._timestamp
