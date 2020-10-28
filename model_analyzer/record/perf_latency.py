@@ -35,6 +35,7 @@ class PerfLatency(Record):
     A record for perf_analyzer
     metric 'Avg Latency'
     """
+
     def __init__(self, latency, timestamp=0):
         """
         Parameters

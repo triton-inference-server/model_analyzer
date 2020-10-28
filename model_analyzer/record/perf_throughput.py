@@ -35,6 +35,7 @@ class PerfThroughput(Record):
     A record for perf_analyzer
     metric 'Throughput'
     """
+
     def __init__(self, throughput, timestamp=0):
         """
         Parameters

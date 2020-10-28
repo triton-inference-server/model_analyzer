@@ -37,6 +37,7 @@ class PerfAnalyzer:
     This class provides an interface for running workloads
     with perf_analyzer.
     """
+
     def __init__(self, config):
         """
         Parameters

@@ -32,6 +32,7 @@ class PerfAnalyzerConfig:
     A config class to set arguments to the perf_analyzer.
     An argument set to None will use the perf_analyzer's default.
     """
+
     def __init__(self):
         self._args = {
             'async': None,
