@@ -23,15 +23,40 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import time
+from abc import abstractmethod
 from model_analyzer.record.record import Record
 
 
 class GPURecord(Record):
     """
-    GPURecord stores information related to
-    GPU metrics
+    This is a base class for any
+    GPU based record
     """
 
-    def __init__(self, name, device):
-        super().__init__(name)
-        self.device = device
+    def __init__(self, device, value, timestamp):
+        """
+        Parameters
+        ----------
+        device : GPUDevice
+            The  GPU device this metric is associated
+            with.
+        value : float
+            The value of the GPU metrtic
+        timestamp : float
+            Elapsed time from start of program
+        """
+
+        super().__init__(value, timestamp)
+        self._device = device
+
+    def device(self):
+        """
+        Returns
+        -------
+        GPUDevice
+            handle for this metric
+        """
+
+        return self._device

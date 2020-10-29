@@ -23,15 +23,65 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import time
+
+from abc import ABC, abstractmethod
 
 
-class Record:
+class Record(ABC):
     """
     This class is used for representing monitoring
     records
     """
 
-    def __init__(self, name):
-        self.time = time.time()
-        self.name = name
+    def __init__(self, value, timestamp):
+        """
+        Parameters
+        ----------
+        value : float
+            The value of the GPU metrtic
+        timestamp : float
+            Elapsed time from start of program
+        """
+
+        self._value = value
+        self._timestamp = timestamp
+
+    @abstractmethod
+    def header(self):
+        """
+        Returns
+        -------
+        str
+            The full name of the
+            metric.
+        """
+
+    def value(self):
+        """
+        This method returns
+        the value of recorded
+        metric
+
+        Returns
+        -------
+        float
+            value of the metric
+        """
+
+        return self._value
+
+    def timestamp(self):
+        """
+        This method should
+        return the time
+        at which the record
+        was created.
+
+        Returns
+        -------
+        float
+            timestamp passed in during
+            record creation
+        """
+
+        return self._timestamp
