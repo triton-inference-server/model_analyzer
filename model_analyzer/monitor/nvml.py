@@ -46,6 +46,7 @@ class NVMLMonitor(Monitor):
         frequency : int
             Sampling frequency for the metric
         """
+
         super().__init__(frequency)
         nvmlInit()
 
@@ -67,9 +68,13 @@ class NVMLMonitor(Monitor):
         self._thread_active = True
         frequency = self._frequency
 
+        monitor_start_time = time.time()
+
         records = []
+
         while self._thread_active:
-            begin = time.time()
+            sample_time = time.time()
+            sample_timestamp = sample_time - monitor_start_time
             for tag in tags:
                 if tag == 'memory':
                     for i, handle in enumerate(self._nvml_handles):
@@ -77,12 +82,14 @@ class NVMLMonitor(Monitor):
                         gpu_device = self._gpus[i]
                         records.append(
                             GPUUsedMemory(device=gpu_device,
-                                          used_mem=memory.used))
+                                          used_mem=memory.used,
+                                          timestamp=sample_timestamp))
                         records.append(
                             GPUFreeMemory(device=gpu_device,
-                                          free_mem=memory.free))
+                                          free_mem=memory.free,
+                                          timestamp=sample_timestamp))
 
-            duration = time.time() - begin
+            duration = time.time() - sample_time
             if duration < frequency:
                 time.sleep(frequency - duration)
 
@@ -98,6 +105,7 @@ class NVMLMonitor(Monitor):
             Name of the metrics to be collected. Options include
             *memory* and *compute*.
         """
+
         self._thread = self._thread_pool.apply_async(self._monitoring_loop,
                                                      (tags, ))
 
@@ -110,6 +118,7 @@ class NVMLMonitor(Monitor):
         List of Records
             GPUUsedMemory and GPUFreeMemory in this list
         """
+
         self._thread_active = False
         records = self._thread.get()
         self._thread = None
@@ -121,5 +130,6 @@ class NVMLMonitor(Monitor):
         Destroy the NVMLMonitor. This function must be called
         in order to appropriately deallocate the resources.
         """
+
         self._thread_pool.terminate()
         self._thread_pool.close()
