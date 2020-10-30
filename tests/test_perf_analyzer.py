@@ -28,8 +28,8 @@ import unittest
 
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.server.server_factory import TritonServerFactory
-from model_analyzer.analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
-from model_analyzer.analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.record.perf_throughput import PerfThroughput
 from model_analyzer.record.perf_latency import PerfLatency
@@ -39,6 +39,7 @@ MODEL_LOCAL_PATH = '/model_analyzer/models'
 MODEL_REPOSITORY_PATH = '/model_analyzer/models'
 TRITON_VERSION = '20.09'
 TEST_MODEL_NAME = 'classification_chestxray_v1'
+TEST_CONCURRENCY_RANGE = '1:16:2'
 CONFIG_TEST_ARG = 'sync'
 TEST_RUN_PARAMS = {'batch-size': [1, 2], 'concurrency-range': [2, 4]}
 
@@ -70,6 +71,17 @@ class TestPerfAnalyzerMethods(unittest.TestCase):
                                "unsupported argument in perf_analyzer"
                                "config"):
             self.config['dummy'] = 1
+
+        # set and get value for each subtype of arguments
+        self.config['model-name'] = TEST_MODEL_NAME
+        self.assertEqual(self.config['model-name'], TEST_MODEL_NAME)
+
+        self.config['concurrency-range'] = TEST_CONCURRENCY_RANGE
+        self.assertEqual(self.config['concurrency-range'],
+                         TEST_CONCURRENCY_RANGE)
+
+        self.config['extra-verbose'] = True
+        self.assertTrue(self.config['extra-verbose'])
 
     def test_run(self):
         # Now create a server config
