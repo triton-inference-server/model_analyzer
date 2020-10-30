@@ -32,6 +32,7 @@ class OutputTable:
     generic table interface 
     with headers rows
     """
+
     def __init__(self, headers):
         """
         Parameters
@@ -174,7 +175,7 @@ class OutputTable:
         index = self._headers.index(header)
         self.remove_column_by_index(index)
 
-    def to_formatted_string(self, column_width=12):
+    def to_formatted_string(self, column_width=None, separator=''):
         """
         Converts the table into its string representation
         making it easy to write by a writer
@@ -183,7 +184,11 @@ class OutputTable:
         ----------
         column_width : int
             The width in characters of each column in this
-            table.
+            table. If None, then each cell will be the width 
+            of its contents.
+        separator : str
+            The string that will separate columns of a row in th
+            table
         
         Returns
         -------
@@ -192,16 +197,19 @@ class OutputTable:
         """
         output_rows = []
         for row in [self._headers] + self._rows:
-            output_rows.append(self._row_to_string(row, column_width))
+            output_rows.append(
+                self._row_to_string(row, column_width, separator))
         return '\n'.join(output_rows)
 
-    def _row_to_string(self, row, column_width=12):
+    def _row_to_string(self, row, column_width, separator):
         """
         Converts a single row to 
         its string representation
         """
-        return ''.join(
-            [self._pad_or_trunc(str(val), column_width) for val in row])
+        return separator.join([
+            self._pad_or_trunc(str(val), column_width)
+            if column_width else str(val) for val in row
+        ])
 
     def _pad_or_trunc(self, string, length):
         """
