@@ -277,105 +277,106 @@ class DCGMError(Exception):
     """
     Class to return error values for DCGM
     """
+
     _valClassMapping = dict()
     # List of currently known error codes
     _error_code_to_string = {
         DCGM_ST_OK:
-            "Success",
+        "Success",
         DCGM_ST_BADPARAM:
-            "Bad parameter passed to function",
+        "Bad parameter passed to function",
         DCGM_ST_GENERIC_ERROR:
-            "Generic unspecified error",
+        "Generic unspecified error",
         DCGM_ST_MEMORY:
-            "Out of memory error",
+        "Out of memory error",
         DCGM_ST_NOT_CONFIGURED:
-            "Setting not configured",
+        "Setting not configured",
         DCGM_ST_NOT_SUPPORTED:
-            "Feature not supported",
+        "Feature not supported",
         DCGM_ST_INIT_ERROR:
-            "DCGM initialization error",
+        "DCGM initialization error",
         DCGM_ST_NVML_ERROR:
-            "NVML error",
+        "NVML error",
         DCGM_ST_PENDING:
-            "Object is in a pending state",
+        "Object is in a pending state",
         DCGM_ST_UNINITIALIZED:
-            "Object is in an undefined state",
+        "Object is in an undefined state",
         DCGM_ST_TIMEOUT:
-            "Timeout",
+        "Timeout",
         DCGM_ST_VER_MISMATCH:
-            "API version mismatch",
+        "API version mismatch",
         DCGM_ST_UNKNOWN_FIELD:
-            "Unknown field",
+        "Unknown field",
         DCGM_ST_NO_DATA:
-            "No data is available",
+        "No data is available",
         DCGM_ST_STALE_DATA:
-            "Data is considered stale",
+        "Data is considered stale",
         DCGM_ST_NOT_WATCHED:
-            "Field is not being updated",
+        "Field is not being updated",
         DCGM_ST_NO_PERMISSION:
-            "Not permissioned",
+        "Not permissioned",
         DCGM_ST_GPU_IS_LOST:
-            "GPU is unreachable",
+        "GPU is unreachable",
         DCGM_ST_RESET_REQUIRED:
-            "GPU requires a reset",
+        "GPU requires a reset",
         DCGM_ST_FUNCTION_NOT_FOUND:
-            "Unable to find function",
+        "Unable to find function",
         DCGM_ST_CONNECTION_NOT_VALID:
-            "The connection to the host engine is not valid any longer",
+        "The connection to the host engine is not valid any longer",
         DCGM_ST_GPU_NOT_SUPPORTED:
-            "This GPU is not supported by DCGM",
+        "This GPU is not supported by DCGM",
         DCGM_ST_GROUP_INCOMPATIBLE:
-            "GPUs are incompatible with each other for\
+        "GPUs are incompatible with each other for\
                  the requested operation",
         DCGM_ST_MAX_LIMIT:
-            "Max limit reached for the object",
+        "Max limit reached for the object",
         DCGM_ST_LIBRARY_NOT_FOUND:
-            "DCGM library could not be found",
+        "DCGM library could not be found",
         DCGM_ST_DUPLICATE_KEY:
-            "Duplicate key passed to function",
+        "Duplicate key passed to function",
         DCGM_ST_GPU_IN_SYNC_BOOST_GROUP:
-            "GPU is already a part of a sync boost group",
+        "GPU is already a part of a sync boost group",
         DCGM_ST_GPU_NOT_IN_SYNC_BOOST_GROUP:
-            "GPU is not a part of the sync boost group",
+        "GPU is not a part of the sync boost group",
         DCGM_ST_REQUIRES_ROOT:
-            "This operation is not supported when the host engine\
+        "This operation is not supported when the host engine\
                 is running as non root",
         DCGM_ST_NVVS_ERROR:
-            "DCGM GPU Diagnostic returned an error.",
+        "DCGM GPU Diagnostic returned an error.",
         DCGM_ST_INSUFFICIENT_SIZE:
-            "An input argument is not large enough",
+        "An input argument is not large enough",
         DCGM_ST_FIELD_UNSUPPORTED_BY_API:
-            "The given field ID is not supported by the API being called",
+        "The given field ID is not supported by the API being called",
         DCGM_ST_MODULE_NOT_LOADED:
-            "This request is serviced by a module of DCGM that\
+        "This request is serviced by a module of DCGM that\
                 is not currently loaded",
         DCGM_ST_IN_USE:
-            "The requested operation could not be completed because\
+        "The requested operation could not be completed because\
                 the affected resource is in use",
         DCGM_ST_GROUP_IS_EMPTY:
-            "The specified group is empty, and this operation\
+        "The specified group is empty, and this operation\
                 is incompatible with an empty group",
         DCGM_ST_PROFILING_NOT_SUPPORTED:
-            "Profiling is not supported for this group of GPUs or GPU",
+        "Profiling is not supported for this group of GPUs or GPU",
         DCGM_ST_PROFILING_LIBRARY_ERROR:
-            "The third-party Profiling module returned an unrecoverable error",
+        "The third-party Profiling module returned an unrecoverable error",
         DCGM_ST_PROFILING_MULTI_PASS:
-            "The requested profiling metrics\
+        "The requested profiling metrics\
                 cannot be collected in a single pass",
         DCGM_ST_DIAG_ALREADY_RUNNING:
-            "A diag instance is already running, cannot\
+        "A diag instance is already running, cannot\
                 run a new diag until the current one finishes",
         DCGM_ST_DIAG_BAD_JSON:
-            "The GPU Diagnostic returned Json that cannot be parsed.",
+        "The GPU Diagnostic returned Json that cannot be parsed.",
         DCGM_ST_DIAG_BAD_LAUNCH:
-            "Error while launching the GPU Diagnostic.",
+        "Error while launching the GPU Diagnostic.",
         DCGM_ST_DIAG_VARIANCE:
-            "The results of training DCGM GPU Diagnostic cannot\
+        "The results of training DCGM GPU Diagnostic cannot\
                 be trusted because they vary too much from run to run",
         DCGM_ST_DIAG_THRESHOLD_EXCEEDED:
-            "A field value met or exceeded the error threshold.",
+        "A field value met or exceeded the error threshold.",
         DCGM_ST_INSUFFICIENT_DRIVER_VERSION:
-            "The installed driver version is insufficient for this API"
+        "The installed driver version is insufficient for this API"
     }
 
     def __new__(typ, value):
@@ -438,6 +439,7 @@ def _extractDCGMErrorsAsClasses():
     DCGMError is a parent class. Each DCGM_ST_* gets it's own subclass.
     e.g. DCGM_ST_UNINITIALIZED will be turned into DCGMError_Uninitialized
     """
+
     this_module = sys.modules[__name__]
     dcgmErrorsNames = filter(lambda x: x.startswith("DCGM_ST_"),
                              dir(this_module))
@@ -448,14 +450,13 @@ def _extractDCGMErrorsAsClasses():
         err_val = getattr(this_module, err_name)
 
         def gen_new(val):
-
             def new(typ):
                 obj = DCGMError.__new__(typ, val)
                 return obj
 
             return new
 
-        new_error_class = type(class_name, (DCGMError,),
+        new_error_class = type(class_name, (DCGMError, ),
                                {'__new__': gen_new(err_val)})
         new_error_class.__module__ = __name__
         setattr(this_module, class_name, new_error_class)
@@ -494,6 +495,7 @@ class _PrintableStructure(Structure):
     Exact format of returned str from this class is subject to change in the
     future.
     """
+
     _fmt_ = {}
 
     def __str__(self):
@@ -520,7 +522,6 @@ class DcgmJSONEncoder(json.JSONEncoder):
     """
     JSON serializer for DCGM structures
     """
-
     def default(self, o):  # pylint: disable=method-hidden
         if isinstance(o, _PrintableStructure):
             retVal = {}
@@ -554,6 +555,7 @@ def make_dcgm_version(struct, ver):
     """
     Creates a unique version number for each struct
     """
+
     return sizeof(struct) | (ver << 24)
 
 
@@ -594,6 +596,7 @@ def _LoadDcgmLibrary(libDcgmPath=None):
     :type libDcgmPath: str
     :return: None
     """
+
     global dcgmLib
 
     if dcgmLib is None:
@@ -626,8 +629,8 @@ def _LoadDcgmLibrary(libDcgmPath=None):
                             }:
                                 libDcgmPath = '/usr/lib64'
 
-                        dcgmLib = CDLL(os.path.join(libDcgmPath,
-                                                    "libdcgm.so.2"))
+                        dcgmLib = CDLL(
+                            os.path.join(libDcgmPath, "libdcgm.so.2"))
 
                 except OSError as ose:
                     _dcgmCheckReturn(DCGM_ST_LIBRARY_NOT_FOUND)
@@ -887,8 +890,8 @@ class c_dcgmDeviceMemoryUsage_v1(_PrintableStructure):
     """
     Represents memory utilization
     """
-    _fields_ = [('version', c_uint), ('bar1Total', c_uint), ('fbTotal', c_uint),
-                ('fbUsed', c_uint), ('fbFree', c_uint)]
+    _fields_ = [('version', c_uint), ('bar1Total', c_uint),
+                ('fbTotal', c_uint), ('fbUsed', c_uint), ('fbFree', c_uint)]
 
 
 class c_dcgmDeviceVgpuUtilInfo_v1(_PrintableStructure):
@@ -923,9 +926,9 @@ class c_dcgmDeviceVgpuEncSessions_v1(_PrintableStructure):
     instance
     """
     _fields_ = [('version', c_uint), ('vgpuId', c_uint), ('sessionId', c_uint),
-                ('pid', c_uint), ('codecType', c_uint), ('hResolution', c_uint),
-                ('vResolution', c_uint), ('averageFps', c_uint),
-                ('averageLatency', c_uint)]
+                ('pid', c_uint), ('codecType', c_uint),
+                ('hResolution', c_uint), ('vResolution', c_uint),
+                ('averageFps', c_uint), ('averageLatency', c_uint)]
 
 
 class c_dcgmDeviceFbcStats_v1(_PrintableStructure):
@@ -1254,7 +1257,8 @@ class c_dcgmPolicyConditionMpr_t(_PrintableStructure):
 class c_dcgmPolicyConditionThermal_t(_PrintableStructure):
     _fields_ = [
         ("timestamp", c_longlong),  # timestamp of the error
-        ("thermalViolation", c_uint)  # Temperature reached that violated policy
+        ("thermalViolation", c_uint
+         )  # Temperature reached that violated policy
     ]
 
 
@@ -1281,7 +1285,6 @@ class c_dcgmPolicyConditionXID_t(_PrintableStructure):
 
 
 class c_dcgmPolicyCallbackResponse_v1(_PrintableStructure):
-
     class Value(Union):
         # implement more of the fields when a test requires them
         _fields_ = [
@@ -1289,15 +1292,15 @@ class c_dcgmPolicyCallbackResponse_v1(_PrintableStructure):
             ("pci",
              c_dcgmPolicyConditionPci_t),  # PCI replay error return structure
             ("mpr", c_dcgmPolicyConditionMpr_t
-            ),  # Max retired pages limit return structure
+             ),  # Max retired pages limit return structure
             ("thermal", c_dcgmPolicyConditionThermal_t
-            ),  # Thermal policy violations return structure
+             ),  # Thermal policy violations return structure
             ("power", c_dcgmPolicyConditionPower_t
-            ),  # Power policy violations return structure
+             ),  # Power policy violations return structure
             ("nvlink", c_dcgmPolicyConditionNvlink_t
-            ),  # Nvlink policy violations return structure..
+             ),  # Nvlink policy violations return structure..
             ("xid", c_dcgmPolicyConditionXID_t
-            )  # XID policy violations return structure
+             )  # XID policy violations return structure
         ]
 
     _fields_ = [
@@ -1547,13 +1550,14 @@ LEVEL_ONE_MAX_RESULTS = 16
 
 
 class c_dcgmDiagResponse_v6(_PrintableStructure):
-    _fields_ = [
-        ('version', c_uint), ('gpuCount', c_uint),
-        ('levelOneTestCount', c_uint),
-        ('levelOneResults', c_dcgmDiagTestResult_v2 * LEVEL_ONE_MAX_RESULTS),
-        ('perGpuResponses', c_dcgmDiagResponsePerGpu_v2 * DCGM_MAX_NUM_DEVICES),
-        ('systemError', c_dcgmDiagErrorDetail_t), ('trainingMsg', c_char * 1024)
-    ]
+    _fields_ = [('version', c_uint), ('gpuCount', c_uint),
+                ('levelOneTestCount', c_uint),
+                ('levelOneResults',
+                 c_dcgmDiagTestResult_v2 * LEVEL_ONE_MAX_RESULTS),
+                ('perGpuResponses',
+                 c_dcgmDiagResponsePerGpu_v2 * DCGM_MAX_NUM_DEVICES),
+                ('systemError', c_dcgmDiagErrorDetail_t),
+                ('trainingMsg', c_char * 1024)]
 
 
 dcgmDiagResponse_version6 = make_dcgm_version(c_dcgmDiagResponse_v6, 6)
@@ -1567,11 +1571,12 @@ class c_dcgmDeviceTopologyPath_t(_PrintableStructure):
 
 
 class c_dcgmDeviceTopology_v1(_PrintableStructure):
-    _fields_ = [('version', c_uint32),
-                ('cpuAffinityMask', c_ulong * DCGM_AFFINITY_BITMASK_ARRAY_SIZE),
-                ('numGpus', c_uint32),
-                ('gpuPaths',
-                 c_dcgmDeviceTopologyPath_t * (DCGM_MAX_NUM_DEVICES - 1))]
+    _fields_ = [
+        ('version', c_uint32),
+        ('cpuAffinityMask', c_ulong * DCGM_AFFINITY_BITMASK_ARRAY_SIZE),
+        ('numGpus', c_uint32),
+        ('gpuPaths', c_dcgmDeviceTopologyPath_t * (DCGM_MAX_NUM_DEVICES - 1))
+    ]
 
 
 dcgmDeviceTopology_version1 = make_dcgm_version(c_dcgmDeviceTopology_v1, 1)
@@ -1689,18 +1694,18 @@ class c_dcgmIntrospectFullFieldsExecTime_v2(_PrintableStructure):
     _fields_ = [
         ('version', c_uint32),
         ('aggregateInfo', c_dcgmIntrospectFieldsExecTime_v1
-        ),  # info that includes global and device scope
+         ),  # info that includes global and device scope
         ('hasGlobalInfo',
          c_int),  # 0 means \ref globalInfo is populated, !0 means it's not
         ('globalInfo', c_dcgmIntrospectFieldsExecTime_v1
-        ),  # info that only includes global field scope
+         ),  # info that only includes global field scope
         ('gpuInfoCount',
          c_uint),  # count of how many entries in \ref gpuInfo are populated
         ('gpuIdsForGpuInfo', c_uint * DCGM_MAX_NUM_DEVICES
-        ),  # the GPU ID at a given index identifies which gpu
+         ),  # the GPU ID at a given index identifies which gpu
         # the corresponding entry in \ref gpuInfo is from
         ('gpuInfo', c_dcgmIntrospectFieldsExecTime_v1 * DCGM_MAX_NUM_DEVICES
-        ),  # info that is separated by the
+         ),  # info that is separated by the
         # GPU ID that the watches were for
     ]
 
@@ -1716,18 +1721,18 @@ class c_dcgmIntrospectFullMemory_v1(_PrintableStructure):
     _fields_ = [
         ('version', c_uint32),
         ('aggregateInfo', c_dcgmIntrospectMemory_v1
-        ),  # info that includes global and device scope
+         ),  # info that includes global and device scope
         ('hasGlobalInfo',
          c_int),  # 0 means \ref globalInfo is populated, !0 means it's not
         ('globalInfo', c_dcgmIntrospectMemory_v1
-        ),  # info that only includes global field scope
+         ),  # info that only includes global field scope
         ('gpuInfoCount',
          c_uint),  # count of how many entries in \ref gpuInfo are populated
         ('gpuIdsForGpuInfo', c_uint * DCGM_MAX_NUM_DEVICES
-        ),  # the GPU ID at a given index identifies which gpu
+         ),  # the GPU ID at a given index identifies which gpu
         # the corresponding entry in \ref gpuInfo is from
         ('gpuInfo', c_dcgmIntrospectMemory_v1 * DCGM_MAX_NUM_DEVICES
-        ),  # info that is separated by the
+         ),  # info that is separated by the
         # GPU ID that the watches were for
     ]
 
@@ -1738,13 +1743,14 @@ dcgmIntrospectFullMemory_version1 = make_dcgm_version(
 
 class c_dcgmIntrospectCpuUtil_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint32),  # version number (dcgmIntrospectCpuUtil_version)
+        ('version',
+         c_uint32),  # version number (dcgmIntrospectCpuUtil_version)
         ('total',
          c_double),  # fraction of device's CPU resources that were used
         ('kernel', c_double
-        ),  # fraction of device's CPU resources that were used in kernel mode
+         ),  # fraction of device's CPU resources that were used in kernel mode
         ('user', c_double
-        ),  # fraction of device's CPU resources that were used in user mode
+         ),  # fraction of device's CPU resources that were used in user mode
     ]
 
 
@@ -1780,7 +1786,7 @@ class c_dcgmRunDiag_v6(_PrintableStructure):
             'flags',
             c_uint),
         ('debugLevel', c_uint
-        ),  # 0-5 for the debug level the GPU diagnostic will use for logging
+         ),  # 0-5 for the debug level the GPU diagnostic will use for logging
         (
             # group of GPUs to verify. Cannot be specified together with
             # gpuList.
@@ -1800,11 +1806,11 @@ class c_dcgmRunDiag_v6(_PrintableStructure):
             'gpuList',
             c_char * DCGM_GPU_LIST_LEN),
         ('debugLogFile', c_char * DCGM_PATH_LEN
-        ),  # Alternate name for the debug log file that should be used
+         ),  # Alternate name for the debug log file that should be used
         ('statsPath', c_char * DCGM_PATH_LEN
-        ),  # Path that the plugin's statistics files should be written to
+         ),  # Path that the plugin's statistics files should be written to
         ('configFileContents', c_char * DCGM_MAX_CONFIG_FILE_LEN
-        ),  # Contents of nvvs config file (likely yaml)
+         ),  # Contents of nvvs config file (likely yaml)
         (
             # Throttle reasons to ignore as either integer mask or csv list of
             # reasons
@@ -1888,7 +1894,7 @@ class c_dcgmNvLinkGpuLinkStatus_v1(_PrintableStructure):
     _fields_ = [
         ('entityId', c_uint32),  # Entity ID of the GPU (gpuId)
         ('linkState', c_uint32 * DCGM_NVLINK_MAX_LINKS_PER_GPU_LEGACY1
-        ),  # Link state of each link of this GPU
+         ),  # Link state of each link of this GPU
     ]
 
 
@@ -1906,7 +1912,7 @@ class c_dcgmNvLinkNvSwitchLinkStatus_t(_PrintableStructure):
     _fields_ = [
         ('entityId', c_uint32),  # Entity ID of the NvSwitch (physicalId)
         ('linkState', c_uint32 * DCGM_NVLINK_MAX_LINKS_PER_NVSWITCH
-        )  # Link state of each link of this NvSwitch
+         )  # Link state of each link of this NvSwitch
     ]
 
 
@@ -1916,14 +1922,14 @@ class c_dcgmNvLinkStatus_v1(_PrintableStructure):
     """
     _fields_ = [
         ('version', c_uint32
-        ),  # version of this message. Should be dcgmNvLinkStatus_version1
+         ),  # version of this message. Should be dcgmNvLinkStatus_version1
         ('numGpus', c_uint32),  # Number of GPUs populated in gpus[]
         ('gpus', c_dcgmNvLinkGpuLinkStatus_v1 *
          DCGM_MAX_NUM_DEVICES),  # Per-GPU NvLink link statuses
         ('numNvSwitches',
          c_uint32),  # Number of NvSwitches populated in nvSwitches[]
         ('nvSwitches', c_dcgmNvLinkNvSwitchLinkStatus_t * DCGM_MAX_NUM_SWITCHES
-        )  # Per-NvSwitch NvLink link statuses
+         )  # Per-NvSwitch NvLink link statuses
     ]
 
 
@@ -1936,14 +1942,14 @@ class c_dcgmNvLinkStatus_v2(_PrintableStructure):
     '''
     _fields_ = [
         ('version', c_uint32
-        ),  # version of this message. Should be dcgmNvLinkStatus_version1
+         ),  # version of this message. Should be dcgmNvLinkStatus_version1
         ('numGpus', c_uint32),  # Number of GPUs populated in gpus[]
         ('gpus', c_dcgmNvLinkGpuLinkStatus_v2 *
          DCGM_MAX_NUM_DEVICES),  # Per-GPU NvLink link statuses
         ('numNvSwitches',
          c_uint32),  # Number of NvSwitches populated in nvSwitches[]
         ('nvSwitches', c_dcgmNvLinkNvSwitchLinkStatus_t * DCGM_MAX_NUM_SWITCHES
-        )  # Per-NvSwitch NvLink link statuses
+         )  # Per-NvSwitch NvLink link statuses
     ]
 
 
@@ -1961,7 +1967,6 @@ DCGM_SUMMARY_SIZE = 7
 
 
 class c_dcgmSummaryResponse_t(_PrintableStructure):
-
     class ResponseValue(Union):
         _fields_ = [
             ('i64', c_int64),

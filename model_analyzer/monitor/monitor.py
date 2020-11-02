@@ -23,45 +23,95 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from abc import ABC, abstractmethod
+from multiprocessing.pool import ThreadPool
 import numba.cuda
+import time
 
 from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class Monitor(ABC):
     """
     Monitor abstract class is a parent class used for monitoring devices.
     """
-
-    def __init__(self, frequency):
+    def __init__(self, frequency, tags):
         """
         Parameters
         ----------
         frequency : float
             How often the metrics should be monitored.
         """
+
         self._frequency = frequency
         self._gpus = []
         for gpu in numba.cuda.list_devices():
             gpu_device = GPUDeviceFactory.create_device_by_cuda_index(gpu.id)
             self._gpus.append(gpu_device)
 
-    @abstractmethod
-    def start_recording_metrics(self, tags):
-        """
-        Start recording the metrics in `tags`.
+        # Is the background thread active
+        self._thread_active = False
 
-        Paramters
-        ---------
-        tags : list
-            List of metrics to start watching for
-        """
-        return
+        # Background thread collecting results
+        self._thread = None
+
+        # Thread pool
+        self._thread_pool = ThreadPool(processes=1)
+        self._tags = tags
+
+    def _monitoring_loop(self):
+        self._thread_active = True
+        frequency = self._frequency
+
+        while self._thread_active:
+            begin = time.time()
+            # Monitoring iteration implemented by each of the subclasses
+            self._monitoring_iteration(tags)
+
+            duration = time.time() - begin
+            if duration < frequency:
+                time.sleep(frequency - duration)
 
     @abstractmethod
+    def _monitoring_iteration(self):
+        """
+        Each of the subclasses must implement this.
+        This is called to execute a single round of monitoring.
+        """
+
+        pass
+
+    @abstractmethod
+    def _collect_records(self):
+        """
+        This method is called to collect all the monitoring records.
+        It is called in the stop_recording_metrics function after
+        the background thread has stopped.
+        """
+
+        pass
+
+    def start_recording_metrics(self):
+        """
+        Start recording the metrics.
+        """
+
+        self._thread = self._thread_pool.apply_async(self._monitoring_loop)
+
     def stop_recording_metrics(self):
         """
         Stop recording metrics. This will stop monitring all the metrics.
         """
-        return
+
+        if not self._thread_active:
+            raise TritonModelAnalyzerException(
+                'start_recording_metrics should be called before\
+                     stop_recording_metrics'
+            )
+
+        self._thread_active = False
+        self._thread = None
+
+        return self._collect_records()

@@ -86,10 +86,10 @@ def DCGM_STR_IS_BLANK(val):
 
 
 class DcgmValue:
-
     def __init__(self, value):
         # Contains either an integer (int64), string, or double of the actual
         # value
+
         self.value = value
 
     def SetFromInt32(self, i32Value):
@@ -97,6 +97,7 @@ class DcgmValue:
         Handle the special case where our source data was an int32 but is
         currently stored in a python int (int64), dealing with blanks
         """
+
         value = int(i32Value)
 
         if not DCGM_INT32_IS_BLANK(i32Value):
@@ -117,6 +118,7 @@ class DcgmValue:
         Returns True if the currently-stored value is a blank value. False if
         not
         """
+
         if self.value is None:
             return True
         elif type(self.value) == int or type(self.value) == long:

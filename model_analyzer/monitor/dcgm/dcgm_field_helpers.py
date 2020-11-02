@@ -38,7 +38,6 @@ class DcgmFieldValue():
     Helper class that makes a python-friendly field value from one returned
     from the python bindings
     """
-
     def __init__(self, rawValue):
         """
         rawValue : dcgm_structs.c_dcgmFieldValue_v?
@@ -88,7 +87,6 @@ class DcgmFieldValue():
 
 
 class DcgmFieldValueTimeSeries:
-
     def __init__(self):
         # Values in timestamp order
         self.values = []
@@ -165,7 +163,6 @@ class DcgmFieldValueCollection:
     Helper class for handling field value update callbacks and storing them
     in a .values member variable
     """
-
     def __init__(self, handle, groupId):
         self.values = {}
         # 2D dictionary of [gpuId][fieldId](DcgmFieldValueTimeSeries)
@@ -227,7 +224,6 @@ class DcgmFieldGroupWatcher(DcgmFieldValueCollection):
     Helper class for watching a field group and storing fields values returned
     from it
     """
-
     def __init__(self, handle, groupId, fieldGroup, operationMode, updateFreq,
                  maxKeepAge, maxKeepSamples, startTimestamp):
         """
@@ -275,7 +271,8 @@ class DcgmFieldGroupWatcher(DcgmFieldValueCollection):
         """
         ret = dcgm_agent.dcgmWatchFields(self._handle, self._groupId,
                                          self._fieldGroup, self._updateFreq,
-                                         self._maxKeepAge, self._maxKeepSamples)
+                                         self._maxKeepAge,
+                                         self._maxKeepSamples)
         # Will throw exception on error
         dcgm_structs._dcgmCheckReturn(ret)
 
@@ -331,7 +328,6 @@ class DcgmFieldValueEntityCollection:
     Helper class for handling field value update callbacks and storing them
     in a .values member variable
     """
-
     def __init__(self, handle, groupId):
         # 3D dictionary of
         # [entityGroupId][entityId][fieldId](DcgmFieldValueTimeSeries)
@@ -392,7 +388,6 @@ class DcgmFieldGroupEntityWatcher(DcgmFieldValueEntityCollection):
     Helper class for watching a field group and storing fields values
     returned from it
     """
-
     def __init__(self, handle, groupId, fieldGroup, operationMode, updateFreq,
                  maxKeepAge, maxKeepSamples, startTimestamp):
         """

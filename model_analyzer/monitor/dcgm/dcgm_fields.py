@@ -794,7 +794,6 @@ class pySamplingProperties:
     The instance of this class is used to hold information related to each
     sampling event type.
     """
-
     def __init__(self, name, sampling_type, sample_val_type, timeIntervalIdle,
                  timeIntervalBoost, min_value, max_value):
         self.name = name
