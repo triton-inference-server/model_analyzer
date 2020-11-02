@@ -43,6 +43,19 @@ TEST_TABLE_STR = (
     "value 80    value 81    value 82    value 83    value 84    value 85    value 86    value 89    \n"
     "value 90    value 91    value 92    value 93    value 94    value 95    value 96    value 99    "
 )
+TEST_CSV_STR = (
+    "Column 0,Column 1,Column 2,Column 3,Column 4,Column 5,Column 6,Column 9\n"
+    "value 00,value 01,value 02,value 03,value 04,value 05,value 06,value 09\n"
+    "value 10,value 11,value 12,value 13,value 14,value 15,value 16,value 19\n"
+    "value 20,value 21,value 22,value 23,value 24,value 25,value 26,value 29\n"
+    "value 30,value 31,value 32,value 33,value 34,value 35,value 36,value 39\n"
+    "value 40,value 41,value 42,value 43,value 44,value 45,value 46,value 49\n"
+    "value 50,value 51,value 52,value 53,value 54,value 55,value 56,value 59\n"
+    "value 60,value 61,value 62,value 63,value 64,value 65,value 66,value 69\n"
+    "value 70,value 71,value 72,value 73,value 74,value 75,value 76,value 79\n"
+    "value 80,value 81,value 82,value 83,value 84,value 85,value 86,value 89\n"
+    "value 90,value 91,value 92,value 93,value 94,value 95,value 96,value 99")
+TEST_COLUMN_WIDTH = 12
 
 
 class TestOutputTableMethods(unittest.TestCase):
@@ -118,7 +131,11 @@ class TestOutputTableMethods(unittest.TestCase):
         table = OutputTable(headers=TEST_HEADERS)
         for row in TEST_ROWS:
             table.add_row(row)
-        self.assertEqual(table.to_formatted_string(), TEST_TABLE_STR)
+        self.assertEqual(
+            table.to_formatted_string(column_width=TEST_COLUMN_WIDTH),
+            TEST_TABLE_STR)
+        self.assertEqual(table.to_formatted_string(separator=','),
+                         TEST_CSV_STR)
 
 
 if __name__ == '__main__':
