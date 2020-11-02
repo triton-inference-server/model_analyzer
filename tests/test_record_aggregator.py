@@ -28,7 +28,7 @@ import unittest
 from model_analyzer.record.record_aggregator import RecordAggregator
 from model_analyzer.record.perf_throughput import PerfThroughput
 from model_analyzer.record.perf_latency import PerfLatency
-from model_analyzer.analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 
 class TestRecordAggregatorMethods(unittest.TestCase):
