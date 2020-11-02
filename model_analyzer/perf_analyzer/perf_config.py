@@ -124,9 +124,9 @@ class PerfAnalyzerConfig:
         if key in self._args:
             return self._args[key]
         elif key in self._input_to_options:
-            self._options[self._input_to_options[key]] = value
+            return self._options[self._input_to_options[key]]
         elif key in self._input_to_verbose:
-            self._verbose[self._input_to_verbose[key]] = value
+            return self._verbose[self._input_to_verbose[key]]
         else:
             raise TritonModelAnalyzerException(
                 f"'{key}' Key not found in config")
@@ -154,7 +154,7 @@ class PerfAnalyzerConfig:
             self._args[key] = value
         elif key in self._input_to_options:
             self._options[self._input_to_options[key]] = value
-        elif key in self._verbose:
+        elif key in self._input_to_verbose:
             self._verbose[self._input_to_verbose[key]] = value
         else:
             raise TritonModelAnalyzerException(
