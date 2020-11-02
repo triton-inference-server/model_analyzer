@@ -28,8 +28,8 @@ import unittest
 
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.server.server_factory import TritonServerFactory
-from model_analyzer.analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
-from model_analyzer.analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.record.perf_throughput import PerfThroughput
 from model_analyzer.record.perf_latency import PerfLatency
