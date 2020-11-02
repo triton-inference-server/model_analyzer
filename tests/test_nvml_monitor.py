@@ -27,43 +27,42 @@
 import unittest
 import time
 import sys
-from unittest.mock import patch, MagicMock, Mock
-from tests.mock_nvml import MockNVML
 
-import model_analyzer
 from model_analyzer.monitor.nvml import NVMLMonitor
 from model_analyzer.record.gpu_free_memory import GPUFreeMemory
 from model_analyzer.record.gpu_used_memory import GPUUsedMemory
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class TestNVMLMonitor(unittest.TestCase):
-    def setUp(self):
-        mock_nvml = MockNVML(self)
-        mock_nvml.setUp()
 
     def test_record_memory(self):
-        self.assertIsInstance(model_analyzer.monitor.nvml.nvmlInit, Mock)
-        self.assertIsInstance(
-            model_analyzer.monitor.nvml.nvmlDeviceGetMemoryInfo, Mock)
-        self.assertIsInstance(
-            model_analyzer.monitor.nvml.nvmlDeviceGetHandleByPciBusId, Mock)
-
         # One measurement every 0.01 seconds
         frequency = 0.01
         monitoring_time = 10
-        nvml_monitor = NVMLMonitor(frequency)
-        nvml_monitor.start_recording_metrics(['memory'])
+        tags = [GPUUsedMemory, GPUFreeMemory]
+        nvml_monitor = NVMLMonitor(frequency, tags)
+        nvml_monitor.start_recording_metrics()
         time.sleep(monitoring_time)
         records = nvml_monitor.stop_recording_metrics()
-        nvml_monitor.destroy()
 
         # Assert instance types
-        num_used_records = sum(
-            [isinstance(record, GPUUsedMemory) for record in records])
-        num_free_records = sum(
-            [isinstance(record, GPUFreeMemory) for record in records])
+        for record in records:
+            self.assertIsInstance(record.device(), GPUDevice)
 
-        self.assertEqual(num_free_records, num_used_records)
+        # The number of records should be dividable by number of tags
+        self.assertTrue(len(records) % len(tags) == 0)
+        self.assertTrue(len(records) > 0)
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            nvml_monitor.stop_recording_metrics()
+
+        nvml_monitor.destroy()
+
+        tags = ['UndefinedTag']
+        with self.assertRaises(TritonModelAnalyzerException):
+            NVMLMonitor(frequency, tags)
 
 
 if __name__ == '__main__':

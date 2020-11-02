@@ -52,6 +52,8 @@ class TestDCGMMonitor(unittest.TestCase):
 
         # The number of records should be dividable by number of tags
         self.assertTrue(len(records) % len(tags) == 0)
+        self.assertTrue(len(records) > 0)
+        import ipdb; ipdb.set_trace()
 
         with self.assertRaises(TritonModelAnalyzerException):
             dcgm_monitor.stop_recording_metrics()

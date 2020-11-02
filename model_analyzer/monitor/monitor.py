@@ -68,7 +68,7 @@ class Monitor(ABC):
         while self._thread_active:
             begin = time.time()
             # Monitoring iteration implemented by each of the subclasses
-            self._monitoring_iteration(tags)
+            self._monitoring_iteration()
 
             duration = time.time() - begin
             if duration < frequency:
