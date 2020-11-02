@@ -23,45 +23,47 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from abc import ABC, abstractmethod
-import numba.cuda
+import unittest
+import time
+import sys
 
-from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
+from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
+from model_analyzer.record.gpu_free_memory import GPUFreeMemory
+from model_analyzer.record.gpu_used_memory import GPUUsedMemory
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
-class Monitor(ABC):
-    """
-    Monitor abstract class is a parent class used for monitoring devices.
-    """
+class TestDCGMMonitor(unittest.TestCase):
 
-    def __init__(self, frequency):
-        """
-        Parameters
-        ----------
-        frequency : float
-            How often the metrics should be monitored.
-        """
-        self._frequency = frequency
-        self._gpus = []
-        for gpu in numba.cuda.list_devices():
-            gpu_device = GPUDeviceFactory.create_device_by_cuda_index(gpu.id)
-            self._gpus.append(gpu_device)
+    def test_record_memory(self):
+        # One measurement every 0.01 seconds
+        frequency = 0.01
+        monitoring_time = 10
+        tags = [GPUUsedMemory, GPUFreeMemory]
+        dcgm_monitor = DCGMMonitor(frequency, tags)
+        dcgm_monitor.start_recording_metrics()
+        time.sleep(monitoring_time)
+        records = dcgm_monitor.stop_recording_metrics()
 
-    @abstractmethod
-    def start_recording_metrics(self, tags):
-        """
-        Start recording the metrics in `tags`.
+        # Assert instance types
+        for record in records:
+            self.assertIsInstance(record.device(), GPUDevice)
 
-        Paramters
-        ---------
-        tags : list
-            List of metrics to start watching for
-        """
-        return
+        # The number of records should be dividable by number of tags
+        self.assertTrue(len(records) % len(tags) == 0)
+        self.assertTrue(len(records) > 0)
+        import ipdb; ipdb.set_trace()
 
-    @abstractmethod
-    def stop_recording_metrics(self):
-        """
-        Stop recording metrics. This will stop monitring all the metrics.
-        """
-        return
+        with self.assertRaises(TritonModelAnalyzerException):
+            dcgm_monitor.stop_recording_metrics()
+
+        dcgm_monitor.destroy()
+
+        tags = ['UndefinedTag']
+        with self.assertRaises(TritonModelAnalyzerException):
+            DCGMMonitor(frequency, tags)
+
+
+if __name__ == '__main__':
+    unittest.main()
