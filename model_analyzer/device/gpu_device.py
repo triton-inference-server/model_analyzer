@@ -23,6 +23,7 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from model_analyzer.device.model import Device
 
 
@@ -39,12 +40,12 @@ class GPUDevice(Device):
                 Device id according to the `nvidia-smi` output
             pci_bus_id : bytes
                 PCI bus id
-            device_uuid : str
+            device_uuid : bytes
                 Device UUID
         """
         assert type(device_id) is int
         assert type(pci_bus_id) is bytes
-        assert type(device_uuid) is str
+        assert type(device_uuid) is bytes
 
         self._device_id = device_id
         self._pci_bus_id = pci_bus_id
