@@ -49,7 +49,8 @@ class PerfThroughput(Record):
 
         super().__init__(throughput, timestamp)
 
-    def header(self):
+    @staticmethod
+    def header():
         """
         Returns
         -------
@@ -58,4 +59,4 @@ class PerfThroughput(Record):
             metric.
         """
 
-        return "Throughput (infer/sec)"
+        return "Throughput(infer/sec)"

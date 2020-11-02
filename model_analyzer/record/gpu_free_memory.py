@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import time
-from model_analyzer.record.gpu_record import GPURecord
+from .gpu_record import GPURecord
 
 
 class GPUFreeMemory(GPURecord):
@@ -47,9 +47,10 @@ class GPUFreeMemory(GPURecord):
             The timestamp for the record in nanoseconds
         """
 
-        super().__init__(device, free_mem, timestamp)
+        super().__init__(device, free_mem // 1e6, timestamp)
 
-    def header(self):
+    @staticmethod
+    def header():
         """
         Returns
         -------
@@ -58,4 +59,4 @@ class GPUFreeMemory(GPURecord):
             metric.
         """
 
-        return "GPU Free Memory [MB]"
+        return "GPU Free Memory(MB)"

@@ -46,7 +46,7 @@ class TestFileWriterMethods(trc.TestResultCollector):
         writer.write('test')
 
         # read file
-        self.assertEqual(test_handle.getvalue(), 'test')
+        self.assertEqual(test_handle.getvalue(), 'test\n')
 
         # redirect stdout and create writer with no filename
         test_handle = StringIO()
@@ -57,7 +57,7 @@ class TestFileWriterMethods(trc.TestResultCollector):
         sys.stdout.flush()
         sys.stdout = old_stdout
 
-        self.assertEqual(test_handle.getvalue(), 'test')
+        self.assertEqual(test_handle.getvalue(), 'test\n')
         test_handle.close()
 
         # Check for malformed calls

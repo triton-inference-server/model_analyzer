@@ -37,6 +37,7 @@ class CLI:
         self._add_arguments()
 
     def _add_arguments(self):
+        # yapf:disable
         self._parser.add_argument(
             '-m',
             '--model-repository',
@@ -57,9 +58,9 @@ class CLI:
         self._parser.add_argument(
             '-b',
             '--batch-size',
-            type=int,
-            default=1,
-            help='Batch size to use for the profiling')
+            type=str,
+            default='1',
+            help='Comma delimited list of batch sizes to use for the profiling')
         self._parser.add_argument(
             '-e',
             '--export',
@@ -69,8 +70,38 @@ class CLI:
             '-c',
             '--concurrency-range',
             type=str,
+            default='1:2:1',
             help='Concurrency range values <start:end:step>')
+        self._parser.add_argument(
+            '-i',
+            '--monitoring-interval',
+            type=float,
+            default=0.01,
+            help='Interval of time between nvml measurements in seconds')
+        self._parser.add_argument(
+            '-p',
+            '--client-protocol',
+            type=str,
+            choices=['http', 'grpc'],
+            default='grpc',
+            help='The protocol used to communicate with the Triton Inference Server')
+        # yapf:enable
 
     def parse(self, argv):
+        """
+        Retrieves the arguments from the command
+        line and loads them into an ArgumentParser
+
+        Parameters
+        ----------
+        argv : list of str
+            the argument values to the python program
+
+        Returns
+        -------
+        argparse.Namespace
+            containing all the parsed arguments
+        """
+
         # Remove the first argument which is the program name
         return self._parser.parse_args(argv[1:])

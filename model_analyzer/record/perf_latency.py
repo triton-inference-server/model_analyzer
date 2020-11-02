@@ -49,7 +49,8 @@ class PerfLatency(Record):
 
         super().__init__(latency, timestamp)
 
-    def header(self):
+    @staticmethod
+    def header():
         """
         Returns
         -------

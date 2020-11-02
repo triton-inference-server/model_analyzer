@@ -33,6 +33,7 @@ class FileWriter(TableWriter):
     """
     Writes table to a file or stdout
     """
+
     def __init__(self, file_handle=None):
         """
         Parameters
@@ -61,8 +62,8 @@ class FileWriter(TableWriter):
         """
         if self._file_handle:
             try:
-                self._file_handle.write(table)
+                self._file_handle.write(table + '\n')
             except IOError as e:
                 raise TritonModelAnalyzerException(e)
         else:
-            print(table, end='')
+            print(table)

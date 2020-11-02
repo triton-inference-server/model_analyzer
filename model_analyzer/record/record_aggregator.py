@@ -31,6 +31,7 @@ class RecordAggregator:
     """
     Stores a collection of Record objects.
     """
+
     def __init__(self):
         self._records = defaultdict(list)
 
@@ -43,6 +44,7 @@ class RecordAggregator:
         record : Record
             A record to be inserted
         """
+
         if isinstance(record, Record):
             header = record.header()
             self._records[header].append(record)
@@ -77,6 +79,7 @@ class RecordAggregator:
             keys are record headers, values
             are all records of that type
         """
+
         if not headers and not filters:
             return self._records
         if headers and not filters:
@@ -110,6 +113,7 @@ class RecordAggregator:
             a list of the types of records in this
             RecordAgrregator
         """
+
         return list(self._records.keys())
 
     def total(self, header=None):
@@ -129,6 +133,7 @@ class RecordAggregator:
             number of records in
             the RecordAggregator
         """
+
         if header:
             if header not in self._records:
                 raise TritonModelAnalyzerException(
@@ -154,6 +159,7 @@ class RecordAggregator:
             keys are requested headers
             and values are the aggregated values
         """
+
         aggregated_records = {}
         for record_type in headers:
             values = []
