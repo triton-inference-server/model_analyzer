@@ -104,6 +104,7 @@ class DCGMMonitor(Monitor):
         for gpu in self._gpus:
             device_id = gpu.device_id()
             metrics = self.group_watcher.values[device_id]
+
             # Find the first key in the metrics dictionary to find the
             # dictionary length
             first_key = list(metrics)[0]
@@ -111,11 +112,11 @@ class DCGMMonitor(Monitor):
             for i in range(num_metrics):
                 for tag in self._tags:
                     dcgm_field = self.MODEL_ANALYZER_TO_DCGM_FIELD[tag]
-                    # DCGM timestamps are in nano seconds, Record's timestamps
-                    # are of type second.
+
+                    # DCGM timestamp is in nanoseconds
                     records.append(
                         tag(gpu, float(metrics[dcgm_field].values[i].value),
-                            metrics[dcgm_field].values[i].ts / 1e6))
+                            metrics[dcgm_field].values[i].ts))
 
         return records
 
