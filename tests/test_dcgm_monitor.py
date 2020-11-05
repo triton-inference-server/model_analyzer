@@ -23,6 +23,7 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import unittest
 import time
 import sys
@@ -53,7 +54,8 @@ class TestDCGMMonitor(unittest.TestCase):
         # The number of records should be dividable by number of tags
         self.assertTrue(len(records) % len(tags) == 0)
         self.assertTrue(len(records) > 0)
-        import ipdb; ipdb.set_trace()
+        self.assertTrue(records[-1].timestamp() -
+                        records[0].timestamp() >= monitoring_time)
 
         with self.assertRaises(TritonModelAnalyzerException):
             dcgm_monitor.stop_recording_metrics()

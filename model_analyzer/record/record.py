@@ -42,6 +42,8 @@ class Record(ABC):
         timestamp : float
             Elapsed time from start of program
         """
+        assert type(value) is float
+        assert type(timestamp) is float
 
         self._value = value
         self._timestamp = timestamp
