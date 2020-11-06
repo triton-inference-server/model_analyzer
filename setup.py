@@ -31,11 +31,14 @@ from setuptools import find_packages
 from setuptools import setup
 from itertools import chain
 
-if 'VERSION' not in os.environ:
-    raise Exception('envvar VERSION must be specified')
 
-VERSION = os.environ['VERSION']
+def version(filename='VERSION'):
+    with open(os.path.join(filename)) as f:
+        project_version = f.read()
+    return project_version
 
+
+project_version = version()
 this_directory = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -53,11 +56,10 @@ data_files = [
 
 setup(
     name='model-analyzer',
-    version=VERSION,
+    version=project_version,
     author='NVIDIA Inc.',
     author_email='sw-dl-triton@nvidia.com',
-    description="The Model Analyzer is a tool to analyze the runtime \
-    performance of one or more models on the Triton Inference Server",
+    description="The Model Analyzer is a tool to analyze the runtime performance of one or more models on the Triton Inference Server",
     license='BSD',
     url='https://developer.nvidia.com/nvidia-triton-inference-server',
     keywords=[
@@ -88,6 +90,10 @@ setup(
         ]
     },
     install_requires=install_requires,
+    # Custom nvidia-pyindex should be specified using dependency links
+    dependency_links=[
+        'https://pypi.ngc.nvidia.com/tritonclient'
+    ],
     packages=find_packages(),
     zip_safe=False,
     data_files=data_files,
