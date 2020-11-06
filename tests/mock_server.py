@@ -24,26 +24,32 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .client import TritonClient
-import tritonclient.grpc as grpcclient
+from abc import ABC, abstractmethod
+from unittest.mock import patch, Mock, MagicMock
 
 
-class TritonGRPCClient(TritonClient):
+class MockServerMethods(ABC):
     """
-    Concrete implementation of TritonClient
-    for GRPC
+    Interface for a mock server declaring
+    the methods it must provide.
     """
 
-    def __init__(self, config):
+    @abstractmethod
+    def stop(self):
         """
-        Parameters
-        ----------
-        config : TritonClientConfig
-            A config with the relevant client options
+        Destroy the mocked classes and
+        functions
         """
 
-        self._client_config = config
-        assert self._client_config['url'], \
-            "Must specify url in client config."
-        self._client = grpcclient.InferenceServerClient(
-            url=self._client_config['url'])
+    @abstractmethod
+    def assert_server_process_start_called_with(self, **args):
+        """
+        Asserts that the tritonserver process was started with
+        the supplied arguments
+        """
+
+    @abstractmethod
+    def assert_server_process_terminate_called(self):
+        """
+        Assert that the server process was stopped
+        """

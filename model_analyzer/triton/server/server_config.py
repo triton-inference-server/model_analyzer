@@ -95,10 +95,12 @@ class TritonServerConfig:
         str
             the command consisting of all set arguments to
             the tritonserver.
-            e.g. '--model-repository=/models --log-verbos=True'
+            e.g. '--model-repository=/models --log-verbose=True'
         """
-        return ' '.join([f'--{key}={val}' if val else ''
-                         for key, val in self._server_args.items()])
+
+        return ' '.join([
+            f'--{key}={val}' for key, val in self._server_args.items() if val
+        ])
 
     def __getitem__(self, key):
         """
@@ -113,6 +115,7 @@ class TritonServerConfig:
         -------
             The value that the argument is set to in this config
         """
+
         return self._server_args[key]
 
     def __setitem__(self, key, value):
@@ -133,8 +136,10 @@ class TritonServerConfig:
             If key is unsupported or undefined in the
             config class
         """
+
         if key in self._server_args:
             self._server_args[key] = value
         else:
-            raise TritonModelAnalyzerException(f"The argument '{key}' to the Triton Inference "
-                                               "Server is not supported by the model analyzer.")
+            raise TritonModelAnalyzerException(
+                f"The argument '{key}' to the Triton Inference "
+                "Server is not supported by the model analyzer.")

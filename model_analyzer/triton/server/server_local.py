@@ -37,18 +37,19 @@ class TritonServerLocal(TritonServer):
     tritonserver locally as as subprocess.
     """
 
-    def __init__(self, version, config):
+    def __init__(self, path, config):
         """
         Parameters
         ----------
-        version : str
-            Current version of Triton Inference Server
+        path  : str
+            The absolute path to the tritonserver executable
         config : TritonServerConfig
             the config object containing arguments for this server instance
         """
+
         self._tritonserver_process = None
-        self._version = version
         self._server_config = config
+        self._server_path = path
 
         assert self._server_config['model-repository'], \
             "Triton Server requires --model-repository argument to be set."
@@ -57,17 +58,21 @@ class TritonServerLocal(TritonServer):
         """
         Starts the tritonserver container locally
         """
+
         # Create command list and run subprocess
-        cmd = ['/opt/tritonserver/bin/tritonserver']
+        cmd = [self._server_path]
         cmd += self._server_config.to_cli_string().replace('=', ' ').split()
 
-        self._tritonserver_process = Popen(
-            cmd, stdout=PIPE, stderr=STDOUT, universal_newlines=True)
+        self._tritonserver_process = Popen(cmd,
+                                           stdout=PIPE,
+                                           stderr=STDOUT,
+                                           universal_newlines=True)
 
     def stop(self):
         """
         Stops the running tritonserver
         """
+
         # Terminate process, capture output
         if self._tritonserver_process is not None:
             self._tritonserver_process.terminate()
