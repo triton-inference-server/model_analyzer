@@ -41,6 +41,7 @@ class TritonHTTPClient(TritonClient):
         config : TritonClientConfig
             A config with the relevant client options
         """
+
         self._client_config = config
         assert self._client_config['url'], \
             "Must specify url in client config."

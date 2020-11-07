@@ -32,8 +32,9 @@ class TritonServerFactory:
     """
     A factory for creating TritonServer instances
     """
+
     @staticmethod
-    def create_server_docker(model_path, version, config):
+    def create_server_docker(model_path, image, config):
         """
         Parameters
         ----------
@@ -41,8 +42,8 @@ class TritonServerFactory:
             The absolute path to the local directory containing the models.
             In the case of locally running server, this may be the same as
             the model repository path
-        version : str
-            Current version of Triton Inference Server
+        image : str
+            The tritonserver docker image to pull and run
         config : TritonServerConfig
             the config object containing arguments for this server instance
         
@@ -50,17 +51,18 @@ class TritonServerFactory:
         -------
         TritonServerDocker
         """
+
         return TritonServerDocker(model_path=model_path,
-                                  version=version,
+                                  image=image,
                                   config=config)
 
     @staticmethod
-    def create_server_local(version, config):
+    def create_server_local(path, config):
         """
         Parameters
         ----------
-        version : str
-            Current version of Triton Inference Server
+        path : str
+            The absolute path to the tritonserver executable
         config : TritonServerConfig
             the config object containing arguments for this server instance
         
@@ -68,4 +70,5 @@ class TritonServerFactory:
         -------
         TritonServerLocal
         """
-        return TritonServerLocal(version=version, config=config)
+
+        return TritonServerLocal(path=path, config=config)

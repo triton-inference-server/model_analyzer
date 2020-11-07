@@ -38,36 +38,6 @@ class TritonClient:
     TritonClientFactory
     """
 
-    def wait_for_server_ready(self, num_retries=WAIT_FOR_READY_NUM_RETRIES):
-        """
-        Parameters
-        ----------
-        num_retries : int
-            number of times to send a ready status
-            request to the server before raising
-            an exception
-
-        Raises
-        ------
-        TritonModelAnalyzerException
-            If server readiness could not be
-            determined in given num_retries
-        """
-        while num_retries > 0:
-            try:
-                if self._client.is_server_ready():
-                    return
-                else:
-                    time.sleep(0.1)
-                    num_retries -= 1
-            except Exception as e:
-                time.sleep(0.1)
-                num_retries -= 1
-                pass
-        raise TritonModelAnalyzerException(
-            "Could not determine server readiness. "
-            "Number of retries exceeded.")
-
     def load_model(self, model):
         """
         Request the inference server to load
@@ -112,10 +82,9 @@ class TritonClient:
             raise TritonModelAnalyzerException(
                 f"Unable to unload the model : {e}")
 
-    def wait_for_model_ready(
-            self,
-            model,
-            num_retries=WAIT_FOR_READY_NUM_RETRIES):
+    def wait_for_model_ready(self,
+                             model,
+                             num_retries=WAIT_FOR_READY_NUM_RETRIES):
         """
         Returns when model is ready.
 

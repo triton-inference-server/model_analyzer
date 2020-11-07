@@ -24,26 +24,47 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .client import TritonClient
-import tritonclient.grpc as grpcclient
+import subprocess
+from unittest.mock import patch, Mock, MagicMock
 
 
-class TritonGRPCClient(TritonClient):
+class MockPerfAnalyzerMethods:
     """
-    Concrete implementation of TritonClient
-    for GRPC
+    Mocks the subprocess module functions used in 
+    model_analyzer/perf_analyzer/perf_analyzer.py
+    Provides functions to check operation.
     """
 
-    def __init__(self, config):
+    def __init__(self):
+        self.patcher_check_output = patch(
+            'model_analyzer.perf_analyzer.perf_analyzer.check_output')
+        self.patcher_stdout = patch(
+            'model_analyzer.perf_analyzer.perf_analyzer.STDOUT', MagicMock())
+        self.check_output_mock = self.patcher_check_output.start()
+        self.stdout_mock = self.patcher_stdout.start()
+
+    def stop(self):
         """
-        Parameters
-        ----------
-        config : TritonClientConfig
-            A config with the relevant client options
+        Destroy the mocked classes and
+        functions
         """
 
-        self._client_config = config
-        assert self._client_config['url'], \
-            "Must specify url in client config."
-        self._client = grpcclient.InferenceServerClient(
-            url=self._client_config['url'])
+        self.patcher_check_output.stop()
+        self.patcher_stdout.stop()
+
+    def assert_perf_analyzer_run_as(self, cmd):
+        """
+        Checks that subprocess.check_output was run
+        with the given command.
+        """
+
+        self.check_output_mock.assert_called_with(cmd,
+                                                  stderr=self.stdout_mock,
+                                                  encoding='utf-8')
+
+    def set_perf_analyzer_result_string(self, output_string):
+        """
+        Sets the return value of subprocess.check_output
+        """
+
+        self.check_output_mock.return_value = output_string

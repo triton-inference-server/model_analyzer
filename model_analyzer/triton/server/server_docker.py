@@ -29,8 +29,6 @@ import docker
 
 from .server import TritonServer
 
-TRITONSERVER_IMAGE = 'nvcr.io/nvidia/tritonserver:'
-
 LOCAL_HTTP_PORT = 8000
 LOCAL_GRPC_PORT = 8001
 LOCAL_METRICS_PORT = 8002
@@ -42,7 +40,7 @@ class TritonServerDocker(TritonServer):
     triton in a docker container.
     """
 
-    def __init__(self, model_path, version, config):
+    def __init__(self, model_path, image, config):
         """
         Parameters
         ----------
@@ -50,16 +48,16 @@ class TritonServerDocker(TritonServer):
             The absolute path to the local directory containing the models.
             In the case of locally running server, this may be the same as
             the model repository path
-        version : str
-            Current version of Triton Inference Server
+        image : str
+            The tritonserver docker image to pull and run
         config : TritonServerConfig
             the config object containing arguments for this server instance
         """
-        self._version = version
+
         self._server_config = config
         self._model_path = model_path
         self._docker_client = docker.from_env()
-        self._tritonserver_image = TRITONSERVER_IMAGE + version + '-py3'
+        self._tritonserver_image = image
         self._tritonserver_container = None
 
         assert self._server_config['model-repository'], \
@@ -69,16 +67,15 @@ class TritonServerDocker(TritonServer):
         """
         Starts the tritonserver docker container using docker-py
         """
+
         # get devices using CUDA_VISIBLE_DEVICES
         CUDA_VISIBLE_DEVICES = os.environ.get('CUDA_VISIBLE_DEVICES', '')
 
         if CUDA_VISIBLE_DEVICES != '':
             device_ids = CUDA_VISIBLE_DEVICES.split(',')
             devices = [
-                docker.types.DeviceRequest(
-                    device_ids=device_ids,
-                    capabilities=[['gpu']]
-                )
+                docker.types.DeviceRequest(device_ids=device_ids,
+                                           capabilities=[['gpu']])
             ]
         else:
             devices = None
@@ -115,8 +112,8 @@ class TritonServerDocker(TritonServer):
             detach=True)
 
         # Run the command in the container
-        cmd = '/opt/tritonserver/bin/tritonserver ' + \
-            self._server_config.to_cli_string()
+        cmd = '/opt/tritonserver/bin/tritonserver ' + self._server_config.to_cli_string(
+        )
 
         self._tritonserver_log = \
             self._tritonserver_container.exec_run(cmd, stream=True)
@@ -126,6 +123,7 @@ class TritonServerDocker(TritonServer):
         Stops the tritonserver docker container
         and cleans up docker client
         """
+
         if self._tritonserver_container is not None:
             self._tritonserver_container.stop()
             self._tritonserver_container.remove()
