@@ -25,6 +25,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
+from unittest.mock import patch, MagicMock
+
+from .mock_server_local import MockServerLocalMethods
+from .mock_perf_analyzer import MockPerfAnalyzerMethods
 
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.server.server_factory import TritonServerFactory
@@ -37,8 +41,10 @@ from model_analyzer.record.perf_latency import PerfLatency
 # Test Parameters
 MODEL_LOCAL_PATH = '/model_analyzer/models'
 MODEL_REPOSITORY_PATH = '/model_analyzer/models'
+PERF_BIN_PATH = 'perf_analyzer'
+TRITON_LOCAL_BIN_PATH = 'test_path'
 TRITON_VERSION = '20.09'
-TEST_MODEL_NAME = 'classification_chestxray_v1'
+TEST_MODEL_NAME = 'test_model'
 TEST_CONCURRENCY_RANGE = '1:16:2'
 CONFIG_TEST_ARG = 'sync'
 TEST_RUN_PARAMS = {'batch-size': [1, 2], 'concurrency-range': [2, 4]}
@@ -46,6 +52,10 @@ TEST_RUN_PARAMS = {'batch-size': [1, 2], 'concurrency-range': [2, 4]}
 
 class TestPerfAnalyzerMethods(unittest.TestCase):
     def setUp(self):
+        # Mocks
+        self.server_local_mock = MockServerLocalMethods()
+        self.perf_mock = MockPerfAnalyzerMethods()
+
         # PerfAnalyzer config for all tests
         self.config = PerfAnalyzerConfig()
         self.config['model-name'] = TEST_MODEL_NAME
@@ -83,42 +93,43 @@ class TestPerfAnalyzerMethods(unittest.TestCase):
         self.config['extra-verbose'] = True
         self.assertTrue(self.config['extra-verbose'])
 
-    def test_run(self):
+    @patch('model_analyzer.triton.server.server.requests', get=MagicMock())
+    def test_run(self, requests_mock):
         # Now create a server config
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
 
         # Create server, PerfAnalyzer, and wait for server ready
         self.server = TritonServerFactory.create_server_local(
-            version=TRITON_VERSION, config=server_config)
-        perf_client = PerfAnalyzer(config=self.config)
+            path=TRITON_LOCAL_BIN_PATH, config=server_config)
+        perf_client = PerfAnalyzer(path=PERF_BIN_PATH, config=self.config)
 
         self.server.start()
-        self.server.wait_for_ready(num_retries=50)
+        requests_mock.get.return_value.status_code = 200
+        self.server.wait_for_ready(num_retries=1)
 
         # Run perf analyzer
         throughput_record, latency_record = perf_client.run()
-
+        self.perf_mock.assert_perf_analyzer_run_as(
+            [PERF_BIN_PATH, '-m', TEST_MODEL_NAME])
         self.server.stop()
 
-    def test_parse_perf_output(self):
-        perf_client = PerfAnalyzer(config=self.config)
-
-        # Test latency parsing (output is at least 4 lines)
+        # Test latency parsing
         test_latency_output = "Avg latency: 5000 ms\n\n\n\n"
-        _, latency_record = perf_client._parse_perf_output(test_latency_output)
+        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
+        _, latency_record = perf_client.run()
         self.assertEqual(latency_record.value(), 5000)
 
         # Test throughput parsing
         test_throughput_output = "Throughput: 46.8 ms\n\n\n\n"
-        throughput_record, _ = perf_client._parse_perf_output(
-            test_throughput_output)
+        self.perf_mock.set_perf_analyzer_result_string(test_throughput_output)
+        throughput_record, _ = perf_client.run()
         self.assertEqual(throughput_record.value(), 46.8)
 
         # Test parsing for both
         test_both_output = "Throughput: 0.001 ms\nAvg latency: 3.6 ms\n\n\n\n"
-        throughput_record, latency_record = perf_client._parse_perf_output(
-            test_both_output)
+        self.perf_mock.set_perf_analyzer_result_string(test_both_output)
+        throughput_record, latency_record = perf_client.run()
         self.assertEqual(throughput_record.value(), 0.001)
         self.assertEqual(latency_record.value(), 3.6)
 
@@ -126,6 +137,10 @@ class TestPerfAnalyzerMethods(unittest.TestCase):
         # In case test raises exception
         if self.server is not None:
             self.server.stop()
+
+        # Stop mocking
+        self.server_local_mock.stop()
+        self.perf_mock.stop()
 
 
 if __name__ == '__main__':

@@ -38,15 +38,18 @@ class PerfAnalyzer:
     with perf_analyzer.
     """
 
-    def __init__(self, config):
+    def __init__(self, path, config):
         """
         Parameters
         ----------
+        path : full path to the perf_analyzer
+                executable
         config : PerfAnalyzerConfig
             keys are names of arguments to perf_analyzer,
             values are their values.
         """
 
+        self.bin_path = path
         self._config = config
         self._outputs = []
 
@@ -66,7 +69,7 @@ class PerfAnalyzer:
             If subprocess throws CalledProcessError
         """
 
-        cmd = ['perf_analyzer']
+        cmd = [self.bin_path]
         cmd += self._config.to_cli_string().replace('=', ' ').split()
 
         # Synchronously start and finish run

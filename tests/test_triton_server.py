@@ -26,15 +26,22 @@
 
 import os
 import unittest
+import subprocess
+from unittest.mock import patch, MagicMock
+
+from .mock_server_docker import MockServerDockerMethods
+from .mock_server_local import MockServerLocalMethods
 
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 # Test parameters
-MODEL_LOCAL_PATH = '/model_analyzer/models'
-MODEL_REPOSITORY_PATH = '/model_analyzer/models'
-TRITON_VERSION = '20.09'
+MODEL_LOCAL_PATH = 'test_local_path'
+MODEL_REPOSITORY_PATH = 'test_repo'
+TRITON_LOCAL_BIN_PATH = 'test_bin_path/tritonserver'
+TRITON_DOCKER_BIN_PATH = '/opt/tritonserver/bin/tritonserver'
+TRITON_IMAGE = 'test_image'
 CONFIG_TEST_ARG = 'exit-on-error'
 CLI_TO_STRING_TEST_ARGS = {
     'allow-grpc': True,
@@ -42,10 +49,14 @@ CLI_TO_STRING_TEST_ARGS = {
     'metrics-port': 8000,
     'model-repository': MODEL_REPOSITORY_PATH
 }
+SERVER_READY_URL = 'http://localhost:8000/v2/health/ready'
 
 
 class TestTritonServerMethods(unittest.TestCase):
     def setUp(self):
+        # Mock
+        self.server_docker_mock = MockServerDockerMethods()
+        self.server_local_mock = MockServerLocalMethods()
 
         # server setup
         self.server = None
@@ -82,7 +93,6 @@ class TestTritonServerMethods(unittest.TestCase):
             server_config[arg] = value
 
         cli_string = server_config.to_cli_string()
-
         for argstring in cli_string.split():
 
             # Parse the created string
@@ -110,11 +120,11 @@ class TestTritonServerMethods(unittest.TestCase):
         # Run for both types of environments
         self.server = TritonServerFactory.create_server_docker(
             model_path=MODEL_LOCAL_PATH,
-            version=TRITON_VERSION,
+            image=TRITON_IMAGE,
             config=server_config)
 
         self.server = TritonServerFactory.create_server_local(
-            version=TRITON_VERSION, config=server_config)
+            path=TRITON_LOCAL_BIN_PATH, config=server_config)
 
         # Try to create a server without specifying model repository and expect
         # error
@@ -125,17 +135,29 @@ class TestTritonServerMethods(unittest.TestCase):
                 "server without specifying model repository."):
             self.server = TritonServerFactory.create_server_docker(
                 model_path=MODEL_LOCAL_PATH,
-                version=TRITON_VERSION,
+                image=TRITON_IMAGE,
                 config=server_config)
         with self.assertRaises(
                 AssertionError,
                 msg="Expected AssertionError for trying to create"
                 "server without specifying model repository."):
             self.server = TritonServerFactory.create_server_local(
-                version=TRITON_VERSION, config=server_config)
+                path=TRITON_LOCAL_BIN_PATH, config=server_config)
+
+    @patch('model_analyzer.triton.server.server.requests', get=MagicMock())
+    def _mock_server_wait_for_ready(self, requests_mock, assert_raises):
+        if assert_raises:
+            with self.assertRaises(TritonModelAnalyzerException,
+                                   msg="Expected to exceed num_retries"):
+                requests_mock.get.return_value.status_code = 400
+                self.server.wait_for_ready(num_retries=1)
+        else:
+            requests_mock.get.return_value.status_code = 200
+            self.server.wait_for_ready(num_retries=1)
+
+        requests_mock.get.assert_called_with(SERVER_READY_URL)
 
     def test_start_wait_stop_gpus(self):
-
         # Create a TritonServerConfig
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
@@ -144,35 +166,51 @@ class TestTritonServerMethods(unittest.TestCase):
         # Create server in docker, start , wait, and stop
         self.server = TritonServerFactory.create_server_docker(
             model_path=MODEL_LOCAL_PATH,
-            version=TRITON_VERSION,
+            image=TRITON_IMAGE,
             config=server_config)
 
-        # Set CUDA_VISIBLE_DEVICES and start the server
-        with self.assertRaises(TritonModelAnalyzerException,
-                               msg="Expected to exceed num_retries"):
-            self.server.wait_for_ready()
+        # Set mock status_code to error, and generate exception
+        self._mock_server_wait_for_ready(assert_raises=True)
 
+        # Start server check that mocked api is called
         self.server.start()
-        self.server.wait_for_ready()
-        self.server.stop()
+        self.server_docker_mock.assert_server_process_start_called_with(
+            TRITON_DOCKER_BIN_PATH + ' ' + server_config.to_cli_string(),
+            MODEL_LOCAL_PATH, MODEL_REPOSITORY_PATH, TRITON_IMAGE, 8000, 8001,
+            8002)
 
-        # Create server locally, start , wait, and stop
+        # Mock status code for connected server then stop
+        self._mock_server_wait_for_ready(assert_raises=False)
+
+        # Stop container and check api calls
+        self.server.stop()
+        self.server_docker_mock.assert_server_process_terminate_called()
+
+        # Create local server which runs triton as a subprocess
         self.server = TritonServerFactory.create_server_local(
-            version=TRITON_VERSION, config=server_config)
+            path=TRITON_LOCAL_BIN_PATH, config=server_config)
 
-        with self.assertRaises(TritonModelAnalyzerException,
-                               msg="Expected to exceed num_retries"):
-            self.server.wait_for_ready()
+        self._mock_server_wait_for_ready(assert_raises=True)
 
+        # Check that API functions are called
         self.server.start()
-        self.server.wait_for_ready()
+
+        self.server_local_mock.assert_server_process_start_called_with(cmd=[
+            TRITON_LOCAL_BIN_PATH, '--model-repository', MODEL_REPOSITORY_PATH
+        ])
+
+        self._mock_server_wait_for_ready(assert_raises=False)
         self.server.stop()
+        self.server_local_mock.assert_server_process_terminate_called()
 
     def tearDown(self):
-
         # In case test raises exception
         if self.server is not None:
             self.server.stop()
+
+        # Stop mocking
+        self.server_docker_mock.stop()
+        self.server_local_mock.stop()
 
 
 if __name__ == '__main__':
