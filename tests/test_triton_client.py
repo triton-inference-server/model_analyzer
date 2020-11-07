@@ -27,6 +27,10 @@
 import os
 import unittest
 import sys
+from unittest.mock import patch, MagicMock
+
+from .mock_server_docker import MockServerDockerMethods
+from .mock_client import MockTritonClientMethods
 
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.client.client_factory import TritonClientFactory
@@ -36,17 +40,21 @@ from model_analyzer.triton.model.model import Model
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 # Test parameters
-MODEL_LOCAL_PATH = '/model_analyzer/models'
-MODEL_REPOSITORY_PATH = '/model_analyzer/models'
-TRITON_VERSION = '20.09'
+MODEL_LOCAL_PATH = 'test_local_path'
+MODEL_REPOSITORY_PATH = 'test_repo'
+TRITON_IMAGE = 'test_image'
 CONFIG_TEST_ARG = 'url'
-GRPC_URL = 'localhost:8001'
-HTTP_URL = 'localhost:8000'
-TEST_MODEL_NAME = 'classification_chestxray_v1'
+GRPC_URL = 'test_grpc_url'
+HTTP_URL = 'test_http_url'
+TEST_MODEL_NAME = 'test_model'
 
 
 class TestTritonClientMethods(unittest.TestCase):
     def setUp(self):
+        # Mocks
+        self.mock_server_docker = MockServerDockerMethods()
+        self.tritonclient_mock = MockTritonClientMethods()
+
         # Create server config
         self.server_config = TritonServerConfig()
         self.server_config['model-repository'] = MODEL_REPOSITORY_PATH
@@ -58,7 +66,7 @@ class TestTritonClientMethods(unittest.TestCase):
         # Create and start the server
         self.server = TritonServerFactory.create_server_docker(
             model_path=MODEL_LOCAL_PATH,
-            version=TRITON_VERSION,
+            image=TRITON_IMAGE,
             config=self.server_config)
 
     def test_client_config(self):
@@ -111,31 +119,8 @@ class TestTritonClientMethods(unittest.TestCase):
             client = TritonClientFactory.create_http_client(
                 config=client_config)
 
-    def test_wait_for_ready(self):
-        # Create a TritonClientConfig
-        client_config = TritonClientConfig()
-        client_config['url'] = HTTP_URL
-
-        # Create client
-        client = TritonClientFactory.create_http_client(config=client_config)
-
-        # Wait for the server when it hasnt been started
-        expected_string = "Could not determine server readiness. Number of retries exceeded."
-        failure_message = "Expected exception waiting for server which is not running"
-        with self.assertRaisesRegex(TritonModelAnalyzerException,
-                                    expected_regex=expected_string,
-                                    msg=failure_message):
-            client.wait_for_server_ready(num_retries=10)
-
-        # Start the server
-        self.server.start()
-
-        # Wait for running server
-        client.wait_for_server_ready()
-
-        self.server.stop()
-
-    def test_load_unload_model(self):
+    @patch('model_analyzer.triton.server.server.requests', get=MagicMock())
+    def test_load_unload_model(self, requests_mock):
         # Create config
         client_config = TritonClientConfig()
         client_config['url'] = GRPC_URL
@@ -145,20 +130,31 @@ class TestTritonClientMethods(unittest.TestCase):
 
         # Start the server and wait till it is ready
         self.server.start()
-        client.wait_for_server_ready()
+
+        requests_mock.get.return_value.status_code = 200
+        self.server.wait_for_ready(num_retries=1)
 
         # Try to load a dummy model and expect error
         with self.assertRaises(TritonModelAnalyzerException,
                                msg="Expected Exception trying"
                                " to load dummy model"):
+            self.tritonclient_mock.raise_exception_on_load()
             client.load_model(Model('dummy'))
+
+        self.tritonclient_mock.reset()
 
         # Load the test model
         client.load_model(Model(TEST_MODEL_NAME))
-        client.wait_for_model_ready(Model(TEST_MODEL_NAME), num_retries=10)
+        client.wait_for_model_ready(Model(TEST_MODEL_NAME), num_retries=1)
 
-        # Try to unload a dummy model
-        client.unload_model(Model('dummy'))
+        # Try to unload a dummy model and expect error
+        with self.assertRaises(TritonModelAnalyzerException,
+                               msg="Expected Exception trying"
+                               " to unload dummy model"):
+            self.tritonclient_mock.raise_exception_on_unload()
+            client.unload_model(Model('dummy'))
+
+        self.tritonclient_mock.reset()
 
         # Unload the test model
         client.unload_model(Model(TEST_MODEL_NAME))
@@ -169,6 +165,8 @@ class TestTritonClientMethods(unittest.TestCase):
         # In case test raises exception
         if self.server is not None:
             self.server.stop()
+        self.mock_server_docker.stop()
+        self.tritonclient_mock.stop()
 
 
 if __name__ == '__main__':
