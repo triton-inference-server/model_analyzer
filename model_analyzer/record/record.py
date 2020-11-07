@@ -40,10 +40,10 @@ class Record(ABC):
         value : float
             The value of the GPU metrtic
         timestamp : float
-            Elapsed time from start of program
+            Elapsed time from start of program in nanoseconds
         """
         assert type(value) is float
-        assert type(timestamp) is float
+        assert type(timestamp) is int
 
         self._value = value
         self._timestamp = timestamp
