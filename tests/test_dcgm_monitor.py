@@ -50,6 +50,8 @@ class TestDCGMMonitor(unittest.TestCase):
         # Assert instance types
         for record in records:
             self.assertIsInstance(record.device(), GPUDevice)
+            self.assertIsInstance(record.value(), float)
+            self.assertIsInstance(record.timestamp(), int)
 
         # The number of records should be dividable by number of tags
         self.assertTrue(len(records) % len(tags) == 0)
