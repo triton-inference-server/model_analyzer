@@ -52,6 +52,11 @@ class DCGMMonitor(Monitor):
         GPUUtilization: dcgm_fields.DCGM_FI_DEV_GPU_UTIL
     }
 
+    DCGM_FIELD_TO_MODEL_ANALYZER = {
+        v: k
+        for k, v in MODEL_ANALYZER_TO_DCGM_FIELD.items()
+    }
+
     def __init__(self, frequency, tags, dcgmPath=None):
         """
         Parameters

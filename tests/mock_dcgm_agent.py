@@ -1,0 +1,208 @@
+# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of NVIDIA CORPORATION nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+from unittest.mock import MagicMock
+from collections import defaultdict
+
+import model_analyzer.monitor.dcgm.dcgm_structs as structs
+import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
+
+class MockDCGMAgent:
+
+    device_groups = {}
+    field_groups = {}
+    devices = [{
+        'pci_bus_id': b'00000000:65:00.0',
+        'uuid': b'd02ae7ed-4471-7046-4215-fad351e5fc10'
+    }]
+
+    @staticmethod
+    def dcgmInit():
+        """
+        Mock dcgmInit method
+        """
+
+        pass
+
+    @staticmethod
+    def dcgmStartEmbedded(op_mode):
+        """
+        Mock dcgmStartEmbedded
+
+        Parameters
+        ----------
+        op_mode : int
+            DCGM operational mode
+        """
+
+        pass
+
+    @staticmethod
+    def dcgmGetAllSupportedDevices(dcgm_handle):
+        """
+        Mock dcgmGetAllSupportedDevices
+
+        Parameters
+        ----------
+        dcgm_handle : ctypes.c_void_p
+            A DCGM Handle object
+        """
+
+        return list(range(0, len(MockDCGMAgent.devices)))
+
+    @staticmethod
+    def dcgmGetDeviceAttributes(dcgm_handle, device):
+        """
+        Mock dcgmGetDeviceAttributes
+
+        Parameters
+        ----------
+        dcgm_handle : ctypes.c_void_p
+            A DCGM Handle object
+        device : int
+            device id
+
+        Returns
+        -------
+        MagicMock
+            A MagicMock containing the device attributes
+        """
+
+        gpu_device = MockDCGMAgent.devices[device]
+        device_attribute = MagicMock()
+        device_attribute.identifiers.pciBusId = gpu_device['pci_bus_id']
+        device_attribute.identifiers.uuid = gpu_device['uuid']
+        return device_attribute
+
+    @staticmethod
+    def dcgmGroupCreate(dcgm_handle, type_name, name):
+        """
+        Mock dcgmGroupCreate
+
+        Parameters
+        ----------
+        dcgm_handle : ctypes.c_void_p
+            A DCGM Handle object
+        type_name : int
+            Group type
+        name : str
+            Device group name
+
+        Returns
+        -------
+        int
+            Returns the group id
+
+        Raises
+        ------
+        KeyError
+            If the group already exists it raises a KeyError
+        """
+
+        if not (name in MockDCGMAgent.device_groups):
+            if type_name == structs.DCGM_GROUP_EMPTY:
+                MockDCGMAgent.device_groups[name] = []
+                group_id = MagicMock()
+                group_id.value = list(MockDCGMAgent.device_groups).index(name)
+                return group_id
+        else:
+            raise KeyError
+
+    @staticmethod
+    def dcgmGroupAddDevice(dcgm_handle, group_id, gpu_device_id):
+        """
+        Mock dcgmGroupAddDevice
+
+        Parameters
+        ----------
+        dcgm_handle : ctypes.c_void_p
+            A DCGM Handle object
+        group_id : int
+            Group type
+        gpu_device_id : int
+            GPU device id
+
+        Raises
+        ------
+        KeyError
+            If the group does not exist
+        """
+
+        group_id = group_id.value
+        if group_id >= len(list(MockDCGMAgent.device_groups)):
+            raise KeyError
+
+        device_group_name = list(MockDCGMAgent.device_groups)[group_id]
+        device_group = MockDCGMAgent.device_groups[device_group_name]
+
+        if gpu_device_id in device_group:
+            raise TritonModelAnalyzerException(f'GPU device {gpu_device_id} already exists in the device group')
+
+        device_group.append(gpu_device_id)
+
+    @staticmethod
+    def dcgmFieldGroupCreate(dcgm_handle, fields, name):
+        """
+        Mock dcgmFieldGroupCreate
+
+        Parameters
+        ----------
+        dcgm_handle : ctypes.c_void_p
+            A DCGM Handle object
+        fields : list
+            List of ints containing the fields to be monitored
+        name : str
+            Group name
+
+        Returns
+        -------
+        int
+            Returns the group id
+
+        Raises
+        ------
+        KeyError
+            If the group already exists it raises a KeyError
+        """
+
+        if not (name in MockDCGMAgent.field_groups):
+            MockDCGMAgent.field_groups[name] = fields
+            group_id = MagicMock()
+            group_id.value = list(MockDCGMAgent.field_groups).index(name)
+            return group_id
+        else:
+            raise KeyError
+
+    @staticmethod
+    def dcgmShutdown():
+        """
+        Mock dcgmShutdown
+        """
+
+        MockDCGMAgent.device_groups = {}
+        MockDCGMAgent.field_groups = {}

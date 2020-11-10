@@ -39,9 +39,14 @@ from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 import test_result_collector as trc
+from .mock_dcgm import MockDCGM
 
 
 class TestDCGMMonitor(trc.TestResultCollector):
+
+    def setUp(self):
+        self.mock_dcgm = MockDCGM()
+        self.mock_dcgm.start()
 
     def test_record_memory(self):
         # One measurement every 0.01 seconds
@@ -98,6 +103,9 @@ class TestDCGMMonitor(trc.TestResultCollector):
                         records[0].timestamp() >= monitoring_time)
 
         dcgm_monitor.destroy()
+
+    def tearDown(self):
+        self.mock_dcgm.stop()
 
 
 if __name__ == '__main__':
