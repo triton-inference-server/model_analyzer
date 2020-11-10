@@ -44,8 +44,8 @@ class GPURecord(Record):
             with.
         value : float
             The value of the GPU metrtic
-        timestamp : float
-            Elapsed time from start of program
+        timestamp : int
+            The timestamp for the record in nanoseconds
         """
 
         super().__init__(value, timestamp)
