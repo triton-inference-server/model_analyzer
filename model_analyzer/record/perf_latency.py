@@ -43,8 +43,8 @@ class PerfLatency(Record):
         latency : float
             The avg latency value obtained from the
             perf_analyzer
-        timestamp : float
-            Elapsed time from start of program
+        timestamp : int
+            The timestamp for the record in nanoseconds
         """
 
         super().__init__(latency, timestamp)

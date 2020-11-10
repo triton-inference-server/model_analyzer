@@ -94,7 +94,7 @@ def dcgmGetAllSupportedDevices(dcgm_handle):
     fn = dcgmFP("dcgmGetAllSupportedDevices")
     ret = fn(dcgm_handle, c_gpuid_list, byref(c_count))
     dcgm_structs._dcgmCheckReturn(ret)
-    return map(None, c_gpuid_list[0:int(c_count.value)])
+    return [c_gpuid_list[i] for i in range(c_count.value)[0:int(c_count.value)]]
 
 
 def dcgmGetAllDevices(dcgm_handle):
@@ -104,7 +104,7 @@ def dcgmGetAllDevices(dcgm_handle):
     fn = dcgmFP("dcgmGetAllDevices")
     ret = fn(dcgm_handle, c_gpuid_list, byref(c_count))
     dcgm_structs._dcgmCheckReturn(ret)
-    return map(None, c_gpuid_list[0:int(c_count.value)])
+    return [c_gpuid_list[i] for i in range(c_count.value)[0:int(c_count.value)]]
 
 
 def dcgmGetDeviceAttributes(dcgm_handle, gpuId):
