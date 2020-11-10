@@ -43,8 +43,8 @@ class GPUFreeMemory(GPURecord):
         free_mem : float
             The free memory in the GPU obtained from
             nvml
-        timestamp : float
-            Elapsed time from start of program
+        timestamp : int
+            The timestamp for the record in nanoseconds
         """
 
         super().__init__(device, free_mem, timestamp)

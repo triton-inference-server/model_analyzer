@@ -43,8 +43,8 @@ class PerfThroughput(Record):
         throughput : float
             The throughput value obtained from the
             perf_analyzer
-        timestamp : float
-            Elapsed time from start of program
+        timestamp : int
+            The timestamp for the record in nanoseconds
         """
 
         super().__init__(throughput, timestamp)

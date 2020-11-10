@@ -39,8 +39,8 @@ class Record(ABC):
         ----------
         value : float or int
             The value of the GPU metrtic
-        timestamp : float
-            Elapsed time from start of program in nanoseconds
+        timestamp : int
+            The timestamp for the record in nanoseconds
         """
         assert type(value) is float or type(value) is int
         assert type(timestamp) is int
