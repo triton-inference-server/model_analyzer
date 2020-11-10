@@ -24,38 +24,5 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import time
-from model_analyzer.record.gpu_record import GPURecord
+python3 -m unittest discover -v
 
-
-class GPUFreeMemory(GPURecord):
-    """
-    The free memory in the GPU.
-    """
-
-    def __init__(self, device, free_mem, timestamp):
-        """
-        Parameters
-        ----------
-        device : GPUDevice
-            The  GPU device this metric is associated
-            with.
-        free_mem : float
-            The free memory in the GPU obtained from
-            nvml
-        timestamp : int
-            The timestamp for the record in nanoseconds
-        """
-
-        super().__init__(device, free_mem, timestamp)
-
-    def header(self):
-        """
-        Returns
-        -------
-        str
-            The full name of the
-            metric.
-        """
-
-        return "GPU Free Memory [MB]"

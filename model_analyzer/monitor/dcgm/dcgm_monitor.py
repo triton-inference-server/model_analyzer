@@ -112,8 +112,11 @@ class DCGMMonitor(Monitor):
             for i in range(num_metrics):
                 for tag in self._tags:
                     dcgm_field = self.MODEL_ANALYZER_TO_DCGM_FIELD[tag]
+
+                    # DCGM timestamp is in nanoseconds
                     records.append(
-                        tag(gpu, metrics[dcgm_field].values[i], time.time()))
+                        tag(gpu, float(metrics[dcgm_field].values[i].value),
+                            metrics[dcgm_field].values[i].ts))
 
         return records
 

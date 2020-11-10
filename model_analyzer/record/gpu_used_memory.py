@@ -38,13 +38,12 @@ class GPUUsedMemory(GPURecord):
         Parameters
         ----------
         device : GPUDevice
-            The  GPU device this metric is associated
+            The GPU device this metric is associated
             with.
         used_mem : float
-            The used memory in the GPU obtained from
-            nvml
-        timestamp : float
-            Elapsed time from start of program
+            GPU used memory
+        timestamp : int
+            The timestamp for the record in nanoseconds
         """
 
         super().__init__(device, used_mem, timestamp)
