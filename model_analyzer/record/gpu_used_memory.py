@@ -46,7 +46,7 @@ class GPUUsedMemory(GPURecord):
             The timestamp for the record in nanoseconds
         """
 
-        super().__init__(device, used_mem // 1e6, timestamp)
+        super().__init__(device, used_mem, timestamp)
 
     @staticmethod
     def header():

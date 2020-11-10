@@ -34,16 +34,12 @@ class TritonGRPCClient(TritonClient):
     for GRPC
     """
 
-    def __init__(self, config):
+    def __init__(self, server_url):
         """
         Parameters
         ----------
-        config : TritonClientConfig
-            A config with the relevant client options
+        server_url : str
+            The url for Triton server's GRPC endpoint
         """
 
-        self._client_config = config
-        assert self._client_config['url'], \
-            "Must specify url in client config."
-        self._client = grpcclient.InferenceServerClient(
-            url=self._client_config['url'])
+        self._client = grpcclient.InferenceServerClient(url=server_url)

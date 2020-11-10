@@ -47,7 +47,7 @@ class GPUFreeMemory(GPURecord):
             The timestamp for the record in nanoseconds
         """
 
-        super().__init__(device, free_mem // 1e6, timestamp)
+        super().__init__(device, free_mem, timestamp)
 
     @staticmethod
     def header():

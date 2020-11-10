@@ -25,11 +25,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from collections import defaultdict
-from .table_writer import TableWriter
+from .output_writer import OutputWriter
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
-class FileWriter(TableWriter):
+class FileWriter(OutputWriter):
     """
     Writes table to a file or stdout
     """
@@ -44,15 +44,15 @@ class FileWriter(TableWriter):
         """
         self._file_handle = file_handle
 
-    def write(self, table):
+    def write(self, out):
         """
         Writes the output to a file or stdout
 
         Parameters
         ----------
-        table : str
-            The formatted table constructed from 
-            recorded metrics as a string.
+        out : str
+            The string to be written to the
+            file or stdout
 
         Raises
         ------
@@ -62,8 +62,8 @@ class FileWriter(TableWriter):
         """
         if self._file_handle:
             try:
-                self._file_handle.write(table + '\n')
+                self._file_handle.write(out)
             except IOError as e:
                 raise TritonModelAnalyzerException(e)
         else:
-            print(table)
+            print(out, end='')

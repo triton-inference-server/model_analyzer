@@ -26,51 +26,79 @@
 
 import os
 import sys
-import time
 from itertools import product
 
 from .cli.cli import CLI
 
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from .monitor.nvml import NVMLMonitor
-from .perf_analyzer.perf_analyzer import PerfAnalyzer
-from .perf_analyzer.perf_config import PerfAnalyzerConfig
+from .analyzer import Analyzer
 from .triton.server.server_factory import TritonServerFactory
 from .triton.server.server_config import TritonServerConfig
 from .triton.client.client_factory import TritonClientFactory
-from .triton.client.client_config import TritonClientConfig
 from .triton.model.model import Model
-from .record.record_aggregator import RecordAggregator
 from .record.gpu_free_memory import GPUFreeMemory
 from .record.gpu_used_memory import GPUUsedMemory
 from .record.perf_throughput import PerfThroughput
-from .output.output_table import OutputTable
+from .record.perf_latency import PerfLatency
 from .output.file_writer import FileWriter
 
 
-def create_perf_config(params):
+def get_triton_handles(args):
     """
-    Utility function for creating
-    a PerfAnalyzerConfig from
-    a dict of parameters
-
+    Creates a TritonServer and starts it.
+    Creates a TritonClient
     Parameters
     ----------
-    params : dict
-        keys are arguments to perf analyzer
-        values are their value
-
+    args : namespace
+        The arguments passed into the CLI
+    
     Returns
     -------
-    PerfAnalyzerConfig
-        The arguments from params
-        are set in this config
+    TritonClient, TritonServer
+        Handles for triton client/server pair.
     """
 
-    config = PerfAnalyzerConfig()
-    for param, value in params.items():
-        config[param] = value
-    return config
+    triton_config = TritonServerConfig()
+    triton_config['model-repository'] = args.model_repository
+    triton_config['model-control-mode'] = 'explicit'
+    server = TritonServerFactory.create_server_local(
+        path=args.triton_server_path, config=triton_config)
+    if args.client_protocol == 'http':
+        client = TritonClientFactory.create_http_client(
+            server_url='localhost:8000')
+    elif args.client_protocol == 'grpc':
+        client = TritonClientFactory.create_grpc_client(
+            server_url='localhost:8001')
+
+    server.start()
+    server.wait_for_ready(num_retries=args.max_retries)
+
+    return client, server
+
+
+def create_run_configs(args):
+    """
+    Parameters
+    ----------
+    args : namespace
+        The arguments passed into the CLI
+    
+    Returns
+    -------
+    list of dicts
+        keys are parameters to perf_analyzer
+        values are individual combinations of argument values
+    """
+
+    sweep_params = {
+        'model-name': args.model_names.split(','),
+        'batch-size': args.batch_sizes.split(','),
+        'concurrency-range': args.concurrency.split(',')
+    }
+    param_combinations = list(product(*tuple(sweep_params.values())))
+    run_params = [
+        dict(zip(sweep_params.keys(), vals)) for vals in param_combinations
+    ]
+    return run_params
 
 
 def main():
@@ -78,132 +106,51 @@ def main():
     Main entrypoint of model_analyzer
     """
 
-    # Get args
-    cli = CLI()
-    args = cli.parse(sys.argv)
-    print(args)
+    # Get args and set monitoring metrics
+    args = CLI().parse()
+    monitoring_metrics = [PerfThroughput, GPUUsedMemory, GPUFreeMemory]
 
-    # Create and start tritonserver
-    triton_config = TritonServerConfig()
-    triton_config['model-repository'] = args.model_repository
-    triton_config['model-control-mode'] = 'explicit'
-
-    server = TritonServerFactory.create_server_local(config=triton_config)
-    server.start()
-    server.wait_for_ready()
-
-    # Create triton client and model
-    client_config = TritonClientConfig()
-    if args.client_protocol == 'http':
-        client_config['url'] = 'localhost:8000'
-        client = TritonClientFactory.create_http_client(config=client_config)
-    elif args.client_protocol == 'grpc':
-        client_config['url'] = 'localhost:8001'
-        client = TritonClientFactory.create_grpc_client(config=client_config)
+    # Triton handles and analyzer
+    client, server = get_triton_handles(args)
+    analyzer = Analyzer(args=args, monitoring_metrics=monitoring_metrics)
 
     # To run perf_analyzer we need all combinations of configs
-    start, stop, step = tuple(map(int, args.concurrency_range.split(':')))
-    sweep_params = {
-        'model-name': args.model_names.split(','),
-        'batch-size': args.batch_size.split(','),
-        'concurrency-range': list(range(start, stop + 1, step))
-    }
+    run_configs = create_run_configs(args)
 
-    param_combinations = list(product(*tuple(sweep_params.values())))
-    run_params = [
-        dict(zip(sweep_params.keys(), vals)) for vals in param_combinations
-    ]
+    try:
+        # Server only metrics
+        analyzer.profile_server_only()
 
-    # Create a record aggregator to collect records, and output table
-    record_aggregator = RecordAggregator()
-    table_headers = [
-        "Model", "Batch", "Concurrency",
-        PerfThroughput.header(), "Max " + GPUFreeMemory.header(),
-        "Max " + GPUUsedMemory.header()
-    ]
+        # Model inference metrics
+        for run_config in run_configs:
+            model = Model(name=run_config['model-name'])
+            client.load_model(model=model)
+            client.wait_for_model_ready(model=model,
+                                        num_retries=args.max_retries)
+            analyzer.profile_model(run_config=run_config,
+                                   perf_output_writer=FileWriter())
+            client.unload_model(model=model)
 
-    # Create the server only result
-    server_only_table = OutputTable(headers=table_headers)
-    nvml_monitor = NVMLMonitor(frequency=args.monitoring_interval)
-    nvml_monitor.start_recording_metrics(["memory"])
-    time.sleep(1)
-    nvml_records = nvml_monitor.stop_recording_metrics()
+    finally:
+        server.stop()
 
-    # Insert all records into aggregator
-    for record in nvml_records:
-        record_aggregator.insert(record)
-
-    # Get max GPUUsedMemory and GPUFreeMemory
-    aggregated_records = record_aggregator.aggregate(
-        headers=[GPUUsedMemory.header(),
-                 GPUFreeMemory.header()],
-        reduce_func=max)
-
-    server_only_table.add_row([
-        "triton-server", 0, 0, 0, aggregated_records[GPUFreeMemory.header()],
-        aggregated_records[GPUUsedMemory.header()]
-    ])
-
-    record_aggregator = RecordAggregator()
-
-    # Now create the output table for the model runs
-    model_table = OutputTable(headers=table_headers)
-
-    # Create table writer for stdout
-    writer = FileWriter()
-
-    # For each combination of run parameters get measurements
-    for params in run_params:
-        perf_config = create_perf_config(params)
-        model = Model(perf_config['model-name'])
-
-        # load the model
-        client.load_model(model=model)
-
-        # Configure perf_analyzer and monitors
-        perf_analyzer = PerfAnalyzer(config=perf_config)
-
-        # Start monitors and run perf_analyzer
-        nvml_monitor.start_recording_metrics(["memory"])
-        throughput_record, _ = perf_analyzer.run()
-        nvml_records = nvml_monitor.stop_recording_metrics()
-        writer.write(perf_analyzer.output())
-
-        # Insert all records into aggregator
-        for record in nvml_records:
-            record_aggregator.insert(record)
-
-        # Get max GPUUsedMemory and GPUFreeMemory
-        aggregated_records = record_aggregator.aggregate(
-            headers=[GPUUsedMemory.header(),
-                     GPUFreeMemory.header()],
-            reduce_func=max)
-
-        # Create row from records
-        output_row = []
-        output_row.append(model.name())
-        output_row.append(perf_config['batch-size'])
-        output_row.append(perf_config['concurrency-range'])
-        output_row.append(throughput_record.value())
-        output_row.append(aggregated_records[GPUFreeMemory.header()])
-        output_row.append(aggregated_records[GPUUsedMemory.header()])
-
-        # Add row and then unload model
-        model_table.add_row(output_row)
-        client.unload_model(model=model)
-
-    # Stop triton
-    server.stop()
-    nvml_monitor.destroy()
-
-    # Write output
-    writer.write("Server Only:")
-    writer.write(
-        server_only_table.to_formatted_string(column_width=28, separator=' ') +
-        '\n')
-    writer.write("Models:")
-    writer.write(
-        model_table.to_formatted_string(column_width=28, separator=' '))
+    # Write output tables
+    analyzer.write_server_only_result(writer=FileWriter(),
+                                      column_width=28,
+                                      column_separator=' ')
+    analyzer.write_model_result(writer=FileWriter(),
+                                column_width=28,
+                                column_separator=' ')
+    if args.export:
+        with open(os.join(args.export_path, args.filename_server_only),
+                  'r+') as f:
+            analyzer.write_server_only_result(writer=FileWriter(file_handle=f),
+                                              column_width=None,
+                                              column_separator=',')
+        with open(os.join(args.export_path, args.filename_model), 'r+') as f:
+            analyzer.write_model_result(writer=FileWriter(file_handle=f),
+                                        column_width=None,
+                                        column_separator=',')
 
 
 if __name__ == '__main__':

@@ -29,8 +29,6 @@ import time
 from tritonclient.utils import InferenceServerException
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-WAIT_FOR_READY_NUM_RETRIES = 100
-
 
 class TritonClient:
     """
@@ -82,9 +80,7 @@ class TritonClient:
             raise TritonModelAnalyzerException(
                 f"Unable to unload the model : {e}")
 
-    def wait_for_model_ready(self,
-                             model,
-                             num_retries=WAIT_FOR_READY_NUM_RETRIES):
+    def wait_for_model_ready(self, model, num_retries):
         """
         Returns when model is ready.
 

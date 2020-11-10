@@ -25,22 +25,17 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import numba.cuda
-<<<<<<< HEAD
 from model_analyzer.device.gpu_device import GPUDevice
 import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
 import model_analyzer.monitor.dcgm.dcgm_structs as structs
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-=======
-from pynvml import nvmlInit, nvmlShutdown, nvmlDeviceGetHandleByPciBusId, \
-    nvmlDeviceGetUUID, nvmlDeviceGetPciInfo, nvmlDeviceGetIndex
-from .gpu_device import GPUDevice
->>>>>>> Add end-to-end support
 
 
 class GPUDeviceFactory:
     """
     Factory class for creating GPUDevices
     """
+
     @staticmethod
     def create_device_by_bus_id(bus_id, dcgmPath=None):
         """

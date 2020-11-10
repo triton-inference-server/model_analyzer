@@ -57,10 +57,12 @@ class TritonServerFactory:
                                   config=config)
 
     @staticmethod
-    def create_server_local(config):
+    def create_server_local(path, config):
         """
         Parameters
         ----------
+        path  : str
+            The absolute path to the tritonserver executable
         config : TritonServerConfig
             the config object containing arguments for this server instance
         

@@ -36,16 +36,21 @@ class PerfThroughput(Record):
     metric 'Throughput'
     """
 
-    def __init__(self, throughput, timestamp=0):
+    def __init__(self, perf_output, timestamp=0):
         """
         Parameters
         ----------
-        throughput : float
-            The throughput value obtained from the
-            perf_analyzer
-        timestamp : int
-            The timestamp for the record in nanoseconds
+        perf_output : str
+            The stdout from the perf_analyzer
+        timestamp : float
+            Elapsed time from start of program
         """
+
+        perf_out_lines = perf_output.split('\n')
+        for line in perf_out_lines[:-3]:
+            # Get first word after Throughput
+            if 'Throughput:' in line:
+                throughput = float(line.split()[1])
 
         super().__init__(throughput, timestamp)
 

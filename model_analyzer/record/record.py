@@ -29,7 +29,7 @@ from abc import ABC, abstractmethod
 
 class Record(ABC):
     """
-    This class is used for representing monitoring
+    This class is used for representing
     records
     """
 
