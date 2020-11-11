@@ -25,42 +25,37 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
-import sys
-import os
-from io import StringIO
-
-from model_analyzer.output.file_writer import FileWriter
+import json
 
 
-class TestFileWriterMethods(unittest.TestCase):
-    def test_write(self):
-        test_handle = StringIO()
-        writer = FileWriter(file_handle=test_handle)
+class TestResultCollector(unittest.TestCase):
+    """
+    TestResultCollector stores test result and prints it to stdout. In order
+    to use this class, unit tests must inherit this class. Use
+    `check_test_results` bash function from `common/util.sh` to verify the
+    expected number of tests produced by this class
+    """
 
-        # Write test using create if not exist mode
-        writer.write('test')
+    @classmethod
+    def setResult(cls, total, errors, failures):
+        cls.total, cls.errors, cls.failures = \
+            total, errors, failures
 
-        # read file
-        self.assertEqual(test_handle.getvalue(), 'test')
+    @classmethod
+    def tearDownClass(cls):
+        # this method is called when all the unit tests in a class are
+        # finished.
+        json_res = {
+            'total': cls.total,
+            'errors': cls.errors,
+            'failures': cls.failures
+        }
+        print(json.dumps(json_res))
 
-        # redirect stdout and create writer with no filename
-        test_handle = StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = test_handle
-        writer = FileWriter()
-        writer.write('test')
-        sys.stdout.flush()
-        sys.stdout = old_stdout
-
-        self.assertEqual(test_handle.getvalue(), 'test')
-        test_handle.close()
-
-        # Check for malformed calls
-        err_str = "Expected TritonModelAnalyzerException on malformed input."
-        writer = FileWriter(file_handle=test_handle)
-        with self.assertRaises(Exception, msg=err_str):
-            writer.write('test')
-
-
-if __name__ == '__main__':
-    unittest.main()
+    def run(self, result=None):
+        # result argument stores the accumulative test results
+        test_result = super().run(result)
+        total = test_result.testsRun
+        errors = len(test_result.errors)
+        failures = len(test_result.failures)
+        self.setResult(total, errors, failures)

@@ -26,6 +26,8 @@
 
 import unittest
 from unittest.mock import patch, MagicMock
+import sys
+sys.path.append('../common/')
 
 from .mock_server_local import MockServerLocalMethods
 from .mock_perf_analyzer import MockPerfAnalyzerMethods
@@ -37,6 +39,7 @@ from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.record.perf_throughput import PerfThroughput
 from model_analyzer.record.perf_latency import PerfLatency
+import test_result_collector as trc
 
 # Test Parameters
 MODEL_LOCAL_PATH = '/model_analyzer/models'
@@ -50,7 +53,8 @@ CONFIG_TEST_ARG = 'sync'
 TEST_RUN_PARAMS = {'batch-size': [1, 2], 'concurrency-range': [2, 4]}
 
 
-class TestPerfAnalyzerMethods(unittest.TestCase):
+class TestPerfAnalyzerMethods(trc.TestResultCollector):
+
     def setUp(self):
         # Mocks
         self.server_local_mock = MockServerLocalMethods()
@@ -68,6 +72,7 @@ class TestPerfAnalyzerMethods(unittest.TestCase):
         self.assertIsNone(self.config[CONFIG_TEST_ARG],
                           msg="Server config had unexpected initial"
                           f" value for {CONFIG_TEST_ARG}")
+
         # Set value
         self.config[CONFIG_TEST_ARG] = True
 

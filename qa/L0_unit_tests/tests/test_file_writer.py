@@ -24,31 +24,48 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-TEST_LOG='test.log'
-EXPECTED_NUM_TESTS=19
-source ../common/util.sh
+import sys
+sys.path.append("../common")
 
-RET=0
+import unittest
+import sys
+import os
+from io import StringIO
 
-set +e
-python3 -m unittest discover -v > $TEST_LOG 2>&1
-if [ $? -ne 0 ]; then
-    RET=1
-else
-    check_test_results $TEST_LOG $EXPECTED_NUM_TESTS
-    if [ $? -ne 0 ]; then
-        cat $TEST_LOG
-        echo -e "\n***\n*** Test Result Verification Failed\n***"
-        RET=1
-    fi
-fi
-set -e
+from model_analyzer.output.file_writer import FileWriter
+import test_result_collector as trc
 
-if [ $RET -eq 0 ]; then
-    echo -e "\n***\n*** Test PASSED\n***"
-else
-    cat $CLIENT_LOG
-    echo -e "\n***\n*** Test FAILED\n***"
-fi
 
-exit $RET
+class TestFileWriterMethods(trc.TestResultCollector):
+
+    def test_write(self):
+        test_handle = StringIO()
+        writer = FileWriter(file_handle=test_handle)
+
+        # Write test using create if not exist mode
+        writer.write('test')
+
+        # read file
+        self.assertEqual(test_handle.getvalue(), 'test')
+
+        # redirect stdout and create writer with no filename
+        test_handle = StringIO()
+        old_stdout = sys.stdout
+        sys.stdout = test_handle
+        writer = FileWriter()
+        writer.write('test')
+        sys.stdout.flush()
+        sys.stdout = old_stdout
+
+        self.assertEqual(test_handle.getvalue(), 'test')
+        test_handle.close()
+
+        # Check for malformed calls
+        err_str = "Expected TritonModelAnalyzerException on malformed input."
+        writer = FileWriter(file_handle=test_handle)
+        with self.assertRaises(Exception, msg=err_str):
+            writer.write('test')
+
+
+if __name__ == '__main__':
+    unittest.main()
