@@ -56,4 +56,4 @@ class GPUUtilization(GPURecord):
             The full name of the metric.
         """
 
-        return "GPU Utilization[%]"
+        return "GPU Utilization(%)"
