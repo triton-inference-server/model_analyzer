@@ -40,13 +40,16 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 
 import test_result_collector as trc
 from .mock_dcgm import MockDCGM
+from .mock_numba import MockNumba
 
 
 class TestDCGMMonitor(trc.TestResultCollector):
 
     def setUp(self):
         self.mock_dcgm = MockDCGM()
+        self.mock_numba = MockNumba()
         self.mock_dcgm.start()
+        self.mock_numba.start()
 
     def test_record_memory(self):
         # One measurement every 0.01 seconds
@@ -106,6 +109,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
 
     def tearDown(self):
         self.mock_dcgm.stop()
+        self.mock_numba.stop()
 
 
 if __name__ == '__main__':

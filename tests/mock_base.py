@@ -24,38 +24,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from unittest.mock import patch, Mock, MagicMock
-
-from .mock_dcgm_field_group_watcher import MockDCGMFieldGroupWatcherHelper
-from .mock_dcgm_agent import MockDCGMAgent
-from .mock_base import MockBase
+from abc import ABC, abstractmethod
 
 
-class MockDCGM(MockBase):
+class MockBase(ABC):
     """
-    Mocks dcgm_agent methods.
+    Base abstract class for all the mocks
     """
 
+    def __init__(self):
+        self._patchers = []
+
+    @abstractmethod
     def _fill_patchers(self):
-        patchers = self._patchers
+        pass
 
-        structs_imports_path = [
-            'model_analyzer.monitor.dcgm.dcgm_monitor',
-            'model_analyzer.device.gpu_device_factory'
-        ]
-        for import_path in structs_imports_path:
-            patchers.append(
-                patch(f'{import_path}.structs._dcgmInit', MagicMock()))
+    def start(self):
+        for patch in self._patchers:
+            patch.start()
 
-        dcgm_agent_imports_path = [
-            'model_analyzer.monitor.dcgm.dcgm_monitor',
-            'model_analyzer.device.gpu_device_factory'
-        ]
-        for import_path in dcgm_agent_imports_path:
-            patchers.append(patch(f'{import_path}.dcgm_agent', MockDCGMAgent))
-
-        patchers.append(
-            patch(
-                'model_analyzer.monitor.dcgm.dcgm_monitor.dcgm_field_helpers.DcgmFieldGroupWatcher',
-                MockDCGMFieldGroupWatcherHelper,
-            ))
+    def stop(self):
+        for patch in self._patchers:
+            patch.stop()

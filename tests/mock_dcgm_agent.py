@@ -31,15 +31,15 @@ import model_analyzer.monitor.dcgm.dcgm_structs as structs
 import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
+TEST_PCI_BUS_ID = b'00000000:6A:00.0'
+TEST_UUID = b'dddddddd-bbbb-aaaa-cccc-ffffffffffff'
+
 
 class MockDCGMAgent:
 
     device_groups = {}
     field_groups = {}
-    devices = [{
-        'pci_bus_id': b'00000000:65:00.0',
-        'uuid': b'd02ae7ed-4471-7046-4215-fad351e5fc10'
-    }]
+    devices = [{'pci_bus_id': TEST_PCI_BUS_ID, 'uuid': TEST_UUID}]
 
     @staticmethod
     def dcgmInit():
@@ -161,7 +161,9 @@ class MockDCGMAgent:
         device_group = MockDCGMAgent.device_groups[device_group_name]
 
         if gpu_device_id in device_group:
-            raise TritonModelAnalyzerException(f'GPU device {gpu_device_id} already exists in the device group')
+            raise TritonModelAnalyzerException(
+                f'GPU device {gpu_device_id} already exists in the device group'
+            )
 
         device_group.append(gpu_device_id)
 

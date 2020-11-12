@@ -34,6 +34,8 @@ from unittest.mock import MagicMock
 
 import time
 
+TEST_RECORD_VALUE = 2.4
+
 
 class MockDCGMFieldGroupWatcherHelper:
     """
@@ -90,7 +92,7 @@ class MockDCGMFieldGroupWatcherHelper:
 
                 # Sample Record
                 record = MagicMock()
-                record.value = 2.4
+                record.value = TEST_RECORD_VALUE
                 record.ts = int(time.time() * 1e6)
                 if not isinstance(self.values[device][field].values, list):
                     self.values[device][field].values = [record]

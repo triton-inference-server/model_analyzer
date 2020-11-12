@@ -26,36 +26,32 @@
 
 from unittest.mock import patch, Mock, MagicMock
 
-from .mock_dcgm_field_group_watcher import MockDCGMFieldGroupWatcherHelper
-from .mock_dcgm_agent import MockDCGMAgent
+from .mock_dcgm_agent import TEST_PCI_BUS_ID
 from .mock_base import MockBase
 
 
-class MockDCGM(MockBase):
+class MockNumba(MockBase):
     """
-    Mocks dcgm_agent methods.
+    Mocks numba class
     """
 
     def _fill_patchers(self):
         patchers = self._patchers
 
-        structs_imports_path = [
-            'model_analyzer.monitor.dcgm.dcgm_monitor',
-            'model_analyzer.device.gpu_device_factory'
-        ]
-        for import_path in structs_imports_path:
+        numba_imports_path = ['model_analyzer.device.gpu_device_factory']
+
+        for import_path in numba_imports_path:
+            device = MagicMock()
+
+            # Ignore everything after 0
+            test_pci_id = str(TEST_PCI_BUS_ID, encoding='ascii').split('.')[0]
+
+            pci_domain_id, pci_bus_id, pci_device_id = test_pci_id.split(':')
+            device.get_device_identity = MagicMock(return_value={
+                pci_bus_id: int(pci_bus_id, 16),
+                pci_domain_id: int(pci_domain_id, 16),
+                pci_device_id: int(pci_device_id, 16)
+            })
             patchers.append(
-                patch(f'{import_path}.structs._dcgmInit', MagicMock()))
-
-        dcgm_agent_imports_path = [
-            'model_analyzer.monitor.dcgm.dcgm_monitor',
-            'model_analyzer.device.gpu_device_factory'
-        ]
-        for import_path in dcgm_agent_imports_path:
-            patchers.append(patch(f'{import_path}.dcgm_agent', MockDCGMAgent))
-
-        patchers.append(
-            patch(
-                'model_analyzer.monitor.dcgm.dcgm_monitor.dcgm_field_helpers.DcgmFieldGroupWatcher',
-                MockDCGMFieldGroupWatcherHelper,
-            ))
+                patch.multiple(f'{import_path}.numba.cuda',
+                               list_devices=[device]))
