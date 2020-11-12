@@ -31,7 +31,7 @@ source ../common/util.sh
 RET=0
 
 set +e
-python3 -m unittest discover -v > $TEST_LOG 2>&1
+python3 -m unittest discover -v -s ../../tests  -t ../../ > $TEST_LOG 2>&1
 if [ $? -ne 0 ]; then
     RET=1
 else
