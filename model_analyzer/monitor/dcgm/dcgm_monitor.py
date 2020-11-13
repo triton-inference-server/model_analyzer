@@ -26,6 +26,7 @@
 
 from model_analyzer.record.gpu_free_memory import GPUFreeMemory
 from model_analyzer.record.gpu_used_memory import GPUUsedMemory
+from model_analyzer.record.gpu_utilization import GPUUtilization
 from model_analyzer.monitor.monitor import Monitor
 from model_analyzer.model_analyzer_exceptions import \
     TritonModelAnalyzerException
@@ -45,9 +46,10 @@ class DCGMMonitor(Monitor):
     """
 
     # Mapping between the DCGM Fields and Model Analyzer Records
-    MODEL_ANALYZER_TO_DCGM_FIELD = {
+    model_analyzer_to_dcgm_field = {
         GPUUsedMemory: dcgm_fields.DCGM_FI_DEV_FB_USED,
-        GPUFreeMemory: dcgm_fields.DCGM_FI_DEV_FB_FREE
+        GPUFreeMemory: dcgm_fields.DCGM_FI_DEV_FB_FREE,
+        GPUUtilization: dcgm_fields.DCGM_FI_DEV_GPU_UTIL
     }
 
     def __init__(self, frequency, tags, dcgmPath=None):
@@ -82,10 +84,11 @@ class DCGMMonitor(Monitor):
         frequency = int(self._frequency * 1000)
         fields = []
         for tag in tags:
-            if tag in self.MODEL_ANALYZER_TO_DCGM_FIELD:
-                dcgm_field = self.MODEL_ANALYZER_TO_DCGM_FIELD[tag]
+            if tag in self.model_analyzer_to_dcgm_field:
+                dcgm_field = self.model_analyzer_to_dcgm_field[tag]
                 fields.append(dcgm_field)
             else:
+                dcgm_agent.dcgmShutdown()
                 raise TritonModelAnalyzerException(
                     f'{tag} is not supported by Model Analyzer DCGM Monitor')
 
@@ -111,7 +114,7 @@ class DCGMMonitor(Monitor):
             num_metrics = len(metrics[first_key].values)
             for i in range(num_metrics):
                 for tag in self._tags:
-                    dcgm_field = self.MODEL_ANALYZER_TO_DCGM_FIELD[tag]
+                    dcgm_field = self.model_analyzer_to_dcgm_field[tag]
 
                     # DCGM timestamp is in nanoseconds
                     records.append(
