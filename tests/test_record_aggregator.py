@@ -23,15 +23,20 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import unittest
+import sys
+sys.path.append('../common')
 
 from model_analyzer.record.record_aggregator import RecordAggregator
 from model_analyzer.record.perf_throughput import PerfThroughput
 from model_analyzer.record.perf_latency import PerfLatency
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+import test_result_collector as trc
 
 
-class TestRecordAggregatorMethods(unittest.TestCase):
+class TestRecordAggregatorMethods(trc.TestResultCollector):
+
     def test_insert(self):
         record_aggregator = RecordAggregator()
 

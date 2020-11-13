@@ -24,5 +24,31 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-python3 -m unittest discover -v
+TEST_LOG='test.log'
+EXPECTED_NUM_TESTS=19
+source ../common/util.sh
 
+RET=0
+
+set +e
+python3 -m unittest discover -v -s ../../tests  -t ../../ > $TEST_LOG 2>&1
+if [ $? -ne 0 ]; then
+    RET=1
+else
+    check_test_results $TEST_LOG $EXPECTED_NUM_TESTS
+    if [ $? -ne 0 ]; then
+        cat $TEST_LOG
+        echo -e "\n***\n*** Test Result Verification Failed\n***"
+        RET=1
+    fi
+fi
+set -e
+
+if [ $RET -eq 0 ]; then
+    echo -e "\n***\n*** Test PASSED\n***"
+else
+    cat $CLIENT_LOG
+    echo -e "\n***\n*** Test FAILED\n***"
+fi
+
+exit $RET

@@ -25,8 +25,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
+import sys
+sys.path.append("../common")
 
 from model_analyzer.output.output_table import OutputTable
+import test_result_collector as trc
+
 
 TEST_HEADERS = [f"Column {i}" for i in range(10)]
 TEST_ROWS = [[f"value {i}{j}" for j in range(10)] for i in range(10)]
@@ -58,9 +62,7 @@ TEST_CSV_STR = (
 TEST_COLUMN_WIDTH = 12
 
 
-class TestOutputTableMethods(unittest.TestCase):
-    def setUp(self):
-        pass
+class TestOutputTableMethods(trc.TestResultCollector):
 
     def test_create_headers(self):
         table = OutputTable(headers=["Column 0"])

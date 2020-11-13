@@ -24,15 +24,20 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+sys.path.append("../common")
+
 import unittest
 import sys
 import os
 from io import StringIO
 
 from model_analyzer.output.file_writer import FileWriter
+import test_result_collector as trc
 
 
-class TestFileWriterMethods(unittest.TestCase):
+class TestFileWriterMethods(trc.TestResultCollector):
+
     def test_write(self):
         test_handle = StringIO()
         writer = FileWriter(file_handle=test_handle)

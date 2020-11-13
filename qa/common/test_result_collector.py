@@ -24,6 +24,38 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-docker>=4.3.1
-numba>=0.51.2
-distro>=1.5.0
+import unittest
+import json
+
+
+class TestResultCollector(unittest.TestCase):
+    """
+    TestResultCollector stores test result and prints it to stdout. In order
+    to use this class, unit tests must inherit this class. Use
+    `check_test_results` bash function from `common/util.sh` to verify the
+    expected number of tests produced by this class
+    """
+
+    @classmethod
+    def setResult(cls, total, errors, failures):
+        cls.total, cls.errors, cls.failures = \
+            total, errors, failures
+
+    @classmethod
+    def tearDownClass(cls):
+        # this method is called when all the unit tests in a class are
+        # finished.
+        json_res = {
+            'total': cls.total,
+            'errors': cls.errors,
+            'failures': cls.failures
+        }
+        print(json.dumps(json_res))
+
+    def run(self, result=None):
+        # result argument stores the accumulative test results
+        test_result = super().run(result)
+        total = test_result.testsRun
+        errors = len(test_result.errors)
+        failures = len(test_result.failures)
+        self.setResult(total, errors, failures)
