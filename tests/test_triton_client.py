@@ -27,6 +27,7 @@
 import os
 import unittest
 import sys
+sys.path.append('../common')
 from unittest.mock import patch, MagicMock
 
 from .mock_server_docker import MockServerDockerMethods
@@ -38,6 +39,7 @@ from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.client.client_config import TritonClientConfig
 from model_analyzer.triton.model.model import Model
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+import test_result_collector as trc
 
 # Test parameters
 MODEL_LOCAL_PATH = 'test_local_path'
@@ -49,7 +51,8 @@ HTTP_URL = 'test_http_url'
 TEST_MODEL_NAME = 'test_model'
 
 
-class TestTritonClientMethods(unittest.TestCase):
+class TestTritonClientMethods(trc.TestResultCollector):
+
     def setUp(self):
         # Mocks
         self.mock_server_docker = MockServerDockerMethods()

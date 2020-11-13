@@ -90,10 +90,6 @@ setup(
         ]
     },
     install_requires=install_requires,
-    # Custom nvidia-pyindex should be specified using dependency links
-    dependency_links=[
-        'https://pypi.ngc.nvidia.com/tritonclient'
-    ],
     packages=find_packages(),
     zip_safe=False,
     data_files=data_files,
