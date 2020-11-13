@@ -25,10 +25,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:20.10-py3
+ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:20.10-py3-clientsdk
 ARG MODEL_ANALYZER_VERSION=1.0.0dev
 ARG MODEL_ANALYZER_CONTAINER_VERSION=20.12dev
 
-FROM ${BASE_IMAGE}
+FROM ${TRITONSDK_BASE_IMAGE} as sdk
+
+FROM $BASE_IMAGE
 ARG MODEL_ANALYZER_VERSION
 ARG MODEL_ANALYZER_CONTAINER_VERSION
 
@@ -38,10 +41,16 @@ ENV DCGM_VERSION=2.0.13
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install tritonclient from the SDK container
+COPY --from=sdk /workspace/install/python /tmp/tritonclient
+RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
+    "tritonclient-*-manylinux1_x86_64.whl" | xargs printf -- '%s[all]' | \
+    xargs pip3 install --upgrade && rm -rf /tmp/tritonclient/
+
 RUN mkdir -p /opt/triton-model-analyzer
 
 # Install DCGM
-RUN wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb && \
+RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb && \
     dpkg -i datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb
 
 WORKDIR /opt/triton-model-analyzer
