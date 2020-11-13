@@ -27,14 +27,17 @@
 import os
 import unittest
 import subprocess
-from unittest.mock import patch, MagicMock
+import sys
+sys.path.append('../common')
 
+from unittest.mock import patch, MagicMock
 from .mock_server_docker import MockServerDockerMethods
 from .mock_server_local import MockServerLocalMethods
 
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+import test_result_collector as trc
 
 # Test parameters
 MODEL_LOCAL_PATH = 'test_local_path'
@@ -52,7 +55,8 @@ CLI_TO_STRING_TEST_ARGS = {
 SERVER_READY_URL = 'http://localhost:8000/v2/health/ready'
 
 
-class TestTritonServerMethods(unittest.TestCase):
+class TestTritonServerMethods(trc.TestResultCollector):
+
     def setUp(self):
         # Mock
         self.server_docker_mock = MockServerDockerMethods()
@@ -112,7 +116,6 @@ class TestTritonServerMethods(unittest.TestCase):
                 msg=f"CLI string contained unknown value: {value}")
 
     def test_create_server(self):
-
         # Create a TritonServerConfig
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH

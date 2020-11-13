@@ -24,6 +24,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+sys.path.append("../common")
+
 import unittest
 import time
 import sys
@@ -34,8 +37,10 @@ from model_analyzer.record.gpu_used_memory import GPUUsedMemory
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
+import test_result_collector as trc
 
-class TestDCGMMonitor(unittest.TestCase):
+
+class TestDCGMMonitor(trc.TestResultCollector):
 
     def test_record_memory(self):
         # One measurement every 0.01 seconds
