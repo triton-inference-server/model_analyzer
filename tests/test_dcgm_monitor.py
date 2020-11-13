@@ -41,6 +41,7 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 import test_result_collector as trc
 from .mock_dcgm import MockDCGM
 from .mock_numba import MockNumba
+from .mock_dcgm_field_group_watcher import TEST_RECORD_VALUE
 
 
 class TestDCGMMonitor(trc.TestResultCollector):
@@ -65,6 +66,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
         for record in records:
             self.assertIsInstance(record.device(), GPUDevice)
             self.assertIsInstance(record.value(), float)
+            self.assertTrue(record.value() == TEST_RECORD_VALUE)
             self.assertIsInstance(record.timestamp(), int)
 
         # The number of records should be dividable by number of tags
@@ -97,6 +99,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
             self.assertIsInstance(record.device(), GPUDevice)
             self.assertIsInstance(record.value(), float)
             self.assertTrue(record.value() <= 100)
+            self.assertTrue(record.value() == TEST_RECORD_VALUE)
             self.assertIsInstance(record.timestamp(), int)
 
         # The number of records should be dividable by number of tags

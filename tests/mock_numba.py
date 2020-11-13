@@ -47,11 +47,14 @@ class MockNumba(MockBase):
             test_pci_id = str(TEST_PCI_BUS_ID, encoding='ascii').split('.')[0]
 
             pci_domain_id, pci_bus_id, pci_device_id = test_pci_id.split(':')
-            device.get_device_identity = MagicMock(return_value={
-                pci_bus_id: int(pci_bus_id, 16),
-                pci_domain_id: int(pci_domain_id, 16),
-                pci_device_id: int(pci_device_id, 16)
-            })
+            device.get_device_identity = MagicMock(
+                return_value={
+                    'pci_bus_id': int(pci_bus_id, 16),
+                    'pci_domain_id': int(pci_domain_id, 16),
+                    'pci_device_id': int(pci_device_id, 16)
+                })
+            device.id = 0
+            list_devices = MagicMock()
+            list_devices.return_value = [device]
             patchers.append(
-                patch.multiple(f'{import_path}.numba.cuda',
-                               list_devices=[device]))
+                patch(f'{import_path}.numba.cuda.list_devices', list_devices))
