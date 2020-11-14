@@ -75,6 +75,7 @@ class CLI:
         self._parser.add_argument(
             '--export',
             type=bool,
+            default=False,
             help='Enables exporting metrics to a file')
         self._parser.add_argument(
             '-e',

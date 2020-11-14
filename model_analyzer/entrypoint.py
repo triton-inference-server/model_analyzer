@@ -37,6 +37,7 @@ from .triton.client.client_factory import TritonClientFactory
 from .triton.model.model import Model
 from .record.gpu_free_memory import GPUFreeMemory
 from .record.gpu_used_memory import GPUUsedMemory
+from .record.gpu_utilization import GPUUtilization
 from .record.perf_throughput import PerfThroughput
 from .record.perf_latency import PerfLatency
 from .output.file_writer import FileWriter
@@ -101,40 +102,23 @@ def create_run_configs(args):
     return run_params
 
 
-def main():
+def write_results(args, analyzer):
     """
-    Main entrypoint of model_analyzer
+    Makes calls to the analyzer to write
+    results out to streams or files.
+    If exporting results is requested,
+    uses a FileWriter for specified output
+    files.
+
+    Parameters
+    ----------
+    args : namespace
+        The arguments passed into the CLI
+    analyzer : Analyzer
+        The instance being used to profile
+        server inferencing.
     """
 
-    # Get args and set monitoring metrics
-    args = CLI().parse()
-    monitoring_metrics = [PerfThroughput, GPUUsedMemory, GPUFreeMemory]
-
-    # Triton handles and analyzer
-    client, server = get_triton_handles(args)
-    analyzer = Analyzer(args=args, monitoring_metrics=monitoring_metrics)
-
-    # To run perf_analyzer we need all combinations of configs
-    run_configs = create_run_configs(args)
-
-    try:
-        # Server only metrics
-        analyzer.profile_server_only()
-
-        # Model inference metrics
-        for run_config in run_configs:
-            model = Model(name=run_config['model-name'])
-            client.load_model(model=model)
-            client.wait_for_model_ready(model=model,
-                                        num_retries=args.max_retries)
-            analyzer.profile_model(run_config=run_config,
-                                   perf_output_writer=FileWriter())
-            client.unload_model(model=model)
-
-    finally:
-        server.stop()
-
-    # Write output tables
     analyzer.write_server_only_result(writer=FileWriter(),
                                       column_width=28,
                                       column_separator=' ')
@@ -151,6 +135,62 @@ def main():
             analyzer.write_model_result(writer=FileWriter(file_handle=f),
                                         column_width=None,
                                         column_separator=',')
+
+
+def run_analyzer(args, analyzer, client, run_configs):
+    """
+    Makes a single call to profile the server only
+    Then for each run configurations, it profiles
+    model inference.
+
+    Parameters
+    ----------
+    args : namespace
+        The arguments passed into the CLI
+    analyzer : Analyzer
+        The instance being used to profile
+        server inferencing.
+    client : TritonClient
+        Instance used to load/unload models
+    run_configs : list of dicts
+        Output of create_run_configs
+
+    Raises
+    ------
+    TritonModelAnalyzerException
+    """
+
+    analyzer.profile_server_only()
+    for run_config in run_configs:
+        model = Model(name=run_config['model-name'])
+        client.load_model(model=model)
+        client.wait_for_model_ready(model=model, num_retries=args.max_retries)
+        analyzer.profile_model(run_config=run_config,
+                               perf_output_writer=FileWriter())
+        client.unload_model(model=model)
+
+
+def main():
+    """
+    Main entrypoint of model_analyzer
+    """
+
+    args = CLI().parse()
+    monitoring_metrics = [
+        PerfThroughput, GPUUtilization, GPUUsedMemory, GPUFreeMemory
+    ]
+
+    analyzer = Analyzer(args, monitoring_metrics)
+
+    client, server = get_triton_handles(args)
+    run_configs = create_run_configs(args)
+
+    try:
+        run_analyzer(args, analyzer, client, run_configs)
+    finally:
+        server.stop()
+
+    write_results(args, analyzer)
 
 
 if __name__ == '__main__':
