@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 class Model:
     """
     A class that encapsulates
@@ -32,6 +33,13 @@ class Model:
     """
 
     def __init__(self, name):
+        """
+        Parameters
+        -------
+        name : str
+            The name of this model
+        """
+
         self._name = name
 
     def name(self):
@@ -40,4 +48,5 @@ class Model:
         -------
         The name of this model
         """
+
         return self._name

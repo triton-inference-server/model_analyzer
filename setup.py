@@ -59,7 +59,8 @@ setup(
     version=project_version,
     author='NVIDIA Inc.',
     author_email='sw-dl-triton@nvidia.com',
-    description="The Model Analyzer is a tool to analyze the runtime performance of one or more models on the Triton Inference Server",
+    description=
+    "The Model Analyzer is a tool to analyze the runtime performance of one or more models on the Triton Inference Server",
     license='BSD',
     url='https://developer.nvidia.com/nvidia-triton-inference-server',
     keywords=[
@@ -85,9 +86,7 @@ setup(
         'Operating System :: Linux',
     ],
     entry_points={
-        'console_scripts': [
-            'model-analyzer = model_analyzer.cli.entrypoint:main'
-        ]
+        'console_scripts': ['model-analyzer = model_analyzer.entrypoint:main']
     },
     install_requires=install_requires,
     packages=find_packages(),

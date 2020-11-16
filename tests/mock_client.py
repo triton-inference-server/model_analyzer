@@ -75,6 +75,22 @@ class MockTritonClientMethods:
         self.patcher_grpc_client.stop()
         self.patcher_inference_server_exception.stop()
 
+    def assert_created_grpc_client_with_args(self, url):
+        """
+        Assert that the correct InferServerClient was
+        indeed constructed with the specified url
+        """
+
+        self.grpc_mock.assert_called_with(url=url)
+
+    def assert_created_http_client_with_args(self, url):
+        """
+        Assert that the correct InferServerClient was
+        indeed constructed with the specified url
+        """
+
+        self.http_mock.assert_called_with(url=url)
+
     def raise_exception_on_load(self):
         """
         Set load_model to throw

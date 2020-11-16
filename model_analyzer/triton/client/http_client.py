@@ -34,16 +34,12 @@ class TritonHTTPClient(TritonClient):
     for HTTP
     """
 
-    def __init__(self, config):
+    def __init__(self, server_url):
         """
         Parameters
         ----------
-        config : TritonClientConfig
-            A config with the relevant client options
+        server_url : str
+            The url for Triton server's HTTP endpoint
         """
 
-        self._client_config = config
-        assert self._client_config['url'], \
-            "Must specify url in client config."
-        self._client = httpclient.InferenceServerClient(
-            url=self._client_config['url'])
+        self._client = httpclient.InferenceServerClient(url=server_url)

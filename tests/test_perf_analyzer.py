@@ -107,36 +107,52 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         # Create server, PerfAnalyzer, and wait for server ready
         self.server = TritonServerFactory.create_server_local(
             path=TRITON_LOCAL_BIN_PATH, config=server_config)
-        perf_client = PerfAnalyzer(path=PERF_BIN_PATH, config=self.config)
+        perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH, config=self.config)
 
         self.server.start()
         requests_mock.get.return_value.status_code = 200
         self.server.wait_for_ready(num_retries=1)
 
-        # Run perf analyzer
-        throughput_record, latency_record = perf_client.run()
+        # Run perf analyzer with dummy tags to check command parsing
+        perf_tags = [id]
+        _ = perf_analyzer.run(perf_tags)
         self.perf_mock.assert_perf_analyzer_run_as(
             [PERF_BIN_PATH, '-m', TEST_MODEL_NAME])
-        self.server.stop()
 
         # Test latency parsing
         test_latency_output = "Avg latency: 5000 ms\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
-        _, latency_record = perf_client.run()
-        self.assertEqual(latency_record.value(), 5000)
+        perf_tags = [PerfLatency]
+        records = perf_analyzer.run(perf_tags)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].value(), 5000)
 
         # Test throughput parsing
-        test_throughput_output = "Throughput: 46.8 ms\n\n\n\n"
+        test_throughput_output = "Throughput: 46.8 infer/sec\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_throughput_output)
-        throughput_record, _ = perf_client.run()
-        self.assertEqual(throughput_record.value(), 46.8)
+        perf_tags = [PerfThroughput]
+        records = perf_analyzer.run(perf_tags)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].value(), 46.8)
 
         # Test parsing for both
-        test_both_output = "Throughput: 0.001 ms\nAvg latency: 3.6 ms\n\n\n\n"
+        test_both_output = "Throughput: 0.001 infer/sec\nAvg latency: 3.6 ms\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_both_output)
-        throughput_record, latency_record = perf_client.run()
-        self.assertEqual(throughput_record.value(), 0.001)
-        self.assertEqual(latency_record.value(), 3.6)
+        perf_tags = [PerfLatency, PerfThroughput]
+        records = perf_analyzer.run(perf_tags)
+        self.assertEqual(len(records), 2)
+        self.assertEqual(records[0].value(), 3.6)
+        self.assertEqual(records[1].value(), 0.001)
+
+        # Test exception handling
+        with self.assertRaisesRegex(
+                expected_exception=TritonModelAnalyzerException,
+                expected_regex="Running perf_analyzer with",
+                msg="Expected TritonModelAnalyzerException"):
+            self.perf_mock.raise_exception_on_run()
+            _ = perf_analyzer.run(perf_tags)
+
+        self.server.stop()
 
     def tearDown(self):
         # In case test raises exception
