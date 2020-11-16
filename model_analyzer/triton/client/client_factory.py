@@ -33,30 +33,31 @@ class TritonClientFactory:
     Base client creator class that declares
     a factory method
     """
+
     @staticmethod
-    def create_grpc_client(config):
+    def create_grpc_client(server_url):
         """
         Parameters
         ----------
-        config : TritonClientConfig
-            A config for the relevant client options
+        server_url : str
+            The url for Triton server's GRPC endpoint
 
         Returns
         -------
         TritonGRPCClient
         """
-        return TritonGRPCClient(config=config)
+        return TritonGRPCClient(server_url=server_url)
 
     @staticmethod
-    def create_http_client(config):
+    def create_http_client(server_url):
         """
         Parameters
         ----------
-        config : TritonClientConfig
-            A config for the relevant client options
+        server_url : str
+            The url for Triton server's HTTP endpoint
 
         Returns
         -------
         TritonHTTPClient
         """
-        return TritonHTTPClient(config=config)
+        return TritonHTTPClient(server_url=server_url)

@@ -29,7 +29,7 @@ from abc import ABC, abstractmethod
 
 class Record(ABC):
     """
-    This class is used for representing monitoring
+    This class is used for representing
     records
     """
 
@@ -48,8 +48,9 @@ class Record(ABC):
         self._value = value
         self._timestamp = timestamp
 
+    @staticmethod
     @abstractmethod
-    def header(self):
+    def header():
         """
         Returns
         -------

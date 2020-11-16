@@ -42,35 +42,35 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
 
         self.assertEqual(record_aggregator.total(), 0)
 
-        throughput_record = PerfThroughput(5)
+        throughput_record = PerfThroughput("Throughput: 5 infer/sec\n\n\n\n")
         record_aggregator.insert(throughput_record)
 
         # Assert record is added
         self.assertEqual(record_aggregator.total(), 1)
 
-    def test_headers(self):
+    def test_record_types(self):
         record_aggregator = RecordAggregator()
 
-        throughput_record = PerfThroughput(5)
+        throughput_record = PerfThroughput("Throughput: 5 infer/sec\n\n\n\n")
         record_aggregator.insert(throughput_record)
 
-        self.assertEqual(record_aggregator.headers()[0],
-                         throughput_record.header())
+        self.assertEqual(record_aggregator.record_types()[0], PerfThroughput)
 
     def test_filter_records_default(self):
         record_aggregator = RecordAggregator()
 
         # insert throughput record and check its presence
-        throughput_record = PerfThroughput(5)
+        throughput_record = PerfThroughput("Throughput: 5 infer/sec\n\n\n\n")
         record_aggregator.insert(throughput_record)
 
         # Get the record
         retrieved_records = record_aggregator.filter_records()
-        retrieved_throughput = retrieved_records[throughput_record.header()][0]
+        retrieved_throughput = retrieved_records[PerfThroughput][0]
 
-        self.assertEqual(retrieved_throughput.header(),
-                         throughput_record.header(),
-                         msg="Headers do not match after filter_records")
+        self.assertIsInstance(
+            retrieved_throughput,
+            PerfThroughput,
+            msg="Record types do not match after filter_records")
 
         self.assertEqual(retrieved_throughput.value(),
                          throughput_record.value(),
@@ -83,62 +83,75 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         with self.assertRaises(Exception):
             record_aggregator.filter_records(filters=[(lambda x: False)])
         with self.assertRaises(Exception):
-            record_aggregator.filter_records(headers=["header1", "header2"],
+            record_aggregator.filter_records(record_types=[None, None],
                                              filters=[(lambda x: False)])
 
         # Insert 3 throughputs
-        throughput_record = PerfThroughput(5)
-        record_aggregator.insert(throughput_record)
-        record_aggregator.insert(PerfThroughput(1))
-        record_aggregator.insert(PerfThroughput(10))
+        record_aggregator.insert(
+            PerfThroughput("Throughput: 5 infer/sec\n\n\n\n"))
+        record_aggregator.insert(
+            PerfThroughput("Throughput: 1 infer/sec\n\n\n\n"))
+        record_aggregator.insert(
+            PerfThroughput("Throughput: 10 infer/sec\n\n\n\n"))
 
         # Test get with filters
         retrieved_records = record_aggregator.filter_records(
-            headers=[throughput_record.header()], filters=[(lambda v: v >= 5)])
+            record_types=[PerfThroughput], filters=[(lambda v: v >= 5)])
 
         # Should return 2 records
-        self.assertEqual(len(retrieved_records[throughput_record.header()]), 2)
+        self.assertEqual(len(retrieved_records[PerfThroughput]), 2)
+        retrieved_values = [
+            record.value() for record in retrieved_records[PerfThroughput]
+        ]
+        self.assertIn(5, retrieved_values)
+        self.assertIn(10, retrieved_values)
 
         # Insert 2 Latency records
-        latency_record = PerfLatency(3)
-        record_aggregator.insert(latency_record)
-        record_aggregator.insert(PerfLatency(6))
+        record_aggregator.insert(PerfLatency("Avg latency: 3 ms\n\n\n\n"))
+        record_aggregator.insert(PerfLatency("Avg latency: 6 ms\n\n\n\n"))
 
         # Test get with multiple headers
         retrieved_records = record_aggregator.filter_records(
-            headers=[latency_record.header(),
-                     throughput_record.header()],
+            record_types=[PerfLatency, PerfThroughput],
             filters=[(lambda v: v == 3), (lambda v: v < 5)])
 
-        self.assertEqual(len(retrieved_records[throughput_record.header()]), 1)
-        self.assertEqual(len(retrieved_records[latency_record.header()]), 1)
+        retrieved_values = {
+            record_type:
+            [record.value() for record in retrieved_records[record_type]]
+            for record_type in [PerfLatency, PerfThroughput]
+        }
+
+        self.assertEqual(len(retrieved_records[PerfLatency]), 1)
+        self.assertIn(3, retrieved_values[PerfLatency])
+
+        self.assertEqual(len(retrieved_records[PerfThroughput]), 1)
+        self.assertIn(1, retrieved_values[PerfThroughput])
 
     def test_aggregate(self):
         record_aggregator = RecordAggregator()
-        throughput_record = PerfThroughput(10)
-        record_aggregator.insert(throughput_record)
 
         # Insert 10 records
-        for i in range(9):
-            record_aggregator.insert(PerfThroughput(i))
+        for i in range(10):
+            record_aggregator.insert(
+                PerfThroughput(f"Throughput: {i} infer/sec\n\n\n\n"))
 
         # Aggregate them with max, min and average
-        max_vals = record_aggregator.aggregate(
-            headers=[throughput_record.header()], reduce_func=max)
-        min_vals = record_aggregator.aggregate(
-            headers=[throughput_record.header()], reduce_func=min)
+        max_vals = record_aggregator.aggregate(record_types=[PerfThroughput],
+                                               reduce_func=max)
+        min_vals = record_aggregator.aggregate(record_types=[PerfThroughput],
+                                               reduce_func=min)
         average = lambda seq: (sum(seq) * 1.0) / len(seq)
         average_vals = record_aggregator.aggregate(
-            headers=[throughput_record.header()], reduce_func=average)
+            record_types=[PerfThroughput], reduce_func=average)
 
-        self.assertEqual(max_vals[throughput_record.header()],
-                         10,
+        self.assertEqual(max_vals[PerfThroughput],
+                         9,
                          msg="Aggregation failed with max")
-        self.assertEqual(min_vals[throughput_record.header()],
+        self.assertEqual(min_vals[PerfThroughput],
                          0,
                          msg="Aggregation failed with min")
-        self.assertEqual(average_vals[throughput_record.header()],
-                         4.6,
+        self.assertEqual(average_vals[PerfThroughput],
+                         4.5,
                          msg="Aggregation failed with average")
 
 

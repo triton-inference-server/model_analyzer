@@ -24,55 +24,29 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from abc import ABC, abstractmethod
 
 
-class TritonClientConfig:
+class OutputWriter(ABC):
     """
-    A config class to set arguments to a TritonClient.
+    Interface that receives a table
+    and writes the table to a file or stream.
     """
 
-    def __init__(self):
-        self._client_args = {
-            'url': None
-        }
-
-    def __getitem__(self, key):
+    @abstractmethod
+    def write(self, out):
         """
-        Gets an arguments value in config
+        Writes the output to a file
+        (stdout, .txt, .csv etc.)
 
         Parameters
         ----------
-        key : str
-            The name of the argument to the client
-
-        Returns
-        -------
-            The value that the argument is set to in this config
-        """
-        return self._client_args[key]
-
-    def __setitem__(self, key, value):
-        """
-        Sets an arguments value in config
-        after checking if defined/supported.
-
-        Parameters
-        ----------
-        key : str
-            The name of the argument to the client
-        value : (any)
-            The value to which the argument is being set
+        out : str
+            The string to be written out
 
         Raises
         ------
         TritonModelAnalyzerException
-            If key is unsupported or undefined in the
-            config class
+            If there is an error or exception while writing
+            the output.
         """
-        if key in self._client_args:
-            self._client_args[key] = value
-        else:
-            raise TritonModelAnalyzerException(
-                f"The argument '{key}' to the client is "
-                "not supported by the model analyzer.")

@@ -48,7 +48,8 @@ class GPUUtilization(GPURecord):
 
         super().__init__(device, gpu_utilization, timestamp)
 
-    def header(self):
+    @staticmethod
+    def header():
         """
         Returns
         -------

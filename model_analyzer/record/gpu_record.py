@@ -26,7 +26,7 @@
 
 import time
 from abc import abstractmethod
-from model_analyzer.record.record import Record
+from .record import Record
 
 
 class GPURecord(Record):

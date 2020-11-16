@@ -36,7 +36,6 @@ from .mock_client import MockTritonClientMethods
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.client.client_factory import TritonClientFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
-from model_analyzer.triton.client.client_config import TritonClientConfig
 from model_analyzer.triton.model.model import Model
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 import test_result_collector as trc
@@ -72,64 +71,24 @@ class TestTritonClientMethods(trc.TestResultCollector):
             image=TRITON_IMAGE,
             config=self.server_config)
 
-    def test_client_config(self):
-        # Create a TritonClientConfig
-        client_config = TritonClientConfig()
-
-        # Check config initializations
-        self.assertIsNone(client_config[CONFIG_TEST_ARG],
-                          msg="Client config had unexpected initial "
-                          f"value for {CONFIG_TEST_ARG}")
-        # Set value
-        client_config[CONFIG_TEST_ARG] = 'localhost:8001'
-
-        # Test get again
-        self.assertTrue(client_config[CONFIG_TEST_ARG],
-                        msg=f"{CONFIG_TEST_ARG} was not set")
-
-        # Try to set an unsupported config argument, expect failure
-        with self.assertRaises(TritonModelAnalyzerException,
-                               msg="Expected ValueError on trying to set "
-                               "unsupported argument in Triton server "
-                               "config"):
-            client_config['dummy'] = 1
-
     def test_create_client(self):
-        # Create a TritonServerConfig
-        client_config = TritonClientConfig()
 
         # Create GRPC client
-        client_config['url'] = GRPC_URL
-        client = TritonClientFactory.create_grpc_client(config=client_config)
-
-        # Try to create a client without specifying url and expect error
-        with self.assertRaises(AssertionError,
-                               msg="Expected AssertionError for trying to "
-                               "create client without specifying url."):
-            client_config['url'] = None
-            client = TritonClientFactory.create_grpc_client(
-                config=client_config)
+        client = TritonClientFactory.create_grpc_client(server_url=GRPC_URL)
+        self.tritonclient_mock.assert_created_grpc_client_with_args(
+            url=GRPC_URL)
 
         # Create HTTP client
-        client_config['url'] = HTTP_URL
-        client = TritonClientFactory.create_http_client(config=client_config)
-
-        # Try to create a client without specifying url and expect error
-        with self.assertRaises(AssertionError,
-                               msg="Expected AssertionError for trying to "
-                               "create client without specifying url."):
-            client_config['url'] = None
-            client = TritonClientFactory.create_http_client(
-                config=client_config)
+        client = TritonClientFactory.create_http_client(server_url=HTTP_URL)
+        self.tritonclient_mock.assert_created_http_client_with_args(
+            url=HTTP_URL)
 
     @patch('model_analyzer.triton.server.server.requests', get=MagicMock())
     def test_load_unload_model(self, requests_mock):
-        # Create config
-        client_config = TritonClientConfig()
-        client_config['url'] = GRPC_URL
 
         # Create client
-        client = TritonClientFactory.create_grpc_client(config=client_config)
+        client = TritonClientFactory.create_grpc_client(server_url=GRPC_URL)
+        self.tritonclient_mock.assert_created_grpc_client_with_args(GRPC_URL)
 
         # Start the server and wait till it is ready
         self.server.start()

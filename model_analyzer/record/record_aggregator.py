@@ -31,6 +31,7 @@ class RecordAggregator:
     """
     Stores a collection of Record objects.
     """
+
     def __init__(self):
         self._records = defaultdict(list)
 
@@ -43,14 +44,15 @@ class RecordAggregator:
         record : Record
             A record to be inserted
         """
+
         if isinstance(record, Record):
-            header = record.header()
-            self._records[header].append(record)
+            record_type = type(record)
+            self._records[record_type].append(record)
         else:
             raise TritonModelAnalyzerException(
                 "Can only add objects of type 'Record' to RecordAggregator")
 
-    def filter_records(self, headers=None, filters=None):
+    def filter_records(self, record_types=None, filters=None):
         """
         Get records that satisfy
         the given list of criteria.
@@ -58,51 +60,54 @@ class RecordAggregator:
         Parameters
         ----------
 
-        headers : list of str
-            the names of the records we are
+        record_types : list of types of Records
+            the types of the records we are
             imposing the filter criteria on.
 
         filters : list of callables
             conditions that determine whether
             a given record should be returned.
             If no filters specified, all records
-            of types specified by headers will be
+            of types specified by record_types will be
             returned.
             Note : This must be of the same length
-                   as the list of headers, or omitted.
+                   as the list of record_types, or omitted.
 
         Returns
         -------
         Dict of List of Records
-            keys are record headers, values
+            keys are record_types, values
             are all records of that type
         """
-        if not headers and not filters:
+
+        if not record_types and not filters:
             return self._records
-        if headers and not filters:
+        if record_types and not filters:
             try:
-                return {k: self._records[k] for k in headers}
+                return {k: self._records[k] for k in record_types}
             except KeyError as k:
                 raise TritonModelAnalyzerException(
-                    f"Record type '{k}' not found in this RecordAggregator")
-        if filters and not headers:
+                    f"Record type '{k.header()}' not found in this RecordAggregator"
+                )
+        if filters and not record_types:
             raise TritonModelAnalyzerException(
-                "Must specify the headers corresponding to each filter criterion."
+                "Must specify the record types corresponding to each filter criterion."
             )
-        if len(headers) != len(filters):
+        if len(record_types) != len(filters):
             raise TritonModelAnalyzerException(
-                "Must specify the same number of headers as filter criteria.")
+                "Must specify the same number of record types as filter criteria."
+            )
 
         # Remove records that do not satisfy criteria
         filtered_records = defaultdict(list)
-        for h, f in zip(headers, filters):
+        for h, f in zip(record_types, filters):
             filtered_records[h] = [
                 record for record in self._records[h] if f(record.value())
             ]
 
         return filtered_records
 
-    def headers(self):
+    def record_types(self):
         """
         Returns
         -------
@@ -110,16 +115,17 @@ class RecordAggregator:
             a list of the types of records in this
             RecordAgrregator
         """
+
         return list(self._records.keys())
 
-    def total(self, header=None):
+    def total(self, record_type=None):
         """
         Get the total number of records in
         the RecordAggregator
 
         Parameters
         ----------
-        header : str
+        record_type : a class name of type Record
             The type of records to count,
             if None, count all types
 
@@ -129,20 +135,22 @@ class RecordAggregator:
             number of records in
             the RecordAggregator
         """
-        if header:
-            if header not in self._records:
+
+        if record_type:
+            if record_type not in self._records:
                 raise TritonModelAnalyzerException(
-                    f"Record type '{header}' not found in this RecordAggregator"
+                    f"Record type '{record_type.header()}' not found in this RecordAggregator"
                 )
-            return len(self._records[header])
+            return len(self._records[record_type])
         return sum(len(self._records[k]) for k in self._records)
 
-    def aggregate(self, headers, reduce_func):
+    def aggregate(self, record_types=None, reduce_func=max):
         """
         Parameters
         ----------
-        headers : str
-            The type of records to aggregate
+        record_types : List of Record types
+            The type of records to aggregate.
+            If None, aggregates all records
 
         reduce_func : callable
             takes as input a list of values
@@ -151,11 +159,14 @@ class RecordAggregator:
         Returns
         -------
         dict
-            keys are requested headers
+            keys are requested record types
             and values are the aggregated values
         """
+
         aggregated_records = {}
-        for record_type in headers:
+        if not record_types:
+            record_types = self.record_types()
+        for record_type in record_types:
             values = []
             for record in self._records[record_type]:
                 values.append(record.value())
