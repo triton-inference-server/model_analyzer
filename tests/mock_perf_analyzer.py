@@ -28,6 +28,16 @@ import subprocess
 from unittest.mock import patch, Mock, MagicMock
 
 
+class MockCalledProcessError(Exception):
+    """
+    A mock of subprocess.CalledProcessError
+    """
+
+    def __init__(self):
+        self.returncode = 1
+        self.cmd = ["dummy command"]
+
+
 class MockPerfAnalyzerMethods:
     """
     Mocks the subprocess module functions used in 
@@ -40,8 +50,13 @@ class MockPerfAnalyzerMethods:
             'model_analyzer.perf_analyzer.perf_analyzer.check_output')
         self.patcher_stdout = patch(
             'model_analyzer.perf_analyzer.perf_analyzer.STDOUT', MagicMock())
+        self.patcher_called_process_error = patch(
+            'model_analyzer.perf_analyzer.perf_analyzer.CalledProcessError',
+            MockCalledProcessError)
         self.check_output_mock = self.patcher_check_output.start()
         self.stdout_mock = self.patcher_stdout.start()
+        self.called_process_error_mock = self.patcher_called_process_error.start(
+        )
 
     def stop(self):
         """
@@ -62,9 +77,27 @@ class MockPerfAnalyzerMethods:
                                                   stderr=self.stdout_mock,
                                                   encoding='utf-8')
 
+    def raise_exception_on_run(self):
+        """
+        Raises a CalledProcessError on call
+        check_output
+        """
+
+        self.check_output_mock.side_effect = self.called_process_error_mock
+
     def set_perf_analyzer_result_string(self, output_string):
         """
         Sets the return value of subprocess.check_output
         """
 
         self.check_output_mock.return_value = output_string
+
+    def reset(self):
+        """
+        Resets the side effects
+        and return values of the
+        mocks in this module
+        """
+
+        self.check_output_mock.side_effect = None
+        self.check_output_mock.return_value = None

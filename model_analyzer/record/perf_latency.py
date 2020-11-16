@@ -36,20 +36,27 @@ class PerfLatency(Record):
     metric 'Avg Latency'
     """
 
-    def __init__(self, latency, timestamp=0):
+    def __init__(self, perf_output, timestamp=0):
         """
         Parameters
         ----------
-        latency : float
-            The avg latency value obtained from the
-            perf_analyzer
-        timestamp : int
-            The timestamp for the record in nanoseconds
+        perf_output : str
+            The stdout from the perf_analyzer
+        timestamp : float
+            Elapsed time from start of program
         """
+
+        perf_out_lines = perf_output.split('\n')
+        for line in perf_out_lines[:-3]:
+            # Get first word and first word after 'latency:'
+            if 'latency:' in line:
+                latency_tags = line.split(' latency: ')
+                latency = float(latency_tags[1].split()[0])
 
         super().__init__(latency, timestamp)
 
-    def header(self):
+    @staticmethod
+    def header():
         """
         Returns
         -------

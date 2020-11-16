@@ -24,7 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
+import sys
 from argparse import ArgumentParser
+
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class CLI:
@@ -33,10 +37,11 @@ class CLI:
     """
 
     def __init__(self):
-        self._parser = ArgumentParser(prog='model_analyzer')
+        self._parser = ArgumentParser()
         self._add_arguments()
 
     def _add_arguments(self):
+        # yapf:disable
         self._parser.add_argument(
             '-m',
             '--model-repository',
@@ -44,7 +49,7 @@ class CLI:
             required=True,
             help='Model repository location')
         self._parser.add_argument(
-            '-t',
+            '-v',
             '--triton-version',
             type=str,
             help='Triton Server version')
@@ -53,24 +58,102 @@ class CLI:
             '--model-names',
             type=str,
             required=True,
-            help='Comma delimited list of the model names to be profiled')
+            help='Comma-delimited list of the model names to be profiled')
         self._parser.add_argument(
             '-b',
-            '--batch-size',
-            type=int,
-            default=1,
-            help='Batch size to use for the profiling')
-        self._parser.add_argument(
-            '-e',
-            '--export',
+            '--batch-sizes',
             type=str,
-            help='Export path to store the results')
+            default='1',
+            help='Comma-delimited list of batch sizes to use for the profiling')
         self._parser.add_argument(
             '-c',
-            '--concurrency-range',
+            '--concurrency',
             type=str,
-            help='Concurrency range values <start:end:step>')
+            default='1',
+            help="Comma-delimited list of concurrency values or ranges <start:end:step>"
+                 " to be used during profiling")
+        self._parser.add_argument(
+            '--export',
+            type=bool,
+            default=False,
+            help='Enables exporting metrics to a file')
+        self._parser.add_argument(
+            '-e',
+            '--export-path',
+            type=str,
+            help='Full path to directory in which to store the results')
+        self._parser.add_argument(
+            '--filename-model',
+            type=str,
+            default='metrics-model.csv',
+            help='Specifies filename for model running metrics')
+        self._parser.add_argument(
+            '--filename-server-only',
+            type=str,
+            default='metrics-server-only.csv',
+            help='Specifies filename for server-only metrics')
+        self._parser.add_argument(
+            '-r',
+            '--max-retries',
+            type=int,
+            default=100,
+            help='Specifies the max number of retries for any retry attempt')
+        self._parser.add_argument(
+            '-d',
+            '--base-duration',
+            type=float,
+            default=0.1,
+            help='Specifies how long (seconds) to gather server-only metrics')
+        self._parser.add_argument(
+            '-i',
+            '--monitoring-interval',
+            type=float,
+            default=0.01,
+            help='Interval of time between DGCM measurements in seconds')
+        self._parser.add_argument(
+            '--client-protocol',
+            type=str,
+            choices=['http', 'grpc'],
+            default='grpc',
+            help='The protocol used to communicate with the Triton Inference Server')
+        self._parser.add_argument(
+            '--perf-analyzer-path',
+            type=str,
+            default='perf_analyzer',
+            help='The full path to the perf_analyzer binary executable')
+        self._parser.add_argument(
+            '--triton-server-path',
+            type=str,
+            default='/opt/tritonserver/bin/tritonserver',
+            help='The full path to the tritonserver binary executable')
+        # yapf:enable
 
-    def parse(self, argv):
+    def parse(self):
+        """
+        Retrieves the arguments from the command
+        line and loads them into an ArgumentParser
+        Also does some sanity checks for arguments.
+        
+        Returns
+        -------
+        argparse.Namespace
+            containing all the parsed arguments
+        """
+
         # Remove the first argument which is the program name
-        return self._parser.parse_args(argv[1:])
+        args = self._parser.parse_args()
+        if args.export:
+            if not args.export_path:
+                print(
+                    "--export-path specified without --export flag: skipping exporting metrics"
+                )
+                args.export_path = None
+            else:
+                if args.export_path and not os.path.isdir(args.export_path):
+                    raise TritonModelAnalyzerException(
+                        f"Export path {args.export_path} is not a directory")
+                if not (args.filename_model and args.filename_server_only):
+                    raise TritonModelAnalyzerException(
+                        "--filename-model and --filename-server-only must be specified"
+                    )
+        return args
