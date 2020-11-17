@@ -31,6 +31,7 @@ from itertools import product
 from .cli.cli import CLI
 
 from .analyzer import Analyzer
+from .model_analyzer_exceptions import TritonModelAnalyzerException
 from .triton.server.server_factory import TritonServerFactory
 from .triton.server.server_config import TritonServerConfig
 from .triton.client.client_factory import TritonClientFactory
@@ -43,10 +44,74 @@ from .record.perf_latency import PerfLatency
 from .output.file_writer import FileWriter
 
 
+def get_client_handle(args):
+    """
+    Creates and returns a TritonClient
+    with specified arguments
+
+    Parameters
+    ----------
+    args : namespace
+        Arguments parsed from the CLI
+    """
+
+    if args.client_protocol == 'http':
+        client = TritonClientFactory.create_http_client(
+            server_url=args.triton_http_endpoint)
+    elif args.client_protocol == 'grpc':
+        client = TritonClientFactory.create_grpc_client(
+            server_url=args.triton_grpc_endpoint)
+    else:
+        raise TritonModelAnalyzerException(
+            f"Unrecognized client-protocol : {args.client_protocol}")
+
+    return client
+
+
+def get_server_handle(args):
+    """
+    Creates and returns a TritonServer
+    with specified arguments
+
+    Parameters
+    ----------
+    args : namespace
+        Arguments parsed from the CLI
+    """
+
+    if args.triton_launch_mode == 'remote':
+        triton_config = TritonServerConfig()
+        triton_config['model-repository'] = 'remote-model-repository'
+        server = TritonServerFactory.create_server_local(path=None,
+                                                         config=triton_config)
+    elif args.triton_launch_mode == 'local':
+        triton_config = TritonServerConfig()
+        triton_config['model-repository'] = args.model_repository
+        triton_config['model-control-mode'] = 'explicit'
+        server = TritonServerFactory.create_server_local(
+            path=args.triton_server_path, config=triton_config)
+        server.start()
+    elif args.triton_launch_mode == 'docker':
+        triton_config = TritonServerConfig()
+        triton_config['model-repository'] = args.model_repository
+        triton_config['model-control-mode'] = 'explicit'
+        server = TritonServerFactory.create_server_docker(
+            model_path=args.model_repository,
+            image='nvcr.io/nvidia/tritonserver:' + args.triton_version,
+            config=triton_config)
+        server.start()
+    else:
+        raise TritonModelAnalyzerException(
+            f"Unrecognized triton-launch-mode : {args.triton_launch_mode}")
+
+    return server
+
+
 def get_triton_handles(args):
     """
     Creates a TritonServer and starts it.
     Creates a TritonClient
+    
     Parameters
     ----------
     args : namespace
@@ -58,20 +123,9 @@ def get_triton_handles(args):
         Handles for triton client/server pair.
     """
 
-    triton_config = TritonServerConfig()
-    triton_config['model-repository'] = args.model_repository
-    triton_config['model-control-mode'] = 'explicit'
-    server = TritonServerFactory.create_server_local(
-        path=args.triton_server_path, config=triton_config)
-    if args.client_protocol == 'http':
-        client = TritonClientFactory.create_http_client(
-            server_url='localhost:8000')
-    elif args.client_protocol == 'grpc':
-        client = TritonClientFactory.create_grpc_client(
-            server_url='localhost:8001')
-
-    server.start()
-    server.wait_for_ready(num_retries=args.max_retries)
+    client = get_client_handle(args)
+    server = get_server_handle(args)
+    client.wait_for_server_ready(num_retries=args.max_retries)
 
     return client, server
 
@@ -99,6 +153,7 @@ def create_run_configs(args):
     run_params = [
         dict(zip(sweep_params.keys(), vals)) for vals in param_combinations
     ]
+
     return run_params
 
 
@@ -119,22 +174,18 @@ def write_results(args, analyzer):
         server inferencing.
     """
 
-    analyzer.write_server_only_result(writer=FileWriter(),
-                                      column_width=28,
-                                      column_separator=' ')
-    analyzer.write_model_result(writer=FileWriter(),
-                                column_width=28,
-                                column_separator=' ')
+    analyzer.write_results(writer=FileWriter(), column_separator=' ')
     if args.export:
-        with open(os.join(args.export_path, args.filename_server_only),
-                  'r+') as f:
-            analyzer.write_server_only_result(writer=FileWriter(file_handle=f),
-                                              column_width=None,
-                                              column_separator=',')
-        with open(os.join(args.export_path, args.filename_model), 'r+') as f:
-            analyzer.write_model_result(writer=FileWriter(file_handle=f),
-                                        column_width=None,
-                                        column_separator=',')
+        with open(os.path.join(args.export_path, args.filename_server_only),
+                  'w+') as f:
+            analyzer.export_server_only_csv(writer=FileWriter(file_handle=f),
+                                            column_separator=',',
+                                            ignore_widths=True)
+        with open(os.path.join(args.export_path, args.filename_model),
+                  'w+') as f:
+            analyzer.export_model_csv(writer=FileWriter(file_handle=f),
+                                      column_separator=',',
+                                      ignore_widths=True)
 
 
 def run_analyzer(args, analyzer, client, run_configs):
@@ -165,9 +216,11 @@ def run_analyzer(args, analyzer, client, run_configs):
         model = Model(name=run_config['model-name'])
         client.load_model(model=model)
         client.wait_for_model_ready(model=model, num_retries=args.max_retries)
-        analyzer.profile_model(run_config=run_config,
-                               perf_output_writer=FileWriter())
-        client.unload_model(model=model)
+        try:
+            analyzer.profile_model(run_config=run_config,
+                                   perf_output_writer=FileWriter())
+        finally:
+            client.unload_model(model=model)
 
 
 def main():
