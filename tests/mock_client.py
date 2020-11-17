@@ -34,7 +34,17 @@ class MockInferenceServerException(Exception):
     A mock object that can be used in
     place of an InferenceServerException
     """
-    pass
+
+    @staticmethod
+    def status():
+        """
+        Returns
+        -------
+        str
+            The error code
+        """
+
+        return "StatusCode.UNAVAILABLE"
 
 
 class MockTritonClientMethods:
@@ -48,7 +58,8 @@ class MockTritonClientMethods:
         client_attrs = {
             'load_model': MagicMock(),
             'unload_model': MagicMock(),
-            'is_model_ready': MagicMock(return_value=True)
+            'is_model_ready': MagicMock(return_value=True),
+            'is_server_ready': MagicMock(return_value=True)
         }
         mock_http_client = Mock(**client_attrs)
         mock_grpc_client = Mock(**client_attrs)
@@ -91,6 +102,40 @@ class MockTritonClientMethods:
 
         self.http_mock.assert_called_with(url=url)
 
+    def assert_grpc_client_waited_for_server_ready(self):
+        """
+        Assert that the correct InferServerClient
+        indeed called is_server_ready
+        """
+
+        self.grpc_mock.return_value.is_server_ready.assert_called()
+
+    def assert_http_client_waited_for_server_ready(self):
+        """
+        Assert that the correct InferServerClient
+        indeed called is_server_ready
+        """
+
+        self.http_mock.return_value.is_server_ready.assert_called()
+
+    def assert_grpc_client_waited_for_model_ready(self, model_name):
+        """
+        Assert that the correct InferServerClient
+        indeed called is_model_ready with correct model
+        """
+
+        self.grpc_mock.return_value.is_model_ready.assert_called_with(
+            model_name)
+
+    def assert_http_client_waited_for_model_ready(self, model_name):
+        """
+        Assert that the correct InferServerClient
+        indeed called is_model_ready with correct model
+        """
+
+        self.http_mock.return_value.is_model_ready.assert_called_with(
+            model_name)
+
     def raise_exception_on_load(self):
         """
         Set load_model to throw
@@ -102,18 +147,41 @@ class MockTritonClientMethods:
 
     def raise_exception_on_unload(self):
         """
-        Set load_model to throw
+        Set unload_model to throw
         InferenceServerException
         """
 
         self.grpc_mock.return_value.unload_model.side_effect = self.exception_mock
         self.http_mock.return_value.unload_model.side_effect = self.exception_mock
 
+    def raise_exception_on_wait_for_server_ready(self):
+        """
+        Set is_server_ready to throw
+        InferenceServerException
+        """
+
+        self.grpc_mock.return_value.is_server_ready.side_effect = self.exception_mock
+        self.http_mock.return_value.is_server_ready.side_effect = self.exception_mock
+
+    def raise_exception_on_wait_for_model_ready(self):
+        """
+        Set is_model_ready to throw
+        InferenceServerException
+        """
+
+        self.grpc_mock.return_value.is_model_ready.side_effect = self.exception_mock
+        self.http_mock.return_value.is_model_ready.side_effect = self.exception_mock
+
     def reset(self):
         """
         Reset the client mocks
         """
+
         self.grpc_mock.return_value.load_model.side_effect = None
         self.http_mock.return_value.load_model.side_effect = None
         self.grpc_mock.return_value.unload_model.side_effect = None
         self.http_mock.return_value.unload_model.side_effect = None
+        self.grpc_mock.return_value.is_server_ready.side_effect = None
+        self.http_mock.return_value.is_server_ready.side_effect = None
+        self.grpc_mock.return_value.is_model_ready.side_effect = None
+        self.http_mock.return_value.is_model_ready.side_effect = None

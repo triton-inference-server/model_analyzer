@@ -36,6 +36,36 @@ class TritonClient:
     TritonClientFactory
     """
 
+    def wait_for_server_ready(self, num_retries):
+        """
+        Parameters
+        ----------
+        num_retries : int
+            number of times to send a ready status
+            request to the server before raising
+            an exception
+        Raises
+        ------
+        TritonModelAnalyzerException
+            If server readiness could not be
+            determined in given num_retries
+        """
+
+        retries = num_retries
+        while retries > 0:
+            try:
+                if self._client.is_server_ready():
+                    return
+            except InferenceServerException as e:
+                if e.status() == 'StatusCode.UNAVAILABLE':
+                    time.sleep(0.05)
+                    retries -= 1
+                else:
+                    raise TritonModelAnalyzerException(e)
+        raise TritonModelAnalyzerException(
+            "Could not determine server readiness. "
+            "Number of retries exceeded.")
+
     def load_model(self, model):
         """
         Request the inference server to load
@@ -99,17 +129,18 @@ class TritonClient:
             If could not determine model readiness
             in given num_retries
         """
-        while num_retries > 0:
+
+        retries = num_retries
+        while retries > 0:
             try:
                 if self._client.is_model_ready(model.name()):
                     return
-                else:
+            except InferenceServerException as e:
+                if e.status() == 'StatusCode.UNAVAILABLE':
                     time.sleep(0.05)
-                    num_retries -= 1
-            except Exception as e:
-                time.sleep(0.05)
-                num_retries -= 1
-                pass
+                    retries -= 1
+                else:
+                    raise TritonModelAnalyzerException(e)
         raise TritonModelAnalyzerException(
             "Could not determine model readiness. "
             "Number of retries exceeded.")
