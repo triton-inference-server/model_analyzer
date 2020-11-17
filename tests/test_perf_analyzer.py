@@ -31,9 +31,11 @@ sys.path.append('../common/')
 
 from .mock_server_local import MockServerLocalMethods
 from .mock_perf_analyzer import MockPerfAnalyzerMethods
+from .mock_client import MockTritonClientMethods
 
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.server.server_factory import TritonServerFactory
+from model_analyzer.triton.client.client_factory import TritonClientFactory
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -50,15 +52,15 @@ TRITON_VERSION = '20.09'
 TEST_MODEL_NAME = 'test_model'
 TEST_CONCURRENCY_RANGE = '1:16:2'
 CONFIG_TEST_ARG = 'sync'
-TEST_RUN_PARAMS = {'batch-size': [1, 2], 'concurrency-range': [2, 4]}
+TEST_GRPC_URL = 'test_hostname:test_port'
 
 
 class TestPerfAnalyzerMethods(trc.TestResultCollector):
-
     def setUp(self):
         # Mocks
         self.server_local_mock = MockServerLocalMethods()
         self.perf_mock = MockPerfAnalyzerMethods()
+        self.client_mock = MockTritonClientMethods()
 
         # PerfAnalyzer config for all tests
         self.config = PerfAnalyzerConfig()
@@ -66,6 +68,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Triton Server
         self.server = None
+        self.client = None
 
     def test_perf_analyzer_config(self):
         # Check config initializations
@@ -98,20 +101,18 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config['extra-verbose'] = True
         self.assertTrue(self.config['extra-verbose'])
 
-    @patch('model_analyzer.triton.server.server.requests', get=MagicMock())
-    def test_run(self, requests_mock):
-        # Now create a server config
+    def test_run(self):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
 
-        # Create server, PerfAnalyzer, and wait for server ready
+        # Create server, client, PerfAnalyzer, and wait for server ready
         self.server = TritonServerFactory.create_server_local(
             path=TRITON_LOCAL_BIN_PATH, config=server_config)
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH, config=self.config)
-
+        self.client = TritonClientFactory.create_grpc_client(
+            server_url=TEST_GRPC_URL)
         self.server.start()
-        requests_mock.get.return_value.status_code = 200
-        self.server.wait_for_ready(num_retries=1)
+        self.client.wait_for_server_ready(num_retries=1)
 
         # Run perf analyzer with dummy tags to check command parsing
         perf_tags = [id]
@@ -162,6 +163,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         # Stop mocking
         self.server_local_mock.stop()
         self.perf_mock.stop()
+        self.client_mock.stop()
 
 
 if __name__ == '__main__':

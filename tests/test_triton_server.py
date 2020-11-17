@@ -52,11 +52,9 @@ CLI_TO_STRING_TEST_ARGS = {
     'metrics-port': 8000,
     'model-repository': MODEL_REPOSITORY_PATH
 }
-SERVER_READY_URL = 'http://localhost:8000/v2/health/ready'
 
 
 class TestTritonServerMethods(trc.TestResultCollector):
-
     def setUp(self):
         # Mock
         self.server_docker_mock = MockServerDockerMethods()
@@ -147,20 +145,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
             self.server = TritonServerFactory.create_server_local(
                 path=TRITON_LOCAL_BIN_PATH, config=server_config)
 
-    @patch('model_analyzer.triton.server.server.requests', get=MagicMock())
-    def _mock_server_wait_for_ready(self, requests_mock, assert_raises):
-        if assert_raises:
-            with self.assertRaises(TritonModelAnalyzerException,
-                                   msg="Expected to exceed num_retries"):
-                requests_mock.get.return_value.status_code = 400
-                self.server.wait_for_ready(num_retries=1)
-        else:
-            requests_mock.get.return_value.status_code = 200
-            self.server.wait_for_ready(num_retries=1)
-
-        requests_mock.get.assert_called_with(SERVER_READY_URL)
-
-    def test_start_wait_stop_gpus(self):
+    def test_start_stop_gpus(self):
         # Create a TritonServerConfig
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
@@ -172,18 +157,12 @@ class TestTritonServerMethods(trc.TestResultCollector):
             image=TRITON_IMAGE,
             config=server_config)
 
-        # Set mock status_code to error, and generate exception
-        self._mock_server_wait_for_ready(assert_raises=True)
-
         # Start server check that mocked api is called
         self.server.start()
         self.server_docker_mock.assert_server_process_start_called_with(
             TRITON_DOCKER_BIN_PATH + ' ' + server_config.to_cli_string(),
             MODEL_LOCAL_PATH, MODEL_REPOSITORY_PATH, TRITON_IMAGE, 8000, 8001,
             8002)
-
-        # Mock status code for connected server then stop
-        self._mock_server_wait_for_ready(assert_raises=False)
 
         # Stop container and check api calls
         self.server.stop()
@@ -193,8 +172,6 @@ class TestTritonServerMethods(trc.TestResultCollector):
         self.server = TritonServerFactory.create_server_local(
             path=TRITON_LOCAL_BIN_PATH, config=server_config)
 
-        self._mock_server_wait_for_ready(assert_raises=True)
-
         # Check that API functions are called
         self.server.start()
 
@@ -202,7 +179,6 @@ class TestTritonServerMethods(trc.TestResultCollector):
             TRITON_LOCAL_BIN_PATH, '--model-repository', MODEL_REPOSITORY_PATH
         ])
 
-        self._mock_server_wait_for_ready(assert_raises=False)
         self.server.stop()
         self.server_local_mock.assert_server_process_terminate_called()
 

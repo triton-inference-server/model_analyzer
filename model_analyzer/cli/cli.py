@@ -49,11 +49,6 @@ class CLI:
             required=True,
             help='Model repository location')
         self._parser.add_argument(
-            '-v',
-            '--triton-version',
-            type=str,
-            help='Triton Server version')
-        self._parser.add_argument(
             '-n',
             '--model-names',
             type=str,
@@ -74,13 +69,13 @@ class CLI:
                  " to be used during profiling")
         self._parser.add_argument(
             '--export',
-            type=bool,
-            default=False,
+            action='store_true',
             help='Enables exporting metrics to a file')
         self._parser.add_argument(
             '-e',
             '--export-path',
             type=str,
+            default='.',
             help='Full path to directory in which to store the results')
         self._parser.add_argument(
             '--filename-model',
@@ -102,7 +97,7 @@ class CLI:
             '-d',
             '--base-duration',
             type=float,
-            default=0.1,
+            default=5,
             help='Specifies how long (seconds) to gather server-only metrics')
         self._parser.add_argument(
             '-i',
@@ -122,11 +117,85 @@ class CLI:
             default='perf_analyzer',
             help='The full path to the perf_analyzer binary executable')
         self._parser.add_argument(
+            '--triton-launch-mode',
+            type=str,
+            choices=['local', 'docker', 'remote'],
+            default='local',
+            help="The method by which to launch Triton Server. "
+                 "'local' assumes tritonserver binary is available locally. "
+                 "'docker' pulls and launches a triton docker container with the specified version. "
+                 "'remote' connects to a running server using given http, grpc and metrics endpoints. "
+        )
+        self._parser.add_argument(
+            '-v',
+            '--triton-version',
+            type=str,
+            help='Triton Server version')
+        self._parser.add_argument(
+            '--triton-http-endpoint',
+            type=str,
+            help="Triton Server HTTP endpoint url used by Model Analyzer client. "
+                 "Will be ignored if server-launch-mode is not 'remote'")
+        self._parser.add_argument(
+            '--triton-grpc-endpoint',
+            type=str,
+            help="Triton Server HTTP endpoint url used by Model Analyzer client. "
+                 "Will be ignored if server-launch-mode is not 'remote'")
+        self._parser.add_argument(
             '--triton-server-path',
             type=str,
             default='/opt/tritonserver/bin/tritonserver',
             help='The full path to the tritonserver binary executable')
         # yapf:enable
+
+    def _preprocess_and_verify_arguments(self, args):
+        """
+        Enforces some rules on input 
+        arguments. Sets some defaults.
+
+        Parameters
+        ----------
+        args : argparse.Namespace
+            containing all the parsed arguments
+
+        Raises
+        ------
+        TritonModelAnalyzerException
+            If arguments are passed in incorrectly
+        """
+
+        if args.export:
+            if not args.export_path:
+                print(
+                    "--export-path specified without --export flag: skipping exporting metrics."
+                )
+                args.export_path = None
+            elif args.export_path and not os.path.isdir(args.export_path):
+                raise TritonModelAnalyzerException(
+                    f"Export path {args.export_path} is not a directory.")
+        if args.triton_launch_mode != 'remote':
+            if args.triton_http_endpoint or args.triton_grpc_endpoint:
+                print(f"triton-launch-mode is {args.triton_launch_mode}."
+                      " Specified Triton endpoints will be ignored.")
+            args.triton_http_endpoint = 'localhost:8000'
+            args.triton_grpc_endpoint = 'localhost:8001'
+        if args.triton_launch_mode == 'remote':
+            if args.client_protocol == 'http' and not args.triton_http_endpoint:
+                raise TritonModelAnalyzerException(
+                    "client-protocol is 'http'. Must specify triton-http-endpoint "
+                    "if connecting to already running server or change protocol using "
+                    "--client-protocol.")
+            if args.client_protocol == 'grpc' and not args.triton_grpc_endpoint:
+                raise TritonModelAnalyzerException(
+                    "client-protocol is 'grpc'. Must specify triton-grpc-endpoint "
+                    "if connecting to already running server or change protocol using "
+                    "--client-protocol.")
+        elif args.triton_launch_mode == 'docker':
+            if not args.triton_version:
+                raise TritonModelAnalyzerException(
+                    "triton-launch-mode is 'docker'. Must specify triton-version "
+                    "if launching server docker container or change launch mode using "
+                    "--triton-launch-mode.")
 
     def parse(self):
         """
@@ -138,22 +207,14 @@ class CLI:
         -------
         argparse.Namespace
             containing all the parsed arguments
+        
+        Raises
+        ------
+        TritonModelAnalyzerException
+            For arguments passed incorrectly
         """
 
         # Remove the first argument which is the program name
-        args = self._parser.parse_args()
-        if args.export:
-            if not args.export_path:
-                print(
-                    "--export-path specified without --export flag: skipping exporting metrics"
-                )
-                args.export_path = None
-            else:
-                if args.export_path and not os.path.isdir(args.export_path):
-                    raise TritonModelAnalyzerException(
-                        f"Export path {args.export_path} is not a directory")
-                if not (args.filename_model and args.filename_server_only):
-                    raise TritonModelAnalyzerException(
-                        "--filename-model and --filename-server-only must be specified"
-                    )
+        args = self._parser.parse_args(sys.argv[1:])
+        self._preprocess_and_verify_arguments(args)
         return args
