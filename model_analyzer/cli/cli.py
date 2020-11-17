@@ -95,7 +95,7 @@ class CLI:
             help='Specifies the max number of retries for any retry attempt')
         self._parser.add_argument(
             '-d',
-            '--base-duration',
+            '--duration-seconds',
             type=float,
             default=5,
             help='Specifies how long (seconds) to gather server-only metrics')
@@ -127,7 +127,6 @@ class CLI:
                  "'remote' connects to a running server using given http, grpc and metrics endpoints. "
         )
         self._parser.add_argument(
-            '-v',
             '--triton-version',
             type=str,
             help='Triton Server version')

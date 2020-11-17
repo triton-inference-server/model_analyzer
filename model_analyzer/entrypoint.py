@@ -179,13 +179,11 @@ def write_results(args, analyzer):
         with open(os.path.join(args.export_path, args.filename_server_only),
                   'w+') as f:
             analyzer.export_server_only_csv(writer=FileWriter(file_handle=f),
-                                            column_separator=',',
-                                            ignore_widths=True)
+                                            column_separator=',')
         with open(os.path.join(args.export_path, args.filename_model),
                   'w+') as f:
             analyzer.export_model_csv(writer=FileWriter(file_handle=f),
-                                      column_separator=',',
-                                      ignore_widths=True)
+                                      column_separator=',')
 
 
 def run_analyzer(args, analyzer, client, run_configs):
