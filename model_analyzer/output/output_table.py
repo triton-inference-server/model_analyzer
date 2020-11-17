@@ -23,7 +23,10 @@
 # OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
+COLUMN_PADDING = 2
 
 
 class OutputTable:
@@ -33,41 +36,45 @@ class OutputTable:
     with headers rows
     """
 
-    def __init__(self, headers, column_widths=None):
+    def __init__(self, headers):
         """
         Parameters
         ----------
         headers : list of str
             Names of the columns of this table
-        column_widths : list of ints
-            width of each column in the table. If None,
-            cell is width of its contents.
         """
 
         self._headers = headers[:]
-        if not column_widths:
-            self._widths = [None for _ in range(len(headers))]
-        else:
-            if len(column_widths) != len(headers):
-                raise TritonModelAnalyzerException(
-                    "Column width must be provided for each header in table headers."
-                )
-            self._widths = column_widths[:]
         self._rows = []
+        self._column_widths = [
+            len(header) + COLUMN_PADDING for header in headers
+        ]
 
     def headers(self):
         """
         Returns
         -------
-        list 
+        list of str
             names of the columns of this table
         """
 
         return self._headers
 
+    def column_widths(self):
+        """
+        Returns
+        -------
+        list of ints
+            Current width in spaces of 
+            each column in table.
+        """
+
+        return self._column_widths
+
     def add_row(self, row, index=None):
         """
-        Adds a row to the table
+        Adds a row to the table. Handles
+        wrapping.
 
         Parameters
         ----------
@@ -85,7 +92,11 @@ class OutputTable:
             index = len(self._rows)
         self._rows.insert(index, row[:])
 
-    def add_column(self, column, index=None, width=10):
+        for i in range(len(row)):
+            self._column_widths[i] = max(
+                len(str(row[i])) + COLUMN_PADDING, self._column_widths[i])
+
+    def add_column(self, column, index=None):
         """
         Adds a column to the table. 
         
@@ -98,8 +109,6 @@ class OutputTable:
             Content of the column to be added
         index : int
             The index at which to add a column
-        width : int
-            The width of the column in spaces
         """
 
         if len(column) != len(self._rows) + 1:
@@ -109,7 +118,9 @@ class OutputTable:
         if index is None:
             index = len(self._headers)
         self._headers.insert(index, column[0])
-        self._widths.insert(index, width)
+        column_width = max([len(str(val)) + COLUMN_PADDING for val in column])
+        self._column_widths.insert(index, column_width)
+
         for i in range(len(self._rows)):
             self._rows[i].insert(index, column[i + 1])
 
@@ -166,10 +177,10 @@ class OutputTable:
             The new width in spaces
         """
 
-        if index < 0 or index >= len(self._widths):
+        if index < 0 or index >= len(self._column_widths):
             raise TritonModelAnalyzerException(
                 f"Index {index} out of range for set_column_width_by_index")
-        self._widths[index] = width
+        self._column_widths[index] = width
 
     def set_column_width_by_header(self, header, width):
         """
@@ -189,7 +200,7 @@ class OutputTable:
         except ValueError:
             raise TritonModelAnalyzerException(
                 f"{header} not present in table")
-        self._widths[index] = width
+        self._column_widths[index] = width
 
     def remove_row_by_index(self, index):
         """
@@ -222,7 +233,7 @@ class OutputTable:
             raise TritonModelAnalyzerException(
                 f"Index {index} out of range for remove_column_by_index")
         self._headers.pop(index)
-        self._widths.pop(index)
+        self._column_widths.pop(index)
         for row in self._rows:
             row.pop(index)
 
@@ -244,7 +255,7 @@ class OutputTable:
                 f"{header} not present in table")
         self.remove_column_by_index(index)
 
-    def to_formatted_string(self, separator=''):
+    def to_formatted_string(self, separator='', ignore_widths=False):
         """
         Converts the table into its string representation
         making it easy to write by a writer
@@ -254,7 +265,10 @@ class OutputTable:
         separator : str
             The string that will separate columns of a row in th
             table
-        
+        ignore_widths : bool
+            Each cell is as wide as its content. Useful
+            for csv format.
+
         Returns
         -------
         str
@@ -263,19 +277,23 @@ class OutputTable:
 
         output_rows = []
         for row in [self._headers] + self._rows:
-            output_rows.append(self._row_to_string(row, separator))
+            output_rows.append(
+                self._row_to_string(row, separator, ignore_widths))
         return '\n'.join(output_rows)
 
-    def _row_to_string(self, row, separator):
+    def _row_to_string(self, row, separator, ignore_widths):
         """
         Converts a single row to 
         its string representation
         """
 
-        return separator.join([
-            self._pad_or_trunc(str(row[j]), self._widths[j])
-            if self._widths[j] else str(row[j]) for j in range(len(row))
-        ])
+        if ignore_widths:
+            return separator.join([str(row[j]) for j in range(len(row))])
+        else:
+            return separator.join([
+                self._pad_or_trunc(str(row[j]), self._column_widths[j])
+                for j in range(len(row))
+            ])
 
     def _pad_or_trunc(self, string, length):
         """

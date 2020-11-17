@@ -58,7 +58,7 @@ class Analyzer:
         """
 
         self.perf_analyzer_path = args.perf_analyzer_path
-        self.base_duration = args.base_duration
+        self.duration_seconds = args.duration_seconds
         self.monitoring_interval = args.monitoring_interval
         self.monitoring_metrics = monitoring_metrics
         self.param_headers = ['Model', 'Batch', 'Concurrency']
@@ -153,7 +153,7 @@ class Analyzer:
 
         dcgm_monitor.destroy()
 
-    def write_results(self, writer, column_separator, ignore_widths=False):
+    def write_results(self, writer, column_separator):
         """
         Writes the tables using the writer with the given
         column specifications.
@@ -165,23 +165,21 @@ class Analyzer:
         column_separator : str
             The string that will be inserted between each column
             of the table
-        ignore_widths : boolean
-            If true, columns of the table will not be of fixed widths,
-            they will vary with the contents.
 
         Raises
         ------
         TritonModelAnalyzerException
         """
 
+        uniform_widths = self._get_max_width_across_tables()
         for table_name in self.tables:
-            self._write_result(table_name, writer, column_separator,
-                               ignore_widths)
-
-    def export_server_only_csv(self,
+            self._set_table_column_widths(table_name, uniform_widths)
+            self._write_result(table_name,
                                writer,
                                column_separator,
-                               ignore_widths=False):
+                               ignore_widths=False)
+
+    def export_server_only_csv(self, writer, column_separator):
         """
         Writes the server-only table as
         a csv file using the given writer
@@ -193,9 +191,6 @@ class Analyzer:
         column_separator : str
             The string that will be inserted between each column
             of the table
-        ignore_widths : boolean
-            If true, columns of the table will not be of fixed widths,
-            they will vary with the contents.
 
         Raises
         ------
@@ -205,10 +200,10 @@ class Analyzer:
         self._write_result("Server Only:",
                            writer,
                            column_separator,
-                           ignore_widths,
+                           ignore_widths=True,
                            write_table_name=False)
 
-    def export_model_csv(self, writer, column_separator, ignore_widths=False):
+    def export_model_csv(self, writer, column_separator):
         """
         Writes the model table as
         a csv file using the given writer
@@ -220,9 +215,6 @@ class Analyzer:
         column_separator : str
             The string that will be inserted between each column
             of the table
-        ignore_widths : boolean
-            If true, columns of the table will not be of fixed widths,
-            they will vary with the contents.
 
         Raises
         ------
@@ -232,7 +224,7 @@ class Analyzer:
         self._write_result("Models:",
                            writer,
                            column_separator,
-                           ignore_widths,
+                           ignore_widths=True,
                            write_table_name=False)
 
     def _write_result(self,
@@ -245,18 +237,16 @@ class Analyzer:
         Utility function that writes any table
         """
 
-        if ignore_widths:
-            for header in self.tables[table_name].headers():
-                self.tables[table_name].set_column_width_by_header(
-                    header, None)
         if write_table_name:
             writer.write('\n'.join([
                 table_name, self.tables[table_name].to_formatted_string(
-                    separator=column_separator), "\n"
+                    separator=column_separator, ignore_widths=ignore_widths),
+                "\n"
             ]))
         else:
             writer.write(self.tables[table_name].to_formatted_string(
-                separator=column_separator) + "\n\n")
+                separator=column_separator, ignore_widths=ignore_widths) +
+                         "\n\n")
 
     def _profile(self, perf_analyzer, dcgm_monitor):
         """
@@ -280,7 +270,7 @@ class Analyzer:
                     f"perf_analyzer binary not found : {e}")
         else:
             perf_records = []
-            time.sleep(self.base_duration)
+            time.sleep(self.duration_seconds)
         dcgm_records = dcgm_monitor.stop_recording_metrics()
 
         # Insert all records into aggregator and get aggregated DCGM records
@@ -303,11 +293,7 @@ class Analyzer:
                 table_headers.append(aggregation_tag + ' ' + metric.header())
             else:
                 table_headers.append(metric.header())
-
-        # Set column widths (Model colummn width is 28, rest are 2 more than length of header)
-        column_widths = [28]
-        column_widths += [len(header) + 2 for header in table_headers[1:]]
-        return OutputTable(headers=table_headers, column_widths=column_widths)
+        return OutputTable(headers=table_headers)
 
     def _create_perf_config(self, params):
         """
@@ -320,3 +306,28 @@ class Analyzer:
         for param, value in params.items():
             config[param] = value
         return config
+
+    def _get_max_width_across_tables(self):
+        """
+        Compares the width of all columns across all
+        tables and returns a list of max widths
+        """
+
+        individual_widths = [
+            self.tables[k].column_widths() for k in self.tables
+        ]
+        uniform_widths = individual_widths[0]
+        for widths in individual_widths[1:]:
+            uniform_widths = [
+                max(uniform_widths[j], widths[j]) for j in range(len(widths))
+            ]
+        return uniform_widths
+
+    def _set_table_column_widths(self, table_name, widths):
+        """
+        Sets the column widths of the table with given name
+        by index correspoding to given list of widths.
+        """
+
+        for j in range(len(self.tables[table_name].column_widths())):
+            self.tables[table_name].set_column_width_by_index(j, widths[j])
