@@ -153,53 +153,110 @@ class Analyzer:
 
         dcgm_monitor.destroy()
 
-    def write_server_only_result(self, writer, column_width, column_separator):
+    def write_results(self, writer, column_separator, ignore_widths=False):
         """
-        Writes the server-only table using the writer with the given
+        Writes the tables using the writer with the given
         column specifications.
 
         Parameters
         ----------
         writer : OutputWriter
             Used to write the result tables to an output stream
-        column_width : int
-            The width of each column of the written table
         column_separator : str
             The string that will be inserted between each column
             of the table
+        ignore_widths : boolean
+            If true, columns of the table will not be of fixed widths,
+            they will vary with the contents.
+
         Raises
         ------
         TritonModelAnalyzerException
         """
 
-        writer.write('\n'.join([
-            'Server Only:', self.tables['Server Only:'].to_formatted_string(
-                column_width=column_width, separator=column_separator), "\n"
-        ]))
+        for table_name in self.tables:
+            self._write_result(table_name, writer, column_separator,
+                               ignore_widths)
 
-    def write_model_result(self, writer, column_width, column_separator):
+    def export_server_only_csv(self,
+                               writer,
+                               column_separator,
+                               ignore_widths=False):
         """
-        Writes the model table using the writer with the given
-        column specifications.
-
+        Writes the server-only table as
+        a csv file using the given writer
+        
         Parameters
         ----------
         writer : OutputWriter
             Used to write the result tables to an output stream
-        column_width : int
-            The width of each column of the written table
         column_separator : str
             The string that will be inserted between each column
             of the table
+        ignore_widths : boolean
+            If true, columns of the table will not be of fixed widths,
+            they will vary with the contents.
+
         Raises
         ------
         TritonModelAnalyzerException
         """
 
-        writer.write('\n'.join([
-            'Models:', self.tables['Models:'].to_formatted_string(
-                column_width=column_width, separator=column_separator), "\n"
-        ]))
+        self._write_result("Server Only:",
+                           writer,
+                           column_separator,
+                           ignore_widths,
+                           write_table_name=False)
+
+    def export_model_csv(self, writer, column_separator, ignore_widths=False):
+        """
+        Writes the model table as
+        a csv file using the given writer
+        
+        Parameters
+        ----------
+        writer : OutputWriter
+            Used to write the result tables to an output stream
+        column_separator : str
+            The string that will be inserted between each column
+            of the table
+        ignore_widths : boolean
+            If true, columns of the table will not be of fixed widths,
+            they will vary with the contents.
+
+        Raises
+        ------
+        TritonModelAnalyzerException
+        """
+
+        self._write_result("Models:",
+                           writer,
+                           column_separator,
+                           ignore_widths,
+                           write_table_name=False)
+
+    def _write_result(self,
+                      table_name,
+                      writer,
+                      column_separator,
+                      ignore_widths=False,
+                      write_table_name=True):
+        """
+        Utility function that writes any table
+        """
+
+        if ignore_widths:
+            for header in self.tables[table_name].headers():
+                self.tables[table_name].set_column_width_by_header(
+                    header, None)
+        if write_table_name:
+            writer.write('\n'.join([
+                table_name, self.tables[table_name].to_formatted_string(
+                    separator=column_separator), "\n"
+            ]))
+        else:
+            writer.write(self.tables[table_name].to_formatted_string(
+                separator=column_separator) + "\n\n")
 
     def _profile(self, perf_analyzer, dcgm_monitor):
         """
@@ -239,13 +296,18 @@ class Analyzer:
         and requested metrics.
         """
 
+        # Create headers
         table_headers = self.param_headers[:]
         for metric in self.monitoring_metrics:
             if metric in self.dcgm_tags:
                 table_headers.append(aggregation_tag + ' ' + metric.header())
             else:
                 table_headers.append(metric.header())
-        return OutputTable(headers=table_headers)
+
+        # Set column widths (Model colummn width is 28, rest are 2 more than length of header)
+        column_widths = [28]
+        column_widths += [len(header) + 2 for header in table_headers[1:]]
+        return OutputTable(headers=table_headers, column_widths=column_widths)
 
     def _create_perf_config(self, params):
         """

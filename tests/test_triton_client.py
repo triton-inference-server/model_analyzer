@@ -51,7 +51,6 @@ TEST_MODEL_NAME = 'test_model'
 
 
 class TestTritonClientMethods(trc.TestResultCollector):
-
     def setUp(self):
         # Mocks
         self.mock_server_docker = MockServerDockerMethods()
@@ -83,8 +82,61 @@ class TestTritonClientMethods(trc.TestResultCollector):
         self.tritonclient_mock.assert_created_http_client_with_args(
             url=HTTP_URL)
 
-    @patch('model_analyzer.triton.server.server.requests', get=MagicMock())
-    def test_load_unload_model(self, requests_mock):
+    def test_wait_for_server_ready(self):
+
+        # For reuse
+        def _test_with_client(self, client):
+            with self.assertRaises(TritonModelAnalyzerException,
+                                   msg="Expected Exception trying"
+                                   " wait for server ready"):
+                self.tritonclient_mock.raise_exception_on_wait_for_server_ready(
+                )
+                client.wait_for_server_ready(num_retries=1)
+            self.tritonclient_mock.reset()
+            client.wait_for_server_ready(num_retries=1)
+
+        # HTTP client
+        client = TritonClientFactory.create_http_client(server_url=HTTP_URL)
+        self.tritonclient_mock.assert_created_http_client_with_args(HTTP_URL)
+        _test_with_client(self, client)
+        self.tritonclient_mock.assert_http_client_waited_for_server_ready()
+
+        # GRPC client
+        client = TritonClientFactory.create_grpc_client(server_url=GRPC_URL)
+        self.tritonclient_mock.assert_created_grpc_client_with_args(GRPC_URL)
+        _test_with_client(self, client)
+        self.tritonclient_mock.assert_grpc_client_waited_for_server_ready()
+
+    def test_wait_for_model_ready(self):
+
+        # For reuse
+        def _test_with_client(self, client):
+            with self.assertRaises(TritonModelAnalyzerException,
+                                   msg="Expected Exception trying"
+                                   " wait for server ready"):
+                self.tritonclient_mock.raise_exception_on_wait_for_model_ready(
+                )
+                client.wait_for_model_ready(model=Model(TEST_MODEL_NAME),
+                                            num_retries=1)
+            self.tritonclient_mock.reset()
+            client.wait_for_model_ready(model=Model(TEST_MODEL_NAME),
+                                        num_retries=1)
+
+        # HTTP client
+        client = TritonClientFactory.create_http_client(server_url=HTTP_URL)
+        self.tritonclient_mock.assert_created_http_client_with_args(HTTP_URL)
+        _test_with_client(self, client)
+        self.tritonclient_mock.assert_http_client_waited_for_model_ready(
+            model_name=TEST_MODEL_NAME)
+
+        # GRPC client
+        client = TritonClientFactory.create_grpc_client(server_url=GRPC_URL)
+        self.tritonclient_mock.assert_created_grpc_client_with_args(GRPC_URL)
+        _test_with_client(self, client)
+        self.tritonclient_mock.assert_grpc_client_waited_for_model_ready(
+            model_name=TEST_MODEL_NAME)
+
+    def test_load_unload_model(self):
 
         # Create client
         client = TritonClientFactory.create_grpc_client(server_url=GRPC_URL)
@@ -92,9 +144,7 @@ class TestTritonClientMethods(trc.TestResultCollector):
 
         # Start the server and wait till it is ready
         self.server.start()
-
-        requests_mock.get.return_value.status_code = 200
-        self.server.wait_for_ready(num_retries=1)
+        client.wait_for_server_ready(num_retries=1)
 
         # Try to load a dummy model and expect error
         with self.assertRaises(TritonModelAnalyzerException,

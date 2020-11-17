@@ -30,9 +30,6 @@ from abc import ABC, abstractmethod
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-WAIT_FOR_READY_NUM_RETRIES = 100
-SERVER_HTTP_PORT = 8000
-
 
 class TritonServer(ABC):
     """
@@ -51,47 +48,3 @@ class TritonServer(ABC):
         """
         Stops and cleans up after the server
         """
-
-    def wait_for_ready(self, num_retries=WAIT_FOR_READY_NUM_RETRIES):
-        """
-        Parameters
-        ----------
-        num_retries : int
-            number of times to send a ready status
-            request to the server before raising
-            an exception
-
-        Raises
-        ------
-        TritonModelAnalyzerException
-            1)  If config doesn't allow http
-                requests
-            2)  If server readiness could not be
-                determined in given num_retries.
-        """
-
-        if self._server_config['allow-http'] is not False:
-            http_port = self._server_config['http-port'] or SERVER_HTTP_PORT
-            url = f"http://localhost:{http_port}/v2/health/ready"
-        else:
-            # TODO to use GRPC to check for ready also
-            raise TritonModelAnalyzerException(
-                'allow-http must be True in order to use wait_for_server_ready'
-            )
-
-        retries = num_retries
-
-        # poll ready endpoint for number of retries
-        while retries > 0:
-            try:
-                r = requests.get(url)
-                if r.status_code == 200:
-                    return True
-            except requests.exceptions.RequestException as e:
-                pass
-            time.sleep(0.1)
-            retries -= 1
-
-        # If num_retries is exceeded return an exception
-        raise TritonModelAnalyzerException(
-            f"Server not ready : num_retries : {num_retries}")
