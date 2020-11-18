@@ -36,6 +36,8 @@ class OutputTable:
     with headers rows
     """
 
+    column_padding = COLUMN_PADDING
+
     def __init__(self, headers):
         """
         Parameters
@@ -47,7 +49,7 @@ class OutputTable:
         self._headers = headers[:]
         self._rows = []
         self._column_widths = [
-            len(header) + COLUMN_PADDING for header in headers
+            len(header) + self.column_padding for header in headers
         ]
 
     def headers(self):
@@ -94,7 +96,7 @@ class OutputTable:
 
         for i in range(len(row)):
             self._column_widths[i] = max(
-                len(str(row[i])) + COLUMN_PADDING, self._column_widths[i])
+                len(str(row[i])) + self.column_padding, self._column_widths[i])
 
     def add_column(self, column, index=None):
         """
@@ -118,7 +120,8 @@ class OutputTable:
         if index is None:
             index = len(self._headers)
         self._headers.insert(index, column[0])
-        column_width = max([len(str(val)) + COLUMN_PADDING for val in column])
+        column_width = max(
+            [len(str(val)) + self.column_padding for val in column])
         self._column_widths.insert(index, column_width)
 
         for i in range(len(self._rows)):
