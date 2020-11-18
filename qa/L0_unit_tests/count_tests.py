@@ -24,32 +24,47 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-TEST_LOG='test.log'
-EXPECTED_NUM_TESTS=`python3 count_tests.py --path ../../tests/`
-source ../common/util.sh
+import argparse
+import os
+import importlib
+import inspect
+import sys
+sys.path.insert(0, '../../')
 
-RET=0
 
-set +e
-python3 -m unittest discover -v -s ../../tests  -t ../../ > $TEST_LOG 2>&1
-if [ $? -ne 0 ]; then
-    RET=1
-else
-    check_test_results $TEST_LOG $EXPECTED_NUM_TESTS
-    if [ $? -ne 0 ]; then
-        cat $TEST_LOG
-        echo -e "\n***\n*** Test Result Verification Failed\n***"
-        RET=1
-    fi
-fi
-set -e
+def args():
+    parser = argparse.ArgumentParser('test_counter')
+    parser.add_argument('--path',
+                        help='Path to use for counting the tests',
+                        type=str)
+    opt = parser.parse_args()
+    return opt
 
-if [ $RET -eq 0 ]; then
-    echo -e "\n***\n*** Test PASSED\n***"
-else
-    cat $CLIENT_LOG
-    echo -e "\n***\n*** Test FAILED\n***"
-fi
 
-exit $RET
+if __name__ == "__main__":
+    number_of_tests = 0
+    opt = args()
+    path = opt.path
 
+    for file_path in os.listdir(path):
+
+        # All the test files start with "Test"
+        if file_path.startswith('test_'):
+            module_name = 'tests.' + file_path.split('.')[0]
+            module = importlib.import_module(module_name)
+            classes = inspect.getmembers(module, inspect.isclass)
+            for class_tuple in classes:
+                class_name = class_tuple[0]
+                class_object = class_tuple[1]
+
+                # All the test classes start with "Test"
+                if class_name.startswith('Test'):
+                    methods = inspect.getmembers(class_object,
+                                                 inspect.isroutine)
+                    for method_tuple in methods:
+                        method_name = method_tuple[0]
+                        if method_name.startswith('test_'):
+                            number_of_tests += 1
+
+    # Print the number of tests
+    print(number_of_tests)
