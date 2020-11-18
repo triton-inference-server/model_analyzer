@@ -56,6 +56,9 @@ class TritonClient:
             try:
                 if self._client.is_server_ready():
                     return
+                else:
+                    time.sleep(0.05)
+                    retries -= 1
             except InferenceServerException as e:
                 if e.status() == 'StatusCode.UNAVAILABLE':
                     time.sleep(0.05)
@@ -135,6 +138,9 @@ class TritonClient:
             try:
                 if self._client.is_model_ready(model.name()):
                     return
+                else:
+                    time.sleep(0.05)
+                    retries -= 1
             except InferenceServerException as e:
                 if e.status() == 'StatusCode.UNAVAILABLE':
                     time.sleep(0.05)

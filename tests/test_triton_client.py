@@ -92,6 +92,13 @@ class TestTritonClientMethods(trc.TestResultCollector):
                 self.tritonclient_mock.raise_exception_on_wait_for_server_ready(
                 )
                 client.wait_for_server_ready(num_retries=1)
+
+            with self.assertRaises(TritonModelAnalyzerException,
+                                   msg="Expected Exception on"
+                                   " server not ready"):
+                self.tritonclient_mock.set_server_not_ready()
+                client.wait_for_server_ready(num_retries=5)
+
             self.tritonclient_mock.reset()
             client.wait_for_server_ready(num_retries=1)
 
@@ -118,6 +125,13 @@ class TestTritonClientMethods(trc.TestResultCollector):
                 )
                 client.wait_for_model_ready(model=Model(TEST_MODEL_NAME),
                                             num_retries=1)
+
+            with self.assertRaises(TritonModelAnalyzerException,
+                                   msg="Expected Exception on"
+                                   " server not ready"):
+                self.tritonclient_mock.set_model_not_ready()
+                client.wait_for_model_ready(model=Model(TEST_MODEL_NAME),
+                                            num_retries=5)
             self.tritonclient_mock.reset()
             client.wait_for_model_ready(model=Model(TEST_MODEL_NAME),
                                         num_retries=1)

@@ -172,6 +172,22 @@ class MockTritonClientMethods:
         self.grpc_mock.return_value.is_model_ready.side_effect = self.exception_mock
         self.http_mock.return_value.is_model_ready.side_effect = self.exception_mock
 
+    def set_server_not_ready(self):
+        """
+        Set is_server_ready's return value to False
+        """
+
+        self.grpc_mock.return_value.is_server_ready.return_value = False
+        self.http_mock.return_value.is_server_ready.return_value = False
+
+    def set_model_not_ready(self):
+        """
+        Set is_model_ready's return value to False
+        """
+
+        self.grpc_mock.return_value.is_model_ready.return_value = False
+        self.http_mock.return_value.is_model_ready.return_value = False
+
     def reset(self):
         """
         Reset the client mocks
@@ -185,3 +201,7 @@ class MockTritonClientMethods:
         self.http_mock.return_value.is_server_ready.side_effect = None
         self.grpc_mock.return_value.is_model_ready.side_effect = None
         self.http_mock.return_value.is_model_ready.side_effect = None
+        self.grpc_mock.return_value.is_server_ready.return_value = True
+        self.http_mock.return_value.is_server_ready.return_value = True
+        self.grpc_mock.return_value.is_model_ready.return_value = True
+        self.http_mock.return_value.is_model_ready.return_value = True
