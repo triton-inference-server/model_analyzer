@@ -24,32 +24,26 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-TEST_LOG='test.log'
-EXPECTED_NUM_TESTS=`python3 count_tests.py --path ../../tests/`
-source ../common/util.sh
+from abc import ABC, abstractmethod
 
-RET=0
 
-set +e
-python3 -m unittest discover -v -s ../../tests  -t ../../ > $TEST_LOG 2>&1
-if [ $? -ne 0 ]; then
-    RET=1
-else
-    check_test_results $TEST_LOG $EXPECTED_NUM_TESTS
-    if [ $? -ne 0 ]; then
-        cat $TEST_LOG
-        echo -e "\n***\n*** Test Result Verification Failed\n***"
-        RET=1
-    fi
-fi
-set -e
+class MockBase(ABC):
+    """
+    Base abstract class for all the mocks
+    """
 
-if [ $RET -eq 0 ]; then
-    echo -e "\n***\n*** Test PASSED\n***"
-else
-    cat $CLIENT_LOG
-    echo -e "\n***\n*** Test FAILED\n***"
-fi
+    def __init__(self):
+        self._patchers = []
+        self._fill_patchers()
 
-exit $RET
+    @abstractmethod
+    def _fill_patchers(self):
+        pass
 
+    def start(self):
+        for patch in self._patchers:
+            patch.start()
+
+    def stop(self):
+        for patch in self._patchers:
+            patch.stop()
