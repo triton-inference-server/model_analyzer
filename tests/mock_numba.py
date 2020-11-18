@@ -24,32 +24,37 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-TEST_LOG='test.log'
-EXPECTED_NUM_TESTS=`python3 count_tests.py --path ../../tests/`
-source ../common/util.sh
+from unittest.mock import patch, Mock, MagicMock
 
-RET=0
+from .mock_dcgm_agent import TEST_PCI_BUS_ID
+from .mock_base import MockBase
 
-set +e
-python3 -m unittest discover -v -s ../../tests  -t ../../ > $TEST_LOG 2>&1
-if [ $? -ne 0 ]; then
-    RET=1
-else
-    check_test_results $TEST_LOG $EXPECTED_NUM_TESTS
-    if [ $? -ne 0 ]; then
-        cat $TEST_LOG
-        echo -e "\n***\n*** Test Result Verification Failed\n***"
-        RET=1
-    fi
-fi
-set -e
 
-if [ $RET -eq 0 ]; then
-    echo -e "\n***\n*** Test PASSED\n***"
-else
-    cat $CLIENT_LOG
-    echo -e "\n***\n*** Test FAILED\n***"
-fi
+class MockNumba(MockBase):
+    """
+    Mocks numba class
+    """
 
-exit $RET
+    def _fill_patchers(self):
+        patchers = self._patchers
 
+        numba_imports_path = ['model_analyzer.device.gpu_device_factory']
+
+        for import_path in numba_imports_path:
+            device = MagicMock()
+
+            # Ignore everything after 0
+            test_pci_id = str(TEST_PCI_BUS_ID, encoding='ascii').split('.')[0]
+
+            pci_domain_id, pci_bus_id, pci_device_id = test_pci_id.split(':')
+            device.get_device_identity = MagicMock(
+                return_value={
+                    'pci_bus_id': int(pci_bus_id, 16),
+                    'pci_domain_id': int(pci_domain_id, 16),
+                    'pci_device_id': int(pci_device_id, 16)
+                })
+            device.id = 0
+            list_devices = MagicMock()
+            list_devices.return_value = [device]
+            patchers.append(
+                patch(f'{import_path}.numba.cuda.list_devices', list_devices))
