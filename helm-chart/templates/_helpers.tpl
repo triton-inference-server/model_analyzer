@@ -16,7 +16,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "memory-analyzer.name" -}}
+{{- define "model-analyzer.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
@@ -25,7 +25,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "memory-analyzer.fullname" -}}
+{{- define "model-analyzer.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
@@ -41,16 +41,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "memory-analyzer.chart" -}}
+{{- define "model-analyzer.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
 Common labels
 */}}
-{{- define "memory-analyzer.labels" -}}
-app.kubernetes.io/name: {{ include "memory-analyzer.name" . }}
-helm.sh/chart: {{ include "memory-analyzer.chart" . }}
+{{- define "model-analyzer.labels" -}}
+app.kubernetes.io/name: {{ include "model-analyzer.name" . }}
+helm.sh/chart: {{ include "model-analyzer.chart" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
@@ -61,9 +61,9 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "memory-analyzer.serviceAccountName" -}}
+{{- define "model-analyzer.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create -}}
-    {{ default (include "memory-analyzer.fullname" .) .Values.serviceAccount.name }}
+    {{ default (include "model-analyzer.fullname" .) .Values.serviceAccount.name }}
 {{- else -}}
     {{ default "default" .Values.serviceAccount.name }}
 {{- end -}}

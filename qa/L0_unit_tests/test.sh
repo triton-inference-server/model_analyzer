@@ -47,7 +47,7 @@ set -e
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"
 else
-    cat $CLIENT_LOG
+    cat $TEST_LOG
     echo -e "\n***\n*** Test FAILED\n***"
 fi
 
