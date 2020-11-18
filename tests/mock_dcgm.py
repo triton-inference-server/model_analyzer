@@ -24,32 +24,38 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-TEST_LOG='test.log'
-EXPECTED_NUM_TESTS=`python3 count_tests.py --path ../../tests/`
-source ../common/util.sh
+from unittest.mock import patch, Mock, MagicMock
 
-RET=0
+from .mock_dcgm_field_group_watcher import MockDCGMFieldGroupWatcherHelper
+from .mock_dcgm_agent import MockDCGMAgent
+from .mock_base import MockBase
 
-set +e
-python3 -m unittest discover -v -s ../../tests  -t ../../ > $TEST_LOG 2>&1
-if [ $? -ne 0 ]; then
-    RET=1
-else
-    check_test_results $TEST_LOG $EXPECTED_NUM_TESTS
-    if [ $? -ne 0 ]; then
-        cat $TEST_LOG
-        echo -e "\n***\n*** Test Result Verification Failed\n***"
-        RET=1
-    fi
-fi
-set -e
 
-if [ $RET -eq 0 ]; then
-    echo -e "\n***\n*** Test PASSED\n***"
-else
-    cat $CLIENT_LOG
-    echo -e "\n***\n*** Test FAILED\n***"
-fi
+class MockDCGM(MockBase):
+    """
+    Mocks dcgm_agent methods.
+    """
 
-exit $RET
+    def _fill_patchers(self):
+        patchers = self._patchers
 
+        structs_imports_path = [
+            'model_analyzer.monitor.dcgm.dcgm_monitor',
+            'model_analyzer.device.gpu_device_factory'
+        ]
+        for import_path in structs_imports_path:
+            patchers.append(
+                patch(f'{import_path}.structs._dcgmInit', MagicMock()))
+
+        dcgm_agent_imports_path = [
+            'model_analyzer.monitor.dcgm.dcgm_monitor',
+            'model_analyzer.device.gpu_device_factory'
+        ]
+        for import_path in dcgm_agent_imports_path:
+            patchers.append(patch(f'{import_path}.dcgm_agent', MockDCGMAgent))
+
+        patchers.append(
+            patch(
+                'model_analyzer.monitor.dcgm.dcgm_monitor.dcgm_field_helpers.DcgmFieldGroupWatcher',
+                MockDCGMFieldGroupWatcherHelper,
+            ))

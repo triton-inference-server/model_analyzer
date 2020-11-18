@@ -39,9 +39,18 @@ from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 import test_result_collector as trc
+from .mock_dcgm import MockDCGM
+from .mock_numba import MockNumba
+from .mock_dcgm_field_group_watcher import TEST_RECORD_VALUE
 
 
 class TestDCGMMonitor(trc.TestResultCollector):
+
+    def setUp(self):
+        self.mock_dcgm = MockDCGM()
+        self.mock_numba = MockNumba()
+        self.mock_dcgm.start()
+        self.mock_numba.start()
 
     def test_record_memory(self):
         # One measurement every 0.01 seconds
@@ -57,6 +66,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
         for record in records:
             self.assertIsInstance(record.device(), GPUDevice)
             self.assertIsInstance(record.value(), float)
+            self.assertTrue(record.value() == TEST_RECORD_VALUE)
             self.assertIsInstance(record.timestamp(), int)
 
         # The number of records should be dividable by number of tags
@@ -89,6 +99,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
             self.assertIsInstance(record.device(), GPUDevice)
             self.assertIsInstance(record.value(), float)
             self.assertTrue(record.value() <= 100)
+            self.assertTrue(record.value() == TEST_RECORD_VALUE)
             self.assertIsInstance(record.timestamp(), int)
 
         # The number of records should be dividable by number of tags
@@ -98,6 +109,10 @@ class TestDCGMMonitor(trc.TestResultCollector):
                         records[0].timestamp() >= monitoring_time)
 
         dcgm_monitor.destroy()
+
+    def tearDown(self):
+        self.mock_dcgm.stop()
+        self.mock_numba.stop()
 
 
 if __name__ == '__main__':
