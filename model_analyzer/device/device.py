@@ -12,22 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .client import TritonClient
-import tritonclient.grpc as grpcclient
 
-
-class TritonGRPCClient(TritonClient):
+class Device:
     """
-    Concrete implementation of TritonClient
-    for GRPC
+    Generic device class representing devices being monitored
     """
 
-    def __init__(self, server_url):
-        """
-        Parameters
-        ----------
-        server_url : str
-            The url for Triton server's GRPC endpoint
-        """
-
-        self._client = grpcclient.InferenceServerClient(url=server_url)
+    def __init__(self):
+        pass
