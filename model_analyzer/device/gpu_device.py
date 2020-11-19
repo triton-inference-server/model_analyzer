@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.device.model import Device
+from model_analyzer.device.device import Device
 
 
 class GPUDevice(Device):
