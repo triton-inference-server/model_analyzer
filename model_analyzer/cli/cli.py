@@ -116,6 +116,7 @@ class CLI:
         )
         self._parser.add_argument(
             '--triton-version',
+            default='20.11-py3',
             type=str,
             help='Triton Server version')
         self._parser.add_argument(
