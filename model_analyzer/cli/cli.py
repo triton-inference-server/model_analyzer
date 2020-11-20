@@ -116,16 +116,19 @@ class CLI:
         )
         self._parser.add_argument(
             '--triton-version',
+            default='20.11-py3',
             type=str,
             help='Triton Server version')
         self._parser.add_argument(
             '--triton-http-endpoint',
             type=str,
+            default='localhost:8000',
             help="Triton Server HTTP endpoint url used by Model Analyzer client. "
                  "Will be ignored if server-launch-mode is not 'remote'")
         self._parser.add_argument(
             '--triton-grpc-endpoint',
             type=str,
+            default='localhost:8001',
             help="Triton Server HTTP endpoint url used by Model Analyzer client. "
                  "Will be ignored if server-launch-mode is not 'remote'")
         self._parser.add_argument(
@@ -137,7 +140,7 @@ class CLI:
 
     def _preprocess_and_verify_arguments(self, args):
         """
-        Enforces some rules on input 
+        Enforces some rules on input
         arguments. Sets some defaults.
 
         Parameters
@@ -189,12 +192,12 @@ class CLI:
         Retrieves the arguments from the command
         line and loads them into an ArgumentParser
         Also does some sanity checks for arguments.
-        
+
         Returns
         -------
         argparse.Namespace
             containing all the parsed arguments
-        
+
         Raises
         ------
         TritonModelAnalyzerException
