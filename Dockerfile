@@ -44,6 +44,9 @@ RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/
 WORKDIR /opt/triton-model-analyzer
 RUN rm -fr *
 COPY . .
+RUN apt-get update && apt-get install -y unzip && \
+    cd qa/common/ && chmod +x get_models.sh && \
+    ./get_models.sh
 RUN python3 setup.py install
 
 ENTRYPOINT []

@@ -27,14 +27,11 @@ class TritonServerDocker(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     triton in a docker container.
     """
-    def __init__(self, model_path, image, config, gpus):
+
+    def __init__(self, image, config, gpus):
         """
         Parameters
         ----------
-        model_path : str
-            The absolute path to the local directory containing the models.
-            In the case of locally running server, this may be the same as
-            the model repository path
         image : str
             The tritonserver docker image to pull and run
         config : TritonServerConfig
@@ -44,7 +41,7 @@ class TritonServerDocker(TritonServer):
         """
 
         self._server_config = config
-        self._model_path = model_path
+        self._host_container = host_container
         self._docker_client = docker.from_env()
         self._tritonserver_image = image
         self._tritonserver_container = None
@@ -70,7 +67,7 @@ class TritonServerDocker(TritonServer):
 
         # Mount required directories
         volumes = {
-            self._model_path: {
+            self._server_config['model-repository']: {
                 'bind': self._server_config['model-repository'],
                 'mode': 'rw'
             }
@@ -93,6 +90,7 @@ class TritonServerDocker(TritonServer):
             image=self._tritonserver_image,
             device_requests=devices,
             volumes=volumes,
+            volumes_from=[self._host_container],
             ports=ports,
             publish_all_ports=True,
             tty=True,

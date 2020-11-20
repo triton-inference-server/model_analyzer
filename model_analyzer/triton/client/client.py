@@ -14,7 +14,6 @@
 
 import time
 
-from tritonclient.utils import InferenceServerException
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
@@ -47,11 +46,10 @@ class TritonClient:
                 else:
                     time.sleep(0.05)
                     retries -= 1
-            except InferenceServerException as e:
-                if e.status() == 'StatusCode.UNAVAILABLE':
-                    time.sleep(0.05)
-                    retries -= 1
-                else:
+            except Exception as e:
+                time.sleep(0.05)
+                retries -= 1
+                if retries == 0:
                     raise TritonModelAnalyzerException(e)
         raise TritonModelAnalyzerException(
             "Could not determine server readiness. "
@@ -71,11 +69,11 @@ class TritonClient:
         Raises
         ------
         TritonModelAnalyzerException
-            If server throws InferenceServerException
+            If server throws Exception
         """
         try:
             self._client.load_model(model.name())
-        except InferenceServerException as e:
+        except Exception as e:
             raise TritonModelAnalyzerException(
                 f"Unable to load the model : {e}")
 
@@ -93,11 +91,11 @@ class TritonClient:
         Raises
         ------
         TritonModelAnalyzerException
-            If server throws InferenceServerException
+            If server throws Exception
         """
         try:
             self._client.unload_model(model.name())
-        except InferenceServerException as e:
+        except Exception as e:
             raise TritonModelAnalyzerException(
                 f"Unable to unload the model : {e}")
 
@@ -129,11 +127,10 @@ class TritonClient:
                 else:
                     time.sleep(0.05)
                     retries -= 1
-            except InferenceServerException as e:
-                if e.status() == 'StatusCode.UNAVAILABLE':
-                    time.sleep(0.05)
-                    retries -= 1
-                else:
+            except Exception as e:
+                time.sleep(0.05)
+                retries -= 1
+                if retries == 0:
                     raise TritonModelAnalyzerException(e)
         raise TritonModelAnalyzerException(
             "Could not determine model readiness. "

@@ -121,6 +121,13 @@ class CLI:
             type=str,
             help='Triton Server version')
         self._parser.add_argument(
+            '--host-container',
+            type=str,
+            help="Name or ID of the container model-analyzer is running inside. "
+                 "This is necessary if running in triton-launch-mode='docker' "
+                 "in order to mount volumes from this container into the "
+                 "Triton Container.")
+        self._parser.add_argument(
             '--triton-http-endpoint',
             type=str,
             default='localhost:8000',
@@ -176,12 +183,6 @@ class CLI:
             elif args.export_path and not os.path.isdir(args.export_path):
                 raise TritonModelAnalyzerException(
                     f"Export path {args.export_path} is not a directory.")
-        if args.triton_launch_mode != 'remote':
-            if args.triton_http_endpoint or args.triton_grpc_endpoint:
-                print(f"triton-launch-mode is {args.triton_launch_mode}."
-                      " Specified Triton endpoints will be ignored.")
-            args.triton_http_endpoint = 'localhost:8000'
-            args.triton_grpc_endpoint = 'localhost:8001'
         if args.triton_launch_mode == 'remote':
             if args.client_protocol == 'http' and not args.triton_http_endpoint:
                 raise TritonModelAnalyzerException(
@@ -194,9 +195,9 @@ class CLI:
                     "if connecting to already running server or change protocol using "
                     "--client-protocol.")
         elif args.triton_launch_mode == 'docker':
-            if not args.triton_version:
+            if not args.host_container:
                 raise TritonModelAnalyzerException(
-                    "triton-launch-mode is 'docker'. Must specify triton-version "
+                    "triton-launch-mode is 'docker'. Must specify host-container "
                     "if launching server docker container or change launch mode using "
                     "--triton-launch-mode.")
         args.gpus = args.gpus.split(',')

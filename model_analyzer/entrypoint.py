@@ -88,10 +88,9 @@ def get_server_handle(args):
         triton_config['model-repository'] = args.model_repository
         triton_config['model-control-mode'] = 'explicit'
         server = TritonServerFactory.create_server_docker(
-            gpus=args.gpus,
-            model_path=args.model_repository,
             image='nvcr.io/nvidia/tritonserver:' + args.triton_version,
-            config=triton_config)
+            config=triton_config,
+            gpus=args.gpus)
         server.start()
     else:
         raise TritonModelAnalyzerException(
@@ -186,9 +185,9 @@ def create_run_configs(args):
     """
 
     sweep_params = {
-        'model-name': args.model_names.split(','),
-        'batch-size': args.batch_sizes.split(','),
-        'concurrency-range': args.concurrency.split(',')
+        'model-name': [name.strip() for name in args.model_names.split(',')],
+        'batch-size': [batch.strip() for batch in args.batch_sizes.split(',')],
+        'concurrency-range': [c.strip() for c in args.concurrency.split(',')]
     }
     param_combinations = list(product(*tuple(sweep_params.values())))
     run_params = [

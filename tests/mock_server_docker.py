@@ -64,7 +64,7 @@ class MockServerDockerMethods(MockServerMethods):
 
     def assert_server_process_start_called_with(self,
                                                 cmd,
-                                                local_model_path,
+                                                host_container_name,
                                                 model_repository_path,
                                                 triton_image,
                                                 http_port=8000,
@@ -78,7 +78,7 @@ class MockServerDockerMethods(MockServerMethods):
         self._assert_docker_initialized()
 
         mock_volumes = {
-            local_model_path: {
+            model_repository_path: {
                 'bind': model_repository_path,
                 'mode': 'rw'
             }
@@ -86,8 +86,10 @@ class MockServerDockerMethods(MockServerMethods):
         mock_ports = {http_port: 8000, grpc_port: 8001, metrics_port: 8002}
         self.mock.from_env.return_value.containers.run.assert_called_once_with(
             image=triton_image,
+            name='triton-server',
             device_requests=[0],
             volumes=mock_volumes,
+            volumes_from=[host_container_name],
             ports=mock_ports,
             publish_all_ports=True,
             tty=True,

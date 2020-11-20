@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright 2020, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,27 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TEST_LOG='test.log'
-source ../common/util.sh
+DIR="$(cd "$(dirname "$0")" && pwd)"
+MODEL_LINKS_TXT="${DIR}/clara_deploy_pipelines.txt"
+MODEL_REPOSITORY_PATH="/qa_model_repository"
 
-rm test.log
+rm -rf $MODEL_REPOSITORY_PATH && mkdir -p $MODEL_REPOSITORY_PATH
+cd $MODEL_REPOSITORY_PATH
 
-MODEL_ANALYZER=`which model-analyzer`
-
-RET=0
-
-set +e
-run_analyzer
-if [ $? != 2 ]; then
-    echo -e "\n***\n*** Failed to run model-analyzer. \n***"
-    cat $ANALYZER_LOG
-    RET=1
-fi
-set -e
-
-if [ $RET -eq 0 ]; then
-    echo -e "\n***\n*** Test PASSED\n***"
-else
-    echo -e "\n***\n*** Test FAILED\n***"
-fi
-exit $RET
+# Get each file in links, unzip and extract model folder
+while IFS= read -r line
+do
+    [[ $line == \#* ]] || [[ -z $line ]] && continue
+    wget -q --content-disposition $line -P $MODEL_REPOSITORY_PATH
+    unzip files.zip
+    unzip app_*model*.zip
+    rm *.zip *.yaml *.txt
+done < $MODEL_LINKS_TXT
