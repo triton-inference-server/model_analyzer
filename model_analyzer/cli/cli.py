@@ -121,13 +121,6 @@ class CLI:
             type=str,
             help='Triton Server version')
         self._parser.add_argument(
-            '--host-container',
-            type=str,
-            help="Name or ID of the container model-analyzer is running inside. "
-                 "This is necessary if running in triton-launch-mode='docker' "
-                 "in order to mount volumes from this container into the "
-                 "Triton Container.")
-        self._parser.add_argument(
             '--triton-http-endpoint',
             type=str,
             default='localhost:8000',
@@ -194,12 +187,6 @@ class CLI:
                     "client-protocol is 'grpc'. Must specify triton-grpc-endpoint "
                     "if connecting to already running server or change protocol using "
                     "--client-protocol.")
-        elif args.triton_launch_mode == 'docker':
-            if not args.host_container:
-                raise TritonModelAnalyzerException(
-                    "triton-launch-mode is 'docker'. Must specify host-container "
-                    "if launching server docker container or change launch mode using "
-                    "--triton-launch-mode.")
         args.gpus = args.gpus.split(',')
 
     def parse(self):

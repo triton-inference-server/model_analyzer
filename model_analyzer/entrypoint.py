@@ -266,22 +266,28 @@ def main():
     Main entrypoint of model_analyzer
     """
 
-    args = CLI().parse()
     monitoring_metrics = [
         PerfThroughput, GPUUtilization, GPUUsedMemory, GPUFreeMemory
     ]
-
-    analyzer = Analyzer(args, monitoring_metrics)
-
-    client, server = get_triton_handles(args)
-    run_configs = create_run_configs(args)
+    try:
+        args = CLI().parse()
+    except TritonModelAnalyzerException as e:
+        print(f"Model-analyzer encountered an error : {e}")
 
     try:
+        analyzer = Analyzer(args, monitoring_metrics)
+
+        client, server = get_triton_handles(args)
+        run_configs = create_run_configs(args)
+
         run_analyzer(args, analyzer, client, run_configs)
+
+        write_results(args, analyzer)
+
+    except TritonModelAnalyzerException as e:
+        print(f"Model-analyzer encountered an error : {e}")
     finally:
         server.stop()
-
-    write_results(args, analyzer)
 
 
 if __name__ == '__main__':

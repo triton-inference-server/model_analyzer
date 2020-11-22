@@ -144,8 +144,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
         self.server.start()
         self.server_docker_mock.assert_server_process_start_called_with(
             TRITON_DOCKER_BIN_PATH + ' ' + server_config.to_cli_string(),
-            HOST_CONTAINER_NAME, MODEL_REPOSITORY_PATH, TRITON_IMAGE, 8000,
-            8001, 8002)
+            MODEL_REPOSITORY_PATH, TRITON_IMAGE, 8000, 8001, 8002)
 
         # Stop container and check api calls
         self.server.stop()

@@ -15,12 +15,12 @@
 ANALYZER_LOG="test.log"
 source ../common/util.sh
 
-rm -rf *.log
+rm -f *.log
 rm -rf results && mkdir -p results
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
-MODEL_REPOSITORY="/qa_model_repository"
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_clara_pipelines"}
 MODEL_NAMES="classification_chestxray_v1"
 BATCH_SIZES="1"
 CONCURRENCY="1"

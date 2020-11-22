@@ -41,7 +41,6 @@ class TritonServerDocker(TritonServer):
         """
 
         self._server_config = config
-        self._host_container = host_container
         self._docker_client = docker.from_env()
         self._tritonserver_image = image
         self._tritonserver_container = None
@@ -69,12 +68,11 @@ class TritonServerDocker(TritonServer):
         volumes = {
             self._server_config['model-repository']: {
                 'bind': self._server_config['model-repository'],
-                'mode': 'rw'
+                'mode': 'ro'
             }
         }
 
-        # Map ports, use config values but set to server defaults if not
-        # specified
+        # Map ports, use config values but set to server defaults if not specified
         server_http_port = self._server_config['http-port'] or 8000
         server_grpc_port = self._server_config['grpc-port'] or 8001
         server_metrics_port = self._server_config['metrics-port'] or 8002
@@ -88,9 +86,9 @@ class TritonServerDocker(TritonServer):
         # Run the docker container
         self._tritonserver_container = self._docker_client.containers.run(
             image=self._tritonserver_image,
+            name='triton-server',
             device_requests=devices,
             volumes=volumes,
-            volumes_from=[self._host_container],
             ports=ports,
             publish_all_ports=True,
             tty=True,

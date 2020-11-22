@@ -14,21 +14,22 @@
 
 source ../common/util.sh
 
-rm -rf *.log
+rm -f *.log
+python3 ../common/cleanup.py $CONTAINER_NAME || true
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
-MODEL_REPOSITORY="/qa_model_repository"
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_clara_pipelines"}
 MODEL_NAMES="classification_chestxray_v1"
-BATCH_SIZES="1"
-CONCURRENCY="1,2"
+BATCH_SIZES="4"
+CONCURRENCY="4"
 MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -n $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY"
 TRITON_LAUNCH_MODES="docker remote local"
-TRITON_SERVER_VERSION="20.10-py3"
+TRITON_SERVER_VERSION="20.11-py3"
 CLIENT_PROTOCOLS="http grpc"
 http_url='localhost:8000'
 grpc_url='localhost:8001'
-TEST_OUTPUT_NUM_ROWS=2
+TEST_OUTPUT_NUM_ROWS=1
 TEST_OUTPUT_NUM_COLUMNS=7
 
 # Run the model-analyzer, both client protocols
@@ -44,7 +45,7 @@ for PROTOCOL in $CLIENT_PROTOCOLS; do
         if [ "$LAUNCH_MODE" == "local" ]; then    
             MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE"
         elif [ "$LAUNCH_MODE" == "docker" ]; then
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE --triton-version=$TRITON_SERVER_VERSION --host-container=$CONTAINER_NAME"
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE --triton-version=$TRITON_SERVER_VERSION"
         elif [ "$LAUNCH_MODE" == "remote" ]; then
             ENDPOINT=${PROTOCOL}_url 
             MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE --triton-${PROTOCOL}-endpoint=${!ENDPOINT}"
@@ -83,6 +84,8 @@ for PROTOCOL in $CLIENT_PROTOCOLS; do
         if [ "$LAUNCH_MODE" == "remote" ]; then
             kill $SERVER_PID
             wait $SERVER_PID
+        elif [ "$LAUNCH_MODE" == "docker" ]; then
+            python3 ../common/cleanup.py $CONTAINER_NAME || true
         fi
     done
 done

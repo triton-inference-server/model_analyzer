@@ -15,7 +15,7 @@
 TEST_LOG='test.log'
 source ../common/util.sh
 
-rm test.log
+rm -f test.log
 
 MODEL_ANALYZER=`which model-analyzer`
 

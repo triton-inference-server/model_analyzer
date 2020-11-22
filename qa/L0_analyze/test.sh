@@ -15,16 +15,16 @@
 ANALYZER_LOG="test.log"
 source ../common/util.sh
 
-rm -rf *.log
+rm -f *.log
 rm -rf results && mkdir -p results
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
-MODEL_REPOSITORY="/qa_model_repository"
-QA_MODELS="`ls /qa_model_repository`"
-MODEL_NAMES=$(echo $QA_MODELS | sed 's/ /,/g')
-BATCH_SIZES="1,2,4,8,16"
-CONCURRENCY="1,2,4,8,16"
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_clara_pipelines"}
+QA_MODELS="`ls $MODEL_REPOSITORY | head -2`"
+MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
+BATCH_SIZES="1,2"
+CONCURRENCY="1,2"
 EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_MODEL="model-metrics.csv"
@@ -37,9 +37,10 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --t
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --export -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY --filename-model=$FILENAME_MODEL"
 
 # Compute expected columns
-NUM_MODELS=`ls $MODEL_REPOSITORY | wc -l`
-let "TEST_OUTPUT_NUM_ROWS = $NUM_MODELS * 25"
-echo $MODEL_NAMES
+NUM_MODELS=`echo $QA_MODELS | awk '{print NF}'`
+NUM_BATCHES=`echo $BATCH_SIZES | awk -F ',' '{print NF}'`
+NUM_CONCURRENCIES=`echo $CONCURRENCY | awk -F ',' '{print NF}'`
+let "TEST_OUTPUT_NUM_ROWS = $NUM_MODELS * $NUM_BATCHES * $NUM_CONCURRENCIES"
 
 # Run the analyzer and check the results
 RET=0
