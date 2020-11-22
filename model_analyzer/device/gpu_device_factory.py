@@ -23,7 +23,6 @@ class GPUDeviceFactory:
     """
     Factory class for creating GPUDevices
     """
-
     @staticmethod
     def create_device_by_bus_id(bus_id, dcgmPath=None):
         """
@@ -97,7 +96,52 @@ class GPUDeviceFactory:
         pci_domain_id = device_identity['pci_domain_id']
         pci_device_id = device_identity['pci_device_id']
         pci_bus_id = device_identity['pci_bus_id']
-        device_bus_id = f'{pci_domain_id:08X}:{pci_bus_id:02X}:{pci_device_id:02X}.0'
+        device_bus_id = \
+            f'{pci_domain_id:08X}:{pci_bus_id:02X}:{pci_device_id:02X}.0'
 
         return GPUDeviceFactory.create_device_by_bus_id(
             bytes(device_bus_id, encoding='ascii'))
+
+    @staticmethod
+    def create_device_by_uuid(uuid, dcgmPath=None):
+        """
+        Create a GPU device using the GPU uuid.
+
+        Parameters
+        ----------
+        uuid : str
+            index of the device in the list of visible CUDA devices.
+
+        Returns
+        -------
+        Device
+            The device associated with the uuid.
+
+        Raises
+        ------
+        TritonModelAnalyzerExcpetion
+            If the uuid does not exist this exception will be raised.
+        """
+
+        structs._dcgmInit(dcgmPath)
+        dcgm_agent.dcgmInit()
+
+        # Start DCGM in the embedded mode to use the shared library
+        dcgm_handle = dcgm_agent.dcgmStartEmbedded(
+            structs.DCGM_OPERATION_MODE_MANUAL)
+        gpu_devices = dcgm_agent.dcgmGetAllSupportedDevices(dcgm_handle)
+        for gpu_device in gpu_devices:
+            device_atrributes = dcgm_agent.dcgmGetDeviceAttributes(
+                dcgm_handle, gpu_device).identifiers
+            pci_bus_id = bytes(
+                device_atrributes.pciBusId.decode('ascii').upper(),
+                encoding='ascii')
+            device_uuid = device_atrributes.uuid
+            if bytes(uuid, encoding='ascii') == device_uuid:
+                gpu_device = GPUDevice(gpu_device, pci_bus_id, device_uuid)
+                dcgm_agent.dcgmShutdown()
+                return gpu_device
+        else:
+            dcgm_agent.dcgmShutdown()
+            raise TritonModelAnalyzerException(
+                f'GPU UUID {uuid} was not found.')

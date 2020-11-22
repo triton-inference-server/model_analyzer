@@ -45,16 +45,17 @@ class Analyzer:
             The list of metric types to monitor.
         """
 
-        self.perf_analyzer_path = args.perf_analyzer_path
-        self.duration_seconds = args.duration_seconds
-        self.monitoring_interval = args.monitoring_interval
-        self.monitoring_metrics = monitoring_metrics
-        self.param_headers = ['Model', 'Batch', 'Concurrency']
+        self._perf_analyzer_path = args.perf_analyzer_path
+        self._duration_seconds = args.duration_seconds
+        self._monitoring_interval = args.monitoring_interval
+        self._monitoring_metrics = monitoring_metrics
+        self._param_headers = ['Model', 'Batch', 'Concurrency']
+        self._gpus = args.gpus
 
         # Separates metric tags into perf_analyzer related and DCGM related tags
         self.dcgm_tags = []
         self.perf_tags = []
-        for metric in self.monitoring_metrics:
+        for metric in self._monitoring_metrics:
             if metric in list(DCGMMonitor.model_analyzer_to_dcgm_field):
                 self.dcgm_tags.append(metric)
             elif metric in PerfAnalyzer.perf_metrics:
@@ -67,21 +68,21 @@ class Analyzer:
 
     def profile_server_only(self, default_value='0'):
         """
-        Runs the DCGM monitor on the triton
-        server without the perf_analyzer
+        Runs the DCGM monitor on the triton server without the perf_analyzer
 
         Parameters
         ----------
         default_value : str
-            The value to fill in for columns in the table
-            that don't apply to profiling server only
+            The value to fill in for columns in the table that don't apply to
+            profiling server only
 
         Raises
         ------
         TritonModelAnalyzerException
         """
 
-        dcgm_monitor = DCGMMonitor(self.monitoring_interval, self.dcgm_tags)
+        dcgm_monitor = DCGMMonitor(self._gpus, self._monitoring_interval,
+                                   self.dcgm_tags)
         server_only_metrics = self._profile(perf_analyzer=None,
                                             dcgm_monitor=dcgm_monitor)
 
@@ -89,7 +90,7 @@ class Analyzer:
         output_row = ['triton-server', default_value, default_value]
 
         # add the obtained metrics
-        for metric in self.monitoring_metrics:
+        for metric in self._monitoring_metrics:
             if metric in server_only_metrics:
                 output_row.append(server_only_metrics[metric])
             else:
@@ -99,28 +100,27 @@ class Analyzer:
 
     def profile_model(self, run_config, perf_output_writer=None):
         """
-        Runs DCGMMonitor while running perf_analyzer
-        with a specific set of arguments. This will
-        profile model inferencing.
+        Runs DCGMMonitor while running perf_analyzer with a specific set of
+        arguments. This will profile model inferencing.
 
         Parameters
         ----------
         run_config : dict
-            The keys are arguments to perf_analyzer
-            The values are their values
+            The keys are arguments to perf_analyzer The values are their
+            values
         perf_output_writer : OutputWriter
-            Writer that writes the output from  
-            perf_analyzer to the output stream/file.
-            If None, the output is not written
+            Writer that writes the output from perf_analyzer to the output
+            stream/file. If None, the output is not written
 
         Raises
         ------
         TritonModelAnalyzerException
         """
 
-        dcgm_monitor = DCGMMonitor(self.monitoring_interval, self.dcgm_tags)
+        dcgm_monitor = DCGMMonitor(self._gpus, self._monitoring_interval,
+                                   self.dcgm_tags)
         perf_analyzer = PerfAnalyzer(
-            path=self.perf_analyzer_path,
+            path=self._perf_analyzer_path,
             config=self._create_perf_config(run_config))
 
         # Get metrics for model inference and write perf_output
@@ -134,7 +134,7 @@ class Analyzer:
             run_config['concurrency-range']
         ]
         output_row += [
-            model_metrics[metric] for metric in self.monitoring_metrics
+            model_metrics[metric] for metric in self._monitoring_metrics
         ]
 
         self.tables["Models:"].add_row(output_row)
@@ -143,8 +143,8 @@ class Analyzer:
 
     def write_results(self, writer, column_separator):
         """
-        Writes the tables using the writer with the given
-        column specifications.
+        Writes the tables using the writer with the given column
+        specifications.
 
         Parameters
         ----------
@@ -169,9 +169,8 @@ class Analyzer:
 
     def export_server_only_csv(self, writer, column_separator):
         """
-        Writes the server-only table as
-        a csv file using the given writer
-        
+        Writes the server-only table as a csv file using the given writer
+
         Parameters
         ----------
         writer : OutputWriter
@@ -193,9 +192,8 @@ class Analyzer:
 
     def export_model_csv(self, writer, column_separator):
         """
-        Writes the model table as
-        a csv file using the given writer
-        
+        Writes the model table as a csv file using the given writer
+
         Parameters
         ----------
         writer : OutputWriter
@@ -244,7 +242,7 @@ class Analyzer:
         Raises
         ------
         TritonModelAnalyzerException
-            if path to perf_analyzer binary could 
+            if path to perf_analyzer binary could
             not be found.
         """
 
@@ -258,7 +256,7 @@ class Analyzer:
                     f"perf_analyzer binary not found : {e}")
         else:
             perf_records = []
-            time.sleep(self.duration_seconds)
+            time.sleep(self._duration_seconds)
         dcgm_records = dcgm_monitor.stop_recording_metrics()
 
         # Insert all records into aggregator and get aggregated DCGM records
@@ -275,8 +273,8 @@ class Analyzer:
         """
 
         # Create headers
-        table_headers = self.param_headers[:]
-        for metric in self.monitoring_metrics:
+        table_headers = self._param_headers[:]
+        for metric in self._monitoring_metrics:
             if metric in self.dcgm_tags:
                 table_headers.append(aggregation_tag + ' ' + metric.header())
             else:
