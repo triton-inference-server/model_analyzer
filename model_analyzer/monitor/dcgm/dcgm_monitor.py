@@ -40,7 +40,7 @@ class DCGMMonitor(Monitor):
         GPUUtilization: dcgm_fields.DCGM_FI_DEV_GPU_UTIL
     }
 
-    def __init__(self, frequency, tags, dcgmPath=None):
+    def __init__(self, gpus, frequency, tags, dcgmPath=None):
         """
         Parameters
         ----------
@@ -52,7 +52,7 @@ class DCGMMonitor(Monitor):
             DCGM installation path
         """
 
-        super().__init__(frequency, tags)
+        super().__init__(gpus, frequency, tags)
         structs._dcgmInit(dcgmPath)
         dcgm_agent.dcgmInit()
 
@@ -98,16 +98,18 @@ class DCGMMonitor(Monitor):
 
             # Find the first key in the metrics dictionary to find the
             # dictionary length
-            first_key = list(metrics)[0]
-            num_metrics = len(metrics[first_key].values)
-            for i in range(num_metrics):
-                for tag in self._tags:
-                    dcgm_field = self.model_analyzer_to_dcgm_field[tag]
+            if len(list(metrics)) > 0:
+                first_key = list(metrics)[0]
+                num_metrics = len(metrics[first_key].values)
+                for i in range(num_metrics):
+                    for tag in self._tags:
+                        dcgm_field = self.model_analyzer_to_dcgm_field[tag]
 
-                    # DCGM timestamp is in nanoseconds
-                    records.append(
-                        tag(gpu, float(metrics[dcgm_field].values[i].value),
-                            metrics[dcgm_field].values[i].ts))
+                        # DCGM timestamp is in nanoseconds
+                        records.append(
+                            tag(gpu,
+                                float(metrics[dcgm_field].values[i].value),
+                                metrics[dcgm_field].values[i].ts))
 
         return records
 

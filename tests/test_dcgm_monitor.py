@@ -29,6 +29,7 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 import test_result_collector as trc
 from .mock_dcgm import MockDCGM
 from .mock_numba import MockNumba
+from .mock_dcgm_agent import TEST_UUID
 from .mock_dcgm_field_group_watcher import TEST_RECORD_VALUE
 
 
@@ -44,7 +45,8 @@ class TestDCGMMonitor(trc.TestResultCollector):
         frequency = 0.01
         monitoring_time = 10
         tags = [GPUUsedMemory, GPUFreeMemory]
-        dcgm_monitor = DCGMMonitor(frequency, tags)
+        gpus = ['all']
+        dcgm_monitor = DCGMMonitor(gpus, frequency, tags)
         dcgm_monitor.start_recording_metrics()
         time.sleep(monitoring_time)
         records = dcgm_monitor.stop_recording_metrics()
@@ -69,14 +71,15 @@ class TestDCGMMonitor(trc.TestResultCollector):
 
         tags = ['UndefinedTag']
         with self.assertRaises(TritonModelAnalyzerException):
-            DCGMMonitor(frequency, tags)
+            DCGMMonitor(gpus, frequency, tags)
 
     def test_record_utilization(self):
         # One measurement every 0.01 seconds
         frequency = 0.01
         monitoring_time = 10
         tags = [GPUUtilization]
-        dcgm_monitor = DCGMMonitor(frequency, tags)
+        gpus = ['all']
+        dcgm_monitor = DCGMMonitor(gpus, frequency, tags)
         dcgm_monitor.start_recording_metrics()
         time.sleep(monitoring_time)
         records = dcgm_monitor.stop_recording_metrics()
@@ -95,6 +98,26 @@ class TestDCGMMonitor(trc.TestResultCollector):
         self.assertTrue(records[-1].timestamp() -
                         records[0].timestamp() >= monitoring_time)
 
+        dcgm_monitor.destroy()
+
+    def test_immediate_start_stop(self):
+        frequency = 0.01
+        tags = [GPUUsedMemory, GPUFreeMemory]
+        gpus = ['all']
+        dcgm_monitor = DCGMMonitor(gpus, frequency, tags)
+        dcgm_monitor.start_recording_metrics()
+        dcgm_monitor.stop_recording_metrics()
+        dcgm_monitor.destroy()
+
+    def test_gpu_id(self):
+        frequency = 0.01
+        tags = [GPUUsedMemory, GPUFreeMemory]
+        gpus = ['UndefinedId']
+        with self.assertRaises(TritonModelAnalyzerException):
+            DCGMMonitor(gpus, frequency, tags)
+
+        gpus = [str(TEST_UUID, encoding='ascii')]
+        dcgm_monitor = DCGMMonitor(gpus, frequency, tags)
         dcgm_monitor.destroy()
 
     def tearDown(self):

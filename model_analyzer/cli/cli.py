@@ -111,8 +111,9 @@ class CLI:
             default='local',
             help="The method by which to launch Triton Server. "
                  "'local' assumes tritonserver binary is available locally. "
-                 "'docker' pulls and launches a triton docker container with the specified version. "
-                 "'remote' connects to a running server using given http, grpc and metrics endpoints. "
+                 "'docker' pulls and launches a triton docker container with "
+                 "the specified version. 'remote' connects to a running "
+                 "server using given http, grpc and metrics endpoints. "
         )
         self._parser.add_argument(
             '--triton-version',
@@ -132,10 +133,22 @@ class CLI:
             help="Triton Server HTTP endpoint url used by Model Analyzer client. "
                  "Will be ignored if server-launch-mode is not 'remote'")
         self._parser.add_argument(
+            '--triton-metrics-url',
+            type=str,
+            default='http://localhost:8002/metrics',
+            help="Triton Server Metrics endpoint url. "
+                 "Will be ignored if server-launch-mode is not 'remote'")
+        self._parser.add_argument(
             '--triton-server-path',
             type=str,
-            default='/opt/tritonserver/bin/tritonserver',
+            default='tritonserver',
             help='The full path to the tritonserver binary executable')
+        self._parser.add_argument(
+            '--gpus',
+            type=str,
+            default='all',
+            help="List of GPU UUIDs to be used for the profiling. "
+                 "Use 'all' to profile all the GPUs visible by CUDA.")
         # yapf:enable
 
     def _preprocess_and_verify_arguments(self, args):
@@ -186,6 +199,7 @@ class CLI:
                     "triton-launch-mode is 'docker'. Must specify triton-version "
                     "if launching server docker container or change launch mode using "
                     "--triton-launch-mode.")
+        args.gpus = args.gpus.split(',')
 
     def parse(self):
         """

@@ -20,9 +20,8 @@ class TritonServerFactory:
     """
     A factory for creating TritonServer instances
     """
-
     @staticmethod
-    def create_server_docker(model_path, image, config):
+    def create_server_docker(model_path, image, config, gpus):
         """
         Parameters
         ----------
@@ -34,13 +33,16 @@ class TritonServerFactory:
             The tritonserver docker image to pull and run
         config : TritonServerConfig
             the config object containing arguments for this server instance
-        
+        gpus : list
+            List of GPUs to be mounted in the container.
+
         Returns
         -------
         TritonServerDocker
         """
 
-        return TritonServerDocker(model_path=model_path,
+        return TritonServerDocker(gpus=gpus,
+                                  model_path=model_path,
                                   image=image,
                                   config=config)
 

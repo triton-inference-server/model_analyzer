@@ -40,6 +40,10 @@ TEST_MODEL_NAME = 'test_model'
 
 class TestTritonClientMethods(trc.TestResultCollector):
     def setUp(self):
+
+        # GPUs
+        gpus = ['all']
+
         # Mocks
         self.mock_server_docker = MockServerDockerMethods()
         self.tritonclient_mock = MockTritonClientMethods()
@@ -54,6 +58,7 @@ class TestTritonClientMethods(trc.TestResultCollector):
 
         # Create and start the server
         self.server = TritonServerFactory.create_server_docker(
+            gpus=gpus,
             model_path=MODEL_LOCAL_PATH,
             image=TRITON_IMAGE,
             config=self.server_config)

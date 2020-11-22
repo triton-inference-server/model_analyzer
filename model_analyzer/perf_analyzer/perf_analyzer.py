@@ -57,7 +57,7 @@ class PerfAnalyzer:
         Returns
         -------
         List of Records
-            List of the metrics obtained from this 
+            List of the metrics obtained from this
             run of perf_analyzer
 
         Raises
