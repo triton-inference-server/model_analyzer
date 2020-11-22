@@ -27,8 +27,7 @@ class TritonServerDocker(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     triton in a docker container.
     """
-
-    def __init__(self, model_path, image, config):
+    def __init__(self, model_path, image, config, gpus):
         """
         Parameters
         ----------
@@ -40,6 +39,8 @@ class TritonServerDocker(TritonServer):
             The tritonserver docker image to pull and run
         config : TritonServerConfig
             the config object containing arguments for this server instance
+        gpus : list
+            list of GPUs to be used
         """
 
         self._server_config = config
@@ -47,6 +48,7 @@ class TritonServerDocker(TritonServer):
         self._docker_client = docker.from_env()
         self._tritonserver_image = image
         self._tritonserver_container = None
+        self._gpus = gpus
 
         assert self._server_config['model-repository'], \
             "Triton Server requires --model-repository argument to be set."
@@ -56,17 +58,15 @@ class TritonServerDocker(TritonServer):
         Starts the tritonserver docker container using docker-py
         """
 
-        # get devices using CUDA_VISIBLE_DEVICES
-        CUDA_VISIBLE_DEVICES = os.environ.get('CUDA_VISIBLE_DEVICES', '')
-
-        if CUDA_VISIBLE_DEVICES != '':
-            device_ids = CUDA_VISIBLE_DEVICES.split(',')
+        if len(self._gpus) == 1 and self._gpus[0] == 'all':
             devices = [
-                docker.types.DeviceRequest(device_ids=device_ids,
-                                           capabilities=[['gpu']])
+                docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])
             ]
         else:
-            devices = None
+            devices = [
+                docker.types.DeviceRequest(device_ids=self._gpus,
+                                           capabilities=[['gpu']])
+            ]
 
         # Mount required directories
         volumes = {
@@ -100,8 +100,7 @@ class TritonServerDocker(TritonServer):
             detach=True)
 
         # Run the command in the container
-        cmd = '/opt/tritonserver/bin/tritonserver ' + self._server_config.to_cli_string(
-        )
+        cmd = 'tritonserver ' + self._server_config.to_cli_string()
 
         self._tritonserver_log = \
             self._tritonserver_container.exec_run(cmd, stream=True)

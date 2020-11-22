@@ -25,20 +25,44 @@ class Monitor(ABC):
     """
     Monitor abstract class is a parent class used for monitoring devices.
     """
-
-    def __init__(self, frequency, tags):
+    def __init__(self, gpus, frequency, tags):
         """
         Parameters
         ----------
+        gpus : list
+            A list of strings containing GPU UUIDs.
         frequency : float
             How often the metrics should be monitored.
+        tags : list
+            A list of Record objects that will be monitored.
+
+        Raises
+        ------
+        TritonModelAnalyzerExcpetion
+            If the GPU cannot be found, the exception will be raised.
         """
 
         self._frequency = frequency
         self._gpus = []
-        for gpu in numba.cuda.list_devices():
-            gpu_device = GPUDeviceFactory.create_device_by_cuda_index(gpu.id)
-            self._gpus.append(gpu_device)
+
+        if len(gpus) == 1 and gpus[0] == 'all':
+            cuda_devices = numba.cuda.list_devices()
+            if len(cuda_devices) == 0:
+                raise TritonModelAnalyzerException(
+                    "No GPUs are visible by CUDA. Make sure that 'nvidia-smi'"
+                    " output shows available GPUs. If you are using Model"
+                    " Analyzer inside a container, ensure that you are"
+                    " launching the container with the"
+                    " appropriate '--gpus' flag"
+                )
+            for gpu in cuda_devices:
+                gpu_device = GPUDeviceFactory.create_device_by_cuda_index(
+                    gpu.id)
+                self._gpus.append(gpu_device)
+        else:
+            for gpu in gpus:
+                gpu_device = GPUDeviceFactory.create_device_by_uuid(gpu)
+                self._gpus.append(gpu_device)
 
         # Is the background thread active
         self._thread_active = False
@@ -51,7 +75,6 @@ class Monitor(ABC):
         self._tags = tags
 
     def _monitoring_loop(self):
-        self._thread_active = True
         frequency = self._frequency
 
         while self._thread_active:
@@ -87,6 +110,7 @@ class Monitor(ABC):
         Start recording the metrics.
         """
 
+        self._thread_active = True
         self._thread = self._thread_pool.apply_async(self._monitoring_loop)
 
     def stop_recording_metrics(self):

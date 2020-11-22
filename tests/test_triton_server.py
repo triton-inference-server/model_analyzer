@@ -31,7 +31,7 @@ import test_result_collector as trc
 MODEL_LOCAL_PATH = 'test_local_path'
 MODEL_REPOSITORY_PATH = 'test_repo'
 TRITON_LOCAL_BIN_PATH = 'test_bin_path/tritonserver'
-TRITON_DOCKER_BIN_PATH = '/opt/tritonserver/bin/tritonserver'
+TRITON_DOCKER_BIN_PATH = 'tritonserver'
 TRITON_IMAGE = 'test_image'
 CONFIG_TEST_ARG = 'exit-on-error'
 CLI_TO_STRING_TEST_ARGS = {
@@ -105,9 +105,11 @@ class TestTritonServerMethods(trc.TestResultCollector):
         # Create a TritonServerConfig
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
+        gpus = ['all']
 
         # Run for both types of environments
         self.server = TritonServerFactory.create_server_docker(
+            gpus=gpus,
             model_path=MODEL_LOCAL_PATH,
             image=TRITON_IMAGE,
             config=server_config)
@@ -123,6 +125,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
                 msg="Expected AssertionError for trying to create"
                 "server without specifying model repository."):
             self.server = TritonServerFactory.create_server_docker(
+                gpus=gpus,
                 model_path=MODEL_LOCAL_PATH,
                 image=TRITON_IMAGE,
                 config=server_config)
@@ -138,9 +141,11 @@ class TestTritonServerMethods(trc.TestResultCollector):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+        gpus = ['all']
 
         # Create server in docker, start , wait, and stop
         self.server = TritonServerFactory.create_server_docker(
+            gpus=gpus,
             model_path=MODEL_LOCAL_PATH,
             image=TRITON_IMAGE,
             config=server_config)

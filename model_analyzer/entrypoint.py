@@ -15,6 +15,9 @@
 import os
 import sys
 from itertools import product
+from prometheus_client.parser import text_string_to_metric_families
+import requests
+import numba.cuda
 
 from .cli.cli import CLI
 
@@ -30,6 +33,7 @@ from .record.gpu_utilization import GPUUtilization
 from .record.perf_throughput import PerfThroughput
 from .record.perf_latency import PerfLatency
 from .output.file_writer import FileWriter
+from .device.gpu_device_factory import GPUDeviceFactory
 
 
 def get_client_handle(args):
@@ -84,6 +88,7 @@ def get_server_handle(args):
         triton_config['model-repository'] = args.model_repository
         triton_config['model-control-mode'] = 'explicit'
         server = TritonServerFactory.create_server_docker(
+            gpus=args.gpus,
             model_path=args.model_repository,
             image='nvcr.io/nvidia/tritonserver:' + args.triton_version,
             config=triton_config)
@@ -95,16 +100,63 @@ def get_server_handle(args):
     return server
 
 
-def get_triton_handles(args):
+def check_triton_and_model_analyzer_gpus(args):
     """
-    Creates a TritonServer and starts it.
-    Creates a TritonClient
-    
+    Check whether Triton Server and Model Analyzer
+    are using the same GPUs
+
     Parameters
     ----------
     args : namespace
         The arguments passed into the CLI
-    
+
+    Raises
+    ------
+    TritonModelAnalyzerException
+        If they are using different GPUs this exception will be raised.
+    """
+
+    # Get Prometheus metrics
+    triton_prom_str = str(requests.get(args.triton_metrics_url).content,
+                          encoding='ascii')
+    metrics = text_string_to_metric_families(triton_prom_str)
+
+    triton_gpus = []
+    for metric in metrics:
+        if metric.name == 'nv_gpu_utilization':
+            for sample in metric.samples:
+                triton_gpus.append(sample.labels['gpu_uuid'])
+
+    if len(args.gpus) == 1 and args.gpus[0] == 'all':
+        devices = numba.cuda.list_devices()
+        model_analyzer_gpus = []
+        for device in devices:
+            gpu_device = GPUDeviceFactory.create_device_by_cuda_index(
+                device.id)
+            model_analyzer_gpus.append(
+                str(gpu_device.device_uuid(), encoding='ascii'))
+        if set(triton_gpus) != set(model_analyzer_gpus):
+            raise TritonModelAnalyzerException(
+                "'Triton Server is not using the same GPUs as Model Analyzer: '"
+                f"Model Analyzer GPUs {model_analyzer_gpus}, Triton GPUs {triton_gpus}"
+            )
+
+    elif set(triton_gpus) != set(args.gpus):
+        raise TritonModelAnalyzerException(
+            "'Triton Server is not using the same GPUs as Model Analyzer: '"
+            f"Model Analyzer GPUs {args.gpus}, Triton GPUs {triton_gpus}")
+
+
+def get_triton_handles(args):
+    """
+    Creates a TritonServer and starts it.
+    Creates a TritonClient
+
+    Parameters
+    ----------
+    args : namespace
+        The arguments passed into the CLI
+
     Returns
     -------
     TritonClient, TritonServer
@@ -114,6 +166,7 @@ def get_triton_handles(args):
     client = get_client_handle(args)
     server = get_server_handle(args)
     client.wait_for_server_ready(num_retries=args.max_retries)
+    check_triton_and_model_analyzer_gpus(args)
 
     return client, server
 
@@ -124,7 +177,7 @@ def create_run_configs(args):
     ----------
     args : namespace
         The arguments passed into the CLI
-    
+
     Returns
     -------
     list of dicts
