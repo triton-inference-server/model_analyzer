@@ -27,14 +27,11 @@ class TritonServerDocker(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     triton in a docker container.
     """
-    def __init__(self, model_path, image, config, gpus):
+
+    def __init__(self, image, config, gpus):
         """
         Parameters
         ----------
-        model_path : str
-            The absolute path to the local directory containing the models.
-            In the case of locally running server, this may be the same as
-            the model repository path
         image : str
             The tritonserver docker image to pull and run
         config : TritonServerConfig
@@ -44,7 +41,6 @@ class TritonServerDocker(TritonServer):
         """
 
         self._server_config = config
-        self._model_path = model_path
         self._docker_client = docker.from_env()
         self._tritonserver_image = image
         self._tritonserver_container = None
@@ -70,14 +66,13 @@ class TritonServerDocker(TritonServer):
 
         # Mount required directories
         volumes = {
-            self._model_path: {
+            self._server_config['model-repository']: {
                 'bind': self._server_config['model-repository'],
-                'mode': 'rw'
+                'mode': 'ro'
             }
         }
 
-        # Map ports, use config values but set to server defaults if not
-        # specified
+        # Map ports, use config values but set to server defaults if not specified
         server_http_port = self._server_config['http-port'] or 8000
         server_grpc_port = self._server_config['grpc-port'] or 8001
         server_metrics_port = self._server_config['metrics-port'] or 8002
@@ -91,6 +86,7 @@ class TritonServerDocker(TritonServer):
         # Run the docker container
         self._tritonserver_container = self._docker_client.containers.run(
             image=self._tritonserver_image,
+            name='triton-server',
             device_requests=devices,
             volumes=volumes,
             ports=ports,

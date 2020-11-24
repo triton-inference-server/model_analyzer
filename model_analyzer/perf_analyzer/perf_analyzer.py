@@ -76,7 +76,7 @@ class PerfAnalyzer:
                                             encoding='utf-8')
             except CalledProcessError as e:
                 raise TritonModelAnalyzerException(
-                    f"Running perf_analyzer with {e.cmd} failed with exit status {e.returncode}"
+                    f"Running perf_analyzer with {e.cmd} failed with exit status {e.returncode} : {e.output}"
                 )
         return [metric(self._output) for metric in tags]
 

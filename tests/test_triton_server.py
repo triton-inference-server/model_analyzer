@@ -28,7 +28,6 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 import test_result_collector as trc
 
 # Test parameters
-MODEL_LOCAL_PATH = 'test_local_path'
 MODEL_REPOSITORY_PATH = 'test_repo'
 TRITON_LOCAL_BIN_PATH = 'test_bin_path/tritonserver'
 TRITON_DOCKER_BIN_PATH = 'tritonserver'
@@ -109,10 +108,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
 
         # Run for both types of environments
         self.server = TritonServerFactory.create_server_docker(
-            gpus=gpus,
-            model_path=MODEL_LOCAL_PATH,
-            image=TRITON_IMAGE,
-            config=server_config)
+            image=TRITON_IMAGE, config=server_config, gpus=gpus)
 
         self.server = TritonServerFactory.create_server_local(
             path=TRITON_LOCAL_BIN_PATH, config=server_config)
@@ -125,10 +121,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
                 msg="Expected AssertionError for trying to create"
                 "server without specifying model repository."):
             self.server = TritonServerFactory.create_server_docker(
-                gpus=gpus,
-                model_path=MODEL_LOCAL_PATH,
-                image=TRITON_IMAGE,
-                config=server_config)
+                image=TRITON_IMAGE, config=server_config, gpus=gpus)
         with self.assertRaises(
                 AssertionError,
                 msg="Expected AssertionError for trying to create"
@@ -145,17 +138,13 @@ class TestTritonServerMethods(trc.TestResultCollector):
 
         # Create server in docker, start , wait, and stop
         self.server = TritonServerFactory.create_server_docker(
-            gpus=gpus,
-            model_path=MODEL_LOCAL_PATH,
-            image=TRITON_IMAGE,
-            config=server_config)
+            image=TRITON_IMAGE, config=server_config, gpus=gpus)
 
         # Start server check that mocked api is called
         self.server.start()
         self.server_docker_mock.assert_server_process_start_called_with(
             TRITON_DOCKER_BIN_PATH + ' ' + server_config.to_cli_string(),
-            MODEL_LOCAL_PATH, MODEL_REPOSITORY_PATH, TRITON_IMAGE, 8000, 8001,
-            8002)
+            MODEL_REPOSITORY_PATH, TRITON_IMAGE, 8000, 8001, 8002)
 
         # Stop container and check api calls
         self.server.stop()

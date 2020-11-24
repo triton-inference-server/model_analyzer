@@ -24,6 +24,7 @@ class MockCalledProcessError(Exception):
     def __init__(self):
         self.returncode = 1
         self.cmd = ["dummy command"]
+        self.output = "mock output"
 
 
 class MockPerfAnalyzerMethods:

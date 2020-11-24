@@ -20,15 +20,12 @@ class TritonServerFactory:
     """
     A factory for creating TritonServer instances
     """
+
     @staticmethod
-    def create_server_docker(model_path, image, config, gpus):
+    def create_server_docker(image, config, gpus):
         """
         Parameters
         ----------
-        model_path : str
-            The absolute path to the local directory containing the models.
-            In the case of locally running server, this may be the same as
-            the model repository path
         image : str
             The tritonserver docker image to pull and run
         config : TritonServerConfig
@@ -41,10 +38,7 @@ class TritonServerFactory:
         TritonServerDocker
         """
 
-        return TritonServerDocker(gpus=gpus,
-                                  model_path=model_path,
-                                  image=image,
-                                  config=config)
+        return TritonServerDocker(image=image, config=config, gpus=gpus)
 
     @staticmethod
     def create_server_local(path, config):

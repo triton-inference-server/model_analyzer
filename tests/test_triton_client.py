@@ -16,7 +16,6 @@ import os
 import unittest
 import sys
 sys.path.append('../common')
-from unittest.mock import patch, MagicMock
 
 from .mock_server_docker import MockServerDockerMethods
 from .mock_client import MockTritonClientMethods
@@ -29,7 +28,6 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 import test_result_collector as trc
 
 # Test parameters
-MODEL_LOCAL_PATH = 'test_local_path'
 MODEL_REPOSITORY_PATH = 'test_repo'
 TRITON_IMAGE = 'test_image'
 CONFIG_TEST_ARG = 'url'
@@ -58,10 +56,7 @@ class TestTritonClientMethods(trc.TestResultCollector):
 
         # Create and start the server
         self.server = TritonServerFactory.create_server_docker(
-            gpus=gpus,
-            model_path=MODEL_LOCAL_PATH,
-            image=TRITON_IMAGE,
-            config=self.server_config)
+            image=TRITON_IMAGE, config=self.server_config, gpus=gpus)
 
     def test_create_client(self):
 
@@ -85,6 +80,7 @@ class TestTritonClientMethods(trc.TestResultCollector):
                 self.tritonclient_mock.raise_exception_on_wait_for_server_ready(
                 )
                 client.wait_for_server_ready(num_retries=1)
+            self.tritonclient_mock.reset()
 
             with self.assertRaises(TritonModelAnalyzerException,
                                    msg="Expected Exception on"
@@ -118,6 +114,7 @@ class TestTritonClientMethods(trc.TestResultCollector):
                 )
                 client.wait_for_model_ready(model=Model(TEST_MODEL_NAME),
                                             num_retries=1)
+            self.tritonclient_mock.reset()
 
             with self.assertRaises(TritonModelAnalyzerException,
                                    msg="Expected Exception on"
