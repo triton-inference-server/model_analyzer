@@ -90,13 +90,66 @@ def get_server_handle(args):
         server = TritonServerFactory.create_server_docker(
             image='nvcr.io/nvidia/tritonserver:' + args.triton_version,
             config=triton_config,
-            gpus=args.gpus)
+            gpus=get_analyzer_gpus(args))
         server.start()
     else:
         raise TritonModelAnalyzerException(
             f"Unrecognized triton-launch-mode : {args.triton_launch_mode}")
 
     return server
+
+
+def get_analyzer_gpus(args):
+    """
+    Creates a list of GPU UUIDs
+    corresponding to the GPUs
+    visible to model_analyzer.
+
+    Parameters
+    ----------
+    args : namespace
+        The arguments passed into the CLI
+    """
+
+    if len(args.gpus) == 1 and args.gpus[0] == 'all':
+        devices = numba.cuda.list_devices()
+    else:
+        devices = args.gpus
+
+    model_analyzer_gpus = []
+    for device in devices:
+        gpu_device = GPUDeviceFactory.create_device_by_cuda_index(device.id)
+        model_analyzer_gpus.append(
+            str(gpu_device.device_uuid(), encoding='ascii'))
+
+    return model_analyzer_gpus
+
+
+def get_triton_metrics_gpus(args):
+    """
+    Uses prometheus to request 
+    a list of GPU UUIDs
+    corresponding to the GPUs
+    visible to Triton Inference 
+    Server
+
+    Parameters
+    ----------
+    args : namespace
+        The arguments passed into the CLI
+    """
+
+    triton_prom_str = str(requests.get(args.triton_metrics_url).content,
+                          encoding='ascii')
+    metrics = text_string_to_metric_families(triton_prom_str)
+
+    triton_gpus = []
+    for metric in metrics:
+        if metric.name == 'nv_gpu_utilization':
+            for sample in metric.samples:
+                triton_gpus.append(sample.labels['gpu_uuid'])
+
+    return triton_gpus
 
 
 def check_triton_and_model_analyzer_gpus(args):
@@ -115,35 +168,13 @@ def check_triton_and_model_analyzer_gpus(args):
         If they are using different GPUs this exception will be raised.
     """
 
-    # Get Prometheus metrics
-    triton_prom_str = str(requests.get(args.triton_metrics_url).content,
-                          encoding='ascii')
-    metrics = text_string_to_metric_families(triton_prom_str)
-
-    triton_gpus = []
-    for metric in metrics:
-        if metric.name == 'nv_gpu_utilization':
-            for sample in metric.samples:
-                triton_gpus.append(sample.labels['gpu_uuid'])
-
-    if len(args.gpus) == 1 and args.gpus[0] == 'all':
-        devices = numba.cuda.list_devices()
-        model_analyzer_gpus = []
-        for device in devices:
-            gpu_device = GPUDeviceFactory.create_device_by_cuda_index(
-                device.id)
-            model_analyzer_gpus.append(
-                str(gpu_device.device_uuid(), encoding='ascii'))
-        if set(triton_gpus) != set(model_analyzer_gpus):
-            raise TritonModelAnalyzerException(
-                "'Triton Server is not using the same GPUs as Model Analyzer: '"
-                f"Model Analyzer GPUs {model_analyzer_gpus}, Triton GPUs {triton_gpus}"
-            )
-
-    elif set(triton_gpus) != set(args.gpus):
+    model_analyzer_gpus = get_analyzer_gpus(args)
+    triton_gpus = get_triton_metrics_gpus(args)
+    if set(model_analyzer_gpus) != set(triton_gpus):
         raise TritonModelAnalyzerException(
             "'Triton Server is not using the same GPUs as Model Analyzer: '"
-            f"Model Analyzer GPUs {args.gpus}, Triton GPUs {triton_gpus}")
+            f"Model Analyzer GPUs {model_analyzer_gpus}, Triton GPUs {triton_gpus}"
+        )
 
 
 def get_triton_handles(args):
@@ -165,7 +196,6 @@ def get_triton_handles(args):
     client = get_client_handle(args)
     server = get_server_handle(args)
     client.wait_for_server_ready(num_retries=args.max_retries)
-    check_triton_and_model_analyzer_gpus(args)
 
     return client, server
 
@@ -269,23 +299,21 @@ def main():
     monitoring_metrics = [
         PerfThroughput, GPUUtilization, GPUUsedMemory, GPUFreeMemory
     ]
+
     try:
         args = CLI().parse()
     except TritonModelAnalyzerException as e:
-        print(f"Model-analyzer encountered an error : {e}")
+        print(f'Model Analyzer encountered an error : {e}')
 
     try:
         analyzer = Analyzer(args, monitoring_metrics)
-
         client, server = get_triton_handles(args)
+        check_triton_and_model_analyzer_gpus(args)
         run_configs = create_run_configs(args)
-
         run_analyzer(args, analyzer, client, run_configs)
-
         write_results(args, analyzer)
-
     except TritonModelAnalyzerException as e:
-        print(f"Model-analyzer encountered an error : {e}")
+        print(f'Model Analyzer encountered an error : {e}')
     finally:
         server.stop()
 
