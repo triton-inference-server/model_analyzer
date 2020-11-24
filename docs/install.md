@@ -34,6 +34,6 @@ There are three ways to use Triton Model Analyzer:
 
 3. Building the Dockerfile:
    ```
-   $ docker build . -t triton_modelanalyzer
-   $ docker run -ti -v <load triton models> --gpus 1 -v `pwd`/examples/quick-start:/workspace/examples triton_modelanalyzer bash
+   $ docker build --pull -t modelanalyzer .
+   $ docker run -ti -v <load triton models> --gpus 1 -v `pwd`/examples/quick-start:/workspace/examples modelanalyzer bash
    ```
