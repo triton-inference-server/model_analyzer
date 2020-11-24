@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:20.10-py3
-ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:20.10-py3-clientsdk
+ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:20.11-py3
+ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:20.11-py3-clientsdk
+
 ARG MODEL_ANALYZER_VERSION=1.0.0dev
 ARG MODEL_ANALYZER_CONTAINER_VERSION=20.12dev
 
