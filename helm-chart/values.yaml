@@ -70,4 +70,4 @@ images:
 
   triton:
     image: nvcr.io/nvidia/tritonserver
-    tag: 20.10-py3
+    tag: 20.12-py3

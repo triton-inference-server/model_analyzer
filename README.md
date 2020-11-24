@@ -15,15 +15,21 @@ limitations under the License.
 
 # Triton Model Analyzer
 
-**NOTE: You are currently on main-dev branch. This branch is tracking 
-development for the new version of Model Analyzer and is not currently 
-usable.**
-
 Triton Model Analyzer is a CLI tool to help with better understanding of the
 compute and memory requirements of the Triton Inference Server models. These
 reports will help the user better understand the trade-offs in different
 configurations and choose a configuration that maximizes the performance of
 Triton Inference Server.
+
+## What's New in 1.0.0
+
+* ModelAnalyzer converted to Python.
+* ModelAnalyzer retains same features and CLI options as the original C# version.
+  * Can gather static and dynamic GPU Memory usage for a single model.
+  * Can gather throughput and latency timing from Triton.
+  * Can schedule different testing configurations for separate models.
+* ModelAnalyzer released as part of the Triton SDK container.
+* ModelAnalzyer released as a PIP wheel on the NVIDIA PyIndex.
 
 ## Requirements
 

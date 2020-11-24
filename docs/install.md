@@ -7,7 +7,7 @@ There are three ways to use Triton Model Analyzer:
    $ pip3 install git+https://github.com/triton-inference-server/model_analyzer
    ```
 
-   If you are using this approach you need to install [tritonclient](https://github.com/triton-inference-server/server/blob/master/docs/client_libraries.md) and DCGM on your
+   If you are using this approach you need to install [tritonclient](https://github.com/triton-inference-server/server/blob/r20.12/docs/client_libraries.md) and DCGM on your
    machine.
 
    For installing DCGM on Ubuntu 20.04 you can use the following commands:
@@ -24,7 +24,7 @@ There are three ways to use Triton Model Analyzer:
    After that, you can use the following commands:
 
    ```
-   $ git clone https://github.com/triton-inference-server/model_analyzer
+   $ git clone https://github.com/triton-inference-server/model_analyzer@r20.12
    $ cd model_analyzer
    $ pip3 install setup.py
    ```
