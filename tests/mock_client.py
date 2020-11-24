@@ -17,24 +17,6 @@ from unittest.mock import patch, Mock, MagicMock
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
-class MockInferenceServerException(Exception):
-    """
-    A mock object that can be used in
-    place of an InferenceServerException
-    """
-
-    @staticmethod
-    def status():
-        """
-        Returns
-        -------
-        str
-            The error code
-        """
-
-        return "StatusCode.UNAVAILABLE"
-
-
 class MockTritonClientMethods:
     """
     Mocks the tritonclient module functions 
@@ -57,12 +39,8 @@ class MockTritonClientMethods:
         self.patcher_grpc_client = patch(
             'model_analyzer.triton.client.grpc_client.grpcclient.InferenceServerClient',
             Mock(return_value=mock_grpc_client))
-        self.patcher_inference_server_exception = patch(
-            'model_analyzer.triton.client.client.InferenceServerException',
-            MockInferenceServerException)
         self.http_mock = self.patcher_http_client.start()
         self.grpc_mock = self.patcher_grpc_client.start()
-        self.exception_mock = self.patcher_inference_server_exception.start()
 
     def stop(self):
         """
@@ -72,7 +50,6 @@ class MockTritonClientMethods:
 
         self.patcher_http_client.stop()
         self.patcher_grpc_client.stop()
-        self.patcher_inference_server_exception.stop()
 
     def assert_created_grpc_client_with_args(self, url):
         """
@@ -130,8 +107,8 @@ class MockTritonClientMethods:
         InferenceServerException
         """
 
-        self.grpc_mock.return_value.load_model.side_effect = self.exception_mock
-        self.http_mock.return_value.load_model.side_effect = self.exception_mock
+        self.grpc_mock.return_value.load_model.side_effect = Exception
+        self.http_mock.return_value.load_model.side_effect = Exception
 
     def raise_exception_on_unload(self):
         """
@@ -139,8 +116,8 @@ class MockTritonClientMethods:
         InferenceServerException
         """
 
-        self.grpc_mock.return_value.unload_model.side_effect = self.exception_mock
-        self.http_mock.return_value.unload_model.side_effect = self.exception_mock
+        self.grpc_mock.return_value.unload_model.side_effect = Exception
+        self.http_mock.return_value.unload_model.side_effect = Exception
 
     def raise_exception_on_wait_for_server_ready(self):
         """
@@ -148,8 +125,8 @@ class MockTritonClientMethods:
         InferenceServerException
         """
 
-        self.grpc_mock.return_value.is_server_ready.side_effect = self.exception_mock
-        self.http_mock.return_value.is_server_ready.side_effect = self.exception_mock
+        self.grpc_mock.return_value.is_server_ready.side_effect = Exception
+        self.http_mock.return_value.is_server_ready.side_effect = Exception
 
     def raise_exception_on_wait_for_model_ready(self):
         """
@@ -157,8 +134,8 @@ class MockTritonClientMethods:
         InferenceServerException
         """
 
-        self.grpc_mock.return_value.is_model_ready.side_effect = self.exception_mock
-        self.http_mock.return_value.is_model_ready.side_effect = self.exception_mock
+        self.grpc_mock.return_value.is_model_ready.side_effect = Exception
+        self.http_mock.return_value.is_model_ready.side_effect = Exception
 
     def set_server_not_ready(self):
         """
