@@ -23,7 +23,6 @@ class PerfThroughput(Record):
     A record for perf_analyzer
     metric 'Throughput'
     """
-
     def __init__(self, perf_output, timestamp=0):
         """
         Parameters
@@ -39,6 +38,10 @@ class PerfThroughput(Record):
             # Get first word after Throughput
             if 'Throughput:' in line:
                 throughput = float(line.split()[1])
+                break
+        else:
+            raise TritonModelAnalyzerException(
+                'perf_analyzer output was not as expected.')
 
         super().__init__(throughput, timestamp)
 

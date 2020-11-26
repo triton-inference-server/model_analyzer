@@ -72,6 +72,7 @@ class PerfAnalyzer:
             cmd += self._config.to_cli_string().replace('=', ' ').split()
             try:
                 self._output = check_output(cmd,
+                                            start_new_session=True,
                                             stderr=STDOUT,
                                             encoding='utf-8')
             except CalledProcessError as e:

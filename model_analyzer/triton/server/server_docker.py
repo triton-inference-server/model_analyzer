@@ -14,12 +14,15 @@
 
 import os
 import docker
+import logging
 
 from .server import TritonServer
 
 LOCAL_HTTP_PORT = 8000
 LOCAL_GRPC_PORT = 8001
 LOCAL_METRICS_PORT = 8002
+
+logger = logging.getLogger(__name__)
 
 
 class TritonServerDocker(TritonServer):
@@ -106,6 +109,8 @@ class TritonServerDocker(TritonServer):
         Stops the tritonserver docker container
         and cleans up docker client
         """
+
+        logger.info('Stopping triton server.')
 
         if self._tritonserver_container is not None:
             self._tritonserver_container.stop()
