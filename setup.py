@@ -19,15 +19,26 @@ from setuptools import find_packages
 from setuptools import setup
 from itertools import chain
 
+if "--dependency-dir" in sys.argv:
+    idx = sys.argv.index("--dependency-dir")
+    DEPENDENCY_DIR = sys.argv[idx + 1]
+    sys.argv.pop(idx + 1)
+    sys.argv.pop(idx)
+else:
+    DEPENDENCY_DIR = '.'
+
+if "--plat-name" in sys.argv:
+    PLATFORM_FLAG = sys.argv[sys.argv.index("--plat-name") + 1]
+else:
+    PLATFORM_FLAG = 'any'
+
+DEPENDENCY_DIR = ""
+
 
 def version(filename='VERSION'):
     with open(os.path.join(filename)) as f:
         project_version = f.read()
     return project_version
-
-
-project_version = version()
-this_directory = os.path.abspath(os.path.dirname(__file__))
 
 
 def req_file(filename):
@@ -36,11 +47,29 @@ def req_file(filename):
     return [x.strip() for x in content if not x.startswith("#")]
 
 
+project_version = version()
 install_requires = req_file("requirements.txt")
 
+try:
+    from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
+
+    class bdist_wheel(_bdist_wheel):
+        def finalize_options(self):
+            _bdist_wheel.finalize_options(self)
+            self.root_is_pure = False
+
+        def get_tag(self):
+            pyver, abi, plat = 'py3', 'none', PLATFORM_FLAG
+            return pyver, abi, plat
+except ImportError:
+    bdist_wheel = None
+
 data_files = [
-    ("", ["LICENSE"]),
+    ("", [os.path.join(DEPENDENCY_DIR, "LICENSE")]),
 ]
+
+if PLATFORM_FLAG != 'any':
+    data_files += [("bin", [os.path.join(DEPENDENCY_DIR, "perf_analyzer")])]
 
 setup(
     name='model-analyzer',
@@ -77,7 +106,7 @@ setup(
         'console_scripts': ['model-analyzer = model_analyzer.entrypoint:main']
     },
     install_requires=install_requires,
-    packages=find_packages(),
+    packages=find_packages(exclude=("tests", )),
     zip_safe=False,
     data_files=data_files,
 )
