@@ -55,6 +55,7 @@ class MockServerLocalMethods(MockServerMethods):
         self.popen_mock.assert_called_once_with(cmd,
                                                 stdout=self.pipe_mock,
                                                 stderr=self.stdout_mock,
+                                                start_new_session=True,
                                                 universal_newlines=True)
 
     def assert_server_process_terminate_called(self):

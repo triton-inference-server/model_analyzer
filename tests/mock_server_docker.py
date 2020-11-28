@@ -18,11 +18,10 @@ from unittest.mock import patch, Mock, MagicMock
 
 class MockServerDockerMethods(MockServerMethods):
     """
-    Mocks the docker module as used in 
-    model_analyzer/triton/server/server_docker.py.
-    Provides functions to check operation.
+    Mocks the docker module as used in
+    model_analyzer/triton/server/server_docker.py. Provides functions to
+    check operation.
     """
-
     def __init__(self):
         docker_container_attrs = {'exec_run': MagicMock()}
         docker_client_attrs = {
@@ -85,7 +84,6 @@ class MockServerDockerMethods(MockServerMethods):
         mock_ports = {http_port: 8000, grpc_port: 8001, metrics_port: 8002}
         self.mock.from_env.return_value.containers.run.assert_called_once_with(
             image=triton_image,
-            name='triton-server',
             device_requests=[0],
             volumes=mock_volumes,
             ports=mock_ports,
@@ -98,8 +96,7 @@ class MockServerDockerMethods(MockServerMethods):
 
     def assert_server_process_terminate_called(self):
         """
-        Asserts that stop was called on 
-        the return value of containers.run
+        Asserts that stop was called on the return value of containers.run
         """
 
         self.mock.from_env.return_value.containers.run.return_value.stop.assert_called(
