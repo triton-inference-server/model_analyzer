@@ -238,3 +238,8 @@ function find_available_ports() {
     done
     echo ${ports[@]}
 }
+
+# Get a space delimited list of gpus with their UUIDs.
+function get_all_gpus_uuids() {
+    nvidia-smi --query-gpu=gpu_uuid,pci.bus_id --format=csv,noheader | awk 'BEGIN { FS = "," }{print $1}'
+}
