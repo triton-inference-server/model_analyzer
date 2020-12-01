@@ -13,8 +13,11 @@
 # limitations under the License.
 
 import time
+import logging
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
+logger = logging.getLogger(__name__)
 
 
 class TritonClient:
@@ -71,11 +74,13 @@ class TritonClient:
         TritonModelAnalyzerException
             If server throws Exception
         """
+
         try:
             self._client.load_model(model.name())
         except Exception as e:
             raise TritonModelAnalyzerException(
                 f"Unable to load the model : {e}")
+        logger.info(f'Model {model.name()} loaded.')
 
     def unload_model(self, model):
         """
@@ -93,11 +98,13 @@ class TritonClient:
         TritonModelAnalyzerException
             If server throws Exception
         """
+
         try:
             self._client.unload_model(model.name())
         except Exception as e:
             raise TritonModelAnalyzerException(
                 f"Unable to unload the model : {e}")
+        logger.info(f'Model {model.name()} unloaded.')
 
     def wait_for_model_ready(self, model, num_retries):
         """

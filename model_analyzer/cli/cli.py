@@ -14,16 +14,18 @@
 
 import os
 import sys
+import logging
 from argparse import ArgumentParser
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
+logger = logging.getLogger(__name__)
 
 
 class CLI:
     """
     CLI class to parse the commandline arguments
     """
-
     def __init__(self):
         self._parser = ArgumentParser()
         self._add_arguments()
@@ -121,6 +123,12 @@ class CLI:
             type=str,
             help='Triton Server version')
         self._parser.add_argument(
+            '--log-level',
+            default='INFO',
+            type=str,
+            choices=['INFO', 'DEBUG', 'ERROR', 'WARNING'],
+            help='Logging levels')
+        self._parser.add_argument(
             '--triton-http-endpoint',
             type=str,
             default='localhost:8000',
@@ -169,7 +177,7 @@ class CLI:
 
         if args.export:
             if not args.export_path:
-                print(
+                logger.warning(
                     "--export-path specified without --export flag: skipping exporting metrics."
                 )
                 args.export_path = None
@@ -189,11 +197,20 @@ class CLI:
                     "--client-protocol.")
         args.gpus = args.gpus.split(',')
 
+    def _setup_logger(self, args):
+        """
+        Setup logger format
+        """
+        log_level = logging.getLevelName(args.log_level)
+        logging.basicConfig(level=log_level,
+                            format="%(asctime)s.%(msecs)d %(levelname)-4s"
+                            "[%(filename)s:%(lineno)d] %(message)s",
+                            datefmt="%Y-%m-%d %H:%M:%S")
+
     def parse(self):
         """
-        Retrieves the arguments from the command
-        line and loads them into an ArgumentParser
-        Also does some sanity checks for arguments.
+        Retrieves the arguments from the command line and loads them into an
+        ArgumentParser Also does some sanity checks for arguments.
 
         Returns
         -------
@@ -209,4 +226,6 @@ class CLI:
         # Remove the first argument which is the program name
         args = self._parser.parse_args(sys.argv[1:])
         self._preprocess_and_verify_arguments(args)
+        self._setup_logger(args)
+
         return args
