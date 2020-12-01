@@ -16,9 +16,12 @@ from abc import ABC, abstractmethod
 from multiprocessing.pool import ThreadPool
 import numba.cuda
 import time
+import logging
 
 from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
+logger = logging.getLogger(__name__)
 
 
 class Monitor(ABC):
@@ -63,6 +66,12 @@ class Monitor(ABC):
             for gpu in gpus:
                 gpu_device = GPUDeviceFactory.create_device_by_uuid(gpu)
                 self._gpus.append(gpu_device)
+
+        gpu_uuids = []
+        for gpu in self._gpus:
+            gpu_uuids.append(str(gpu.device_uuid(), encoding='ascii'))
+        gpu_uuids_str = ','.join(gpu_uuids)
+        logger.info(f'Using GPU(s) with UUID(s) = {{ {gpu_uuids_str} }} for the analysis.')
 
         # Is the background thread active
         self._thread_active = False

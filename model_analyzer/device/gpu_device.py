@@ -31,6 +31,7 @@ class GPUDevice(Device):
             device_uuid : bytes
                 Device UUID
         """
+
         assert type(device_id) is int
         assert type(pci_bus_id) is bytes
         assert type(device_uuid) is bytes
@@ -46,6 +47,7 @@ class GPUDevice(Device):
         int
             device id of this GPU
         """
+
         return self._device_id
 
     def pci_bus_id(self):
@@ -55,13 +57,15 @@ class GPUDevice(Device):
         bytes
             PCI bus id of this GPU
         """
+
         return self._pci_bus_id
 
     def device_uuid(self):
         """
         Returns
         -------
-        str
+        bytes
             UUID of this GPU
         """
+
         return self._device_uuid

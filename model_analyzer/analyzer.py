@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import time
+import logging
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from .monitor.dcgm.dcgm_monitor import DCGMMonitor
@@ -24,6 +25,8 @@ from .record.gpu_used_memory import GPUUsedMemory
 from .record.perf_throughput import PerfThroughput
 from .record.perf_latency import PerfLatency
 from .output.output_table import OutputTable
+
+logger = logging.getLogger(__name__)
 
 
 class Analyzer:
@@ -81,6 +84,7 @@ class Analyzer:
         TritonModelAnalyzerException
         """
 
+        logging.info('Profiling server only metrics...')
         dcgm_monitor = DCGMMonitor(self._gpus, self._monitoring_interval,
                                    self.dcgm_tags)
         server_only_metrics = self._profile(perf_analyzer=None,
@@ -117,6 +121,7 @@ class Analyzer:
         TritonModelAnalyzerException
         """
 
+        logging.info(f"Profiling model {run_config['model-name']}...")
         dcgm_monitor = DCGMMonitor(self._gpus, self._monitoring_interval,
                                    self.dcgm_tags)
         perf_analyzer = PerfAnalyzer(

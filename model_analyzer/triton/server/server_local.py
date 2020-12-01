@@ -13,10 +13,12 @@
 # limitations under the License.
 
 from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
+import logging
 
 from .server import TritonServer
 
 SERVER_OUTPUT_TIMEOUT_SECS = 5
+logger = logging.getLogger(__name__)
 
 
 class TritonServerLocal(TritonServer):
@@ -52,9 +54,11 @@ class TritonServerLocal(TritonServer):
         cmd += self._server_config.to_cli_string().replace('=', ' ').split()
 
         self._tritonserver_process = Popen(cmd,
+                                           start_new_session=True,
                                            stdout=PIPE,
                                            stderr=STDOUT,
                                            universal_newlines=True)
+        logger.info('Triton Server started.')
 
     def stop(self):
         """
@@ -71,3 +75,4 @@ class TritonServerLocal(TritonServer):
                 self._tritonserver_process.kill()
                 output, _ = self._tritonserver_process.communicate()
             self._tritonserver_process = None
+            logger.info('Triton Server stopped.')

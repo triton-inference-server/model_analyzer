@@ -18,6 +18,8 @@ from itertools import product
 from prometheus_client.parser import text_string_to_metric_families
 import requests
 import numba.cuda
+import signal
+import logging
 
 from .cli.cli import CLI
 
@@ -34,6 +36,9 @@ from .record.perf_throughput import PerfThroughput
 from .record.perf_latency import PerfLatency
 from .output.file_writer import FileWriter
 from .device.gpu_device_factory import GPUDeviceFactory
+
+logger = logging.getLogger(__name__)
+MAX_NUMBER_OF_INTERRUPTS = 3
 
 
 def get_client_handle(args):
@@ -74,12 +79,14 @@ def get_server_handle(args):
     if args.triton_launch_mode == 'remote':
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = 'remote-model-repository'
+        logger.info('Using remote Triton Server...')
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config)
     elif args.triton_launch_mode == 'local':
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = args.model_repository
         triton_config['model-control-mode'] = 'explicit'
+        logger.info('Starting a local Triton Server...')
         server = TritonServerFactory.create_server_local(
             path=args.triton_server_path, config=triton_config)
         server.start()
@@ -87,6 +94,7 @@ def get_server_handle(args):
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = args.model_repository
         triton_config['model-control-mode'] = 'explicit'
+        logger.info('Starting a Triton Server using docker...')
         server = TritonServerFactory.create_server_docker(
             image='nvcr.io/nvidia/tritonserver:' + args.triton_version,
             config=triton_config,
@@ -101,9 +109,8 @@ def get_server_handle(args):
 
 def get_analyzer_gpus(args):
     """
-    Creates a list of GPU UUIDs
-    corresponding to the GPUs
-    visible to model_analyzer.
+    Creates a list of GPU UUIDs corresponding to the GPUs visible to
+    model_analyzer.
 
     Parameters
     ----------
@@ -127,11 +134,8 @@ def get_analyzer_gpus(args):
 
 def get_triton_metrics_gpus(args):
     """
-    Uses prometheus to request 
-    a list of GPU UUIDs
-    corresponding to the GPUs
-    visible to Triton Inference 
-    Server
+    Uses prometheus to request a list of GPU UUIDs corresponding to the GPUs
+    visible to Triton Inference Server
 
     Parameters
     ----------
@@ -154,8 +158,7 @@ def get_triton_metrics_gpus(args):
 
 def check_triton_and_model_analyzer_gpus(args):
     """
-    Check whether Triton Server and Model Analyzer
-    are using the same GPUs
+    Check whether Triton Server and Model Analyzer are using the same GPUs
 
     Parameters
     ----------
@@ -179,8 +182,7 @@ def check_triton_and_model_analyzer_gpus(args):
 
 def get_triton_handles(args):
     """
-    Creates a TritonServer and starts it.
-    Creates a TritonClient
+    Creates a TritonServer and starts it. Creates a TritonClient
 
     Parameters
     ----------
@@ -196,6 +198,7 @@ def get_triton_handles(args):
     client = get_client_handle(args)
     server = get_server_handle(args)
     client.wait_for_server_ready(num_retries=args.max_retries)
+    logger.info('Triton Server is ready.')
 
     return client, server
 
@@ -229,10 +232,8 @@ def create_run_configs(args):
 
 def write_results(args, analyzer):
     """
-    Makes calls to the analyzer to write
-    results out to streams or files.
-    If exporting results is requested,
-    uses a FileWriter for specified output
+    Makes calls to the analyzer to write results out to streams or files. If
+    exporting results is requested, uses a FileWriter for specified output
     files.
 
     Parameters
@@ -258,17 +259,15 @@ def write_results(args, analyzer):
 
 def run_analyzer(args, analyzer, client, run_configs):
     """
-    Makes a single call to profile the server only
-    Then for each run configurations, it profiles
-    model inference.
+    Makes a single call to profile the server only Then for each run
+    configurations, it profiles model inference.
 
     Parameters
     ----------
     args : namespace
         The arguments passed into the CLI
     analyzer : Analyzer
-        The instance being used to profile
-        server inferencing.
+        The instance being used to profile server inferencing.
     client : TritonClient
         Instance used to load/unload models
     run_configs : list of dicts
@@ -296,24 +295,52 @@ def main():
     Main entrypoint of model_analyzer
     """
 
+    global exiting
+
+    # Number of Times User Requested Exit
+    exiting = 0
+
     monitoring_metrics = [
         PerfThroughput, GPUUtilization, GPUUsedMemory, GPUFreeMemory
     ]
 
+    def interrupt_handler(signal, frame):
+        global exiting
+        exiting += 1
+        logging.info(
+            f'Received SIGINT. Exiting ({exiting}/{MAX_NUMBER_OF_INTERRUPTS})...'
+        )
+
+        if exiting == MAX_NUMBER_OF_INTERRUPTS:
+            sys.exit(1)
+        return
+
+    signal.signal(signal.SIGINT, interrupt_handler)
+
     try:
         args = CLI().parse()
     except TritonModelAnalyzerException as e:
-        print(f'Model Analyzer encountered an error : {e}')
+        logging.error(f'Model Analyzer encountered an error: {e}')
 
+    logging.info(f'Triton Model Analyzer started {args} arguments')
+    analyzer = Analyzer(args, monitoring_metrics)
     try:
-        analyzer = Analyzer(args, monitoring_metrics)
         client, server = get_triton_handles(args)
+
+        # Only check for exit after the events that take a long time.
+        if exiting:
+            return
+
         check_triton_and_model_analyzer_gpus(args)
         run_configs = create_run_configs(args)
+        if exiting:
+            return
+
+        logging.info('Starting perf_analyzer...')
         run_analyzer(args, analyzer, client, run_configs)
         write_results(args, analyzer)
     except TritonModelAnalyzerException as e:
-        print(f'Model Analyzer encountered an error : {e}')
+        logging.error(f'Model Analyzer encountered an error: {e}')
     finally:
         server.stop()
 
