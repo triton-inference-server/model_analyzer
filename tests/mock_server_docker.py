@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from .mock_server import MockServerMethods
+from .mock_api_error import MockAPIError
 from unittest.mock import patch, Mock, MagicMock
 
 
@@ -93,6 +94,25 @@ class MockServerDockerMethods(MockServerMethods):
             detach=True)
 
         self._assert_docker_exec_run_with_args(cmd=cmd, stream=True)
+
+    def raise_exception_on_container_run(self):
+        """
+        Raises MockAPIError on container run
+        """
+        self.exception_on_run_patcher = patch(
+            'model_analyzer.triton.server.server_docker.docker.errors.APIError',
+            MockAPIError)
+        self.api_error_mock = self.exception_on_run_patcher.start()
+        self.mock.from_env.return_value.containers.run.side_effect = \
+            self.api_error_mock
+
+    def stop_raise_exception_on_container_run(self):
+        """
+        Stop raising exception on container run
+        """
+        ...
+        self.mock.from_env.return_value.containers.run.side_effect = None
+        self.exception_on_run_patcher.stop()
 
     def assert_server_process_terminate_called(self):
         """
