@@ -22,15 +22,16 @@ class FileWriter(OutputWriter):
     Writes table to a file or stdout
     """
 
-    def __init__(self, file_handle=None):
+    def __init__(self, filename=None):
         """
         Parameters
         ----------
         filename : File
-            The file or stream pointer to write the output to.
-            Writer to stdout if file_handle is None
+            The full path to the file or stream to write the output to.
+            Writes to stdout if filename is None
         """
-        self._file_handle = file_handle
+
+        self._filename = filename
 
     def write(self, out):
         """
@@ -48,10 +49,12 @@ class FileWriter(OutputWriter):
             If there is an error or exception while writing
             the output.
         """
-        if self._file_handle:
+
+        if self._filename:
             try:
-                self._file_handle.write(out)
-            except IOError as e:
+                with open(self._filename, 'w+') as f:
+                    f.write(out)
+            except OSError as e:
                 raise TritonModelAnalyzerException(e)
         else:
             print(out, end='')

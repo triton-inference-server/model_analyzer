@@ -23,8 +23,15 @@ class MockServerDockerMethods(MockServerMethods):
     model_analyzer/triton/server/server_docker.py. Provides functions to
     check operation.
     """
+
+    TEST_LOG = "Triton Server Test Log"
+
     def __init__(self):
-        docker_container_attrs = {'exec_run': MagicMock()}
+        docker_container_attrs = {
+            'exec_run':
+            MagicMock(return_value=(None, (bytes(x, 'utf-8')
+                                           for x in list(self.TEST_LOG))))
+        }
         docker_client_attrs = {
             'containers.run': Mock(return_value=Mock(**docker_container_attrs))
         }

@@ -152,6 +152,10 @@ class CLI:
             default='tritonserver',
             help='The full path to the tritonserver binary executable')
         self._parser.add_argument(
+            '--triton-output-path',
+            type=str,
+            help='The full path to a file to write the Triton Server log output to.')
+        self._parser.add_argument(
             '--gpus',
             type=str,
             default='all',

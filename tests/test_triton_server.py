@@ -20,8 +20,8 @@ from unittest import mock
 sys.path.append('../common')
 
 from unittest.mock import patch, MagicMock
-from .mock_server_docker import MockServerDockerMethods
-from .mock_server_local import MockServerLocalMethods
+from .mocks.mock_server_docker import MockServerDockerMethods
+from .mocks.mock_server_local import MockServerLocalMethods
 
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
@@ -136,7 +136,6 @@ class TestTritonServerMethods(trc.TestResultCollector):
         # Create a TritonServerConfig
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
-        os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         gpus = ['all']
 
 
@@ -172,6 +171,27 @@ class TestTritonServerMethods(trc.TestResultCollector):
 
         self.server.stop()
         self.server_local_mock.assert_server_process_terminate_called()
+
+    def test_get_logs(self):
+        server_config = TritonServerConfig()
+        server_config['model-repository'] = MODEL_REPOSITORY_PATH
+        gpus = ['all']
+
+        # Check docker server logs
+        self.server = TritonServerFactory.create_server_docker(
+            image=TRITON_IMAGE, config=server_config, gpus=gpus)
+        self.server.start()
+        self.server.stop()
+        self.server_docker_mock.assert_server_process_terminate_called()
+        self.assertEqual(self.server.logs(), "Triton Server Test Log")
+
+        # Create local server logs
+        self.server = TritonServerFactory.create_server_local(
+            path=TRITON_LOCAL_BIN_PATH, config=server_config)
+        self.server.start()
+        self.server.stop()
+        self.server_local_mock.assert_server_process_terminate_called()
+        self.assertEqual(self.server.logs(), "Triton Server Test Log")
 
     def tearDown(self):
         # In case test raises exception

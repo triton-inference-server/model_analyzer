@@ -11,34 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import requests
-import time
-from abc import ABC, abstractmethod
-
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-
-
-class TritonServer(ABC):
-    """
-    Defines the interface for the objects created by
-    TritonServerFactory
-    """
-
-    @abstractmethod
-    def start(self):
-        """
-        Starts the tritonserver
-        """
-
-    @abstractmethod
-    def stop(self):
-        """
-        Stops and cleans up after the server
-        """
-
-    @abstractmethod
-    def logs(self):
-        """
-        Gets the server's stdout logs as a string
-        """

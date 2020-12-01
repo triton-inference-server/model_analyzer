@@ -18,40 +18,48 @@ sys.path.append("../common")
 import unittest
 import sys
 import os
-from io import StringIO
 
+from .mocks.mock_io import MockIOMethods
+
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.output.file_writer import FileWriter
 import test_result_collector as trc
 
+TEST_FILENAME = 'test_filename'
+
 
 class TestFileWriterMethods(trc.TestResultCollector):
+    def setUp(self):
+        self.io_mock = MockIOMethods()
+
     def test_write(self):
-        test_handle = StringIO()
-        writer = FileWriter(file_handle=test_handle)
+        # Create and use writer
+        writer = FileWriter(filename=TEST_FILENAME)
 
-        # Write test using create if not exist mode
+        # Check for exception on open and write
+        self.io_mock.raise_exception_on_open()
+        err_str = "Expected TritonModelAnalyzerException on malformed input."
+        with self.assertRaises(TritonModelAnalyzerException, msg=err_str):
+            writer.write('test')
+        self.io_mock.reset()
+
+        self.io_mock.raise_exception_on_write()
+        err_str = "Expected TritonModelAnalyzerException on malformed input."
+        with self.assertRaises(TritonModelAnalyzerException, msg=err_str):
+            writer.write('test')
+        self.io_mock.reset()
+
+        # Check mock call on successful write
         writer.write('test')
+        self.io_mock.assert_write_called_with_args('test')
 
-        # read file
-        self.assertEqual(test_handle.getvalue(), 'test')
-
-        # redirect stdout and create writer with no filename
-        test_handle = StringIO()
-        old_stdout = sys.stdout
-        sys.stdout = test_handle
+        # Perform checks for stdout
         writer = FileWriter()
         writer.write('test')
-        sys.stdout.flush()
-        sys.stdout = old_stdout
+        self.io_mock.assert_print_called_with_args('test')
 
-        self.assertEqual(test_handle.getvalue(), 'test')
-        test_handle.close()
-
-        # Check for malformed calls
-        err_str = "Expected TritonModelAnalyzerException on malformed input."
-        writer = FileWriter(file_handle=test_handle)
-        with self.assertRaises(Exception, msg=err_str):
-            writer.write('test')
+    def tearDown(self):
+        self.io_mock.stop()
 
 
 if __name__ == '__main__':

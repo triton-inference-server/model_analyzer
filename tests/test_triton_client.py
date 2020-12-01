@@ -17,8 +17,8 @@ import unittest
 import sys
 sys.path.append('../common')
 
-from .mock_server_docker import MockServerDockerMethods
-from .mock_client import MockTritonClientMethods
+from .mocks.mock_server_docker import MockServerDockerMethods
+from .mocks.mock_client import MockTritonClientMethods
 
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.client.client_factory import TritonClientFactory

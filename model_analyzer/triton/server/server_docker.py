@@ -48,6 +48,7 @@ class TritonServerDocker(TritonServer):
         self._docker_client = docker.from_env()
         self._tritonserver_image = image
         self._tritonserver_container = None
+        self._tritonserver_log_gen = None
         self._gpus = gpus
 
         assert self._server_config['model-repository'], \
@@ -115,7 +116,7 @@ class TritonServerDocker(TritonServer):
         # Run the command in the container
         cmd = 'tritonserver ' + self._server_config.to_cli_string()
 
-        self._tritonserver_log = \
+        _, self._tritonserver_log_gen = \
             self._tritonserver_container.exec_run(cmd, stream=True)
 
     def stop(self):
@@ -132,3 +133,11 @@ class TritonServerDocker(TritonServer):
 
             self._tritonserver_container = None
             self._docker_client.close()
+
+    def logs(self):
+        """
+        Retrieves the Triton server's stdout
+        as a str
+        """
+
+        return b''.join(list(self._tritonserver_log_gen)).decode("utf-8")
