@@ -210,3 +210,31 @@ function check_exported_metrics() {
     done
     return 0
 }
+
+function install_netstat() {
+    netstat > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        return
+    else
+        DEBIAN_FRONTEND=noninteractive
+        apt-get update -qq > /dev/null 2>&1
+        DEBIAN_FRONTEND=noninteractive
+        apt-get install net-tools -y -qq > /dev/null 2>&1
+    fi
+}
+
+function find_available_ports() {
+    install_netstat
+    # First argument is the number of ports
+    num_port=$1
+
+    export ports=()
+    for i in `seq 1 $num_port`; do
+        current_port=$((10000 + $RANDOM % 10000))
+        while [ `netstat -ano tcp |& grep :$current_port > /dev/null 2>&1` ]; do
+            current_port=$(echo "$port + 1" | bc)
+        done
+        ports=("${ports[@]}" "$current_port")
+    done
+    echo ${ports[@]}
+}

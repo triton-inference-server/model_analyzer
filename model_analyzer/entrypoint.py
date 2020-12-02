@@ -20,6 +20,7 @@ import requests
 import numba.cuda
 import signal
 import logging
+from urllib.parse import urlparse
 
 from .cli.cli import CLI
 
@@ -85,6 +86,9 @@ def get_server_handle(args):
     elif args.triton_launch_mode == 'local':
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = args.model_repository
+        triton_config['http-port'] = args.triton_http_endpoint.split(':')[-1]
+        triton_config['grpc-port'] = args.triton_grpc_endpoint.split(':')[-1]
+        triton_config['metrics-port'] = urlparse(args.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
         logger.info('Starting a local Triton Server...')
         server = TritonServerFactory.create_server_local(
@@ -93,6 +97,9 @@ def get_server_handle(args):
     elif args.triton_launch_mode == 'docker':
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = args.model_repository
+        triton_config['http-port'] = args.triton_http_endpoint.split(':')[-1]
+        triton_config['grpc-port'] = args.triton_grpc_endpoint.split(':')[-1]
+        triton_config['metrics-port'] = urlparse(args.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
         logger.info('Starting a Triton Server using docker...')
         server = TritonServerFactory.create_server_docker(
@@ -220,7 +227,12 @@ def create_run_configs(args):
     sweep_params = {
         'model-name': [name.strip() for name in args.model_names.split(',')],
         'batch-size': [batch.strip() for batch in args.batch_sizes.split(',')],
-        'concurrency-range': [c.strip() for c in args.concurrency.split(',')]
+        'concurrency-range': [c.strip() for c in args.concurrency.split(',')],
+        'protocol': [args.client_protocol],
+        'url': [
+            args.triton_http_endpoint
+            if args.client_protocol == 'http' else args.triton_grpc_endpoint
+        ],
     }
     param_combinations = list(product(*tuple(sweep_params.values())))
     run_params = [

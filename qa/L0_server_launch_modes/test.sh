@@ -22,12 +22,16 @@ MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer
 MODEL_NAMES="classification_chestxray_v1"
 BATCH_SIZES="4"
 CONCURRENCY="4"
+PORTS=(`find_available_ports 3`)
+http_port="${PORTS[0]}"
+grpc_port="${PORTS[1]}"
+metrics_port="${PORTS[2]}"
 MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -n $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY"
+MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
+MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:$metrics_port/metrics"
 TRITON_LAUNCH_MODES="docker remote local"
 TRITON_SERVER_VERSION="20.11-py3"
 CLIENT_PROTOCOLS="http grpc"
-http_url='localhost:8000'
-grpc_url='localhost:8001'
 TEST_OUTPUT_NUM_ROWS=1
 TEST_OUTPUT_NUM_COLUMNS=7
 
@@ -42,13 +46,14 @@ for PROTOCOL in $CLIENT_PROTOCOLS; do
 
         # Set arguments for various launch modes
         if [ "$LAUNCH_MODE" == "local" ]; then    
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE"
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS"
         elif [ "$LAUNCH_MODE" == "docker" ]; then
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE --triton-version=$TRITON_SERVER_VERSION"
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE --triton-version=$TRITON_SERVER_VERSION $MODEL_ANALYZER_PORTS"
         elif [ "$LAUNCH_MODE" == "remote" ]; then
-            ENDPOINT=${PROTOCOL}_url 
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE --triton-${PROTOCOL}-endpoint=${!ENDPOINT}"
-            
+            MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:8000 --triton-grpc-endpoint localhost:8001"
+            MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:8002/metrics"
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS"
+
             # For remote launch, set server args and start server
             SERVER=`which tritonserver`
             SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit"

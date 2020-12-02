@@ -83,9 +83,9 @@ class TritonServerDocker(TritonServer):
         server_metrics_port = self._server_config['metrics-port'] or 8002
 
         ports = {
-            server_http_port: LOCAL_HTTP_PORT,
-            server_grpc_port: LOCAL_GRPC_PORT,
-            server_metrics_port: LOCAL_METRICS_PORT
+            server_http_port: server_http_port,
+            server_grpc_port: server_grpc_port,
+            server_metrics_port: server_metrics_port
         }
 
         try:
@@ -107,7 +107,7 @@ class TritonServerDocker(TritonServer):
                     f"{server_metrics_port}.\n"
                     "Change the Triton server ports using"
                     " --triton-http-endpoint, --triton-grpc-endpoint,"
-                    " and --triton-metrics-endpoint"
+                    " and --triton-metrics-endpoint flags."
                 )
             else:
                 raise error
