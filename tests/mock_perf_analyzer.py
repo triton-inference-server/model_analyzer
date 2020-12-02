@@ -63,6 +63,7 @@ class MockPerfAnalyzerMethods:
         """
 
         self.check_output_mock.assert_called_with(cmd,
+                                                  start_new_session=True,
                                                   stderr=self.stdout_mock,
                                                   encoding='utf-8')
 

@@ -17,6 +17,8 @@ import docker
 import logging
 
 from .server import TritonServer
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 LOCAL_HTTP_PORT = 8000
 LOCAL_GRPC_PORT = 8001
@@ -30,7 +32,6 @@ class TritonServerDocker(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     triton in a docker container.
     """
-
     def __init__(self, image, config, gpus):
         """
         Parameters
@@ -75,7 +76,8 @@ class TritonServerDocker(TritonServer):
             }
         }
 
-        # Map ports, use config values but set to server defaults if not specified
+        # Map ports, use config values but set to server defaults if not
+        # specified
         server_http_port = self._server_config['http-port'] or 8000
         server_grpc_port = self._server_config['grpc-port'] or 8001
         server_metrics_port = self._server_config['metrics-port'] or 8002
@@ -86,17 +88,29 @@ class TritonServerDocker(TritonServer):
             server_metrics_port: LOCAL_METRICS_PORT
         }
 
-        # Run the docker container
-        self._tritonserver_container = self._docker_client.containers.run(
-            image=self._tritonserver_image,
-            name='triton-server',
-            device_requests=devices,
-            volumes=volumes,
-            ports=ports,
-            publish_all_ports=True,
-            tty=True,
-            stdin_open=True,
-            detach=True)
+        try:
+            # Run the docker container
+            self._tritonserver_container = self._docker_client.containers.run(
+                image=self._tritonserver_image,
+                device_requests=devices,
+                volumes=volumes,
+                ports=ports,
+                publish_all_ports=True,
+                tty=True,
+                stdin_open=True,
+                detach=True)
+        except docker.errors.APIError as error:
+            if error.explanation.find('port is already allocated') != -1:
+                raise TritonModelAnalyzerException(
+                    "One of the following port(s) are already allocated: "
+                    f"{server_http_port}, {server_grpc_port}, "
+                    f"{server_metrics_port}.\n"
+                    "Change the Triton server ports using"
+                    " --triton-http-endpoint, --triton-grpc-endpoint,"
+                    " and --triton-metrics-endpoint"
+                )
+            else:
+                raise error
 
         # Run the command in the container
         cmd = 'tritonserver ' + self._server_config.to_cli_string()
