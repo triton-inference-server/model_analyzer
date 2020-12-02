@@ -67,6 +67,7 @@ class TritonServerLocal(TritonServer):
 
         # Terminate process, capture output
         if self._tritonserver_process is not None:
+            logger.info('Triton Server stopped.')
             self._tritonserver_process.terminate()
             try:
                 output, _ = self._tritonserver_process.communicate(
@@ -75,4 +76,3 @@ class TritonServerLocal(TritonServer):
                 self._tritonserver_process.kill()
                 output, _ = self._tritonserver_process.communicate()
             self._tritonserver_process = None
-            logger.info('Triton Server stopped.')

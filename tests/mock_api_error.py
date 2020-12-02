@@ -11,18 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-A cleanup script to run after
-docker server launches.
-"""
-import sys
-import docker
 
-docker_client = docker.from_env()
-try:
-    server_container = docker_client.containers.get('triton-server')
-    server_container.stop()
-    server_container.remove()
-except (docker.errors.NotFound, docker.errors.APIError) as e:
-    pass
-docker_client.close()
+class MockAPIError(Exception):
+    """
+    Mock for Docker API errors
+    """
+
+    def __init__(self):
+        self.explanation = 'port is already allocated'

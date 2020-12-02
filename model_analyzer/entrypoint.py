@@ -321,9 +321,11 @@ def main():
         args = CLI().parse()
     except TritonModelAnalyzerException as e:
         logging.error(f'Model Analyzer encountered an error: {e}')
+        sys.exit(1)
 
     logging.info(f'Triton Model Analyzer started {args} arguments')
     analyzer = Analyzer(args, monitoring_metrics)
+    server = None
     try:
         client, server = get_triton_handles(args)
 
@@ -342,7 +344,8 @@ def main():
     except TritonModelAnalyzerException as e:
         logging.error(f'Model Analyzer encountered an error: {e}')
     finally:
-        server.stop()
+        if server is not None:
+            server.stop()
 
 
 if __name__ == '__main__':

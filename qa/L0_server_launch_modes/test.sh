@@ -15,7 +15,6 @@
 source ../common/util.sh
 
 rm -f *.log
-python3 ../common/cleanup.py $CONTAINER_NAME || true
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -84,8 +83,6 @@ for PROTOCOL in $CLIENT_PROTOCOLS; do
         if [ "$LAUNCH_MODE" == "remote" ]; then
             kill $SERVER_PID
             wait $SERVER_PID
-        elif [ "$LAUNCH_MODE" == "docker" ]; then
-            python3 ../common/cleanup.py $CONTAINER_NAME || true
         fi
     done
 done

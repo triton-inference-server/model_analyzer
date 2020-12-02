@@ -16,6 +16,7 @@ import os
 import unittest
 import subprocess
 import sys
+from unittest import mock
 sys.path.append('../common')
 
 from unittest.mock import patch, MagicMock
@@ -145,6 +146,11 @@ class TestTritonServerMethods(trc.TestResultCollector):
         self.server_docker_mock.assert_server_process_start_called_with(
             TRITON_DOCKER_BIN_PATH + ' ' + server_config.to_cli_string(),
             MODEL_REPOSITORY_PATH, TRITON_IMAGE, 8000, 8001, 8002)
+
+        self.server_docker_mock.raise_exception_on_container_run()
+        with self.assertRaises(TritonModelAnalyzerException):
+            self.server.start()
+        self.server_docker_mock.stop_raise_exception_on_container_run()
 
         # Stop container and check api calls
         self.server.stop()
