@@ -15,7 +15,7 @@
 ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:20.11-py3
 ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:20.11-py3-clientsdk
 
-ARG MODEL_ANALYZER_VERSION=1.0.0dev
+ARG MODEL_ANALYZER_VERSION=1.0.0.dev0
 ARG MODEL_ANALYZER_CONTAINER_VERSION=20.12dev
 
 FROM ${TRITONSDK_BASE_IMAGE} as sdk
@@ -44,8 +44,12 @@ RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/
 
 WORKDIR /opt/triton-model-analyzer
 RUN rm -fr *
+COPY --from=sdk /usr/local/bin/perf_analyzer .
 COPY . .
-RUN python3 setup.py install
+RUN chmod +x build_wheel.sh && \
+    ./build_wheel.sh perf_analyzer true && \
+    rm -f perf_analyzer
+RUN python3 -m pip install wheels/nvidia_triton_model_analyzer-${MODEL_ANALYZER_VERSION}-py3-none-manylinux1_x86_64.whl
 
 ENTRYPOINT []
 ENV MODEL_ANALYZER_VERSION ${MODEL_ANALYZER_VERSION}
