@@ -56,7 +56,9 @@ class TestTritonClientMethods(trc.TestResultCollector):
 
         # Create and start the server
         self.server = TritonServerFactory.create_server_docker(
-            image=TRITON_IMAGE, config=self.server_config, gpus=gpus)
+            image=TRITON_IMAGE,
+            config=self.server_config,
+            gpus=gpus)
 
     def test_create_client(self):
 

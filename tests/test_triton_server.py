@@ -122,7 +122,9 @@ class TestTritonServerMethods(trc.TestResultCollector):
                 msg="Expected AssertionError for trying to create"
                 "server without specifying model repository."):
             self.server = TritonServerFactory.create_server_docker(
-                image=TRITON_IMAGE, config=server_config, gpus=gpus)
+                image=TRITON_IMAGE,
+                config=server_config,
+                gpus=gpus)
         with self.assertRaises(
                 AssertionError,
                 msg="Expected AssertionError for trying to create"
@@ -136,6 +138,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
         gpus = ['all']
+
 
         # Create server in docker, start , wait, and stop
         self.server = TritonServerFactory.create_server_docker(
