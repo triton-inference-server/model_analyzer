@@ -147,7 +147,7 @@ function check_analyzer_output() {
     fi
 
     # Check number of rows
-    num_rows_found=`awk '/Models:/ {getline; getline; i=0; while(getline) {i+=1}; print i}' $log_file`
+    num_rows_found=`awk 'BEGIN{i=0} /Models:/{flag=1;getline;getline} /^$/{flag=0} flag {i+=1} END{print i}' $log_file`
     if [[ "$num_rows_found" != "$expected_num_rows" ]]; then
             echo -e "\n***\n*** Test Failed: Expected $expected_num_rows rows in Model metrics table, got ${num_rows_found}\n***"
             return 1
