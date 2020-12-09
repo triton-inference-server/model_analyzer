@@ -26,10 +26,10 @@ cluster using helm charts. You can find information about helm charts [here](htt
 
 ## Using Kubernetes with GPUs
 
-1. **Install Kubernetes :** If you need to set up a Kubernetes cluster, you can follow the steps [here](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/install-k8s.html) to verify your installation, and troubleshoot any issues.
-2. **Set Default Container Runtime :** Using Kubernetes with GPU accelerated containers is tricky. Kubernetes does not yet support the `--gpus` options for running Docker containers, so you will need to register the `nvidia` runtime as the default for Docker on all GPU nodes. Follow the directions [here](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/dcgme2e.html#install-nvidia-container-toolkit-previously-nvidia-docker2).
+1. **Install Kubernetes :** If you need to set up a Kubernetes cluster, you can follow the steps in the [NVIDIA Kubernetes Installation Docs](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/install-k8s.html) to verify your installation, and troubleshoot any issues.
+2. **Set Default Container Runtime :** Using Kubernetes with GPU accelerated containers is tricky. Kubernetes does not yet support the `--gpus` options for running Docker containers, so you will need to register the `nvidia` runtime as the default for Docker on all GPU nodes. Follow the directions in the  [NVIDIA Container Toolkit Installation Docs](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/dcgme2e.html#install-nvidia-container-toolkit-previously-nvidia-docker2).
 
-3. **Install NVIDIA Device Plugin :** Also required to use GPUs with Kubernetes is the NVIDIA Device Plugin, a daemonset that automatically enumerates the number of GPUs on your worker nodes, and allows pods to run on them. Follow the directions [here](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/dcgme2e.html#install-nvidia-device-plugin) to deploy the device plugin on your cluster.
+3. **Install NVIDIA Device Plugin :** Also required to use GPUs with Kubernetes is the NVIDIA Device Plugin, a daemonset that automatically enumerates the number of GPUs on your worker nodes, and allows pods to run on them. Follow the directions in the [NVIDIA Device Plugin Docs](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/dcgme2e.html#install-nvidia-device-plugin) to deploy the device plugin on your cluster.
 
 ## Deploy Model Analyzer
 
@@ -42,11 +42,11 @@ kube-system   calico-kube-controllers-5dc87d545c-5c9sp         1/1     Running  
 kube-system   calico-node-8dcn5                                1/1     Running   0          21m
 kube-system   coredns-f9fd979d6-9l29n                          1/1     Running   0          36m
 kube-system   coredns-f9fd979d6-mf775                          1/1     Running   0          36m
-kube-system   etcd-asramesh-dt.nvidia.com                      1/1     Running   0          36m
-kube-system   kube-apiserver-asramesh-dt.nvidia.com            1/1     Running   0          36m
-kube-system   kube-controller-manager-asramesh-dt.nvidia.com   1/1     Running   0          36m
+kube-system   etcd-user.nvidia.com                             1/1     Running   0          36m
+kube-system   kube-apiserver-user.nvidia.com                   1/1     Running   0          36m
+kube-system   kube-controller-manager-user.nvidia.com          1/1     Running   0          36m
 kube-system   kube-proxy-zhpv7                                 1/1     Running   0          36m
-kube-system   kube-scheduler-asramesh-dt.nvidia.com            1/1     Running   0          36m
+kube-system   kube-scheduler-user.nvidia.com                   1/1     Running   0          36m
 kube-system   nvidia-device-plugin-1607379880-dblhc            1/1     Running   0          11m
 ```
 
@@ -139,11 +139,11 @@ kube-system   calico-kube-controllers-5dc87d545c-5c9sp         1/1     Running  
 kube-system   calico-node-8dcn5                                1/1     Running   0          54m
 kube-system   coredns-f9fd979d6-9l29n                          1/1     Running   0          69m
 kube-system   coredns-f9fd979d6-mf775                          1/1     Running   0          69m
-kube-system   etcd-asramesh-dt.nvidia.com                      1/1     Running   0          69m
-kube-system   kube-apiserver-asramesh-dt.nvidia.com            1/1     Running   0          69m
-kube-system   kube-controller-manager-asramesh-dt.nvidia.com   1/1     Running   0          69m
+kube-system   etcd-user.nvidia.com                             1/1     Running   0          69m
+kube-system   kube-apiserver-user.nvidia.com                   1/1     Running   0          69m
+kube-system   kube-controller-manager-user.nvidia.com          1/1     Running   0          69m
 kube-system   kube-proxy-zhpv7                                 1/1     Running   0          69m
-kube-system   kube-scheduler-asramesh-dt.nvidia.com            1/1     Running   0          69m
+kube-system   kube-scheduler-user.nvidia.com                   1/1     Running   0          69m
 kube-system   nvidia-device-plugin-1607379880-dblhc            1/1     Running   0          44m
 ```
 
