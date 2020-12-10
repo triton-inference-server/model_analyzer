@@ -99,17 +99,13 @@ class DCGMMonitor(Monitor):
             # Find the first key in the metrics dictionary to find the
             # dictionary length
             if len(list(metrics)) > 0:
-                first_key = list(metrics)[0]
-                num_metrics = len(metrics[first_key].values)
-                for i in range(num_metrics):
-                    for tag in self._tags:
-                        dcgm_field = self.model_analyzer_to_dcgm_field[tag]
+                for tag in self._tags:
+                    dcgm_field = self.model_analyzer_to_dcgm_field[tag]
+                    for measurement in metrics[dcgm_field].values:
 
                         # DCGM timestamp is in nanoseconds
                         records.append(
-                            tag(gpu,
-                                float(metrics[dcgm_field].values[i].value),
-                                metrics[dcgm_field].values[i].ts))
+                            tag(gpu, float(measurement.value), measurement.ts))
 
         return records
 
