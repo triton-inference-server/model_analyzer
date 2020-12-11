@@ -40,6 +40,7 @@ class TritonServerLocal(TritonServer):
         self._tritonserver_process = None
         self._server_config = config
         self._server_path = path
+        self._log = None
 
         assert self._server_config['model-repository'], \
             "Triton Server requires --model-repository argument to be set."
@@ -70,9 +71,18 @@ class TritonServerLocal(TritonServer):
             logger.info('Triton Server stopped.')
             self._tritonserver_process.terminate()
             try:
-                output, _ = self._tritonserver_process.communicate(
+                self._log, _ = self._tritonserver_process.communicate(
                     timeout=SERVER_OUTPUT_TIMEOUT_SECS)
             except TimeoutExpired:
                 self._tritonserver_process.kill()
-                output, _ = self._tritonserver_process.communicate()
+                self._log, _ = self._tritonserver_process.communicate()
             self._tritonserver_process = None
+            logger.info('Triton Server stopped.')
+
+    def logs(self):
+        """
+        Retrieves the Triton server's stdout
+        as a str
+        """
+
+        return self._log

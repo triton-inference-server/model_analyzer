@@ -65,12 +65,13 @@ function run_server_launch_modes() {
         for LAUNCH_MODE in $TRITON_LAUNCH_MODES; do
             MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE="$MODEL_ANALYZER_ARGS_WITH_PROTOCOL --triton-launch-mode=$LAUNCH_MODE"
             ANALYZER_LOG=analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
-
+            SERVER_LOG=${LAUNCH_MODE}.${PROTOCOL}.server.log
+            
             # Set arguments for various launch modes
             if [ "$LAUNCH_MODE" == "local" ]; then    
-                MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS"
+                MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG}"
             elif [ "$LAUNCH_MODE" == "docker" ]; then
-                MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE --triton-version=$TRITON_SERVER_VERSION $MODEL_ANALYZER_PORTS"
+                MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE --triton-version=$TRITON_SERVER_VERSION $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG}"
             elif [ "$LAUNCH_MODE" == "remote" ]; then
                 MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:8000 --triton-grpc-endpoint localhost:8001"
                 MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:8002/metrics"
@@ -79,7 +80,6 @@ function run_server_launch_modes() {
                 # For remote launch, set server args and start server
                 SERVER=`which tritonserver`
                 SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit"
-                SERVER_LOG=${PROTOCOL}.server.log
 
                 run_server
                 if [ "$SERVER_PID" == "0" ]; then
@@ -103,6 +103,12 @@ function run_server_launch_modes() {
             if [ "$LAUNCH_MODE" == "remote" ]; then
                 kill $SERVER_PID
                 wait $SERVER_PID
+            else
+                if [ ! -s "$SERVER_LOG" ]; then
+                    echo -e "\n***\n*** Test Output Verification Failed : No logs found\n***"
+                    cat $ANALYZER_LOG
+                    RET=1
+                fi
             fi
 
             model_analyzer_gpu_uuids=`cat $ANALYZER_LOG | grep -E "Using GPU\(s\) with UUID\(s\)" | tail -n 1 | sed -n 's/.*{\(.*\)}.*/\1/p'`

@@ -259,14 +259,36 @@ def write_results(args, analyzer):
 
     analyzer.write_results(writer=FileWriter(), column_separator=' ')
     if args.export:
-        with open(os.path.join(args.export_path, args.filename_server_only),
-                  'w+') as f:
-            analyzer.export_server_only_csv(writer=FileWriter(file_handle=f),
-                                            column_separator=',')
-        with open(os.path.join(args.export_path, args.filename_model),
-                  'w+') as f:
-            analyzer.export_model_csv(writer=FileWriter(file_handle=f),
-                                      column_separator=',')
+        server_metrics_path = os.path.join(args.export_path,
+                                           args.filename_server_only)
+        analyzer.export_server_only_csv(
+            writer=FileWriter(filename=server_metrics_path),
+            column_separator=',')
+        model_metrics_path = os.path.join(args.export_path,
+                                          args.filename_model)
+        analyzer.export_model_csv(
+            writer=FileWriter(filename=model_metrics_path),
+            column_separator=',')
+
+
+def write_server_logs(args, server):
+    """
+    Checks if server logs have been
+    requested, and writes them
+    to the specified file
+
+    Parameters
+    ----------
+    args : namespace
+        The arguments passed into the CLI
+    server : TritonServer
+        The triton server instance whose logs
+        we may want to write out.
+    """
+
+    if args.triton_output_path:
+        server_log_writer = FileWriter(filename=args.triton_output_path)
+        server_log_writer.write(server.logs())
 
 
 def run_analyzer(args, analyzer, client, run_configs):
@@ -358,6 +380,7 @@ def main():
     finally:
         if server is not None:
             server.stop()
+            write_server_logs(args, server)
 
 
 if __name__ == '__main__':

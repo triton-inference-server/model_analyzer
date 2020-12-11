@@ -27,10 +27,10 @@ from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 import test_result_collector as trc
-from .mock_dcgm import MockDCGM
-from .mock_numba import MockNumba
-from .mock_dcgm_agent import TEST_UUID
-from .mock_dcgm_field_group_watcher import TEST_RECORD_VALUE
+from .mocks.mock_dcgm import MockDCGM
+from .mocks.mock_numba import MockNumba
+from .mocks.mock_dcgm_agent import TEST_UUID
+from .mocks.mock_dcgm_field_group_watcher import TEST_RECORD_VALUE
 
 
 class TestDCGMMonitor(trc.TestResultCollector):

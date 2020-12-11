@@ -24,7 +24,10 @@ class MockServerLocalMethods(MockServerMethods):
     """
 
     def __init__(self):
-        Popen_attrs = {'communicate.return_value': ('output', 'error')}
+        Popen_attrs = {
+            'communicate.return_value':
+            ('Triton Server Test Log', 'Test Error')
+        }
         self.patcher_popen = patch(
             'model_analyzer.triton.server.server_local.Popen',
             Mock(return_value=Mock(**Popen_attrs)))

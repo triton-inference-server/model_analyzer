@@ -17,9 +17,9 @@ from unittest.mock import patch, MagicMock
 import sys
 sys.path.append('../common/')
 
-from .mock_server_local import MockServerLocalMethods
-from .mock_perf_analyzer import MockPerfAnalyzerMethods
-from .mock_client import MockTritonClientMethods
+from .mocks.mock_server_local import MockServerLocalMethods
+from .mocks.mock_perf_analyzer import MockPerfAnalyzerMethods
+from .mocks.mock_client import MockTritonClientMethods
 
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.server.server_factory import TritonServerFactory
