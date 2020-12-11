@@ -21,8 +21,8 @@ cluster using helm charts. You can find information about helm charts [here](htt
 
 ## Requirements
 
-* A Kubernetes enabled cluster
-* Helm
+* A [Kubernetes](https://kubernetes.io/) enabled cluster
+* [Helm](https://helm.sh/)
 
 ## Using Kubernetes with GPUs
 
