@@ -130,34 +130,26 @@ function check_test_results () {
     return 0
 }
 
-# Check the output tables from the model-analyzer
-# This function simply ensures that there is a
-# Server-only table, a model table, and that
-# They have the specified dimensions
-function check_analyzer_output() {
-    local log_file=$1
-    local expected_num_rows=$2
-    local expected_num_columns=$3
-
-    # Check server-only row
-    num_columns_found=`awk '/Server Only:/ {getline; for (n=0; n<1;n++) {getline}; print NF}' $log_file`
-    if [[ $num_columns_found != $expected_num_columns ]]; then
-        echo -e "\n***\n*** Test Failed: Expected $expected_num_columns columns in Server Only metrics, got ${num_columns_found}.\n***"
+# Check row and columns of csv file
+function check_csv_table_row_column() {
+    local csv_file=$1
+    local expected_num_columns=$2
+    local expected_num_rows=$3
+    local tag=$4
+    if [[ ! -f "$csv_file" ]]; then
+        echo -e "\n***\n*** Test Failed: $csv_file does not exist\n***"
         return 1
     fi
 
-    # Check number of rows
-    num_rows_found=`awk 'BEGIN{i=0} /Models:/{flag=1;getline;getline} /^$/{flag=0} flag {i+=1} END{print i}' $log_file`
-    if [[ "$num_rows_found" != "$expected_num_rows" ]]; then
-            echo -e "\n***\n*** Test Failed: Expected $expected_num_rows rows in Model metrics table, got ${num_rows_found}\n***"
-            return 1
+    num_rows=`awk -v pattern=$tag '$0 ~ pattern {getline; i=0; while(getline) {i+=1}; print i}' $csv_file`
+    if [[ "$num_rows" != "$expected_num_rows" ]]; then
+        echo -e "\n***\n*** Test Failed: Expected $expected_num_rows rows in $csv_file, got ${num_rows}\n***"
+        return 1
     fi
-    # Check models table
     for i in $( seq 1 $expected_num_rows ); do
-        # Columns in ith row
-        num_columns_found=`awk -v row="$i" '/Models:/ {getline; for (n=0; n<row;n++) {getline}; print NF}' $log_file`
+        num_columns_found=`awk -v pattern=$tag -F ',' -v row="$i" '$0 ~ pattern {for (n=0; n<row;n++) {getline}; print NF}' $csv_file`
         if [[ "$num_columns_found" != "$expected_num_columns" ]]; then
-            echo -e "\n***\n*** Test Failed: Expected $expected_num_columns columns in row $i of Model metrics table, got ${num_columns_found}\n***"
+            echo -e "\n***\n*** Test Failed: Expected $expected_num_columns columns in row $i, got ${num_columns_found}\n***"
             return 1
         fi
     done
@@ -165,44 +157,53 @@ function check_analyzer_output() {
 }
 
 
-# Check the export metrics
-# Check that the files exist
-# Check number of rows and columns
-function check_exported_metrics() {
-    local server_metrics_file=$1
-    local model_metrics_file=$2
+# Check row and columns of stdout
+function check_csv_table_row_column() {
+    local csv_file=$1
+    local expected_num_columns=$2
     local expected_num_rows=$3
-    local expected_num_columns=$4
-
-    # Check if files exist 
-    if [[ ! -f "$server_metrics_file" ]]; then
-        echo -e "\n***\n*** Test Failed: $server_metrics_file does not exist\n***"
-        return 1
-    elif [[ ! -f "$model_metrics_file" ]]; then
-        echo -e "\n***\n*** Test Failed: $model_metrics_file does not exist\n***"
+    local tag=$4
+    if [[ ! -f "$csv_file" ]]; then
+        echo -e "\n***\n*** Test Failed: $csv_file does not exist\n***"
         return 1
     fi
 
-    # Check rows and columns in server file
-    server_rows=`awk '/Model/ {getline; i=0; while(getline) {i+=1}; print i}' $server_metrics_file`
-    if [[ "$server_rows" != "1" ]]; then
-        echo -e "\n***\n*** Test Failed: Expected $expected_num_rows rows in $server_metrics_file, got ${server_rows}\n***"
-        return 1
-    fi
-    num_columns_found=`awk -F ',' '/Model/ {for (n=0; n<1;n++) {getline}; print NF}' $server_metrics_file`
-    if [[ $num_columns_found != $expected_num_columns ]]; then
-        echo -e "\n***\n*** Test Failed: Expected $expected_num_columns columns in Server Only metrics, got ${num_columns_found}.\n***"
-        return 1
-    fi
-
-    # Check rows and columns in model_file
-    model_rows=`awk '/Model/ {getline; i=0; while(getline) {i+=1}; print i}' $model_metrics_file`
-    if [[ "$model_rows" != "$expected_num_rows" ]]; then
-        echo -e "\n***\n*** Test Failed: Expected $expected_num_rows rows in $model_metrics_file, got ${model_rows}\n***"
+    num_rows=`awk -v pattern=$tag '$0 ~ pattern {getline; i=0; while(getline) {i+=1}; print i}' $csv_file`
+    if [[ "$num_rows" != "$expected_num_rows" ]]; then
+        echo -e "\n***\n*** Test Failed: Expected $expected_num_rows rows in $csv_file, got ${num_rows}\n***"
         return 1
     fi
     for i in $( seq 1 $expected_num_rows ); do
-        num_columns_found=`awk -F ',' -v row="$i" '/Model/ {for (n=0; n<row;n++) {getline}; print NF}' $model_metrics_file`
+        num_columns_found=`awk -v pattern=$tag -F ',' -v row="$i" '$0 ~ pattern {for (n=0; n<row;n++) {getline}; print NF}' $csv_file`
+        if [[ "$num_columns_found" != "$expected_num_columns" ]]; then
+            echo -e "\n***\n*** Test Failed: Expected $expected_num_columns columns in row $i, got ${num_columns_found}\n***"
+            return 1
+        fi
+    done
+    return 0
+}
+
+# Check the output tables from the model-analyzer
+# This function simply ensures that there is a
+# Server-only table, a model table, and that
+# They have the specified dimensions
+function check_log_table_row_column() {
+    local log_file=$1
+    local expected_num_columns=$2
+    local expected_num_rows=$3
+    local tag=$4
+
+    # Check number of rows
+    num_rows_found=`awk  "BEGIN{i=0} /$tag/{flag=1;getline;getline} /^$/{flag=0} flag {i+=1} END{print i}" $log_file`
+    if [[ "$num_rows_found" != "$expected_num_rows" ]]; then
+        echo -e "\n***\n*** Test Failed: Expected $expected_num_rows rows $log_file, got ${num_rows_found}\n***"
+        return 1
+    fi
+
+    # Check models table
+    for i in $( seq 1 $expected_num_rows ); do
+        # Columns in ith row
+        num_columns_found=`awk -v row="$i" "/$tag/{getline; for (n=0; n<row;n++) {getline}; print NF}" $log_file`
         if [[ "$num_columns_found" != "$expected_num_columns" ]]; then
             echo -e "\n***\n*** Test Failed: Expected $expected_num_columns columns in row $i of Model metrics table, got ${num_columns_found}\n***"
             return 1

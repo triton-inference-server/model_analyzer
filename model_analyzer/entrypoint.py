@@ -264,10 +264,13 @@ def write_results(args, analyzer):
         analyzer.export_server_only_csv(
             writer=FileWriter(filename=server_metrics_path),
             column_separator=',')
-        model_metrics_path = os.path.join(args.export_path,
-                                          args.filename_model)
+        metrics_inference_path = os.path.join(args.export_path,
+                                              args.filename_model_inference)
+        metrics_gpu_path = os.path.join(args.export_path,
+                                        args.filename_model_gpu)
         analyzer.export_model_csv(
-            writer=FileWriter(filename=model_metrics_path),
+            inference_writer=FileWriter(filename=metrics_inference_path),
+            gpu_metrics_writer=FileWriter(filename=metrics_gpu_path),
             column_separator=',')
 
 
@@ -318,6 +321,7 @@ def run_analyzer(args, analyzer, client, run_configs):
         client.load_model(model=model)
         client.wait_for_model_ready(model=model, num_retries=args.max_retries)
         try:
+            pass
             analyzer.profile_model(run_config=run_config,
                                    perf_output_writer=FileWriter())
         finally:
@@ -376,7 +380,7 @@ def main():
         run_analyzer(args, analyzer, client, run_configs)
         write_results(args, analyzer)
     except TritonModelAnalyzerException as e:
-        logging.error(f'Model Analyzer encountered an error: {e}')
+        logging.exception(f'Model Analyzer encountered an error: {e}')
     finally:
         if server is not None:
             server.stop()

@@ -14,8 +14,10 @@
 
 import time
 import logging
+from collections import defaultdict
 
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 from .monitor.dcgm.dcgm_monitor import DCGMMonitor
 from .perf_analyzer.perf_analyzer import PerfAnalyzer
 from .perf_analyzer.perf_config import PerfAnalyzerConfig
@@ -37,7 +39,6 @@ class Analyzer:
     exposes profiling and result writing
     methods.
     """
-
     def __init__(self, args, monitoring_metrics):
         """
         Parameters
@@ -64,9 +65,10 @@ class Analyzer:
             elif metric in PerfAnalyzer.perf_metrics:
                 self.perf_tags.append(metric)
 
-        self.tables = {
-            "Server Only:": self._create_output_table(),
-            "Models:": self._create_output_table()
+        self._tables = {
+            'model_gpu_metrics': self._create_gpu_output_table('Models (GPU Metrics)'),
+            'server_gpu_metrics': self._create_gpu_output_table('Server Only'),
+            'model_inference_metrics': self._create_inference_output_table('Models (Inference)')
         }
 
     def profile_server_only(self, default_value='0'):
@@ -87,19 +89,21 @@ class Analyzer:
         logging.info('Profiling server only metrics...')
         dcgm_monitor = DCGMMonitor(self._gpus, self._monitoring_interval,
                                    self.dcgm_tags)
-        server_only_metrics = self._profile(perf_analyzer=None,
-                                            dcgm_monitor=dcgm_monitor)
+        server_only_gpu_metrics, _ = self._profile(perf_analyzer=None,
+                                                   dcgm_monitor=dcgm_monitor)
 
-        # Model name here is triton-server, batch and concurrency are defaults
-        output_row = ['triton-server', default_value, default_value]
+        gpu_metrics = defaultdict(list)
+        for _, metric in server_only_gpu_metrics.items():
+            for gpu_id, metric_value in metric.items():
+                gpu_metrics[gpu_id].append(metric_value)
 
-        # add the obtained metrics
-        for metric in self._monitoring_metrics:
-            if metric in server_only_metrics:
-                output_row.append(server_only_metrics[metric])
-            else:
-                output_row.append(default_value)
-        self.tables["Server Only:"].add_row(output_row)
+        for gpu_id, metric in gpu_metrics.items():
+            # Model name here is triton-server, batch and concurrency
+            # are defaults
+            output_row = ['triton-server', default_value, default_value]
+            output_row += metric
+            output_row.append(gpu_id)
+            self._tables['server_gpu_metrics'].add_row(output_row)
         dcgm_monitor.destroy()
 
     def profile_model(self, run_config, perf_output_writer=None):
@@ -129,20 +133,38 @@ class Analyzer:
             config=self._create_perf_config(run_config))
 
         # Get metrics for model inference and write perf_output
-        model_metrics = self._profile(perf_analyzer=perf_analyzer,
-                                      dcgm_monitor=dcgm_monitor)
+        model_gpu_metrics, inference_metrics = self._profile(
+            perf_analyzer=perf_analyzer, dcgm_monitor=dcgm_monitor)
         if perf_output_writer:
             perf_output_writer.write(perf_analyzer.output() + '\n')
 
+        # Process GPU Metrics
+        gpu_metrics = defaultdict(list)
+        for _, metric in model_gpu_metrics.items():
+            for gpu_id, metric_value in metric.items():
+                gpu_metrics[gpu_id].append(metric_value)
+
+        for gpu_id, metrics in gpu_metrics.items():
+            # Model name here is triton-server, batch and concurrency
+            # are defaults
+            output_row = [
+                run_config['model-name'], run_config['batch-size'],
+                run_config['concurrency-range']
+            ]
+            output_row += metrics
+            output_row.append(gpu_id)
+            self._tables['model_gpu_metrics'].add_row(output_row)
+
+        # Process Inference Metrics
         output_row = [
             run_config['model-name'], run_config['batch-size'],
             run_config['concurrency-range']
         ]
-        output_row += [
-            model_metrics[metric] for metric in self._monitoring_metrics
-        ]
 
-        self.tables["Models:"].add_row(output_row)
+        output_row += [
+            inference_metrics[metric] for metric in inference_metrics
+        ]
+        self._tables['model_inference_metrics'].add_row(output_row)
 
         dcgm_monitor.destroy()
 
@@ -164,10 +186,8 @@ class Analyzer:
         TritonModelAnalyzerException
         """
 
-        uniform_widths = self._get_max_width_across_tables()
-        for table_name in self.tables:
-            self._set_table_column_widths(table_name, uniform_widths)
-            self._write_result(table_name,
+        for table in self._tables.values():
+            self._write_result(table,
                                writer,
                                column_separator,
                                ignore_widths=False)
@@ -189,20 +209,24 @@ class Analyzer:
         TritonModelAnalyzerException
         """
 
-        self._write_result("Server Only:",
+        self._write_result(self._tables['server_gpu_metrics'],
                            writer,
                            column_separator,
                            ignore_widths=True,
-                           write_table_name=False)
+                           write_table_name=False,
+                           include_title=False)
 
-    def export_model_csv(self, writer, column_separator):
+    def export_model_csv(self, inference_writer, gpu_metrics_writer,
+                         column_separator):
         """
         Writes the model table as a csv file using the given writer
 
         Parameters
         ----------
-        writer : OutputWriter
-            Used to write the result tables to an output stream
+        inference_writer : OutputWriter
+            Used to write the inference table result to an output stream
+        gpu_metrics_writer : OutputWriter
+            Used to write the gpu metrics table result to an output stream
         column_separator : str
             The string that will be inserted between each column
             of the table
@@ -212,32 +236,42 @@ class Analyzer:
         TritonModelAnalyzerException
         """
 
-        self._write_result("Models:",
-                           writer,
+        self._write_result(self._tables['model_gpu_metrics'],
+                           gpu_metrics_writer,
                            column_separator,
                            ignore_widths=True,
-                           write_table_name=False)
+                           write_table_name=False,
+                           include_title=False)
+
+        self._write_result(self._tables['model_inference_metrics'],
+                           inference_writer,
+                           column_separator,
+                           ignore_widths=True,
+                           write_table_name=False,
+                           include_title=False)
 
     def _write_result(self,
-                      table_name,
+                      table,
                       writer,
                       column_separator,
                       ignore_widths=False,
-                      write_table_name=True):
+                      write_table_name=True,
+                      include_title=True):
         """
         Utility function that writes any table
         """
 
-        if write_table_name:
+        if include_title:
             writer.write('\n'.join([
-                table_name, self.tables[table_name].to_formatted_string(
-                    separator=column_separator, ignore_widths=ignore_widths),
-                "\n"
+                table.title() + ":",
+                table.to_formatted_string(separator=column_separator,
+                                          ignore_widths=ignore_widths), "\n"
             ]))
         else:
-            writer.write(self.tables[table_name].to_formatted_string(
-                separator=column_separator, ignore_widths=ignore_widths) +
-                         "\n\n")
+            writer.write(
+                table.to_formatted_string(separator=column_separator,
+                                          ignore_widths=ignore_widths) +
+                "\n\n")
 
     def _profile(self, perf_analyzer, dcgm_monitor):
         """
@@ -266,11 +300,23 @@ class Analyzer:
 
         # Insert all records into aggregator and get aggregated DCGM records
         record_aggregator = RecordAggregator()
-        for record in perf_records + dcgm_records:
+        for record in dcgm_records:
             record_aggregator.insert(record)
-        return record_aggregator.aggregate()
 
-    def _create_output_table(self, aggregation_tag='Max'):
+        def gpu_device_id(record):
+            return record.device().device_id()
+
+        records_groupby_gpu = {}
+        for tag in self.dcgm_tags:
+            records_groupby_gpu[tag] = record_aggregator.groupby(
+                tag, gpu_device_id)
+
+        perf_record_aggregator = RecordAggregator()
+        for record in perf_records:
+            perf_record_aggregator.insert(record)
+        return records_groupby_gpu, perf_record_aggregator.aggregate()
+
+    def _create_inference_output_table(self, title, aggregation_tag='Max'):
         """
         Utility function that creates a table with column
         headers corresponding to perf_analyzer arguments
@@ -280,11 +326,19 @@ class Analyzer:
         # Create headers
         table_headers = self._param_headers[:]
         for metric in self._monitoring_metrics:
+            if metric not in self.dcgm_tags:
+                table_headers.append(metric.header())
+        return OutputTable(headers=table_headers, title=title)
+
+    def _create_gpu_output_table(self, title, aggregation_tag='Max'):
+
+        # Create headers
+        table_headers = self._param_headers[:]
+        for metric in self._monitoring_metrics:
             if metric in self.dcgm_tags:
                 table_headers.append(aggregation_tag + ' ' + metric.header())
-            else:
-                table_headers.append(metric.header())
-        return OutputTable(headers=table_headers)
+        table_headers.append('GPU ID')
+        return OutputTable(headers=table_headers, title=title)
 
     def _create_perf_config(self, params):
         """
@@ -297,28 +351,3 @@ class Analyzer:
         for param, value in params.items():
             config[param] = value
         return config
-
-    def _get_max_width_across_tables(self):
-        """
-        Compares the width of all columns across all
-        tables and returns a list of max widths
-        """
-
-        individual_widths = [
-            self.tables[k].column_widths() for k in self.tables
-        ]
-        uniform_widths = individual_widths[0]
-        for widths in individual_widths[1:]:
-            uniform_widths = [
-                max(uniform_widths[j], widths[j]) for j in range(len(widths))
-            ]
-        return uniform_widths
-
-    def _set_table_column_widths(self, table_name, widths):
-        """
-        Sets the column widths of the table with given name
-        by index correspoding to given list of widths.
-        """
-
-        for j in range(len(self.tables[table_name].column_widths())):
-            self.tables[table_name].set_column_width_by_index(j, widths[j])
