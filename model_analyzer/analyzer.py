@@ -66,9 +66,12 @@ class Analyzer:
                 self.perf_tags.append(metric)
 
         self._tables = {
-            'model_gpu_metrics': self._create_gpu_output_table('Models (GPU Metrics)'),
-            'server_gpu_metrics': self._create_gpu_output_table('Server Only'),
-            'model_inference_metrics': self._create_inference_output_table('Models (Inference)')
+            'model_gpu_metrics':
+            self._create_gpu_output_table('Models (GPU Metrics)'),
+            'server_gpu_metrics':
+            self._create_gpu_output_table('Server Only'),
+            'model_inference_metrics':
+            self._create_inference_output_table('Models (Inference)')
         }
 
     def profile_server_only(self, default_value='0'):
@@ -161,9 +164,7 @@ class Analyzer:
             run_config['concurrency-range']
         ]
 
-        output_row += [
-            inference_metrics[metric] for metric in inference_metrics
-        ]
+        output_row += inference_metrics.values()
         self._tables['model_inference_metrics'].add_row(output_row)
 
         dcgm_monitor.destroy()
@@ -303,13 +304,10 @@ class Analyzer:
         for record in dcgm_records:
             record_aggregator.insert(record)
 
-        def gpu_device_id(record):
-            return record.device().device_id()
-
         records_groupby_gpu = {}
         for tag in self.dcgm_tags:
             records_groupby_gpu[tag] = record_aggregator.groupby(
-                tag, gpu_device_id)
+                tag, (lambda record: record.device().device_id()))
 
         perf_record_aggregator = RecordAggregator()
         for record in perf_records:
