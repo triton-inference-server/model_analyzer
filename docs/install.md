@@ -18,13 +18,18 @@ limitations under the License.
 
 There are three ways to use Triton Model Analyzer:
 
-1. Using the `pip`:
+1. Install PIP package from the NVIDIA Py Index
+   ```
+   $ pip3 install nvidia-pyindex
+   $ pip3 install nvidia-triton-model-analyzer
+   ```
+
+2. Using PIP package from GitHub Repo:
    ```
    $ pip3 install git+https://github.com/triton-inference-server/model_analyzer
    ```
 
-   If you are using this approach you need to install [tritonclient](https://github.com/triton-inference-server/server/blob/r20.12/docs/client_libraries.md) and DCGM on your
-   machine.
+   If you are using this approach you need to install [tritonclient](https://github.com/triton-inference-server/server/blob/r20.12/docs/client_libraries.md) and DCGM on your machine.
 
    For installing DCGM on Ubuntu 20.04 you can use the following commands:
    ```
@@ -33,7 +38,7 @@ There are three ways to use Triton Model Analyzer:
     dpkg -i datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb
    ```
 
-2. Building from source:
+3. Building from source:
 
    Building from source is similar to installing using pip. You need
    to install the same dependencies mentioned in the "Using pip section".
@@ -48,7 +53,7 @@ There are three ways to use Triton Model Analyzer:
    After these steps, `model-analyzer` executable should be available in
    `$PATH`.
 
-3. Building the Dockerfile:
+4. Building the Dockerfile:
    ```
    $ docker build . -t triton_modelanalyzer
    $ docker run -ti -v <load triton models> --gpus 1 -v `pwd`/examples/quick-start:/workspace/examples triton_modelanalyzer bash
