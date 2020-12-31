@@ -105,33 +105,33 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.server.start()
         self.client.wait_for_server_ready(num_retries=1)
 
-        # Run perf analyzer with dummy tags to check command parsing
-        perf_tags = [id]
-        _ = perf_analyzer.run(perf_tags)
+        # Run perf analyzer with dummy metrics to check command parsing
+        perf_metrics = [id]
+        _ = perf_analyzer.run(perf_metrics)
         self.perf_mock.assert_perf_analyzer_run_as(
             [PERF_BIN_PATH, '-m', TEST_MODEL_NAME])
 
         # Test latency parsing
         test_latency_output = "Avg latency: 5000 ms\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
-        perf_tags = [PerfLatency]
-        records = perf_analyzer.run(perf_tags)
+        perf_metrics = [PerfLatency]
+        records = perf_analyzer.run(perf_metrics)
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].value(), 5000)
 
         # Test throughput parsing
         test_throughput_output = "Throughput: 46.8 infer/sec\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_throughput_output)
-        perf_tags = [PerfThroughput]
-        records = perf_analyzer.run(perf_tags)
+        perf_metrics = [PerfThroughput]
+        records = perf_analyzer.run(perf_metrics)
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].value(), 46.8)
 
         # Test parsing for both
         test_both_output = "Throughput: 0.001 infer/sec\nAvg latency: 3.6 ms\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_both_output)
-        perf_tags = [PerfLatency, PerfThroughput]
-        records = perf_analyzer.run(perf_tags)
+        perf_metrics = [PerfLatency, PerfThroughput]
+        records = perf_analyzer.run(perf_metrics)
         self.assertEqual(len(records), 2)
         self.assertEqual(records[0].value(), 3.6)
         self.assertEqual(records[1].value(), 0.001)
@@ -142,7 +142,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                 expected_regex="Running perf_analyzer with",
                 msg="Expected TritonModelAnalyzerException"):
             self.perf_mock.raise_exception_on_run()
-            _ = perf_analyzer.run(perf_tags)
+            _ = perf_analyzer.run(perf_metrics)
 
         self.server.stop()
 

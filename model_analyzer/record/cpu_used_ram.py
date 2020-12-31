@@ -13,30 +13,28 @@
 # limitations under the License.
 
 import time
-from .gpu_record import GPURecord
+
+from .record import Record
 
 
-class GPUUsedMemory(GPURecord):
+class CPUUsedRAM(Record):
     """
-    The used memory in the GPU.
+    The CPU memory usage record
     """
 
-    tag = "gpu_used_memory"
+    tag = "cpu_used_ram"
 
-    def __init__(self, device, used_mem, timestamp):
+    def __init__(self, used_mem, timestamp=0):
         """
         Parameters
         ----------
-        device : GPUDevice
-            The GPU device this metric is associated
-            with.
-        used_mem : float
-            GPU used memory
+        free_mem : float
+            CPU used memory
         timestamp : int
             The timestamp for the record in nanoseconds
         """
 
-        super().__init__(device, used_mem, timestamp)
+        super().__init__(used_mem, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -56,4 +54,4 @@ class GPUUsedMemory(GPURecord):
             metric.
         """
 
-        return aggregation_tag + "GPU Memory Usage(MB)"
+        return aggregation_tag + "RAM Usage(MB)"

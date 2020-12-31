@@ -14,7 +14,7 @@
 
 from .mock_server import MockServerMethods
 from .mock_api_error import MockAPIError
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock, MagicMock, call
 
 
 class MockServerDockerMethods(MockServerMethods):
@@ -25,12 +25,21 @@ class MockServerDockerMethods(MockServerMethods):
     """
 
     TEST_LOG = "Triton Server Test Log"
+    TEST_MEM = "10.0e3"
 
     def __init__(self):
         docker_container_attrs = {
             'exec_run':
             MagicMock(return_value=(None, (bytes(x, 'utf-8')
-                                           for x in list(self.TEST_LOG))))
+                                           for x in list(self.TEST_LOG)))),
+            'stats':
+            Mock(return_value={
+                'memory_stats': {
+                    'usage': 0.0,
+                    'max_usage': 0.0,
+                    'limits': 0.0
+                }
+            })
         }
         docker_client_attrs = {
             'containers.run': Mock(return_value=Mock(**docker_container_attrs))
@@ -67,13 +76,14 @@ class MockServerDockerMethods(MockServerMethods):
 
         self.mock.from_env.assert_called()
 
-    def _assert_docker_exec_run_with_args(self, cmd, stream=True):
+    def _assert_docker_exec_run_with_args(self, cmd, stream):
         """
         Asserts that a command cmd was run on the docker container
         with the given stream value
         """
-        self.mock.from_env.return_value.containers.run.return_value.exec_run.assert_called_once_with(
-            cmd, stream=True)
+
+        self.mock.from_env.return_value.containers.run.return_value.exec_run.assert_any_call(
+            cmd=cmd, stream=stream)
 
     def assert_server_process_start_called_with(self,
                                                 cmd,
@@ -108,6 +118,10 @@ class MockServerDockerMethods(MockServerMethods):
 
         self._assert_docker_exec_run_with_args(cmd=cmd, stream=True)
 
+        # The return value should now be set to TEST_MEM as further calls to exec_run are in cpu_stats
+        self.mock.from_env.return_value.containers.run.return_value.exec_run.return_value = (
+            None, bytes(self.TEST_MEM, 'utf-8'))
+
     def raise_exception_on_container_run(self):
         """
         Raises MockAPIError on container run
@@ -136,3 +150,15 @@ class MockServerDockerMethods(MockServerMethods):
         )
         self.mock.from_env.return_value.containers.run.return_value.remove.assert_called(
         )
+
+    def assert_cpu_stats_called(self):
+        """
+        Checks the call to docker.Container.stats
+        """
+
+        self._assert_docker_exec_run_with_args(
+            cmd=
+            'bash -c "pmap -x $(pgrep tritonserver) | tail -n1 | awk \'{print $4}\'"',
+            stream=False)
+        self._assert_docker_exec_run_with_args(
+            cmd='bash -c "free | awk \'{if(NR==2)print $7}\'"', stream=False)

@@ -15,7 +15,7 @@
 from model_analyzer.record.gpu_free_memory import GPUFreeMemory
 from model_analyzer.record.gpu_used_memory import GPUUsedMemory
 from model_analyzer.record.gpu_utilization import GPUUtilization
-from model_analyzer.monitor.monitor import Monitor
+from model_analyzer.monitor.gpu_monitor import GPUMonitor
 from model_analyzer.model_analyzer_exceptions import \
     TritonModelAnalyzerException
 
@@ -28,7 +28,7 @@ from multiprocessing.pool import ThreadPool
 import time
 
 
-class DCGMMonitor(Monitor):
+class DCGMMonitor(GPUMonitor):
     """
     Use DCGM to monitor GPU metrics
     """
@@ -40,19 +40,19 @@ class DCGMMonitor(Monitor):
         GPUUtilization: dcgm_fields.DCGM_FI_DEV_GPU_UTIL
     }
 
-    def __init__(self, gpus, frequency, tags, dcgmPath=None):
+    def __init__(self, gpus, frequency, metrics, dcgmPath=None):
         """
         Parameters
         ----------
         frequency : int
             Sampling frequency for the metric
-        tags : list
+        metrics : list
             List of Record types to monitor
         dcgmPath : str (optional)
             DCGM installation path
         """
 
-        super().__init__(gpus, frequency, tags)
+        super().__init__(gpus, frequency, metrics)
         structs._dcgmInit(dcgmPath)
         dcgm_agent.dcgmInit()
 
@@ -71,14 +71,13 @@ class DCGMMonitor(Monitor):
 
         frequency = int(self._frequency * 1000)
         fields = []
-        for tag in tags:
-            if tag in self.model_analyzer_to_dcgm_field:
-                dcgm_field = self.model_analyzer_to_dcgm_field[tag]
-                fields.append(dcgm_field)
-            else:
-                dcgm_agent.dcgmShutdown()
-                raise TritonModelAnalyzerException(
-                    f'{tag} is not supported by Model Analyzer DCGM Monitor')
+        try:
+            for metric in metrics:
+                fields.append(self.model_analyzer_to_dcgm_field[metric])
+        except KeyError:
+            dcgm_agent.dcgmShutdown()
+            raise TritonModelAnalyzerException(
+                f'{metric} is not supported by Model Analyzer DCGM Monitor')
 
         self.dcgm_field_group_id = dcgm_agent.dcgmFieldGroupCreate(
             dcgm_handle, fields, 'triton-monitor')
@@ -99,13 +98,14 @@ class DCGMMonitor(Monitor):
             # Find the first key in the metrics dictionary to find the
             # dictionary length
             if len(list(metrics)) > 0:
-                for tag in self._tags:
-                    dcgm_field = self.model_analyzer_to_dcgm_field[tag]
+                for metric_type in self._metrics:
+                    dcgm_field = self.model_analyzer_to_dcgm_field[metric_type]
                     for measurement in metrics[dcgm_field].values:
 
                         # DCGM timestamp is in nanoseconds
                         records.append(
-                            tag(gpu, float(measurement.value), measurement.ts))
+                            metric_type(gpu, float(measurement.value),
+                                        measurement.ts))
 
         return records
 
@@ -116,5 +116,4 @@ class DCGMMonitor(Monitor):
         """
 
         dcgm_agent.dcgmShutdown()
-        self._thread_pool.terminate()
-        self._thread_pool.close()
+        super().destroy()

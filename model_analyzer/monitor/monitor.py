@@ -14,64 +14,31 @@
 
 from abc import ABC, abstractmethod
 from multiprocessing.pool import ThreadPool
-import numba.cuda
 import time
-import logging
 
-from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-
-logger = logging.getLogger(__name__)
 
 
 class Monitor(ABC):
     """
     Monitor abstract class is a parent class used for monitoring devices.
     """
-    def __init__(self, gpus, frequency, tags):
+
+    def __init__(self, frequency, metrics):
         """
         Parameters
         ----------
-        gpus : list
-            A list of strings containing GPU UUIDs.
         frequency : float
             How often the metrics should be monitored.
-        tags : list
+        metrics : list
             A list of Record objects that will be monitored.
 
         Raises
         ------
-        TritonModelAnalyzerExcpetion
-            If the GPU cannot be found, the exception will be raised.
+        TritonModelAnalyzerException
         """
 
         self._frequency = frequency
-        self._gpus = []
-
-        if len(gpus) == 1 and gpus[0] == 'all':
-            cuda_devices = numba.cuda.list_devices()
-            if len(cuda_devices) == 0:
-                raise TritonModelAnalyzerException(
-                    "No GPUs are visible by CUDA. Make sure that 'nvidia-smi'"
-                    " output shows available GPUs. If you are using Model"
-                    " Analyzer inside a container, ensure that you are"
-                    " launching the container with the"
-                    " appropriate '--gpus' flag"
-                )
-            for gpu in cuda_devices:
-                gpu_device = GPUDeviceFactory.create_device_by_cuda_index(
-                    gpu.id)
-                self._gpus.append(gpu_device)
-        else:
-            for gpu in gpus:
-                gpu_device = GPUDeviceFactory.create_device_by_uuid(gpu)
-                self._gpus.append(gpu_device)
-
-        gpu_uuids = []
-        for gpu in self._gpus:
-            gpu_uuids.append(str(gpu.device_uuid(), encoding='ascii'))
-        gpu_uuids_str = ','.join(gpu_uuids)
-        logger.info(f'Using GPU(s) with UUID(s) = {{ {gpu_uuids_str} }} for the analysis.')
 
         # Is the background thread active
         self._thread_active = False
@@ -81,7 +48,7 @@ class Monitor(ABC):
 
         # Thread pool
         self._thread_pool = ThreadPool(processes=1)
-        self._tags = tags
+        self._metrics = metrics
 
     def _monitoring_loop(self):
         frequency = self._frequency
@@ -125,6 +92,14 @@ class Monitor(ABC):
     def stop_recording_metrics(self):
         """
         Stop recording metrics. This will stop monitring all the metrics.
+
+        Returns
+        ------
+        List of Records
+
+        Raises
+        ------
+        TritonModelAnalyzerException
         """
 
         if not self._thread_active:
@@ -136,3 +111,11 @@ class Monitor(ABC):
         self._thread = None
 
         return self._collect_records()
+
+    def destroy(self):
+        """
+        Cleanup threadpool resources
+        """
+
+        self._thread_pool.terminate()
+        self._thread_pool.close()

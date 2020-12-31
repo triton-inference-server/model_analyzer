@@ -21,6 +21,8 @@ class GPUFreeMemory(GPURecord):
     The free memory in the GPU.
     """
 
+    tag = "gpu_free_memory"
+
     def __init__(self, device, free_mem, timestamp):
         """
         Parameters
@@ -38,8 +40,16 @@ class GPUFreeMemory(GPURecord):
         super().__init__(device, free_mem, timestamp)
 
     @staticmethod
-    def header():
+    def header(aggregation_tag=None):
         """
+        Parameters
+        ----------
+        aggregation_tag : str
+            An optional tag that may be displayed 
+            as part of the header indicating that 
+            this record has been aggregated using 
+            max, min or average etc. 
+             
         Returns
         -------
         str
@@ -47,4 +57,4 @@ class GPUFreeMemory(GPURecord):
             metric.
         """
 
-        return "GPU Free Memory(MB)"
+        return aggregation_tag + "GPU Memory Available(MB)"

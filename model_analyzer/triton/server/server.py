@@ -42,3 +42,9 @@ class TritonServer(ABC):
         """
         Gets the server's stdout logs as a string
         """
+
+    @abstractmethod
+    def cpu_stats(self):
+        """
+        Returns the CPU memory usage and CPU available memory in MB
+        """

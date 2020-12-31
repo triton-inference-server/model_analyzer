@@ -16,7 +16,6 @@ import sys
 sys.path.append("../common")
 
 import unittest
-import sys
 import os
 
 from .mocks.mock_io import MockIOMethods

@@ -27,7 +27,7 @@ class PerfAnalyzer:
     """
 
     # The metrics that PerfAnalyzer can collect
-    perf_metrics = [PerfLatency, PerfThroughput]
+    perf_metrics = {PerfLatency, PerfThroughput}
 
     def __init__(self, path, config):
         """
@@ -44,13 +44,13 @@ class PerfAnalyzer:
         self._config = config
         self._output = None
 
-    def run(self, tags):
+    def run(self, metrics):
         """
         Runs the perf analyzer with the
         intialized configuration
         Parameters
         ----------
-        tags : List of Record types
+        metrics : List of Record types
             The list of record types to parse from
             Perf Analyzer
 
@@ -66,7 +66,7 @@ class PerfAnalyzer:
             If subprocess throws CalledProcessError
         """
 
-        if tags:
+        if metrics:
             # Synchronously start and finish run
             cmd = [self.bin_path]
             cmd += self._config.to_cli_string().replace('=', ' ').split()
@@ -79,7 +79,7 @@ class PerfAnalyzer:
                 raise TritonModelAnalyzerException(
                     f"Running perf_analyzer with {e.cmd} failed with exit status {e.returncode} : {e.output}"
                 )
-        return [metric(self._output) for metric in tags]
+        return [metric(self._output) for metric in metrics]
 
     def output(self):
         """

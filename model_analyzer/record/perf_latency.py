@@ -24,6 +24,8 @@ class PerfLatency(Record):
     metric 'Avg Latency'
     """
 
+    tag = "perf_latency"
+
     def __init__(self, perf_output, timestamp=0):
         """
         Parameters
@@ -44,8 +46,16 @@ class PerfLatency(Record):
         super().__init__(latency, timestamp)
 
     @staticmethod
-    def header():
+    def header(aggregation_tag=None):
         """
+        Parameters
+        ----------
+        aggregation_tag : str
+            An optional tag that may be displayed 
+            as part of the header indicating that 
+            this record has been aggregated using 
+            max, min or average etc. 
+             
         Returns
         -------
         str
@@ -53,4 +63,4 @@ class PerfLatency(Record):
             metric.
         """
 
-        return "Average Latency"
+        return "Average Latency(us)"
