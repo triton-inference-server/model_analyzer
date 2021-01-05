@@ -101,7 +101,8 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         # Test get with multiple headers
         retrieved_records = record_aggregator.filter_records(
             record_types=[PerfLatency, PerfThroughput],
-            filters=[(lambda v: v.value() == 3), (lambda v: v.value() < 5)]).get_records()
+            filters=[(lambda v: v.value() == 3),
+                     (lambda v: v.value() < 5)]).get_records()
 
         retrieved_values = {
             record_type:
@@ -128,15 +129,15 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         def groupby_criteria(record):
             return record.timestamp()
 
-        records = record_aggregator.groupby(PerfThroughput, groupby_criteria)
-        self.assertTrue(list(records) == [0, 1])
-        self.assertTrue(list(records.values()) == [5.0, 10.0])
+        records = record_aggregator.groupby([PerfThroughput], groupby_criteria)
+        self.assertTrue(list(records[PerfThroughput]) == [0, 1])
+        self.assertTrue(list(records[PerfThroughput].values()) == [5.0, 10.0])
 
-        records = record_aggregator.groupby(PerfThroughput,
+        records = record_aggregator.groupby([PerfThroughput],
                                             groupby_criteria,
                                             reduce_func=min)
-        self.assertTrue(list(records) == [0, 1])
-        self.assertTrue(list(records.values()) == [5.0, 1.0])
+        self.assertTrue(list(records[PerfThroughput]) == [0, 1])
+        self.assertTrue(list(records[PerfThroughput].values()) == [5.0, 1.0])
 
     def test_aggregate(self):
         record_aggregator = RecordAggregator()

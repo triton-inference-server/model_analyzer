@@ -116,16 +116,16 @@ class RecordAggregator:
 
         return filtered_records
 
-    def groupby(self, record_type, groupby_criteria, reduce_func=max):
+    def groupby(self, record_types, groupby_criterion, reduce_func=max):
         """
         Group all the records of a certain type together if they have the
         same value for a given groupbby criteria.
 
         Parameters
         ----------
-        record_type : Record
-            A record type
-        groupby_criteria : callable
+        record_types : list
+            A list of record type
+        groupby_criterion : callable
             This callable will receive a single record as the argument and
             must return the value that will be used for groupby
         reduce_func : callable
@@ -134,25 +134,28 @@ class RecordAggregator:
         Returns
         -------
         dict
-            A dictionary where the keys are the unique values returned by
-            groupby_criteria and the values are the aggregated records.
+            A dictionary of dictionaries where the first level keys are the
+            record type and the second level keys are unique values returned
+            by groupby_criteria and the values are the aggregated records.
         """
 
-        records = self.filter_records(record_types=[record_type]).get_records()
-        field_values = set()
-        for record in records[record_type]:
-            field_values.add(groupby_criteria(record))
-
-        groupby_result = {}
-        for field_value in field_values:
-            aggregated_result = self.filter_records(
-                record_types=[record_type],
-                filters=[
-                    lambda record: groupby_criteria(record) == field_value
-                ]).aggregate(record_types=[record_type],
-                             reduce_func=reduce_func)
-            groupby_result[field_value] = aggregated_result[record_type]
-
+        field_values = {
+            record_type: set([groupby_criterion(record)
+                              for record in self._records[record_type]])
+            for record_type in record_types
+        }
+        groupby_result = defaultdict(list)
+        for record_type in record_types:
+            groupby_result[record_type] = defaultdict(list)
+            for field_value in field_values[record_type]:
+                aggregated_result = self.filter_records(
+                    record_types=[record_type],
+                    filters=[
+                        lambda r: groupby_criterion(r) == field_value
+                    ]).aggregate(record_types=[record_type],
+                                 reduce_func=reduce_func)
+                groupby_result[record_type][field_value] = \
+                    aggregated_result[record_type]
         return groupby_result
 
     def record_types(self):

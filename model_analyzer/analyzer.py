@@ -53,7 +53,8 @@ class Analyzer:
         self._duration_seconds = args.duration_seconds
         self._monitoring_interval = args.monitoring_interval
         self._monitoring_metrics = monitoring_metrics
-        self._param_headers = ['Model', 'Batch', 'Concurrency']
+        self._param_inference_headers = ['Model', 'Batch', 'Concurrency']
+        self._param_gpu_headers = ['Model', 'GPU ID', 'Batch', 'Concurrency']
         self._gpus = args.gpus
 
         # Separates metric tags into perf_analyzer related and DCGM related tags
@@ -103,9 +104,10 @@ class Analyzer:
         for gpu_id, metric in gpu_metrics.items():
             # Model name here is triton-server, batch and concurrency
             # are defaults
-            output_row = ['triton-server', default_value, default_value]
+            output_row = [
+                'triton-server', gpu_id, default_value, default_value
+            ]
             output_row += metric
-            output_row.append(gpu_id)
             self._tables['server_gpu_metrics'].add_row(output_row)
         dcgm_monitor.destroy()
 
@@ -151,11 +153,10 @@ class Analyzer:
             # Model name here is triton-server, batch and concurrency
             # are defaults
             output_row = [
-                run_config['model-name'], run_config['batch-size'],
+                run_config['model-name'], gpu_id, run_config['batch-size'],
                 run_config['concurrency-range']
             ]
             output_row += metrics
-            output_row.append(gpu_id)
             self._tables['model_gpu_metrics'].add_row(output_row)
 
         # Process Inference Metrics
@@ -305,9 +306,8 @@ class Analyzer:
             record_aggregator.insert(record)
 
         records_groupby_gpu = {}
-        for tag in self.dcgm_tags:
-            records_groupby_gpu[tag] = record_aggregator.groupby(
-                tag, (lambda record: record.device().device_id()))
+        records_groupby_gpu = record_aggregator.groupby(
+            self.dcgm_tags, lambda record: record.device().device_id())
 
         perf_record_aggregator = RecordAggregator()
         for record in perf_records:
@@ -322,7 +322,7 @@ class Analyzer:
         """
 
         # Create headers
-        table_headers = self._param_headers[:]
+        table_headers = self._param_inference_headers[:]
         for metric in self._monitoring_metrics:
             if metric not in self.dcgm_tags:
                 table_headers.append(metric.header())
@@ -331,11 +331,10 @@ class Analyzer:
     def _create_gpu_output_table(self, title, aggregation_tag='Max'):
 
         # Create headers
-        table_headers = self._param_headers[:]
+        table_headers = self._param_gpu_headers[:]
         for metric in self._monitoring_metrics:
             if metric in self.dcgm_tags:
                 table_headers.append(aggregation_tag + ' ' + metric.header())
-        table_headers.append('GPU ID')
         return OutputTable(headers=table_headers, title=title)
 
     def _create_perf_config(self, params):
