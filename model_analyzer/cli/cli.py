@@ -56,8 +56,8 @@ class CLI:
             '--concurrency',
             type=str,
             default='1',
-            help='Comma-delimited list of concurrency values or ranges'
-                 ' <start:end:step> to be used during profiling')
+            help='Comma-delimited list of concurrency values'
+                 'to be used during profiling')
         self._parser.add_argument(
             '--export',
             action='store_true',
@@ -116,7 +116,7 @@ class CLI:
             '--perf-measurement-window',
             type=int,
             default=5000,
-            help='Time interval between perf_analyzer measurements. perf_analyzer will take '
+            help='Time interval in milliseconds between perf_analyzer measurements. perf_analyzer will take '
                  'measurements over all the requests completed within this time interval.')
         self._parser.add_argument(
             '--no-perf-output',
