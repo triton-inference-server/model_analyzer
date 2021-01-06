@@ -58,6 +58,6 @@ else
     ${PYTHON} setup.py bdist_wheel --dependency-dir $WHLDIR
 fi
 rm -f $WHLDIR/* && cp dist/* $WHLDIR
-rm -rf build dist nvidia_triton_model_analyzer.egg-info
+rm -rf build dist triton_model_analyzer.egg-info
 touch ${WHLDIR}/stamp.whl
 echo $(date) : "=== Output wheel file is in: ${WHLDIR}"
