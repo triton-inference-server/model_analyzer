@@ -51,7 +51,7 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         record_aggregator.insert(throughput_record)
 
         # Get the record
-        retrieved_records = record_aggregator.filter_records()
+        retrieved_records = record_aggregator.filter_records().get_records()
         retrieved_throughput = retrieved_records[PerfThroughput][0]
 
         self.assertIsInstance(
@@ -83,7 +83,8 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
 
         # Test get with filters
         retrieved_records = record_aggregator.filter_records(
-            record_types=[PerfThroughput], filters=[(lambda v: v >= 5)])
+            record_types=[PerfThroughput],
+            filters=[(lambda v: v.value() >= 5)]).get_records()
 
         # Should return 2 records
         self.assertEqual(len(retrieved_records[PerfThroughput]), 2)
@@ -100,7 +101,8 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         # Test get with multiple headers
         retrieved_records = record_aggregator.filter_records(
             record_types=[PerfLatency, PerfThroughput],
-            filters=[(lambda v: v == 3), (lambda v: v < 5)])
+            filters=[(lambda v: v.value() == 3),
+                     (lambda v: v.value() < 5)]).get_records()
 
         retrieved_values = {
             record_type:
@@ -113,6 +115,29 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
 
         self.assertEqual(len(retrieved_records[PerfThroughput]), 1)
         self.assertIn(1, retrieved_values[PerfThroughput])
+
+    def test_groupby(self):
+        record_aggregator = RecordAggregator()
+        # Insert 3 throughputs
+        record_aggregator.insert(
+            PerfThroughput("Throughput: 5 infer/sec\n\n\n\n", timestamp=0))
+        record_aggregator.insert(
+            PerfThroughput("Throughput: 1 infer/sec\n\n\n\n", timestamp=1))
+        record_aggregator.insert(
+            PerfThroughput("Throughput: 10 infer/sec\n\n\n\n", timestamp=1))
+
+        def groupby_criteria(record):
+            return record.timestamp()
+
+        records = record_aggregator.groupby([PerfThroughput], groupby_criteria)
+        self.assertTrue(list(records[PerfThroughput]) == [0, 1])
+        self.assertTrue(list(records[PerfThroughput].values()) == [5.0, 10.0])
+
+        records = record_aggregator.groupby([PerfThroughput],
+                                            groupby_criteria,
+                                            reduce_func=min)
+        self.assertTrue(list(records[PerfThroughput]) == [0, 1])
+        self.assertTrue(list(records[PerfThroughput].values()) == [5.0, 1.0])
 
     def test_aggregate(self):
         record_aggregator = RecordAggregator()

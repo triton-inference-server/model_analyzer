@@ -27,16 +27,18 @@ BATCH_SIZES="1,2"
 CONCURRENCY="1,2"
 EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
-FILENAME_MODEL="model-metrics.csv"
+FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
+FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 TRITON_LAUNCH_MODE="docker"
 TRITON_SERVER_VERSION="20.11-py3"
 CLIENT_PROTOCOL="grpc"
-TEST_OUTPUT_NUM_COLUMNS=7
 PORTS=(`find_available_ports 3`)
+GPUS=(`get_all_gpus_uuids`)
 
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -n $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE --triton-version=$TRITON_SERVER_VERSION"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --export -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY --filename-model=$FILENAME_MODEL"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --export -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 
@@ -56,18 +58,51 @@ if [ $? -ne 0 ]; then
     cat $ANALYZER_LOG
     RET=1
 else
-    # Verify results
-    check_analyzer_output $ANALYZER_LOG $TEST_OUTPUT_NUM_ROWS $TEST_OUTPUT_NUM_COLUMNS
+    SERVER_METRICS_FILE=${EXPORT_PATH}/${FILENAME_SERVER_ONLY}
+    MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/${FILENAME_GPU_MODEL}
+    MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/${FILENAME_INFERENCE_MODEL}
+    METRICS_NUM_COLUMNS=7
+    INFERENCE_NUM_COLUMNS=4
+
+    check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
     if [ $? -ne 0 ]; then
-        echo -e "\n***\n*** Test Output Verification Failed\n***"
+        echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
         cat $ANALYZER_LOG
         RET=1
     fi
-    SERVER_METRICS_FILE=${EXPORT_PATH}/${FILENAME_SERVER_ONLY}
-    MODEL_METRICS_FILE=${EXPORT_PATH}/${FILENAME_MODEL}
-    check_exported_metrics $SERVER_METRICS_FILE $MODEL_METRICS_FILE $TEST_OUTPUT_NUM_ROWS $TEST_OUTPUT_NUM_COLUMNS
+    check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) "Models\ \(GPU\ Metrics\):"
     if [ $? -ne 0 ]; then
-        echo -e "\n***\n*** Test Output Verification Failed\n***"
+        echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
+        cat $ANALYZER_LOG
+        RET=1
+    fi
+    check_log_table_row_column $ANALYZER_LOG $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS "Models\ \(Inference\):"
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test Output Verification Failed for $ANALAYZER_LOG.\n***"
+        cat $ANALYZER_LOG
+        RET=1
+    fi
+
+    SERVER_METRICS_FILE=${EXPORT_PATH}/${FILENAME_SERVER_ONLY}
+    MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/${FILENAME_GPU_MODEL}
+    MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/${FILENAME_INFERENCE_MODEL}
+
+    OUTPUT_TAG="Model"
+    check_csv_table_row_column $SERVER_METRICS_FILE $METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test Output Verification Failed for $SERVER_METRICS_FILE.\n***"
+        cat $ANALYZER_LOG
+        RET=1
+    fi
+    check_csv_table_row_column $MODEL_METRICS_GPU_FILE $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) $OUTPUT_TAG
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_GPU_FILE.\n***"
+        cat $ANALYZER_LOG
+        RET=1
+    fi
+    check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS $OUTPUT_TAG
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_INFERENCE_FILE.\n***"
         cat $ANALYZER_LOG
         RET=1
     fi

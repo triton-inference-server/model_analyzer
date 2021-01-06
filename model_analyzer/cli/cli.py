@@ -68,10 +68,15 @@ class CLI:
             default='.',
             help='Full path to directory in which to store the results')
         self._parser.add_argument(
-            '--filename-model',
+            '--filename-model-inference',
             type=str,
-            default='metrics-model.csv',
-            help='Specifies filename for model running metrics')
+            default='metrics-model-inference.csv',
+            help='Specifies filename for storing model inference metrics')
+        self._parser.add_argument(
+            '--filename-model-gpu',
+            type=str,
+            default='metrics-model-gpu.csv',
+            help='Specifies filename for storing model GPU metrics')
         self._parser.add_argument(
             '--filename-server-only',
             type=str,

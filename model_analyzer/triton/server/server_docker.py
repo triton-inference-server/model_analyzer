@@ -108,7 +108,7 @@ class TritonServerDocker(TritonServer):
                     f"{server_metrics_port}.\n"
                     "Change the Triton server ports using"
                     " --triton-http-endpoint, --triton-grpc-endpoint,"
-                    " and --triton-metrics-endpoint flags."
+                    " and --triton-metrics-url flags."
                 )
             else:
                 raise error

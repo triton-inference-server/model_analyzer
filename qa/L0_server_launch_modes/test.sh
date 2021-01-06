@@ -32,8 +32,6 @@ MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhos
 TRITON_LAUNCH_MODES="docker remote local"
 TRITON_SERVER_VERSION="20.11-py3"
 CLIENT_PROTOCOLS="http grpc"
-TEST_OUTPUT_NUM_ROWS=1
-TEST_OUTPUT_NUM_COLUMNS=7
 
 # Run the model-analyzer, both client protocols
 RET=0

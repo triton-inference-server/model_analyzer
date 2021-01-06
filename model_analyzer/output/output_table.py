@@ -19,26 +19,38 @@ COLUMN_PADDING = 2
 
 class OutputTable:
     """
-    A class that implements a 
-    generic table interface 
-    with headers rows
+    A class that implements a generic table interface with headers rows
     """
 
     column_padding = COLUMN_PADDING
 
-    def __init__(self, headers):
+    def __init__(self, headers, title=None):
         """
         Parameters
         ----------
         headers : list of str
             Names of the columns of this table
+        title : str
+            Title of the table
         """
 
         self._headers = headers[:]
+        self._title = title
         self._rows = []
         self._column_widths = [
             len(header) + self.column_padding for header in headers
         ]
+
+    def title(self):
+        """
+        Get table title
+
+        Returns
+        -------
+        str
+            Title of the table
+        """
+        return self._title
 
     def headers(self):
         """
@@ -55,23 +67,21 @@ class OutputTable:
         Returns
         -------
         list of ints
-            Current width in spaces of 
-            each column in table.
+            Current width in spaces of each column in table.
         """
 
         return self._column_widths
 
     def add_row(self, row, index=None):
         """
-        Adds a row to the table. Handles
-        wrapping.
+        Adds a row to the table. Handles wrapping.
 
         Parameters
         ----------
         row : list of vals
             The contents of the row to be added
         index : int
-            The index at which to add a row 
+            The index at which to add a row
         """
 
         if len(row) != len(self._headers):
@@ -88,8 +98,8 @@ class OutputTable:
 
     def add_column(self, column, index=None):
         """
-        Adds a column to the table. 
-        
+        Adds a column to the table.
+
         **Note : column[0] is assumed
         to be the column header.
 
@@ -123,7 +133,7 @@ class OutputTable:
         ----------
         index : int
             index of row to return
-        
+
         Returns
         -------
         list of vals
@@ -143,7 +153,7 @@ class OutputTable:
         ----------
         index : int
             index of column to return
-        
+
         Returns
         -------
         list of vals
@@ -274,8 +284,7 @@ class OutputTable:
 
     def _row_to_string(self, row, separator, ignore_widths):
         """
-        Converts a single row to 
-        its string representation
+        Converts a single row to its string representation
         """
 
         if ignore_widths:
@@ -288,8 +297,7 @@ class OutputTable:
 
     def _pad_or_trunc(self, string, length):
         """
-        Constructs a single cell of the table
-        by either padding or truncating 
+        Constructs a single cell of the table by either padding or truncating
         the value inside
         """
 
