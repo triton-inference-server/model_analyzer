@@ -233,6 +233,7 @@ def create_run_configs(args):
             args.triton_http_endpoint
             if args.client_protocol == 'http' else args.triton_grpc_endpoint
         ],
+        'measurement-interval': [args.perf_measurement_window]
     }
     param_combinations = list(product(*tuple(sweep_params.values())))
     run_params = [
@@ -321,9 +322,9 @@ def run_analyzer(args, analyzer, client, run_configs):
         client.load_model(model=model)
         client.wait_for_model_ready(model=model, num_retries=args.max_retries)
         try:
-            pass
+            perf_output_writer = None if args.no_perf_output else FileWriter()
             analyzer.profile_model(run_config=run_config,
-                                   perf_output_writer=FileWriter())
+                                   perf_output_writer=perf_output_writer)
         finally:
             client.unload_model(model=model)
 

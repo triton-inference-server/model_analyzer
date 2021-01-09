@@ -26,6 +26,7 @@ class CLI:
     """
     CLI class to parse the commandline arguments
     """
+
     def __init__(self):
         self._parser = ArgumentParser()
         self._add_arguments()
@@ -55,8 +56,8 @@ class CLI:
             '--concurrency',
             type=str,
             default='1',
-            help="Comma-delimited list of concurrency values or ranges <start:end:step>"
-                 " to be used during profiling")
+            help='Comma-delimited list of concurrency values'
+                 'to be used during profiling')
         self._parser.add_argument(
             '--export',
             action='store_true',
@@ -111,6 +112,17 @@ class CLI:
             type=str,
             default='perf_analyzer',
             help='The full path to the perf_analyzer binary executable')
+        self._parser.add_argument(
+            '--perf-measurement-window',
+            type=int,
+            default=5000,
+            help='Time interval in milliseconds between perf_analyzer measurements. perf_analyzer will take '
+                 'measurements over all the requests completed within this time interval.')
+        self._parser.add_argument(
+            '--no-perf-output',
+            action='store_true',
+            help='Writes the output from the perf_analyze to stdout'
+        )
         self._parser.add_argument(
             '--triton-launch-mode',
             type=str,
