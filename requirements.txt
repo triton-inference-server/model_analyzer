@@ -17,3 +17,4 @@ distro>=1.5.0
 numba>=0.51.2
 prometheus_client>=0.9.0
 requests>=2.24.0
+pyyaml>=5.3.1
