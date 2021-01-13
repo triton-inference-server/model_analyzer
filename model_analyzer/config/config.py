@@ -19,7 +19,7 @@ from .config_field import ConfigField
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
-class Config:
+class AnalyzerConfig:
     """
     Model Analyzer config object.
     """
