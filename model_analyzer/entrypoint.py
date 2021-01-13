@@ -37,7 +37,7 @@ from .record.perf_throughput import PerfThroughput
 from .record.perf_latency import PerfLatency
 from .output.file_writer import FileWriter
 from .device.gpu_device_factory import GPUDeviceFactory
-from .config.config import Config
+from .config.config import AnalyzerConfig
 
 logger = logging.getLogger(__name__)
 MAX_NUMBER_OF_INTERRUPTS = 3
@@ -358,7 +358,7 @@ def main():
     signal.signal(signal.SIGINT, interrupt_handler)
 
     try:
-        config = Config()
+        config = AnalyzerConfig()
         cli = CLI(config)
         cli.parse()
     except TritonModelAnalyzerException as e:

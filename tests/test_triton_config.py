@@ -18,7 +18,7 @@ from unittest.mock import MagicMock
 sys.path.append('../common')
 
 import test_result_collector as trc
-from model_analyzer.config.config import Config
+from model_analyzer.config.config import AnalyzerConfig
 from model_analyzer.cli.cli import CLI
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from .mocks.mock_config import MockConfig
@@ -33,7 +33,7 @@ class TestConfig(trc.TestResultCollector):
         yaml_content = 'model_repository: yaml_repository'
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
-        config = Config()
+        config = AnalyzerConfig()
         cli = CLI(config)
         cli.parse()
 
@@ -49,7 +49,7 @@ class TestConfig(trc.TestResultCollector):
         yaml_content = 'model_repository: yaml_repository'
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
-        config = Config()
+        config = AnalyzerConfig()
         cli = CLI(config)
         cli.parse()
 
@@ -62,7 +62,7 @@ class TestConfig(trc.TestResultCollector):
         yaml_content = 'model_repository: yaml_repository'
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
-        config = Config()
+        config = AnalyzerConfig()
         cli = CLI(config)
 
         # When a required field is not specified, parse will lead to an exception
