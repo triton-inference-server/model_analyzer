@@ -49,6 +49,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.server_local_mock = MockServerLocalMethods()
         self.perf_mock = MockPerfAnalyzerMethods()
         self.client_mock = MockTritonClientMethods()
+        self.server_local_mock.start()
+        self.perf_mock.start()
+        self.client_mock.start()
 
         # PerfAnalyzer config for all tests
         self.config = PerfAnalyzerConfig()

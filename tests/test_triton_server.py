@@ -47,6 +47,8 @@ class TestTritonServerMethods(trc.TestResultCollector):
         # Mock
         self.server_docker_mock = MockServerDockerMethods()
         self.server_local_mock = MockServerLocalMethods()
+        self.server_docker_mock.start()
+        self.server_local_mock.start()
 
         # server setup
         self.server = None
@@ -122,9 +124,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
                 msg="Expected AssertionError for trying to create"
                 "server without specifying model repository."):
             self.server = TritonServerFactory.create_server_docker(
-                image=TRITON_IMAGE,
-                config=server_config,
-                gpus=gpus)
+                image=TRITON_IMAGE, config=server_config, gpus=gpus)
         with self.assertRaises(
                 AssertionError,
                 msg="Expected AssertionError for trying to create"
@@ -137,7 +137,6 @@ class TestTritonServerMethods(trc.TestResultCollector):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
         gpus = ['all']
-
 
         # Create server in docker, start , wait, and stop
         self.server = TritonServerFactory.create_server_docker(

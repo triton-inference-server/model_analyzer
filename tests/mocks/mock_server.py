@@ -12,22 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from unittest.mock import patch, Mock, MagicMock
 
+from .mock_base import MockBase
 
-class MockServerMethods(ABC):
+
+class MockServerMethods(MockBase):
     """
     Interface for a mock server declaring
     the methods it must provide.
     """
-
-    @abstractmethod
-    def stop(self):
-        """
-        Destroy the mocked classes and
-        functions
-        """
 
     @abstractmethod
     def assert_server_process_start_called_with(self, **args):

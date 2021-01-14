@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import subprocess
+from .mock_base import MockBase
 from unittest.mock import patch, Mock, MagicMock
 
 
@@ -27,7 +27,7 @@ class MockCalledProcessError(Exception):
         self.output = "mock output"
 
 
-class MockPerfAnalyzerMethods:
+class MockPerfAnalyzerMethods(MockBase):
     """
     Mocks the subprocess module functions used in 
     model_analyzer/perf_analyzer/perf_analyzer.py
@@ -42,19 +42,26 @@ class MockPerfAnalyzerMethods:
         self.patcher_called_process_error = patch(
             'model_analyzer.perf_analyzer.perf_analyzer.CalledProcessError',
             MockCalledProcessError)
+        super().__init__()
+
+    def start(self):
+        """
+        Start the patchers
+        """
+
         self.check_output_mock = self.patcher_check_output.start()
         self.stdout_mock = self.patcher_stdout.start()
         self.called_process_error_mock = self.patcher_called_process_error.start(
         )
 
-    def stop(self):
+    def _fill_patchers(self):
         """
-        Destroy the mocked classes and
-        functions
+        Fills patcher list
         """
 
-        self.patcher_check_output.stop()
-        self.patcher_stdout.stop()
+        self._patchers.append(self.patcher_check_output)
+        self._patchers.append(self.patcher_stdout)
+        self._patchers.append(self.patcher_called_process_error)
 
     def assert_perf_analyzer_run_as(self, cmd):
         """
