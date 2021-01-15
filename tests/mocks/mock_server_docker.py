@@ -42,15 +42,21 @@ class MockServerDockerMethods(MockServerMethods):
         self.patcher_docker = patch(
             'model_analyzer.triton.server.server_docker.docker',
             Mock(**docker_attrs))
+        super().__init__()
+
+    def start(self):
+        """ 
+        Start the patchers
+        """
 
         self.mock = self.patcher_docker.start()
 
-    def stop(self):
+    def _fill_patchers(self):
         """
-        Destroy the mocked classes and
-        functions
+        Fill patcher list
         """
-        self.patcher_docker.stop()
+
+        self._patchers.append(self.patcher_docker)
 
     def _assert_docker_initialized(self):
         """

@@ -43,8 +43,10 @@ class TestTritonClientMethods(trc.TestResultCollector):
         gpus = ['all']
 
         # Mocks
-        self.mock_server_docker = MockServerDockerMethods()
+        self.server_docker_mock = MockServerDockerMethods()
         self.tritonclient_mock = MockTritonClientMethods()
+        self.server_docker_mock.start()
+        self.tritonclient_mock.start()
 
         # Create server config
         self.server_config = TritonServerConfig()
@@ -56,9 +58,7 @@ class TestTritonClientMethods(trc.TestResultCollector):
 
         # Create and start the server
         self.server = TritonServerFactory.create_server_docker(
-            image=TRITON_IMAGE,
-            config=self.server_config,
-            gpus=gpus)
+            image=TRITON_IMAGE, config=self.server_config, gpus=gpus)
 
     def test_create_client(self):
 
@@ -183,7 +183,7 @@ class TestTritonClientMethods(trc.TestResultCollector):
         # In case test raises exception
         if self.server is not None:
             self.server.stop()
-        self.mock_server_docker.stop()
+        self.server_docker_mock.stop()
         self.tritonclient_mock.stop()
 
 

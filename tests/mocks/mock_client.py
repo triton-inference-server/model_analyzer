@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .mock_base import MockBase
 from unittest.mock import patch, Mock, MagicMock
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
-class MockTritonClientMethods:
+class MockTritonClientMethods(MockBase):
     """
     Mocks the tritonclient module functions 
     used in model_analyzer/triton/client
@@ -39,17 +40,23 @@ class MockTritonClientMethods:
         self.patcher_grpc_client = patch(
             'model_analyzer.triton.client.grpc_client.grpcclient.InferenceServerClient',
             Mock(return_value=mock_grpc_client))
+        super().__init__()
+
+    def start(self):
+        """
+        start the patchers
+        """
+
         self.http_mock = self.patcher_http_client.start()
         self.grpc_mock = self.patcher_grpc_client.start()
 
-    def stop(self):
+    def _fill_patchers(self):
         """
-        Destroy the mocked classes and
-        functions
+        Fills the patcher list for destruction
         """
 
-        self.patcher_http_client.stop()
-        self.patcher_grpc_client.stop()
+        self._patchers.append(self.patcher_http_client)
+        self._patchers.append(self.patcher_grpc_client)
 
     def assert_created_grpc_client_with_args(self, url):
         """

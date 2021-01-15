@@ -35,19 +35,25 @@ class MockServerLocalMethods(MockServerMethods):
             'model_analyzer.triton.server.server_local.STDOUT', MagicMock())
         self.patcher_pipe = patch(
             'model_analyzer.triton.server.server_local.PIPE', MagicMock())
+        super().__init__()
+
+    def start(self):
+        """ 
+        Start the patchers
+        """
+
         self.popen_mock = self.patcher_popen.start()
         self.stdout_mock = self.patcher_stdout.start()
         self.pipe_mock = self.patcher_pipe.start()
 
-    def stop(self):
+    def _fill_patchers(self):
         """
-        Destroy the mocked classes and
-        functions
+        Fill patcher list
         """
 
-        self.patcher_popen.stop()
-        self.patcher_stdout.stop()
-        self.patcher_pipe.stop()
+        self._patchers.append(self.patcher_popen)
+        self._patchers.append(self.patcher_stdout)
+        self._patchers.append(self.patcher_pipe)
 
     def assert_server_process_start_called_with(self, cmd):
         """
