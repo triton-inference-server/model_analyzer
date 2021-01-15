@@ -52,7 +52,7 @@ RUN chmod +x build_wheel.sh && \
     ./build_wheel.sh perf_analyzer true && \
     rm -f perf_analyzer
 RUN python3 -m pip install --upgrade pip && \
-    python3 -m pip install wheels/nvidia_triton_model_analyzer-*-manylinux1_x86_64.whl
+    python3 -m pip install wheels/triton_model_analyzer-*-manylinux1_x86_64.whl
 
 ENTRYPOINT []
 ENV MODEL_ANALYZER_VERSION ${MODEL_ANALYZER_VERSION}

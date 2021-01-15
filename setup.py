@@ -72,7 +72,7 @@ if PLATFORM_FLAG != 'any':
     data_files += [("bin", [os.path.join(DEPENDENCY_DIR, "perf_analyzer")])]
 
 setup(
-    name='nvidia-triton-model-analyzer',
+    name='triton-model-analyzer',
     version=project_version,
     author='NVIDIA Inc.',
     author_email='sw-dl-triton@nvidia.com',
