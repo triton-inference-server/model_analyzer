@@ -33,29 +33,27 @@ logger = logging.getLogger(__name__)
 
 class Analyzer:
     """
-    A class responsible for coordinating
-    the various components of the model_analyzer.
-    Configured with metrics to monitor,
-    exposes profiling and result writing
-    methods.
+    A class responsible for coordinating the various components of the
+    model_analyzer. Configured with metrics to monitor, exposes profiling and
+    result writing methods.
     """
-    def __init__(self, args, monitoring_metrics):
+    def __init__(self, config, monitoring_metrics):
         """
         Parameters
         ----------
-        args : namespace
-            The arguments passed into the CLI
+        config : Config
+            Model Analyzer config
         monitoring_metrics : List of Record types
             The list of metric types to monitor.
         """
 
-        self._perf_analyzer_path = args.perf_analyzer_path
-        self._duration_seconds = args.duration_seconds
-        self._monitoring_interval = args.monitoring_interval
+        self._perf_analyzer_path = config.perf_analyzer_path
+        self._duration_seconds = config.duration_seconds
+        self._monitoring_interval = config.monitoring_interval
         self._monitoring_metrics = monitoring_metrics
         self._param_inference_headers = ['Model', 'Batch', 'Concurrency']
         self._param_gpu_headers = ['Model', 'GPU ID', 'Batch', 'Concurrency']
-        self._gpus = args.gpus
+        self._gpus = config.gpus
 
         # Separates metric tags into perf_analyzer related and DCGM related tags
         self.dcgm_tags = []
