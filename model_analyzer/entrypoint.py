@@ -226,9 +226,9 @@ def create_run_configs(config):
     """
 
     sweep_params = {
-        'model-name': [name.strip() for name in config.model_names.split(',')],
-        'batch-size': [batch.strip() for batch in config.batch_sizes.split(',')],
-        'concurrency-range': [c.strip() for c in config.concurrency.split(',')],
+        'model-name': config.model_names,
+        'batch-size': config.batch_sizes,
+        'concurrency-range': config.concurrency,
         'protocol': [config.client_protocol],
         'url': [
             config.triton_http_endpoint

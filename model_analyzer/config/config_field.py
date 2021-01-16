@@ -23,7 +23,7 @@ class ConfigField:
                  preprocess=None,
                  default_value=None,
                  required=False,
-                 parser_args={}):
+                 parser_args=None):
         """
         Create a configuration field.
 
@@ -54,9 +54,8 @@ class ConfigField:
         self._name = name
         self._field_type = field_type
         self._flags = flags
-        self._value = None
         self._choices = choices
-        self._parser_args = parser_args
+        self._parser_args = {} if parser_args is None else parser_args
         self._preprocess = preprocess
         self._required = required
 
@@ -98,11 +97,11 @@ class ConfigField:
 
         Returns
         -------
-        type
+        ConfigValue
             Type of the config field
         """
 
-        return self._field_type
+        return self._field_type.cli_type()
 
     def name(self):
         """
@@ -145,9 +144,7 @@ class ConfigField:
         Set the value for the config field.
         """
 
-        self._value = self._field_type(value)
-        if self._preprocess is not None:
-            self._value = self._preprocess(value)
+        self._field_type.set_value(value)
 
     def value(self):
         """
@@ -159,7 +156,7 @@ class ConfigField:
             The value of the config field.
         """
 
-        return self._value
+        return self._field_type.value()
 
     def required(self):
         """
