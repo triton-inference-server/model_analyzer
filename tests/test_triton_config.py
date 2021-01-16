@@ -74,6 +74,83 @@ class TestConfig(trc.TestResultCollector):
             config.get_all_config()['model_repository'] == 'yaml_repository')
         mock_config.stop()
 
+    def test_range_values(self):
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file'
+        ]
+        yaml_content = 'model_names: model_1,model_2'
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+        cli.parse()
+
+        self.assertTrue(
+            config.get_all_config()['model_names'] == ['model_1', 'model_2'])
+        mock_config.stop()
+
+        yaml_content = """
+model_names:
+    - model_1
+    - model_2
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+        cli.parse()
+        self.assertTrue(
+            config.get_all_config()['model_names'] == ['model_1', 'model_2'])
+        mock_config.stop()
+
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file', '--model-names', 'model_1,model_2'
+        ]
+        yaml_content = """
+batch_sizes:
+    - 2
+    - 3
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+        cli.parse()
+        self.assertTrue(
+            config.get_all_config()['batch_sizes'] == [2, 3])
+        mock_config.stop()
+
+        yaml_content = """
+batch_sizes:
+    start: 2
+    end: 6
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+        cli.parse()
+        self.assertTrue(
+            config.get_all_config()['batch_sizes'] == [2, 3, 4, 5])
+        mock_config.stop()
+
+        yaml_content = """
+batch_sizes:
+    start: 2
+    end: 6
+    step: 2
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+        cli.parse()
+        self.assertTrue(
+            config.get_all_config()['batch_sizes'] == [2, 4])
+        mock_config.stop()
+
 
 if __name__ == '__main__':
     unittest.main()
