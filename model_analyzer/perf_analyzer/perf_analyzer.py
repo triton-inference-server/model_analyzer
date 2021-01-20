@@ -14,10 +14,16 @@
 
 from itertools import product
 from subprocess import check_output, CalledProcessError, STDOUT
+import logging
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.record.perf_latency import PerfLatency
 from model_analyzer.record.perf_throughput import PerfThroughput
+
+MAX_INTERVAL_CHANGES = 20
+INTERVAL_DELTA = 1000
+
+logger = logging.getLogger(__name__)
 
 
 class PerfAnalyzer:
@@ -68,18 +74,30 @@ class PerfAnalyzer:
 
         if metrics:
             # Synchronously start and finish run
-            cmd = [self.bin_path]
-            cmd += self._config.to_cli_string().replace('=', ' ').split()
-            try:
-                self._output = check_output(cmd,
-                                            start_new_session=True,
-                                            stderr=STDOUT,
-                                            encoding='utf-8')
-            except CalledProcessError as e:
-                raise TritonModelAnalyzerException(
-                    f"Running perf_analyzer with {e.cmd} failed with exit status {e.returncode} : {e.output}"
-                )
-        return [metric(self._output) for metric in metrics]
+            for _ in range(MAX_INTERVAL_CHANGES):
+                cmd = [self.bin_path]
+                cmd += self._config.to_cli_string().replace('=', ' ').split()
+
+                try:
+                    self._output = check_output(cmd,
+                                                start_new_session=True,
+                                                stderr=STDOUT,
+                                                encoding='utf-8')
+                    return [metric(self._output) for metric in metrics]
+                except CalledProcessError as e:
+                    if e.output.find("Please use a larger time window.") > 0:
+                        self._config['measurement-interval'] += INTERVAL_DELTA
+                        logger.info(
+                            f"perf_analyzer's measurement window is too small, increased to {self._config['measurement-interval']} ms."
+                        )
+                    else:
+                        raise TritonModelAnalyzerException(
+                            f"Running perf_analyzer with {e.cmd} failed with exit status {e.returncode} : {e.output}"
+                        )
+
+            raise TritonModelAnalyzerException(
+                f"Ran perf_analyzer {MAX_INTERVAL_CHANGES} times, but no valid requests recorded in max time interval of {self._config['measurement-interval']} "
+            )
 
     def output(self):
         """

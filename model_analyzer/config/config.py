@@ -23,6 +23,7 @@ class AnalyzerConfig:
     """
     Model Analyzer config object.
     """
+
     def __init__(self):
         """
         Create a new config.
@@ -165,8 +166,8 @@ class AnalyzerConfig:
                 'no_perf_output',
                 flags=['--no-perf-output'],
                 parser_args={'action': 'store_true'},
-                description='Writes the output from the perf_analyze to stdout'
-            ))
+                description=
+                'Silences the output from the perf_analyzer to stdout'))
         self._add_config(
             ConfigField(
                 'triton_launch_mode',
