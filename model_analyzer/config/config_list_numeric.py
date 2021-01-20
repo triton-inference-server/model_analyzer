@@ -13,13 +13,14 @@
 # limitations under the License.
 
 from .config_value import ConfigValue
+from model_analyzer.constants import MODEL_ANALYZER_SUCCESS
 
 
 class ConfigListNumeric(ConfigValue):
     """
     A list of numeric values.
     """
-    def __init__(self, type_):
+    def __init__(self, type_, preprocess=None, required=False):
         """
         Create a new list of numeric values.
 
@@ -27,8 +28,13 @@ class ConfigListNumeric(ConfigValue):
         ----------
         type_ : type
             The type of elements in the list
+        preprocess : callable
+            Function be called before setting new values.
+        required : bool
+            Whether a given config is required or not.
         """
 
+        super().__init__(preprocess, required)
         self._type = type_
         self._value = []
 
@@ -45,19 +51,16 @@ class ConfigListNumeric(ConfigValue):
 
         type_ = self._type
 
-        # Is a comma delimited list?
-        if type(value) is str:
+        if self._is_string(value):
             self._value = []
             value = value.split(',')
             for item in value:
                 self._value.append(type_(item))
-        # Is a list of values?
-        elif type(value) is list:
+        elif self._is_list(value):
             self._value = []
             for item in value:
                 self._value.append(type_(item))
-        # Is a range?
-        elif type(value) is dict:
+        elif self._is_dict(value):
             if 'start' in value and 'end' in value:
                 step = 1
                 start = value['start']
@@ -67,6 +70,8 @@ class ConfigListNumeric(ConfigValue):
                 self._value = list(range(start, end, step))
         else:
             self._value = type_(value)
+
+        return MODEL_ANALYZER_SUCCESS
 
     def cli_type(self):
         """

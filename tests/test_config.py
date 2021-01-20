@@ -74,7 +74,7 @@ class TestConfig(trc.TestResultCollector):
             config.get_all_config()['model_repository'] == 'yaml_repository')
         mock_config.stop()
 
-    def test_range_values(self):
+    def test_range_and_list_values(self):
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
             'path-to-config-file'
@@ -100,6 +100,7 @@ model_names:
         config = AnalyzerConfig()
         cli = CLI(config)
         cli.parse()
+
         self.assertTrue(
             config.get_all_config()['model_names'] == ['model_1', 'model_2'])
         mock_config.stop()
@@ -118,8 +119,7 @@ batch_sizes:
         config = AnalyzerConfig()
         cli = CLI(config)
         cli.parse()
-        self.assertTrue(
-            config.get_all_config()['batch_sizes'] == [2, 3])
+        self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 3])
         mock_config.stop()
 
         yaml_content = """
@@ -132,8 +132,7 @@ batch_sizes:
         config = AnalyzerConfig()
         cli = CLI(config)
         cli.parse()
-        self.assertTrue(
-            config.get_all_config()['batch_sizes'] == [2, 3, 4, 5])
+        self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 3, 4, 5])
         mock_config.stop()
 
         yaml_content = """
@@ -147,8 +146,155 @@ batch_sizes:
         config = AnalyzerConfig()
         cli = CLI(config)
         cli.parse()
-        self.assertTrue(
-            config.get_all_config()['batch_sizes'] == [2, 4])
+        self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 4])
+        mock_config.stop()
+
+    def test_object(self):
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file'
+        ]
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+      parameters:
+        concurrency:
+          - 1
+          - 2
+          - 3
+          - 4
+  - vgg_19_graphdef
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+        cli.parse()
+
+        self.assertTrue(config.get_all_config()['model_names'] == [{
+            'vgg_16_graphdef': {
+                'parameters': {
+                    'concurrency': [1, 2, 3, 4]
+                }
+            }
+        }, 'vgg_19_graphdef'])
+        mock_config.stop()
+
+        yaml_content = """
+model_names:
+  vgg_16_graphdef:
+    parameters:
+      concurrency:
+        - 1
+        - 2
+        - 3
+        - 4
+  vgg_19_graphdef:
+    parameters:
+      concurrency:
+        - 1
+        - 2
+        - 3
+        - 4
+      batch_sizes:
+          start: 2
+          end: 6
+          step: 2
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+        cli.parse()
+
+        print(config.get_all_config()['model_names'])
+        self.assertTrue(config.get_all_config()['model_names'] == {
+            'vgg_16_graphdef': {
+                'parameters': {
+                    'concurrency': [1, 2, 3, 4]
+                }
+            },
+            'vgg_19_graphdef': {
+                'parameters': {
+                    'concurrency': [1, 2, 3, 4],
+                    'batch_sizes': [2, 4]
+                }
+            }
+        })
+        mock_config.stop()
+
+    def test_constraints(self):
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file'
+        ]
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+      parameters:
+        concurrency:
+          - 1
+          - 2
+          - 3
+          - 4
+      objectives:
+        - throughput
+        - gpu_memory
+      constraints:
+        gpu_memory:
+          max: 80
+  - vgg_19_graphdef
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+        cli.parse()
+
+        self.assertTrue(config.get_all_config()['model_names'] == [{
+            'vgg_16_graphdef': {
+                'parameters': {
+                    'concurrency': [1, 2, 3, 4]
+                },
+                'objectives': ['throughput', 'gpu_memory'],
+                'constraints': {
+                    'gpu_memory': {
+                        'max': 80,
+                    }
+                }
+            }
+        }, 'vgg_19_graphdef'])
+        mock_config.stop()
+
+        # GPU Memory shouldn't have min
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+      parameters:
+        concurrency:
+          - 1
+          - 2
+          - 3
+          - 4
+      objectives:
+        - throughput
+        - gpu_memory
+      constraints:
+        gpu_memory:
+          max: 80
+          min: 45
+  - vgg_19_graphdef
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            cli.parse()
         mock_config.stop()
 
 

@@ -20,6 +20,21 @@ class ConfigValue(abc.ABC):
     """
     Parent class for all the types used in the ConfigField.
     """
+    def __init__(self, preprocess=None, required=False):
+        """
+        Parameters
+        ----------
+        name : str
+            Configuration name.
+        preprocess : callable
+            Function be called before setting new values.
+        required : bool
+            Whether a given config is required or not.
+        """
+
+        self._preprocess = preprocess
+        self._required = required
+
     @abstractmethod
     def set_value(self, value):
         """
@@ -39,7 +54,91 @@ class ConfigValue(abc.ABC):
             The value of the config field.
         """
 
-        return self._value
+        return_result = self._value
+        if type(self._value) is dict:
+            return_result = {}
+            for key, value_ in self._value.items():
+                if hasattr(value_, 'value'):
+                    return_result[key] = value_.value()
+                else:
+                    return_result[key] = value_.value()
+        elif type(self._value) is list:
+            return_result = []
+            for item in self._value:
+                if hasattr(item, 'value'):
+                    return_result.append(item.value())
+                else:
+                    return_result.append(item)
+
+        return return_result
+
+    def _is_primitive(self, value):
+        """
+        Is the value a primitive type.
+
+        Parameters
+        ----------
+        value : object
+            Value to be checked
+
+        Returns
+        -------
+        bool
+            True if yes, False if no
+        """
+
+        return not (self._is_dict(value) or self._is_list(value))
+
+    def _is_string(self, value):
+        """
+        Is the value a string.
+
+        Parameters
+        ----------
+        value : object
+            Value to be checked
+
+        Returns
+        -------
+        bool
+            True if yes, False if no
+        """
+
+        return type(value) is str
+
+    def _is_dict(self, value):
+        """
+        Is the value a dictionary.
+
+        Parameters
+        ----------
+        value : object
+            Value to be checked
+
+        Returns
+        -------
+        bool
+            True if yes, False if no
+        """
+
+        return type(value) is dict
+
+    def _is_list(self, value):
+        """
+        Is the value a list.
+
+        Parameters
+        ----------
+        value : object
+            Value to be checked
+
+        Returns
+        -------
+        bool
+            True if yes, False if no
+        """
+
+        return type(value) is list
 
     def cli_type(self):
         """
@@ -52,3 +151,15 @@ class ConfigValue(abc.ABC):
         """
 
         return self._type
+
+    def required(self):
+        """
+        Get the required field value
+
+        Returns
+        -------
+        bool
+            Whether the config field is required or not.
+        """
+
+        return self._required

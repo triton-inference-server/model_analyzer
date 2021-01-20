@@ -16,15 +16,21 @@ from .config_value import ConfigValue
 from model_analyzer.constants import \
      MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILED
 
+from copy import deepcopy
 
-class ConfigListString(ConfigValue):
+
+class ConfigListGeneric(ConfigValue):
     """
-    A list of string values.
+    A generic list.
     """
-    def __init__(self, preprocess=None, required=False):
+    def __init__(self, types, preprocess=None, required=False):
         """
-        Instantiate a new ConfigListString
+        Create a new list of numeric values.
 
+        Parameters
+        ----------
+        types : A list of allowed types
+            The type of elements in the list
         preprocess : callable
             Function be called before setting new values.
         required : bool
@@ -32,7 +38,9 @@ class ConfigListString(ConfigValue):
         """
 
         super().__init__(preprocess, required)
+
         self._type = str
+        self._allowed_types = types
         self._value = []
 
     def set_value(self, value):
@@ -42,26 +50,26 @@ class ConfigListString(ConfigValue):
         Parameters
         ----------
         value : object
-            The value for this field. It can be a string of comma-delimited
-            items or a list.
-
-        Returns
-        -------
-        int
-            1 on success, and 0 on failure
+            The value for this field.
         """
 
-        if self._is_string(value):
-            self._value = value.split(',')
-        elif self._is_list(value):
-            self._value = []
-            for item in value:
-                if not self._is_primitive(item):
-                    return MODEL_ANALYZER_FAILED
-                self._value.append(self._type(item))
-        else:
-            if self._is_dict(value):
-                return MODEL_ANALYZER_FAILED
-            self._value = [self._type(value)]
+        allowed_types = self._allowed_types
 
+        new_value = []
+        if type(value) is list:
+            for item in value:
+                # Try setting the value for each type in the list, if none
+                # of them are possible we fail setting the value for this field
+                for allowed_type in allowed_types:
+                    list_item = deepcopy(allowed_type)
+                    status = list_item.set_value(item)
+                    if status == MODEL_ANALYZER_SUCCESS:
+                        new_value.append(list_item)
+                        break
+                else:
+                    return MODEL_ANALYZER_FAILED
+        else:
+            return MODEL_ANALYZER_FAILED
+
+        self._value = new_value
         return MODEL_ANALYZER_SUCCESS

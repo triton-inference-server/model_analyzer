@@ -13,20 +13,31 @@
 # limitations under the License.
 
 from .config_value import ConfigValue
+from model_analyzer.constants import \
+     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILED
 
 
 class ConfigPrimitive(ConfigValue):
     """
     A wrapper class for the primitive datatypes.
     """
-
-    def __init__(self, type_):
+    def __init__(
+        self,
+        type_,
+        preprocess=None,
+        required=False,
+    ):
         """
-        Create a new primitive config.
-
+        Parameters
+        ----------
         type_ : type
             Type of the field.
+        preprocess : callable
+            Function be called before setting new values.
+        required : bool
+            Whether a given config is required or not.
         """
+        super().__init__(preprocess, required)
 
         self._type = type_
         self._value = None
@@ -39,4 +50,8 @@ class ConfigPrimitive(ConfigValue):
             The value for this field.
         """
 
-        self._value = self._type(value)
+        if self._is_primitive(value):
+            self._value = self._type(value)
+        else:
+            return MODEL_ANALYZER_FAILED
+        return MODEL_ANALYZER_SUCCESS

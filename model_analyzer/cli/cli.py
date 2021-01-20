@@ -42,6 +42,11 @@ class CLI:
         configs = config.get_config()
         for config in configs.values():
             parser_args = config.parser_args()
+
+            # Skip the non-CLI flags
+            if config.flags() is None:
+                continue
+
             # 'store_true' and 'store_false' does not
             # allow 'type' or 'choices' parameters
             if 'action' in parser_args and (
