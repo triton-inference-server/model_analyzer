@@ -23,6 +23,9 @@ class PerfThroughput(Record):
     A record for perf_analyzer
     metric 'Throughput'
     """
+
+    tag = "perf_throughput"
+
     def __init__(self, perf_output, timestamp=0):
         """
         Parameters
@@ -46,8 +49,16 @@ class PerfThroughput(Record):
         super().__init__(throughput, timestamp)
 
     @staticmethod
-    def header():
+    def header(aggregation_tag=None):
         """
+        Parameters
+        ----------
+        aggregation_tag : str
+            An optional tag that may be displayed 
+            as part of the header indicating that 
+            this record has been aggregated using 
+            max, min or average etc. 
+             
         Returns
         -------
         str

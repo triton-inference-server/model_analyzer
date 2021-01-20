@@ -24,6 +24,15 @@ class MockServerLocalMethods(MockServerMethods):
     """
 
     def __init__(self):
+        memory_full_attrs = {'uss': 0}
+        virtual_memory_attrs = {'available': 0}
+        process_attrs = {
+            'memory_full_info': Mock(return_value=Mock(**memory_full_attrs))
+        }
+        psutil_attrs = {
+            'Process': Mock(return_value=Mock(**process_attrs)),
+            'virtual_memory': Mock(return_value=Mock(**virtual_memory_attrs))
+        }
         Popen_attrs = {
             'communicate.return_value':
             ('Triton Server Test Log', 'Test Error')
@@ -35,6 +44,9 @@ class MockServerLocalMethods(MockServerMethods):
             'model_analyzer.triton.server.server_local.STDOUT', MagicMock())
         self.patcher_pipe = patch(
             'model_analyzer.triton.server.server_local.PIPE', MagicMock())
+        self.patcher_psutil = patch(
+            'model_analyzer.triton.server.server_local.psutil',
+            Mock(**psutil_attrs))
         super().__init__()
 
     def start(self):
@@ -45,6 +57,7 @@ class MockServerLocalMethods(MockServerMethods):
         self.popen_mock = self.patcher_popen.start()
         self.stdout_mock = self.patcher_stdout.start()
         self.pipe_mock = self.patcher_pipe.start()
+        self.psutil_mock = self.patcher_psutil.start()
 
     def _fill_patchers(self):
         """
@@ -54,6 +67,7 @@ class MockServerLocalMethods(MockServerMethods):
         self._patchers.append(self.patcher_popen)
         self._patchers.append(self.patcher_stdout)
         self._patchers.append(self.patcher_pipe)
+        self._patchers.append(self.patcher_psutil)
 
     def assert_server_process_start_called_with(self, cmd):
         """
@@ -75,3 +89,20 @@ class MockServerLocalMethods(MockServerMethods):
 
         self.popen_mock.return_value.terminate.assert_called()
         self.popen_mock.return_value.communicate.assert_called()
+
+    def set_cpu_memory_values(self, used_mem, free_mem):
+        """
+        Sets the value of psutil.Process.memory_full_info.uss 
+        and psutil.virtual_memory.available
+        """
+
+        self.psutil_mock.Process.return_value.memory_full_info.return_value.uss = used_mem
+        self.psutil_mock.virtual_memory.return_value.available = free_mem
+
+    def assert_cpu_stats_called(self):
+        """
+        Checks the call to psutil.Process.memory_full_info and psutil.virtual_memory
+        """
+
+        self.psutil_mock.Process.return_value.memory_full_info.assert_called()
+        self.psutil_mock.virtual_memory.assert_called()

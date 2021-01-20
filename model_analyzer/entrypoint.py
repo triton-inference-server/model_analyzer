@@ -30,11 +30,7 @@ from .triton.server.server_factory import TritonServerFactory
 from .triton.server.server_config import TritonServerConfig
 from .triton.client.client_factory import TritonClientFactory
 from .triton.model.model import Model
-from .record.gpu_free_memory import GPUFreeMemory
-from .record.gpu_used_memory import GPUUsedMemory
-from .record.gpu_utilization import GPUUtilization
-from .record.perf_throughput import PerfThroughput
-from .record.perf_latency import PerfLatency
+from .record.metrics_mapper import MetricsMapper
 from .output.file_writer import FileWriter
 from .device.gpu_device_factory import GPUDeviceFactory
 from .config.config import AnalyzerConfig
@@ -89,7 +85,8 @@ def get_server_handle(config):
         triton_config['model-repository'] = config.model_repository
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
-        triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
+        triton_config['metrics-port'] = urlparse(
+            config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
         logger.info('Starting a local Triton Server...')
         server = TritonServerFactory.create_server_local(
@@ -100,7 +97,8 @@ def get_server_handle(config):
         triton_config['model-repository'] = config.model_repository
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
-        triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
+        triton_config['metrics-port'] = urlparse(
+            config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
         logger.info('Starting a Triton Server using docker...')
         server = TritonServerFactory.create_server_docker(
@@ -227,12 +225,14 @@ def create_run_configs(config):
 
     sweep_params = {
         'model-name': [name.strip() for name in config.model_names.split(',')],
-        'batch-size': [batch.strip() for batch in config.batch_sizes.split(',')],
-        'concurrency-range': [c.strip() for c in config.concurrency.split(',')],
+        'batch-size':
+        [batch.strip() for batch in config.batch_sizes.split(',')],
+        'concurrency-range':
+        [c.strip() for c in config.concurrency.split(',')],
         'protocol': [config.client_protocol],
         'url': [
-            config.triton_http_endpoint
-            if config.client_protocol == 'http' else config.triton_grpc_endpoint
+            config.triton_http_endpoint if config.client_protocol == 'http'
+            else config.triton_grpc_endpoint
         ],
         'measurement-interval': [config.perf_measurement_window]
     }
@@ -321,13 +321,32 @@ def run_analyzer(config, analyzer, client, run_configs):
     for run_config in run_configs:
         model = Model(name=run_config['model-name'])
         client.load_model(model=model)
-        client.wait_for_model_ready(model=model, num_retries=config.max_retries)
+        client.wait_for_model_ready(model=model,
+                                    num_retries=config.max_retries)
         try:
-            perf_output_writer = None if config.no_perf_output else FileWriter()
+            perf_output_writer = None if config.no_perf_output else FileWriter(
+            )
             analyzer.profile_model(run_config=run_config,
                                    perf_output_writer=perf_output_writer)
         finally:
             client.unload_model(model=model)
+
+
+def interrupt_handler(signal, frame):
+    """
+    A signal handler to properly
+    shutdown the model analyzer on
+    interrupt
+    """
+
+    global exiting
+    exiting += 1
+    logging.info(
+        f'Received SIGINT. Exiting ({exiting}/{MAX_NUMBER_OF_INTERRUPTS})...')
+
+    if exiting == MAX_NUMBER_OF_INTERRUPTS:
+        sys.exit(1)
+    return
 
 
 def main():
@@ -340,20 +359,13 @@ def main():
     # Number of Times User Requested Exit
     exiting = 0
 
-    monitoring_metrics = [
-        PerfThroughput, GPUUtilization, GPUUsedMemory, GPUFreeMemory
+    metric_tags = [
+        "perf_throughput", "perf_latency", "gpu_used_memory",
+        "gpu_free_memory", "gpu_utilization", "cpu_used_ram",
+        "cpu_available_ram"
     ]
 
-    def interrupt_handler(signal, frame):
-        global exiting
-        exiting += 1
-        logging.info(
-            f'Received SIGINT. Exiting ({exiting}/{MAX_NUMBER_OF_INTERRUPTS})...'
-        )
-
-        if exiting == MAX_NUMBER_OF_INTERRUPTS:
-            sys.exit(1)
-        return
+    monitoring_metrics = MetricsMapper.get_monitoring_metrics(metric_tags)
 
     signal.signal(signal.SIGINT, interrupt_handler)
 
@@ -365,8 +377,8 @@ def main():
         logging.error(f'Model Analyzer encountered an error: {e}')
         sys.exit(1)
 
-    logging.info(f'Triton Model Analyzer started: config={config.get_all_config()}')
-    analyzer = Analyzer(config, monitoring_metrics)
+    logging.info(
+        f'Triton Model Analyzer started: config={config.get_all_config()}')
     server = None
     try:
         client, server = get_triton_handles(config)
@@ -375,6 +387,7 @@ def main():
         if exiting:
             return
 
+        analyzer = Analyzer(config, monitoring_metrics, server)
         check_triton_and_model_analyzer_gpus(config)
         run_configs = create_run_configs(config)
         if exiting:

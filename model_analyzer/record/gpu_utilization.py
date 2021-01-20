@@ -21,6 +21,8 @@ class GPUUtilization(GPURecord):
     GPU utilization record
     """
 
+    tag = "gpu_utilization"
+
     def __init__(self, device, gpu_utilization, timestamp):
         """
         Parameters
@@ -37,12 +39,21 @@ class GPUUtilization(GPURecord):
         super().__init__(device, gpu_utilization, timestamp)
 
     @staticmethod
-    def header():
+    def header(aggregation_tag=None):
         """
+        Parameters
+        ----------
+        aggregation_tag : str
+            An optional tag that may be displayed 
+            as part of the header indicating that 
+            this record has been aggregated using 
+            max, min or average etc. 
+             
         Returns
         -------
         str
-            The full name of the metric.
+            The full name of the
+            metric.
         """
 
-        return "GPU Utilization(%)"
+        return aggregation_tag + "GPU Utilization(%)"

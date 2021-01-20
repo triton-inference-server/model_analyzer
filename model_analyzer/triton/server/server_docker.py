@@ -32,6 +32,7 @@ class TritonServerDocker(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     triton in a docker container.
     """
+
     def __init__(self, image, config, gpus):
         """
         Parameters
@@ -108,8 +109,7 @@ class TritonServerDocker(TritonServer):
                     f"{server_metrics_port}.\n"
                     "Change the Triton server ports using"
                     " --triton-http-endpoint, --triton-grpc-endpoint,"
-                    " and --triton-metrics-url flags."
-                )
+                    " and --triton-metrics-endpoint flags.")
             else:
                 raise error
 
@@ -117,7 +117,7 @@ class TritonServerDocker(TritonServer):
         cmd = 'tritonserver ' + self._server_config.to_cli_string()
 
         _, self._tritonserver_log_gen = \
-            self._tritonserver_container.exec_run(cmd, stream=True)
+            self._tritonserver_container.exec_run(cmd=cmd, stream=True)
 
     def stop(self):
         """
@@ -141,3 +141,19 @@ class TritonServerDocker(TritonServer):
         """
 
         return b''.join(list(self._tritonserver_log_gen)).decode("utf-8")
+
+    def cpu_stats(self):
+        """
+        Returns the CPU memory usage and CPU available memory in MB
+        """
+
+        cmd = 'bash -c "pmap -x $(pgrep tritonserver) | tail -n1 | awk \'{print $4}\'"'
+        _, used_mem_bytes = self._tritonserver_container.exec_run(cmd=cmd,
+                                                                  stream=False)
+        cmd = 'bash -c "free | awk \'{if(NR==2)print $7}\'"'
+        _, available_mem_bytes = self._tritonserver_container.exec_run(
+            cmd=cmd, stream=False)
+
+        # Divide by 1.0e6 to convert from kilobytes to MB
+        return float(used_mem_bytes.decode("utf-8")) // 1.0e3, float(
+            available_mem_bytes.decode("utf-8")) // 1.0e3

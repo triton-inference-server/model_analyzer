@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
+import psutil
 import logging
 
 from .server import TritonServer
@@ -68,7 +69,6 @@ class TritonServerLocal(TritonServer):
 
         # Terminate process, capture output
         if self._tritonserver_process is not None:
-            logger.info('Triton Server stopped.')
             self._tritonserver_process.terminate()
             try:
                 self._log, _ = self._tritonserver_process.communicate(
@@ -86,3 +86,19 @@ class TritonServerLocal(TritonServer):
         """
 
         return self._log
+
+    def cpu_stats(self):
+        """
+        Returns the CPU memory usage and CPU available memory in MB
+        """
+
+        if self._tritonserver_process:
+            server_process = psutil.Process(self._tritonserver_process.pid)
+            process_memory_info = server_process.memory_full_info()
+            system_memory_info = psutil.virtual_memory()
+
+            # Divide by 1.0e6 to convert from bytes to MB
+            return (process_memory_info.uss //
+                    1.0e6), (system_memory_info.available // 1.0e6)
+        else:
+            return 0.0, 0.0

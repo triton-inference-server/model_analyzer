@@ -192,6 +192,32 @@ class TestTritonServerMethods(trc.TestResultCollector):
         self.server_local_mock.assert_server_process_terminate_called()
         self.assertEqual(self.server.logs(), "Triton Server Test Log")
 
+    def test_cpu_stats(self):
+        server_config = TritonServerConfig()
+        server_config['model-repository'] = MODEL_REPOSITORY_PATH
+        gpus = ['all']
+
+        # Test local server cpu_stats
+        self.server = TritonServerFactory.create_server_local(
+            path=TRITON_LOCAL_BIN_PATH, config=server_config)
+        self.server.start()
+        _, _ = self.server.cpu_stats()
+        self.server_local_mock.assert_cpu_stats_called()
+        self.server.stop()
+
+        # Test docker server cpu stats
+        self.server = TritonServerFactory.create_server_docker(
+            image=TRITON_IMAGE, config=server_config, gpus=gpus)
+        self.server.start()
+
+        # The following needs to be called as it resets exec_run return value
+        self.server_docker_mock.assert_server_process_start_called_with(
+            TRITON_DOCKER_BIN_PATH + ' ' + server_config.to_cli_string(),
+            MODEL_REPOSITORY_PATH, TRITON_IMAGE, 8000, 8001, 8002)
+        _, _ = self.server.cpu_stats()
+        self.server_docker_mock.assert_cpu_stats_called()
+        self.server.stop()
+
     def tearDown(self):
         # In case test raises exception
         if self.server is not None:

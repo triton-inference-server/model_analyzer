@@ -36,3 +36,10 @@ class MockServerMethods(MockBase):
         """
         Assert that the server process was stopped
         """
+
+    @abstractmethod
+    def assert_cpu_stats_called(self):
+        """
+        Assert that correct cpu memory stats
+        api functions wer called for this implementation
+        """

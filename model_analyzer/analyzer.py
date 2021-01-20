@@ -19,13 +19,10 @@ from collections import defaultdict
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from .monitor.dcgm.dcgm_monitor import DCGMMonitor
+from .monitor.cpu_monitor import CPUMonitor
 from .perf_analyzer.perf_analyzer import PerfAnalyzer
 from .perf_analyzer.perf_config import PerfAnalyzerConfig
 from .record.record_aggregator import RecordAggregator
-from .record.gpu_free_memory import GPUFreeMemory
-from .record.gpu_used_memory import GPUUsedMemory
-from .record.perf_throughput import PerfThroughput
-from .record.perf_latency import PerfLatency
 from .output.output_table import OutputTable
 
 logger = logging.getLogger(__name__)
@@ -37,7 +34,8 @@ class Analyzer:
     model_analyzer. Configured with metrics to monitor, exposes profiling and
     result writing methods.
     """
-    def __init__(self, config, monitoring_metrics):
+
+    def __init__(self, config, monitoring_metrics, server):
         """
         Parameters
         ----------
@@ -45,6 +43,7 @@ class Analyzer:
             Model Analyzer config
         monitoring_metrics : List of Record types
             The list of metric types to monitor.
+        server : TritonServer handle
         """
 
         self._perf_analyzer_path = config.perf_analyzer_path
@@ -54,21 +53,26 @@ class Analyzer:
         self._param_inference_headers = ['Model', 'Batch', 'Concurrency']
         self._param_gpu_headers = ['Model', 'GPU ID', 'Batch', 'Concurrency']
         self._gpus = config.gpus
+        self._server = server
 
-        # Separates metric tags into perf_analyzer related and DCGM related tags
-        self.dcgm_tags = []
-        self.perf_tags = []
+        # Separates metric list into perf_analyzer related and DCGM related lists
+        self._dcgm_metrics = set()
+        self._perf_metrics = set()
+        self._cpu_metrics = set()
+
         for metric in self._monitoring_metrics:
-            if metric in list(DCGMMonitor.model_analyzer_to_dcgm_field):
-                self.dcgm_tags.append(metric)
+            if metric in DCGMMonitor.model_analyzer_to_dcgm_field:
+                self._dcgm_metrics.add(metric)
             elif metric in PerfAnalyzer.perf_metrics:
-                self.perf_tags.append(metric)
+                self._perf_metrics.add(metric)
+            elif metric in CPUMonitor.cpu_metrics:
+                self._cpu_metrics.add(metric)
 
         self._tables = {
-            'model_gpu_metrics':
-            self._create_gpu_output_table('Models (GPU Metrics)'),
             'server_gpu_metrics':
             self._create_gpu_output_table('Server Only'),
+            'model_gpu_metrics':
+            self._create_gpu_output_table('Models (GPU Metrics)'),
             'model_inference_metrics':
             self._create_inference_output_table('Models (Inference)')
         }
@@ -90,9 +94,12 @@ class Analyzer:
 
         logging.info('Profiling server only metrics...')
         dcgm_monitor = DCGMMonitor(self._gpus, self._monitoring_interval,
-                                   self.dcgm_tags)
+                                   self._dcgm_metrics)
+        cpu_monitor = CPUMonitor(self._server, self._monitoring_interval,
+                                 self._cpu_metrics)
         server_only_gpu_metrics, _ = self._profile(perf_analyzer=None,
-                                                   dcgm_monitor=dcgm_monitor)
+                                                   dcgm_monitor=dcgm_monitor,
+                                                   cpu_monitor=cpu_monitor)
 
         gpu_metrics = defaultdict(list)
         for _, metric in server_only_gpu_metrics.items():
@@ -108,10 +115,11 @@ class Analyzer:
             output_row += metric
             self._tables['server_gpu_metrics'].add_row(output_row)
         dcgm_monitor.destroy()
+        cpu_monitor.destroy()
 
     def profile_model(self, run_config, perf_output_writer=None):
         """
-        Runs DCGMMonitor while running perf_analyzer with a specific set of
+        Runs monitors while running perf_analyzer with a specific set of
         arguments. This will profile model inferencing.
 
         Parameters
@@ -130,14 +138,19 @@ class Analyzer:
 
         logging.info(f"Profiling model {run_config['model-name']}...")
         dcgm_monitor = DCGMMonitor(self._gpus, self._monitoring_interval,
-                                   self.dcgm_tags)
+                                   self._dcgm_metrics)
+        cpu_monitor = CPUMonitor(self._server, self._monitoring_interval,
+                                 self._cpu_metrics)
         perf_analyzer = PerfAnalyzer(
             path=self._perf_analyzer_path,
             config=self._create_perf_config(run_config))
 
         # Get metrics for model inference and write perf_output
         model_gpu_metrics, inference_metrics = self._profile(
-            perf_analyzer=perf_analyzer, dcgm_monitor=dcgm_monitor)
+            perf_analyzer=perf_analyzer,
+            dcgm_monitor=dcgm_monitor,
+            cpu_monitor=cpu_monitor)
+
         if perf_output_writer:
             perf_output_writer.write(perf_analyzer.output() + '\n')
 
@@ -167,6 +180,7 @@ class Analyzer:
         self._tables['model_inference_metrics'].add_row(output_row)
 
         dcgm_monitor.destroy()
+        cpu_monitor.destroy()
 
     def write_results(self, writer, column_separator):
         """
@@ -273,7 +287,7 @@ class Analyzer:
                                           ignore_widths=ignore_widths) +
                 "\n\n")
 
-    def _profile(self, perf_analyzer, dcgm_monitor):
+    def _profile(self, perf_analyzer, dcgm_monitor, cpu_monitor):
         """
         Utility function that runs the perf_analyzer
         and DCGMMonitor once.
@@ -287,9 +301,10 @@ class Analyzer:
 
         # Start monitors and run perf_analyzer
         dcgm_monitor.start_recording_metrics()
+        cpu_monitor.start_recording_metrics()
         if perf_analyzer:
             try:
-                perf_records = perf_analyzer.run(self.perf_tags)
+                perf_records = perf_analyzer.run(self._perf_metrics)
             except FileNotFoundError as e:
                 raise TritonModelAnalyzerException(
                     f"perf_analyzer binary not found : {e}")
@@ -297,6 +312,7 @@ class Analyzer:
             perf_records = []
             time.sleep(self._duration_seconds)
         dcgm_records = dcgm_monitor.stop_recording_metrics()
+        cpu_records = cpu_monitor.stop_recording_metrics()
 
         # Insert all records into aggregator and get aggregated DCGM records
         record_aggregator = RecordAggregator()
@@ -305,12 +321,12 @@ class Analyzer:
 
         records_groupby_gpu = {}
         records_groupby_gpu = record_aggregator.groupby(
-            self.dcgm_tags, lambda record: record.device().device_id())
+            self._dcgm_metrics, lambda record: record.device().device_id())
 
-        perf_record_aggregator = RecordAggregator()
-        for record in perf_records:
-            perf_record_aggregator.insert(record)
-        return records_groupby_gpu, perf_record_aggregator.aggregate()
+        perf_and_cpu_record_aggregator = RecordAggregator()
+        for record in perf_records + cpu_records:
+            perf_and_cpu_record_aggregator.insert(record)
+        return records_groupby_gpu, perf_and_cpu_record_aggregator.aggregate()
 
     def _create_inference_output_table(self, title, aggregation_tag='Max'):
         """
@@ -322,17 +338,16 @@ class Analyzer:
         # Create headers
         table_headers = self._param_inference_headers[:]
         for metric in self._monitoring_metrics:
-            if metric not in self.dcgm_tags:
-                table_headers.append(metric.header())
+            if metric not in self._dcgm_metrics:
+                table_headers.append(metric.header(aggregation_tag + " "))
         return OutputTable(headers=table_headers, title=title)
 
     def _create_gpu_output_table(self, title, aggregation_tag='Max'):
 
         # Create headers
         table_headers = self._param_gpu_headers[:]
-        for metric in self._monitoring_metrics:
-            if metric in self.dcgm_tags:
-                table_headers.append(aggregation_tag + ' ' + metric.header())
+        for metric in self._dcgm_metrics:
+            table_headers.append(metric.header(aggregation_tag + " "))
         return OutputTable(headers=table_headers, title=title)
 
     def _create_perf_config(self, params):

@@ -12,10 +12,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
+import importlib
 
 
-class Record(ABC):
+class RecordType(ABCMeta):
+    """
+    A metaclass that holds the instantiated Record types
+    """
+
+    record_types = {}
+
+    def __new__(cls, name, base, namespace):
+        """
+        This function is called upon declaration
+        of any classes of type RecordType
+        """
+
+        record_type = super().__new__(cls, name, base, namespace)
+
+        # If record_type.tag is a string, register it here
+        if isinstance(record_type.tag, str):
+            cls.record_types[record_type.tag] = record_type
+        return record_type
+
+    @classmethod
+    def get(cls, tag):
+        """
+        Parameters
+        ----------
+        tag : str
+            tag that a record type has registered it classname with
+        
+        Returns
+        -------
+        The class of type RecordType correspoding to the tag
+        """
+
+        if tag not in cls.record_types:
+            try:
+                importlib.import_module('model_analyzer.record.%s' % tag)
+            except ImportError as e:
+                print(e)
+        return cls.record_types[tag]
+
+
+class Record(metaclass=RecordType):
     """
     This class is used for representing
     records
@@ -38,13 +80,31 @@ class Record(ABC):
 
     @staticmethod
     @abstractmethod
-    def header():
+    def header(aggregation_tag=None):
         """
+        Parameters
+        ----------
+        aggregation_tag : str
+            An optional tag that may be displayed 
+            as part of the header indicating that 
+            this record has been aggregated using 
+            max, min or average etc. 
+             
         Returns
         -------
         str
             The full name of the
             metric.
+        """
+
+    @property
+    @abstractmethod
+    def tag(self):
+        """
+        Returns
+        -------
+        str
+            the name tag of the record type. 
         """
 
     def value(self):
