@@ -34,11 +34,7 @@ Server.
    --gpus 1 -v /var/run/docker.sock:/var/run/docker.sock --net host --privileged
    ```
 
-   You should use `--triton-launch-mode docker` flag for the Model Analyzer to use this mode,
-   and will also need to provide Model Analyzer the name or ID of the container in which it 
-   is running using the `--host-container` flag. This is so that the Model Analyzer can
-   mount the model repository in the container you are running into the sibling container
-   it will launch in order to run Triton Inference Server.
+   You should use `--triton-launch-mode docker` flag for the Model Analyzer to use this mode.
 
 3. **Using an already running Triton Inference Server**. This mode is beneficial
    when you want to use an already running Triton Inference Server. 
