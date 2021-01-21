@@ -39,6 +39,7 @@ for more information.
 * [Quick Start](docs/quick_start.md)
 * [Install](docs/install.md)
 * [Launch Modes](docs/launch_modes.md)
+* [Config File](docs/config.md)
 
 # Reporting problems, asking questions
 
