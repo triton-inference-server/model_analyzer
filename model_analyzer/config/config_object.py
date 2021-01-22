@@ -14,7 +14,7 @@
 
 from .config_value import ConfigValue
 from model_analyzer.constants import \
-     MODEL_ANALYZER_FAILED, MODEL_ANALYZER_SUCCESS
+     MODEL_ANALYZER_FAILURE, MODEL_ANALYZER_SUCCESS
 from copy import deepcopy
 
 
@@ -65,7 +65,7 @@ class ConfigObject(ConfigValue):
                 elif '*' in schema:
                     new_item = deepcopy(schema['*'])
                 else:
-                    return MODEL_ANALYZER_FAILED
+                    return MODEL_ANALYZER_FAILURE
 
                 new_value[key] = new_item
 
@@ -74,10 +74,10 @@ class ConfigObject(ConfigValue):
 
                 # If it was not able to set the value, for this
                 # field, we fail.
-                if status == MODEL_ANALYZER_FAILED:
-                    return MODEL_ANALYZER_FAILED
+                if status == MODEL_ANALYZER_FAILURE:
+                    return MODEL_ANALYZER_FAILURE
         else:
-            return MODEL_ANALYZER_FAILED
+            return MODEL_ANALYZER_FAILURE
         self._value = new_value
 
         return MODEL_ANALYZER_SUCCESS

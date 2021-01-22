@@ -30,15 +30,18 @@ The placeholders below are used throughout the configuration:
 * `<comma-delimited-list>`: a list of comma separated items.
 * `<int>`: a regular integer value.
 * `<list>`: a list of values.
-* `<range>`: An object containing `start` and `end` key with an optional `step` value. The types that support `<range>` can be described by a list or using the example structure below:
+* `<range>`: An object containing `start` and `stop` key with an optional
+`step` value. If `step` is not defined, we use 1 as the default value for
+`step`. The types that support `<range>` can be described by a list or using
+the example structure below:
 ```yaml
 batch_sizes:
     start: 2
-    end: 6
+    stop: 6
     step: 2
 ```
 
-This YAML represents the array `[2, 4]`. Note that `end` is not included.
+This YAML represents the array `[2, 4, 6]`.
 
 ```yaml
 # Path to the Model Repository
@@ -143,7 +146,7 @@ model_names:
 
 batch_sizes:
     start: 4
-    end: 9
+    stop: 9
 concurrency:
     - 2
     - 4
@@ -151,9 +154,9 @@ concurrency:
 ```
 
 If you save this file to the `config.yml`, you can start
-Model Analyzer using the `-f` flag.
+Model Analyzer using the `-f`, or `--config-file` flag.
 
 This config will analyze the models using batch sizes equal
-to `[4, 5, 6, 7, 8]` and concurrency values equal to
+to `[4, 5, 6, 7, 8, 9]` and concurrency values equal to
 `[2, 4, 8]`. You can also specify the `step` value
 for batch size to change the step size.

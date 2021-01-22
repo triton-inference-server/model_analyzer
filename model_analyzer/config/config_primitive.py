@@ -14,7 +14,7 @@
 
 from .config_value import ConfigValue
 from model_analyzer.constants import \
-     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILED
+     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
 
 
 class ConfigPrimitive(ConfigValue):
@@ -53,5 +53,5 @@ class ConfigPrimitive(ConfigValue):
         if self._is_primitive(value):
             self._value = self._type(value)
         else:
-            return MODEL_ANALYZER_FAILED
+            return MODEL_ANALYZER_FAILURE
         return MODEL_ANALYZER_SUCCESS

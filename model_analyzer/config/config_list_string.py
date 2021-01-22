@@ -14,7 +14,7 @@
 
 from .config_value import ConfigValue
 from model_analyzer.constants import \
-     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILED
+     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
 
 
 class ConfigListString(ConfigValue):
@@ -57,11 +57,11 @@ class ConfigListString(ConfigValue):
             self._value = []
             for item in value:
                 if not self._is_primitive(item):
-                    return MODEL_ANALYZER_FAILED
+                    return MODEL_ANALYZER_FAILURE
                 self._value.append(self._type(item))
         else:
             if self._is_dict(value):
-                return MODEL_ANALYZER_FAILED
+                return MODEL_ANALYZER_FAILURE
             self._value = [self._type(value)]
 
         return MODEL_ANALYZER_SUCCESS

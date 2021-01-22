@@ -132,7 +132,7 @@ batch_sizes:
         config = AnalyzerConfig()
         cli = CLI(config)
         cli.parse()
-        self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 3, 4, 5])
+        self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 3, 4, 5, 6])
         mock_config.stop()
 
         yaml_content = """
@@ -146,7 +146,7 @@ batch_sizes:
         config = AnalyzerConfig()
         cli = CLI(config)
         cli.parse()
-        self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 4])
+        self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 4, 6])
         mock_config.stop()
 
     def test_object(self):
@@ -208,7 +208,6 @@ model_names:
         cli = CLI(config)
         cli.parse()
 
-        print(config.get_all_config()['model_names'])
         self.assertTrue(config.get_all_config()['model_names'] == {
             'vgg_16_graphdef': {
                 'parameters': {
@@ -218,7 +217,7 @@ model_names:
             'vgg_19_graphdef': {
                 'parameters': {
                     'concurrency': [1, 2, 3, 4],
-                    'batch_sizes': [2, 4]
+                    'batch_sizes': [2, 4, 6]
                 }
             }
         })
