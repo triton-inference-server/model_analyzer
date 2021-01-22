@@ -14,7 +14,7 @@
 
 from .config_value import ConfigValue
 from model_analyzer.constants import \
-     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILED
+     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
 
 from copy import deepcopy
 
@@ -67,9 +67,9 @@ class ConfigListGeneric(ConfigValue):
                         new_value.append(list_item)
                         break
                 else:
-                    return MODEL_ANALYZER_FAILED
+                    return MODEL_ANALYZER_FAILURE
         else:
-            return MODEL_ANALYZER_FAILED
+            return MODEL_ANALYZER_FAILURE
 
         self._value = new_value
         return MODEL_ANALYZER_SUCCESS

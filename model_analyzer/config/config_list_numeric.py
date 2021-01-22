@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from .config_value import ConfigValue
-from model_analyzer.constants import MODEL_ANALYZER_SUCCESS
+from model_analyzer.constants import \
+     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
 
 
 class ConfigListNumeric(ConfigValue):
@@ -67,7 +68,9 @@ class ConfigListNumeric(ConfigValue):
                 end = value['end']
                 if 'step' in value:
                     step = value['step']
-                self._value = list(range(start, end, step))
+                self._value = list(range(start, end + 1, step))
+            else:
+                return MODEL_ANALYZER_FAILURE
         else:
             self._value = type_(value)
 
