@@ -62,17 +62,17 @@ class ConfigListNumeric(ConfigValue):
             for item in value:
                 self._value.append(type_(item))
         elif self._is_dict(value):
-            if 'start' in value and 'end' in value:
+            if 'start' in value and 'stop' in value:
                 step = 1
                 start = value['start']
-                end = value['end']
+                stop = value['stop']
                 if 'step' in value:
                     step = value['step']
-                self._value = list(range(start, end + 1, step))
+                self._value = list(range(start, stop + 1, step))
             else:
                 return MODEL_ANALYZER_FAILURE
         else:
-            self._value = type_(value)
+            self._value = [type_(value)]
 
         return MODEL_ANALYZER_SUCCESS
 
