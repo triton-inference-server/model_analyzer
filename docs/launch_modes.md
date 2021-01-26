@@ -43,4 +43,5 @@ Server.
    depending on your chosen client protocol using the `--triton-grpc-endpoint`,
    and `--triton-http-endpoint` flags.  You should also make sure that same GPUs
    are available to the Inference Server and Model Analyzer and they are on the 
-   same machine. Model Analyzer does not currently support profiling remote GPUs.
+   same machine. Model Analyzer does not currently support profiling remote GPUs. You should
+   also start the Triton Server using `--model-control-mode=explicit` to use this mode.
