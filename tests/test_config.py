@@ -123,9 +123,32 @@ batch_sizes:
         mock_config.stop()
 
         yaml_content = """
+batch_sizes: 2
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+        cli.parse()
+        self.assertTrue(config.get_all_config()['batch_sizes'] == [2])
+        mock_config.stop()
+
+        yaml_content = """
+concurrency: 2
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+        cli.parse()
+        self.assertTrue(config.get_all_config()['concurrency'] == [2])
+        self.assertTrue(config.get_all_config()['batch_sizes'] == [1])
+        mock_config.stop()
+
+        yaml_content = """
 batch_sizes:
     start: 2
-    end: 6
+    stop: 6
 """
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
@@ -138,7 +161,7 @@ batch_sizes:
         yaml_content = """
 batch_sizes:
     start: 2
-    end: 6
+    stop: 6
     step: 2
 """
         mock_config = MockConfig(args, yaml_content)
@@ -199,7 +222,7 @@ model_names:
         - 4
       batch_sizes:
           start: 2
-          end: 6
+          stop: 6
           step: 2
 """
         mock_config = MockConfig(args, yaml_content)

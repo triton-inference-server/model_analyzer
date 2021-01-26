@@ -52,7 +52,9 @@ class ConfigListString(ConfigValue):
         """
 
         if self._is_string(value):
-            self._value = value.split(',')
+            value = value.split(',')
+            for item in value:
+                self._value.append(self._type(item))
         elif self._is_list(value):
             self._value = []
             for item in value:
