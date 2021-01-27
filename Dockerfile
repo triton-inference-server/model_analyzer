@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:20.12-py3
-ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:20.12-py3-sdk
+ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:21.02-py3
+ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:21.02-py3-sdk
 
-ARG MODEL_ANALYZER_VERSION=1.1.0dev
-ARG MODEL_ANALYZER_CONTAINER_VERSION=21.02dev
+ARG MODEL_ANALYZER_VERSION=1.1.0
+ARG MODEL_ANALYZER_CONTAINER_VERSION=21.02
 
 FROM ${TRITONSDK_BASE_IMAGE} as sdk
 
