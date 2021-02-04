@@ -14,14 +14,15 @@
 
 from .config_value import ConfigValue
 from model_analyzer.constants import \
-     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
+    MODEL_ANALYZER_FAILURE
 
 
 class ConfigListString(ConfigValue):
     """
     A list of string values.
     """
-    def __init__(self, preprocess=None, required=False):
+
+    def __init__(self, preprocess=None, required=False, validator=None):
         """
         Instantiate a new ConfigListString
 
@@ -29,9 +30,16 @@ class ConfigListString(ConfigValue):
             Function be called before setting new values.
         required : bool
             Whether a given config is required or not.
+        validator : callable or None
+            A validator for the value of the field.
         """
 
-        super().__init__(preprocess, required)
+        # default validator
+        if validator is None:
+            def validator(x):
+                return type(x) is list and len(x) > 0
+
+        super().__init__(preprocess, required, validator)
         self._type = str
         self._value = []
 
@@ -51,19 +59,19 @@ class ConfigListString(ConfigValue):
             1 on success, and 0 on failure
         """
 
+        new_value = []
         if self._is_string(value):
             value = value.split(',')
             for item in value:
-                self._value.append(self._type(item))
+                new_value.append(self._type(item))
         elif self._is_list(value):
-            self._value = []
             for item in value:
                 if not self._is_primitive(item):
                     return MODEL_ANALYZER_FAILURE
-                self._value.append(self._type(item))
+                new_value.append(self._type(item))
         else:
             if self._is_dict(value):
                 return MODEL_ANALYZER_FAILURE
-            self._value = [self._type(value)]
+            new_value = [self._type(value)]
 
-        return MODEL_ANALYZER_SUCCESS
+        return super().set_value(new_value)

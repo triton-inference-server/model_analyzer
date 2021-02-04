@@ -13,15 +13,12 @@
 # limitations under the License.
 
 import unittest
-import sys
-from unittest.mock import MagicMock
-sys.path.append('../common')
-
-import test_result_collector as trc
-from model_analyzer.config.config import AnalyzerConfig
-from model_analyzer.cli.cli import CLI
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from .mocks.mock_config import MockConfig
+from .common import test_result_collector as trc
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
+from model_analyzer.cli.cli import CLI
+from model_analyzer.config.config import AnalyzerConfig
 
 
 class TestConfig(trc.TestResultCollector):
@@ -65,7 +62,8 @@ class TestConfig(trc.TestResultCollector):
         config = AnalyzerConfig()
         cli = CLI(config)
 
-        # When a required field is not specified, parse will lead to an exception
+        # When a required field is not specified, parse will lead to an
+        # exception
         with self.assertRaises(TritonModelAnalyzerException):
             cli.parse()
 
@@ -155,7 +153,8 @@ batch_sizes:
         config = AnalyzerConfig()
         cli = CLI(config)
         cli.parse()
-        self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 3, 4, 5, 6])
+        self.assertTrue(
+            config.get_all_config()['batch_sizes'] == [2, 3, 4, 5, 6])
         mock_config.stop()
 
         yaml_content = """
@@ -231,19 +230,20 @@ model_names:
         cli = CLI(config)
         cli.parse()
 
-        self.assertTrue(config.get_all_config()['model_names'] == {
-            'vgg_16_graphdef': {
-                'parameters': {
-                    'concurrency': [1, 2, 3, 4]
+        self.assertTrue(
+            config.get_all_config()['model_names'] == {
+                'vgg_16_graphdef': {
+                    'parameters': {
+                        'concurrency': [1, 2, 3, 4]
+                    }
+                },
+                'vgg_19_graphdef': {
+                    'parameters': {
+                        'concurrency': [1, 2, 3, 4],
+                        'batch_sizes': [2, 4, 6]
+                    }
                 }
-            },
-            'vgg_19_graphdef': {
-                'parameters': {
-                    'concurrency': [1, 2, 3, 4],
-                    'batch_sizes': [2, 4, 6]
-                }
-            }
-        })
+            })
         mock_config.stop()
 
     def test_constraints(self):
@@ -317,6 +317,86 @@ model_names:
 
         with self.assertRaises(TritonModelAnalyzerException):
             cli.parse()
+        mock_config.stop()
+
+    def test_validation(self):
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file'
+        ]
+
+        # end key should not be included in concurrency
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+      parameters:
+        concurrency:
+            start: 4
+            stop: 12
+            end: 2
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            cli.parse()
+            mock_config.stop()
+
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file'
+        ]
+
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+      parameters:
+        concurrency:
+            start: 13
+            stop: 12
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            cli.parse()
+            mock_config.stop()
+
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+      parameters:
+        concurrency: []
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            cli.parse()
+            mock_config.stop()
+
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+      parameters:
+        concurrency: [1]
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+
+        cli.parse()
         mock_config.stop()
 
 

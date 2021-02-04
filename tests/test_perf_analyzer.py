@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +13,6 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import patch, MagicMock
-import sys
-sys.path.append('../common/')
 
 from .mocks.mock_server_local import MockServerLocalMethods
 from .mocks.mock_perf_analyzer import MockPerfAnalyzerMethods
@@ -26,10 +23,11 @@ from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.client.client_factory import TritonClientFactory
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 from model_analyzer.record.perf_throughput import PerfThroughput
 from model_analyzer.record.perf_latency import PerfLatency
-import test_result_collector as trc
+from .common import test_result_collector as trc
 
 # Test Parameters
 MODEL_LOCAL_PATH = '/model_analyzer/models'

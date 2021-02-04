@@ -15,12 +15,16 @@
 import abc
 from abc import abstractmethod
 
+from model_analyzer.constants import \
+    MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
+
 
 class ConfigValue(abc.ABC):
     """
     Parent class for all the types used in the ConfigField.
     """
-    def __init__(self, preprocess=None, required=False):
+
+    def __init__(self, preprocess=None, required=False, validator=None):
         """
         Parameters
         ----------
@@ -30,10 +34,13 @@ class ConfigValue(abc.ABC):
             Function be called before setting new values.
         required : bool
             Whether a given config is required or not.
+        validator : callable or None
+            A validator for the value of the field.
         """
 
         self._preprocess = preprocess
         self._required = required
+        self._validator = validator
 
     @abstractmethod
     def set_value(self, value):
@@ -42,7 +49,14 @@ class ConfigValue(abc.ABC):
         subclass.
         """
 
-        pass
+        if self._validator:
+            if self._validator(value):
+                self._value = value
+                return MODEL_ANALYZER_SUCCESS
+            return MODEL_ANALYZER_FAILURE
+        else:
+            self._value = value
+            return MODEL_ANALYZER_SUCCESS
 
     def value(self):
         """

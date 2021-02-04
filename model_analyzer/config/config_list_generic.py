@@ -14,7 +14,7 @@
 
 from .config_value import ConfigValue
 from model_analyzer.constants import \
-     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
+    MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
 
 from copy import deepcopy
 
@@ -23,7 +23,8 @@ class ConfigListGeneric(ConfigValue):
     """
     A generic list.
     """
-    def __init__(self, types, preprocess=None, required=False):
+
+    def __init__(self, types, preprocess=None, required=False, validator=None, output_mapper=None):
         """
         Create a new list of numeric values.
 
@@ -35,13 +36,22 @@ class ConfigListGeneric(ConfigValue):
             Function be called before setting new values.
         required : bool
             Whether a given config is required or not.
+        output_mapper: callable
+            This callable unifies the output value of this field.
         """
 
-        super().__init__(preprocess, required)
+        # default validator
+        if validator is None:
+
+            def validator(x):
+                return type(x) is list and len(x) > 0
+
+        super().__init__(preprocess, required, validator)
 
         self._type = str
         self._allowed_types = types
         self._value = []
+        self._output_mapper = output_mapper
 
     def set_value(self, value):
         """
@@ -71,5 +81,4 @@ class ConfigListGeneric(ConfigValue):
         else:
             return MODEL_ANALYZER_FAILURE
 
-        self._value = new_value
-        return MODEL_ANALYZER_SUCCESS
+        return super().set_value(value)

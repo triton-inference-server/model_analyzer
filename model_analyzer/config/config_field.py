@@ -15,7 +15,7 @@
 from model_analyzer.model_analyzer_exceptions import \
     TritonModelAnalyzerException
 from model_analyzer.constants import \
-     MODEL_ANALYZER_SUCCESS
+    MODEL_ANALYZER_SUCCESS
 
 
 class ConfigField:
@@ -145,7 +145,7 @@ class ConfigField:
         Set the value for the config field.
         """
 
-        # Trying setting the value for each type in the field. If it
+        # Try to set the value for each type in the field. If it
         # was not succesful for any of the types, raise an exception.
         for i, config_type in enumerate(self._field_types):
             status = config_type.set_value(value)
@@ -154,7 +154,7 @@ class ConfigField:
                 break
         else:
             raise TritonModelAnalyzerException(
-                f'Can\'t set value {{ {value} }} for field {self._name}')
+                f'Can\'t set value {value} for field {self._name}.')
 
     def value(self):
         """

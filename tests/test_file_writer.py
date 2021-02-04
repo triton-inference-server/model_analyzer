@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-sys.path.append("../common")
-
-import unittest
-import os
-
-from .mocks.mock_io import MockIOMethods
-
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from .common import test_result_collector as trc
 from model_analyzer.output.file_writer import FileWriter
-import test_result_collector as trc
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
+from .mocks.mock_io import MockIOMethods
+import unittest
+
 
 TEST_FILENAME = 'test_filename'
 

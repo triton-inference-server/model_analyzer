@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,11 @@
 # limitations under the License.
 
 import unittest
-import sys
-sys.path.append("../common")
 
 from model_analyzer.output.output_table import OutputTable
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-import test_result_collector as trc
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
+from .common import test_result_collector as trc
 
 TEST_HEADERS = [f"Column {i}" for i in range(10)]
 TEST_COLUMN_WIDTH = 12
