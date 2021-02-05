@@ -46,7 +46,7 @@ class ConfigListGeneric(ConfigValue):
             def validator(x):
                 return type(x) is list and len(x) > 0
 
-        super().__init__(preprocess, required, validator)
+        super().__init__(preprocess, required, validator, output_mapper)
 
         self._type = str
         self._allowed_types = types
@@ -81,4 +81,4 @@ class ConfigListGeneric(ConfigValue):
         else:
             return MODEL_ANALYZER_FAILURE
 
-        return super().set_value(value)
+        return super().set_value(new_value)

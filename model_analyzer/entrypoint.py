@@ -223,8 +223,9 @@ def create_run_configs(config):
         values are individual combinations of argument values
     """
 
+    model_names = [model.model_name() for model in config.model_names]
     sweep_params = {
-        'model-name': config.model_names,
+        'model-name': model_names,
         'batch-size': config.batch_sizes,
         'concurrency-range': config.concurrency,
         'protocol': [config.client_protocol],

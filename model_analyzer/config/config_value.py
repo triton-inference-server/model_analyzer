@@ -24,23 +24,30 @@ class ConfigValue(abc.ABC):
     Parent class for all the types used in the ConfigField.
     """
 
-    def __init__(self, preprocess=None, required=False, validator=None):
+    def __init__(self,
+                 preprocess=None,
+                 required=False,
+                 validator=None,
+                 output_mapper=None):
         """
         Parameters
         ----------
         name : str
             Configuration name.
-        preprocess : callable
+        preprocess : callable or None
             Function be called before setting new values.
         required : bool
             Whether a given config is required or not.
         validator : callable or None
             A validator for the value of the field.
+        output_mapper: callable or None
+            This callable unifies the output value of this field.
         """
 
         self._preprocess = preprocess
         self._required = required
         self._validator = validator
+        self._output_mapper = output_mapper
 
     @abstractmethod
     def set_value(self, value):
@@ -49,14 +56,23 @@ class ConfigValue(abc.ABC):
         subclass.
         """
 
+        output_validated = False
         if self._validator:
             if self._validator(value):
-                self._value = value
-                return MODEL_ANALYZER_SUCCESS
-            return MODEL_ANALYZER_FAILURE
+                output_validated = True
         else:
-            self._value = value
+            output_validated = True
+
+        if output_validated:
+            if self._output_mapper:
+                value = self._output_mapper(value)
+
+        self._value = value
+
+        if output_validated:
             return MODEL_ANALYZER_SUCCESS
+        else:
+            return MODEL_ANALYZER_FAILURE
 
     def value(self):
         """

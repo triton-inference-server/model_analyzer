@@ -27,7 +27,9 @@ class ConfigObject(ConfigValue):
                  schema,
                  preprocess=None,
                  required=False,
-                 validator=None):
+                 validator=None,
+                 output_mapper=None
+                 ):
         """
         schema : dict
             A dictionary where the keys are the object keys and the values
@@ -38,6 +40,8 @@ class ConfigObject(ConfigValue):
             Whether a given config is required or not.
         validator : callable or None
             A validator for the value of the field.
+        output_mapper: callable or None
+            This callable unifies the output value of this field.
         """
 
         # default validator
@@ -45,7 +49,7 @@ class ConfigObject(ConfigValue):
             def validator(x):
                 return type(x) is dict and len(x) > 0
 
-        super().__init__(preprocess, required, validator)
+        super().__init__(preprocess, required, validator, output_mapper)
         self._type = str
         self._value = {}
         self._schema = schema

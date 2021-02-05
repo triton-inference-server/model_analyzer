@@ -28,6 +28,7 @@ class ConfigPrimitive(ConfigValue):
         preprocess=None,
         required=False,
         validator=None,
+        output_mapper=None
     ):
         """
         Parameters
@@ -40,6 +41,8 @@ class ConfigPrimitive(ConfigValue):
             Whether a given config is required or not.
         validator : callable or None
             A validator for the value of the field.
+        output_mapper: callable or None
+            This callable unifies the output value of this field.
         """
 
         # default validator
@@ -47,7 +50,7 @@ class ConfigPrimitive(ConfigValue):
             def validator(x):
                 return x is not None or x != ''
 
-        super().__init__(preprocess, required, validator)
+        super().__init__(preprocess, required, validator, output_mapper)
 
         self._type = type_
         self._value = None

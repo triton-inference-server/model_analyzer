@@ -22,7 +22,11 @@ class ConfigListString(ConfigValue):
     A list of string values.
     """
 
-    def __init__(self, preprocess=None, required=False, validator=None):
+    def __init__(self,
+                 preprocess=None,
+                 required=False,
+                 validator=None,
+                 output_mapper=None):
         """
         Instantiate a new ConfigListString
 
@@ -32,6 +36,8 @@ class ConfigListString(ConfigValue):
             Whether a given config is required or not.
         validator : callable or None
             A validator for the value of the field.
+        output_mapper: callable or None
+            This callable unifies the output value of this field.
         """
 
         # default validator
@@ -39,7 +45,7 @@ class ConfigListString(ConfigValue):
             def validator(x):
                 return type(x) is list and len(x) > 0
 
-        super().__init__(preprocess, required, validator)
+        super().__init__(preprocess, required, validator, output_mapper)
         self._type = str
         self._value = []
 

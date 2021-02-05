@@ -22,7 +22,12 @@ class ConfigListNumeric(ConfigValue):
     A list of numeric values.
     """
 
-    def __init__(self, type_, preprocess=None, required=False, validator=None):
+    def __init__(self,
+                 type_,
+                 preprocess=None,
+                 required=False,
+                 validator=None,
+                 output_mapper=None):
         """
         Create a new list of numeric values.
 
@@ -36,6 +41,8 @@ class ConfigListNumeric(ConfigValue):
             Whether a given config is required or not.
         validator : callable or None
             A validator for the final value of the field.
+        output_mapper: callable or None
+            This callable unifies the output value of this field.
         """
 
         # default validator
@@ -47,7 +54,7 @@ class ConfigListNumeric(ConfigValue):
 
                 return False
 
-        super().__init__(preprocess, required, validator)
+        super().__init__(preprocess, required, validator, output_mapper)
         self._type = type_
         self._value = []
 

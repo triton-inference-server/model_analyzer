@@ -21,7 +21,9 @@ from .config_list_string import ConfigListString
 from .config_list_numeric import ConfigListNumeric
 from .config_object import ConfigObject
 from .config_list_generic import ConfigListGeneric
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from .config_model import ConfigModel
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 
 class AnalyzerConfig:
@@ -76,10 +78,12 @@ class AnalyzerConfig:
                     'max': ConfigPrimitive(int),
                 }),
             })
+
         model_object_constraint = ConfigObject(
             required=True,
             schema={
-                # Any key is allowed, but the keys must follow the pattern below
+                # Any key is allowed, but the keys must follow the pattern
+                # below
                 '*':
                 ConfigObject(
                     schema={
@@ -94,7 +98,7 @@ class AnalyzerConfig:
                         'constraints':
                         constraints_scheme
                     })
-            })
+            }, output_mapper=ConfigModel.model_object_to_config_model)
         self._add_config(
             ConfigField(
                 'model_names',
@@ -102,10 +106,16 @@ class AnalyzerConfig:
                 field_types=[
                     model_object_constraint,
                     ConfigListGeneric(
-                        [model_object_constraint,
-                         ConfigPrimitive(str)],
-                        required=True),
-                    ConfigListString(),
+                        [
+                            model_object_constraint,
+                            ConfigPrimitive(
+                                str,
+                                output_mapper=ConfigModel.model_str_to_config_model
+                            )],
+                        required=True,
+                        output_mapper=ConfigModel.model_mixed_to_config_model),
+                    ConfigListString(
+                        output_mapper=ConfigModel.model_list_to_config_model),
                 ],
                 description='Comma-delimited list of the model names to be profiled'))
 
