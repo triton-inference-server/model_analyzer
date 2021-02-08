@@ -14,7 +14,7 @@
 
 from .config_value import ConfigValue
 from model_analyzer.constants import \
-    MODEL_ANALYZER_FAILURE, MODEL_ANALYZER_SUCCESS
+    MODEL_ANALYZER_FAILURE
 from copy import deepcopy
 
 
@@ -50,7 +50,8 @@ class ConfigObject(ConfigValue):
                 return type(x) is dict and len(x) > 0
 
         super().__init__(preprocess, required, validator, output_mapper)
-        self._type = str
+        self._type = self
+        self._cli_type = str
         self._value = {}
         self._schema = schema
 

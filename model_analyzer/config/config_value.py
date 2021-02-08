@@ -60,12 +60,10 @@ class ConfigValue(abc.ABC):
         if self._validator:
             if self._validator(value):
                 output_validated = True
+            else:
+                return MODEL_ANALYZER_FAILURE
         else:
             output_validated = True
-
-        if output_validated:
-            if self._output_mapper:
-                value = self._output_mapper(value)
 
         self._value = value
 
@@ -85,22 +83,32 @@ class ConfigValue(abc.ABC):
         """
 
         return_result = self._value
-        if type(self._value) is dict:
-            return_result = {}
-            for key, value_ in self._value.items():
+        if self._output_mapper:
+            return_result = self._output_mapper(return_result)
+
+        if type(return_result) is dict:
+            final_return_result = {}
+            for key, value_ in return_result.items():
                 if hasattr(value_, 'value'):
-                    return_result[key] = value_.value()
+                    final_return_result[key] = value_.value()
                 else:
-                    return_result[key] = value_.value()
-        elif type(self._value) is list:
-            return_result = []
-            for item in self._value:
+                    final_return_result[key] = value_.value()
+            return_result = final_return_result
+        elif type(return_result) is list:
+            return_results = []
+            for item in return_result:
                 if hasattr(item, 'value'):
-                    return_result.append(item.value())
+                    return_results.append(item.value())
                 else:
-                    return_result.append(item)
+                    return_results.append(item)
+            return_result = return_results
+        elif hasattr(return_result, 'value'):
+            return_result = return_result.value()
 
         return return_result
+
+    def raw_value(self):
+        return self._value
 
     def _is_primitive(self, value):
         """
@@ -178,6 +186,18 @@ class ConfigValue(abc.ABC):
         -------
         type
             Type to be used for the CLI.
+        """
+
+        return self._cli_type
+
+    def container_type(self):
+        """
+        Get the container type for this field.
+
+        Returns
+        -------
+        ConfigValue
+            Container type for the field.
         """
 
         return self._type

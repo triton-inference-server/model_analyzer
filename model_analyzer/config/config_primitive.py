@@ -14,7 +14,7 @@
 
 from .config_value import ConfigValue
 from model_analyzer.constants import \
-    MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
+    MODEL_ANALYZER_FAILURE
 
 
 class ConfigPrimitive(ConfigValue):
@@ -52,7 +52,7 @@ class ConfigPrimitive(ConfigValue):
 
         super().__init__(preprocess, required, validator, output_mapper)
 
-        self._type = type_
+        self._type = self._cli_type = type_
         self._value = None
 
     def set_value(self, value):

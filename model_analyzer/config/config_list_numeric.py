@@ -56,6 +56,7 @@ class ConfigListNumeric(ConfigValue):
 
         super().__init__(preprocess, required, validator, output_mapper)
         self._type = type_
+        self._cli_type = str
         self._value = []
 
     def set_value(self, value):
@@ -99,15 +100,3 @@ class ConfigListNumeric(ConfigValue):
             new_value = [type_(value)]
 
         return super().set_value(new_value)
-
-    def cli_type(self):
-        """
-        Get the type of this field for CLI.
-
-        Returns
-        -------
-        type
-            str
-        """
-
-        return str

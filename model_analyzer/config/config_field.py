@@ -15,7 +15,7 @@
 from model_analyzer.model_analyzer_exceptions import \
     TritonModelAnalyzerException
 from model_analyzer.constants import \
-    MODEL_ANALYZER_SUCCESS
+    MODEL_ANALYZER_FAILURE
 
 
 class ConfigField:
@@ -25,7 +25,7 @@ class ConfigField:
                  choices=None,
                  description=None,
                  default_value=None,
-                 field_types=None,
+                 field_type=None,
                  parser_args=None):
         """
         Create a configuration field.
@@ -38,8 +38,8 @@ class ConfigField:
             Description of the config.
         flags : list
             List of the flags to be used for the CLI.
-        field_types : list
-            List of type ConfigValue.
+        field_type : ConfigValue
+            type of the field
         choices : list or None
             List of the choices to be used.
         preprocess : callable
@@ -53,7 +53,7 @@ class ConfigField:
         self._description = description
         self._default_value = default_value
         self._name = name
-        self._field_types = field_types
+        self._field_type = field_type
         self._used_field_idx = 0
         self._flags = flags
         self._choices = choices
@@ -101,8 +101,19 @@ class ConfigField:
             Type of the config field
         """
 
-        used_field_idx = self._used_field_idx
-        return self._field_types[used_field_idx].cli_type()
+        return self._field_type
+
+    def cli_type(self):
+        """
+        Get the equivalent CLI type of the field.
+
+        Returns
+        -------
+        type
+            CLI type of the field.
+        """
+
+        return self._field_type.cli_type()
 
     def name(self):
         """
@@ -145,14 +156,11 @@ class ConfigField:
         Set the value for the config field.
         """
 
-        # Try to set the value for each type in the field. If it
-        # was not succesful for any of the types, raise an exception.
-        for i, config_type in enumerate(self._field_types):
-            status = config_type.set_value(value)
-            if status == MODEL_ANALYZER_SUCCESS:
-                self._used_field_idx = i
-                break
-        else:
+        field_type = self._field_type
+
+        status = field_type.set_value(value)
+
+        if status == MODEL_ANALYZER_FAILURE:
             raise TritonModelAnalyzerException(
                 f'Can\'t set value {value} for field {self._name}.')
 
@@ -166,8 +174,7 @@ class ConfigField:
             The value of the config field.
         """
 
-        used_field_idx = self._used_field_idx
-        return self._field_types[used_field_idx].value()
+        return self._field_type.value()
 
     def required(self):
         """
@@ -179,5 +186,4 @@ class ConfigField:
             Whether the config field is required or not.
         """
 
-        used_field_idx = self._used_field_idx
-        return self._field_types[used_field_idx].required()
+        return self._field_type.required()

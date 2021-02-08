@@ -23,7 +23,8 @@ class ConfigModel:
                  model_name,
                  objectives=None,
                  constraints=None,
-                 parameters=None):
+                 parameters=None,
+                 model_config_parameters=None):
         """
         Parameters
         ----------
@@ -36,12 +37,15 @@ class ConfigModel:
         parameters : None or dict
             Constraints on batch_size and concurrency values need to be
             specified here.
+        model_config_parameters : None or dict
+            Model config parameters that is used for this model
         """
 
         self._model_name = model_name
         self._objectives = objectives
         self._constraints = constraints
         self._parameters = parameters
+        self._model_config_paramters = model_config_parameters
 
     def objectives(self):
         """
@@ -72,6 +76,16 @@ class ConfigModel:
         """
 
         return self._parameters
+
+    def model_config_parameters(self):
+        """
+        Returns
+        -------
+        dict or None
+            A dictionary containing the model config parameters.
+        """
+
+        return self._model_config_paramters
 
     def model_name(self):
         """
@@ -182,5 +196,9 @@ class ConfigModel:
 
         if self._constraints:
             model_object['constraints'] = self._constraints
+
+        if self._model_config_paramters:
+            model_object['model_config_parameters'] = \
+                self._model_config_paramters
 
         return str(model_object)

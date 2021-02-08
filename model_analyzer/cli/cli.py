@@ -64,7 +64,7 @@ class CLI:
                     default=argparse.SUPPRESS,
                     choices=config.choices(),
                     help=config.description(),
-                    type=config.field_type(),
+                    type=config.cli_type(),
                     **config.parser_args(),
                 )
 
