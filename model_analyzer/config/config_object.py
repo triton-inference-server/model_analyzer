@@ -14,7 +14,7 @@
 
 from .config_value import ConfigValue
 from model_analyzer.constants import \
-     MODEL_ANALYZER_FAILURE, MODEL_ANALYZER_SUCCESS
+    MODEL_ANALYZER_FAILURE, MODEL_ANALYZER_SUCCESS
 from copy import deepcopy
 
 
@@ -22,7 +22,14 @@ class ConfigObject(ConfigValue):
     """
     Representation of dictionaries in Config
     """
-    def __init__(self, schema, preprocess=None, required=False):
+
+    def __init__(self,
+                 schema,
+                 preprocess=None,
+                 required=False,
+                 validator=None,
+                 output_mapper=None
+                 ):
         """
         schema : dict
             A dictionary where the keys are the object keys and the values
@@ -31,8 +38,18 @@ class ConfigObject(ConfigValue):
             Function be called before setting new values.
         required : bool
             Whether a given config is required or not.
+        validator : callable or None
+            A validator for the value of the field.
+        output_mapper: callable or None
+            This callable unifies the output value of this field.
         """
-        super().__init__(preprocess, required)
+
+        # default validator
+        if validator is None:
+            def validator(x):
+                return type(x) is dict and len(x) > 0
+
+        super().__init__(preprocess, required, validator, output_mapper)
         self._type = str
         self._value = {}
         self._schema = schema
@@ -78,9 +95,7 @@ class ConfigObject(ConfigValue):
                     return MODEL_ANALYZER_FAILURE
         else:
             return MODEL_ANALYZER_FAILURE
-        self._value = new_value
-
-        return MODEL_ANALYZER_SUCCESS
+        return super().set_value(new_value)
 
     def __getattr__(self, name):
         # We need to add this check, to prevent infinite

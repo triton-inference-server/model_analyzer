@@ -14,14 +14,20 @@
 
 from .config_value import ConfigValue
 from model_analyzer.constants import \
-     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
+    MODEL_ANALYZER_FAILURE
 
 
 class ConfigListNumeric(ConfigValue):
     """
     A list of numeric values.
     """
-    def __init__(self, type_, preprocess=None, required=False):
+
+    def __init__(self,
+                 type_,
+                 preprocess=None,
+                 required=False,
+                 validator=None,
+                 output_mapper=None):
         """
         Create a new list of numeric values.
 
@@ -33,9 +39,22 @@ class ConfigListNumeric(ConfigValue):
             Function be called before setting new values.
         required : bool
             Whether a given config is required or not.
+        validator : callable or None
+            A validator for the final value of the field.
+        output_mapper: callable or None
+            This callable unifies the output value of this field.
         """
 
-        super().__init__(preprocess, required)
+        # default validator
+        if validator is None:
+
+            def validator(x):
+                if type(x) is list and len(x) > 0:
+                    return True
+
+                return False
+
+        super().__init__(preprocess, required, validator, output_mapper)
         self._type = type_
         self._value = []
 
@@ -51,30 +70,35 @@ class ConfigListNumeric(ConfigValue):
         """
 
         type_ = self._type
+        new_value = []
 
         if self._is_string(value):
             self._value = []
             value = value.split(',')
             for item in value:
-                self._value.append(type_(item))
+                new_value.append(type_(item))
         elif self._is_list(value):
-            self._value = []
             for item in value:
-                self._value.append(type_(item))
+                new_value.append(type_(item))
         elif self._is_dict(value):
-            if 'start' in value and 'stop' in value:
+            two_key_condition = len(
+                value) == 2 and 'start' in value and 'stop' in value
+            three_key_condition = len(
+                value) == 3 and 'start' in value and 'stop' in value\
+                and 'step' in value
+            if two_key_condition or three_key_condition:
                 step = 1
                 start = value['start']
                 stop = value['stop']
                 if 'step' in value:
                     step = value['step']
-                self._value = list(range(start, stop + 1, step))
+                new_value = list(range(start, stop + 1, step))
             else:
                 return MODEL_ANALYZER_FAILURE
         else:
-            self._value = [type_(value)]
+            new_value = [type_(value)]
 
-        return MODEL_ANALYZER_SUCCESS
+        return super().set_value(new_value)
 
     def cli_type(self):
         """

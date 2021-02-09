@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,14 +13,11 @@
 # limitations under the License.
 
 import unittest
-import sys
-sys.path.append('../common')
 
 from model_analyzer.record.record_aggregator import RecordAggregator
 from model_analyzer.record.perf_throughput import PerfThroughput
 from model_analyzer.record.perf_latency import PerfLatency
-from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
-import test_result_collector as trc
+from .common import test_result_collector as trc
 
 
 class TestRecordAggregatorMethods(trc.TestResultCollector):
@@ -152,7 +149,8 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
                                                reduce_func=max)
         min_vals = record_aggregator.aggregate(record_types=[PerfThroughput],
                                                reduce_func=min)
-        average = lambda seq: (sum(seq) * 1.0) / len(seq)
+
+        def average(seq): return (sum(seq) * 1.0) / len(seq)
         average_vals = record_aggregator.aggregate(
             record_types=[PerfThroughput], reduce_func=average)
 

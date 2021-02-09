@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-sys.path.append("../common")
-
 import unittest
 import time
 
@@ -23,9 +20,10 @@ from model_analyzer.record.gpu_free_memory import GPUFreeMemory
 from model_analyzer.record.gpu_used_memory import GPUUsedMemory
 from model_analyzer.record.gpu_utilization import GPUUtilization
 from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
-import test_result_collector as trc
+from .common import test_result_collector as trc
 from .mocks.mock_dcgm import MockDCGM
 from .mocks.mock_numba import MockNumba
 from .mocks.mock_dcgm_agent import TEST_UUID

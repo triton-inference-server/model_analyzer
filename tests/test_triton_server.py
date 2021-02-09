@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,21 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import unittest
-import subprocess
-import sys
-from unittest import mock
-sys.path.append('../common')
 
-from unittest.mock import patch, MagicMock
 from .mocks.mock_server_docker import MockServerDockerMethods
 from .mocks.mock_server_local import MockServerLocalMethods
+from .common import test_result_collector as trc
 
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-import test_result_collector as trc
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 # Test parameters
 MODEL_REPOSITORY_PATH = 'test_repo'

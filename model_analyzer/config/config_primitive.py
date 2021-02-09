@@ -14,18 +14,21 @@
 
 from .config_value import ConfigValue
 from model_analyzer.constants import \
-     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
+    MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
 
 
 class ConfigPrimitive(ConfigValue):
     """
     A wrapper class for the primitive datatypes.
     """
+
     def __init__(
         self,
         type_,
         preprocess=None,
         required=False,
+        validator=None,
+        output_mapper=None
     ):
         """
         Parameters
@@ -36,8 +39,18 @@ class ConfigPrimitive(ConfigValue):
             Function be called before setting new values.
         required : bool
             Whether a given config is required or not.
+        validator : callable or None
+            A validator for the value of the field.
+        output_mapper: callable or None
+            This callable unifies the output value of this field.
         """
-        super().__init__(preprocess, required)
+
+        # default validator
+        if validator is None:
+            def validator(x):
+                return x is not None or x != ''
+
+        super().__init__(preprocess, required, validator, output_mapper)
 
         self._type = type_
         self._value = None
@@ -51,7 +64,7 @@ class ConfigPrimitive(ConfigValue):
         """
 
         if self._is_primitive(value):
-            self._value = self._type(value)
+            value = self._type(value)
+            return super().set_value(value)
         else:
             return MODEL_ANALYZER_FAILURE
-        return MODEL_ANALYZER_SUCCESS
