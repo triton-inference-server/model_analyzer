@@ -12,5 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Config constants
 MODEL_ANALYZER_SUCCESS = 1
 MODEL_ANALYZER_FAILURE = 0
+
+# Result Table constants
+SERVER_ONLY_TABLE_DEFAULT_VALUE = '0'
+RESULT_TABLE_COLUMN_PADDING = 2

@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
+from functools import total_ordering
 from .gpu_record import GPURecord
 
 
+@total_ordering
 class GPUUsedMemory(GPURecord):
     """
     The used memory in the GPU.
@@ -23,7 +24,7 @@ class GPUUsedMemory(GPURecord):
 
     tag = "gpu_used_memory"
 
-    def __init__(self, device, used_mem, timestamp):
+    def __init__(self, device, used_mem, timestamp=0):
         """
         Parameters
         ----------
@@ -57,3 +58,38 @@ class GPUUsedMemory(GPURecord):
         """
 
         return aggregation_tag + "GPU Memory Usage(MB)"
+
+    def __eq__(self, other):
+        """
+        Allows checking for
+        equality between two records
+        """
+
+        return self.value() == other.value()
+
+    def __lt__(self, other):
+        """
+        Allows checking if 
+        this record is less than 
+        the other
+        """
+
+        return self.value() < other.value()
+
+    def __add__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return GPUUsedMemory(device=None,
+                             used_mem=(self.value() + other.value()))
+
+    def __sub__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return GPUUsedMemory(device=None,
+                             used_mem=(self.value() - other.value()))

@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import sys
-from itertools import product
 from prometheus_client.parser import text_string_to_metric_families
 import requests
 import numba.cuda
@@ -29,8 +27,6 @@ from .model_analyzer_exceptions import TritonModelAnalyzerException
 from .triton.server.server_factory import TritonServerFactory
 from .triton.server.server_config import TritonServerConfig
 from .triton.client.client_factory import TritonClientFactory
-from .triton.model.model import Model
-from .record.metrics_mapper import MetricsMapper
 from .output.file_writer import FileWriter
 from .device.gpu_device_factory import GPUDeviceFactory
 from .config.config import AnalyzerConfig
@@ -209,72 +205,6 @@ def get_triton_handles(config):
     return client, server
 
 
-def create_run_configs(config):
-    """
-    Parameters
-    ----------
-    config : namespace
-        The arguments passed into the CLI
-
-    Returns
-    -------
-    list of dicts
-        keys are parameters to perf_analyzer
-        values are individual combinations of argument values
-    """
-
-    model_names = [model.model_name() for model in config.model_names]
-    sweep_params = {
-        'model-name': model_names,
-        'batch-size': config.batch_sizes,
-        'concurrency-range': config.concurrency,
-        'protocol': [config.client_protocol],
-        'url': [
-            config.triton_http_endpoint if config.client_protocol == 'http'
-            else config.triton_grpc_endpoint
-        ],
-        'measurement-interval': [config.perf_measurement_window]
-    }
-    param_combinations = list(product(*tuple(sweep_params.values())))
-    run_params = [
-        dict(zip(sweep_params.keys(), vals)) for vals in param_combinations
-    ]
-
-    return run_params
-
-
-def write_results(config, analyzer):
-    """
-    Makes calls to the analyzer to write results out to streams or files. If
-    exporting results is requested, uses a FileWriter for specified output
-    files.
-
-    Parameters
-    ----------
-    config : namespace
-        The arguments passed into the CLI
-    analyzer : Analyzer
-        The instance being used to profile
-        server inferencing.
-    """
-
-    analyzer.write_results(writer=FileWriter(), column_separator=' ')
-    if config.export:
-        server_metrics_path = os.path.join(config.export_path,
-                                           config.filename_server_only)
-        analyzer.export_server_only_csv(
-            writer=FileWriter(filename=server_metrics_path),
-            column_separator=',')
-        metrics_inference_path = os.path.join(config.export_path,
-                                              config.filename_model_inference)
-        metrics_gpu_path = os.path.join(config.export_path,
-                                        config.filename_model_gpu)
-        analyzer.export_model_csv(
-            inference_writer=FileWriter(filename=metrics_inference_path),
-            gpu_metrics_writer=FileWriter(filename=metrics_gpu_path),
-            column_separator=',')
-
-
 def write_server_logs(config, server):
     """
     Checks if server logs have been
@@ -293,42 +223,6 @@ def write_server_logs(config, server):
     if config.triton_output_path:
         server_log_writer = FileWriter(filename=config.triton_output_path)
         server_log_writer.write(server.logs())
-
-
-def run_analyzer(config, analyzer, client, run_configs):
-    """
-    Makes a single call to profile the server only Then for each run
-    configurations, it profiles model inference.
-
-    Parameters
-    ----------
-    config : namespace
-        The arguments passed into the CLI
-    analyzer : Analyzer
-        The instance being used to profile server inferencing.
-    client : TritonClient
-        Instance used to load/unload models
-    run_configs : list of dicts
-        Output of create_run_configs
-
-    Raises
-    ------
-    TritonModelAnalyzerException
-    """
-
-    analyzer.profile_server_only()
-    for run_config in run_configs:
-        model = Model(name=run_config['model-name'])
-        client.load_model(model=model)
-        client.wait_for_model_ready(model=model,
-                                    num_retries=config.max_retries)
-        try:
-            perf_output_writer = None if config.no_perf_output else FileWriter(
-            )
-            analyzer.profile_model(run_config=run_config,
-                                   perf_output_writer=perf_output_writer)
-        finally:
-            client.unload_model(model=model)
 
 
 def interrupt_handler(signal, frame):
@@ -364,8 +258,6 @@ def main():
         "cpu_available_ram"
     ]
 
-    monitoring_metrics = MetricsMapper.get_monitoring_metrics(metric_tags)
-
     signal.signal(signal.SIGINT, interrupt_handler)
 
     try:
@@ -378,6 +270,7 @@ def main():
 
     logging.info(
         f'Triton Model Analyzer started: config={config.get_all_config()}')
+
     server = None
     try:
         client, server = get_triton_handles(config)
@@ -386,15 +279,14 @@ def main():
         if exiting:
             return
 
-        analyzer = Analyzer(config, monitoring_metrics, server)
+        analyzer = Analyzer(config, client, metric_tags, server)
         check_triton_and_model_analyzer_gpus(config)
-        run_configs = create_run_configs(config)
         if exiting:
             return
 
         logging.info('Starting perf_analyzer...')
-        run_analyzer(config, analyzer, client, run_configs)
-        write_results(config, analyzer)
+        analyzer.run()
+        analyzer.write_and_export_results()
     except TritonModelAnalyzerException as e:
         logging.exception(f'Model Analyzer encountered an error: {e}')
     finally:

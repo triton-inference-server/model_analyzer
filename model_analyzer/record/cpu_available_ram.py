@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
+from functools import total_ordering
 
 from .record import Record
 
 
+@total_ordering
 class CPUAvailableRAM(Record):
     """
     The Available CPU memory
@@ -55,3 +56,36 @@ class CPUAvailableRAM(Record):
         """
 
         return aggregation_tag + "RAM Available(MB)"
+
+    def __eq__(self, other):
+        """
+        Allows checking for
+        equality between two records
+        """
+
+        return self.value() == other.value()
+
+    def __lt__(self, other):
+        """
+        Allows checking if 
+        this record is less than 
+        the other
+        """
+
+        return self.value() < other.value()
+
+    def __add__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return CPUAvailableRAM(free_mem=(self.value() + other.value()))
+
+    def __sub__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return CPUAvailableRAM(free_mem=(self.value() - other.value()))

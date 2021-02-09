@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from itertools import product
 from subprocess import check_output, CalledProcessError, STDOUT
 import logging
 
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 from model_analyzer.record.perf_latency import PerfLatency
 from model_analyzer.record.perf_throughput import PerfThroughput
 
@@ -49,6 +49,7 @@ class PerfAnalyzer:
         self.bin_path = path
         self._config = config
         self._output = None
+        self._perf_records = None
 
     def run(self, metrics):
         """
@@ -83,21 +84,24 @@ class PerfAnalyzer:
                                                 start_new_session=True,
                                                 stderr=STDOUT,
                                                 encoding='utf-8')
-                    return [metric(self._output) for metric in metrics]
+                    self._parse_output()
+                    return
                 except CalledProcessError as e:
                     if e.output.find("Please use a larger time window.") > 0:
                         self._config['measurement-interval'] += INTERVAL_DELTA
                         logger.info(
-                            f"perf_analyzer's measurement window is too small, increased to {self._config['measurement-interval']} ms."
+                            "perf_analyzer's measurement window is too small, "
+                            f"increased to {self._config['measurement-interval']} ms."
                         )
                     else:
                         raise TritonModelAnalyzerException(
-                            f"Running perf_analyzer with {e.cmd} failed with exit status {e.returncode} : {e.output}"
-                        )
+                            f"Running perf_analyzer with {e.cmd} failed with"
+                            f" exit status {e.returncode} : {e.output}")
 
             raise TritonModelAnalyzerException(
-                f"Ran perf_analyzer {MAX_INTERVAL_CHANGES} times, but no valid requests recorded in max time interval of {self._config['measurement-interval']} "
-            )
+                f"Ran perf_analyzer {MAX_INTERVAL_CHANGES} times, "
+                "but no valid requests recorded in max time interval"
+                f" of {self._config['measurement-interval']} ")
 
     def output(self):
         """
@@ -112,3 +116,42 @@ class PerfAnalyzer:
         raise TritonModelAnalyzerException(
             "Attempted to get perf_analyzer output"
             "without calling run first.")
+
+    def get_records(self):
+        """
+        Returns
+        -------
+        The stdout output of the
+        last perf_analyzer run
+        """
+
+        if self._perf_records:
+            return self._perf_records
+        raise TritonModelAnalyzerException(
+            "Attempted to get perf_analyzer resultss"
+            "without calling run first.")
+
+    def _parse_output(self):
+        """
+        Extract metrics from the output of
+        the perf_analyzer
+        """
+
+        self._perf_records = []
+        perf_out_lines = self._output.split('\n')
+        for line in perf_out_lines[:-3]:
+            # Get first word after Throughput
+            if 'Throughput:' in line:
+                throughput = float(line.split()[1])
+                self._perf_records.append(
+                    PerfThroughput(throughput=throughput))
+
+            # Get first word and first word after 'latency:'
+            elif 'latency:' in line:
+                latency_tags = line.split(' latency: ')
+                latency = float(latency_tags[1].split()[0])
+                self._perf_records.append(PerfLatency(latency=latency))
+
+        if not self._perf_records:
+            raise TritonModelAnalyzerException(
+                'perf_analyzer output was not as expected.')

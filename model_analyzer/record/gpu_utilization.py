@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
+from functools import total_ordering
 from model_analyzer.record.gpu_record import GPURecord
 
 
+@total_ordering
 class GPUUtilization(GPURecord):
     """
     GPU utilization record
@@ -23,7 +24,7 @@ class GPUUtilization(GPURecord):
 
     tag = "gpu_utilization"
 
-    def __init__(self, device, gpu_utilization, timestamp):
+    def __init__(self, device, gpu_utilization, timestamp=0):
         """
         Parameters
         ----------
@@ -57,3 +58,38 @@ class GPUUtilization(GPURecord):
         """
 
         return aggregation_tag + "GPU Utilization(%)"
+
+    def __eq__(self, other):
+        """
+        Allows checking for
+        equality between two records
+        """
+
+        return self.value() == other.value()
+
+    def __lt__(self, other):
+        """
+        Allows checking if
+        this record is less than
+        the other
+        """
+
+        return self.value() < other.value()
+
+    def __add__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return GPUUtilization(device=None,
+                              gpu_utilization=(self.value() + other.value()))
+
+    def __sub__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return GPUUtilization(device=None,
+                              gpu_utilization=(self.value() - other.value()))

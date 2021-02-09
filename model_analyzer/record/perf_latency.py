@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
-
+from functools import total_ordering
 from .record import Record
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
+@total_ordering
 class PerfLatency(Record):
     """
     A record for perf_analyzer
@@ -26,22 +25,15 @@ class PerfLatency(Record):
 
     tag = "perf_latency"
 
-    def __init__(self, perf_output, timestamp=0):
+    def __init__(self, latency, timestamp=0):
         """
         Parameters
         ----------
-        perf_output : str
-            The stdout from the perf_analyzer
+        latency : float
+            the latency extracted from the perf analyzer output
         timestamp : float
             Elapsed time from start of program
         """
-
-        perf_out_lines = perf_output.split('\n')
-        for line in perf_out_lines[:-3]:
-            # Get first word and first word after 'latency:'
-            if 'latency:' in line:
-                latency_tags = line.split(' latency: ')
-                latency = float(latency_tags[1].split()[0])
 
         super().__init__(latency, timestamp)
 
@@ -64,3 +56,36 @@ class PerfLatency(Record):
         """
 
         return "Average Latency(us)"
+
+    def __eq__(self, other):
+        """
+        Allows checking for
+        equality between two records
+        """
+
+        return self.value() == other.value()
+
+    def __lt__(self, other):
+        """
+        Allows checking if 
+        this record is less than 
+        the other
+        """
+
+        return self.value() > other.value()
+
+    def __add__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return PerfLatency(latency=(self.value() + other.value()))
+
+    def __sub__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return PerfLatency(latency=(self.value() - other.value()))

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod
 import importlib
 
 
@@ -72,6 +72,7 @@ class Record(metaclass=RecordType):
         timestamp : int
             The timestamp for the record in nanoseconds
         """
+
         assert type(value) is float or type(value) is int
         assert type(timestamp) is int
 
@@ -136,3 +137,42 @@ class Record(metaclass=RecordType):
         """
 
         return self._timestamp
+
+    def __mul__(self, other):
+        """
+        Defines left multiplication for records
+        with floats or ints
+
+        Returns
+        -------
+        Record
+        """
+
+        if isinstance(other, int) or isinstance(other, float):
+            self._value = self._value * other
+            return self
+        else:
+            raise TypeError
+
+    def __rmul__(self, other):
+        """
+        Defines right multiplication
+        """
+
+        return self.__mul__(other)
+
+    def __truediv__(self, other):
+        """
+        Defines left multiplication for records
+        with floats or ints
+
+        Returns
+        -------
+        Record
+        """
+
+        if isinstance(other, int) or isinstance(other, float):
+            self._value = self._value / other
+            return self
+        else:
+            raise TypeError
