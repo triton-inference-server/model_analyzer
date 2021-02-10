@@ -70,13 +70,15 @@ class Analyzer:
         self._metrics_manager.profile_server(
             default_value=SERVER_ONLY_TABLE_DEFAULT_VALUE)
 
-        for model_name in self._config.model_names:
-            self._client.load_model(model_name=model_name)
+        for model in self._config.model_names:
+            self._client.load_model(model_name=model.model_name())
             self._client.wait_for_model_ready(
-                model_name=model_name, num_retries=self._config.max_retries)
+                model_name=model.model_name(),
+                num_retries=self._config.max_retries)
             try:
                 for run_config in FullRunConfigGenerator(
-                        analyzer_config=self._config, model_name=model_name):
+                        analyzer_config=self._config,
+                        model_name=model.model_name()):
 
                     # Initialize the result
                     self._result_manager.init_result(run_config)
@@ -95,7 +97,7 @@ class Analyzer:
                     # Submit the result to be sorted
                     self._result_manager.complete_result()
             finally:
-                self._client.unload_model(model_name=model_name)
+                self._client.unload_model(model_name=model.model_name())
 
             # Write results to tables
             self._result_manager.compile_results()
