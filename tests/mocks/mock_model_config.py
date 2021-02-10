@@ -13,13 +13,12 @@
 # limitations under the License.
 
 from .mock_base import MockBase
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open, MagicMock
 
 
-class MockConfig(MockBase):
-    def __init__(self, args, yaml_file_content):
-        self.args = args
-        self.yaml_file_content = yaml_file_content
+class MockModelConfig(MockBase):
+    def __init__(self, model_file_content):
+        self._model_file_content = model_file_content
         super().__init__()
 
     def _fill_patchers(self):
@@ -27,9 +26,18 @@ class MockConfig(MockBase):
 
         patchers.append(
             patch(
-                "builtins.open",
+                'builtins.open',
                 mock_open(
-                    read_data=self.yaml_file_content)))
+                    read_data=self._model_file_content)))
         patchers.append(
-            patch("model_analyzer.cli.cli.sys.argv", self.args)
+            patch(
+                'model_analyzer.triton.model.model_config.os.path.exists',
+                MagicMock(return_value=True)
+            )
+        )
+        patchers.append(
+            patch(
+                'model_analyzer.triton.model.model_config.os.path.isfile',
+                MagicMock(return_value=False)
+            )
         )

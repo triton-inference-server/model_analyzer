@@ -441,7 +441,7 @@ model_names:
 
         with self.assertRaises(TritonModelAnalyzerException):
             cli.parse()
-            mock_config.stop()
+        mock_config.stop()
 
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
@@ -464,7 +464,7 @@ model_names:
 
         with self.assertRaises(TritonModelAnalyzerException):
             cli.parse()
-            mock_config.stop()
+        mock_config.stop()
 
         yaml_content = """
 model_names:
@@ -480,7 +480,7 @@ model_names:
 
         with self.assertRaises(TritonModelAnalyzerException):
             cli.parse()
-            mock_config.stop()
+        mock_config.stop()
 
     def test_config_model(self):
         args = [
