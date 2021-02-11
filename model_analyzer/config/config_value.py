@@ -17,6 +17,8 @@ from abc import abstractmethod
 
 from model_analyzer.constants import \
     MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 
 class ConfigValue(abc.ABC):
@@ -92,7 +94,8 @@ class ConfigValue(abc.ABC):
                 if hasattr(value_, 'value'):
                     final_return_result[key] = value_.value()
                 else:
-                    final_return_result[key] = value_.value()
+                    raise TritonModelAnalyzerException(
+                        'ConfigObject should always have a "value" attribute for each key.')
             return_result = final_return_result
         elif type(return_result) is list:
             return_results = []

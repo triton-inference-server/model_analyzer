@@ -60,7 +60,6 @@ class ModelConfig:
         with open(os.path.join(model_path, "config.pbtxt"), 'r+') as f:
             config_str = f.read()
 
-        print(config_str)
         protobuf_message = text_format.Parse(
             config_str, model_config_pb2.ModelConfig())
 
