@@ -46,7 +46,7 @@ class ConfigListString(ConfigValue):
                 return type(x) is list and len(x) > 0
 
         super().__init__(preprocess, required, validator, output_mapper)
-        self._type = str
+        self._type = self._cli_type = str
         self._value = []
 
     def set_value(self, value):

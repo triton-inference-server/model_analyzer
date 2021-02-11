@@ -13,29 +13,26 @@
 # limitations under the License.
 
 from .config_value import ConfigValue
-from model_analyzer.constants import \
-    MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
-
-from copy import deepcopy
+from model_analyzer.constants import MODEL_ANALYZER_FAILURE
 
 
-class ConfigListGeneric(ConfigValue):
+class ConfigEnum(ConfigValue):
     """
-    A generic list.
+    Enum type support for config.
     """
 
     def __init__(self,
-                 type_,
+                 choices,
                  preprocess=None,
                  required=False,
                  validator=None,
                  output_mapper=None):
         """
-        Create a new list of numeric values.
+        Create a new enum config field.
 
         Parameters
         ----------
-        type_ : ConfigValue
+        types : A list of allowed types
             The type of elements in the list
         preprocess : callable
             Function be called before setting new values.
@@ -47,41 +44,26 @@ class ConfigListGeneric(ConfigValue):
             This callable unifies the output value of this field.
         """
 
-        # default validator
-        if validator is None:
-
-            def validator(x):
-                return type(x) is list and len(x) > 0
-
+        self._choices = choices
+        self._type = self
         super().__init__(preprocess, required, validator, output_mapper)
 
-        self._type = type_
-        self._cli_type = str
-        self._value = []
-        self._output_mapper = output_mapper
-
     def set_value(self, value):
-        """
-        Set the value for this field.
+        choices = self._choices
 
-        Parameters
-        ----------
-        value : object
-            The value for this field.
-        """
-
-        type_ = self._type
-
-        new_value = []
-        if type(value) is list:
-            for item in value:
-                list_item = deepcopy(type_)
-                status = list_item.set_value(item)
-                if status == MODEL_ANALYZER_SUCCESS:
-                    new_value.append(list_item)
-                else:
-                    return MODEL_ANALYZER_FAILURE
-        else:
+        if value not in choices:
             return MODEL_ANALYZER_FAILURE
 
-        return super().set_value(new_value)
+        return super().set_value(value)
+
+    def cli_type(self):
+        """
+        Get the type of this field for CLI.
+
+        Returns
+        -------
+        type
+            str
+        """
+
+        return str
