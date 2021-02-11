@@ -27,17 +27,17 @@ class PerfThroughput(Record):
 
     tag = "perf_throughput"
 
-    def __init__(self, throughput, timestamp=0):
+    def __init__(self, value, timestamp=0):
         """
         Parameters
         ----------
-        throughput : float
+        value : float
             The throughput from the perf analyzer output
         timestamp : float
             Elapsed time from start of program
         """
 
-        super().__init__(throughput, timestamp)
+        super().__init__(value, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -82,7 +82,7 @@ class PerfThroughput(Record):
         to produce a brand new record.
         """
 
-        return PerfThroughput(throughput=(self.value() + other.value()))
+        return PerfThroughput(value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
@@ -90,4 +90,4 @@ class PerfThroughput(Record):
         to produce a brand new record.
         """
 
-        return PerfThroughput(throughput=(self.value() - other.value()))
+        return PerfThroughput(value=(self.value() - other.value()))

@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -143,14 +143,13 @@ class PerfAnalyzer:
             # Get first word after Throughput
             if 'Throughput:' in line:
                 throughput = float(line.split()[1])
-                self._perf_records.append(
-                    PerfThroughput(throughput=throughput))
+                self._perf_records.append(PerfThroughput(value=throughput))
 
             # Get first word and first word after 'latency:'
             elif 'latency:' in line:
                 latency_tags = line.split(' latency: ')
                 latency = float(latency_tags[1].split()[0])
-                self._perf_records.append(PerfLatency(latency=latency))
+                self._perf_records.append(PerfLatency(value=latency))
 
         if not self._perf_records:
             raise TritonModelAnalyzerException(

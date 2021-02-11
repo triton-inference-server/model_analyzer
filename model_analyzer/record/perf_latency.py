@@ -25,17 +25,17 @@ class PerfLatency(Record):
 
     tag = "perf_latency"
 
-    def __init__(self, latency, timestamp=0):
+    def __init__(self, value, timestamp=0):
         """
         Parameters
         ----------
-        latency : float
+        value : float
             the latency extracted from the perf analyzer output
         timestamp : float
             Elapsed time from start of program
         """
 
-        super().__init__(latency, timestamp)
+        super().__init__(value, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -80,7 +80,7 @@ class PerfLatency(Record):
         to produce a brand new record.
         """
 
-        return PerfLatency(latency=(self.value() + other.value()))
+        return PerfLatency(value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
@@ -88,4 +88,4 @@ class PerfLatency(Record):
         to produce a brand new record.
         """
 
-        return PerfLatency(latency=(self.value() - other.value()))
+        return PerfLatency(value=(self.value() - other.value()))

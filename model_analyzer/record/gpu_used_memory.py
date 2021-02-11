@@ -24,20 +24,20 @@ class GPUUsedMemory(GPURecord):
 
     tag = "gpu_used_memory"
 
-    def __init__(self, device, used_mem, timestamp=0):
+    def __init__(self, value, device=None, timestamp=0):
         """
         Parameters
         ----------
+        value : float
+            GPU used memory
         device : GPUDevice
             The GPU device this metric is associated
             with.
-        used_mem : float
-            GPU used memory
         timestamp : int
             The timestamp for the record in nanoseconds
         """
 
-        super().__init__(device, used_mem, timestamp)
+        super().__init__(value, device, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -82,8 +82,7 @@ class GPUUsedMemory(GPURecord):
         to produce a brand new record.
         """
 
-        return GPUUsedMemory(device=None,
-                             used_mem=(self.value() + other.value()))
+        return GPUUsedMemory(device=None, value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
@@ -91,5 +90,4 @@ class GPUUsedMemory(GPURecord):
         to produce a brand new record.
         """
 
-        return GPUUsedMemory(device=None,
-                             used_mem=(self.value() - other.value()))
+        return GPUUsedMemory(device=None, value=(self.value() - other.value()))

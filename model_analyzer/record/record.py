@@ -149,8 +149,7 @@ class Record(metaclass=RecordType):
         """
 
         if isinstance(other, int) or isinstance(other, float):
-            self._value = self._value * other
-            return self
+            return type(self)(value=(self.value() * other))
         else:
             raise TypeError
 
@@ -172,7 +171,6 @@ class Record(metaclass=RecordType):
         """
 
         if isinstance(other, int) or isinstance(other, float):
-            self._value = self._value / other
-            return self
+            return type(self)(value=(self.value() / other))
         else:
             raise TypeError

@@ -25,17 +25,17 @@ class CPUUsedRAM(Record):
 
     tag = "cpu_used_ram"
 
-    def __init__(self, used_mem, timestamp=0):
+    def __init__(self, value, timestamp=0):
         """
         Parameters
         ----------
-        free_mem : float
+        value : float
             CPU used memory
         timestamp : int
             The timestamp for the record in nanoseconds
         """
 
-        super().__init__(used_mem, timestamp)
+        super().__init__(value, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -80,7 +80,7 @@ class CPUUsedRAM(Record):
         to produce a brand new record.
         """
 
-        return CPUUsedRAM(used_mem=(self.value() + other.value()))
+        return CPUUsedRAM(value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
@@ -88,4 +88,4 @@ class CPUUsedRAM(Record):
         to produce a brand new record.
         """
 
-        return CPUUsedRAM(used_mem=(self.value() - other.value()))
+        return CPUUsedRAM(value=(self.value() - other.value()))

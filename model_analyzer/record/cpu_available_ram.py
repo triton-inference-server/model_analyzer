@@ -25,17 +25,17 @@ class CPUAvailableRAM(Record):
 
     tag = "cpu_available_ram"
 
-    def __init__(self, free_mem, timestamp=0):
+    def __init__(self, value, timestamp=0):
         """
         Parameters
         ----------
-        free_mem : float
+        value : float
             CPU free memory
         timestamp : int
             The timestamp for the record in nanoseconds
         """
 
-        super().__init__(free_mem, timestamp)
+        super().__init__(value, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):

@@ -24,21 +24,21 @@ class GPUFreeMemory(GPURecord):
 
     tag = "gpu_free_memory"
 
-    def __init__(self, device, free_mem, timestamp=0):
+    def __init__(self, value, device=None, timestamp=0):
         """
         Parameters
         ----------
+        value : float
+            The free memory in the GPU obtained from
+            DCGM
         device : GPUDevice
             The  GPU device this metric is associated
             with.
-        free_mem : float
-            The free memory in the GPU obtained from
-            nvml
         timestamp : int
             The timestamp for the record in nanoseconds
         """
 
-        super().__init__(device, free_mem, timestamp)
+        super().__init__(value, device, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -83,8 +83,7 @@ class GPUFreeMemory(GPURecord):
         to produce a brand new record.
         """
 
-        return GPUFreeMemory(device=None,
-                             used_mem=(self.value() + other.value()))
+        return GPUFreeMemory(device=None, value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
@@ -92,5 +91,4 @@ class GPUFreeMemory(GPURecord):
         to produce a brand new record.
         """
 
-        return GPUFreeMemory(device=None,
-                             used_mem=(self.value() - other.value()))
+        return GPUFreeMemory(device=None, value=(self.value() - other.value()))

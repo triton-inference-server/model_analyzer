@@ -20,8 +20,9 @@ from model_analyzer.model_analyzer_exceptions \
 
 class ResultComparator:
     """
-    A function object that configurably
-    computes a float score for each RunResult.
+    Stores information needed
+    to compare results and 
+    measurements.
     """
 
     def __init__(self,
