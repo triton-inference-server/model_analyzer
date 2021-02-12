@@ -53,34 +53,22 @@ class MetricsManager:
         self._perf_analyzer_path = config.perf_analyzer_path
         self._result_manager = result_manager
 
-        # Separates metrics and objectives into related lists
-
         self._dcgm_metrics = []
         self._perf_metrics = []
         self._cpu_metrics = []
 
-        monitoring_metrics = MetricsMapper.get_metric_types(tags=metric_tags)
-        priorities = MetricsMapper.get_metric_types(tags=config.objectives)
+        self._create_metric_tables(metrics=MetricsMapper.get_metric_types(
+            tags=metric_tags))
 
-        # Set up constraints
-        constraint_tags = list(config.constraints.keys())
-        constraint_metrics = MetricsMapper.get_metric_types(
-            tags=constraint_tags)
-        constraints = {
-            constraint_metrics[i]: config.constraints[constraint_tags[i]]
-            for i in range(len(constraint_tags))
-        }
-
-        self._categorize_metrics(metrics=monitoring_metrics)
-        self._configure_result_manager(constraints=constraints,
-                                       priorities=priorities)
-
-    def _categorize_metrics(self, metrics):
+    def _create_metric_tables(self, metrics):
         """
-        Splits up monitoring metrics into various 
-        categories, defined in ___init___
+        Splits up monitoring metrics into various
+        categories, defined in ___init___ and
+        requests result manager to make
+        corresponding table
         """
 
+        # Separates metrics and objectives into related lists
         for metric in metrics:
             if metric in DCGMMonitor.model_analyzer_to_dcgm_field:
                 self._dcgm_metrics.append(metric)
@@ -89,21 +77,41 @@ class MetricsManager:
             elif metric in CPUMonitor.cpu_metrics:
                 self._cpu_metrics.append(metric)
 
-    def _configure_result_manager(self, constraints, priorities):
+        self._result_manager.create_tables(
+            gpu_specific_metrics=self._dcgm_metrics,
+            non_gpu_specific_metrics=self._perf_metrics + self._cpu_metrics,
+            aggregation_tag='Max')
+
+    def configure_result_manager(self, config_model):
         """
-        Requests the result manager to create tables using
-        metric categories and sets the result comparator
+        Processes the constraints and priorities
+        for given ConfigModel and creates a result
+        comparator to pass to the result manager
+
+        Parameters
+        ----------
+        config_model : ConfigModel
+            The config model object for the model that is currently being
+            run
         """
+
+        # Construct list of record types for priorities and dict for constraints
+
+        priorities = MetricsMapper.get_metric_types(
+            tags=config_model.objectives())
+        constraint_tags = list(config_model.constraints().keys())
+        constraint_metrics = MetricsMapper.get_metric_types(
+            tags=constraint_tags)
+        constraints = {
+            constraint_metrics[i]:
+            config_model.constraints()[constraint_tags[i]]
+            for i in range(len(constraint_tags))
+        }
 
         self._result_comparator = ResultComparator(
             gpu_metric_types=self._dcgm_metrics,
             non_gpu_metric_types=self._perf_metrics + self._cpu_metrics,
             metric_priorities=priorities)
-
-        self._result_manager.create_tables(
-            gpu_specific_metrics=self._dcgm_metrics,
-            non_gpu_specific_metrics=self._perf_metrics + self._cpu_metrics,
-            aggregation_tag='Max')
 
         self._result_manager.set_constraints_and_comparator(
             constraints=constraints, comparator=self._result_comparator)

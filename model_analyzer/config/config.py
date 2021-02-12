@@ -470,6 +470,74 @@ class AnalyzerConfig:
                             "[%(filename)s:%(lineno)d] %(message)s",
                             datefmt="%Y-%m-%d %H:%M:%S")
 
+    def _autofill_values(self):
+        """
+        Fill in the implied or default
+        config values.
+        """
+
+        new_model_names = {}
+        for model in self.model_names:
+            new_model_names[model.model_name()] = {}
+            if not model.objectives():
+                if 'objectives' not in self._fields:
+                    raise TritonModelAnalyzerException(
+                        "Must specify top-level 'objectives' section in config."
+                        f"Objectives not specified under model : {model.model_name()}"
+                    )
+                new_model_names[
+                    model.model_name()]['objectives'] = self.objectives
+            if not model.constraints():
+                if 'constraints' not in self._fields:
+                    raise TritonModelAnalyzerException(
+                        "Must specify top-level 'constraints' section in config."
+                        f"Constraints not specified under model : {model.model_name()}"
+                    )
+                new_model_names[
+                    model.model_name()]['constraints'] = self.constraints
+            if not model.parameters():
+                if 'batch_sizes' not in self._fields or 'concurrency' not in self._fields:
+                    raise TritonModelAnalyzerException(
+                        "Must specify parameters in top-level 'batch_sizes' "
+                        "and 'concurrency' sections in config."
+                        f"Parameters not specified under model : {model.model_name()}"
+                    )
+                global_parameters = {
+                    'batch_sizes': self.batch_sizes,
+                    'concurrency': self.concurrency
+                }
+                new_model_names[
+                    model.model_name()]['parameters'] = global_parameters
+            elif 'batch_sizes' not in model.parameters():
+                if 'batch_sizes' not in self._fields:
+                    raise TritonModelAnalyzerException(
+                        "Must specify top-level 'batch_sizes' section in config."
+                        f"Batch sizes not specified under parameters section for model : {model.model_name()}"
+                    )
+                global_parameters = {
+                    'batch_sizes': self.batch_sizes,
+                    'concurrency': model.parameters()['concurrency']
+                }
+                new_model_names[
+                    model.model_name()]['parameters'] = global_parameters
+            elif 'concurrency' not in model.parameters():
+                if 'concurrency' not in self._fields:
+                    raise TritonModelAnalyzerException(
+                        "Must specify top-level 'concurrency' section in config."
+                        f"Concurrency values not specified under parameters section for model : {model.model_name()}"
+                    )
+                global_parameters = {
+                    'batch_sizes': model.parameters()['batch_sizes'],
+                    'concurrency': self.concurrency
+                }
+                new_model_names[
+                    model.model_name()]['parameters'] = global_parameters
+            if not model.model_config_parameters(
+            ) and 'model_config_parameters' in self._fields:
+                new_model_names[model.model_name(
+                )]['parameters'] = self.model_config_parameters
+        self._fields['model_names'].set_value(new_model_names)
+
     def set_config_values(self, args):
         """
         Set the config values. This function sets all the values for the
@@ -508,6 +576,7 @@ class AnalyzerConfig:
                 )
         self._setup_logger()
         self._preprocess_and_verify_arguments()
+        self._autofill_values()
 
     def get_config(self):
         """

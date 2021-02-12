@@ -104,7 +104,7 @@ class ConfigModel:
 
         Parameters
         ----------
-        dict
+        value : dict
             A dictionary where the keys are model names
             and the values are ConfigObjects.
 
