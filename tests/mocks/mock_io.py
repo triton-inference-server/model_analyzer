@@ -56,7 +56,7 @@ class MockIOMethods:
         with given arguments 
         """
 
-        self.open_mock.assert_called_with(out)
+        self.open_mock.assert_called_with(filename)
 
     def assert_write_called_with_args(self, out):
         """

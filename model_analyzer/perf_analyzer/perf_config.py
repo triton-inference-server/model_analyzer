@@ -21,7 +21,15 @@ class PerfAnalyzerConfig:
     An argument set to None will use the perf_analyzer's default.
     """
 
-    def __init__(self):
+    def __init__(self, params=None):
+        """
+        Parameters
+        ----------
+        params : dict
+            allows initialization of 
+            a PerfAnalyzerConfig via 
+            a dictionary
+        """
         self._args = {
             'async': None,
             'sync': None,
@@ -69,6 +77,11 @@ class PerfAnalyzerConfig:
         }
 
         self._input_to_verbose = {'verbose': '-v', 'extra-verbose': '-v -v'}
+
+        # Initialize from config if given
+        if params:
+            for key in params:
+                self[key] = params[key]
 
     def to_cli_string(self):
         """

@@ -58,7 +58,7 @@ class TritonClient:
             "Could not determine server readiness. "
             "Number of retries exceeded.")
 
-    def load_model(self, model):
+    def load_model(self, model_name):
         """
         Request the inference server to load
         a particular model in explicit model
@@ -66,8 +66,8 @@ class TritonClient:
 
         Parameters
         ----------
-        model : Model
-            model to load from repository
+        model_name : str
+            name of the model to load from repository
 
         Raises
         ------
@@ -76,13 +76,13 @@ class TritonClient:
         """
 
         try:
-            self._client.load_model(model.name())
+            self._client.load_model(model_name)
         except Exception as e:
             raise TritonModelAnalyzerException(
                 f"Unable to load the model : {e}")
-        logger.info(f'Model {model.name()} loaded.')
+        logger.info(f'Model {model_name} loaded.')
 
-    def unload_model(self, model):
+    def unload_model(self, model_name):
         """
         Request the inference server to unload
         a particular model in explicit model
@@ -90,8 +90,8 @@ class TritonClient:
 
         Parameters
         ----------
-        model : Model
-            model to unload from repository
+        model_name : str
+            name of the model to load from repository
 
         Raises
         ------
@@ -100,19 +100,19 @@ class TritonClient:
         """
 
         try:
-            self._client.unload_model(model.name())
+            self._client.unload_model(model_name)
         except Exception as e:
             raise TritonModelAnalyzerException(
                 f"Unable to unload the model : {e}")
-        logger.info(f'Model {model.name()} unloaded.')
+        logger.info(f'Model {model_name} unloaded.')
 
-    def wait_for_model_ready(self, model, num_retries):
+    def wait_for_model_ready(self, model_name, num_retries):
         """
         Returns when model is ready.
 
         Parameters
         ----------
-        model : str
+        model_name : str
             name of the model to load from repository
         num_retries : int
             number of times to send a ready status
@@ -129,7 +129,7 @@ class TritonClient:
         retries = num_retries
         while retries > 0:
             try:
-                if self._client.is_model_ready(model.name()):
+                if self._client.is_model_ready(model_name):
                     return
                 else:
                     time.sleep(0.05)

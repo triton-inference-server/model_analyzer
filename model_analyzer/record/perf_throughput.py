@@ -13,11 +13,12 @@
 # limitations under the License.
 
 import time
+from functools import total_ordering
 
 from .record import Record
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
+@total_ordering
 class PerfThroughput(Record):
     """
     A record for perf_analyzer
@@ -26,27 +27,17 @@ class PerfThroughput(Record):
 
     tag = "perf_throughput"
 
-    def __init__(self, perf_output, timestamp=0):
+    def __init__(self, value, timestamp=0):
         """
         Parameters
         ----------
-        perf_output : str
-            The stdout from the perf_analyzer
+        value : float
+            The throughput from the perf analyzer output
         timestamp : float
             Elapsed time from start of program
         """
 
-        perf_out_lines = perf_output.split('\n')
-        for line in perf_out_lines[:-3]:
-            # Get first word after Throughput
-            if 'Throughput:' in line:
-                throughput = float(line.split()[1])
-                break
-        else:
-            raise TritonModelAnalyzerException(
-                'perf_analyzer output was not as expected.')
-
-        super().__init__(throughput, timestamp)
+        super().__init__(value, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -67,3 +58,36 @@ class PerfThroughput(Record):
         """
 
         return "Throughput(infer/sec)"
+
+    def __eq__(self, other):
+        """
+        Allows checking for
+        equality between two records
+        """
+
+        return self.value() == other.value()
+
+    def __lt__(self, other):
+        """
+        Allows checking if 
+        this record is less than 
+        the other
+        """
+
+        return self.value() < other.value()
+
+    def __add__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return PerfThroughput(value=(self.value() + other.value()))
+
+    def __sub__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return PerfThroughput(value=(self.value() - other.value()))

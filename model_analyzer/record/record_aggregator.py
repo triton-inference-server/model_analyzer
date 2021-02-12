@@ -12,15 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.record.record import Record
 from collections import defaultdict
 import itertools
+
+from model_analyzer.record.record import Record
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 
 class RecordAggregator:
     """
     Stores a collection of Record objects.
     """
+
     def __init__(self):
         self._records = defaultdict(list)
 
@@ -40,6 +44,20 @@ class RecordAggregator:
         else:
             raise TritonModelAnalyzerException(
                 "Can only add objects of type 'Record' to RecordAggregator")
+
+    def insert_all(self, record_list):
+        """
+        Insert records from a list of records
+        into the RecordAggregator
+
+        Parameters
+        ----------
+        record_list : List of Records
+            The records to insert
+        """
+
+        for record in record_list:
+            self.insert(record)
 
     def add_key(self, record_type, records):
         """
@@ -140,8 +158,10 @@ class RecordAggregator:
         """
 
         field_values = {
-            record_type: set([groupby_criterion(record)
-                              for record in self._records[record_type]])
+            record_type: set([
+                groupby_criterion(record)
+                for record in self._records[record_type]
+            ])
             for record_type in record_types
         }
         groupby_result = defaultdict(list)
@@ -150,10 +170,9 @@ class RecordAggregator:
             for field_value in field_values[record_type]:
                 aggregated_result = self.filter_records(
                     record_types=[record_type],
-                    filters=[
-                        lambda r: groupby_criterion(r) == field_value
-                    ]).aggregate(record_types=[record_type],
-                                 reduce_func=reduce_func)
+                    filters=[lambda r: groupby_criterion(r) == field_value
+                             ]).aggregate(record_types=[record_type],
+                                          reduce_func=reduce_func)
                 groupby_result[record_type][field_value] = \
                     aggregated_result[record_type]
         return groupby_result
@@ -214,14 +233,12 @@ class RecordAggregator:
             and values are the aggregated values
         """
 
-        aggregated_records = {}
         if not record_types:
             record_types = self.record_types()
-        for record_type in record_types:
-            values = []
-            for record in self._records[record_type]:
-                values.append(record.value())
-            aggregated_records[record_type] = reduce_func(values)
+        aggregated_records = {
+            record_type: reduce_func(self._records[record_type])
+            for record_type in record_types
+        }
         return aggregated_records
 
     def get_records(self):

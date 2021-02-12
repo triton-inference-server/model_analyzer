@@ -23,15 +23,15 @@ class GPURecord(Record):
     GPU based record
     """
 
-    def __init__(self, device, value, timestamp):
+    def __init__(self, value, device=None, timestamp=0):
         """
         Parameters
         ----------
+        value : float
+            The value of the GPU metrtic
         device : GPUDevice
             The  GPU device this metric is associated
             with.
-        value : float
-            The value of the GPU metrtic
         timestamp : int
             The timestamp for the record in nanoseconds
         """

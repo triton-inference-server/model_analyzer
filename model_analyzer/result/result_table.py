@@ -12,17 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
-COLUMN_PADDING = 2
+from model_analyzer.constants import RESULT_TABLE_COLUMN_PADDING
 
 
-class OutputTable:
+class ResultTable:
     """
     A class that implements a generic table interface with headers rows
     """
 
-    column_padding = COLUMN_PADDING
+    column_padding = RESULT_TABLE_COLUMN_PADDING
 
     def __init__(self, headers, title=None):
         """
@@ -34,12 +35,12 @@ class OutputTable:
             Title of the table
         """
 
-        self._headers = headers[:]
+        self._headers = headers
         self._title = title
-        self._rows = []
         self._column_widths = [
             len(header) + self.column_padding for header in headers
         ]
+        self._rows = []
 
     def title(self):
         """
@@ -72,22 +73,36 @@ class OutputTable:
 
         return self._column_widths
 
-    def add_row(self, row, index=None):
+    def empty(self):
+        """
+        Returns
+        -------
+        True if this table has no data
+        False if it does
+        """
+
+        return len(self._rows) == 0
+
+    def insert_row_by_index(self, row, index=None):
         """
         Adds a row to the table. Handles wrapping.
 
         Parameters
         ----------
-        row : list of vals
-            The contents of the row to be added
-        index : int
-            The index at which to add a row
+        row : list
+            A row of data to add to the ResultTable
+
+        Raises
+        ------
+        TritonModelAnalyzerException
+            if there is a mismatch between the table headers
+            and the row to be inserted.
         """
 
         if len(row) != len(self._headers):
             raise TritonModelAnalyzerException(
-                "Must provide a value for each existing column when adding a new row."
-            )
+                "Must provide a value for each existing"
+                " column when adding a new row.")
         if index is None:
             index = len(self._rows)
         self._rows.insert(index, row[:])
@@ -96,36 +111,7 @@ class OutputTable:
             self._column_widths[i] = max(
                 len(str(row[i])) + self.column_padding, self._column_widths[i])
 
-    def add_column(self, column, index=None):
-        """
-        Adds a column to the table.
-
-        **Note : column[0] is assumed
-        to be the column header.
-
-        Parameters
-        ----------
-        column : list of vals
-            Content of the column to be added
-        index : int
-            The index at which to add a column
-        """
-
-        if len(column) != len(self._rows) + 1:
-            raise TritonModelAnalyzerException(
-                "Must provide a value for each existing row when adding a new column."
-            )
-        if index is None:
-            index = len(self._headers)
-        self._headers.insert(index, column[0])
-        column_width = max(
-            [len(str(val)) + self.column_padding for val in column])
-        self._column_widths.insert(index, column_width)
-
-        for i in range(len(self._rows)):
-            self._rows[i].insert(index, column[i + 1])
-
-    def get_row(self, index):
+    def get_row_by_index(self, index):
         """
         Returns the row at given index
 
@@ -145,64 +131,6 @@ class OutputTable:
                 f"Index {index} out of range for get_row")
         return self._rows[index]
 
-    def get_column(self, index):
-        """
-        Returns the column at given index
-
-        Parameters
-        ----------
-        index : int
-            index of column to return
-
-        Returns
-        -------
-        list of vals
-            The contents of the desired column
-        """
-
-        if index < 0 or index >= len(self._headers):
-            raise TritonModelAnalyzerException(
-                f"Index {index} out of range for get_column")
-        return [self._headers[index]] + [row[index] for row in self._rows]
-
-    def set_column_width_by_index(self, index, width):
-        """
-        Allows setting the column width in the string
-        representation of the table
-
-        Parameters
-        ----------
-        header : str
-            Name of the column whose width to adjust
-        width : int
-            The new width in spaces
-        """
-
-        if index < 0 or index >= len(self._column_widths):
-            raise TritonModelAnalyzerException(
-                f"Index {index} out of range for set_column_width_by_index")
-        self._column_widths[index] = width
-
-    def set_column_width_by_header(self, header, width):
-        """
-        Allows setting the column width in the string
-        representation of the table
-
-        Parameters
-        ----------
-        header : str
-            Name of the column whose width to adjust
-        width : int
-            The new width in spaces
-        """
-
-        try:
-            index = self._headers.index(header)
-        except ValueError:
-            raise TritonModelAnalyzerException(
-                f"{header} not present in table")
-        self._column_widths[index] = width
-
     def remove_row_by_index(self, index):
         """
         Removes row at given index
@@ -214,47 +142,13 @@ class OutputTable:
             The index of the row to be removed
         """
 
+        if len(self._rows) == 0:
+            raise TritonModelAnalyzerException(
+                "Attempting to remove result from an empty ResultTable!")
         if index < 0 or index >= len(self._rows):
             raise TritonModelAnalyzerException(
                 f"Index {index} out of range for remove_row_by_index")
         self._rows.pop(index)
-
-    def remove_column_by_index(self, index):
-        """
-        Removes column at given index
-        from the table
-
-        Parameters
-        ----------
-        index : int
-            The index of the column to be removed
-        """
-
-        if index < 0 or index >= len(self._headers):
-            raise TritonModelAnalyzerException(
-                f"Index {index} out of range for remove_column_by_index")
-        self._headers.pop(index)
-        self._column_widths.pop(index)
-        for row in self._rows:
-            row.pop(index)
-
-    def remove_column_by_header(self, header):
-        """
-        Removes column with given header
-        from the table
-
-        Parameters
-        ----------
-        header : str
-            The name of the column to be removed
-        """
-
-        try:
-            index = self._headers.index(header)
-        except ValueError:
-            raise TritonModelAnalyzerException(
-                f"{header} not present in table")
-        self.remove_column_by_index(index)
 
     def to_formatted_string(self, separator='', ignore_widths=False):
         """

@@ -102,8 +102,8 @@ class AnalyzerConfig:
 
             fields = field.message_type.fields
             for sub_field in fields:
-                sub_field_schema[sub_field.name] = self._resolve_protobuf_field(
-                    sub_field)
+                sub_field_schema[
+                    sub_field.name] = self._resolve_protobuf_field(sub_field)
             if field.label == FieldDescriptor.LABEL_REPEATED:
                 config_type = ConfigListGeneric(
                     ConfigObject(schema=sub_field_schema))
@@ -117,7 +117,8 @@ class AnalyzerConfig:
             config_type = ConfigEnum(choices)
         else:
             raise TritonModelAnalyzerException(
-                'The current version of Model Config is not supported by Model Analyzer.')
+                'The current version of Model Config is not supported by Model Analyzer.'
+            )
 
         return ConfigUnion([config_type, ConfigListGeneric(config_type)])
 
@@ -145,13 +146,16 @@ class AnalyzerConfig:
 
         constraints_scheme = ConfigObject(
             schema={
-                'throughput': ConfigObject(schema={
+                'perf_throughput':
+                ConfigObject(schema={
                     'min': ConfigPrimitive(int),
                 }),
-                'latency': ConfigObject(schema={
+                'perf_latency':
+                ConfigObject(schema={
                     'max': ConfigPrimitive(int),
                 }),
-                'gpu_memory': ConfigObject(schema={
+                'gpu_used_memory':
+                ConfigObject(schema={
                     'max': ConfigPrimitive(int),
                 }),
             })
@@ -174,9 +178,11 @@ class AnalyzerConfig:
                         ConfigListString(),
                         'constraints':
                         constraints_scheme,
-                        'model_config_parameters': model_config_fields
+                        'model_config_parameters':
+                        model_config_fields
                     })
-            }, output_mapper=ConfigModel.model_object_to_config_model)
+            },
+            output_mapper=ConfigModel.model_object_to_config_model)
         self._add_config(
             ConfigField(
                 'model_names',
@@ -186,29 +192,33 @@ class AnalyzerConfig:
                     ConfigListGeneric(
                         ConfigUnion([
                             model_object_constraint,
-                            ConfigPrimitive(
-                                str,
-                                output_mapper=ConfigModel.model_str_to_config_model
-                            )]),
+                            ConfigPrimitive(str,
+                                            output_mapper=ConfigModel.
+                                            model_str_to_config_model)
+                        ]),
                         required=True,
                         output_mapper=ConfigModel.model_mixed_to_config_model),
                     ConfigListString(
                         output_mapper=ConfigModel.model_list_to_config_model),
-                ], required=True),
-                description='Comma-delimited list of the model names to be profiled'))
+                ],
+                                       required=True),
+                description=
+                'Comma-delimited list of the model names to be profiled'))
 
         self._add_config(
             ConfigField(
                 'objectives',
                 field_type=ConfigListString(),
-                description='Model Analyzer uses the objectives described here to find the best configuration for each model.'
+                description=
+                'Model Analyzer uses the objectives described here to find the best configuration for each model.'
             ))
 
         self._add_config(
             ConfigField(
                 'constraints',
                 field_type=constraints_scheme,
-                description='Constraints on the objectives specified in the "objectives" field of the config.'
+                description=
+                'Constraints on the objectives specified in the "objectives" field of the config.'
             ))
         self._add_config(
             ConfigField(
@@ -216,7 +226,8 @@ class AnalyzerConfig:
                 flags=['--batch-sizes', '-b'],
                 field_type=ConfigListNumeric(int),
                 default_value=1,
-                description='Comma-delimited list of batch sizes to use for the profiling')
+                description=
+                'Comma-delimited list of batch sizes to use for the profiling')
         )
         self._add_config(
             ConfigField(
@@ -224,7 +235,8 @@ class AnalyzerConfig:
                 flags=['-c', '--concurrency'],
                 field_type=ConfigListNumeric(int),
                 default_value=1,
-                description="Comma-delimited list of concurrency values or ranges <start:end:step>"
+                description=
+                "Comma-delimited list of concurrency values or ranges <start:end:step>"
                 " to be used during profiling"))
         self._add_config(
             ConfigField('export',
@@ -238,14 +250,16 @@ class AnalyzerConfig:
                 flags=['--export-path', '-e'],
                 default_value='.',
                 field_type=ConfigPrimitive(str),
-                description="Full path to directory in which to store the results"))
+                description=
+                "Full path to directory in which to store the results"))
         self._add_config(
             ConfigField(
                 'filename_model_inference',
                 flags=['--filename-model-inference'],
                 default_value='metrics-model-inference.csv',
                 field_type=ConfigPrimitive(str),
-                description='Specifies filename for storing model inference metrics'))
+                description=
+                'Specifies filename for storing model inference metrics'))
         self._add_config(
             ConfigField(
                 'filename_model_gpu',
@@ -267,21 +281,24 @@ class AnalyzerConfig:
                 flags=['-r', '--max-retries'],
                 field_type=ConfigPrimitive(int),
                 default_value=100,
-                description='Specifies the max number of retries for any retry attempt'))
+                description=
+                'Specifies the max number of retries for any retry attempt'))
         self._add_config(
             ConfigField(
                 'duration_seconds',
                 field_type=ConfigPrimitive(int),
                 flags=['-d', '--duration-seconds'],
                 default_value=5,
-                description='Specifies how long (seconds) to gather server-only metrics'))
+                description=
+                'Specifies how long (seconds) to gather server-only metrics'))
         self._add_config(
             ConfigField(
                 'monitoring_interval',
                 flags=['-i', '--monitoring-interval'],
                 field_type=ConfigPrimitive(float),
                 default_value=0.01,
-                description='Interval of time between DGCM measurements in seconds'))
+                description=
+                'Interval of time between DGCM measurements in seconds'))
         self._add_config(
             ConfigField(
                 'client_protocol',
@@ -289,7 +306,8 @@ class AnalyzerConfig:
                 choices=['http', 'grpc'],
                 field_type=ConfigPrimitive(str),
                 default_value='grpc',
-                description='The protocol used to communicate with the Triton Inference Server'
+                description=
+                'The protocol used to communicate with the Triton Inference Server'
             ))
         self._add_config(
             ConfigField(
@@ -297,14 +315,16 @@ class AnalyzerConfig:
                 flags=['--perf-analyzer-path'],
                 field_type=ConfigPrimitive(str),
                 default_value='perf_analyzer',
-                description='The full path to the perf_analyzer binary executable'))
+                description=
+                'The full path to the perf_analyzer binary executable'))
         self._add_config(
             ConfigField(
                 'perf_measurement_window',
                 flags=['--perf-measurement-window'],
                 field_type=ConfigPrimitive(int),
                 default_value=5000,
-                description='Time interval in milliseconds between perf_analyzer measurements. perf_analyzer will take '
+                description=
+                'Time interval in milliseconds between perf_analyzer measurements. perf_analyzer will take '
                 'measurements over all the requests completed within this time interval.'
             ))
         self._add_config(
@@ -313,7 +333,8 @@ class AnalyzerConfig:
                 flags=['--no-perf-output'],
                 field_type=ConfigPrimitive(bool),
                 parser_args={'action': 'store_true'},
-                description='Silences the output from the perf_analyzer to stdout'))
+                description=
+                'Silences the output from the perf_analyzer to stdout'))
         self._add_config(
             ConfigField(
                 'triton_launch_mode',
@@ -345,7 +366,8 @@ class AnalyzerConfig:
                 default_value='localhost:8000',
                 flags=['--triton-http-endpoint'],
                 field_type=ConfigPrimitive(str),
-                description="Triton Server HTTP endpoint url used by Model Analyzer client. "
+                description=
+                "Triton Server HTTP endpoint url used by Model Analyzer client. "
                 "Will be ignored if server-launch-mode is not 'remote'"))
         self._add_config(
             ConfigField(
@@ -353,7 +375,8 @@ class AnalyzerConfig:
                 flags=['--triton-grpc-endpoint'],
                 field_type=ConfigPrimitive(str),
                 default_value='localhost:8001',
-                description="Triton Server HTTP endpoint url used by Model Analyzer client. "
+                description=
+                "Triton Server HTTP endpoint url used by Model Analyzer client. "
                 "Will be ignored if server-launch-mode is not 'remote'"))
         self._add_config(
             ConfigField(
@@ -368,13 +391,15 @@ class AnalyzerConfig:
                         field_type=ConfigPrimitive(str),
                         flags=['--triton-server-path'],
                         default_value='tritonserver',
-                        description='The full path to the tritonserver binary executable'))
+                        description=
+                        'The full path to the tritonserver binary executable'))
         self._add_config(
             ConfigField(
                 'triton_output_path',
                 field_type=ConfigPrimitive(str),
                 flags=['--triton-output-path'],
-                description='The full path to a file to write the Triton Server log output to.'
+                description=
+                'The full path to a file to write the Triton Server log output to.'
             ))
         self._add_config(
             ConfigField(
@@ -402,7 +427,7 @@ class AnalyzerConfig:
 
         if self.export:
             if not self.export_path:
-                logger.warning(
+                logging.warning(
                     "--export-path specified without --export flag: skipping exporting metrics."
                 )
                 self.export_path = None

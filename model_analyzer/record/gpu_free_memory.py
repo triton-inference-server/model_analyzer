@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
+from functools import total_ordering
 from .gpu_record import GPURecord
 
 
+@total_ordering
 class GPUFreeMemory(GPURecord):
     """
     The free memory in the GPU.
@@ -23,21 +24,21 @@ class GPUFreeMemory(GPURecord):
 
     tag = "gpu_free_memory"
 
-    def __init__(self, device, free_mem, timestamp):
+    def __init__(self, value, device=None, timestamp=0):
         """
         Parameters
         ----------
+        value : float
+            The free memory in the GPU obtained from
+            DCGM
         device : GPUDevice
             The  GPU device this metric is associated
             with.
-        free_mem : float
-            The free memory in the GPU obtained from
-            nvml
         timestamp : int
             The timestamp for the record in nanoseconds
         """
 
-        super().__init__(device, free_mem, timestamp)
+        super().__init__(value, device, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -58,3 +59,36 @@ class GPUFreeMemory(GPURecord):
         """
 
         return aggregation_tag + "GPU Memory Available(MB)"
+
+    def __eq__(self, other):
+        """
+        Allows checking for
+        equality between two records
+        """
+
+        return self.value() == other.value()
+
+    def __lt__(self, other):
+        """
+        Allows checking if 
+        this record is less than 
+        the other
+        """
+
+        return self.value() < other.value()
+
+    def __add__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return GPUFreeMemory(device=None, value=(self.value() + other.value()))
+
+    def __sub__(self, other):
+        """
+        Allows adding two records together
+        to produce a brand new record.
+        """
+
+        return GPUFreeMemory(device=None, value=(self.value() - other.value()))

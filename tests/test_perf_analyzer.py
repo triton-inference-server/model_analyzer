@@ -105,7 +105,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Run perf analyzer with dummy metrics to check command parsing
         perf_metrics = [id]
-        _ = perf_analyzer.run(perf_metrics)
+        test_latency_output = "Avg latency: 5000 ms\n\n\n\n"
+        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
+        perf_analyzer.run(perf_metrics)
         self.perf_mock.assert_perf_analyzer_run_as(
             [PERF_BIN_PATH, '-m', TEST_MODEL_NAME])
 
@@ -113,7 +115,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         test_latency_output = "Avg latency: 5000 ms\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
         perf_metrics = [PerfLatency]
-        records = perf_analyzer.run(perf_metrics)
+        perf_analyzer.run(perf_metrics)
+        records = perf_analyzer.get_records()
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].value(), 5000)
 
@@ -121,18 +124,20 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         test_throughput_output = "Throughput: 46.8 infer/sec\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_throughput_output)
         perf_metrics = [PerfThroughput]
-        records = perf_analyzer.run(perf_metrics)
+        perf_analyzer.run(perf_metrics)
+        records = perf_analyzer.get_records()
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].value(), 46.8)
 
         # Test parsing for both
         test_both_output = "Throughput: 0.001 infer/sec\nAvg latency: 3.6 ms\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_both_output)
-        perf_metrics = [PerfLatency, PerfThroughput]
-        records = perf_analyzer.run(perf_metrics)
+        perf_metrics = [PerfThroughput, PerfLatency]
+        perf_analyzer.run(perf_metrics)
+        records = perf_analyzer.get_records()
         self.assertEqual(len(records), 2)
-        self.assertEqual(records[0].value(), 3.6)
-        self.assertEqual(records[1].value(), 0.001)
+        self.assertEqual(records[0].value(), 0.001)
+        self.assertEqual(records[1].value(), 3.6)
 
         # Test exception handling
         with self.assertRaisesRegex(
@@ -140,7 +145,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                 expected_regex="Running perf_analyzer with",
                 msg="Expected TritonModelAnalyzerException"):
             self.perf_mock.raise_exception_on_run()
-            _ = perf_analyzer.run(perf_metrics)
+            perf_analyzer.run(perf_metrics)
 
         self.server.stop()
 

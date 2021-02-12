@@ -51,9 +51,9 @@ class CPUMonitor(Monitor):
 
         used_mem, free_mem = self._server.cpu_stats()
         if CPUUsedRAM in self._metrics:
-            self._cpu_memory_records.append(CPUUsedRAM(used_mem))
+            self._cpu_memory_records.append(CPUUsedRAM(value=used_mem))
         if CPUAvailableRAM in self._metrics:
-            self._cpu_memory_records.append(CPUAvailableRAM(free_mem))
+            self._cpu_memory_records.append(CPUAvailableRAM(value=free_mem))
 
     def _collect_records(self):
         """

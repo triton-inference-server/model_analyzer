@@ -50,8 +50,7 @@ class ModelConfig:
 
         if not os.path.exists(model_path):
             raise TritonModelAnalyzerException(
-                'Model path specified does not exist.'
-            )
+                'Model path specified does not exist.')
 
         if os.path.isfile(model_path):
             raise TritonModelAnalyzerException(
@@ -60,8 +59,8 @@ class ModelConfig:
         with open(os.path.join(model_path, "config.pbtxt"), 'r+') as f:
             config_str = f.read()
 
-        protobuf_message = text_format.Parse(
-            config_str, model_config_pb2.ModelConfig())
+        protobuf_message = text_format.Parse(config_str,
+                                             model_config_pb2.ModelConfig())
 
         return ModelConfig(protobuf_message)
 
@@ -102,15 +101,13 @@ class ModelConfig:
 
         if not os.path.exists(model_path):
             raise TritonModelAnalyzerException(
-                'Output path specified does not exist.'
-            )
+                'Output path specified does not exist.')
 
         if os.path.isfile(model_path):
             raise TritonModelAnalyzerException(
                 'Model output path must be a directory.')
 
-        model_config_bytes = text_format.MessageToBytes(
-            self._model_config)
+        model_config_bytes = text_format.MessageToBytes(self._model_config)
 
         with open(os.path.join(model_path, "config.pbtxt"), 'wb') as f:
             f.write(model_config_bytes)

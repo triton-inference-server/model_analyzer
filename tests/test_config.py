@@ -31,7 +31,6 @@ from model_analyzer.config.config_list_numeric import \
 
 
 class TestConfig(trc.TestResultCollector):
-
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
@@ -47,14 +46,14 @@ class TestConfig(trc.TestResultCollector):
         self.assertTrue(len(model_configs) == len(expected_model_configs))
         for model_config, expected_model_config \
                 in zip(model_configs, expected_model_configs):
-            self.assertTrue(expected_model_config.model_name()
-                            == model_config.model_name())
-            self.assertTrue(expected_model_config.parameters()
-                            == model_config.parameters())
-            self.assertTrue(expected_model_config.constraints()
-                            == model_config.constraints())
-            self.assertTrue(expected_model_config.objectives()
-                            == model_config.objectives())
+            self.assertTrue(expected_model_config.model_name() ==
+                            model_config.model_name())
+            self.assertTrue(expected_model_config.parameters() ==
+                            model_config.parameters())
+            self.assertTrue(expected_model_config.constraints() ==
+                            model_config.constraints())
+            self.assertTrue(expected_model_config.objectives() ==
+                            model_config.objectives())
             self.assertTrue(expected_model_config.model_config_parameters() ==
                             model_config.model_config_parameters())
 
@@ -67,23 +66,20 @@ class TestConfig(trc.TestResultCollector):
                 model_config.field_type().raw_value().container_type(),
                 ConfigUnion)
         else:
-            self.assertIsInstance(
-                model_config.field_type().raw_value(), ConfigObject)
+            self.assertIsInstance(model_config.field_type().raw_value(),
+                                  ConfigObject)
 
-    def _assert_model_object_types(
-            self,
-            model_config,
-            model_name,
-            check_parameters=False,
-            check_concurrency=False,
-            check_batch_size=False):
+    def _assert_model_object_types(self,
+                                   model_config,
+                                   model_name,
+                                   check_parameters=False,
+                                   check_concurrency=False,
+                                   check_batch_size=False):
 
         if isinstance(model_config, ConfigUnion):
-            self.assertIsInstance(model_config.raw_value(),
-                                  ConfigObject)
+            self.assertIsInstance(model_config.raw_value(), ConfigObject)
             self.assertIsInstance(
-                model_config.raw_value().raw_value()[model_name],
-                ConfigObject)
+                model_config.raw_value().raw_value()[model_name], ConfigObject)
             model_config = model_config.raw_value().raw_value()[model_name]
         else:
             self.assertIsInstance(model_config, ConfigObject)
@@ -96,15 +92,14 @@ class TestConfig(trc.TestResultCollector):
                         parameters_config.raw_value()['concurrency'],
                         ConfigListNumeric)
 
-    def _assert_model_config_params(
-            self, model_config_parameters):
+    def _assert_model_config_params(self, model_config_parameters):
         self.assertIsInstance(model_config_parameters, ConfigObject)
 
         input_param = model_config_parameters.raw_value()['input']
         self.assertIsInstance(input_param, ConfigUnion)
         self.assertIsInstance(input_param.raw_value(), ConfigListGeneric)
-        self.assertIsInstance(
-            input_param.raw_value().container_type(), ConfigObject)
+        self.assertIsInstance(input_param.raw_value().container_type(),
+                              ConfigObject)
 
         # Check types for 'name'
         name_param = input_param.raw_value().raw_value()[0].raw_value()['name']
@@ -112,28 +107,25 @@ class TestConfig(trc.TestResultCollector):
         self.assertIsInstance(name_param.raw_value(), ConfigPrimitive)
 
         # Check types for 'data_type'
-        data_type_param = input_param.raw_value().raw_value()[
-            0].raw_value()['data_type']
+        data_type_param = input_param.raw_value().raw_value()[0].raw_value(
+        )['data_type']
         self.assertIsInstance(data_type_param, ConfigUnion)
         self.assertIsInstance(data_type_param.raw_value(), ConfigEnum)
 
         # Check types for 'dims'
-        dims_param = input_param.raw_value().raw_value()[
-            0].raw_value()['dims']
+        dims_param = input_param.raw_value().raw_value()[0].raw_value()['dims']
         self.assertIsInstance(dims_param, ConfigUnion)
         self.assertIsInstance(dims_param.raw_value(), ConfigListGeneric)
-        self.assertIsInstance(
-            dims_param.raw_value().container_type(), ConfigPrimitive)
+        self.assertIsInstance(dims_param.raw_value().container_type(),
+                              ConfigPrimitive)
 
         # Check types for 'format'
-        format_param = input_param.raw_value().raw_value()[
-            0].raw_value()['format']
+        format_param = input_param.raw_value().raw_value()[0].raw_value(
+        )['format']
         self.assertIsInstance(format_param, ConfigUnion)
         self.assertIsInstance(format_param.raw_value(), ConfigEnum)
 
-    def _assert_model_str_type(
-            self,
-            model_config):
+    def _assert_model_str_type(self, model_config):
         self.assertIsInstance(model_config, ConfigUnion)
         self.assertIsInstance(model_config.raw_value(), ConfigPrimitive)
 
@@ -182,13 +174,14 @@ class TestConfig(trc.TestResultCollector):
         yaml_content = 'model_names: model_1,model_2'
         config = self._evaluate_config(args, yaml_content)
         expected_model_configs = [
-            ConfigModel('model_1'), ConfigModel('model_2')
+            ConfigModel('model_1'),
+            ConfigModel('model_2')
         ]
         self._assert_equality_of_model_configs(
             config.get_all_config()['model_names'], expected_model_configs)
-        self.assertIsInstance(config.get_config()[
-                              'model_names'].field_type().raw_value(),
-                              ConfigListString)
+        self.assertIsInstance(
+            config.get_config()['model_names'].field_type().raw_value(),
+            ConfigListString)
 
         yaml_content = """
 model_names:
@@ -216,8 +209,7 @@ batch_sizes:
 """
         config = self._evaluate_config(args, yaml_content)
         self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 3])
-        self.assertIsInstance(config.get_config()[
-                              'batch_sizes'].field_type(),
+        self.assertIsInstance(config.get_config()['batch_sizes'].field_type(),
                               ConfigListNumeric)
 
         yaml_content = """
@@ -225,8 +217,7 @@ batch_sizes: 2
 """
         config = self._evaluate_config(args, yaml_content)
         self.assertTrue(config.get_all_config()['batch_sizes'] == [2])
-        self.assertIsInstance(config.get_config()[
-                              'batch_sizes'].field_type(),
+        self.assertIsInstance(config.get_config()['batch_sizes'].field_type(),
                               ConfigListNumeric)
 
         yaml_content = """
@@ -234,11 +225,11 @@ concurrency: 2
 """
         config = self._evaluate_config(args, yaml_content)
         self.assertTrue(config.get_all_config()['concurrency'] == [2])
-        self.assertIsInstance(config.get_config()[
-                              'concurrency'].field_type(), ConfigListNumeric)
+        self.assertIsInstance(config.get_config()['concurrency'].field_type(),
+                              ConfigListNumeric)
         self.assertTrue(config.get_all_config()['batch_sizes'] == [1])
-        self.assertIsInstance(config.get_config()[
-                              'batch_sizes'].field_type(), ConfigListNumeric)
+        self.assertIsInstance(config.get_config()['batch_sizes'].field_type(),
+                              ConfigListNumeric)
 
         yaml_content = """
 batch_sizes:
@@ -248,8 +239,8 @@ batch_sizes:
         config = self._evaluate_config(args, yaml_content)
         self.assertTrue(
             config.get_all_config()['batch_sizes'] == [2, 3, 4, 5, 6])
-        self.assertIsInstance(config.get_config()[
-                              'batch_sizes'].field_type(), ConfigListNumeric)
+        self.assertIsInstance(config.get_config()['batch_sizes'].field_type(),
+                              ConfigListNumeric)
 
         yaml_content = """
 batch_sizes:
@@ -259,8 +250,8 @@ batch_sizes:
 """
         config = self._evaluate_config(args, yaml_content)
         self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 4, 6])
-        self.assertIsInstance(config.get_config()[
-                              'batch_sizes'].field_type(), ConfigListNumeric)
+        self.assertIsInstance(config.get_config()['batch_sizes'].field_type(),
+                              ConfigListNumeric)
 
     def test_object(self):
         args = [
@@ -283,15 +274,18 @@ model_names:
         model_config = config.get_config()['model_names']
         self._assert_model_config_types(model_config)
 
-        expected_model_objects = [ConfigModel('vgg_16_graphdef', parameters={
-            'concurrency': [1, 2, 3, 4]
-        }), ConfigModel('vgg_19_graphdef')]
+        expected_model_objects = [
+            ConfigModel('vgg_16_graphdef',
+                        parameters={'concurrency': [1, 2, 3, 4]}),
+            ConfigModel('vgg_19_graphdef')
+        ]
 
         # Check the types for the first value
         first_model = model_config.field_type().raw_value().raw_value()[0]
-        self._assert_model_object_types(
-            first_model, 'vgg_16_graphdef',
-            check_parameters=True, check_concurrency=True)
+        self._assert_model_object_types(first_model,
+                                        'vgg_16_graphdef',
+                                        check_parameters=True,
+                                        check_concurrency=True)
 
         # Check the types for the second value
         second_model = model_config.field_type().raw_value().raw_value()[1]
@@ -322,12 +316,14 @@ model_names:
           step: 2
 """
         expected_model_objects = [
-            ConfigModel('vgg_16_graphdef', parameters={
-                'concurrency': [1, 2, 3, 4]
-            }),
+            ConfigModel('vgg_16_graphdef',
+                        parameters={'concurrency': [1, 2, 3, 4]}),
             ConfigModel('vgg_19_graphdef',
-                        parameters={'concurrency': [1, 2, 3, 4],
-                                    'batch_sizes': [2, 4, 6]})]
+                        parameters={
+                            'concurrency': [1, 2, 3, 4],
+                            'batch_sizes': [2, 4, 6]
+                        })
+        ]
         config = self._evaluate_config(args, yaml_content)
         self._assert_equality_of_model_configs(
             config.get_all_config()['model_names'], expected_model_objects)
@@ -336,20 +332,22 @@ model_names:
         self._assert_model_config_types(model_config)
 
         # first model
-        first_model = model_config.field_type().raw_value().raw_value()[
-            'vgg_16_graphdef']
-        self._assert_model_object_types(
-            first_model, 'vgg_16_graphdef',
-            check_parameters=True,
-            check_concurrency=True, check_batch_size=True)
+        first_model = model_config.field_type().raw_value().raw_value(
+        )['vgg_16_graphdef']
+        self._assert_model_object_types(first_model,
+                                        'vgg_16_graphdef',
+                                        check_parameters=True,
+                                        check_concurrency=True,
+                                        check_batch_size=True)
 
         # second model
-        second_model = model_config.field_type().raw_value().raw_value()[
-            'vgg_19_graphdef']
-        self._assert_model_object_types(
-            second_model, 'vgg_19_graphdef',
-            check_parameters=True,
-            check_concurrency=True, check_batch_size=True)
+        second_model = model_config.field_type().raw_value().raw_value(
+        )['vgg_19_graphdef']
+        self._assert_model_object_types(second_model,
+                                        'vgg_19_graphdef',
+                                        check_parameters=True,
+                                        check_concurrency=True,
+                                        check_batch_size=True)
 
     def test_constraints(self):
         args = [
@@ -367,24 +365,23 @@ model_names:
           - 3
           - 4
       objectives:
-        - throughput
-        - gpu_memory
+        - perf_throughput
+        - gpu_used_memory
       constraints:
-        gpu_memory:
+        gpu_used_memory:
           max: 80
   - vgg_19_graphdef
 """
         config = self._evaluate_config(args, yaml_content)
         expected_model_objects = [
             ConfigModel('vgg_16_graphdef',
-                        parameters={
-                            'concurrency': [1, 2, 3, 4]
-                        },
-                        objectives=['throughput', 'gpu_memory'],
-                        constraints={'gpu_memory': {
+                        parameters={'concurrency': [1, 2, 3, 4]},
+                        objectives=['perf_throughput', 'gpu_used_memory'],
+                        constraints={'gpu_used_memory': {
                             'max': 80,
                         }}),
-            ConfigModel('vgg_19_graphdef')]
+            ConfigModel('vgg_19_graphdef')
+        ]
         self._assert_equality_of_model_configs(
             config.get_all_config()['model_names'], expected_model_objects)
 
@@ -400,8 +397,8 @@ model_names:
           - 3
           - 4
       objectives:
-        - throughput
-        - gpu_memory
+        - perf_throughput
+        - gpu_used_memory
       constraints:
         gpu_memory:
           max: 80
@@ -503,11 +500,14 @@ model_names:
         expected_model_configs = [
             ConfigModel('vgg_16_graphdef',
                         model_config_parameters={
-                            'instance_group': [
-                                {'kind': 'KIND_GPU', 'count': 1}
-                            ]})]
-        self._assert_equality_of_model_configs(
-            model_configs, expected_model_configs)
+                            'instance_group': [{
+                                'kind': 'KIND_GPU',
+                                'count': 1
+                            }]
+                        })
+        ]
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
 
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
@@ -532,12 +532,17 @@ model_names:
         expected_model_configs = [
             ConfigModel('vgg_16_graphdef',
                         model_config_parameters={
-                            'instance_group': [
-                                {'kind': 'KIND_GPU', 'count': 1},
-                                {'kind': 'KIND_CPU', 'count': 1}
-                            ]})]
-        self._assert_equality_of_model_configs(
-            model_configs, expected_model_configs)
+                            'instance_group': [{
+                                'kind': 'KIND_GPU',
+                                'count': 1
+                            }, {
+                                'kind': 'KIND_CPU',
+                                'count': 1
+                            }]
+                        })
+        ]
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
 
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
@@ -564,12 +569,17 @@ model_names:
         expected_model_configs = [
             ConfigModel('vgg_16_graphdef',
                         model_config_parameters={
-                            'instance_group': [
-                                [{'kind': 'KIND_GPU', 'count': 1}],
-                                [{'kind': 'KIND_CPU', 'count': 1}]
-                            ]})]
-        self._assert_equality_of_model_configs(
-            model_configs, expected_model_configs)
+                            'instance_group': [[{
+                                'kind': 'KIND_GPU',
+                                'count': 1
+                            }], [{
+                                'kind': 'KIND_CPU',
+                                'count': 1
+                            }]]
+                        })
+        ]
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
 
         yaml_content = """
 model_names:
@@ -589,14 +599,14 @@ model_names:
         expected_model_configs = [
             ConfigModel('vgg_16_graphdef',
                         model_config_parameters={
-                            'input': [
-                                {
-                                    'name': 'NV_MODEL_INPUT',
-                                    'data_type': 'TYPE_FP32',
-                                    'format': 'FORMAT_NHWC',
-                                    'dims': [256, 256, 3]
-                                }
-                            ]})]
+                            'input': [{
+                                'name': 'NV_MODEL_INPUT',
+                                'data_type': 'TYPE_FP32',
+                                'format': 'FORMAT_NHWC',
+                                'dims': [256, 256, 3]
+                            }]
+                        })
+        ]
         model_config = config.get_config()['model_names']
         self._assert_model_config_types(model_config)
 
@@ -607,8 +617,8 @@ model_names:
         )['vgg_16_graphdef'].raw_value()['model_config_parameters']
 
         self._assert_model_config_params(model_config_parameters)
-        self._assert_equality_of_model_configs(
-            model_configs, expected_model_configs)
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
 
 
 if __name__ == '__main__':
