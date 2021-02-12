@@ -23,25 +23,31 @@ from model_analyzer.model_analyzer_exceptions \
 
 
 class TestModelConfig(trc.TestResultCollector):
-
     def setUp(self):
         self._model_config = {
-            'name': 'classification_chestxray_v1',
-            'platform': 'tensorflow_graphdef',
-            'max_batch_size': 32,
-            'input': [
-                {'name': 'NV_MODEL_INPUT',
-                 'data_type': 'TYPE_FP32',
-                 'format': 'FORMAT_NHWC',
-                 'dims': ['256', '256', '3']}],
-            'output': [
-                {'name': 'NV_MODEL_OUTPUT',
-                 'data_type':
-                 'TYPE_FP32',
-                 'dims': ['15'],
-                 'label_filename':
-                 'chestxray_labels.txt'}],
-            'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]}
+            'name':
+            'classification_chestxray_v1',
+            'platform':
+            'tensorflow_graphdef',
+            'max_batch_size':
+            32,
+            'input': [{
+                'name': 'NV_MODEL_INPUT',
+                'data_type': 'TYPE_FP32',
+                'format': 'FORMAT_NHWC',
+                'dims': ['256', '256', '3']
+            }],
+            'output': [{
+                'name': 'NV_MODEL_OUTPUT',
+                'data_type': 'TYPE_FP32',
+                'dims': ['15'],
+                'label_filename': 'chestxray_labels.txt'
+            }],
+            'instance_group': [{
+                'count': 1,
+                'kind': 'KIND_GPU'
+            }]
+        }
 
         # Equivalent protobuf for the model config above.
         self._model_config_protobuf = """
@@ -84,9 +90,7 @@ instance_group [
         model_config = ModelConfig.create_from_dictionary(self._model_config)
         self.assertTrue(model_config.get_config() == self._model_config)
 
-        new_config = {'instance_group': [
-                {'count': 2, 'kind': 'KIND_CPU'}
-            ]}
+        new_config = {'instance_group': [{'count': 2, 'kind': 'KIND_CPU'}]}
         model_config.set_config(new_config)
         self.assertTrue(model_config.get_config() == new_config)
 
@@ -102,8 +106,8 @@ instance_group [
 
         model_config_from_file = \
             ModelConfig.create_from_file(model_output_path)
-        self.assertTrue(model_config_from_file.get_config()
-                        == self._model_config)
+        self.assertTrue(
+            model_config_from_file.get_config() == self._model_config)
 
         # output path is a file
         with self.assertRaises(TritonModelAnalyzerException):

@@ -13,23 +13,22 @@
 # limitations under the License.
 
 from .config_value import ConfigValue
+from .config_status import ConfigStatus
 from model_analyzer.constants import \
-    MODEL_ANALYZER_FAILURE
+    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
 
 
 class ConfigPrimitive(ConfigValue):
     """
     A wrapper class for the primitive datatypes.
     """
-
-    def __init__(
-        self,
-        type_,
-        preprocess=None,
-        required=False,
-        validator=None,
-        output_mapper=None
-    ):
+    def __init__(self,
+                 type_,
+                 preprocess=None,
+                 required=False,
+                 validator=None,
+                 output_mapper=None,
+                 name=None):
         """
         Parameters
         ----------
@@ -43,14 +42,23 @@ class ConfigPrimitive(ConfigValue):
             A validator for the value of the field.
         output_mapper: callable or None
             This callable unifies the output value of this field.
+        name : str
+            Fully qualified name for this field.
         """
 
         # default validator
         if validator is None:
-            def validator(x):
-                return x is not None or x != ''
 
-        super().__init__(preprocess, required, validator, output_mapper)
+            def validator(x):
+                if x is not None or x != '':
+                    return ConfigStatus(CONFIG_PARSER_SUCCESS)
+
+                return ConfigStatus(
+                    CONFIG_PARSER_FAILURE,
+                    f'The value for field "{self.name()}" should not be empty.'
+                )
+
+        super().__init__(preprocess, required, validator, output_mapper, name)
 
         self._type = self._cli_type = type_
         self._value = None
@@ -64,7 +72,14 @@ class ConfigPrimitive(ConfigValue):
         """
 
         if self._is_primitive(value):
-            value = self._type(value)
+            try:
+                value = self._type(value)
+            except ValueError as e:
+                message = f'Failed to set the value for field "{self.name()}". Error: {e}.'
+                return ConfigStatus(CONFIG_PARSER_FAILURE, message, self)
             return super().set_value(value)
         else:
-            return MODEL_ANALYZER_FAILURE
+            return ConfigStatus(
+                CONFIG_PARSER_FAILURE,
+                f'Value "{value}" for field "{self.name()}" should be a primitive type.',
+                self)

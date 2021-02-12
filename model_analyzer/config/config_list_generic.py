@@ -13,8 +13,9 @@
 # limitations under the License.
 
 from .config_value import ConfigValue
+from .config_status import ConfigStatus
 from model_analyzer.constants import \
-    MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
+    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
 
 from copy import deepcopy
 
@@ -23,13 +24,13 @@ class ConfigListGeneric(ConfigValue):
     """
     A generic list.
     """
-
     def __init__(self,
                  type_,
                  preprocess=None,
                  required=False,
                  validator=None,
-                 output_mapper=None):
+                 output_mapper=None,
+                 name=None):
         """
         Create a new list of numeric values.
 
@@ -45,15 +46,26 @@ class ConfigListGeneric(ConfigValue):
             A validator for the final value of the field.
         output_mapper: callable
             This callable unifies the output value of this field.
+        name : str
+            Fully qualified name for this field.
         """
 
         # default validator
         if validator is None:
 
             def validator(x):
-                return type(x) is list and len(x) > 0
+                if type(x) is list and len(x) > 0:
+                    return ConfigStatus(CONFIG_PARSER_SUCCESS)
 
-        super().__init__(preprocess, required, validator, output_mapper)
+                return ConfigStatus(
+                    CONFIG_PARSER_FAILURE,
+                    f'The value for field "{self.name()}" should be a list'
+                    ' and the length must be larger than zero.')
+
+        super().__init__(preprocess, required, validator, output_mapper, name)
+
+        # type_ should be instance of ConfigValue
+        assert isinstance(type_, ConfigValue)
 
         self._type = type_
         self._cli_type = str
@@ -76,12 +88,20 @@ class ConfigListGeneric(ConfigValue):
         if type(value) is list:
             for item in value:
                 list_item = deepcopy(type_)
-                status = list_item.set_value(item)
-                if status == MODEL_ANALYZER_SUCCESS:
+                config_status = list_item.set_value(item)
+                if config_status.status() == CONFIG_PARSER_SUCCESS:
                     new_value.append(list_item)
                 else:
-                    return MODEL_ANALYZER_FAILURE
+                    return config_status
         else:
-            return MODEL_ANALYZER_FAILURE
+            return ConfigStatus(
+                status=CONFIG_PARSER_FAILURE,
+                message=
+                f'Value for field "{self.name()}" must be a list, value is "{value}".',
+                config_object=self)
 
         return super().set_value(new_value)
+
+    def set_name(self, name):
+        super().set_name(name)
+        self._type.set_name(name)

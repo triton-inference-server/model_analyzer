@@ -13,8 +13,8 @@
 # limitations under the License.
 
 # Config constants
-MODEL_ANALYZER_SUCCESS = 1
-MODEL_ANALYZER_FAILURE = 0
+CONFIG_PARSER_SUCCESS = 1
+CONFIG_PARSER_FAILURE = 0
 
 # Result Table constants
 SERVER_ONLY_TABLE_DEFAULT_VALUE = '0'

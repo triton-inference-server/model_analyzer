@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import unittest
+import re
 from .mocks.mock_config import MockConfig
 from .common import test_result_collector as trc
+
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.cli.cli import CLI
@@ -28,6 +30,8 @@ from model_analyzer.config.config_object import ConfigObject
 from model_analyzer.config.config_enum import ConfigEnum
 from model_analyzer.config.config_list_numeric import \
     ConfigListNumeric
+from model_analyzer.constants import \
+    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
 
 
 class TestConfig(trc.TestResultCollector):
@@ -619,6 +623,81 @@ model_names:
         self._assert_model_config_params(model_config_parameters)
         self._assert_equality_of_model_configs(model_configs,
                                                expected_model_configs)
+
+    def test_error_messages(self):
+
+        # ConfigListNumeric
+        config_numeric = ConfigListNumeric(float)
+        config_status = config_numeric.set_value({
+            'start': 12,
+            'stop': 15,
+            'undefined_key': 8
+        })
+
+        config_message = config_status.message()
+        result = re.search('.*\'start\'.*\'stop\'.*\'undefined_key\'.*',
+                           config_message)
+
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertIsNotNone(config_message)
+        self.assertIsNotNone(result)
+
+        config_numeric = ConfigListNumeric(float)
+        config_status = config_numeric.set_value({'start': 12, 'stop': 'two'})
+        config_message = config_status.message()
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+        config_numeric = ConfigListNumeric(float)
+        config_status = config_numeric.set_value({'start': 'five', 'stop': 2})
+        config_message = config_status.message()
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+        config_numeric = ConfigListNumeric(float)
+        config_status = config_numeric.set_value({'start': 10, 'stop': 2})
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+        # ConfigUnion error message
+        config_union = ConfigUnion(
+            [ConfigListNumeric(float),
+             ConfigPrimitive(str)])
+
+        # Dictionaries are not accepted.
+        config_status = config_union.set_value({'a': 'b'})
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+        # ConfigEnum
+        config_enum = ConfigEnum(['a', 'b'])
+        config_status = config_enum.set_value('c')
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+        # ConfigListGeneric
+        config_list_generic = ConfigListGeneric(ConfigPrimitive(float))
+        config_status = config_list_generic.set_value({'a': 'b'})
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+        # ConfigListString
+        config_list_string = ConfigListString()
+        config_status = config_list_string.set_value({'a': 'b'})
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+        config_status = config_list_string.set_value([{'a': 'b'}])
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+        # ConfigObject
+        config_object = ConfigObject(schema={'key': ConfigPrimitive(float)})
+        config_status = config_object.set_value({'undefiend_key': 2.0})
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+        config_status = config_object.set_value({'key': [1, 2, 3]})
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+        config_status = config_object.set_value([1, 2, 3])
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+        # ConfigPrimitive
+        config_primitive = ConfigPrimitive(float)
+        config_status = config_primitive.set_value('a')
+        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
 
 if __name__ == '__main__':

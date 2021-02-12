@@ -15,7 +15,7 @@
 from model_analyzer.model_analyzer_exceptions import \
     TritonModelAnalyzerException
 from model_analyzer.constants import \
-    MODEL_ANALYZER_FAILURE
+    CONFIG_PARSER_FAILURE
 
 
 class ConfigField:
@@ -158,11 +158,13 @@ class ConfigField:
 
         field_type = self._field_type
 
-        status = field_type.set_value(value)
+        config_status = field_type.set_value(value)
 
-        if status == MODEL_ANALYZER_FAILURE:
+        if config_status.status() == CONFIG_PARSER_FAILURE:
             raise TritonModelAnalyzerException(
-                f'Can\'t set value {value} for field {self._name}.')
+                f'Can\'t set the value for field "{self._name}". '
+                'The error below occured when parsing the config:\n'
+                f'{config_status.message()}')
 
     def value(self):
         """
@@ -187,3 +189,6 @@ class ConfigField:
         """
 
         return self._field_type.required()
+
+    def set_name(self, name):
+        self._field_type.set_name(name)

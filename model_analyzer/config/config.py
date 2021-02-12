@@ -494,6 +494,7 @@ class AnalyzerConfig:
         else:
             yaml_config = None
         for key, value in self._fields.items():
+            self._fields[key].set_name(key)
             if key in args:
                 self._fields[key].set_value(getattr(args, key))
             elif yaml_config is not None and key in yaml_config:

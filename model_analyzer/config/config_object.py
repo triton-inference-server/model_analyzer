@@ -13,8 +13,9 @@
 # limitations under the License.
 
 from .config_value import ConfigValue
+from .config_status import ConfigStatus
 from model_analyzer.constants import \
-    MODEL_ANALYZER_FAILURE
+    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
 from copy import deepcopy
 
 
@@ -22,14 +23,13 @@ class ConfigObject(ConfigValue):
     """
     Representation of dictionaries in Config
     """
-
     def __init__(self,
                  schema,
                  preprocess=None,
                  required=False,
                  validator=None,
-                 output_mapper=None
-                 ):
+                 output_mapper=None,
+                 name=None):
         """
         schema : dict
             A dictionary where the keys are the object keys and the values
@@ -42,14 +42,23 @@ class ConfigObject(ConfigValue):
             A validator for the value of the field.
         output_mapper: callable or None
             This callable unifies the output value of this field.
+        name : str
+            Fully qualified name for this field.
         """
 
         # default validator
         if validator is None:
-            def validator(x):
-                return type(x) is dict and len(x) > 0
 
-        super().__init__(preprocess, required, validator, output_mapper)
+            def validator(x):
+                if type(x) is dict and len(x) > 0:
+                    return ConfigStatus(CONFIG_PARSER_SUCCESS)
+
+                return ConfigStatus(
+                    CONFIG_PARSER_FAILURE,
+                    f'The value for field "{self.name()}" should be a dictionary'
+                    ' and the length must be larger than zero.')
+
+        super().__init__(preprocess, required, validator, output_mapper, name)
         self._type = self
         self._cli_type = str
         self._value = {}
@@ -83,19 +92,26 @@ class ConfigObject(ConfigValue):
                 elif '*' in schema:
                     new_item = deepcopy(schema['*'])
                 else:
-                    return MODEL_ANALYZER_FAILURE
+                    return ConfigStatus(
+                        CONFIG_PARSER_FAILURE, f'Key "{key}" should not be '
+                        f'specified in field "{self.name()}".', self)
 
+                new_item.set_name(f'{self.name()}.{key}')
                 new_value[key] = new_item
 
                 # Set the value of the new field
-                status = new_item.set_value(value_)
+                config_status = new_item.set_value(value_)
 
                 # If it was not able to set the value, for this
                 # field, we fail.
-                if status == MODEL_ANALYZER_FAILURE:
-                    return MODEL_ANALYZER_FAILURE
+                if config_status.status() == CONFIG_PARSER_FAILURE:
+                    return config_status
         else:
-            return MODEL_ANALYZER_FAILURE
+            return ConfigStatus(
+                CONFIG_PARSER_FAILURE,
+                f'Value for field "{self.name()}" should be an object.'
+                f' Type {type(value)} is provided instead.', self)
+
         return super().set_value(new_value)
 
     def __getattr__(self, name):
