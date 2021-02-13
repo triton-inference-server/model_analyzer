@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import os
-import shutil
 from .common import test_result_collector as trc
 from .mocks.mock_model_config import MockModelConfig
+from unittest.mock import mock_open, patch, MagicMock
 
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.model_analyzer_exceptions \
@@ -97,24 +97,29 @@ instance_group [
     def test_write_config_file(self):
         model_config = ModelConfig.create_from_dictionary(self._model_config)
         model_output_path = os.path.abspath('./model_config')
-        shutil.rmtree(model_output_path, ignore_errors=True)
 
-        os.mkdir(model_output_path)
+        # Write the model config to output
+        with patch('model_analyzer.triton.model.model_config.open',
+                   mock_open()) as mocked_file:
+            model_config.write_config_to_file(model_output_path)
+            content = mocked_file().write.call_args.args[0]
 
-        model_output_path = os.path.abspath(model_output_path)
-        model_config.write_config_to_file(model_output_path)
-
+        mock_model_config = MockModelConfig(content)
+        mock_model_config.start()
         model_config_from_file = \
             ModelConfig.create_from_file(model_output_path)
         self.assertTrue(
             model_config_from_file.get_config() == self._model_config)
-
-        # output path is a file
-        with self.assertRaises(TritonModelAnalyzerException):
-            model_output_path += '/config.pbtxt'
-            ModelConfig.create_from_file(model_output_path)
+        mock_model_config.stop()
 
         # output path doesn't exist
-        with self.assertRaises(TritonModelAnalyzerException):
-            model_output_path = '/non/existent/path'
-            ModelConfig.create_from_file(model_output_path)
+        with patch('model_analyzer.triton.model.model_config.os.path.exists',
+                   MagicMock(return_value=False)):
+            with self.assertRaises(TritonModelAnalyzerException):
+                ModelConfig.create_from_file(model_output_path)
+
+        # output path is a file
+        with patch('model_analyzer.triton.model.model_config.os.path.isfile',
+                   MagicMock(return_value=True)):
+            with self.assertRaises(TritonModelAnalyzerException):
+                ModelConfig.create_from_file(model_output_path)

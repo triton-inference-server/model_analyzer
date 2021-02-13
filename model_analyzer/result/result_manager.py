@@ -23,12 +23,14 @@ from model_analyzer.model_analyzer_exceptions \
 
 class ResultManager:
     """
-    This class provides methods to create, and add to 
+    This class provides methods to create, and add to
     ResultTables. Each ResultTable holds results from
     multiple runs.
     """
 
-    non_gpu_specific_headers = ['Model', 'Batch', 'Concurrency']
+    non_gpu_specific_headers = [
+        'Model', 'Batch', 'Concurrency', 'Model Config Path'
+    ]
     gpu_specific_headers = ['Model', 'GPU ID', 'Batch', 'Concurrency']
     server_only_table_key = 'server_gpu_metrics'
     model_gpu_table_passing_key = 'model_gpu_metrics_passing'
@@ -129,8 +131,8 @@ class ResultManager:
         Parameters
         ----------
         run_config : RunConfig
-            The run config corresponding to the current 
-            run
+            The run config corresponding to the current
+            run.
         """
 
         if len(self._result_tables) == 0:
@@ -187,8 +189,8 @@ class ResultManager:
 
     def compile_results(self):
         """
-        The function called at the end of all runs 
-        FOR A MODEL that compiles all result and 
+        The function called at the end of all runs
+        FOR A MODEL that compiles all result and
         dumps the data into tables for exporting.
         """
 
@@ -227,12 +229,15 @@ class ResultManager:
         """
 
         perf_config = measurement.perf_config()
-        model_name = perf_config['model-name']
+        model_name = perf_config.get_config_model().model_name()
+        tmp_model_name = perf_config['model-name']
         batch_size = perf_config['batch-size']
         concurrency = perf_config['concurrency-range']
 
         # Non GPU specific data
-        inference_metrics = [model_name, batch_size, concurrency]
+        inference_metrics = [
+            model_name, batch_size, concurrency, tmp_model_name
+        ]
         inference_metrics += [
             metric.value() for metric in measurement.non_gpu_data()
         ]
@@ -250,7 +255,7 @@ class ResultManager:
         """
         Returns
         -------
-        dict 
+        dict
             table keys and ResultTables
         """
 

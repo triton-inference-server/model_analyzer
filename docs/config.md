@@ -96,8 +96,8 @@ model_names: <comma-delimited-string|list>
 # this time interval.
 [ perf_measurement_window: <int> | default: 5000 ]
 
-# Stops writing the output from the perf_analyzer to stdout.
-[ no_perf_output: <bool> | default: false ]
+# Enables writing the output from the perf_analyzer to stdout.
+[ perf_output: <bool> | default: false ]
 
 # Triton Server version used when launching using Docker mode
 [ triton_version: <string> | default: 21.02-py3 ]

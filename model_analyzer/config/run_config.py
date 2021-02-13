@@ -21,7 +21,7 @@ class RunConfig:
     one ModelConfig and produces one RunResult. 
     """
 
-    def __init__(self, model_config, perf_configs):
+    def __init__(self, model_name, model_config, perf_configs):
         """
         Parameters
         ----------
@@ -33,14 +33,27 @@ class RunConfig:
         """
 
         self._model_config = model_config
+        self._model_name = model_name
         self._perf_analyzer_configs = perf_configs
+
+    def model_name(self):
+        """
+        Get the temporary model name for this run config.
+
+        Returns
+        -------
+        str
+            Temporary model name
+        """
+
+        return self._model_name
 
     def model_config(self):
         """
         Returns
         -------
         ModelConfig
-            The ModelConfig corresponding to this run. 
+            The ModelConfig corresponding to this run.
         """
 
         return self._model_config

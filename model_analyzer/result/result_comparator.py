@@ -23,9 +23,7 @@ from collections import defaultdict
 
 class ResultComparator:
     """
-    Stores information needed
-    to compare results and 
-    measurements.
+    Stores information needed to compare results and measurements.
     """
 
     def __init__(self, gpu_metric_types, non_gpu_metric_types,
@@ -40,7 +38,7 @@ class ResultComparator:
             The types of measurements in the measurements
             list that do NOT have a GPU ID, in the order they appear
         metric_objectives : dict of RecordTypes
-            keys are the metric types, and values are The relative importance 
+            keys are the metric types, and values are The relative importance
             of the keys with respect to other. If the values are 0,
         """
 
@@ -73,11 +71,11 @@ class ResultComparator:
             first result to be compared
         result2 : RunResult
             second result to be compared
-        
+
         Returns
         -------
-        int 
-            0 
+        int
+            0
                 if the results are determined
                 to be the same within a threshold
             1
@@ -111,8 +109,8 @@ class ResultComparator:
 
         Returns
         -------
-        int 
-            0 
+        int
+            0
                 if the results are determined
                 to be the same within a threshold
             1

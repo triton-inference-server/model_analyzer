@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import os
+from distutils.dir_util import copy_tree
 from google.protobuf import text_format, json_format
+from google.protobuf.descriptor import FieldDescriptor
 from tritonclient.grpc import model_config_pb2
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
@@ -23,7 +25,6 @@ class ModelConfig:
     """
     A class that encapsulates all the metadata about a Triton model.
     """
-
     def __init__(self, model_config):
         """
         Parameters
@@ -84,7 +85,10 @@ class ModelConfig:
 
         return ModelConfig(protobuf_message)
 
-    def write_config_to_file(self, model_path):
+    def write_config_to_file(self,
+                             model_path,
+                             copy_original_model=False,
+                             src_model_path=None):
         """
         Writes a protobuf config file.
 
@@ -92,6 +96,9 @@ class ModelConfig:
         ----------
         model_path : str
             Path to write the model config.
+
+        copy_original_model : bool
+            Whether to copy the original model too or not.
 
         Raises
         ------
@@ -108,6 +115,9 @@ class ModelConfig:
                 'Model output path must be a directory.')
 
         model_config_bytes = text_format.MessageToBytes(self._model_config)
+
+        if copy_original_model:
+            copy_tree(src_model_path, model_path)
 
         with open(os.path.join(model_path, "config.pbtxt"), 'wb') as f:
             f.write(model_config_bytes)
@@ -137,3 +147,32 @@ class ModelConfig:
 
         self._model_config = json_format.ParseDict(
             config, model_config_pb2.ModelConfig())
+
+    def set_field(self, name, value):
+        """
+        Set a value for a Model Config field.
+
+        Parameters
+        ----------
+        name : str
+            Name of the field
+        value : object
+            The value to be used for the field.
+        """
+        model_config = self._model_config
+
+        if model_config.DESCRIPTOR.fields_by_name[
+                name].label == FieldDescriptor.LABEL_REPEATED:
+            repeated_field = getattr(model_config, name)
+            del repeated_field[:]
+            repeated_field.extend(value)
+        else:
+            setattr(model_config, name, value)
+
+    def get_field(self, name):
+        """
+        Get the value for the current field.
+        """
+
+        model_config = self._model_config
+        return getattr(model_config, name)

@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 
 class PerfAnalyzerConfig:
@@ -21,15 +22,18 @@ class PerfAnalyzerConfig:
     An argument set to None will use the perf_analyzer's default.
     """
 
-    def __init__(self, params=None):
+    def __init__(self, model, params=None):
         """
         Parameters
         ----------
         params : dict
-            allows initialization of 
-            a PerfAnalyzerConfig via 
-            a dictionary
+            allows initialization of a PerfAnalyzerConfig via a dictionary
+
+        model : ConfigModel
+            Config model corresponding to these parameters.
         """
+
+        self._model = model
         self._args = {
             'async': None,
             'sync': None,
@@ -102,6 +106,17 @@ class PerfAnalyzerConfig:
         args += [f'--{k}={v}' for k, v in self._args.items() if v]
 
         return ' '.join(args)
+
+    def get_config_model(self):
+        """
+        Get the ConfigModel corresponding to this Perf Config.
+
+        Returns
+        -------
+        ConfigModel
+        """
+
+        return self._model
 
     def __getitem__(self, key):
         """

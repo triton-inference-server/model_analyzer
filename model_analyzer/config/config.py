@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import importlib
 import yaml
 import logging
 import os
@@ -26,6 +25,7 @@ from .config_list_generic import ConfigListGeneric
 from .config_model import ConfigModel
 from .config_union import ConfigUnion
 from model_analyzer.record.record import RecordType
+from .config_sweep import ConfigSweep
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from .config_enum import ConfigEnum
@@ -40,7 +40,6 @@ class AnalyzerConfig:
     """
     Model Analyzer config object.
     """
-
     def __init__(self):
         """
         Create a new config.
@@ -123,7 +122,7 @@ class AnalyzerConfig:
                 'The current version of Model Config is not supported by Model Analyzer.'
             )
 
-        return ConfigUnion([config_type, ConfigListGeneric(config_type)])
+        return ConfigSweep(config_type)
 
     def _get_model_config_fields(self):
         """
@@ -351,12 +350,13 @@ class AnalyzerConfig:
             ))
         self._add_config(
             ConfigField(
-                'no_perf_output',
-                flags=['--no-perf-output'],
+                'perf_output',
+                flags=['--perf-output'],
                 field_type=ConfigPrimitive(bool),
+                default_value=False,
                 parser_args={'action': 'store_true'},
                 description=
-                'Silences the output from the perf_analyzer to stdout'))
+                'Enables the output from the perf_analyzer to stdout'))
         self._add_config(
             ConfigField(
                 'triton_launch_mode',
@@ -431,6 +431,13 @@ class AnalyzerConfig:
                 default_value='all',
                 description="List of GPU UUIDs to be used for the profiling. "
                 "Use 'all' to profile all the GPUs visible by CUDA."))
+        self._add_config(
+            ConfigField('output_model_repository_path',
+                        field_type=ConfigPrimitive(str),
+                        default_value='./output_model_repository',
+                        flags=['--output-model-repository-path'],
+                        description='Output model repository path used by Model Analyzer.'
+                        ' This is the directory that will contain all the generated model configurations'))
         self._add_config(
             ConfigField('config_file',
                         field_type=ConfigPrimitive(str),

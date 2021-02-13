@@ -69,9 +69,9 @@ class ConfigUnion(ConfigValue):
                 self._used_type_index = i
                 return super().set_value(type_)
         else:
-            message = f'Value "{value}" cannot be set for field "{self.name()}".'
+            message = (f'Value "{value}" cannot be set for field "{self.name()}".'
             ' This field allows multiple types of values.'
-            ' You only need to fix one of the errors below:\n'
+            ' You only need to fix one of the errors below:\n')
             for config_status in config_statuses:
                 message_lines = config_status.message().split('\n')
 
@@ -82,12 +82,12 @@ class ConfigUnion(ConfigValue):
 
                     # Make sure that the line is not empty
                     if not message_lines[0].strip() == '':
-                        message += f"\t* ' + {message_lines[0]} + '\n'"
+                        message += f"\t* {message_lines[0]}\n"
                         for message_line in message_lines[1:]:
-                            message += f"'\t ' + {message_line} + '\n'"
+                            message += f"\t {message_line}\n"
                 else:
                     for message_line in message_lines:
-                        message += f"'\t* ' + {message_line} + '\n'"
+                        message += f"\t* {message_line} \n"
 
             return ConfigStatus(CONFIG_PARSER_FAILURE, message, self)
 

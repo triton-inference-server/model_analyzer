@@ -15,11 +15,12 @@
 import os
 import logging
 
-from .config.full_run_config_generator import FullRunConfigGenerator
+from .config.run_config_generator import RunConfigGenerator
 from .result.result_manager import ResultManager
 from .record.metrics_manager import MetricsManager
 from .output.file_writer import FileWriter
 from .constants import SERVER_ONLY_TABLE_DEFAULT_VALUE
+from .model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class Analyzer:
@@ -28,7 +29,6 @@ class Analyzer:
     model_analyzer. Configured with metrics to monitor, exposes profiling and
     result writing methods.
     """
-
     def __init__(self, config, client, metric_tags, server):
         """
         Parameters
@@ -44,6 +44,7 @@ class Analyzer:
 
         self._config = config
         self._client = client
+        self._server = server
 
         # Results Manager
         self._result_manager = ResultManager(config=config)
@@ -65,45 +66,64 @@ class Analyzer:
         TritonModelAnalyzerException
         """
 
+        config = self._config
+
         logging.info('Profiling server only metrics...')
 
+        # Phase 1: Profile server only metrics
+        self._server.start()
+        self._client.wait_for_server_ready(config.max_retries)
         self._metrics_manager.profile_server(
             default_value=SERVER_ONLY_TABLE_DEFAULT_VALUE)
+        self._server.stop()
 
-        for model in self._config.model_names:
-            self._client.load_model(model_name=model.model_name())
-            self._client.wait_for_model_ready(
-                model_name=model.model_name(),
-                num_retries=self._config.max_retries)
-            try:
-                # Send objectives and constraints to result manager
-                self._metrics_manager.configure_result_manager(
+        output_model_repo_path = config.output_model_repository_path
+        model_repository = config.model_repository
+
+        # Phase 2: Profile each model
+        for model in config.model_names:
+            self._metrics_manager.configure_result_manager(
                     config_model=model)
+            run_config_generator = RunConfigGenerator(model,
+                                                 analyzer_config=self._config)
+            for run_config in run_config_generator.get_run_configs():
+                model_config = run_config.model_config()
+                original_model_name = run_config.model_name()
+                model_name = model_config.get_field('name')
 
-                for run_config in FullRunConfigGenerator(
-                        analyzer_config=self._config, config_model=model):
+                # Create the directory for the new model
+                os.mkdir(f'{output_model_repo_path}/{model_name}')
+                model_config.write_config_to_file(
+                    f'{output_model_repo_path}/{model_name}', True,
+                    f'{model_repository}/{original_model_name}')
 
-                    # Initialize the result
-                    self._result_manager.init_result(run_config)
+                self._server.start()
+                self._client.wait_for_server_ready(config.max_retries)
+                self._client.load_model(model_name=model_name)
+                self._client.wait_for_model_ready(
+                    model_name=model_name,
+                    num_retries=self._config.max_retries)
+                self._result_manager.init_result(run_config)
 
-                    # TODO write/copy model configs
-                    for perf_config in run_config.perf_analyzer_configs():
-                        perf_output_writer = None if \
-                            self._config.no_perf_output else FileWriter()
+                # Profile various batch size and concurrency values.
+                # TODO: Need to sort the values for batch size and concurrency
+                # for correct measurment of the GPU memory metrics.
+                for perf_config in run_config.perf_analyzer_configs():
+                    perf_output_writer = None if \
+                        not self._config.perf_output else FileWriter()
 
-                        logging.info(
-                            f"Profiling model {perf_config['model-name']}...")
-                        self._metrics_manager.profile_model(
-                            perf_config=perf_config,
-                            perf_output_writer=perf_output_writer)
+                    logging.info(
+                        f"Profiling model {perf_config['model-name']}...")
+                    self._metrics_manager.profile_model(
+                        perf_config=perf_config,
+                        perf_output_writer=perf_output_writer)
+                self._server.stop()
 
-                    # Submit the result to be sorted
-                    self._result_manager.complete_result()
-            finally:
-                self._client.unload_model(model_name=model.model_name())
+                # Submit the result to be sorted
+                self._result_manager.complete_result()
 
-            # Write results to tables
-            self._result_manager.compile_results()
+        # Write results to tables
+        self._result_manager.compile_results()
 
     def write_and_export_results(self):
         """
