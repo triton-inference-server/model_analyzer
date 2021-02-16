@@ -13,21 +13,22 @@
 # limitations under the License.
 
 from .config_value import ConfigValue
+from .config_status import ConfigStatus
 from model_analyzer.constants import \
-    MODEL_ANALYZER_FAILURE
+    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
 
 
 class ConfigListNumeric(ConfigValue):
     """
     A list of numeric values.
     """
-
     def __init__(self,
                  type_,
                  preprocess=None,
                  required=False,
                  validator=None,
-                 output_mapper=None):
+                 output_mapper=None,
+                 name=None):
         """
         Create a new list of numeric values.
 
@@ -43,6 +44,8 @@ class ConfigListNumeric(ConfigValue):
             A validator for the final value of the field.
         output_mapper: callable or None
             This callable unifies the output value of this field.
+        name : str
+            Fully qualified name for this field.
         """
 
         # default validator
@@ -50,14 +53,32 @@ class ConfigListNumeric(ConfigValue):
 
             def validator(x):
                 if type(x) is list and len(x) > 0:
-                    return True
+                    return ConfigStatus(CONFIG_PARSER_SUCCESS)
 
-                return False
+                return ConfigStatus(
+                    CONFIG_PARSER_FAILURE,
+                    f'The value for field "{self.name()}" should be a list'
+                    ' and the length must be larger than zero.')
 
-        super().__init__(preprocess, required, validator, output_mapper)
+        super().__init__(preprocess, required, validator, output_mapper, name)
         self._type = type_
         self._cli_type = str
         self._value = []
+
+    def _process_list(self, value):
+        """
+        A function to process the case where value is
+        a list.
+        """
+
+        type_ = self._type
+        new_value = []
+
+        for item in value:
+            item = type_(item)
+            new_value.append(item)
+
+        return new_value
 
     def set_value(self, value):
         """
@@ -73,30 +94,38 @@ class ConfigListNumeric(ConfigValue):
         type_ = self._type
         new_value = []
 
-        if self._is_string(value):
-            self._value = []
-            value = value.split(',')
-            for item in value:
-                new_value.append(type_(item))
-        elif self._is_list(value):
-            for item in value:
-                new_value.append(type_(item))
-        elif self._is_dict(value):
-            two_key_condition = len(
-                value) == 2 and 'start' in value and 'stop' in value
-            three_key_condition = len(
-                value) == 3 and 'start' in value and 'stop' in value\
-                and 'step' in value
-            if two_key_condition or three_key_condition:
-                step = 1
-                start = value['start']
-                stop = value['stop']
-                if 'step' in value:
-                    step = value['step']
-                new_value = list(range(start, stop + 1, step))
+        try:
+            if self._is_string(value):
+                self._value = []
+                value = value.split(',')
+
+            if self._is_list(value):
+                new_value = self._process_list(value)
+
+            elif self._is_dict(value):
+                two_key_condition = len(
+                    value) == 2 and 'start' in value and 'stop' in value
+                three_key_condition = len(
+                    value) == 3 and 'start' in value and 'stop' in value\
+                    and 'step' in value
+                if two_key_condition or three_key_condition:
+                    step = 1
+                    start = int(value['start'])
+                    stop = int(value['stop'])
+                    if 'step' in value:
+                        step = int(value['step'])
+                    new_value = list(range(start, stop + 1, step))
+                else:
+                    return ConfigStatus(
+                        CONFIG_PARSER_FAILURE,
+                        f'If a dictionary is used for field "{self.name()}", it'
+                        ' should only contain "start" and "stop" key with an'
+                        f' optional "step" key. Currently, contains {list(value)}.',
+                        config_object=self)
             else:
-                return MODEL_ANALYZER_FAILURE
-        else:
-            new_value = [type_(value)]
+                new_value = [type_(value)]
+        except ValueError as e:
+            message = f'Failed to set the value for field "{self.name()}". Error: {e}.'
+            return ConfigStatus(CONFIG_PARSER_FAILURE, message, self)
 
         return super().set_value(new_value)

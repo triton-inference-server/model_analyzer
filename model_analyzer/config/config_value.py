@@ -16,7 +16,8 @@ import abc
 from abc import abstractmethod
 
 from model_analyzer.constants import \
-    MODEL_ANALYZER_SUCCESS, MODEL_ANALYZER_FAILURE
+    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+from .config_status import ConfigStatus
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
@@ -25,17 +26,15 @@ class ConfigValue(abc.ABC):
     """
     Parent class for all the types used in the ConfigField.
     """
-
     def __init__(self,
                  preprocess=None,
                  required=False,
                  validator=None,
-                 output_mapper=None):
+                 output_mapper=None,
+                 name=None):
         """
         Parameters
         ----------
-        name : str
-            Configuration name.
         preprocess : callable or None
             Function be called before setting new values.
         required : bool
@@ -44,12 +43,15 @@ class ConfigValue(abc.ABC):
             A validator for the value of the field.
         output_mapper: callable or None
             This callable unifies the output value of this field.
+        name : str
+            Fully qualified name for this field.
         """
 
         self._preprocess = preprocess
         self._required = required
         self._validator = validator
         self._output_mapper = output_mapper
+        self._name = name
 
     @abstractmethod
     def set_value(self, value):
@@ -58,21 +60,14 @@ class ConfigValue(abc.ABC):
         subclass.
         """
 
-        output_validated = False
         if self._validator:
-            if self._validator(value):
-                output_validated = True
-            else:
-                return MODEL_ANALYZER_FAILURE
-        else:
-            output_validated = True
+            config_status = self._validator(value)
+            if config_status.status() == CONFIG_PARSER_FAILURE:
+                return config_status
 
         self._value = value
 
-        if output_validated:
-            return MODEL_ANALYZER_SUCCESS
-        else:
-            return MODEL_ANALYZER_FAILURE
+        return ConfigStatus(status=CONFIG_PARSER_SUCCESS)
 
     def value(self):
         """
@@ -95,7 +90,8 @@ class ConfigValue(abc.ABC):
                     final_return_result[key] = value_.value()
                 else:
                     raise TritonModelAnalyzerException(
-                        'ConfigObject should always have a "value" attribute for each key.')
+                        'ConfigObject should always have a '
+                        '"value" attribute for each key.')
             return_result = final_return_result
         elif type(return_result) is list:
             return_results = []
@@ -216,3 +212,27 @@ class ConfigValue(abc.ABC):
         """
 
         return self._required
+
+    def name(self):
+        """
+        Get the fully qualified name for this field.
+
+        Returns
+        -------
+        str or None
+            Fully qualified name for this field.
+        """
+
+        return self._name
+
+    def set_name(self, name):
+        """
+        Set the name for this field.
+
+        Parameters
+        ----------
+        name : str
+            New name to be set for this field.
+        """
+
+        self._name = name

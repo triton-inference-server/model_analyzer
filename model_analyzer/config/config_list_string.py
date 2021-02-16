@@ -13,20 +13,21 @@
 # limitations under the License.
 
 from .config_value import ConfigValue
+from .config_status import ConfigStatus
 from model_analyzer.constants import \
-    MODEL_ANALYZER_FAILURE
+    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
 
 
 class ConfigListString(ConfigValue):
     """
     A list of string values.
     """
-
     def __init__(self,
                  preprocess=None,
                  required=False,
                  validator=None,
-                 output_mapper=None):
+                 output_mapper=None,
+                 name=None):
         """
         Instantiate a new ConfigListString
 
@@ -38,14 +39,23 @@ class ConfigListString(ConfigValue):
             A validator for the value of the field.
         output_mapper: callable or None
             This callable unifies the output value of this field.
+        name : str
+            Fully qualified name for this field.
         """
 
         # default validator
         if validator is None:
-            def validator(x):
-                return type(x) is list and len(x) > 0
 
-        super().__init__(preprocess, required, validator, output_mapper)
+            def validator(x):
+                if type(x) is list and len(x) > 0:
+                    return ConfigStatus(CONFIG_PARSER_SUCCESS)
+
+                return ConfigStatus(
+                    CONFIG_PARSER_FAILURE,
+                    f'The value for field "{self.name()}" should be a list'
+                    ' and the length must be larger than zero.')
+
+        super().__init__(preprocess, required, validator, output_mapper, name)
         self._type = self._cli_type = str
         self._value = []
 
@@ -73,11 +83,19 @@ class ConfigListString(ConfigValue):
         elif self._is_list(value):
             for item in value:
                 if not self._is_primitive(item):
-                    return MODEL_ANALYZER_FAILURE
+                    return ConfigStatus(
+                        CONFIG_PARSER_FAILURE,
+                        'The value for each item in the list should'
+                        f' be a primitive value not "{item}" for field '
+                        f'"{self.name()}".', self)
                 new_value.append(self._type(item))
         else:
             if self._is_dict(value):
-                return MODEL_ANALYZER_FAILURE
+                return ConfigStatus(
+                    CONFIG_PARSER_FAILURE,
+                    f'The value for field "{self.name()}" should not be'
+                    ' a dictionary, current '
+                    f'value is "{value}".', self)
             new_value = [self._type(value)]
 
         return super().set_value(new_value)
