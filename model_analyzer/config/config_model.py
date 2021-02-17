@@ -168,7 +168,7 @@ class ConfigModel:
 
         Parameters
         ----------
-        list
+        models : list
             A mixed list containing lists or ConfigModel objects.
 
         Returns

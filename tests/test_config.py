@@ -47,19 +47,19 @@ class TestConfig(trc.TestResultCollector):
 
     def _assert_equality_of_model_configs(self, model_configs,
                                           expected_model_configs):
-        self.assertTrue(len(model_configs) == len(expected_model_configs))
+        self.assertEqual(len(model_configs), len(expected_model_configs))
         for model_config, expected_model_config \
                 in zip(model_configs, expected_model_configs):
-            self.assertTrue(expected_model_config.model_name() ==
-                            model_config.model_name())
-            self.assertTrue(expected_model_config.parameters() ==
-                            model_config.parameters())
-            self.assertTrue(expected_model_config.constraints() ==
-                            model_config.constraints())
-            self.assertTrue(expected_model_config.objectives() ==
-                            model_config.objectives())
-            self.assertTrue(expected_model_config.model_config_parameters() ==
-                            model_config.model_config_parameters())
+            self.assertEqual(expected_model_config.model_name(),
+                             model_config.model_name())
+            self.assertEqual(expected_model_config.parameters(),
+                             model_config.parameters())
+            self.assertEqual(expected_model_config.constraints(),
+                             model_config.constraints())
+            self.assertEqual(expected_model_config.objectives(),
+                             model_config.objectives())
+            self.assertEqual(expected_model_config.model_config_parameters(),
+                             model_config.model_config_parameters())
 
     def _assert_model_config_types(self, model_config):
         self.assertIsInstance(model_config.field_type(), ConfigUnion)
@@ -178,14 +178,24 @@ class TestConfig(trc.TestResultCollector):
         yaml_content = 'model_names: model_1,model_2'
         config = self._evaluate_config(args, yaml_content)
         expected_model_configs = [
-            ConfigModel('model_1'),
-            ConfigModel('model_2')
+            ConfigModel('model_1',
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1]
+                        },
+                        objectives=['perf_throughput']),
+            ConfigModel('model_2',
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1]
+                        },
+                        objectives=['perf_throughput'])
         ]
         self._assert_equality_of_model_configs(
             config.get_all_config()['model_names'], expected_model_configs)
         self.assertIsInstance(
             config.get_config()['model_names'].field_type().raw_value(),
-            ConfigListString)
+            ConfigObject)
 
         yaml_content = """
 model_names:
@@ -197,10 +207,14 @@ model_names:
             config.get_all_config()['model_names'], expected_model_configs)
 
         model_config = config.get_config()['model_names']
+
         self._assert_model_config_types(model_config)
         self.assertIsInstance(
-            model_config.field_type().raw_value().raw_value()[0].raw_value(),
-            ConfigPrimitive)
+            model_config.field_type().raw_value().raw_value()
+            ['model_1'].raw_value()['objectives'], ConfigListString)
+        self.assertIsInstance(
+            model_config.field_type().raw_value().raw_value()
+            ['model_1'].raw_value()['parameters'], ConfigObject)
 
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
@@ -280,20 +294,31 @@ model_names:
 
         expected_model_objects = [
             ConfigModel('vgg_16_graphdef',
-                        parameters={'concurrency': [1, 2, 3, 4]}),
-            ConfigModel('vgg_19_graphdef')
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1, 2, 3, 4]
+                        },
+                        objectives=['perf_throughput']),
+            ConfigModel('vgg_19_graphdef',
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1]
+                        },
+                        objectives=['perf_throughput'])
         ]
 
         # Check the types for the first value
-        first_model = model_config.field_type().raw_value().raw_value()[0]
+        first_model = model_config.field_type().raw_value().raw_value(
+        )['vgg_16_graphdef']
         self._assert_model_object_types(first_model,
                                         'vgg_16_graphdef',
                                         check_parameters=True,
                                         check_concurrency=True)
 
         # Check the types for the second value
-        second_model = model_config.field_type().raw_value().raw_value()[1]
-        self._assert_model_str_type(second_model)
+        second_model = model_config.field_type().raw_value().raw_value(
+        )['vgg_19_graphdef']
+        self._assert_model_object_types(second_model, 'vgg_19_graphdef')
 
         self._assert_equality_of_model_configs(
             config.get_all_config()['model_names'], expected_model_objects)
@@ -321,12 +346,17 @@ model_names:
 """
         expected_model_objects = [
             ConfigModel('vgg_16_graphdef',
-                        parameters={'concurrency': [1, 2, 3, 4]}),
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1, 2, 3, 4]
+                        },
+                        objectives=['perf_throughput']),
             ConfigModel('vgg_19_graphdef',
                         parameters={
                             'concurrency': [1, 2, 3, 4],
                             'batch_sizes': [2, 4, 6]
-                        })
+                        },
+                        objectives=['perf_throughput'])
         ]
         config = self._evaluate_config(args, yaml_content)
         self._assert_equality_of_model_configs(
@@ -379,12 +409,20 @@ model_names:
         config = self._evaluate_config(args, yaml_content)
         expected_model_objects = [
             ConfigModel('vgg_16_graphdef',
-                        parameters={'concurrency': [1, 2, 3, 4]},
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1, 2, 3, 4]
+                        },
                         objectives=['perf_throughput', 'gpu_used_memory'],
                         constraints={'gpu_used_memory': {
                             'max': 80,
                         }}),
-            ConfigModel('vgg_19_graphdef')
+            ConfigModel('vgg_19_graphdef',
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1]
+                        },
+                        objectives=['perf_throughput'])
         ]
         self._assert_equality_of_model_configs(
             config.get_all_config()['model_names'], expected_model_objects)
@@ -503,6 +541,11 @@ model_names:
         model_configs = config.get_all_config()['model_names']
         expected_model_configs = [
             ConfigModel('vgg_16_graphdef',
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1]
+                        },
+                        objectives=['perf_throughput'],
                         model_config_parameters={
                             'instance_group': [{
                                 'kind': 'KIND_GPU',
@@ -535,6 +578,11 @@ model_names:
         model_configs = config.get_all_config()['model_names']
         expected_model_configs = [
             ConfigModel('vgg_16_graphdef',
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1]
+                        },
+                        objectives=['perf_throughput'],
                         model_config_parameters={
                             'instance_group': [{
                                 'kind': 'KIND_GPU',
@@ -572,6 +620,11 @@ model_names:
         model_configs = config.get_all_config()['model_names']
         expected_model_configs = [
             ConfigModel('vgg_16_graphdef',
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1]
+                        },
+                        objectives=['perf_throughput'],
                         model_config_parameters={
                             'instance_group': [[{
                                 'kind': 'KIND_GPU',
@@ -602,6 +655,11 @@ model_names:
         model_configs = config.get_all_config()['model_names']
         expected_model_configs = [
             ConfigModel('vgg_16_graphdef',
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1]
+                        },
+                        objectives=['perf_throughput'],
                         model_config_parameters={
                             'input': [{
                                 'name': 'NV_MODEL_INPUT',
@@ -614,11 +672,11 @@ model_names:
         model_config = config.get_config()['model_names']
         self._assert_model_config_types(model_config)
 
-        model = model_config.field_type().raw_value().raw_value()[0]
+        model = model_config.field_type().raw_value().raw_value(
+        )['vgg_16_graphdef']
         self._assert_model_object_types(model, 'vgg_16_graphdef')
 
-        model_config_parameters = model.raw_value().raw_value(
-        )['vgg_16_graphdef'].raw_value()['model_config_parameters']
+        model_config_parameters = model.raw_value()['model_config_parameters']
 
         self._assert_model_config_params(model_config_parameters)
         self._assert_equality_of_model_configs(model_configs,
@@ -698,6 +756,250 @@ model_names:
         config_primitive = ConfigPrimitive(float)
         config_status = config_primitive.set_value('a')
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+
+    def test_autofill(self):
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file'
+        ]
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+        model_config_parameters:
+            instance_group:
+                -
+                    kind: KIND_GPU
+                    count: 1
+
+"""
+        # Test defaults
+        config = self._evaluate_config(args, yaml_content)
+        model_configs = config.get_all_config()['model_names']
+        expected_model_configs = [
+            ConfigModel('vgg_16_graphdef',
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': [1]
+                        },
+                        objectives=['perf_throughput'],
+                        model_config_parameters={
+                            'instance_group': [{
+                                'kind': 'KIND_GPU',
+                                'count': 1
+                            }]
+                        })
+        ]
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
+
+        yaml_content = """
+objectives:
+  - perf_throughput
+  - gpu_used_memory
+constraints:
+  gpu_used_memory:
+    max: 80
+model_names:
+  -
+    vgg_16_graphdef:
+        parameters:
+          batch_sizes:
+            - 16
+            - 32
+          concurrency:
+            start: 2
+            stop: 4
+            step: 2
+        model_config_parameters:
+            instance_group:
+                -
+                    kind: KIND_GPU
+                    count: 1
+
+"""
+        # Test autofill objectives and constraints
+        config = self._evaluate_config(args, yaml_content)
+        model_configs = config.get_all_config()['model_names']
+        expected_model_configs = [
+            ConfigModel('vgg_16_graphdef',
+                        parameters={
+                            'batch_sizes': [16, 32],
+                            'concurrency': [2, 4]
+                        },
+                        objectives=['perf_throughput', 'gpu_used_memory'],
+                        constraints={'gpu_used_memory': {
+                            'max': 80,
+                        }},
+                        model_config_parameters={
+                            'instance_group': [{
+                                'kind': 'KIND_GPU',
+                                'count': 1
+                            }]
+                        })
+        ]
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
+
+        yaml_content = """
+concurrency:
+  start: 2
+  stop : 4
+  step: 2
+model_names:
+  -
+    vgg_16_graphdef:
+        parameters:
+          batch_sizes:
+            - 16
+            - 32
+        objectives:
+          - gpu_used_memory
+        constraints:
+          perf_latency:
+            max: 8000
+        model_config_parameters:
+            instance_group:
+                -
+                    kind: KIND_GPU
+                    count: 1
+
+"""
+        # Test autofill concurrency
+        config = self._evaluate_config(args, yaml_content)
+        model_configs = config.get_all_config()['model_names']
+        expected_model_configs = [
+            ConfigModel('vgg_16_graphdef',
+                        parameters={
+                            'batch_sizes': [16, 32],
+                            'concurrency': [2, 4]
+                        },
+                        objectives=['gpu_used_memory'],
+                        constraints={'perf_latency': {
+                            'max': 8000
+                        }},
+                        model_config_parameters={
+                            'instance_group': [{
+                                'kind': 'KIND_GPU',
+                                'count': 1
+                            }]
+                        })
+        ]
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
+
+        yaml_content = """
+batch_sizes:
+  - 16
+  - 32
+model_names:
+  -
+    vgg_16_graphdef:
+        parameters:
+          concurrency:
+            start: 2
+            stop : 4
+            step: 2
+        objectives:
+          - gpu_used_memory
+        constraints:
+          perf_latency:
+            max: 8000
+        model_config_parameters:
+            instance_group:
+                -
+                    kind: KIND_GPU
+                    count: 1
+
+"""
+        # Test autofill batch sizes
+        config = self._evaluate_config(args, yaml_content)
+        model_configs = config.get_all_config()['model_names']
+        expected_model_configs = [
+            ConfigModel('vgg_16_graphdef',
+                        parameters={
+                            'batch_sizes': [16, 32],
+                            'concurrency': [2, 4]
+                        },
+                        objectives=['gpu_used_memory'],
+                        constraints={'perf_latency': {
+                            'max': 8000
+                        }},
+                        model_config_parameters={
+                            'instance_group': [{
+                                'kind': 'KIND_GPU',
+                                'count': 1
+                            }]
+                        })
+        ]
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
+
+        yaml_content = """
+objectives:
+  - perf_throughput
+  - perf_latency
+constraints:
+    perf_latency:
+      max: 8000
+    gpu_used_memory:
+      max: 10000
+batch_sizes:
+  - 16
+  - 32
+concurrency:
+  start: 2
+  stop: 4
+  step: 2
+model_names:
+  -
+    vgg_16_graphdef:
+        parameters:
+          concurrency:
+            start: 5
+            stop : 7
+        objectives:
+          - gpu_used_memory
+  -
+    vgg_19_graphdef:
+        parameters:
+          batch_sizes:
+            - 1
+            - 2
+        constraints:
+          perf_latency:
+            max: 8000
+"""
+        # Test autofill batch sizes
+        config = self._evaluate_config(args, yaml_content)
+        model_configs = config.get_all_config()['model_names']
+        expected_model_configs = [
+            ConfigModel('vgg_16_graphdef',
+                        parameters={
+                            'batch_sizes': [16, 32],
+                            'concurrency': [5, 6, 7]
+                        },
+                        objectives=['gpu_used_memory'],
+                        constraints={
+                            'perf_latency': {
+                                'max': 8000
+                            },
+                            'gpu_used_memory': {
+                                'max': 10000
+                            }
+                        }),
+            ConfigModel('vgg_19_graphdef',
+                        parameters={
+                            'batch_sizes': [1, 2],
+                            'concurrency': [2, 4]
+                        },
+                        objectives=['perf_throughput', 'perf_latency'],
+                        constraints={'perf_latency': {
+                            'max': 8000
+                        }})
+        ]
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
 
 
 if __name__ == '__main__':

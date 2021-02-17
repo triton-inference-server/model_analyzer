@@ -23,6 +23,7 @@ class ConfigObject(ConfigValue):
     """
     Representation of dictionaries in Config
     """
+
     def __init__(self,
                  schema,
                  preprocess=None,
@@ -70,7 +71,7 @@ class ConfigObject(ConfigValue):
 
         Parameters
         ----------
-        value : object
+        value : dict
             The value for this field.
 
         Returns

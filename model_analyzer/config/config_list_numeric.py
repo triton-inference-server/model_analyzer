@@ -22,6 +22,7 @@ class ConfigListNumeric(ConfigValue):
     """
     A list of numeric values.
     """
+
     def __init__(self,
                  type_,
                  preprocess=None,

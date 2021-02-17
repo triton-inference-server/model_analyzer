@@ -22,6 +22,7 @@ class ConfigPrimitive(ConfigValue):
     """
     A wrapper class for the primitive datatypes.
     """
+
     def __init__(self,
                  type_,
                  preprocess=None,

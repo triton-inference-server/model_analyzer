@@ -26,6 +26,7 @@ class ConfigValue(abc.ABC):
     """
     Parent class for all the types used in the ConfigField.
     """
+
     def __init__(self,
                  preprocess=None,
                  required=False,
@@ -203,7 +204,7 @@ class ConfigValue(abc.ABC):
 
     def required(self):
         """
-        Get the required field value
+        Get the 'required' field value
 
         Returns
         -------

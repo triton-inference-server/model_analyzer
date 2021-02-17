@@ -99,14 +99,18 @@ class MetricsManager:
 
         priorities = MetricsMapper.get_metric_types(
             tags=config_model.objectives())
-        constraint_tags = list(config_model.constraints().keys())
-        constraint_metrics = MetricsMapper.get_metric_types(
-            tags=constraint_tags)
-        constraints = {
-            constraint_metrics[i]:
-            config_model.constraints()[constraint_tags[i]]
-            for i in range(len(constraint_tags))
-        }
+        constraints = {}
+
+        # Constraints may be empty
+        if config_model.constraints():
+            constraint_tags = list(config_model.constraints().keys())
+            constraint_metrics = MetricsMapper.get_metric_types(
+                tags=constraint_tags)
+            constraints = {
+                constraint_metrics[i]:
+                config_model.constraints()[constraint_tags[i]]
+                for i in range(len(constraint_tags))
+            }
 
         self._result_comparator = ResultComparator(
             gpu_metric_types=self._dcgm_metrics,
