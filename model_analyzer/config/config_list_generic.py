@@ -24,6 +24,7 @@ class ConfigListGeneric(ConfigValue):
     """
     A generic list.
     """
+
     def __init__(self,
                  type_,
                  preprocess=None,

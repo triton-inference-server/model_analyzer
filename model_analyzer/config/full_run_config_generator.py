@@ -26,20 +26,21 @@ class FullRunConfigGenerator:
     parsing and run_config generation
     """
 
-    def __init__(self, analyzer_config, model_name):
+    def __init__(self, analyzer_config, config_model):
         """
+        Parameters
+        ----------
         analyzer_config : ModelAnalyzerConfig
             The config object parsed from 
             a model analyzer config yaml or json.
-
-        model_name : str
-            The name of the model for which we need
-            to generate run configs
+        config_model : ConfigModel
+            The ConfigModel object that contains all
+            relevant information about this model
         """
 
         super().__init__()
         self._analyzer_config = analyzer_config
-        self._model_name = model_name
+        self._model = config_model
         self._run_configs = []
         self._generate_all_run_configs()
 
@@ -73,7 +74,7 @@ class FullRunConfigGenerator:
 
         # TODO replace [None] with list from the config
         model_config_params = {
-            'model_name': [self._model_name],
+            'model_name': [self._model.model_name()],
             'instance_group': [None],
             'dynamic_batching': [None]
         }
@@ -96,11 +97,11 @@ class FullRunConfigGenerator:
         """
 
         perf_config_params = {
-            'model-name': [self._model_name],
+            'model-name': [self._model.model_name()],
             'batch-size':
-            self._analyzer_config.batch_sizes,
+            self._model.parameters()['batch_sizes'],
             'concurrency-range':
-            self._analyzer_config.concurrency,
+            self._model.parameters()['concurrency'],
             'protocol': [self._analyzer_config.client_protocol],
             'url': [
                 self._analyzer_config.triton_http_endpoint

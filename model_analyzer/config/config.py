@@ -209,6 +209,7 @@ class AnalyzerConfig:
             ConfigField(
                 'objectives',
                 field_type=ConfigListString(),
+                default_value=['perf_throughput'],
                 description=
                 'Model Analyzer uses the objectives described here to find the best configuration for each model.'
             ))
@@ -351,7 +352,7 @@ class AnalyzerConfig:
             ConfigField('triton_version',
                         flags=['--triton-version'],
                         field_type=ConfigPrimitive(str),
-                        default_value='20.11-py3',
+                        default_value='20.12-py3',
                         description='Triton Server Docker version'))
         self._add_config(
             ConfigField('log_level',
@@ -470,6 +471,58 @@ class AnalyzerConfig:
                             "[%(filename)s:%(lineno)d] %(message)s",
                             datefmt="%Y-%m-%d %H:%M:%S")
 
+    def _autofill_values(self):
+        """
+        Fill in the implied or default
+        config values.
+        """
+
+        new_model_names = {}
+        for model in self.model_names:
+            new_model = {}
+
+            # Objectives
+            if not model.objectives():
+                new_model['objectives'] = self.objectives
+            else:
+                new_model['objectives'] = model.objectives()
+
+            # Constraints
+            if not model.constraints():
+                if 'constraints' in self._fields and self._fields[
+                        'constraints'].value():
+                    new_model['constraints'] = self.constraints
+            else:
+                new_model['constraints'] = model.constraints()
+
+            # Run parameters
+            if not model.parameters():
+                new_model['parameters'] = {
+                    'batch_sizes': self.batch_sizes,
+                    'concurrency': self.concurrency
+                }
+            elif 'batch_sizes' not in model.parameters():
+                new_model['parameters'] = {
+                    'batch_sizes': self.batch_sizes,
+                    'concurrency': model.parameters()['concurrency']
+                }
+            elif 'concurrency' not in model.parameters():
+                new_model['parameters'] = {
+                    'batch_sizes': model.parameters()['batch_sizes'],
+                    'concurrency': self.concurrency
+                }
+            else:
+                new_model['parameters'] = model.parameters()
+
+            # Transfer model config parameters directly
+            if model.model_config_parameters():
+                new_model[
+                    'model_config_parameters'] = model.model_config_parameters(
+                    )
+
+            new_model_names[model.model_name()] = new_model
+        self._fields['model_names'].set_value(new_model_names)
+
     def set_config_values(self, args):
         """
         Set the config values. This function sets all the values for the
@@ -508,6 +561,7 @@ class AnalyzerConfig:
                 )
         self._setup_logger()
         self._preprocess_and_verify_arguments()
+        self._autofill_values()
 
     def get_config(self):
         """

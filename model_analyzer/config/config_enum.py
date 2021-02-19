@@ -22,6 +22,7 @@ class ConfigEnum(ConfigValue):
     """
     Enum type support for config.
     """
+
     def __init__(self,
                  choices,
                  preprocess=None,

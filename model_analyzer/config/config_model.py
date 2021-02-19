@@ -104,7 +104,7 @@ class ConfigModel:
 
         Parameters
         ----------
-        dict
+        value : dict
             A dictionary where the keys are model names
             and the values are ConfigObjects.
 
@@ -168,7 +168,7 @@ class ConfigModel:
 
         Parameters
         ----------
-        list
+        models : list
             A mixed list containing lists or ConfigModel objects.
 
         Returns

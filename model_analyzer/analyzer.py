@@ -76,9 +76,12 @@ class Analyzer:
                 model_name=model.model_name(),
                 num_retries=self._config.max_retries)
             try:
+                # Send priorities and constraints to result manager
+                self._metrics_manager.configure_result_manager(
+                    config_model=model)
+
                 for run_config in FullRunConfigGenerator(
-                        analyzer_config=self._config,
-                        model_name=model.model_name()):
+                        analyzer_config=self._config, config_model=model):
 
                     # Initialize the result
                     self._result_manager.init_result(run_config)

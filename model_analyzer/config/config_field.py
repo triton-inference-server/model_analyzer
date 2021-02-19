@@ -34,18 +34,16 @@ class ConfigField:
         ----------
         name : str
             Configuration name.
-        description : str
-            Description of the config.
         flags : list
             List of the flags to be used for the CLI.
-        field_type : ConfigValue
-            type of the field
         choices : list or None
             List of the choices to be used.
-        preprocess : callable
-            Function be called before setting new values.
+        description : str
+            Description of the config.
         default_value : object
             Default value used for the config field.
+        field_type : ConfigValue
+            type of the field
         parser_args : dict
             Additionaly arguments to be passed to ArgumentParser.
         """
@@ -156,9 +154,7 @@ class ConfigField:
         Set the value for the config field.
         """
 
-        field_type = self._field_type
-
-        config_status = field_type.set_value(value)
+        config_status = self._field_type.set_value(value)
 
         if config_status.status() == CONFIG_PARSER_FAILURE:
             raise TritonModelAnalyzerException(
