@@ -70,6 +70,11 @@ class ConfigObject(ConfigValue):
         """
         Set the value for this field.
 
+        Note: Because ConfigObjects can have nested
+        ConfigValues and the schema contains these,
+        this function performs deep copies of the 
+        types of objects, and then sets their values.
+
         Parameters
         ----------
         value : dict

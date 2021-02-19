@@ -56,8 +56,8 @@ class ResultComparator:
             for i in range(len(gpu_metric_types))
         }
 
-        # Normalize metric objectives
-        self._metric_objectives = {
+        # Normalize metric weights
+        self._metric_weights = {
             key: (val / sum(metric_objectives.values()))
             for key, val in metric_objectives.items()
         }
@@ -138,29 +138,27 @@ class ResultComparator:
         non_gpu_data1 = measurement1.non_gpu_data()
         non_gpu_data2 = measurement2.non_gpu_data()
 
-        score_diff = 0.0
-        for objective, weight in self._metric_objectives.items():
+        score_gain = 0.0
+        for objective, weight in self._metric_weights.items():
             if objective in self._non_gpu_type_to_idx:
                 metric_idx = self._non_gpu_type_to_idx[objective]
                 value_diff = (non_gpu_data1[metric_idx] -
                               non_gpu_data2[metric_idx]).value()
-                value_sum = (non_gpu_data1[metric_idx] +
-                             non_gpu_data2[metric_idx]).value()
+                value_base = non_gpu_data1[metric_idx].value()
             elif objective in self._gpu_type_to_idx:
                 metric_idx = self._gpu_type_to_idx[objective]
                 value_diff = (avg_gpu_data1[metric_idx] -
                               avg_gpu_data2[metric_idx]).value()
-                value_sum = (avg_gpu_data1[metric_idx] +
-                             avg_gpu_data2[metric_idx]).value()
+                value_base = avg_gpu_data1[metric_idx].value()
             else:
                 raise TritonModelAnalyzerException(
                     f"Category unknown for objective : '{objective}'")
-            score_diff += (weight * (value_diff / value_sum))
+            score_gain += (weight * (value_diff / value_base))
 
         # Compare score with threshhold
-        if score_diff > COMPARISON_SCORE_THRESHOLD:
+        if score_gain > COMPARISON_SCORE_THRESHOLD:
             return 1
-        elif score_diff < -COMPARISON_SCORE_THRESHOLD:
+        elif score_gain < -COMPARISON_SCORE_THRESHOLD:
             return -1
         return 0
 
