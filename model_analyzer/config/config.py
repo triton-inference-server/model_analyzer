@@ -144,6 +144,8 @@ class AnalyzerConfig:
                         field_type=ConfigPrimitive(str, required=True),
                         description='Model repository location'))
 
+        objectives_scheme = ConfigObject(
+            schema={'**': ConfigPrimitive(type_=int)})
         constraints_scheme = ConfigObject(
             schema={
                 'perf_throughput':
@@ -175,7 +177,7 @@ class AnalyzerConfig:
                                 'concurrency': ConfigListNumeric(type_=int)
                             }),
                         'objectives':
-                        ConfigListString(),
+                        objectives_scheme,
                         'constraints':
                         constraints_scheme,
                         'model_config_parameters':
@@ -208,8 +210,8 @@ class AnalyzerConfig:
         self._add_config(
             ConfigField(
                 'objectives',
-                field_type=ConfigListString(),
-                default_value=['perf_throughput'],
+                field_type=objectives_scheme,
+                default_value={'perf_throughput': 10},
                 description=
                 'Model Analyzer uses the objectives described here to find the best configuration for each model.'
             ))

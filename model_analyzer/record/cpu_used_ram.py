@@ -84,7 +84,7 @@ class CPUUsedRAM(Record):
 
     def __sub__(self, other):
         """
-        Allows adding two records together
+        Allows subtracting two records together
         to produce a brand new record.
         """
 

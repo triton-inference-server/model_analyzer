@@ -183,13 +183,13 @@ class TestConfig(trc.TestResultCollector):
                             'batch_sizes': [1],
                             'concurrency': [1]
                         },
-                        objectives=['perf_throughput']),
+                        objectives={'perf_throughput': 10}),
             ConfigModel('model_2',
                         parameters={
                             'batch_sizes': [1],
                             'concurrency': [1]
                         },
-                        objectives=['perf_throughput'])
+                        objectives={'perf_throughput': 10})
         ]
         self._assert_equality_of_model_configs(
             config.get_all_config()['model_names'], expected_model_configs)
@@ -211,7 +211,7 @@ model_names:
         self._assert_model_config_types(model_config)
         self.assertIsInstance(
             model_config.field_type().raw_value().raw_value()
-            ['model_1'].raw_value()['objectives'], ConfigListString)
+            ['model_1'].raw_value()['objectives'], ConfigObject)
         self.assertIsInstance(
             model_config.field_type().raw_value().raw_value()
             ['model_1'].raw_value()['parameters'], ConfigObject)
@@ -298,13 +298,13 @@ model_names:
                             'batch_sizes': [1],
                             'concurrency': [1, 2, 3, 4]
                         },
-                        objectives=['perf_throughput']),
+                        objectives={'perf_throughput': 10}),
             ConfigModel('vgg_19_graphdef',
                         parameters={
                             'batch_sizes': [1],
                             'concurrency': [1]
                         },
-                        objectives=['perf_throughput'])
+                        objectives={'perf_throughput': 10})
         ]
 
         # Check the types for the first value
@@ -350,13 +350,13 @@ model_names:
                             'batch_sizes': [1],
                             'concurrency': [1, 2, 3, 4]
                         },
-                        objectives=['perf_throughput']),
+                        objectives={'perf_throughput': 10}),
             ConfigModel('vgg_19_graphdef',
                         parameters={
                             'concurrency': [1, 2, 3, 4],
                             'batch_sizes': [2, 4, 6]
                         },
-                        objectives=['perf_throughput'])
+                        objectives={'perf_throughput': 10})
         ]
         config = self._evaluate_config(args, yaml_content)
         self._assert_equality_of_model_configs(
@@ -399,8 +399,8 @@ model_names:
           - 3
           - 4
       objectives:
-        - perf_throughput
-        - gpu_used_memory
+        perf_throughput: 10
+        gpu_used_memory: 5
       constraints:
         gpu_used_memory:
           max: 80
@@ -413,7 +413,10 @@ model_names:
                             'batch_sizes': [1],
                             'concurrency': [1, 2, 3, 4]
                         },
-                        objectives=['perf_throughput', 'gpu_used_memory'],
+                        objectives={
+                            'perf_throughput': 10,
+                            'gpu_used_memory': 5
+                        },
                         constraints={'gpu_used_memory': {
                             'max': 80,
                         }}),
@@ -422,7 +425,7 @@ model_names:
                             'batch_sizes': [1],
                             'concurrency': [1]
                         },
-                        objectives=['perf_throughput'])
+                        objectives={'perf_throughput': 10})
         ]
         self._assert_equality_of_model_configs(
             config.get_all_config()['model_names'], expected_model_objects)
@@ -439,8 +442,8 @@ model_names:
           - 3
           - 4
       objectives:
-        - perf_throughput
-        - gpu_used_memory
+        perf_throughput: 10
+        gpu_used_memory: 5
       constraints:
         gpu_memory:
           max: 80
@@ -545,7 +548,7 @@ model_names:
                             'batch_sizes': [1],
                             'concurrency': [1]
                         },
-                        objectives=['perf_throughput'],
+                        objectives={'perf_throughput': 10},
                         model_config_parameters={
                             'instance_group': [{
                                 'kind': 'KIND_GPU',
@@ -582,7 +585,7 @@ model_names:
                             'batch_sizes': [1],
                             'concurrency': [1]
                         },
-                        objectives=['perf_throughput'],
+                        objectives={'perf_throughput': 10},
                         model_config_parameters={
                             'instance_group': [{
                                 'kind': 'KIND_GPU',
@@ -624,7 +627,7 @@ model_names:
                             'batch_sizes': [1],
                             'concurrency': [1]
                         },
-                        objectives=['perf_throughput'],
+                        objectives={'perf_throughput': 10},
                         model_config_parameters={
                             'instance_group': [[{
                                 'kind': 'KIND_GPU',
@@ -659,7 +662,7 @@ model_names:
                             'batch_sizes': [1],
                             'concurrency': [1]
                         },
-                        objectives=['perf_throughput'],
+                        objectives={'perf_throughput': 10},
                         model_config_parameters={
                             'input': [{
                                 'name': 'NV_MODEL_INPUT',
@@ -782,7 +785,7 @@ model_names:
                             'batch_sizes': [1],
                             'concurrency': [1]
                         },
-                        objectives=['perf_throughput'],
+                        objectives={'perf_throughput': 10},
                         model_config_parameters={
                             'instance_group': [{
                                 'kind': 'KIND_GPU',
@@ -795,8 +798,8 @@ model_names:
 
         yaml_content = """
 objectives:
-  - perf_throughput
-  - gpu_used_memory
+  perf_throughput: 10
+  gpu_used_memory: 5
 constraints:
   gpu_used_memory:
     max: 80
@@ -827,7 +830,10 @@ model_names:
                             'batch_sizes': [16, 32],
                             'concurrency': [2, 4]
                         },
-                        objectives=['perf_throughput', 'gpu_used_memory'],
+                        objectives={
+                            'perf_throughput': 10,
+                            'gpu_used_memory': 5
+                        },
                         constraints={'gpu_used_memory': {
                             'max': 80,
                         }},
@@ -854,7 +860,7 @@ model_names:
             - 16
             - 32
         objectives:
-          - gpu_used_memory
+          gpu_used_memory: 10
         constraints:
           perf_latency:
             max: 8000
@@ -874,7 +880,7 @@ model_names:
                             'batch_sizes': [16, 32],
                             'concurrency': [2, 4]
                         },
-                        objectives=['gpu_used_memory'],
+                        objectives={'gpu_used_memory': 10},
                         constraints={'perf_latency': {
                             'max': 8000
                         }},
@@ -901,7 +907,7 @@ model_names:
             stop : 4
             step: 2
         objectives:
-          - gpu_used_memory
+          gpu_used_memory: 10
         constraints:
           perf_latency:
             max: 8000
@@ -921,7 +927,7 @@ model_names:
                             'batch_sizes': [16, 32],
                             'concurrency': [2, 4]
                         },
-                        objectives=['gpu_used_memory'],
+                        objectives={'gpu_used_memory': 10},
                         constraints={'perf_latency': {
                             'max': 8000
                         }},
@@ -937,8 +943,8 @@ model_names:
 
         yaml_content = """
 objectives:
-  - perf_throughput
-  - perf_latency
+  perf_throughput: 10
+  perf_latency: 5
 constraints:
     perf_latency:
       max: 8000
@@ -959,7 +965,7 @@ model_names:
             start: 5
             stop : 7
         objectives:
-          - gpu_used_memory
+          gpu_used_memory: 10
   -
     vgg_19_graphdef:
         parameters:
@@ -979,7 +985,7 @@ model_names:
                             'batch_sizes': [16, 32],
                             'concurrency': [5, 6, 7]
                         },
-                        objectives=['gpu_used_memory'],
+                        objectives={'gpu_used_memory': 10},
                         constraints={
                             'perf_latency': {
                                 'max': 8000
@@ -993,7 +999,10 @@ model_names:
                             'batch_sizes': [1, 2],
                             'concurrency': [2, 4]
                         },
-                        objectives=['perf_throughput', 'perf_latency'],
+                        objectives={
+                            'perf_throughput': 10,
+                            'perf_latency': 5
+                        },
                         constraints={'perf_latency': {
                             'max': 8000
                         }})

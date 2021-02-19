@@ -84,8 +84,11 @@ class PerfLatency(Record):
 
     def __sub__(self, other):
         """
-        Allows adding two records together
+        Allows subbing two records together
         to produce a brand new record.
+
+        ** Note this does reverse subtraction because
+            of the inverted nature of latency (lower is better)
         """
 
-        return PerfLatency(value=(self.value() - other.value()))
+        return PerfLatency(value=(other.value() - self.value()))

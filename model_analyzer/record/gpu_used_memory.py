@@ -74,7 +74,7 @@ class GPUUsedMemory(GPURecord):
         the other
         """
 
-        return self.value() < other.value()
+        return self.value() > other.value()
 
     def __add__(self, other):
         """
@@ -86,8 +86,8 @@ class GPUUsedMemory(GPURecord):
 
     def __sub__(self, other):
         """
-        Allows adding two records together
+        Allows subtracting two records together
         to produce a brand new record.
         """
 
-        return GPUUsedMemory(device=None, value=(self.value() - other.value()))
+        return GPUUsedMemory(device=None, value=(other.value() - self.value()))

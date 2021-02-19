@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import abstractmethod
 from .config_value import ConfigValue
 from .config_status import ConfigStatus
 from model_analyzer.constants import \
@@ -84,29 +85,44 @@ class ConfigObject(ConfigValue):
         schema = self._schema
 
         if type(value) is dict:
-            for key, value_ in value.items():
-                if key in schema:
-                    new_item = deepcopy(schema[key])
+            if '**' in schema:
+                # If ** double wildcard is present, we can accept any number
+                # of any keys here
+                for key, value_ in value.items():
+                    new_item = deepcopy(schema['**'])
+                    new_item.set_name(f'{self.name()}.{key}')
+                    new_value[key] = new_item
 
-                # If the key is not available in the schema, but wildcard is
-                # present, we use the schema for the wildcard.
-                elif '*' in schema:
-                    new_item = deepcopy(schema['*'])
-                else:
-                    return ConfigStatus(
-                        CONFIG_PARSER_FAILURE, f'Key "{key}" should not be '
-                        f'specified in field "{self.name()}".', self)
+                    # Set the value of the new field
+                    config_status = new_item.set_value(value_)
 
-                new_item.set_name(f'{self.name()}.{key}')
-                new_value[key] = new_item
+                    # If it was not able to set the value, for this
+                    # field, we fail.
+                    if config_status.status() == CONFIG_PARSER_FAILURE:
+                        return config_status
+            else:
+                for key, value_ in value.items():
+                    if key in schema:
+                        new_item = deepcopy(schema[key])
 
-                # Set the value of the new field
-                config_status = new_item.set_value(value_)
+                    # If the key is not available in the schema, but wildcard is
+                    # present, we use the schema for the wildcard.
+                    elif '*' in schema:
+                        new_item = deepcopy(schema['*'])
+                    else:
+                        return ConfigStatus(
+                            CONFIG_PARSER_FAILURE,
+                            f'Key "{key}" should not be '
+                            f'specified in field "{self.name()}".', self)
 
-                # If it was not able to set the value, for this
-                # field, we fail.
-                if config_status.status() == CONFIG_PARSER_FAILURE:
-                    return config_status
+                    new_item.set_name(f'{self.name()}.{key}')
+                    new_value[key] = new_item
+
+                    # If it was not able to set the value, for this
+                    # field, we fail.
+                    config_status = new_item.set_value(value_)
+                    if config_status.status() == CONFIG_PARSER_FAILURE:
+                        return config_status
         else:
             return ConfigStatus(
                 CONFIG_PARSER_FAILURE,

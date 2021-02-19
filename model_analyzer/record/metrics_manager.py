@@ -84,7 +84,7 @@ class MetricsManager:
 
     def configure_result_manager(self, config_model):
         """
-        Processes the constraints and priorities
+        Processes the constraints and objectives
         for given ConfigModel and creates a result
         comparator to pass to the result manager
 
@@ -95,11 +95,15 @@ class MetricsManager:
             run
         """
 
-        # Construct list of record types for priorities and dict for constraints
-
-        priorities = MetricsMapper.get_metric_types(
-            tags=config_model.objectives())
         constraints = {}
+
+        # Construct dict of record types for objectives and constraints
+        objective_tags = list(config_model.objectives().keys())
+        objective_metrics = MetricsMapper.get_metric_types(tags=objective_tags)
+        objectives = {
+            objective_metrics[i]: config_model.objectives()[objective_tags[i]]
+            for i in range(len(objective_tags))
+        }
 
         # Constraints may be empty
         if config_model.constraints():
@@ -115,7 +119,7 @@ class MetricsManager:
         self._result_comparator = ResultComparator(
             gpu_metric_types=self._dcgm_metrics,
             non_gpu_metric_types=self._perf_metrics + self._cpu_metrics,
-            metric_priorities=priorities)
+            metric_objectives=objectives)
 
         self._result_manager.set_constraints_and_comparator(
             constraints=constraints, comparator=self._result_comparator)
