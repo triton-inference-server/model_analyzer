@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.record.gpu_free_memory import GPUFreeMemory
-from model_analyzer.record.gpu_used_memory import GPUUsedMemory
-from model_analyzer.record.gpu_utilization import GPUUtilization
+from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
+from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
+from model_analyzer.record.types.gpu_utilization import GPUUtilization
 from model_analyzer.monitor.gpu_monitor import GPUMonitor
 from model_analyzer.model_analyzer_exceptions import \
     TritonModelAnalyzerException

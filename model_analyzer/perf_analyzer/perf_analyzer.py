@@ -17,8 +17,8 @@ import logging
 
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
-from model_analyzer.record.perf_latency import PerfLatency
-from model_analyzer.record.perf_throughput import PerfThroughput
+from model_analyzer.record.types.perf_latency import PerfLatency
+from model_analyzer.record.types.perf_throughput import PerfThroughput
 
 MAX_INTERVAL_CHANGES = 20
 INTERVAL_DELTA = 1000

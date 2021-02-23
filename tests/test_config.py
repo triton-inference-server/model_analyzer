@@ -211,7 +211,7 @@ model_names:
         self._assert_model_config_types(model_config)
         self.assertIsInstance(
             model_config.field_type().raw_value().raw_value()
-            ['model_1'].raw_value()['objectives'], ConfigObject)
+            ['model_1'].raw_value()['objectives'], ConfigUnion)
         self.assertIsInstance(
             model_config.field_type().raw_value().raw_value()
             ['model_1'].raw_value()['parameters'], ConfigObject)
@@ -442,8 +442,8 @@ model_names:
           - 3
           - 4
       objectives:
-        perf_throughput: 10
-        gpu_used_memory: 5
+        - perf_throughput
+        - gpu_used_memory
       constraints:
         gpu_memory:
           max: 80
@@ -907,7 +907,7 @@ model_names:
             stop : 4
             step: 2
         objectives:
-          gpu_used_memory: 10
+          - gpu_used_memory
         constraints:
           perf_latency:
             max: 8000
@@ -965,7 +965,7 @@ model_names:
             start: 5
             stop : 7
         objectives:
-          gpu_used_memory: 10
+          - gpu_used_memory
   -
     vgg_19_graphdef:
         parameters:

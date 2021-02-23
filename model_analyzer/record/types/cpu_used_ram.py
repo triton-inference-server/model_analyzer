@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 from functools import total_ordering
 
-from .record import Record
+from model_analyzer.record.record import Record
 
 
 @total_ordering
@@ -68,11 +68,11 @@ class CPUUsedRAM(Record):
     def __lt__(self, other):
         """
         Allows checking if 
-        this record is less than 
+        this record is better than 
         the other
         """
 
-        return self.value() < other.value()
+        return self.value() > other.value()
 
     def __add__(self, other):
         """
@@ -88,4 +88,4 @@ class CPUUsedRAM(Record):
         to produce a brand new record.
         """
 
-        return CPUUsedRAM(value=(self.value() - other.value()))
+        return CPUUsedRAM(value=(other.value() - self.value()))

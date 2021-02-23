@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import result
 from model_analyzer.record.measurement import Measurement
 from model_analyzer.result.run_result import RunResult
 from model_analyzer.result.result_comparator import ResultComparator
-from model_analyzer.record.metrics_mapper import MetricsMapper
+from model_analyzer.record.metrics_manager import MetricsManager
 from .common import test_result_collector as trc
 
 
@@ -28,11 +27,11 @@ class TestResultComparatorMethods(trc.TestResultCollector):
         objective spec dictionary
         """
 
-        gpu_metric_types = MetricsMapper.get_metric_types(gpu_metric_tags)
-        non_gpu_metric_types = MetricsMapper.get_metric_types(
+        gpu_metric_types = MetricsManager.get_metric_types(gpu_metric_tags)
+        non_gpu_metric_types = MetricsManager.get_metric_types(
             non_gpu_metric_tags)
         objective_tags = list(objective_spec.keys())
-        objective_metrics = MetricsMapper.get_metric_types(objective_tags)
+        objective_metrics = MetricsManager.get_metric_types(objective_tags)
         objectives = {
             objective_metrics[i]: objective_spec[objective_tags[i]]
             for i in range(len(objective_tags))
@@ -55,7 +54,7 @@ class TestResultComparatorMethods(trc.TestResultCollector):
             gpu_data[gpu_id] = []
             gpu_metric_tags = list(metrics_values.keys())
             for i, gpu_metric in enumerate(
-                    MetricsMapper.get_metric_types(gpu_metric_tags)):
+                    MetricsManager.get_metric_types(gpu_metric_tags)):
                 gpu_data[gpu_id].append(
                     gpu_metric(value=metrics_values[gpu_metric_tags[i]]))
 
@@ -63,7 +62,7 @@ class TestResultComparatorMethods(trc.TestResultCollector):
         non_gpu_data = []
         non_gpu_metric_tags = list(non_gpu_metric_values.keys())
         for i, metric in enumerate(
-                MetricsMapper.get_metric_types(non_gpu_metric_tags)):
+                MetricsManager.get_metric_types(non_gpu_metric_tags)):
             non_gpu_data.append(
                 metric(value=non_gpu_metric_values[non_gpu_metric_tags[i]]))
 

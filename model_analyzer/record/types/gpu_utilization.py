@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,24 +13,23 @@
 # limitations under the License.
 
 from functools import total_ordering
-from .gpu_record import GPURecord
+from model_analyzer.record.gpu_record import GPURecord
 
 
 @total_ordering
-class GPUFreeMemory(GPURecord):
+class GPUUtilization(GPURecord):
     """
-    The free memory in the GPU.
+    GPU utilization record
     """
 
-    tag = "gpu_free_memory"
+    tag = "gpu_utilization"
 
     def __init__(self, value, device=None, timestamp=0):
         """
         Parameters
         ----------
         value : float
-            The free memory in the GPU obtained from
-            DCGM
+            The GPU utilization value
         device : GPUDevice
             The  GPU device this metric is associated
             with.
@@ -58,7 +57,7 @@ class GPUFreeMemory(GPURecord):
             metric.
         """
 
-        return aggregation_tag + "GPU Memory Available(MB)"
+        return aggregation_tag + "GPU Utilization(%)"
 
     def __eq__(self, other):
         """
@@ -70,8 +69,8 @@ class GPUFreeMemory(GPURecord):
 
     def __lt__(self, other):
         """
-        Allows checking if 
-        this record is less than 
+        Allows checking if
+        this record is less than
         the other
         """
 
@@ -83,7 +82,8 @@ class GPUFreeMemory(GPURecord):
         to produce a brand new record.
         """
 
-        return GPUFreeMemory(device=None, value=(self.value() + other.value()))
+        return GPUUtilization(device=None,
+                              value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
@@ -91,4 +91,5 @@ class GPUFreeMemory(GPURecord):
         to produce a brand new record.
         """
 
-        return GPUFreeMemory(device=None, value=(self.value() - other.value()))
+        return GPUUtilization(device=None,
+                              value=(self.value() - other.value()))

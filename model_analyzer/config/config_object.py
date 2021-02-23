@@ -90,44 +90,27 @@ class ConfigObject(ConfigValue):
         schema = self._schema
 
         if type(value) is dict:
-            if '**' in schema:
-                # If ** double wildcard is present, we can accept any number
-                # of any keys here
-                for key, value_ in value.items():
-                    new_item = deepcopy(schema['**'])
-                    new_item.set_name(f'{self.name()}.{key}')
-                    new_value[key] = new_item
+            for key, value_ in value.items():
+                if key in schema:
+                    new_item = deepcopy(schema[key])
 
-                    # Set the value of the new field
-                    config_status = new_item.set_value(value_)
+                # If the key is not available in the schema, but wildcard is
+                # present, we use the schema for the wildcard.
+                elif '*' in schema:
+                    new_item = deepcopy(schema['*'])
+                else:
+                    return ConfigStatus(
+                        CONFIG_PARSER_FAILURE, f'Key "{key}" should not be '
+                        f'specified in field "{self.name()}".', self)
 
-                    # If it was not able to set the value, for this
-                    # field, we fail.
-                    if config_status.status() == CONFIG_PARSER_FAILURE:
-                        return config_status
-            else:
-                for key, value_ in value.items():
-                    if key in schema:
-                        new_item = deepcopy(schema[key])
+                new_item.set_name(f'{self.name()}.{key}')
+                new_value[key] = new_item
 
-                    # If the key is not available in the schema, but wildcard is
-                    # present, we use the schema for the wildcard.
-                    elif '*' in schema:
-                        new_item = deepcopy(schema['*'])
-                    else:
-                        return ConfigStatus(
-                            CONFIG_PARSER_FAILURE,
-                            f'Key "{key}" should not be '
-                            f'specified in field "{self.name()}".', self)
-
-                    new_item.set_name(f'{self.name()}.{key}')
-                    new_value[key] = new_item
-
-                    # If it was not able to set the value, for this
-                    # field, we fail.
-                    config_status = new_item.set_value(value_)
-                    if config_status.status() == CONFIG_PARSER_FAILURE:
-                        return config_status
+                # If it was not able to set the value, for this
+                # field, we fail.
+                config_status = new_item.set_value(value_)
+                if config_status.status() == CONFIG_PARSER_FAILURE:
+                    return config_status
         else:
             return ConfigStatus(
                 CONFIG_PARSER_FAILURE,

@@ -92,7 +92,7 @@ class ConfigValue(abc.ABC):
                 else:
                     raise TritonModelAnalyzerException(
                         'ConfigObject should always have a '
-                        '"value" attribute for each key.')
+                        '"value" attribute for each value.')
             return_result = final_return_result
         elif type(return_result) is list:
             return_results = []

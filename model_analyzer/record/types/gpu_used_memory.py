@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,29 +13,31 @@
 # limitations under the License.
 
 from functools import total_ordering
-from .record import Record
+from model_analyzer.record.gpu_record import GPURecord
 
 
 @total_ordering
-class PerfLatency(Record):
+class GPUUsedMemory(GPURecord):
     """
-    A record for perf_analyzer
-    metric 'Avg Latency'
+    The used memory in the GPU.
     """
 
-    tag = "perf_latency"
+    tag = "gpu_used_memory"
 
-    def __init__(self, value, timestamp=0):
+    def __init__(self, value, device=None, timestamp=0):
         """
         Parameters
         ----------
         value : float
-            the latency extracted from the perf analyzer output
-        timestamp : float
-            Elapsed time from start of program
+            GPU used memory
+        device : GPUDevice
+            The GPU device this metric is associated
+            with.
+        timestamp : int
+            The timestamp for the record in nanoseconds
         """
 
-        super().__init__(value, timestamp)
+        super().__init__(value, device, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -55,7 +57,7 @@ class PerfLatency(Record):
             metric.
         """
 
-        return "Average Latency(us)"
+        return aggregation_tag + "GPU Memory Usage(MB)"
 
     def __eq__(self, other):
         """
@@ -80,15 +82,12 @@ class PerfLatency(Record):
         to produce a brand new record.
         """
 
-        return PerfLatency(value=(self.value() + other.value()))
+        return GPUUsedMemory(device=None, value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
-        Allows subbing two records together
+        Allows subtracting two records together
         to produce a brand new record.
-
-        ** Note this does reverse subtraction because
-            of the inverted nature of latency (lower is better)
         """
 
-        return PerfLatency(value=(other.value() - self.value()))
+        return GPUUsedMemory(device=None, value=(other.value() - self.value()))
