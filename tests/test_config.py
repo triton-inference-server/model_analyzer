@@ -459,6 +459,33 @@ model_names:
             cli.parse()
         mock_config.stop()
 
+        # Test objective key that is not one of the supported metrics
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+      parameters:
+        concurrency:
+          - 1
+          - 2
+          - 3
+          - 4
+      objectives:
+        - throughput
+      constraints:
+        gpu_used_memory:
+          max: 80
+  - vgg_19_graphdef
+"""
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            cli.parse()
+        mock_config.stop()
+
     def test_validation(self):
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
