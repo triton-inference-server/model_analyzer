@@ -15,12 +15,12 @@
 import os
 import logging
 
-from .config.run_config_generator import RunConfigGenerator
+from .output.file_writer import FileWriter
+from .config.run_config.run_config_generator import RunConfigGenerator
 from .result.result_manager import ResultManager
 from .record.metrics_manager import MetricsManager
-from .output.file_writer import FileWriter
+from .plots.plot_manager import PlotManager
 from .constants import SERVER_ONLY_TABLE_DEFAULT_VALUE
-from .model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class Analyzer:
@@ -29,6 +29,7 @@ class Analyzer:
     model_analyzer. Configured with metrics to monitor, exposes profiling and
     result writing methods.
     """
+
     def __init__(self, config, client, metric_tags, server):
         """
         Parameters
@@ -56,6 +57,9 @@ class Analyzer:
             server=server,
             result_manager=self._result_manager)
 
+        # Plot manager
+        self._plot_manager = PlotManager(config=config)
+
     def run(self):
         """
         Configures RunConfigGenerator, then
@@ -82,10 +86,10 @@ class Analyzer:
 
         # Phase 2: Profile each model
         for model in config.model_names:
-            self._metrics_manager.configure_result_manager(
-                    config_model=model)
-            run_config_generator = RunConfigGenerator(model,
-                                                 analyzer_config=self._config)
+            self._result_manager.set_constraints_and_objectives(
+                config_model=model)
+            run_config_generator = RunConfigGenerator(
+                model=model, analyzer_config=self._config)
             for run_config in run_config_generator.get_run_configs():
                 model_config = run_config.model_config()
                 original_model_name = run_config.model_name()
@@ -122,145 +126,28 @@ class Analyzer:
                 # Submit the result to be sorted
                 self._result_manager.complete_result()
 
-        # Write results to tables
-        self._result_manager.compile_results()
+            # Add the best measurements from the best result to the plot for the model
+            for result in self._result_manager.top_n_results(
+                    n=config.top_n_configs):
+                model_config_name = result.run_config().model_config(
+                ).get_field('name')
+                for measurement in result.top_n_measurements(
+                        n=config.top_n_measurements):
+                    self._plot_manager.add_measurement(
+                        model_config_label=model_config_name,
+                        measurement=measurement)
+
+            # Write plots to disk
+            self._plot_manager.complete_plots(model_name=model.model_name())
+
+            # Write results to tables
+            self._result_manager.compile_results()
 
     def write_and_export_results(self):
         """
-        Makes calls to _write_results out to streams or files. If
-        exporting results is requested, uses a FileWriter for specified output
-        files.
+        Tells the results manager and plot managers
+        to dump the results onto disk
         """
 
-        self._write_results(writer=FileWriter(), column_separator=' ')
-        if self._config.export:
-            server_metrics_path = os.path.join(
-                self._config.export_path, self._config.filename_server_only)
-            logging.info(
-                f"Exporting server only metrics to {server_metrics_path}...")
-            self._export_server_only_csv(
-                writer=FileWriter(filename=server_metrics_path),
-                column_separator=',')
-            metrics_inference_path = os.path.join(
-                self._config.export_path,
-                self._config.filename_model_inference)
-            metrics_gpu_path = os.path.join(self._config.export_path,
-                                            self._config.filename_model_gpu)
-            logging.info(
-                f"Exporting inference metrics to {metrics_inference_path}...")
-            logging.info(f"Exporting GPU metrics to {metrics_gpu_path}...")
-            self._export_model_csv(
-                inference_writer=FileWriter(filename=metrics_inference_path),
-                gpu_metrics_writer=FileWriter(filename=metrics_gpu_path),
-                column_separator=',')
-
-    def _write_results(self, writer, column_separator):
-        """
-        Writes the tables using the writer with the given column
-        specifications.
-
-        Parameters
-        ----------
-        writer : OutputWriter
-            Used to write the result tables to an output stream
-        column_separator : str
-            The string that will be inserted between each column
-            of the table
-
-        Raises
-        ------
-        TritonModelAnalyzerException
-        """
-
-        for table in self._result_manager.get_all_tables().values():
-            self._write_result(table,
-                               writer,
-                               column_separator,
-                               ignore_widths=False)
-
-    def _write_result(self,
-                      table,
-                      writer,
-                      column_separator,
-                      ignore_widths=False,
-                      include_title=True):
-        """
-        Utility function that writes any table
-        """
-
-        if include_title:
-            writer.write('\n'.join([
-                table.title() + ":",
-                table.to_formatted_string(separator=column_separator,
-                                          ignore_widths=ignore_widths), "\n"
-            ]))
-        else:
-            writer.write(
-                table.to_formatted_string(separator=column_separator,
-                                          ignore_widths=ignore_widths) +
-                "\n\n")
-
-    def _export_server_only_csv(self, writer, column_separator):
-        """
-        Writes the server-only table as a csv file using the given writer
-
-        Parameters
-        ----------
-        writer : OutputWriter
-            Used to write the result tables to an output stream
-        column_separator : str
-            The string that will be inserted between each column
-            of the table
-
-        Raises
-        ------
-        TritonModelAnalyzerException
-        """
-
-        self._write_result(self._result_manager.get_server_table(),
-                           writer,
-                           column_separator,
-                           ignore_widths=True,
-                           include_title=False)
-
-    def _export_model_csv(self, inference_writer, gpu_metrics_writer,
-                          column_separator):
-        """
-        Writes the model table as a csv file using the given writer
-
-        Parameters
-        ----------
-        inference_writer : OutputWriter
-            Used to write the inference table result to an output stream
-        gpu_metrics_writer : OutputWriter
-            Used to write the gpu metrics table result to an output stream
-        column_separator : str
-            The string that will be inserted between each column
-            of the table
-
-        Raises
-        ------
-        TritonModelAnalyzerException
-        """
-
-        gpu_table, non_gpu_table = \
-            self._result_manager.get_passing_model_tables()
-
-        if non_gpu_table.empty() or gpu_table.empty():
-            logging.info(
-                "No results were found that satisfy specified constraints."
-                "Writing results that failed constraints in sorted order.")
-            gpu_table, non_gpu_table = \
-                self._result_manager.get_failing_model_tables()
-
-        self._write_result(table=gpu_table,
-                           writer=gpu_metrics_writer,
-                           column_separator=column_separator,
-                           ignore_widths=True,
-                           include_title=False)
-
-        self._write_result(table=non_gpu_table,
-                           writer=inference_writer,
-                           column_separator=column_separator,
-                           ignore_widths=True,
-                           include_title=False)
+        self._result_manager.write_and_export_results()
+        self._plot_manager.export_plots()

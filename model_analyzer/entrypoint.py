@@ -31,7 +31,7 @@ from .triton.server.server_config import TritonServerConfig
 from .triton.client.client_factory import TritonClientFactory
 from .output.file_writer import FileWriter
 from .device.gpu_device_factory import GPUDeviceFactory
-from .config.config import AnalyzerConfig
+from .config.input_config.config import AnalyzerConfig
 
 logger = logging.getLogger(__name__)
 MAX_NUMBER_OF_INTERRUPTS = 3

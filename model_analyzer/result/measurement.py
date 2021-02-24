@@ -14,11 +14,15 @@
 
 from functools import total_ordering
 
+from model_analyzer.result.result_utils import average_list
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
+
 
 @total_ordering
 class Measurement:
     """
-    Encapsulates the set of metrics obtained from a single 
+    Encapsulates the set of metrics obtained from a single
     perf_analyzer run
     """
 
@@ -36,10 +40,31 @@ class Measurement:
             Handle for ResultComparator that knows how to order measurements
         """
 
+        # average values over all GPUs
         self._gpu_data = gpu_data
+        self._avg_gpu_data = average_list(list(self._gpu_data.values()))
         self._non_gpu_data = non_gpu_data
         self._perf_config = perf_config
         self._comparator = comparator
+
+        self._gpu_data_from_tag = {
+            type(metric).tag: metric
+            for metric in self._avg_gpu_data
+        }
+        self._non_gpu_data_from_tag = {
+            type(metric).tag: metric
+            for metric in self._non_gpu_data
+        }
+
+    def data(self):
+        """
+        Returns
+        -------
+        list of records
+            the metric values in this measurement
+        """
+
+        return self._avg_gpu_data + self._non_gpu_data
 
     def gpu_data(self):
         """
@@ -62,6 +87,30 @@ class Measurement:
         """
 
         return self._perf_config
+
+    def get_value_of_metric(self, tag):
+        """
+        Parameters
+        ----------
+        tag : str
+            A human readable tag that corresponds
+            to a particular metric
+        
+        Returns
+        -------
+        Record
+            metric Record corresponding to 
+            the tag, in this measurement
+        """
+
+        if tag in self._gpu_data_from_tag:
+            return self._gpu_data_from_tag[tag]
+        elif tag in self._non_gpu_data_from_tag:
+            return self._non_gpu_data_from_tag[tag]
+        else:
+            raise TritonModelAnalyzerException(
+                f"No metric corresponding to tag {tag}"
+                " found in measurement")
 
     def __eq__(self, other):
         """

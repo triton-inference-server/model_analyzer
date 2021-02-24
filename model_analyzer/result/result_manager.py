@@ -12,11 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import heapq
+import logging
 
 from .result_table import ResultTable
+from .result_comparator import ResultComparator
 from .run_result import RunResult
+from .measurement import Measurement
 from .constraint_manager import ConstraintManager
+from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
@@ -34,9 +39,7 @@ class ResultManager:
     gpu_specific_headers = [
         'Model', 'GPU ID', 'Batch', 'Concurrency', 'Model Config Path'
     ]
-    server_table_headers = [
-        'Model', 'GPU ID', 'Batch', 'Concurrency'
-    ]
+    server_table_headers = ['Model', 'GPU ID', 'Batch', 'Concurrency']
     server_only_table_key = 'server_gpu_metrics'
     model_gpu_table_passing_key = 'model_gpu_metrics_passing'
     model_inference_table_passing_key = 'model_inference_metrics_passing'
@@ -53,29 +56,34 @@ class ResultManager:
 
         self._config = config
         self._result_tables = {}
-        self._current_run_results = {}
+        self._current_run_result = None
         self._result_comparator = None
 
         # Results are stored in a heap queue
         self._results = []
 
-    def set_constraints_and_comparator(self, constraints, comparator):
+        # Results exported to export_path/results
+        self._results_export_directory = os.path.join(config.export_path,
+                                                      'results')
+        os.makedirs(self._results_export_directory, exist_ok=True)
+
+    def set_constraints_and_objectives(self, config_model):
         """
-        Sets the ResultComparator for all the results
-        this ResultManager will construct
+        Processes the constraints and objectives
+        for given ConfigModel and creates a result
+        comparator and constraint manager
 
         Parameters
         ----------
-        constraints : dict
-            The constraints that determine whether
-            a measurement can be used.
-        comparator : ResultComparator
-            the result comparator function object that can
-            compare two results.
+        config_model : ConfigModel
+            The config model object for the model that is currently being
+            run
         """
 
-        self._constraint_manager = ConstraintManager(constraints=constraints)
-        self._result_comparator = comparator
+        self._constraint_manager = ConstraintManager(
+            constraints=config_model.constraints())
+        self._result_comparator = ResultComparator(
+            metric_objectives=config_model.objectives())
 
     def create_tables(self, gpu_specific_metrics, non_gpu_specific_metrics,
                       aggregation_tag):
@@ -169,7 +177,7 @@ class ResultManager:
             self._result_tables[
                 self.server_only_table_key].insert_row_by_index(data_row)
 
-    def add_model_data(self, measurement):
+    def add_model_data(self, gpu_data, non_gpu_data, perf_config):
         """
         This function adds model inference
         measurements to the result, not directly
@@ -177,12 +185,25 @@ class ResultManager:
 
         Parameters
         ----------
-        measurement : Measurement
-            The measurements from the metrics manager,
-            actual values from the monitors
+        gpu_data : dict of list of Records
+            These are the values from the monitors that have a GPU ID
+            associated with them
+        non_gpu_data : list of Records
+            These do not have a GPU ID associated with them
+        perf_config : PerfAnalyzerConfig
+            The perf config that was used for the perf run that generated
+            this data data
         """
 
-        self._current_run_result.add_data(measurement=measurement)
+        if self._current_run_result:
+            self._current_run_result.add_measurement(
+                measurement=Measurement(gpu_data=gpu_data,
+                                        non_gpu_data=non_gpu_data,
+                                        perf_config=perf_config,
+                                        comparator=self._result_comparator))
+        else:
+            raise TritonModelAnalyzerException(
+                "Must intialize a result before adding model data.")
 
     def complete_result(self):
         """
@@ -191,6 +212,23 @@ class ResultManager:
         """
 
         heapq.heappush(self._results, self._current_run_result)
+        self._current_run_result = None
+
+    def top_n_results(self, n):
+        """
+        Parameters
+        ----------
+        n : int
+            The number of  top results 
+            to retrieve
+            
+        Returns
+        -------
+        RunResult
+            The n best results for this model
+        """
+
+        return heapq.nsmallest(3, self._results)
 
     def compile_results(self):
         """
@@ -202,8 +240,8 @@ class ResultManager:
         # Fill rows in descending order
         while self._results:
             next_best_result = heapq.heappop(self._results)
-            model_name = next_best_result.get_run_config().model_name()
-            measurements = next_best_result.get_measurements()
+            model_name = next_best_result.run_config().model_name()
+            measurements = next_best_result.measurements()
             self._compile_measurements(measurements, model_name)
 
     def _compile_measurements(self, measurements, model_name):
@@ -253,67 +291,12 @@ class ResultManager:
 
         # GPU specific data
         for gpu_id, metrics in measurement.gpu_data().items():
-            gpu_metrics = [model_name, gpu_id, batch_size, concurrency, tmp_model_name]
+            gpu_metrics = [
+                model_name, gpu_id, batch_size, concurrency, tmp_model_name
+            ]
             gpu_metrics += [metric.value() for metric in metrics]
             self._result_tables[gpu_table_key].insert_row_by_index(
                 row=gpu_metrics)
-
-    def get_all_tables(self):
-        """
-        Returns
-        -------
-        dict
-            table keys and ResultTables
-        """
-
-        return self._result_tables
-
-    def get_server_table(self):
-        """
-        Returns
-        -------
-        ResultTable
-            The table corresponding to server only
-            data
-        """
-
-        return self._get_table(self.server_only_table_key)
-
-    def get_passing_model_tables(self):
-        """
-        Returns
-        -------
-        (ResultTable, ResultTable)
-            The tables corresponding to the model inference
-            data
-        """
-
-        return self._get_table(
-            self.model_gpu_table_passing_key), self._get_table(
-                self.model_inference_table_passing_key)
-
-    def get_failing_model_tables(self):
-        """
-        Returns
-        -------
-        (ResultTable, ResultTable)
-            The table corresponding to the model inference
-            data
-        """
-
-        return self._get_table(
-            self.model_gpu_table_failing_key), self._get_table(
-                self.model_inference_table_failing_key)
-
-    def _get_table(self, key):
-        """
-        Get a ResultTable by table key
-        """
-
-        if key not in self._result_tables:
-            raise TritonModelAnalyzerException(
-                f"Table with key '{key}' not found in ResultManager")
-        return self._result_tables[key]
 
     def _add_result_table(self,
                           table_key,
@@ -334,3 +317,150 @@ class ResultManager:
             table_headers.append(metric.header(aggregation_tag + " "))
         self._result_tables[table_key] = ResultTable(headers=table_headers,
                                                      title=title)
+
+    def write_and_export_results(self):
+        """
+        Makes calls to _write_results out to streams or files. If
+        exporting results is requested, uses a FileWriter for specified output
+        files.
+        """
+
+        self._write_results(writer=FileWriter(), column_separator=' ')
+        if self._config.export:
+
+            # Configure server only results path and export results
+            server_metrics_path = os.path.join(
+                self._results_export_directory,
+                self._config.filename_server_only)
+            logging.info(
+                f"Exporting server only metrics to {server_metrics_path}...")
+            self._export_server_only_csv(
+                writer=FileWriter(filename=server_metrics_path),
+                column_separator=',')
+
+            # Configure model metrics results path and export results
+            metrics_inference_path = os.path.join(
+                self._results_export_directory,
+                self._config.filename_model_inference)
+            metrics_gpu_path = os.path.join(self._results_export_directory,
+                                            self._config.filename_model_gpu)
+            logging.info(
+                f"Exporting inference metrics to {metrics_inference_path}...")
+            logging.info(f"Exporting GPU metrics to {metrics_gpu_path}...")
+            self._export_model_csv(
+                inference_writer=FileWriter(filename=metrics_inference_path),
+                gpu_metrics_writer=FileWriter(filename=metrics_gpu_path),
+                column_separator=',')
+
+    def _export_server_only_csv(self, writer, column_separator):
+        """
+        Writes the server-only table as a csv file using the given writer
+
+        Parameters
+        ----------
+        writer : OutputWriter
+            Used to write the result tables to an output stream
+        column_separator : str
+            The string that will be inserted between each column
+            of the table
+
+        Raises
+        ------
+        TritonModelAnalyzerException
+        """
+
+        self._write_result(self._result_tables[self.server_only_table_key],
+                           writer,
+                           column_separator,
+                           ignore_widths=True,
+                           include_title=False)
+
+    def _export_model_csv(self, inference_writer, gpu_metrics_writer,
+                          column_separator):
+        """
+        Writes the model table as a csv file using the given writer
+
+        Parameters
+        ----------
+        inference_writer : OutputWriter
+            Used to write the inference table result to an output stream
+        gpu_metrics_writer : OutputWriter
+            Used to write the gpu metrics table result to an output stream
+        column_separator : str
+            The string that will be inserted between each column
+            of the table
+
+        Raises
+        ------
+        TritonModelAnalyzerException
+        """
+
+        gpu_table = self._result_tables[self.model_gpu_table_passing_key]
+        non_gpu_table = self._result_tables[
+            self.model_inference_table_passing_key]
+
+        if non_gpu_table.empty() or gpu_table.empty():
+            logging.info(
+                "No results were found that satisfy specified constraints."
+                "Writing results that failed constraints in sorted order.")
+            gpu_table = self._result_tables[self.model_gpu_table_failing_key]
+            non_gpu_table = self._result_tables[
+                self.model_inference_table_failing_key]
+
+        self._write_result(table=gpu_table,
+                           writer=gpu_metrics_writer,
+                           column_separator=column_separator,
+                           ignore_widths=True,
+                           include_title=False)
+
+        self._write_result(table=non_gpu_table,
+                           writer=inference_writer,
+                           column_separator=column_separator,
+                           ignore_widths=True,
+                           include_title=False)
+
+    def _write_results(self, writer, column_separator):
+        """
+        Writes the tables using the writer with the given column
+        specifications.
+
+        Parameters
+        ----------
+        writer : OutputWriter
+            Used to write the result tables to an output stream
+        column_separator : str
+            The string that will be inserted between each column
+            of the table
+
+        Raises
+        ------
+        TritonModelAnalyzerException
+        """
+
+        for table in self._result_tables.values():
+            self._write_result(table,
+                               writer,
+                               column_separator,
+                               ignore_widths=False)
+
+    def _write_result(self,
+                      table,
+                      writer,
+                      column_separator,
+                      ignore_widths=False,
+                      include_title=True):
+        """
+        Utility function that writes any table
+        """
+
+        if include_title:
+            writer.write('\n'.join([
+                table.title() + ":",
+                table.to_formatted_string(separator=column_separator,
+                                          ignore_widths=ignore_widths), "\n"
+            ]))
+        else:
+            writer.write(
+                table.to_formatted_string(separator=column_separator,
+                                          ignore_widths=ignore_widths) +
+                "\n\n")

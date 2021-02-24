@@ -20,16 +20,17 @@ from .common import test_result_collector as trc
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.cli.cli import CLI
-from model_analyzer.config.config import AnalyzerConfig
-from model_analyzer.config.config_model import ConfigModel
-from model_analyzer.config.config_list_string import ConfigListString
-from model_analyzer.config.config_list_generic import ConfigListGeneric
-from model_analyzer.config.config_primitive import ConfigPrimitive
-from model_analyzer.config.config_union import ConfigUnion
-from model_analyzer.config.config_object import ConfigObject
-from model_analyzer.config.config_enum import ConfigEnum
-from model_analyzer.config.config_sweep import ConfigSweep
-from model_analyzer.config.config_list_numeric import \
+from model_analyzer.config.input_config.config import AnalyzerConfig
+from model_analyzer.config.input_config.config_model import ConfigModel
+from model_analyzer.config.input_config.config_plot import ConfigPlot
+from model_analyzer.config.input_config.config_list_string import ConfigListString
+from model_analyzer.config.input_config.config_list_generic import ConfigListGeneric
+from model_analyzer.config.input_config.config_primitive import ConfigPrimitive
+from model_analyzer.config.input_config.config_union import ConfigUnion
+from model_analyzer.config.input_config.config_object import ConfigObject
+from model_analyzer.config.input_config.config_enum import ConfigEnum
+from model_analyzer.config.input_config.config_sweep import ConfigSweep
+from model_analyzer.config.input_config.config_list_numeric import \
     ConfigListNumeric
 from model_analyzer.constants import \
     CONFIG_PARSER_FAILURE
@@ -61,6 +62,18 @@ class TestConfig(trc.TestResultCollector):
                              model_config.objectives())
             self.assertEqual(expected_model_config.model_config_parameters(),
                              model_config.model_config_parameters())
+
+    def _assert_equality_of_plot_configs(self, plot_configs,
+                                         expected_plot_configs):
+        self.assertEqual(len(plot_configs), len(expected_plot_configs))
+        for plot_config, expected_plot_config \
+                in zip(plot_configs, expected_plot_configs):
+            self.assertEqual(expected_plot_config.name(), plot_config.name())
+            self.assertEqual(expected_plot_config.title(), plot_config.title())
+            self.assertEqual(expected_plot_config.x_axis(),
+                             plot_config.x_axis())
+            self.assertEqual(expected_plot_config.y_axis(),
+                             plot_config.y_axis())
 
     def _assert_model_config_types(self, model_config):
         self.assertIsInstance(model_config.field_type(), ConfigUnion)
@@ -732,6 +745,84 @@ model_names:
     def test_config_sweep(self):
         config_sweep = ConfigSweep(ConfigPrimitive(int))
         config_sweep.set_value(2)
+
+    def test_config_plot(self):
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file'
+        ]
+        yaml_content = """
+model_names: vgg_16_graphdef
+plots:
+  test_plot:
+    title: Throughput vs. Latency
+    x_axis: perf_throughput
+    y_axis: perf_latency
+"""
+        config = self._evaluate_config(args, yaml_content)
+        plot_configs = config.get_all_config()['plots']
+        expected_plot_configs = [
+            ConfigPlot('test_plot',
+                       title='Throughput vs. Latency',
+                       x_axis='perf_throughput',
+                       y_axis='perf_latency')
+        ]
+        self._assert_equality_of_plot_configs(plot_configs,
+                                              expected_plot_configs)
+
+        yaml_content = """
+model_names: vgg_16_graphdef
+plots:
+  - test_plot1:
+      title: Throughput vs. Latency
+      x_axis: perf_throughput
+      y_axis: perf_latency
+  - test_plot2:
+      title: GPU Memory vs. Latency
+      x_axis: gpu_used_memory
+      y_axis: perf_latency
+"""
+        config = self._evaluate_config(args, yaml_content)
+        plot_configs = config.get_all_config()['plots']
+        expected_plot_configs = [
+            ConfigPlot('test_plot1',
+                       title='Throughput vs. Latency',
+                       x_axis='perf_throughput',
+                       y_axis='perf_latency'),
+            ConfigPlot('test_plot2',
+                       title='GPU Memory vs. Latency',
+                       x_axis='gpu_used_memory',
+                       y_axis='perf_latency')
+        ]
+        self._assert_equality_of_plot_configs(plot_configs,
+                                              expected_plot_configs)
+
+        yaml_content = """
+model_names: vgg_16_graphdef
+plots:
+  test_plot1:
+    title: Throughput vs. Latency
+    x_axis: perf_throughput
+    y_axis: perf_latency
+  test_plot2:
+    title: GPU Memory vs. Latency
+    x_axis: gpu_used_memory
+    y_axis: perf_latency
+"""
+        config = self._evaluate_config(args, yaml_content)
+        plot_configs = config.get_all_config()['plots']
+        expected_plot_configs = [
+            ConfigPlot('test_plot1',
+                       title='Throughput vs. Latency',
+                       x_axis='perf_throughput',
+                       y_axis='perf_latency'),
+            ConfigPlot('test_plot2',
+                       title='GPU Memory vs. Latency',
+                       x_axis='gpu_used_memory',
+                       y_axis='perf_latency')
+        ]
+        self._assert_equality_of_plot_configs(plot_configs,
+                                              expected_plot_configs)
 
     def test_error_messages(self):
         # ConfigListNumeric

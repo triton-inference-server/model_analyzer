@@ -25,11 +25,12 @@ class ModelConfig:
     """
     A class that encapsulates all the metadata about a Triton model.
     """
+
     def __init__(self, model_config):
         """
         Parameters
         -------
-        model_config : dict
+        model_config : protobuf message
         """
 
         self._model_config = model_config
@@ -98,7 +99,7 @@ class ModelConfig:
             Path to write the model config.
 
         copy_original_model : bool
-            Whether to copy the original model too or not.
+            Whether or not to copy the original model.
 
         Raises
         ------

@@ -44,7 +44,7 @@ class RunResult:
         # Heap
         self._measurements = []
 
-    def add_data(self, measurement):
+    def add_measurement(self, measurement):
         """
         This function adds model inference
         measurements to the result
@@ -58,7 +58,7 @@ class RunResult:
 
         heapq.heappush(self._measurements, measurement)
 
-    def get_measurements(self):
+    def measurements(self):
         """
         Returns
         -------
@@ -69,7 +69,23 @@ class RunResult:
 
         return self._measurements
 
-    def get_run_config(self):
+    def top_n_measurements(self, n):
+        """
+        Parameters
+        ----------
+        n : int
+            The number of  top results 
+            to retrieve
+        
+        Returns
+        -------
+        The top n measurements in
+        this result
+        """
+
+        return heapq.nsmallest(n, self._measurements)
+
+    def run_config(self):
         """
         Returns
         -------

@@ -24,6 +24,7 @@ from .config_object import ConfigObject
 from .config_list_generic import ConfigListGeneric
 from .config_model import ConfigModel
 from .config_union import ConfigUnion
+from .config_plot import ConfigPlot
 from model_analyzer.record.record import RecordType
 from .config_sweep import ConfigSweep
 from model_analyzer.model_analyzer_exceptions \
@@ -40,6 +41,7 @@ class AnalyzerConfig:
     """
     Model Analyzer config object.
     """
+
     def __init__(self):
         """
         Create a new config.
@@ -180,6 +182,16 @@ class AnalyzerConfig:
                 }),
             })
 
+        plots_scheme = ConfigObject(schema={
+            '*':
+            ConfigObject(
+                schema={
+                    'title': ConfigPrimitive(type_=str),
+                    'x_axis': ConfigPrimitive(type_=str),
+                    'y_axis': ConfigPrimitive(type_=str),
+                })
+        },
+                                    output_mapper=ConfigPlot.from_object)
         model_object_constraint = ConfigObject(
             required=True,
             schema={
@@ -233,7 +245,38 @@ class AnalyzerConfig:
                 description=
                 'Model Analyzer uses the objectives described here to find the best configuration for each model.'
             ))
-
+        self._add_config(
+            ConfigField(
+                'plots',
+                field_type=ConfigUnion([
+                    plots_scheme,
+                    ConfigListGeneric(type_=plots_scheme,
+                                      output_mapper=ConfigPlot.from_list)
+                ]),
+                default_value={
+                    'default_plot': {
+                        'title': 'Throughput vs. Latency',
+                        'x_axis': 'perf_latency',
+                        'y_axis': 'perf_throughput'
+                    }
+                },
+                description=
+                'Model analyzer uses the information in this section to construct plots of the results.'
+            ))
+        self._add_config(
+            ConfigField(
+                'top_n_configs',
+                field_type=ConfigPrimitive(int),
+                default_value=3,
+                description='The number of top model configurations to plot.'))
+        self._add_config(
+            ConfigField(
+                'top_n_measurements',
+                field_type=ConfigPrimitive(int),
+                default_value=5,
+                description=
+                'The number of top sets of measurements to plot per top model config.'
+            ))
         self._add_config(
             ConfigField(
                 'constraints',
@@ -349,14 +392,13 @@ class AnalyzerConfig:
                 'measurements over all the requests completed within this time interval.'
             ))
         self._add_config(
-            ConfigField(
-                'perf_output',
-                flags=['--perf-output'],
-                field_type=ConfigPrimitive(bool),
-                default_value=False,
-                parser_args={'action': 'store_true'},
-                description=
-                'Enables the output from the perf_analyzer to stdout'))
+            ConfigField('perf_output',
+                        flags=['--perf-output'],
+                        field_type=ConfigPrimitive(bool),
+                        default_value=False,
+                        parser_args={'action': 'store_true'},
+                        description=
+                        'Enables the output from the perf_analyzer to stdout'))
         self._add_config(
             ConfigField(
                 'triton_launch_mode',
@@ -432,20 +474,25 @@ class AnalyzerConfig:
                 description="List of GPU UUIDs to be used for the profiling. "
                 "Use 'all' to profile all the GPUs visible by CUDA."))
         self._add_config(
-            ConfigField('output_model_repository_path',
-                        field_type=ConfigPrimitive(str),
-                        default_value='./output_model_repository',
-                        flags=['--output-model-repository-path'],
-                        description='Output model repository path used by Model Analyzer.'
-                        ' This is the directory that will contain all the generated model configurations'))
+            ConfigField(
+                'output_model_repository_path',
+                field_type=ConfigPrimitive(str),
+                default_value='./output_model_repository',
+                flags=['--output-model-repository-path'],
+                description=
+                'Output model repository path used by Model Analyzer.'
+                ' This is the directory that will contain all the generated model configurations'
+            ))
         self._add_config(
-            ConfigField('override_output_model_repository',
-                        field_type=ConfigPrimitive(bool),
-                        parser_args={'action': 'store_true'},
-                        default_value=False,
-                        flags=['--override-output-model-repository'],
-                        description='Will override the contents of the output model repository'
-                        ' and replace it with the new results.'))
+            ConfigField(
+                'override_output_model_repository',
+                field_type=ConfigPrimitive(bool),
+                parser_args={'action': 'store_true'},
+                default_value=False,
+                flags=['--override-output-model-repository'],
+                description=
+                'Will override the contents of the output model repository'
+                ' and replace it with the new results.'))
         self._add_config(
             ConfigField('config_file',
                         field_type=ConfigPrimitive(str),

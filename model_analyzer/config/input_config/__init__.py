@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,12 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-docker>=4.3.1
-distro>=1.5.0
-numba>=0.51.2
-prometheus_client>=0.9.0
-requests>=2.24.0
-pyyaml>=5.3.1
-psutil>=5.8.0
-matplotlib>=3.3.4
