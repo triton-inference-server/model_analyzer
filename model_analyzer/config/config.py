@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib
 import yaml
 import logging
 import os
+
 from .config_field import ConfigField
 from .config_primitive import ConfigPrimitive
 from .config_list_string import ConfigListString
@@ -23,6 +25,7 @@ from .config_object import ConfigObject
 from .config_list_generic import ConfigListGeneric
 from .config_model import ConfigModel
 from .config_union import ConfigUnion
+from model_analyzer.record.record import RecordType
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from .config_enum import ConfigEnum
@@ -144,6 +147,24 @@ class AnalyzerConfig:
                         field_type=ConfigPrimitive(str, required=True),
                         description='Model repository location'))
 
+        def objective_list_output_mapper(objectives):
+            # Takes a list of objectives and maps them
+            # into a dict
+            output_dict = {}
+            for objective in objectives:
+                value = ConfigPrimitive(type_=int)
+                value.set_value(10)
+                output_dict[objective] = value
+            return output_dict
+
+        objectives_scheme = ConfigUnion([
+            ConfigObject(
+                schema={
+                    tag: ConfigPrimitive(type_=int)
+                    for tag in RecordType.get_all_record_types().keys()
+                }),
+            ConfigListString(output_mapper=objective_list_output_mapper)
+        ])
         constraints_scheme = ConfigObject(
             schema={
                 'perf_throughput':
@@ -175,7 +196,7 @@ class AnalyzerConfig:
                                 'concurrency': ConfigListNumeric(type_=int)
                             }),
                         'objectives':
-                        ConfigListString(),
+                        objectives_scheme,
                         'constraints':
                         constraints_scheme,
                         'model_config_parameters':
@@ -208,8 +229,8 @@ class AnalyzerConfig:
         self._add_config(
             ConfigField(
                 'objectives',
-                field_type=ConfigListString(),
-                default_value=['perf_throughput'],
+                field_type=objectives_scheme,
+                default_value={'perf_throughput': 10},
                 description=
                 'Model Analyzer uses the objectives described here to find the best configuration for each model.'
             ))

@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,31 +13,29 @@
 # limitations under the License.
 
 from functools import total_ordering
-from model_analyzer.record.gpu_record import GPURecord
+
+from model_analyzer.record.record import Record
 
 
 @total_ordering
-class GPUUtilization(GPURecord):
+class CPUUsedRAM(Record):
     """
-    GPU utilization record
+    The CPU memory usage record
     """
 
-    tag = "gpu_utilization"
+    tag = "cpu_used_ram"
 
-    def __init__(self, value, device=None, timestamp=0):
+    def __init__(self, value, timestamp=0):
         """
         Parameters
         ----------
         value : float
-            The GPU utilization value
-        device : GPUDevice
-            The  GPU device this metric is associated
-            with.
+            CPU used memory
         timestamp : int
             The timestamp for the record in nanoseconds
         """
 
-        super().__init__(value, device, timestamp)
+        super().__init__(value, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -57,7 +55,7 @@ class GPUUtilization(GPURecord):
             metric.
         """
 
-        return aggregation_tag + "GPU Utilization(%)"
+        return aggregation_tag + "RAM Usage(MB)"
 
     def __eq__(self, other):
         """
@@ -69,12 +67,12 @@ class GPUUtilization(GPURecord):
 
     def __lt__(self, other):
         """
-        Allows checking if
-        this record is less than
+        Allows checking if 
+        this record is better than 
         the other
         """
 
-        return self.value() < other.value()
+        return self.value() > other.value()
 
     def __add__(self, other):
         """
@@ -82,14 +80,12 @@ class GPUUtilization(GPURecord):
         to produce a brand new record.
         """
 
-        return GPUUtilization(device=None,
-                              value=(self.value() + other.value()))
+        return CPUUsedRAM(value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
-        Allows adding two records together
+        Allows subtracting two records together
         to produce a brand new record.
         """
 
-        return GPUUtilization(device=None,
-                              value=(self.value() - other.value()))
+        return CPUUsedRAM(value=(other.value() - self.value()))

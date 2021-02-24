@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,24 +13,25 @@
 # limitations under the License.
 
 from functools import total_ordering
-from .record import Record
+
+from model_analyzer.record.record import Record
 
 
 @total_ordering
-class PerfLatency(Record):
+class PerfThroughput(Record):
     """
     A record for perf_analyzer
-    metric 'Avg Latency'
+    metric 'Throughput'
     """
 
-    tag = "perf_latency"
+    tag = "perf_throughput"
 
     def __init__(self, value, timestamp=0):
         """
         Parameters
         ----------
         value : float
-            the latency extracted from the perf analyzer output
+            The throughput from the perf analyzer output
         timestamp : float
             Elapsed time from start of program
         """
@@ -55,7 +56,7 @@ class PerfLatency(Record):
             metric.
         """
 
-        return "Average Latency(us)"
+        return "Throughput(infer/sec)"
 
     def __eq__(self, other):
         """
@@ -72,7 +73,7 @@ class PerfLatency(Record):
         the other
         """
 
-        return self.value() > other.value()
+        return self.value() < other.value()
 
     def __add__(self, other):
         """
@@ -80,12 +81,12 @@ class PerfLatency(Record):
         to produce a brand new record.
         """
 
-        return PerfLatency(value=(self.value() + other.value()))
+        return PerfThroughput(value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
-        Allows adding two records together
+        Allows subtracting two records together
         to produce a brand new record.
         """
 
-        return PerfLatency(value=(self.value() - other.value()))
+        return PerfThroughput(value=(self.value() - other.value()))

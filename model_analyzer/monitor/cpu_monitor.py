@@ -14,8 +14,8 @@
 
 from .monitor import Monitor
 
-from model_analyzer.record.cpu_available_ram import CPUAvailableRAM
-from model_analyzer.record.cpu_used_ram import CPUUsedRAM
+from model_analyzer.record.types.cpu_available_ram import CPUAvailableRAM
+from model_analyzer.record.types.cpu_used_ram import CPUUsedRAM
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 

@@ -12,8 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from abc import ABCMeta, abstractmethod
 import importlib
+
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 
 class RecordType(ABCMeta):
@@ -51,10 +55,34 @@ class RecordType(ABCMeta):
 
         if tag not in cls.record_types:
             try:
-                importlib.import_module('model_analyzer.record.%s' % tag)
+                importlib.import_module('model_analyzer.record.types.%s' % tag)
             except ImportError as e:
                 print(e)
         return cls.record_types[tag]
+
+    @classmethod
+    def get_all_record_types(cls):
+        """
+        Returns
+        -------
+        dict
+            keys are tags and values are 
+            all the types that have this as a
+            metaclass
+        """
+
+        type_module_directory = \
+            os.path.join(
+                globals()['__spec__'].origin.rsplit('/', 1)[0], 'types')
+        for filename in os.listdir(type_module_directory):
+            if filename != '__init__.py' and filename.endswith('.py'):
+                try:
+                    importlib.import_module(
+                        f'model_analyzer.record.types.{filename[:-3]}')
+                except AttributeError:
+                    raise TritonModelAnalyzerException(
+                        "Error retrieving all record types")
+        return cls.record_types
 
 
 class Record(metaclass=RecordType):

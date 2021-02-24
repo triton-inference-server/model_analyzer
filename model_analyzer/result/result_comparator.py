@@ -13,9 +13,12 @@
 # limitations under the License.
 
 from .result_utils import average_list
+from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
 from model_analyzer.record.measurement import Measurement
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
+
+from collections import defaultdict
 
 
 class ResultComparator:
@@ -25,12 +28,8 @@ class ResultComparator:
     measurements.
     """
 
-    def __init__(self,
-                 gpu_metric_types,
-                 non_gpu_metric_types,
-                 metric_priorities,
-                 comparison_threshold_percent=1,
-                 weights=None):
+    def __init__(self, gpu_metric_types, non_gpu_metric_types,
+                 metric_objectives):
         """
         Parameters
         ----------
@@ -40,15 +39,9 @@ class ResultComparator:
         non_gpu_metric_types : list of RecordTypes
             The types of measurements in the measurements
             list that do NOT have a GPU ID, in the order they appear
-        metric_priorities : list of RecordTypes
-            The priority of the types above (i.e. the order
-            of comparison)
-        comparison_threshold_percent : int
-            The threshold within with two measurements are considered
-            equal as a percentage of the first measurement
-        weights : list of float
-            The relative importance of the priorities with respect to others
-            If None, then equal weighting (normal priority comparison)
+        metric_objectives : dict of RecordTypes
+            keys are the metric types, and values are The relative importance 
+            of the keys with respect to other. If the values are 0,
         """
 
         # Index the non gpu metric types
@@ -63,17 +56,16 @@ class ResultComparator:
             for i in range(len(gpu_metric_types))
         }
 
-        self._metric_priorities = metric_priorities
-        self._comparison_threshold_factor = (comparison_threshold_percent *
-                                             1.0) / 100
-
-        # TODO implement a weighted comparison
-        self._weights = weights
+        # Normalize metric weights
+        self._metric_weights = {
+            key: (val / sum(metric_objectives.values()))
+            for key, val in metric_objectives.items()
+        }
 
     def compare_results(self, result1, result2):
         """
-        Compares two results using priorities 
-        specified in model analyzer config
+        Computes score for two results and compares
+        the scores.
 
         Parameters
         ----------
@@ -106,7 +98,7 @@ class ResultComparator:
     def compare_measurements(self, measurement1, measurement2):
         """
         Compares individual meausurements retrieved from perf runs
-        based on priorities specified by model analyzer config
+        based on their scores
 
         Parameters
         ----------
@@ -135,9 +127,9 @@ class ResultComparator:
         gpu_rows1 = []
         gpu_rows2 = []
 
-        for _, gpu_row in gpu_data1.items():
+        for gpu_row in gpu_data1.values():
             gpu_rows1.append(gpu_row)
-        for _, gpu_row in gpu_data2.items():
+        for gpu_row in gpu_data2.values():
             gpu_rows2.append(gpu_row)
 
         avg_gpu_data1 = average_list(gpu_rows1)
@@ -146,33 +138,28 @@ class ResultComparator:
         non_gpu_data1 = measurement1.non_gpu_data()
         non_gpu_data2 = measurement2.non_gpu_data()
 
-        for priority in self._metric_priorities:
-            if priority in self._non_gpu_type_to_idx:
-                # Get position in measurements of current priority's value
-                metric_idx = self._non_gpu_type_to_idx[priority]
-                threshold = self._comparison_threshold_factor * non_gpu_data1[
-                    metric_idx].value()
+        score_gain = 0.0
+        for objective, weight in self._metric_weights.items():
+            if objective in self._non_gpu_type_to_idx:
+                metric_idx = self._non_gpu_type_to_idx[objective]
                 value_diff = (non_gpu_data1[metric_idx] -
                               non_gpu_data2[metric_idx]).value()
-
-                if value_diff > threshold:
-                    return 1
-                elif value_diff < -threshold:
-                    return -1
-            elif priority in self._gpu_type_to_idx:
-                metric_idx = self._gpu_type_to_idx[priority]
-                threshold = self._comparison_threshold_factor * avg_gpu_data1[
-                    metric_idx].value()
+                value_base = non_gpu_data1[metric_idx].value()
+            elif objective in self._gpu_type_to_idx:
+                metric_idx = self._gpu_type_to_idx[objective]
                 value_diff = (avg_gpu_data1[metric_idx] -
                               avg_gpu_data2[metric_idx]).value()
-
-                if value_diff > threshold:
-                    return 1
-                elif value_diff < -threshold:
-                    return -1
+                value_base = avg_gpu_data1[metric_idx].value()
             else:
                 raise TritonModelAnalyzerException(
-                    f"Category unknown for objective : '{priority}'")
+                    f"Category unknown for objective : '{objective}'")
+            score_gain += (weight * (value_diff / value_base))
+
+        # Compare score with threshhold
+        if score_gain > COMPARISON_SCORE_THRESHOLD:
+            return 1
+        elif score_gain < -COMPARISON_SCORE_THRESHOLD:
+            return -1
         return 0
 
     def _aggregate_measurements(self, result, aggregation_func):
@@ -190,14 +177,20 @@ class ResultComparator:
 
         measurements = result.get_measurements()
 
-        gpu_rows = []
+        gpu_data = defaultdict(list)
         non_gpu_rows = []
         for measurement in measurements:
-            for gpu_row in measurement.gpu_data().values():
-                gpu_rows.append(gpu_row)
+            gpu_measurement_data = measurement.gpu_data()
+            for gpu_id, gpu_row in gpu_measurement_data.items():
+                gpu_data[gpu_id].append(gpu_row)
             non_gpu_rows.append(measurement.non_gpu_data())
 
-        return Measurement(gpu_measurement=aggregation_func(gpu_rows),
-                           non_gpu_measurement=aggregation_func(non_gpu_rows),
+        # Aggregate the data
+        for gpu_id, gpu_rows in gpu_data.items():
+            gpu_data[gpu_id] = aggregation_func(gpu_rows)
+        non_gpu_data = aggregation_func(non_gpu_rows)
+
+        return Measurement(gpu_data=gpu_data,
+                           non_gpu_data=non_gpu_data,
                            perf_config=None,
                            comparator=self)

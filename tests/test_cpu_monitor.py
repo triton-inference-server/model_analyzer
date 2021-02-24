@@ -16,8 +16,8 @@ import unittest
 import time
 
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
-from model_analyzer.record.cpu_available_ram import CPUAvailableRAM
-from model_analyzer.record.cpu_used_ram import CPUUsedRAM
+from model_analyzer.record.types.cpu_available_ram import CPUAvailableRAM
+from model_analyzer.record.types.cpu_used_ram import CPUUsedRAM
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.model_analyzer_exceptions \

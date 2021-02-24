@@ -24,10 +24,10 @@ class Measurement:
 
     def __init__(self, gpu_data, non_gpu_data, perf_config, comparator):
         """
-        gpu_data : dict of list of RecordTypes
+        gpu_data : dict of list of Records
             These are the values from the monitors that have a GPU ID
             associated with them
-        non_gpu_data : list of RecordTypes
+        non_gpu_data : list of Records
             These do not have a GPU ID associated with them
         perf_config : PerfAnalyzerConfig
             The perf config that was used for the perf run that generated

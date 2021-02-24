@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import abstractmethod
 from .config_value import ConfigValue
 from .config_status import ConfigStatus
 from model_analyzer.constants import \
@@ -69,6 +70,11 @@ class ConfigObject(ConfigValue):
         """
         Set the value for this field.
 
+        Note: Because ConfigObjects can have nested
+        ConfigValues and the schema contains these,
+        this function performs deep copies of the 
+        types of objects, and then sets their values.
+
         Parameters
         ----------
         value : dict
@@ -100,11 +106,9 @@ class ConfigObject(ConfigValue):
                 new_item.set_name(f'{self.name()}.{key}')
                 new_value[key] = new_item
 
-                # Set the value of the new field
-                config_status = new_item.set_value(value_)
-
                 # If it was not able to set the value, for this
                 # field, we fail.
+                config_status = new_item.set_value(value_)
                 if config_status.status() == CONFIG_PARSER_FAILURE:
                     return config_status
         else:

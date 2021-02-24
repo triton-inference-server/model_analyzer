@@ -76,7 +76,7 @@ class Analyzer:
                 model_name=model.model_name(),
                 num_retries=self._config.max_retries)
             try:
-                # Send priorities and constraints to result manager
+                # Send objectives and constraints to result manager
                 self._metrics_manager.configure_result_manager(
                     config_model=model)
 

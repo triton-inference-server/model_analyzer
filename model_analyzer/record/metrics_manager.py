@@ -15,7 +15,7 @@ from collections import defaultdict
 import logging
 
 from .record_aggregator import RecordAggregator
-from .metrics_mapper import MetricsMapper
+from .record import RecordType
 from .measurement import Measurement
 from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
@@ -57,7 +57,7 @@ class MetricsManager:
         self._perf_metrics = []
         self._cpu_metrics = []
 
-        self._create_metric_tables(metrics=MetricsMapper.get_metric_types(
+        self._create_metric_tables(metrics=MetricsManager.get_metric_types(
             tags=metric_tags))
 
     def _create_metric_tables(self, metrics):
@@ -84,7 +84,7 @@ class MetricsManager:
 
     def configure_result_manager(self, config_model):
         """
-        Processes the constraints and priorities
+        Processes the constraints and objectives
         for given ConfigModel and creates a result
         comparator to pass to the result manager
 
@@ -95,16 +95,21 @@ class MetricsManager:
             run
         """
 
-        # Construct list of record types for priorities and dict for constraints
-
-        priorities = MetricsMapper.get_metric_types(
-            tags=config_model.objectives())
         constraints = {}
+
+        # Construct dict of record types for objectives and constraints
+        objective_tags = list(config_model.objectives().keys())
+        objective_metrics = MetricsManager.get_metric_types(
+            tags=objective_tags)
+        objectives = {
+            objective_metrics[i]: config_model.objectives()[objective_tags[i]]
+            for i in range(len(objective_tags))
+        }
 
         # Constraints may be empty
         if config_model.constraints():
             constraint_tags = list(config_model.constraints().keys())
-            constraint_metrics = MetricsMapper.get_metric_types(
+            constraint_metrics = MetricsManager.get_metric_types(
                 tags=constraint_tags)
             constraints = {
                 constraint_metrics[i]:
@@ -115,7 +120,7 @@ class MetricsManager:
         self._result_comparator = ResultComparator(
             gpu_metric_types=self._dcgm_metrics,
             non_gpu_metric_types=self._perf_metrics + self._cpu_metrics,
-            metric_priorities=priorities)
+            metric_objectives=objectives)
 
         self._result_manager.set_constraints_and_comparator(
             constraints=constraints, comparator=self._result_comparator)
@@ -274,3 +279,21 @@ class MetricsManager:
         cpu_record_aggregator = RecordAggregator()
         cpu_record_aggregator.insert_all(cpu_records)
         return cpu_record_aggregator.aggregate()
+
+    @staticmethod
+    def get_metric_types(tags):
+        """
+        Parameters
+        ----------
+        tags : list of str
+            Human readable names for the 
+            metrics to monitor. They correspond
+            to actual record types.
+
+        Returns
+        -------
+        List
+            of record types being monitored
+        """
+
+        return [RecordType.get(tag) for tag in tags]

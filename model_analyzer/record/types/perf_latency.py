@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,25 +14,26 @@
 
 from functools import total_ordering
 
-from .record import Record
+from model_analyzer.record.record import Record
 
 
 @total_ordering
-class CPUUsedRAM(Record):
+class PerfLatency(Record):
     """
-    The CPU memory usage record
+    A record for perf_analyzer
+    metric 'Avg Latency'
     """
 
-    tag = "cpu_used_ram"
+    tag = "perf_latency"
 
     def __init__(self, value, timestamp=0):
         """
         Parameters
         ----------
         value : float
-            CPU used memory
-        timestamp : int
-            The timestamp for the record in nanoseconds
+            the latency extracted from the perf analyzer output
+        timestamp : float
+            Elapsed time from start of program
         """
 
         super().__init__(value, timestamp)
@@ -55,7 +56,7 @@ class CPUUsedRAM(Record):
             metric.
         """
 
-        return aggregation_tag + "RAM Usage(MB)"
+        return "Average Latency(us)"
 
     def __eq__(self, other):
         """
@@ -72,7 +73,7 @@ class CPUUsedRAM(Record):
         the other
         """
 
-        return self.value() < other.value()
+        return self.value() > other.value()
 
     def __add__(self, other):
         """
@@ -80,12 +81,15 @@ class CPUUsedRAM(Record):
         to produce a brand new record.
         """
 
-        return CPUUsedRAM(value=(self.value() + other.value()))
+        return PerfLatency(value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
-        Allows adding two records together
+        Allows subbing two records together
         to produce a brand new record.
+
+        ** Note this does reverse subtraction because
+            of the inverted nature of latency (lower is better)
         """
 
-        return CPUUsedRAM(value=(self.value() - other.value()))
+        return PerfLatency(value=(other.value() - self.value()))

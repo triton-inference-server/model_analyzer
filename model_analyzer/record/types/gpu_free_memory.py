@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,29 +13,32 @@
 # limitations under the License.
 
 from functools import total_ordering
-
-from .record import Record
+from model_analyzer.record.gpu_record import GPURecord
 
 
 @total_ordering
-class CPUAvailableRAM(Record):
+class GPUFreeMemory(GPURecord):
     """
-    The Available CPU memory
+    The free memory in the GPU.
     """
 
-    tag = "cpu_available_ram"
+    tag = "gpu_free_memory"
 
-    def __init__(self, value, timestamp=0):
+    def __init__(self, value, device=None, timestamp=0):
         """
         Parameters
         ----------
         value : float
-            CPU free memory
+            The free memory in the GPU obtained from
+            DCGM
+        device : GPUDevice
+            The  GPU device this metric is associated
+            with.
         timestamp : int
             The timestamp for the record in nanoseconds
         """
 
-        super().__init__(value, timestamp)
+        super().__init__(value, device, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -55,7 +58,7 @@ class CPUAvailableRAM(Record):
             metric.
         """
 
-        return aggregation_tag + "RAM Available(MB)"
+        return aggregation_tag + "GPU Memory Available(MB)"
 
     def __eq__(self, other):
         """
@@ -80,12 +83,12 @@ class CPUAvailableRAM(Record):
         to produce a brand new record.
         """
 
-        return CPUAvailableRAM(free_mem=(self.value() + other.value()))
+        return GPUFreeMemory(device=None, value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
-        Allows adding two records together
+        Allows subtracting two records together
         to produce a brand new record.
         """
 
-        return CPUAvailableRAM(free_mem=(self.value() - other.value()))
+        return GPUFreeMemory(device=None, value=(self.value() - other.value()))

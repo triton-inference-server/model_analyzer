@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from functools import total_ordering
-from .gpu_record import GPURecord
+from model_analyzer.record.gpu_record import GPURecord
 
 
 @total_ordering
@@ -74,7 +74,7 @@ class GPUUsedMemory(GPURecord):
         the other
         """
 
-        return self.value() < other.value()
+        return self.value() > other.value()
 
     def __add__(self, other):
         """
@@ -86,8 +86,8 @@ class GPUUsedMemory(GPURecord):
 
     def __sub__(self, other):
         """
-        Allows adding two records together
+        Allows subtracting two records together
         to produce a brand new record.
         """
 
-        return GPUUsedMemory(device=None, value=(self.value() - other.value()))
+        return GPUUsedMemory(device=None, value=(other.value() - self.value()))

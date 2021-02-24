@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,32 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 from functools import total_ordering
-
-from .record import Record
+from model_analyzer.record.gpu_record import GPURecord
 
 
 @total_ordering
-class PerfThroughput(Record):
+class GPUUtilization(GPURecord):
     """
-    A record for perf_analyzer
-    metric 'Throughput'
+    GPU utilization record
     """
 
-    tag = "perf_throughput"
+    tag = "gpu_utilization"
 
-    def __init__(self, value, timestamp=0):
+    def __init__(self, value, device=None, timestamp=0):
         """
         Parameters
         ----------
         value : float
-            The throughput from the perf analyzer output
-        timestamp : float
-            Elapsed time from start of program
+            The GPU utilization value
+        device : GPUDevice
+            The  GPU device this metric is associated
+            with.
+        timestamp : int
+            The timestamp for the record in nanoseconds
         """
 
-        super().__init__(value, timestamp)
+        super().__init__(value, device, timestamp)
 
     @staticmethod
     def header(aggregation_tag=None):
@@ -57,7 +57,7 @@ class PerfThroughput(Record):
             metric.
         """
 
-        return "Throughput(infer/sec)"
+        return aggregation_tag + "GPU Utilization(%)"
 
     def __eq__(self, other):
         """
@@ -69,8 +69,8 @@ class PerfThroughput(Record):
 
     def __lt__(self, other):
         """
-        Allows checking if 
-        this record is less than 
+        Allows checking if
+        this record is less than
         the other
         """
 
@@ -82,12 +82,14 @@ class PerfThroughput(Record):
         to produce a brand new record.
         """
 
-        return PerfThroughput(value=(self.value() + other.value()))
+        return GPUUtilization(device=None,
+                              value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
-        Allows adding two records together
+        Allows subtracting two records together
         to produce a brand new record.
         """
 
-        return PerfThroughput(value=(self.value() - other.value()))
+        return GPUUtilization(device=None,
+                              value=(self.value() - other.value()))
