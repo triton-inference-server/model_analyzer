@@ -28,7 +28,7 @@ EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
-TRITON_LAUNCH_MODE="local"
+TRITON_LAUNCH_MODE="docker"
 CLIENT_PROTOCOL="http"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
@@ -52,12 +52,13 @@ else
     SERVER_METRICS_FILE=${EXPORT_PATH}/${FILENAME_SERVER_ONLY}
     MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/${FILENAME_GPU_MODEL}
     MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/${FILENAME_INFERENCE_MODEL}
-    METRICS_NUM_COLUMNS=7
-    INFERENCE_NUM_COLUMNS=7
+    METRICS_NUM_COLUMNS=8
+    INFERENCE_NUM_COLUMNS=8
+    SERVER_METRICS_NUM_COLUMNS=7
     NUM_ROWS=1
     OUTPUT_TAG="Model"
 
-    check_csv_table_row_column $SERVER_METRICS_FILE $METRICS_NUM_COLUMNS $(($NUM_ROWS * ${#GPUS[@]})) $OUTPUT_TAG
+    check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_METRICS_NUM_COLUMNS $(($NUM_ROWS * ${#GPUS[@]})) $OUTPUT_TAG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $SERVER_METRICS_FILE.\n***"
         cat $ANALYZER_LOG

@@ -22,7 +22,7 @@ class PerfAnalyzerConfig:
     An argument set to None will use the perf_analyzer's default.
     """
 
-    def __init__(self, model, params=None):
+    def __init__(self, model=None, params=None):
         """
         Parameters
         ----------

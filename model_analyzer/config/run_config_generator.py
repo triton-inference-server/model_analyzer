@@ -30,9 +30,8 @@ class RunConfigGenerator:
             The config object parsed from
             a model analyzer config yaml or json.
 
-        model_name : str
-            The name of the model for which we need
-            to generate run configs
+        model : ConfigModel
+            ConfigModel object to generate the run configs for.
         """
 
         super().__init__()

@@ -31,7 +31,12 @@ class ResultManager:
     non_gpu_specific_headers = [
         'Model', 'Batch', 'Concurrency', 'Model Config Path'
     ]
-    gpu_specific_headers = ['Model', 'GPU ID', 'Batch', 'Concurrency']
+    gpu_specific_headers = [
+        'Model', 'GPU ID', 'Batch', 'Concurrency', 'Model Config Path'
+    ]
+    server_table_headers = [
+        'Model', 'GPU ID', 'Batch', 'Concurrency'
+    ]
     server_only_table_key = 'server_gpu_metrics'
     model_gpu_table_passing_key = 'model_gpu_metrics_passing'
     model_inference_table_passing_key = 'model_inference_metrics_passing'
@@ -90,7 +95,7 @@ class ResultManager:
         # Server only
         self._add_result_table(table_key=self.server_only_table_key,
                                title='Server Only',
-                               headers=self.gpu_specific_headers,
+                               headers=self.server_table_headers,
                                metric_types=gpu_specific_metrics,
                                aggregation_tag=aggregation_tag)
 
@@ -246,7 +251,7 @@ class ResultManager:
 
         # GPU specific data
         for gpu_id, metrics in measurement.gpu_data().items():
-            gpu_metrics = [model_name, gpu_id, batch_size, concurrency]
+            gpu_metrics = [model_name, gpu_id, batch_size, concurrency, tmp_model_name]
             gpu_metrics += [metric.value() for metric in metrics]
             self._result_tables[gpu_table_key].insert_row_by_index(
                 row=gpu_metrics)

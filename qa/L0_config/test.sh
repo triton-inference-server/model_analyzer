@@ -51,7 +51,7 @@ fi
 
 # Run the analyzer with various configurations and check the results
 for config in ${LIST_OF_CONFIG_FILES[@]}; do
-    rm -rf results && mkdir -p results
+    rm -rf results && mkdir -p results && rm -rf ./output_model_repository/
     set +e
 
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $config"
@@ -66,10 +66,11 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
         SERVER_METRICS_FILE=${EXPORT_PATH}/${FILENAME_SERVER_ONLY}
         MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/${FILENAME_GPU_MODEL}
         MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/${FILENAME_INFERENCE_MODEL}
-        METRICS_NUM_COLUMNS=7
-        INFERENCE_NUM_COLUMNS=7
+        METRICS_NUM_COLUMNS=8
+        INFERENCE_NUM_COLUMNS=8
+        SERVER_METRICS_NUM_COLUMNS=7
 
-        check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
+        check_log_table_row_column $ANALYZER_LOG $SERVER_METRICS_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
             cat $ANALYZER_LOG
@@ -93,7 +94,7 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
         MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/${FILENAME_INFERENCE_MODEL}
 
         OUTPUT_TAG="Model"
-        check_csv_table_row_column $SERVER_METRICS_FILE $METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
+        check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Output Verification Failed for $SERVER_METRICS_FILE.\n***"
             cat $ANALYZER_LOG
