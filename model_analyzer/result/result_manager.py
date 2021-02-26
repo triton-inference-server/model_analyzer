@@ -224,6 +224,7 @@ class ResultManager:
                     inference_table_key=self.model_inference_table_passing_key)
             else:
                 self._compile_measurement(
+                    model_name=model_name,
                     measurement=next_best_measurement,
                     gpu_table_key=self.model_gpu_table_failing_key,
                     inference_table_key=self.model_inference_table_failing_key)

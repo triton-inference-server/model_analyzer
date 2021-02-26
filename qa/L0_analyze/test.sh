@@ -16,7 +16,7 @@ ANALYZER_LOG="test.log"
 source ../common/util.sh
 
 rm -f *.log
-rm -rf results && mkdir -p results && 
+rm -rf results && mkdir -p results
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
