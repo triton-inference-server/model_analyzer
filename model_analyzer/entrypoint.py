@@ -14,6 +14,7 @@
 
 import sys
 import os
+import shutil
 from prometheus_client.parser import text_string_to_metric_families
 import requests
 import numba.cuda
@@ -97,7 +98,8 @@ def get_server_handle(config):
             path=config.triton_server_path, config=triton_config)
     elif config.triton_launch_mode == 'docker':
         triton_config = TritonServerConfig()
-        triton_config['model-repository'] = os.path.abspath(config.output_model_repository_path)
+        triton_config['model-repository'] = os.path.abspath(
+            config.output_model_repository_path)
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
         triton_config['metrics-port'] = urlparse(
@@ -281,10 +283,17 @@ def main():
     try:
         os.mkdir(output_model_repo_path)
     except OSError:
-        raise TritonModelAnalyzerException(
-            f'Path {output_model_repo_path} already exists. '
-            'Change the --output-model-repo-path flag or remove this directory.'
-        )
+        if not config.override_output_model_repository:
+            raise TritonModelAnalyzerException(
+                f'Path \'{output_model_repo_path}\' already exists. '
+                'Change the --output-model-repo-path flag or remove this directory.'
+            )
+        else:
+            shutil.rmtree(output_model_repo_path)
+            logger.warn(
+                f'Overriding the output model repo path \'{output_model_repo_path}\''
+            )
+            os.mkdir(output_model_repo_path)
     try:
         client, server = get_triton_handles(config)
 

@@ -15,6 +15,8 @@
 source ../common/util.sh
 
 rm -f *.log
+OUTPUT_MODEL_REPOSITORY='/tmp/output/model_repository'
+rm -rf $OUTPUT_MODEL_REPOSITORY
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -27,6 +29,7 @@ http_port="${PORTS[0]}"
 grpc_port="${PORTS[1]}"
 metrics_port="${PORTS[2]}"
 MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -n $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY"
 MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
 MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:$metrics_port/metrics"
 TRITON_LAUNCH_MODES="docker remote local"
@@ -61,6 +64,7 @@ function run_server_launch_modes() {
     for PROTOCOL in $CLIENT_PROTOCOLS; do
         MODEL_ANALYZER_ARGS_WITH_PROTOCOL="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$PROTOCOL"
         for LAUNCH_MODE in $TRITON_LAUNCH_MODES; do
+            rm -rf $OUTPUT_MODEL_REPOSITORY
             MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE="$MODEL_ANALYZER_ARGS_WITH_PROTOCOL --triton-launch-mode=$LAUNCH_MODE"
             ANALYZER_LOG=analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
             SERVER_LOG=${LAUNCH_MODE}.${PROTOCOL}.server.log

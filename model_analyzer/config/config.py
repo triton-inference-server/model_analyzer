@@ -439,6 +439,14 @@ class AnalyzerConfig:
                         description='Output model repository path used by Model Analyzer.'
                         ' This is the directory that will contain all the generated model configurations'))
         self._add_config(
+            ConfigField('override_output_model_repository',
+                        field_type=ConfigPrimitive(bool),
+                        parser_args={'action': 'store_true'},
+                        default_value=False,
+                        flags=['--override-output-model-repository'],
+                        description='Will override the contents of the output model repository'
+                        ' and replace it with the new results.'))
+        self._add_config(
             ConfigField('config_file',
                         field_type=ConfigPrimitive(str),
                         flags=['-f', '--config-file'],

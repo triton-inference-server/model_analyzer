@@ -98,11 +98,14 @@ instance_group [
         model_config = ModelConfig.create_from_dictionary(self._model_config)
         model_output_path = os.path.abspath('./model_config')
 
+        mock_model_config = MockModelConfig()
+        mock_model_config.start()
         # Write the model config to output
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()) as mocked_file:
             model_config.write_config_to_file(model_output_path)
             content = mocked_file().write.call_args.args[0]
+        mock_model_config.stop()
 
         mock_model_config = MockModelConfig(content)
         mock_model_config.start()

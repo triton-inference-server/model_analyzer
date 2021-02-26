@@ -22,7 +22,7 @@ class PerfAnalyzerConfig:
     An argument set to None will use the perf_analyzer's default.
     """
 
-    def __init__(self, model=None, params=None):
+    def __init__(self, params=None):
         """
         Parameters
         ----------
@@ -33,7 +33,6 @@ class PerfAnalyzerConfig:
             Config model corresponding to these parameters.
         """
 
-        self._model = model
         self._args = {
             'async': None,
             'sync': None,
@@ -106,17 +105,6 @@ class PerfAnalyzerConfig:
         args += [f'--{k}={v}' for k, v in self._args.items() if v]
 
         return ' '.join(args)
-
-    def get_config_model(self):
-        """
-        Get the ConfigModel corresponding to this Perf Config.
-
-        Returns
-        -------
-        ConfigModel
-        """
-
-        return self._model
 
     def __getitem__(self, key):
         """

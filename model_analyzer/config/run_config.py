@@ -18,7 +18,7 @@ class RunConfig:
     A class that encapsulates all the information
     needed to complete a single run of the Model
     Analyzer. One run corresponds to
-    one ModelConfig and produces one RunResult. 
+    one ModelConfig and produces one RunResult.
     """
 
     def __init__(self, model_name, model_config, perf_configs):
@@ -38,12 +38,12 @@ class RunConfig:
 
     def model_name(self):
         """
-        Get the temporary model name for this run config.
+        Get the parameterized model name for this run config.
 
         Returns
         -------
         str
-            Temporary model name
+            Parameterized model name
         """
 
         return self._model_name

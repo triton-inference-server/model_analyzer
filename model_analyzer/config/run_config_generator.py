@@ -40,7 +40,7 @@ class RunConfigGenerator:
         self._run_configs = []
         self._generate_run_configs()
 
-    def _generate_run_config_for_field(self, value):
+    def _generate_model_config_combinations(self, value):
         """
         Generates all the alternative config fields for
         a given value.
@@ -71,7 +71,7 @@ class RunConfigGenerator:
                 # here.
                 for sweep_choice in sweep_choices:
                     sweep_parameter_list += \
-                        self._generate_run_config_for_field(
+                        self._generate_model_config_combinations(
                                                     sweep_choice
                                                     )
 
@@ -92,7 +92,7 @@ class RunConfigGenerator:
             sweep_parameter_list = []
             for item in value:
                 sweep_parameter_list_item = \
-                    self._generate_run_config_for_field(
+                    self._generate_model_config_combinations(
                         item)
                 sweep_parameter_list.append(sweep_parameter_list_item)
 
@@ -113,7 +113,7 @@ class RunConfigGenerator:
 
         # Generate all the sweeps for a given parameter
         models_sweeps = \
-            self._generate_run_config_for_field(
+            self._generate_model_config_combinations(
                 model_config_parameters)
         for model_sweep in models_sweeps:
             model_config = ModelConfig.create_from_file(
@@ -170,7 +170,7 @@ class RunConfigGenerator:
         perf_configs = []
         for params in self._generate_parameter_combinations(
                 perf_config_params):
-            perf_configs.append(PerfAnalyzerConfig(config_model, params))
+            perf_configs.append(PerfAnalyzerConfig(params))
         return perf_configs
 
     def _generate_parameter_combinations(self, params):

@@ -202,10 +202,11 @@ class ResultManager:
         # Fill rows in descending order
         while self._results:
             next_best_result = heapq.heappop(self._results)
+            model_name = next_best_result.get_run_config().model_name()
             measurements = next_best_result.get_measurements()
-            self._compile_measurements(measurements)
+            self._compile_measurements(measurements, model_name)
 
-    def _compile_measurements(self, measurements):
+    def _compile_measurements(self, measurements, model_name):
         """
         checks measurement against constraints,
         and puts it into the correct (passing or failing)
@@ -217,6 +218,7 @@ class ResultManager:
             if self._constraint_manager.check_constraints(
                     measurement=next_best_measurement):
                 self._compile_measurement(
+                    model_name=model_name,
                     measurement=next_best_measurement,
                     gpu_table_key=self.model_gpu_table_passing_key,
                     inference_table_key=self.model_inference_table_passing_key)
@@ -227,14 +229,13 @@ class ResultManager:
                     inference_table_key=self.model_inference_table_failing_key)
 
     def _compile_measurement(self, measurement, gpu_table_key,
-                             inference_table_key):
+                             inference_table_key, model_name):
         """
         Add a single measurement to the specified
         table
         """
 
         perf_config = measurement.perf_config()
-        model_name = perf_config.get_config_model().model_name()
         tmp_model_name = perf_config['model-name']
         batch_size = perf_config['batch-size']
         concurrency = perf_config['concurrency-range']
