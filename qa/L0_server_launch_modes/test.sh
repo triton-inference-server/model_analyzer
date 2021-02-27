@@ -30,7 +30,7 @@ MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -n $MODEL_NAMES -b $BATCH_SIZES -
 MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
 MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:$metrics_port/metrics"
 TRITON_LAUNCH_MODES="docker remote local"
-TRITON_SERVER_VERSION="20.12-py3"
+TRITON_SERVER_VERSION="21.02-py3"
 CLIENT_PROTOCOLS="http grpc"
 
 # Run the model-analyzer, both client protocols
