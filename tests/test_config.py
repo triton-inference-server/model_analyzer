@@ -28,10 +28,11 @@ from model_analyzer.config.config_primitive import ConfigPrimitive
 from model_analyzer.config.config_union import ConfigUnion
 from model_analyzer.config.config_object import ConfigObject
 from model_analyzer.config.config_enum import ConfigEnum
+from model_analyzer.config.config_sweep import ConfigSweep
 from model_analyzer.config.config_list_numeric import \
     ConfigListNumeric
 from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+    CONFIG_PARSER_FAILURE
 
 
 class TestConfig(trc.TestResultCollector):
@@ -100,34 +101,50 @@ class TestConfig(trc.TestResultCollector):
         self.assertIsInstance(model_config_parameters, ConfigObject)
 
         input_param = model_config_parameters.raw_value()['input']
-        self.assertIsInstance(input_param, ConfigUnion)
+        self.assertIsInstance(input_param, ConfigSweep)
+        # Is list of params
         self.assertIsInstance(input_param.raw_value(), ConfigListGeneric)
+
+        # Each subitem is also a list
         self.assertIsInstance(input_param.raw_value().container_type(),
-                              ConfigObject)
+                              ConfigListGeneric)
+
+        single_sweep_param = input_param.raw_value().raw_value()[0]
+        self.assertIsInstance(single_sweep_param.raw_value()[0], ConfigObject)
 
         # Check types for 'name'
-        name_param = input_param.raw_value().raw_value()[0].raw_value()['name']
-        self.assertIsInstance(name_param, ConfigUnion)
-        self.assertIsInstance(name_param.raw_value(), ConfigPrimitive)
-
-        # Check types for 'data_type'
-        data_type_param = input_param.raw_value().raw_value()[0].raw_value(
-        )['data_type']
-        self.assertIsInstance(data_type_param, ConfigUnion)
-        self.assertIsInstance(data_type_param.raw_value(), ConfigEnum)
-
-        # Check types for 'dims'
-        dims_param = input_param.raw_value().raw_value()[0].raw_value()['dims']
-        self.assertIsInstance(dims_param, ConfigUnion)
-        self.assertIsInstance(dims_param.raw_value(), ConfigListGeneric)
-        self.assertIsInstance(dims_param.raw_value().container_type(),
+        name_param = single_sweep_param.raw_value()[0].raw_value()['name']
+        self.assertIsInstance(name_param, ConfigSweep)
+        self.assertIsInstance(name_param.raw_value(), ConfigListGeneric)
+        self.assertIsInstance(name_param.raw_value().container_type(),
                               ConfigPrimitive)
 
+        # Check types for 'data_type'
+        data_type_param = single_sweep_param.raw_value()[0].raw_value(
+        )['data_type']
+        self.assertIsInstance(data_type_param, ConfigSweep)
+        self.assertIsInstance(data_type_param.raw_value(), ConfigListGeneric)
+        self.assertIsInstance(data_type_param.raw_value().container_type(),
+                              ConfigEnum)
+
+        # Check types for 'dims'
+        dims_param = single_sweep_param.raw_value()[0].raw_value()['dims']
+        self.assertIsInstance(dims_param, ConfigSweep)
+        self.assertIsInstance(dims_param.raw_value(), ConfigListGeneric)
+        self.assertIsInstance(dims_param.raw_value().container_type(),
+                              ConfigListGeneric)
+        self.assertIsInstance(dims_param.raw_value().raw_value()[0],
+                              ConfigListGeneric)
+        self.assertIsInstance(
+            dims_param.raw_value().raw_value()[0].container_type(),
+            ConfigPrimitive)
+
         # Check types for 'format'
-        format_param = input_param.raw_value().raw_value()[0].raw_value(
-        )['format']
-        self.assertIsInstance(format_param, ConfigUnion)
-        self.assertIsInstance(format_param.raw_value(), ConfigEnum)
+        format_param = single_sweep_param.raw_value()[0].raw_value()['format']
+        self.assertIsInstance(format_param, ConfigSweep)
+        self.assertIsInstance(format_param.raw_value(), ConfigListGeneric)
+        self.assertIsInstance(format_param.raw_value().container_type(),
+                              ConfigEnum)
 
     def _assert_model_str_type(self, model_config):
         self.assertIsInstance(model_config, ConfigUnion)
@@ -577,10 +594,10 @@ model_names:
                         },
                         objectives={'perf_throughput': 10},
                         model_config_parameters={
-                            'instance_group': [{
-                                'kind': 'KIND_GPU',
-                                'count': 1
-                            }]
+                            'instance_group': [[{
+                                'kind': ['KIND_GPU'],
+                                'count': [1]
+                            }]]
                         })
         ]
         self._assert_equality_of_model_configs(model_configs,
@@ -614,13 +631,13 @@ model_names:
                         },
                         objectives={'perf_throughput': 10},
                         model_config_parameters={
-                            'instance_group': [{
-                                'kind': 'KIND_GPU',
-                                'count': 1
+                            'instance_group': [[{
+                                'kind': ['KIND_GPU'],
+                                'count': [1]
                             }, {
-                                'kind': 'KIND_CPU',
-                                'count': 1
-                            }]
+                                'kind': ['KIND_CPU'],
+                                'count': [1]
+                            }]]
                         })
         ]
         self._assert_equality_of_model_configs(model_configs,
@@ -657,11 +674,11 @@ model_names:
                         objectives={'perf_throughput': 10},
                         model_config_parameters={
                             'instance_group': [[{
-                                'kind': 'KIND_GPU',
-                                'count': 1
+                                'kind': ['KIND_GPU'],
+                                'count': [1]
                             }], [{
-                                'kind': 'KIND_CPU',
-                                'count': 1
+                                'kind': ['KIND_CPU'],
+                                'count': [1]
                             }]]
                         })
         ]
@@ -691,12 +708,12 @@ model_names:
                         },
                         objectives={'perf_throughput': 10},
                         model_config_parameters={
-                            'input': [{
-                                'name': 'NV_MODEL_INPUT',
-                                'data_type': 'TYPE_FP32',
-                                'format': 'FORMAT_NHWC',
-                                'dims': [256, 256, 3]
-                            }]
+                            'input': [[{
+                                'name': ['NV_MODEL_INPUT'],
+                                'data_type': ['TYPE_FP32'],
+                                'format': ['FORMAT_NHWC'],
+                                'dims': [[256, 256, 3]]
+                            }]]
                         })
         ]
         model_config = config.get_config()['model_names']
@@ -712,10 +729,14 @@ model_names:
         self._assert_equality_of_model_configs(model_configs,
                                                expected_model_configs)
 
-    def test_error_messages(self):
+    def test_config_sweep(self):
+        config_sweep = ConfigSweep(ConfigPrimitive(int))
+        config_sweep.set_value(2)
 
+    def test_error_messages(self):
         # ConfigListNumeric
         config_numeric = ConfigListNumeric(float)
+        config_numeric.set_name('key')
         config_status = config_numeric.set_value({
             'start': 12,
             'stop': 15,
@@ -731,60 +752,80 @@ model_names:
         self.assertIsNotNone(result)
 
         config_numeric = ConfigListNumeric(float)
+        config_numeric.set_name('key')
         config_status = config_numeric.set_value({'start': 12, 'stop': 'two'})
-        config_message = config_status.message()
+        print(config_message)
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
         config_numeric = ConfigListNumeric(float)
+        config_numeric.set_name('key')
         config_status = config_numeric.set_value({'start': 'five', 'stop': 2})
         config_message = config_status.message()
+        print(config_message)
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
         config_numeric = ConfigListNumeric(float)
+        config_numeric.set_name('key')
         config_status = config_numeric.set_value({'start': 10, 'stop': 2})
+        print(config_status.message())
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
         # ConfigUnion error message
         config_union = ConfigUnion(
             [ConfigListNumeric(float),
              ConfigPrimitive(str)])
+        config_union.set_name('key')
 
         # Dictionaries are not accepted.
         config_status = config_union.set_value({'a': 'b'})
+        print(config_status.message())
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
         # ConfigEnum
         config_enum = ConfigEnum(['a', 'b'])
+        config_enum.set_name('key')
         config_status = config_enum.set_value('c')
+        print(config_status.message())
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
         # ConfigListGeneric
         config_list_generic = ConfigListGeneric(ConfigPrimitive(float))
+        config_list_generic.set_name('key')
         config_status = config_list_generic.set_value({'a': 'b'})
+        print(config_status.message())
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
         # ConfigListString
         config_list_string = ConfigListString()
+        config_list_string.set_name('key')
         config_status = config_list_string.set_value({'a': 'b'})
+        print(config_status.message())
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
         config_status = config_list_string.set_value([{'a': 'b'}])
+        print(config_status.message())
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
         # ConfigObject
         config_object = ConfigObject(schema={'key': ConfigPrimitive(float)})
+        config_object.set_name('key')
         config_status = config_object.set_value({'undefiend_key': 2.0})
+        print(config_status.message())
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
         config_status = config_object.set_value({'key': [1, 2, 3]})
+        print(config_status.message())
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
         config_status = config_object.set_value([1, 2, 3])
+        print(config_status.message())
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
         # ConfigPrimitive
         config_primitive = ConfigPrimitive(float)
+        config_primitive.set_name('key')
         config_status = config_primitive.set_value('a')
+        print(config_status.message())
         self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
 
     def test_autofill(self):
@@ -814,10 +855,10 @@ model_names:
                         },
                         objectives={'perf_throughput': 10},
                         model_config_parameters={
-                            'instance_group': [{
-                                'kind': 'KIND_GPU',
-                                'count': 1
-                            }]
+                            'instance_group': [[{
+                                'kind': ['KIND_GPU'],
+                                'count': [1]
+                            }]]
                         })
         ]
         self._assert_equality_of_model_configs(model_configs,
@@ -865,10 +906,10 @@ model_names:
                             'max': 80,
                         }},
                         model_config_parameters={
-                            'instance_group': [{
-                                'kind': 'KIND_GPU',
-                                'count': 1
-                            }]
+                            'instance_group': [[{
+                                'kind': ['KIND_GPU'],
+                                'count': [1]
+                            }]]
                         })
         ]
         self._assert_equality_of_model_configs(model_configs,
@@ -912,10 +953,10 @@ model_names:
                             'max': 8000
                         }},
                         model_config_parameters={
-                            'instance_group': [{
-                                'kind': 'KIND_GPU',
-                                'count': 1
-                            }]
+                            'instance_group': [[{
+                                'kind': ['KIND_GPU'],
+                                'count': [1]
+                            }]]
                         })
         ]
         self._assert_equality_of_model_configs(model_configs,
@@ -959,10 +1000,10 @@ model_names:
                             'max': 8000
                         }},
                         model_config_parameters={
-                            'instance_group': [{
-                                'kind': 'KIND_GPU',
-                                'count': 1
-                            }]
+                            'instance_group': [[{
+                                'kind': ['KIND_GPU'],
+                                'count': [1]
+                            }]]
                         })
         ]
         self._assert_equality_of_model_configs(model_configs,

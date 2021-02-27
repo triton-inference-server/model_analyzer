@@ -81,7 +81,7 @@ class RunResult:
         return self._run_config
 
     def __eq__(self, other):
-        """ 
+        """
         Checks for the equality of this and
         another RunResult
         """

@@ -23,13 +23,20 @@ from model_analyzer.model_analyzer_exceptions \
 
 class ResultManager:
     """
-    This class provides methods to create, and add to 
+    This class provides methods to create, and add to
     ResultTables. Each ResultTable holds results from
     multiple runs.
     """
 
-    non_gpu_specific_headers = ['Model', 'Batch', 'Concurrency']
-    gpu_specific_headers = ['Model', 'GPU ID', 'Batch', 'Concurrency']
+    non_gpu_specific_headers = [
+        'Model', 'Batch', 'Concurrency', 'Model Config Path'
+    ]
+    gpu_specific_headers = [
+        'Model', 'GPU ID', 'Batch', 'Concurrency', 'Model Config Path'
+    ]
+    server_table_headers = [
+        'Model', 'GPU ID', 'Batch', 'Concurrency'
+    ]
     server_only_table_key = 'server_gpu_metrics'
     model_gpu_table_passing_key = 'model_gpu_metrics_passing'
     model_inference_table_passing_key = 'model_inference_metrics_passing'
@@ -88,7 +95,7 @@ class ResultManager:
         # Server only
         self._add_result_table(table_key=self.server_only_table_key,
                                title='Server Only',
-                               headers=self.gpu_specific_headers,
+                               headers=self.server_table_headers,
                                metric_types=gpu_specific_metrics,
                                aggregation_tag=aggregation_tag)
 
@@ -129,8 +136,8 @@ class ResultManager:
         Parameters
         ----------
         run_config : RunConfig
-            The run config corresponding to the current 
-            run
+            The run config corresponding to the current
+            run.
         """
 
         if len(self._result_tables) == 0:
@@ -187,18 +194,19 @@ class ResultManager:
 
     def compile_results(self):
         """
-        The function called at the end of all runs 
-        FOR A MODEL that compiles all result and 
+        The function called at the end of all runs
+        FOR A MODEL that compiles all result and
         dumps the data into tables for exporting.
         """
 
         # Fill rows in descending order
         while self._results:
             next_best_result = heapq.heappop(self._results)
+            model_name = next_best_result.get_run_config().model_name()
             measurements = next_best_result.get_measurements()
-            self._compile_measurements(measurements)
+            self._compile_measurements(measurements, model_name)
 
-    def _compile_measurements(self, measurements):
+    def _compile_measurements(self, measurements, model_name):
         """
         checks measurement against constraints,
         and puts it into the correct (passing or failing)
@@ -210,29 +218,33 @@ class ResultManager:
             if self._constraint_manager.check_constraints(
                     measurement=next_best_measurement):
                 self._compile_measurement(
+                    model_name=model_name,
                     measurement=next_best_measurement,
                     gpu_table_key=self.model_gpu_table_passing_key,
                     inference_table_key=self.model_inference_table_passing_key)
             else:
                 self._compile_measurement(
+                    model_name=model_name,
                     measurement=next_best_measurement,
                     gpu_table_key=self.model_gpu_table_failing_key,
                     inference_table_key=self.model_inference_table_failing_key)
 
     def _compile_measurement(self, measurement, gpu_table_key,
-                             inference_table_key):
+                             inference_table_key, model_name):
         """
         Add a single measurement to the specified
         table
         """
 
         perf_config = measurement.perf_config()
-        model_name = perf_config['model-name']
+        tmp_model_name = perf_config['model-name']
         batch_size = perf_config['batch-size']
         concurrency = perf_config['concurrency-range']
 
         # Non GPU specific data
-        inference_metrics = [model_name, batch_size, concurrency]
+        inference_metrics = [
+            model_name, batch_size, concurrency, tmp_model_name
+        ]
         inference_metrics += [
             metric.value() for metric in measurement.non_gpu_data()
         ]
@@ -241,7 +253,7 @@ class ResultManager:
 
         # GPU specific data
         for gpu_id, metrics in measurement.gpu_data().items():
-            gpu_metrics = [model_name, gpu_id, batch_size, concurrency]
+            gpu_metrics = [model_name, gpu_id, batch_size, concurrency, tmp_model_name]
             gpu_metrics += [metric.value() for metric in metrics]
             self._result_tables[gpu_table_key].insert_row_by_index(
                 row=gpu_metrics)
@@ -250,7 +262,7 @@ class ResultManager:
         """
         Returns
         -------
-        dict 
+        dict
             table keys and ResultTables
         """
 

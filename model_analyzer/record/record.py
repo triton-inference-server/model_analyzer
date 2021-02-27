@@ -29,8 +29,8 @@ class RecordType(ABCMeta):
 
     def __new__(cls, name, base, namespace):
         """
-        This function is called upon declaration
-        of any classes of type RecordType
+        This function is called upon declaration of any classes of type
+        RecordType
         """
 
         record_type = super().__new__(cls, name, base, namespace)
@@ -47,7 +47,7 @@ class RecordType(ABCMeta):
         ----------
         tag : str
             tag that a record type has registered it classname with
-        
+
         Returns
         -------
         The class of type RecordType correspoding to the tag
@@ -90,7 +90,6 @@ class Record(metaclass=RecordType):
     This class is used for representing
     records
     """
-
     def __init__(self, value, timestamp):
         """
         Parameters
@@ -114,11 +113,10 @@ class Record(metaclass=RecordType):
         Parameters
         ----------
         aggregation_tag : str
-            An optional tag that may be displayed 
-            as part of the header indicating that 
-            this record has been aggregated using 
-            max, min or average etc. 
-             
+            An optional tag that may be displayed as part of the header
+            indicating that this record has been aggregated using max, min or
+            average etc.
+
         Returns
         -------
         str
@@ -133,14 +131,12 @@ class Record(metaclass=RecordType):
         Returns
         -------
         str
-            the name tag of the record type. 
+            the name tag of the record type.
         """
 
     def value(self):
         """
-        This method returns
-        the value of recorded
-        metric
+        This method returns the value of recorded metric
 
         Returns
         -------
@@ -152,10 +148,7 @@ class Record(metaclass=RecordType):
 
     def timestamp(self):
         """
-        This method should
-        return the time
-        at which the record
-        was created.
+        This method should return the time at which the record was created.
 
         Returns
         -------
@@ -168,8 +161,7 @@ class Record(metaclass=RecordType):
 
     def __mul__(self, other):
         """
-        Defines left multiplication for records
-        with floats or ints
+        Defines left multiplication for records with floats or ints.
 
         Returns
         -------
@@ -190,8 +182,7 @@ class Record(metaclass=RecordType):
 
     def __truediv__(self, other):
         """
-        Defines left multiplication for records
-        with floats or ints
+        Defines left multiplication for records with floats or ints
 
         Returns
         -------

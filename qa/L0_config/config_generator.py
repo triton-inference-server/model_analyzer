@@ -29,7 +29,7 @@ def get_random_intervals():
     return list(range(begin, end + 1, step)), begin, end, step
 
 
-def get_all_configurations():
+def _get_range_configs():
     intervals, begin, end, step = get_random_intervals()
     intervals = [str(x) for x in intervals]
 
@@ -97,6 +97,51 @@ def get_all_configurations():
             number_of_models * concurrency_number * batch_size_number
         run_params.append(new_run)
 
+    return run_params
+
+
+def _get_sweep_configs():
+
+    sweep_configs = []
+    model_config = {
+        'model_names': {
+            'classification_breast_v1': {
+                'model_config_parameters': {
+                    'instance_group': [{
+                        'count': [1, 2, 3, 4],
+                        'kind': 'KIND_GPU'
+                    }]
+                }
+            }
+        },
+        'triton_launch_mode': ['docker'],
+    }
+    model_config['total_param'] = 4
+    sweep_configs.append(model_config)
+
+    model_config = {
+        'model_names': {
+            'classification_breast_v1': {
+                'model_config_parameters': {
+                    'dynamic_batching': {
+                        'preferred_batch_size': [[4, 8], [5, 6]],
+                        'max_queue_delay_microseconds': [100, 200]
+                    }
+                }
+            }
+        },
+        'triton_launch_mode': ['docker'],
+    }
+    model_config['total_param'] = 4
+    sweep_configs.append(model_config)
+    return sweep_configs
+
+
+def get_all_configurations():
+
+    run_params = []
+    run_params += _get_range_configs()
+    run_params += _get_sweep_configs()
     return run_params
 
 

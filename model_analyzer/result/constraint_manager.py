@@ -15,7 +15,7 @@
 
 class ConstraintManager:
     """
-    Handles processing and applying 
+    Handles processing and applying
     constraints on a given measurements
     """
 
@@ -24,7 +24,7 @@ class ConstraintManager:
         Parameters
         ----------
         constraints : dict
-            keys are record_types and values are dicts 
+            keys are record_types and values are dicts
             describing either max/min
         """
 
@@ -32,14 +32,14 @@ class ConstraintManager:
 
     def check_constraints(self, measurement):
         """
-        Takes a measurement and 
+        Takes a measurement and
         checks it against the constraints.
 
         Parameters
         ----------
         measurement : list of metrics
             The measurement to check against the constraints
-        
+
         Return
         ------
         True if measurement passes constraints
@@ -58,7 +58,7 @@ class ConstraintManager:
     def _check_constraints(self, metrics):
         """
         Determines whether a constraint
-        is a min or max constraint and 
+        is a min or max constraint and
         checks whether the given value
         satisfies the constraint
         """

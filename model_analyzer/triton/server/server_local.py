@@ -51,16 +51,17 @@ class TritonServerLocal(TritonServer):
         Starts the tritonserver container locally
         """
 
-        # Create command list and run subprocess
-        cmd = [self._server_path]
-        cmd += self._server_config.to_cli_string().replace('=', ' ').split()
+        if self._server_path:
+            # Create command list and run subprocess
+            cmd = [self._server_path]
+            cmd += self._server_config.to_cli_string().replace('=', ' ').split()
 
-        self._tritonserver_process = Popen(cmd,
-                                           start_new_session=True,
-                                           stdout=PIPE,
-                                           stderr=STDOUT,
-                                           universal_newlines=True)
-        logger.info('Triton Server started.')
+            self._tritonserver_process = Popen(cmd,
+                                               start_new_session=True,
+                                               stdout=PIPE,
+                                               stderr=STDOUT,
+                                               universal_newlines=True)
+            logger.info('Triton Server started.')
 
     def stop(self):
         """

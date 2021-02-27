@@ -43,11 +43,11 @@ class CPUAvailableRAM(Record):
         Parameters
         ----------
         aggregation_tag : str
-            An optional tag that may be displayed 
-            as part of the header indicating that 
-            this record has been aggregated using 
-            max, min or average etc. 
-             
+            An optional tag that may be displayed
+            as part of the header indicating that
+            this record has been aggregated using
+            max, min or average etc.
+
         Returns
         -------
         str

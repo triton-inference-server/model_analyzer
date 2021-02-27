@@ -76,7 +76,7 @@ class Measurement:
         another
 
         If True, this means this measurement is better
-        than the other. 
+        than the other.
         """
 
         # seems like this should be == -1 but we're using a min heap

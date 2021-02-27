@@ -49,6 +49,7 @@ class ConfigValue(abc.ABC):
         """
 
         self._preprocess = preprocess
+        self._is_sweepable = False
         self._required = required
         self._validator = validator
         self._output_mapper = output_mapper

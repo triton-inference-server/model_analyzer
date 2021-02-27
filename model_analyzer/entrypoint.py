@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import sys
+import os
+import shutil
 from prometheus_client.parser import text_string_to_metric_families
 import requests
 import numba.cuda
@@ -76,9 +78,16 @@ def get_server_handle(config):
         logger.info('Using remote Triton Server...')
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config)
+        logger.info(
+            'GPU memory metrics reported in the remote mode are not'
+            ' accuracte. Model Analyzer uses Triton explicit model control to'
+            ' load/unload models. Some frameworks do not release the GPU'
+            ' memory even when the memory is not being used. Consider'
+            ' using the "local" or "docker" mode if you want to accurately'
+            ' monitor the GPU memory usage for different models.')
     elif config.triton_launch_mode == 'local':
         triton_config = TritonServerConfig()
-        triton_config['model-repository'] = config.model_repository
+        triton_config['model-repository'] = config.output_model_repository_path
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
         triton_config['metrics-port'] = urlparse(
@@ -87,10 +96,10 @@ def get_server_handle(config):
         logger.info('Starting a local Triton Server...')
         server = TritonServerFactory.create_server_local(
             path=config.triton_server_path, config=triton_config)
-        server.start()
     elif config.triton_launch_mode == 'docker':
         triton_config = TritonServerConfig()
-        triton_config['model-repository'] = config.model_repository
+        triton_config['model-repository'] = os.path.abspath(
+            config.output_model_repository_path)
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
         triton_config['metrics-port'] = urlparse(
@@ -101,7 +110,6 @@ def get_server_handle(config):
             image='nvcr.io/nvidia/tritonserver:' + config.triton_version,
             config=triton_config,
             gpus=get_analyzer_gpus(config))
-        server.start()
     else:
         raise TritonModelAnalyzerException(
             f"Unrecognized triton-launch-mode : {config.triton_launch_mode}")
@@ -199,8 +207,6 @@ def get_triton_handles(config):
 
     client = get_client_handle(config)
     server = get_server_handle(config)
-    client.wait_for_server_ready(num_retries=config.max_retries)
-    logger.info('Triton Server is ready.')
 
     return client, server
 
@@ -272,6 +278,22 @@ def main():
         f'Triton Model Analyzer started: config={config.get_all_config()}')
 
     server = None
+    # Generate the output model repository path folder.
+    output_model_repo_path = config.output_model_repository_path
+    try:
+        os.mkdir(output_model_repo_path)
+    except OSError:
+        if not config.override_output_model_repository:
+            raise TritonModelAnalyzerException(
+                f'Path \'{output_model_repo_path}\' already exists. '
+                'Change the --output-model-repo-path flag or remove this directory.'
+            )
+        else:
+            shutil.rmtree(output_model_repo_path)
+            logger.warn(
+                f'Overriding the output model repo path \'{output_model_repo_path}\''
+            )
+            os.mkdir(output_model_repo_path)
     try:
         client, server = get_triton_handles(config)
 
@@ -280,7 +302,13 @@ def main():
             return
 
         analyzer = Analyzer(config, client, metric_tags, server)
+
+        # Check TritonServer GPUs
+        server.start()
+        client.wait_for_server_ready(config.max_retries)
         check_triton_and_model_analyzer_gpus(config)
+        server.stop()
+
         if exiting:
             return
 

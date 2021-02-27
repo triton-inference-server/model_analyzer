@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 
 class TritonServerConfig:
@@ -20,7 +21,6 @@ class TritonServerConfig:
     A config class to set arguments to the Triton Inference
     Server. An argument set to None will use the server default.
     """
-
     def __init__(self):
         # Args will be a dict with the string representation as key
         self._server_args = {

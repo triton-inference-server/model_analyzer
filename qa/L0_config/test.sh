@@ -32,6 +32,7 @@ TRITON_SERVER_VERSION="21.02-py3"
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
+OUTPUT_MODEL_REPOSITORY='/tmp/output/model_repository'
 
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --model-repository $MODEL_REPOSITORY"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE --triton-version=$TRITON_SERVER_VERSION"
@@ -39,6 +40,8 @@ MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --export -e $EXPORT_PATH --f
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY"
+
 LIST_OF_CONFIG_FILES=(`ls | grep .yml`)
 
 RET=0
@@ -51,7 +54,7 @@ fi
 
 # Run the analyzer with various configurations and check the results
 for config in ${LIST_OF_CONFIG_FILES[@]}; do
-    rm -rf results && mkdir -p results
+    rm -rf results && mkdir -p results && rm -rf $OUTPUT_MODEL_REPOSITORY
     set +e
 
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $config"
@@ -66,10 +69,11 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
         SERVER_METRICS_FILE=${EXPORT_PATH}/${FILENAME_SERVER_ONLY}
         MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/${FILENAME_GPU_MODEL}
         MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/${FILENAME_INFERENCE_MODEL}
-        METRICS_NUM_COLUMNS=7
-        INFERENCE_NUM_COLUMNS=7
+        METRICS_NUM_COLUMNS=8
+        INFERENCE_NUM_COLUMNS=8
+        SERVER_METRICS_NUM_COLUMNS=7
 
-        check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
+        check_log_table_row_column $ANALYZER_LOG $SERVER_METRICS_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
             cat $ANALYZER_LOG
@@ -93,7 +97,7 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
         MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/${FILENAME_INFERENCE_MODEL}
 
         OUTPUT_TAG="Model"
-        check_csv_table_row_column $SERVER_METRICS_FILE $METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
+        check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Output Verification Failed for $SERVER_METRICS_FILE.\n***"
             cat $ANALYZER_LOG
