@@ -117,3 +117,13 @@ class ConfigPlot:
         for plot_name, plot_spec in plots.items():
             plot_list.append(ConfigPlot(plot_name, **plot_spec.value()))
         return plot_list
+
+    def __repr__(self):
+        plot_object = {
+            'name': self._name,
+            'title': self._title,
+            'x_axis': self._x_axis,
+            'y_axis': self._y_axis
+        }
+
+        return str(plot_object)

@@ -20,17 +20,17 @@ from .common import test_result_collector as trc
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.cli.cli import CLI
-from model_analyzer.config.input_config.config import AnalyzerConfig
-from model_analyzer.config.input_config.config_model import ConfigModel
-from model_analyzer.config.input_config.config_plot import ConfigPlot
-from model_analyzer.config.input_config.config_list_string import ConfigListString
-from model_analyzer.config.input_config.config_list_generic import ConfigListGeneric
-from model_analyzer.config.input_config.config_primitive import ConfigPrimitive
-from model_analyzer.config.input_config.config_union import ConfigUnion
-from model_analyzer.config.input_config.config_object import ConfigObject
-from model_analyzer.config.input_config.config_enum import ConfigEnum
-from model_analyzer.config.input_config.config_sweep import ConfigSweep
-from model_analyzer.config.input_config.config_list_numeric import \
+from model_analyzer.config.input.config import AnalyzerConfig
+from model_analyzer.config.input.config_model import ConfigModel
+from model_analyzer.config.input.config_plot import ConfigPlot
+from model_analyzer.config.input.config_list_string import ConfigListString
+from model_analyzer.config.input.config_list_generic import ConfigListGeneric
+from model_analyzer.config.input.config_primitive import ConfigPrimitive
+from model_analyzer.config.input.config_union import ConfigUnion
+from model_analyzer.config.input.config_object import ConfigObject
+from model_analyzer.config.input.config_enum import ConfigEnum
+from model_analyzer.config.input.config_sweep import ConfigSweep
+from model_analyzer.config.input.config_list_numeric import \
     ConfigListNumeric
 from model_analyzer.constants import \
     CONFIG_PARSER_FAILURE
@@ -746,6 +746,7 @@ model_names:
         config_sweep = ConfigSweep(ConfigPrimitive(int))
         config_sweep.set_value(2)
 
+    @unittest.skip("We have temporarily disabled plot configs.")
     def test_config_plot(self):
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',

@@ -46,13 +46,14 @@ class ConstraintManager:
         False otherwise
         """
 
-        for metric in measurement.data():
-            if type(metric).tag in self._constraints:
-                constraint = self._constraints[type(metric).tag]
-                if 'min' in constraint:
-                    if metric.value() < constraint['min']:
-                        return False
-                if 'max' in constraint:
-                    if metric.value() > constraint['max']:
-                        return False
+        if self._constraints:
+            for metric in measurement.data():
+                if type(metric).tag in self._constraints:
+                    constraint = self._constraints[type(metric).tag]
+                    if 'min' in constraint:
+                        if metric.value() < constraint['min']:
+                            return False
+                    if 'max' in constraint:
+                        if metric.value() > constraint['max']:
+                            return False
         return True

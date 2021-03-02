@@ -15,9 +15,9 @@
 from .common import test_result_collector as trc
 from .mocks.mock_config import MockConfig
 from .mocks.mock_model_config import MockModelConfig
-from model_analyzer.config.input_config.config import AnalyzerConfig
+from model_analyzer.config.input.config import AnalyzerConfig
 from model_analyzer.cli.cli import CLI
-from model_analyzer.config.run_config.run_config_generator \
+from model_analyzer.config.run.run_config_generator \
     import RunConfigGenerator
 from unittest.mock import mock_open, patch
 import yaml

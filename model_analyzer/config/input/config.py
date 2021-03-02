@@ -181,17 +181,6 @@ class AnalyzerConfig:
                     'max': ConfigPrimitive(int),
                 }),
             })
-
-        plots_scheme = ConfigObject(schema={
-            '*':
-            ConfigObject(
-                schema={
-                    'title': ConfigPrimitive(type_=str),
-                    'x_axis': ConfigPrimitive(type_=str),
-                    'y_axis': ConfigPrimitive(type_=str),
-                })
-        },
-                                    output_mapper=ConfigPlot.from_object)
         model_object_constraint = ConfigObject(
             required=True,
             schema={
@@ -244,38 +233,6 @@ class AnalyzerConfig:
                 default_value={'perf_throughput': 10},
                 description=
                 'Model Analyzer uses the objectives described here to find the best configuration for each model.'
-            ))
-        self._add_config(
-            ConfigField(
-                'plots',
-                field_type=ConfigUnion([
-                    plots_scheme,
-                    ConfigListGeneric(type_=plots_scheme,
-                                      output_mapper=ConfigPlot.from_list)
-                ]),
-                default_value={
-                    'default_plot': {
-                        'title': 'Throughput vs. Latency',
-                        'x_axis': 'perf_latency',
-                        'y_axis': 'perf_throughput'
-                    }
-                },
-                description=
-                'Model analyzer uses the information in this section to construct plots of the results.'
-            ))
-        self._add_config(
-            ConfigField(
-                'top_n_configs',
-                field_type=ConfigPrimitive(int),
-                default_value=3,
-                description='The number of top model configurations to plot.'))
-        self._add_config(
-            ConfigField(
-                'top_n_measurements',
-                field_type=ConfigPrimitive(int),
-                default_value=5,
-                description=
-                'The number of top sets of measurements to plot per top model config.'
             ))
         self._add_config(
             ConfigField(
@@ -606,6 +563,64 @@ class AnalyzerConfig:
             new_model_names[model.model_name()] = new_model
         self._fields['model_names'].set_value(new_model_names)
 
+    def _configure_plots(self):
+        """
+        Sets up the plots that will be 
+        included in the summary
+        """
+
+        plots_scheme = ConfigObject(schema={
+            '*':
+            ConfigObject(
+                schema={
+                    'title': ConfigPrimitive(type_=str),
+                    'x_axis': ConfigPrimitive(type_=str),
+                    'y_axis': ConfigPrimitive(type_=str),
+                })
+        },
+                                    output_mapper=ConfigPlot.from_object)
+        self._add_config(
+            ConfigField(
+                'plots',
+                field_type=ConfigUnion([
+                    plots_scheme,
+                    ConfigListGeneric(type_=plots_scheme,
+                                      output_mapper=ConfigPlot.from_list)
+                ]),
+                default_value={
+                    'throughput_v_latency': {
+                        'title': 'Throughput vs. Latency',
+                        'x_axis': 'perf_latency',
+                        'y_axis': 'perf_throughput'
+                    },
+                    'gpu_mem_v_latency': {
+                        'title': 'GPU Memory vs. Latency',
+                        'x_axis': 'perf_latency',
+                        'y_axis': 'gpu_used_memory'
+                    }
+                },
+                description=
+                'Model analyzer uses the information in this section to construct plots of the results.'
+            ))
+        self._add_config(
+            ConfigField(
+                'top_n_configs',
+                field_type=ConfigPrimitive(int),
+                default_value=3,
+                description='The number of top model configurations to plot.'))
+        self._add_config(
+            ConfigField(
+                'top_n_measurements',
+                field_type=ConfigPrimitive(int),
+                default_value=5,
+                description=
+                'The number of top sets of measurements to plot per top model config.'
+            ))
+
+        # Fill these in with their defaults
+        for key in ['plots', 'top_n_configs', 'top_n_measurements']:
+            self._fields[key].set_value(self._fields[key].default_value())
+
     def set_config_values(self, args):
         """
         Set the config values. This function sets all the values for the
@@ -645,6 +660,7 @@ class AnalyzerConfig:
         self._setup_logger()
         self._preprocess_and_verify_arguments()
         self._autofill_values()
+        self._configure_plots()
 
     def get_config(self):
         """

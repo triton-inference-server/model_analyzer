@@ -26,7 +26,12 @@ class Measurement:
     perf_analyzer run
     """
 
-    def __init__(self, gpu_data, non_gpu_data, perf_config, comparator):
+    def __init__(self,
+                 gpu_data,
+                 non_gpu_data,
+                 perf_config,
+                 comparator,
+                 aggregation_func=average_list):
         """
         gpu_data : dict of list of Records
             These are the values from the monitors that have a GPU ID
@@ -38,11 +43,14 @@ class Measurement:
             this data data
         comparator : ResultComparator
             Handle for ResultComparator that knows how to order measurements
+        aggregation_func: callable(list) -> list
+            A callable that receives a list and outputs a list used to aggregate
+            data across gpus. 
         """
 
         # average values over all GPUs
         self._gpu_data = gpu_data
-        self._avg_gpu_data = average_list(list(self._gpu_data.values()))
+        self._avg_gpu_data = aggregation_func(list(self._gpu_data.values()))
         self._non_gpu_data = non_gpu_data
         self._perf_config = perf_config
         self._comparator = comparator

@@ -16,7 +16,7 @@ import os
 import logging
 
 from .output.file_writer import FileWriter
-from .config.run_config.run_config_generator import RunConfigGenerator
+from .config.run.run_config_generator import RunConfigGenerator
 from .result.result_manager import ResultManager
 from .record.metrics_manager import MetricsManager
 from .plots.plot_manager import PlotManager
