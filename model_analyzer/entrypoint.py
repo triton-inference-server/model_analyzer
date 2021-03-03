@@ -128,16 +128,19 @@ def get_analyzer_gpus(config):
         The arguments passed into the CLI
     """
 
+    model_analyzer_gpus = []
     if len(config.gpus) == 1 and config.gpus[0] == 'all':
         devices = numba.cuda.list_devices()
+        for device in devices:
+            gpu_device = GPUDeviceFactory.create_device_by_cuda_index(device.id)
+            model_analyzer_gpus.append(
+                str(gpu_device.device_uuid(), encoding='ascii'))
     else:
         devices = config.gpus
-
-    model_analyzer_gpus = []
-    for device in devices:
-        gpu_device = GPUDeviceFactory.create_device_by_cuda_index(device.id)
-        model_analyzer_gpus.append(
-            str(gpu_device.device_uuid(), encoding='ascii'))
+        for device in devices:
+            gpu_device = GPUDeviceFactory.create_device_by_uuid(device)
+            model_analyzer_gpus.append(
+                str(gpu_device.device_uuid(), encoding='ascii'))
 
     return model_analyzer_gpus
 
@@ -317,8 +320,6 @@ def main():
         logging.info('Starting perf_analyzer...')
         analyzer.run()
         analyzer.write_and_export_results()
-    except TritonModelAnalyzerException as e:
-        logging.exception(f'Model Analyzer encountered an error: {e}')
     finally:
         if server is not None:
             server.stop()
