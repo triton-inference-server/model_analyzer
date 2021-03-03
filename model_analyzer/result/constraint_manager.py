@@ -46,30 +46,14 @@ class ConstraintManager:
         False otherwise
         """
 
-        gpu_data = measurement.gpu_data()
-        non_gpu_data = measurement.non_gpu_data()
-
-        for metrics in gpu_data.values():
-            if not self._check_constraints(metrics=metrics):
-                return False
-
-        return self._check_constraints(metrics=non_gpu_data)
-
-    def _check_constraints(self, metrics):
-        """
-        Determines whether a constraint
-        is a min or max constraint and
-        checks whether the given value
-        satisfies the constraint
-        """
-
-        for metric in metrics:
-            if type(metric) in self._constraints:
-                constraint = self._constraints[type(metric)]
-                if 'min' in constraint:
-                    if metric.value() < constraint['min']:
-                        return False
-                if 'max' in constraint:
-                    if metric.value() > constraint['max']:
-                        return False
+        if self._constraints:
+            for metric in measurement.data():
+                if type(metric).tag in self._constraints:
+                    constraint = self._constraints[type(metric).tag]
+                    if 'min' in constraint:
+                        if metric.value() < constraint['min']:
+                            return False
+                    if 'max' in constraint:
+                        if metric.value() > constraint['max']:
+                            return False
         return True

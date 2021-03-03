@@ -16,11 +16,9 @@ import logging
 
 from .record_aggregator import RecordAggregator
 from .record import RecordType
-from .measurement import Measurement
 from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
-from model_analyzer.result.result_comparator import ResultComparator
 
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
@@ -82,49 +80,6 @@ class MetricsManager:
             non_gpu_specific_metrics=self._perf_metrics + self._cpu_metrics,
             aggregation_tag='Max')
 
-    def configure_result_manager(self, config_model):
-        """
-        Processes the constraints and objectives
-        for given ConfigModel and creates a result
-        comparator to pass to the result manager
-
-        Parameters
-        ----------
-        config_model : ConfigModel
-            The config model object for the model that is currently being
-            run
-        """
-
-        constraints = {}
-
-        # Construct dict of record types for objectives and constraints
-        objective_tags = list(config_model.objectives().keys())
-        objective_metrics = MetricsManager.get_metric_types(
-            tags=objective_tags)
-        objectives = {
-            objective_metrics[i]: config_model.objectives()[objective_tags[i]]
-            for i in range(len(objective_tags))
-        }
-
-        # Constraints may be empty
-        if config_model.constraints():
-            constraint_tags = list(config_model.constraints().keys())
-            constraint_metrics = MetricsManager.get_metric_types(
-                tags=constraint_tags)
-            constraints = {
-                constraint_metrics[i]:
-                config_model.constraints()[constraint_tags[i]]
-                for i in range(len(constraint_tags))
-            }
-
-        self._result_comparator = ResultComparator(
-            gpu_metric_types=self._dcgm_metrics,
-            non_gpu_metric_types=self._perf_metrics + self._cpu_metrics,
-            metric_objectives=objectives)
-
-        self._result_manager.set_constraints_and_comparator(
-            constraints=constraints, comparator=self._result_comparator)
-
     def profile_server(self, default_value):
         """
         Runs the DCGM monitor on the triton server without the perf_analyzer
@@ -171,14 +126,10 @@ class MetricsManager:
         model_non_gpu_metric_values = list(
             perf_analyzer_metrics.values()) + list(model_cpu_metrics.values())
 
-        # Construct a measurement
-        model_measurement = Measurement(
+        self._result_manager.add_model_data(
             gpu_data=model_gpu_metrics,
             non_gpu_data=model_non_gpu_metric_values,
-            perf_config=perf_config,
-            comparator=self._result_comparator)
-
-        self._result_manager.add_model_data(measurement=model_measurement)
+            perf_config=perf_config)
 
     def _start_monitors(self):
         """

@@ -43,7 +43,8 @@ class TestResultCollector(unittest.TestCase):
     def run(self, result=None):
         # result argument stores the accumulative test results
         test_result = super().run(result)
-        total = test_result.testsRun
-        errors = len(test_result.errors)
-        failures = len(test_result.failures)
-        self.setResult(total, errors, failures)
+        if test_result:
+            total = test_result.testsRun
+            errors = len(test_result.errors)
+            failures = len(test_result.failures)
+            self.setResult(total, errors, failures)
