@@ -287,6 +287,8 @@ def main():
             raise TritonModelAnalyzerException(
                 f'Path \'{output_model_repo_path}\' already exists. '
                 'Change the --output-model-repo-path flag or remove this directory.'
+                ' You can also allow overriding of the output directory using'
+                ' the --override-output-model-repository flag.'
             )
         else:
             shutil.rmtree(output_model_repo_path)

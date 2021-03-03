@@ -58,7 +58,14 @@ class ModelConfig:
             raise TritonModelAnalyzerException(
                 'Model output path must be a directory.')
 
-        with open(os.path.join(model_path, "config.pbtxt"), 'r+') as f:
+        model_config_path = os.path.join(model_path, "config.pbtxt")
+        if not os.path.isfile(model_config_path):
+            raise TritonModelAnalyzerException(
+                f'Path "{model_config_path}" does not exist.'
+                ' Make sure that you have specified the correct model'
+                ' repository and model name(s).')
+
+        with open(model_config_path, 'r+') as f:
             config_str = f.read()
 
         protobuf_message = text_format.Parse(config_str,
