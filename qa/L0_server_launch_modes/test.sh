@@ -15,7 +15,7 @@
 source ../common/util.sh
 
 rm -f *.log
-OUTPUT_MODEL_REPOSITORY='/tmp/output/model_repository'
+OUTPUT_MODEL_REPOSITORY=(`get_output_directory`)
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
 # Set test parameters

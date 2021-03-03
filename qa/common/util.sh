@@ -244,3 +244,14 @@ function find_available_ports() {
 function get_all_gpus_uuids() {
     nvidia-smi --query-gpu=gpu_uuid,pci.bus_id --format=csv,noheader | awk 'BEGIN { FS = "," }{print $1}'
 }
+
+# We need to randomize the output directory so that in case the CI containers
+# end up on the same host, it does not create a conflict
+function get_output_directory() {
+    random_number=$((10000 + $RANDOM % 10000))
+    while [ `ls /tmp/output/ | grep $random_number` ]; do
+        random_number=$(echo "$random_number + 1" | bc)
+    done
+
+    echo /tmp/output/$random_number
+}
