@@ -55,7 +55,7 @@ class CPUUsedRAM(Record):
             metric.
         """
 
-        return aggregation_tag + "RAM Usage(MB)"
+        return aggregation_tag + "RAM Usage (MB)"
 
     def __eq__(self, other):
         """

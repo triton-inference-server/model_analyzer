@@ -57,7 +57,7 @@ class GPUUsedMemory(GPURecord):
             metric.
         """
 
-        return aggregation_tag + "GPU Memory Usage(MB)"
+        return aggregation_tag + "GPU Memory Usage (MB)"
 
     def __eq__(self, other):
         """

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.result.constraint_manager import ConstraintManager
 import os
 from .plot import Plot
 
@@ -40,6 +41,10 @@ class PlotManager:
         # Add all required plots
         self._current_plots = self._new_plots()
 
+        # Constraints should be plotted as well
+        self._constraints = ConstraintManager.get_constraints_for_all_models(
+            self._config)
+
         # List of plots per model
         self._completed_plots = {}
 
@@ -55,21 +60,20 @@ class PlotManager:
                  y_axis=plot.y_axis()) for plot in self._config.plots
         ]
 
-    def add_measurement(self, model_config_label, measurement):
+    def add_measurement(self, measurement):
         """
         Add a measurement to all plots
         
         Parameters
         ----------
-        model_config_label : str
-            Name to use to identify the line on plot
         measurement : Measurement
             The measurment to add to this 
         """
 
         for plot in self._current_plots:
-            plot.add_measurement(model_config_label=model_config_label,
-                                 measurement=measurement)
+            plot.add_measurement(
+                model_config_label=measurement.perf_config()['model-name'],
+                measurement=measurement)
 
     def complete_plots(self, model_name):
         """
@@ -85,7 +89,8 @@ class PlotManager:
 
         completed_plots = []
         for plot in self._current_plots:
-            plot.plot_data()
+            plot.plot_data_and_constraints(
+                constraints=self._constraints[model_name])
             completed_plots.append(plot)
 
         self._completed_plots[model_name] = completed_plots

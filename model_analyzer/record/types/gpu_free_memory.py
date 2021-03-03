@@ -58,7 +58,7 @@ class GPUFreeMemory(GPURecord):
             metric.
         """
 
-        return aggregation_tag + "GPU Memory Available(MB)"
+        return aggregation_tag + "GPU Memory Available (MB)"
 
     def __eq__(self, other):
         """

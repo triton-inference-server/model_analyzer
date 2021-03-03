@@ -56,7 +56,7 @@ class PerfThroughput(Record):
             metric.
         """
 
-        return "Throughput(infer/sec)"
+        return "Throughput (infer/sec)"
 
     def __eq__(self, other):
         """
