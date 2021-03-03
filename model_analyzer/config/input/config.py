@@ -328,6 +328,16 @@ class AnalyzerConfig:
                 "Full path to directory in which to store the results"))
         self._add_config(
             ConfigField(
+                'summarize',
+                flags=['--summarize'],
+                field_type=ConfigPrimitive(bool),
+                default_value=False,
+                parser_args={'action': 'store_true'},
+                description=
+                'Model Analyzer generates a brief summary of the collected data.'
+            ))
+        self._add_config(
+            ConfigField(
                 'filename_model_inference',
                 flags=['--filename-model-inference'],
                 default_value='metrics-model-inference.csv',

@@ -32,8 +32,8 @@ class RunConfig:
             to Perf Analyzer
         """
 
-        self._model_config = model_config
         self._model_name = model_name
+        self._model_config = model_config
         self._perf_analyzer_configs = perf_configs
 
     def model_name(self):

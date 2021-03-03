@@ -112,7 +112,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Run perf analyzer with dummy metrics to check command parsing
         perf_metrics = [id]
-        test_latency_output = "Avg latency: 5000 ms\n\n\n\n"
+        test_latency_output = "p99 latency: 5000 us\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
         perf_analyzer.run(perf_metrics)
         self.perf_mock.assert_perf_analyzer_run_as([
@@ -121,13 +121,13 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         ])
 
         # Test latency parsing
-        test_latency_output = "Avg latency: 5000 ms\n\n\n\n"
+        test_latency_output = "p99 latency: 5000 us\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
         perf_metrics = [PerfLatency]
         perf_analyzer.run(perf_metrics)
         records = perf_analyzer.get_records()
         self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 5000)
+        self.assertEqual(records[0].value(), 5)
 
         # Test throughput parsing
         test_throughput_output = "Throughput: 46.8 infer/sec\n\n\n\n"
@@ -139,7 +139,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(records[0].value(), 46.8)
 
         # Test parsing for both
-        test_both_output = "Throughput: 0.001 infer/sec\nAvg latency: 3.6 ms\n\n\n\n"
+        test_both_output = "Throughput: 0.001 infer/sec\np99 latency: 3600 us\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_both_output)
         perf_metrics = [PerfThroughput, PerfLatency]
         perf_analyzer.run(perf_metrics)

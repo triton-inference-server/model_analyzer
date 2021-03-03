@@ -86,7 +86,7 @@ class TestPlotMethods(trc.TestResultCollector):
         plot.add_measurement('test_model_label', measurement=measurement)
 
         # Call plot and assert args
-        plot.plot_data()
+        plot.plot_data_and_constraints(constraints={})
         self.matplotlib_mock.assert_called_plot_with_args(
             x_data=[200], y_data=[8000], marker='o', label='test_model_label')
 

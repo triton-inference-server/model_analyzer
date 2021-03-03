@@ -120,6 +120,16 @@ class Measurement:
                 f"No metric corresponding to tag {tag}"
                 " found in measurement")
 
+    def gpus_used(self):
+        """
+        Returns
+        -------
+        list of ints
+            list of device IDs used in this measurement
+        """
+
+        return list(self._gpu_data.keys())
+
     def __eq__(self, other):
         """
         Check whether two sets of measurements are equivalent

@@ -55,13 +55,13 @@ class Plot:
 
         self._ax.set_title(title)
 
-        x_header, y_header = [
+        self._x_header, self._y_header = [
             metric.header(aggregation_tag='')
             for metric in MetricsManager.get_metric_types([x_axis, y_axis])
         ]
 
-        self._ax.set_xlabel(x_header)
-        self._ax.set_ylabel(y_header)
+        self._ax.set_xlabel(self._x_header)
+        self._ax.set_ylabel(self._y_header)
 
     def add_measurement(self, model_config_label, measurement):
         """
@@ -85,10 +85,17 @@ class Plot:
         self._data[model_config_label]['y_data'].append(
             measurement.get_value_of_metric(tag=self._y_axis).value())
 
-    def plot_data(self):
+    def plot_data_and_constraints(self, constraints):
         """
         Calls plotting function
         on this plot's Axes object
+
+        Parameters
+        ----------
+        constraints: dict
+            The keys are metric tags and values are dicts whose
+            keys are constraint types (min, max) and values are their 
+            values
         """
 
         for model_config_name, data in self._data.items():
@@ -97,6 +104,23 @@ class Plot:
                 list(t)
                 for t in zip(*sorted(zip(data['x_data'], data['y_data']))))
             self._ax.plot(x_data, y_data, marker='o', label=model_config_name)
+
+        # Plot constraints
+        if self._x_axis in constraints:
+            for constraint_type, constraint_val in constraints[
+                    self._x_axis].items():
+                constraint_label = f"Target {self._x_header.rsplit(' ',1)[0]}"
+                self._ax.axvline(x=constraint_val,
+                                 linestyle='--',
+                                 label=constraint_label)
+        if self._y_axis in constraints:
+            for constraint_type, constraint_val in constraints[
+                    self._y_axis].items():
+                constraint_label = f"Target {self._y_header.rsplit(' ', 1)[0]}"
+                self._ax.axhline(y=constraint_val,
+                                 linestyle='--',
+                                 label=constraint_label)
+            # plot h lines
         self._ax.legend()
         self._ax.grid()
 

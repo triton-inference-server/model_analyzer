@@ -57,7 +57,7 @@ class GPUUtilization(GPURecord):
             metric.
         """
 
-        return aggregation_tag + "GPU Utilization(%)"
+        return aggregation_tag + "GPU Utilization (%)"
 
     def __eq__(self, other):
         """

@@ -171,8 +171,6 @@ model_names:
                                                           run_search,
                                                           generate_only=True)
 
-
-
                 run_configs = run_config_generator.get_run_configs()
                 print(len(run_configs))
                 self.assertTrue(len(run_configs) == 2)

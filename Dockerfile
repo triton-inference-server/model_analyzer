@@ -30,7 +30,9 @@ ENV DCGM_VERSION=2.0.13
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt update && apt install -y python3-dev
+RUN apt-get update && \
+    apt-get install -y python3-dev \
+            wkhtmltopdf
 
 # Install tritonclient from the SDK container
 COPY --from=sdk /workspace/install/python /tmp/tritonclient

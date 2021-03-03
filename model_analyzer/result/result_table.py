@@ -63,6 +63,17 @@ class ResultTable:
 
         return self._headers
 
+    def size(self):
+        """
+        Returns
+        -------
+        int
+            number of rows in this
+            table
+        """
+
+        return len(self._rows)
+
     def column_widths(self):
         """
         Returns
@@ -101,8 +112,8 @@ class ResultTable:
 
         if len(row) != len(self._headers):
             raise TritonModelAnalyzerException(
-                "Must provide a value for each existing"
-                " column when adding a new row.")
+                f"Inserted row contains {len(row)} values."
+                f"There are {len(self._headers)} provided headers.")
         if index is None:
             index = len(self._rows)
         self._rows.insert(index, row[:])

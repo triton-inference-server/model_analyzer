@@ -21,7 +21,7 @@ from model_analyzer.record.record import Record
 class PerfLatency(Record):
     """
     A record for perf_analyzer
-    metric 'Avg Latency'
+    metric 'p99 Latency'
     """
 
     tag = "perf_latency"
@@ -56,7 +56,7 @@ class PerfLatency(Record):
             metric.
         """
 
-        return "Average Latency(us)"
+        return "p99 Latency (ms)"
 
     def __eq__(self, other):
         """

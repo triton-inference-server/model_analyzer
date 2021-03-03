@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import heapq
-import logging
-
 from .result_table import ResultTable
 from .result_comparator import ResultComparator
 from .run_result import RunResult
 from .measurement import Measurement
-from .constraint_manager import ConstraintManager
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
+
+import os
+import heapq
+import logging
 
 
 class ResultManager:
@@ -34,10 +33,12 @@ class ResultManager:
     """
 
     non_gpu_specific_headers = [
-        'Model', 'Batch', 'Concurrency', 'Model Config Path'
+        'Model', 'Batch', 'Concurrency', 'Model Config Path', 'Instance Group',
+        'Dynamic Batcher Sizes'
     ]
     gpu_specific_headers = [
-        'Model', 'GPU ID', 'Batch', 'Concurrency', 'Model Config Path'
+        'Model', 'GPU ID', 'Batch', 'Concurrency', 'Model Config Path',
+        'Instance Group', 'Dynamic Batcher Sizes'
     ]
     server_table_headers = ['Model', 'GPU ID', 'Batch', 'Concurrency']
     server_only_table_key = 'server_gpu_metrics'
@@ -46,7 +47,7 @@ class ResultManager:
     model_gpu_table_failing_key = 'model_gpu_metrics_failing'
     model_inference_table_failing_key = 'model_inference_metrics_failing'
 
-    def __init__(self, config):
+    def __init__(self, config, statistics):
         """
         Parameters
         ----------
@@ -58,9 +59,12 @@ class ResultManager:
         self._result_tables = {}
         self._current_run_result = None
         self._result_comparator = None
+        self._statistics = statistics
 
         # Results are stored in a heap queue
         self._results = []
+        self._passing_results = []
+        self._failing_results = []
 
         # Results exported to export_path/results
         self._results_export_directory = os.path.join(config.export_path,
@@ -80,8 +84,7 @@ class ResultManager:
             run
         """
 
-        self._constraint_manager = ConstraintManager(
-            constraints=config_model.constraints())
+        self._constraints = config_model.constraints()
         self._result_comparator = ResultComparator(
             metric_objectives=config_model.objectives())
 
@@ -157,7 +160,9 @@ class ResultManager:
 
         # Create RunResult
         self._current_run_result = RunResult(
-            run_config=run_config, comparator=self._result_comparator)
+            run_config=run_config,
+            comparator=self._result_comparator,
+            constraints=self._constraints)
 
     def add_server_data(self, data, default_value):
         """
@@ -208,12 +213,16 @@ class ResultManager:
 
     def complete_result(self):
         """
-        Submit the current RunResults into
-        the ResultTable
+        Submit the current RunResult into
+        the results heaps based on whether 
+        it passes constraints or not.
         """
 
         if self._current_run_result is not None:
-            heapq.heappush(self._results, self._current_run_result)
+            if self._current_run_result.failing():
+                heapq.heappush(self._failing_results, self._current_run_result)
+            else:
+                heapq.heappush(self._passing_results, self._current_run_result)
             self._current_run_result = None
 
     def reset_result(self):
@@ -223,6 +232,16 @@ class ResultManager:
         """
 
         self._current_run_result = None
+
+    def results(self):
+        """
+        Returns
+        -------
+        list of RunResults
+            The results currently in the heap
+        """
+
+        return self._results
 
     def top_n_results(self, n):
         """
@@ -234,11 +253,34 @@ class ResultManager:
 
         Returns
         -------
-        RunResult
-            The n best results for this model
+        list of RunResults
+            The n best results for this model,
+            must all be passing results
         """
 
-        return heapq.nsmallest(3, self._results)
+        if len(self._passing_results) == 0:
+            logging.warn(
+                f"Requested top {n} configs, but none satisfied constraints."
+                "Showing available constraint failing configs for this model.")
+
+            if n > len(self._failing_results):
+                logging.warn(
+                    f"Requested top {n} failing configs, "
+                    f"but found only {len(self._failing_results)}."
+                    "Showing all available constraint failing configs for this model."
+                )
+            return heapq.nsmallest(min(n, len(self._failing_results)),
+                                   self._failing_results)
+
+        if n > len(self._passing_results):
+            logging.warn(
+                f"Requested top {n} configs, "
+                f"but found only {len(self._passing_results)} passing configs."
+                "Showing all available constraint satisfying configs for this model."
+            )
+
+        return heapq.nsmallest(min(n, len(self._passing_results)),
+                               self._passing_results)
 
     def compile_results(self):
         """
@@ -250,35 +292,49 @@ class ResultManager:
         # Fill rows in descending order
         while self._results:
             next_best_result = heapq.heappop(self._results)
-            model_name = next_best_result.run_config().model_name()
-            measurements = next_best_result.measurements()
-            self._compile_measurements(measurements, model_name)
 
-    def _compile_measurements(self, measurements, model_name):
+            # Get name, instance_group, and dynamic batching enabled info from result
+            model_name = next_best_result.run_config().model_name()
+            instance_group_str = next_best_result.instance_group_string()
+            dynamic_batching_str = next_best_result.dynamic_batching_string()
+            self._compile_measurements(next_best_result, model_name,
+                                       instance_group_str,
+                                       dynamic_batching_str)
+        self._update_statistics()
+
+    def _compile_measurements(self, run_result, model_name, instance_group,
+                              dynamic_batching):
         """
         checks measurement against constraints,
         and puts it into the correct (passing or failing)
         table
         """
 
-        while measurements:
-            next_best_measurement = heapq.heappop(measurements)
-            if self._constraint_manager.check_constraints(
-                    measurement=next_best_measurement):
-                self._compile_measurement(
-                    model_name=model_name,
-                    measurement=next_best_measurement,
-                    gpu_table_key=self.model_gpu_table_passing_key,
-                    inference_table_key=self.model_inference_table_passing_key)
-            else:
-                self._compile_measurement(
-                    model_name=model_name,
-                    measurement=next_best_measurement,
-                    gpu_table_key=self.model_gpu_table_failing_key,
-                    inference_table_key=self.model_inference_table_failing_key)
+        passing_measurements = run_result.passing_measurements()
+        while passing_measurements:
+            next_best_measurement = heapq.heappop(passing_measurements)
+            self._compile_measurement(
+                model_name=model_name,
+                instance_group=instance_group,
+                dynamic_batching=dynamic_batching,
+                measurement=next_best_measurement,
+                gpu_table_key=self.model_gpu_table_passing_key,
+                inference_table_key=self.model_inference_table_passing_key)
 
-    def _compile_measurement(self, measurement, gpu_table_key,
-                             inference_table_key, model_name):
+        failing_measurements = run_result.failing_measurements()
+        while failing_measurements:
+            next_best_measurement = heapq.heappop(failing_measurements)
+            self._compile_measurement(
+                model_name=model_name,
+                instance_group=instance_group,
+                dynamic_batching=dynamic_batching,
+                measurement=next_best_measurement,
+                gpu_table_key=self.model_gpu_table_failing_key,
+                inference_table_key=self.model_inference_table_failing_key)
+
+    def _compile_measurement(self, model_name, instance_group,
+                             dynamic_batching, measurement, gpu_table_key,
+                             inference_table_key):
         """
         Add a single measurement to the specified
         table
@@ -291,7 +347,8 @@ class ResultManager:
 
         # Non GPU specific data
         inference_metrics = [
-            model_name, batch_size, concurrency, tmp_model_name
+            model_name, batch_size, concurrency, tmp_model_name,
+            instance_group, dynamic_batching
         ]
         inference_metrics += [
             metric.value() for metric in measurement.non_gpu_data()
@@ -302,7 +359,8 @@ class ResultManager:
         # GPU specific data
         for gpu_id, metrics in measurement.gpu_data().items():
             gpu_metrics = [
-                model_name, gpu_id, batch_size, concurrency, tmp_model_name
+                model_name, gpu_id, batch_size, concurrency, tmp_model_name,
+                instance_group, dynamic_batching
             ]
             gpu_metrics += [metric.value() for metric in metrics]
             self._result_tables[gpu_table_key].insert_row_by_index(
@@ -474,3 +532,19 @@ class ResultManager:
                 table.to_formatted_string(separator=column_separator,
                                           ignore_widths=ignore_widths) +
                 "\n\n")
+
+    def _update_statistics(self):
+        """
+        This function computes statistics
+        with measurements currently in the 
+        result manager's tables
+        """
+
+        passing_configurations = self._result_tables[
+            self.model_inference_table_passing_key].size()
+
+        failing_configurations = self._result_tables[
+            self.model_inference_table_failing_key].size()
+
+        self._statistics.set_passing_configurations(passing_configurations)
+        self._statistics.set_failing_configurations(failing_configurations)

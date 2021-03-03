@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .constraint_manager import ConstraintManager
+
 import heapq
+import logging
 from functools import total_ordering
 
 
@@ -24,7 +27,7 @@ class RunResult:
     to a particular ResultTable
     """
 
-    def __init__(self, run_config, comparator):
+    def __init__(self, run_config, comparator, constraints=None):
         """
         Parameters
         ----------
@@ -36,18 +39,38 @@ class RunResult:
             results and returns 1 if the first is better than
             the second, 0 if they are equal and -1
             otherwise
+        constraints: dict
+            keys are metrics and values are 
+            constraint_type:constraint_value pairs
         """
 
         self._run_config = run_config
         self._comparator = comparator
+        self._constraints = constraints
 
-        # Heap
+        # Heaps
         self._measurements = []
+        self._passing_measurements = []
+        self._failing_measurements = []
+
+    def failing(self):
+        """
+        Returns
+        -------
+        True if this is a failing result
+        False if at least one measurement
+        passes
+        """
+
+        if not self._passing_measurements:
+            return True
+        return False
 
     def add_measurement(self, measurement):
         """
-        This function adds model inference
-        measurements to the result
+        This function checks whether a measurement
+        passes the constraints and adds model inference
+        measurements to the corresponding heap
 
         Parameters
         ----------
@@ -57,33 +80,111 @@ class RunResult:
         """
 
         heapq.heappush(self._measurements, measurement)
+        if ConstraintManager.check_constraints(self._constraints, measurement):
+            heapq.heappush(self._passing_measurements, measurement)
+        else:
+            heapq.heappush(self._failing_measurements, measurement)
 
     def measurements(self):
         """
         Returns
         -------
-        (list, list)
-            gpu_specific, and non gpu specific measurements
-            respectively.
+        list
+            of measurements in this RunResult
         """
 
         return self._measurements
+
+    def passing_measurements(self):
+        """
+        Returns
+        -------
+        list
+            of passing measurements in this RunResult
+        """
+
+        return self._passing_measurements
+
+    def failing_measurements(self):
+        """
+        Returns
+        -------
+        list
+            of failing measurements in this RunResult
+        """
+
+        return self._failing_measurements
 
     def top_n_measurements(self, n):
         """
         Parameters
         ----------
         n : int
-            The number of  top results 
+            The number of  top measurements 
             to retrieve
 
         Returns
         -------
-        The top n measurements in
-        this result
+        list os Measurements
+            The top n measurements in
+            this result
         """
 
-        return heapq.nsmallest(n, self._measurements)
+        if len(self._passing_measurements) == 0:
+            logging.warn(
+                f"Requested top {n} measurements, but none satisfied constraints."
+                "Showing available constraint failing measurements for this config."
+            )
+
+            if n > len(self._failing_measurements):
+                logging.warn(
+                    f"Requested top {n} failing measurements, "
+                    f"but found only {len(self._failing_measurements)}."
+                    "Showing all available constraint failing measurements for this config."
+                )
+            return heapq.nsmallest(min(n, len(self._failing_measurements)),
+                                   self._failing_measurements)
+
+        if n > len(self._passing_measurements):
+            logging.warn(f"Requested top {n} measurements, but "
+                         f"found only {len(self._passing_measurements)}. "
+                         "Showing all available measurements for this config.")
+
+        return heapq.nsmallest(min(n, len(self._passing_measurements)),
+                               self._passing_measurements)
+
+    def instance_group_string(self):
+        """
+        Returns
+        -------
+        str
+            representation of the instance group used 
+            to generate this result
+        """
+        instance_group_list = self.run_config().model_config().get_config(
+        )['instance_group']
+        group_str_list = [
+            f"{group['count']}-{group['kind'].split('_')[1]}"
+            for group in instance_group_list
+        ]
+        return ','.join(group_str_list)
+
+    def dynamic_batching_string(self):
+        """
+        Returns
+        -------
+        str
+            representation of the dynamic batcher
+            configuration used to generate this result
+        """
+
+        model_config = self.run_config().model_config()
+        if 'dynamic_batching' in model_config.get_config():
+            dynamic_batch_sizes = model_config.get_config(
+            )['dynamic_batching']['preferred_batch_size']
+            return ','.join([str(x) for x in dynamic_batch_sizes])
+        else:
+            return "Disabled"
 
     def run_config(self):
         """
