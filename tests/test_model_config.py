@@ -15,6 +15,7 @@
 import os
 from .common import test_result_collector as trc
 from .mocks.mock_model_config import MockModelConfig
+from .mocks.mock_client import Mock
 from unittest.mock import mock_open, patch, MagicMock
 
 from model_analyzer.triton.model.model_config import ModelConfig

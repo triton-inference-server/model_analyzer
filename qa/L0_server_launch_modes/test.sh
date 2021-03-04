@@ -105,7 +105,7 @@ function run_server_launch_modes() {
             MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE="$MODEL_ANALYZER_ARGS_WITH_PROTOCOL --triton-launch-mode=$LAUNCH_MODE"
             ANALYZER_LOG=analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
             SERVER_LOG=${LAUNCH_MODE}.${PROTOCOL}.server.log
-            
+
             # Set arguments for various launch modes
             if [ "$LAUNCH_MODE" == "local" ]; then    
                 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG}"
@@ -152,7 +152,7 @@ function run_server_launch_modes() {
 
             model_analyzer_gpu_uuids=`cat $ANALYZER_LOG | grep -E "Using GPU\(s\) with UUID\(s\)" | tail -n 1 | sed -n 's/.*{\(.*\)}.*/\1/p'`
             model_analyzer_gpu_uuids=(`echo $model_analyzer_gpu_uuids | sed "s/,/ /g"`)
-            if [ $gpus == "" ]; then
+            if [ -z $gpus ]; then
                 check_all_gpus "${model_analyzer_gpu_uuids[@]}"
             else
                 check_gpus "${model_analyzer_gpu_uuids[@]}" "${gpus[@]}"

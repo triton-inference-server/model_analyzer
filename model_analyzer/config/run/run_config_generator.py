@@ -24,7 +24,7 @@ class RunConfigGenerator:
     A class that handles ModelAnalyzerConfig parsing and generates a list of
     run configurations.
     """
-    def __init__(self, model, analyzer_config):
+    def __init__(self, model, analyzer_config, client):
         """
         analyzer_config : ModelAnalyzerConfig
             The config object parsed from
@@ -32,12 +32,16 @@ class RunConfigGenerator:
 
         model : ConfigModel
             ConfigModel object to generate the run configs for.
+
+        client : TritonClient
+            TritonClient to be used for interacting with the Triton API
         """
 
         super().__init__()
         self._analyzer_config = analyzer_config.get_all_config()
         self._model = model
         self._run_configs = []
+        self._client = client
         self._generate_run_configs()
 
     def _generate_model_config_combinations(self, value):
@@ -111,33 +115,42 @@ class RunConfigGenerator:
         model_name_index = 0
         model_config_parameters = model.model_config_parameters()
 
-        # Generate all the sweeps for a given parameter
-        models_sweeps = \
-            self._generate_model_config_combinations(
-                model_config_parameters)
-        for model_sweep in models_sweeps:
-            model_config = ModelConfig.create_from_file(
-                f'{model_repository}/{model.model_name()}')
-            model_config_dict = model_config.get_config()
-            for key, value in model_sweep.items():
-                model_config_dict[key] = value
-            model_config = ModelConfig.create_from_dictionary(
-                model_config_dict)
+        if analyzer_config['triton_launch_mode'] != 'remote':
+            # Generate all the sweeps for a given parameter
+            models_sweeps = \
+                self._generate_model_config_combinations(
+                    model_config_parameters)
+            for model_sweep in models_sweeps:
+                model_config = ModelConfig.create_from_file(
+                    f'{model_repository}/{model.model_name()}')
+                model_config_dict = model_config.get_config()
+                for key, value in model_sweep.items():
+                    model_config_dict[key] = value
+                model_config = ModelConfig.create_from_dictionary(
+                    model_config_dict)
 
-            # Temporary model name to be used for profiling. We
-            # can't use the same name for different configurations.
-            # The new model name is the original model suffixed with
-            # _i<config_index>. Where the config index is the index
-            # of the model config alternative.
-            model_tmp_name = f'{model.model_name()}_i{model_name_index}'
-            model_config.set_field('name', model_tmp_name)
+                # Temporary model name to be used for profiling. We
+                # can't use the same name for different configurations.
+                # The new model name is the original model suffixed with
+                # _i<config_index>. Where the config index is the index
+                # of the model config alternative.
+                model_tmp_name = f'{model.model_name()}_i{model_name_index}'
+                model_config.set_field('name', model_tmp_name)
+                perf_configs = self._generate_perf_config_for_model(
+                    model_tmp_name, model)
+
+                # Add the new run config.
+                self._run_configs.append(
+                    RunConfig(model.model_name(), model_config, perf_configs))
+                model_name_index += 1
+        else:
+            model_config = ModelConfig.create_from_triton_api(
+                self._client, model.model_name(),
+                analyzer_config['max_retries'])
             perf_configs = self._generate_perf_config_for_model(
-                model_tmp_name, model)
-
-            # Add the new run config.
+                model.model_name(), model)
             self._run_configs.append(
                 RunConfig(model.model_name(), model_config, perf_configs))
-            model_name_index += 1
 
     def get_run_configs(self):
         """

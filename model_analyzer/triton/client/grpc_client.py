@@ -21,7 +21,6 @@ class TritonGRPCClient(TritonClient):
     Concrete implementation of TritonClient
     for GRPC
     """
-
     def __init__(self, server_url):
         """
         Parameters
@@ -31,3 +30,28 @@ class TritonGRPCClient(TritonClient):
         """
 
         self._client = grpcclient.InferenceServerClient(url=server_url)
+
+    def get_model_config(self, model_name, num_retries):
+        """
+        Model name to get the config for.
+
+        Parameters
+        ----------
+        model_name : str
+            Name of the model to find the config.
+
+        num_retries : int
+            Number of times to wait for the model load
+
+        Returns
+        -------
+        dict
+            A dictionary containg the model config.
+        """
+
+        self.load_model(model_name)
+        self.wait_for_model_ready(model_name, num_retries)
+        model_config_dict = self._client.get_model_config(model_name,
+                                                          as_json=True)
+        self.unload_model(model_name)
+        return model_config_dict['config']

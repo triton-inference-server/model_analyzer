@@ -77,10 +77,10 @@ class TritonClient:
 
         try:
             self._client.load_model(model_name)
+            logger.info(f'Model {model_name} loaded.')
         except Exception as e:
             raise TritonModelAnalyzerException(
                 f"Unable to load the model : {e}")
-        logger.info(f'Model {model_name} loaded.')
 
     def unload_model(self, model_name):
         """
@@ -101,10 +101,10 @@ class TritonClient:
 
         try:
             self._client.unload_model(model_name)
+            logger.info(f'Model {model_name} unloaded.')
         except Exception as e:
             raise TritonModelAnalyzerException(
                 f"Unable to unload the model : {e}")
-        logger.info(f'Model {model_name} unloaded.')
 
     def wait_for_model_ready(self, model_name, num_retries):
         """
@@ -142,3 +142,27 @@ class TritonClient:
         raise TritonModelAnalyzerException(
             "Could not determine model readiness. "
             "Number of retries exceeded.")
+
+    def get_model_config(self, model_name, num_retries):
+        """
+        Model name to get the config for.
+
+        Parameters
+        ----------
+        model_name : str
+            Name of the model to find the config.
+
+        num_retries : int
+            Number of times to wait for the model load
+
+        Returns
+        -------
+        dict
+            A dictionary containg the model config.
+        """
+
+        self.load_model(model_name)
+        self.wait_for_model_ready(model_name, num_retries)
+        model_config_dict = self._client.get_model_config(model_name)
+        self.unload_model(model_name)
+        return model_config_dict

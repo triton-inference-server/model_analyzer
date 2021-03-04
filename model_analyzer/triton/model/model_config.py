@@ -93,6 +93,25 @@ class ModelConfig:
 
         return ModelConfig(protobuf_message)
 
+    @staticmethod
+    def create_from_triton_api(client, model_name, num_retries):
+        """
+        Creates the model config from the Triton API.
+
+        Parameters
+        ----------
+        client : TritonClient
+            Triton client to use to call the API
+        model_name : str
+            Name of the model to request config for.
+        num_retries : int
+            Number of times to try loading the model.
+        """
+
+        model_config_dict = client.get_model_config(model_name, num_retries)
+
+        return ModelConfig.create_from_dictionary(model_config_dict)
+
     def write_config_to_file(self,
                              model_path,
                              copy_original_model=False,

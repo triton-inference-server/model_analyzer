@@ -15,9 +15,11 @@
 from .common import test_result_collector as trc
 from .mocks.mock_config import MockConfig
 from .mocks.mock_model_config import MockModelConfig
-from model_analyzer.config.input.config import AnalyzerConfig
+from .mocks.mock_client import MockTritonClientMethods
+from model_analyzer.config.config import AnalyzerConfig
 from model_analyzer.cli.cli import CLI
-from model_analyzer.config.run.run_config_generator \
+from model_analyzer.triton.client.grpc_client import TritonGRPCClient
+from model_analyzer.config.run_config_generator \
     import RunConfigGenerator
 from unittest.mock import mock_open, patch
 import yaml
@@ -43,6 +45,9 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         mock_model_config = MockModelConfig()
         mock_model_config.start()
+        mock_client = MockTritonClientMethods()
+        mock_client.start()
+        client = TritonGRPCClient('localhost:8000')
 
         # When there is not any sweep_parameter the length of
         # run_configs should be equal to the length of different
@@ -50,12 +55,14 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model, config)
+                run_config_generator = RunConfigGenerator(
+                    model, config, client)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 1)
                 self.assertTrue(
                     len(run_configs[0].perf_analyzer_configs()) == 1)
         mock_model_config.stop()
+        mock_client.stop()
 
         yaml_content = yaml.dump({
             'concurrency': [2, 3, 4],
@@ -64,15 +71,18 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         config = self._evaluate_config(args, yaml_content)
         mock_model_config = MockModelConfig()
         mock_model_config.start()
+        mock_client.start()
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model, config)
+                run_config_generator = RunConfigGenerator(
+                    model, config, client)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 1)
                 self.assertTrue(
                     len(run_configs[0].perf_analyzer_configs()) == 9)
         mock_model_config.stop()
+        mock_client.stop()
 
         yaml_content = """
 model_names:
@@ -91,15 +101,18 @@ model_names:
         config = self._evaluate_config(args, yaml_content)
         mock_model_config = MockModelConfig()
         mock_model_config.start()
+        mock_client.start()
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model, config)
+                run_config_generator = RunConfigGenerator(
+                    model, config, client)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 1)
                 self.assertTrue(
                     len(run_configs[0].perf_analyzer_configs()) == 1)
         mock_model_config.stop()
+        mock_client.stop()
 
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
@@ -123,17 +136,20 @@ model_names:
 """
         config = self._evaluate_config(args, yaml_content)
         mock_model_config = MockModelConfig()
+        mock_client.start()
         mock_model_config.start()
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model, config)
+                run_config_generator = RunConfigGenerator(
+                    model, config, client)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 2)
                 for run_config in run_configs:
                     self.assertTrue(
                         len(run_config.perf_analyzer_configs()) == 1)
         mock_model_config.stop()
+        mock_client.stop()
 
         yaml_content = """
 model_names:
@@ -153,16 +169,19 @@ model_names:
         config = self._evaluate_config(args, yaml_content)
         mock_model_config = MockModelConfig()
         mock_model_config.start()
+        mock_client.start()
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model, config)
+                run_config_generator = RunConfigGenerator(
+                    model, config, client)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 1)
                 for run_config in run_configs:
                     self.assertTrue(
                         len(run_config.perf_analyzer_configs()) == 1)
         mock_model_config.stop()
+        mock_client.stop()
 
         yaml_content = """
 model_names:
@@ -178,16 +197,19 @@ model_names:
         config = self._evaluate_config(args, yaml_content)
         mock_model_config = MockModelConfig()
         mock_model_config.start()
+        mock_client.start()
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model, config)
+                run_config_generator = RunConfigGenerator(
+                    model, config, client)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 6)
                 for run_config in run_configs:
                     self.assertTrue(
                         len(run_config.perf_analyzer_configs()) == 1)
         mock_model_config.stop()
+        mock_client.stop()
 
         yaml_content = """
 concurrency: [1, 2, 3]
@@ -205,10 +227,12 @@ model_names:
         config = self._evaluate_config(args, yaml_content)
         mock_model_config = MockModelConfig()
         mock_model_config.start()
+        mock_client.start()
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model, config)
+                run_config_generator = RunConfigGenerator(
+                    model, config, client)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 6)
                 instance_groups = []
@@ -242,6 +266,7 @@ model_names:
                 for instance_group in instance_groups:
                     self.assertIn(instance_group, expected_instance_groups)
         mock_model_config.stop()
+        mock_client.stop()
 
         yaml_content = """
 concurrency: [1, 2, 3]
@@ -258,10 +283,12 @@ model_names:
         config = self._evaluate_config(args, yaml_content)
         mock_model_config = MockModelConfig()
         mock_model_config.start()
+        mock_client.start()
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model, config)
+                run_config_generator = RunConfigGenerator(
+                    model, config, client)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 6)
                 instance_groups = []
@@ -295,6 +322,7 @@ model_names:
                 for instance_group in instance_groups:
                     self.assertIn(instance_group, expected_instance_groups)
         mock_model_config.stop()
+        mock_client.stop()
 
         yaml_content = """
 concurrency: [1, 2, 3]
@@ -314,10 +342,12 @@ model_names:
         config = self._evaluate_config(args, yaml_content)
         mock_model_config = MockModelConfig()
         mock_model_config.start()
+        mock_client.start()
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model, config)
+                run_config_generator = RunConfigGenerator(
+                    model, config, client)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 6)
                 instance_groups = []
@@ -352,6 +382,7 @@ model_names:
                 for instance_group in instance_groups:
                     self.assertIn(instance_group, expected_instance_groups)
         mock_model_config.stop()
+        mock_client.stop()
 
         yaml_content = """
 concurrency: [1, 2, 3]
@@ -371,10 +402,12 @@ model_names:
         config = self._evaluate_config(args, yaml_content)
         mock_model_config = MockModelConfig()
         mock_model_config.start()
+        mock_client.start()
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model, config)
+                run_config_generator = RunConfigGenerator(
+                    model, config, client)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 24)
                 instance_groups = []
@@ -436,6 +469,7 @@ model_names:
                 for dynamic_batching in dynamic_batchings:
                     self.assertIn(dynamic_batching, expected_dynamic_batchings)
         mock_model_config.stop()
+        mock_client.stop()
 
         yaml_content = """
 model_names:
@@ -457,10 +491,12 @@ model_names:
         config = self._evaluate_config(args, yaml_content)
         mock_model_config = MockModelConfig()
         mock_model_config.start()
+        mock_client.start()
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model, config)
+                run_config_generator = RunConfigGenerator(
+                    model, config, client)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 12)
                 instance_groups = []
@@ -514,3 +550,4 @@ model_names:
                 for dynamic_batching in dynamic_batchings:
                     self.assertIn(dynamic_batching, expected_dynamic_batchings)
         mock_model_config.stop()
+        mock_client.stop()

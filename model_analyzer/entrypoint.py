@@ -78,13 +78,18 @@ def get_server_handle(config):
         logger.info('Using remote Triton Server...')
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config)
-        logger.info(
+        logger.warn(
             'GPU memory metrics reported in the remote mode are not'
             ' accuracte. Model Analyzer uses Triton explicit model control to'
             ' load/unload models. Some frameworks do not release the GPU'
             ' memory even when the memory is not being used. Consider'
             ' using the "local" or "docker" mode if you want to accurately'
             ' monitor the GPU memory usage for different models.')
+        logger.warn(
+            'Config sweep parameters are ignored in the "remote" mode because'
+            ' Model Analyzer does not have access to the model repository of'
+            ' the remote Triton Server.'
+        )
     elif config.triton_launch_mode == 'local':
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = config.output_model_repository_path
@@ -288,15 +293,15 @@ def main():
     except OSError:
         if not config.override_output_model_repository:
             raise TritonModelAnalyzerException(
-                f'Path \'{output_model_repo_path}\' already exists. '
-                'Change the --output-model-repo-path flag or remove this directory.'
+                f'Path "{output_model_repo_path}" already exists. '
+                'Please set or modify "--output-model-repository-path" flag or remove this directory.'
                 ' You can also allow overriding of the output directory using'
-                ' the --override-output-model-repository flag.'
+                ' the "--override-output-model-repository" flag.'
             )
         else:
             shutil.rmtree(output_model_repo_path)
             logger.warn(
-                f'Overriding the output model repo path \'{output_model_repo_path}\''
+                f'Overriding the output model repo path "{output_model_repo_path}"...'
             )
             os.mkdir(output_model_repo_path)
     try:

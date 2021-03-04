@@ -35,9 +35,15 @@ class MockModelConfig(MockBase):
                 MagicMock(return_value=True)
             )
         )
+
+        def isfile(file_name):
+            if file_name.endswith('.pbtxt'):
+                return True
+            else:
+                return False
         patchers.append(
             patch(
                 'model_analyzer.triton.model.model_config.os.path.isfile',
-                MagicMock(return_value=False)
+                isfile
             )
         )
