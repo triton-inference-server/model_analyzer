@@ -58,7 +58,14 @@ class ModelConfig:
             raise TritonModelAnalyzerException(
                 'Model output path must be a directory.')
 
-        with open(os.path.join(model_path, "config.pbtxt"), 'r+') as f:
+        model_config_path = os.path.join(model_path, "config.pbtxt")
+        if not os.path.isfile(model_config_path):
+            raise TritonModelAnalyzerException(
+                f'Path "{model_config_path}" does not exist.'
+                ' Make sure that you have specified the correct model'
+                ' repository and model name(s).')
+
+        with open(model_config_path, 'r+') as f:
             config_str = f.read()
 
         protobuf_message = text_format.Parse(config_str,
@@ -85,6 +92,25 @@ class ModelConfig:
             model_dict, model_config_pb2.ModelConfig())
 
         return ModelConfig(protobuf_message)
+
+    @staticmethod
+    def create_from_triton_api(client, model_name, num_retries):
+        """
+        Creates the model config from the Triton API.
+
+        Parameters
+        ----------
+        client : TritonClient
+            Triton client to use to call the API
+        model_name : str
+            Name of the model to request config for.
+        num_retries : int
+            Number of times to try loading the model.
+        """
+
+        model_config_dict = client.get_model_config(model_name, num_retries)
+
+        return ModelConfig.create_from_dictionary(model_config_dict)
 
     def write_config_to_file(self,
                              model_path,

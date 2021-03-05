@@ -39,7 +39,7 @@ CLIENT_PROTOCOLS="http grpc"
 # Run the model-analyzer, both client protocols
 RET=0
 
-function check_gpus() {
+function check_all_gpus() {
     analyzer_gpus=($@)
     gpu_uuids=(`get_all_gpus_uuids`)
     cuda_devices=(`echo $CUDA_VISIBLE_DEVICES | sed "s/,/ /g"`)
@@ -60,15 +60,52 @@ function check_gpus() {
     return 0
 }
 
+function check_gpus() {
+    analyzer_gpus=($1)
+    triton_gpus=($2)
+
+    if [ ${#analyzer_gpus[@]} != ${#triton_gpus[@]} ]; then
+        return 1
+    fi
+
+    index=0
+    for analyzer_gpu in $analyzer_gpus; do
+        gpu_uuid=${triton_gpus[$index]}
+        if [ $gpu_uuid != $analyzer_gpu ]; then
+            echo -e "\n***\n*** Model Analyzer is not using the correct GPUs.\n***"
+            return 1
+        fi
+        index=$((index+1))
+    done
+    return 0
+}
+
+function convert_gpu_array_to_flag() {
+    gpu_array=$1
+    if [ ${#gpu_array[@]} -ge 1 ]; then
+        gpus_flag="--gpus "
+        for gpu in ${gpu_array[@]}; do
+            gpus_flag="$gpu_flag $gpu,"
+        done
+
+        # Remove trailing comma
+        gpu_flag=${gpu_flag::-1}
+        echo $gpu_flag
+    else
+        echo ""
+    fi
+}
+
 function run_server_launch_modes() {
+    gpus=$1
     for PROTOCOL in $CLIENT_PROTOCOLS; do
-        MODEL_ANALYZER_ARGS_WITH_PROTOCOL="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$PROTOCOL"
+        MODEL_ANALYZER_ARGS_WITH_PROTOCOL="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$PROTOCOL `convert_gpu_array_to_flag $gpus`"
         for LAUNCH_MODE in $TRITON_LAUNCH_MODES; do
             rm -rf $OUTPUT_MODEL_REPOSITORY
             MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE="$MODEL_ANALYZER_ARGS_WITH_PROTOCOL --triton-launch-mode=$LAUNCH_MODE"
             ANALYZER_LOG=analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
             SERVER_LOG=${LAUNCH_MODE}.${PROTOCOL}.server.log
-            
+
             # Set arguments for various launch modes
             if [ "$LAUNCH_MODE" == "local" ]; then    
                 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG}"
@@ -115,7 +152,11 @@ function run_server_launch_modes() {
 
             model_analyzer_gpu_uuids=`cat $ANALYZER_LOG | grep -E "Using GPU\(s\) with UUID\(s\)" | tail -n 1 | sed -n 's/.*{\(.*\)}.*/\1/p'`
             model_analyzer_gpu_uuids=(`echo $model_analyzer_gpu_uuids | sed "s/,/ /g"`)
-            check_gpus "${model_analyzer_gpu_uuids[@]}"
+            if [ -z $gpus ]; then
+                check_all_gpus "${model_analyzer_gpu_uuids[@]}"
+            else
+                check_gpus "${model_analyzer_gpu_uuids[@]}" "${gpus[@]}"
+            fi
             if [ $? -ne 0 ]; then
                 RET=1
                 break
@@ -127,6 +168,9 @@ function run_server_launch_modes() {
 # This test will be executed with 4-GPUs.
 CUDA_DEVICE_ORDER="PCI_BUS_ID"
 
+##########################################################
+# Test controling the GPUs with the CUDA_VISIBLE_DEVICES #
+##########################################################
 export CUDA_VISIBLE_DEVICES=3
 run_server_launch_modes
 
@@ -135,6 +179,21 @@ run_server_launch_modes
 
 export CUDA_VISIBLE_DEVICES=0,1,2
 run_server_launch_modes
+
+#################################################
+# Test controling the GPUs with the --gpus flag #
+#################################################
+CURRENT_GPUS=(${GPUS[2]})
+run_server_launch_modes "$CURRENT_GPUS"
+
+CURRENT_GPUS=(${GPUS[2]})
+run_server_launch_modes "$CURRENT_GPUS"
+
+CURRENT_GPUS=${GPUS[@]:1}
+run_server_launch_modes "$CURRENT_GPUS"
+
+CURRENT_GPUS=${GPUS[@]:1}
+run_server_launch_modes "$CURRENT_GPUS"
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"
