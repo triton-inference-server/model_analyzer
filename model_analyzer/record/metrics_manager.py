@@ -126,10 +126,11 @@ class MetricsManager:
         model_non_gpu_metric_values = list(
             perf_analyzer_metrics.values()) + list(model_cpu_metrics.values())
 
-        self._result_manager.add_model_data(
+        measurement = self._result_manager.add_model_data(
             gpu_data=model_gpu_metrics,
             non_gpu_data=model_non_gpu_metric_values,
             perf_config=perf_config)
+        return measurement
 
     def _start_monitors(self):
         """

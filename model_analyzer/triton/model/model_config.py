@@ -52,11 +52,11 @@ class ModelConfig:
 
         if not os.path.exists(model_path):
             raise TritonModelAnalyzerException(
-                'Model path specified does not exist.')
+                f'Model path "{model_path}" specified does not exist.')
 
         if os.path.isfile(model_path):
             raise TritonModelAnalyzerException(
-                'Model output path must be a directory.')
+                f'Model output path "{model_path}" must be a directory.')
 
         model_config_path = os.path.join(model_path, "config.pbtxt")
         if not os.path.isfile(model_config_path):

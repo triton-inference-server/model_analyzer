@@ -255,7 +255,6 @@ class AnalyzerConfig:
                 'concurrency',
                 flags=['-c', '--concurrency'],
                 field_type=ConfigListNumeric(int),
-                default_value=1,
                 description=
                 "Comma-delimited list of concurrency values or ranges <start:end:step>"
                 " to be used during profiling"))

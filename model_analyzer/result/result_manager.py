@@ -196,11 +196,12 @@ class ResultManager:
         """
 
         if self._current_run_result:
-            self._current_run_result.add_measurement(
-                measurement=Measurement(gpu_data=gpu_data,
-                                        non_gpu_data=non_gpu_data,
-                                        perf_config=perf_config,
-                                        comparator=self._result_comparator))
+            measurement = Measurement(gpu_data=gpu_data,
+                                      non_gpu_data=non_gpu_data,
+                                      perf_config=perf_config,
+                                      comparator=self._result_comparator)
+            self._current_run_result.add_measurement(measurement)
+            return measurement
         else:
             raise TritonModelAnalyzerException(
                 "Must intialize a result before adding model data.")

@@ -15,7 +15,8 @@
 import time
 import logging
 
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,6 @@ class TritonClient:
     Defines the interface for the objects created by
     TritonClientFactory
     """
-
     def wait_for_server_ready(self, num_retries):
         """
         Parameters
@@ -69,18 +69,18 @@ class TritonClient:
         model_name : str
             name of the model to load from repository
 
-        Raises
+        Returns
         ------
-        TritonModelAnalyzerException
-            If server throws Exception
+        int or None
+            Returns -1 if the failed.
         """
 
         try:
             self._client.load_model(model_name)
             logger.info(f'Model {model_name} loaded.')
         except Exception as e:
-            raise TritonModelAnalyzerException(
-                f"Unable to load the model : {e}")
+            logger.info(f'Model {model_name} load failed: {e}')
+            return -1
 
     def unload_model(self, model_name):
         """
@@ -103,8 +103,8 @@ class TritonClient:
             self._client.unload_model(model_name)
             logger.info(f'Model {model_name} unloaded.')
         except Exception as e:
-            raise TritonModelAnalyzerException(
-                f"Unable to unload the model : {e}")
+            logger.info(f'Model {model_name} unload failed: {e}')
+            return -1
 
     def wait_for_model_ready(self, model_name, num_retries):
         """
@@ -137,11 +137,10 @@ class TritonClient:
             except Exception as e:
                 time.sleep(0.05)
                 retries -= 1
-                if retries == 0:
-                    raise TritonModelAnalyzerException(e)
-        raise TritonModelAnalyzerException(
-            "Could not determine model readiness. "
-            "Number of retries exceeded.")
+
+        logger.info(
+            f'Model readiness failed for model {model_name}. Error {e}')
+        return -1
 
     def get_model_config(self, model_name, num_retries):
         """
@@ -157,7 +156,7 @@ class TritonClient:
 
         Returns
         -------
-        dict
+        dict or None
             A dictionary containg the model config.
         """
 

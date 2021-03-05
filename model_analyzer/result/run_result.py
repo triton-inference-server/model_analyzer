@@ -76,7 +76,7 @@ class RunResult:
         n : int
             The number of  top results 
             to retrieve
-        
+
         Returns
         -------
         The top n measurements in

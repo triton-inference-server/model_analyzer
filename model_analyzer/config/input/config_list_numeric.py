@@ -53,7 +53,7 @@ class ConfigListNumeric(ConfigValue):
         if validator is None:
 
             def validator(x):
-                if type(x) is list and len(x) > 0:
+                if type(x) is list:
                     return ConfigStatus(CONFIG_PARSER_SUCCESS)
 
                 return ConfigStatus(
