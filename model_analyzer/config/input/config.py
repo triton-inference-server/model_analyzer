@@ -259,6 +259,13 @@ class AnalyzerConfig:
                 "Comma-delimited list of concurrency values or ranges <start:end:step>"
                 " to be used during profiling"))
         self._add_config(
+            ConfigField(
+                'perf_analyzer_timeout',
+                field_type=ConfigPrimitive(int),
+                default_value=600,
+                description=
+                "Perf analyzer timeout value in seconds."))
+        self._add_config(
             ConfigField('export',
                         flags=['--export'],
                         field_type=ConfigPrimitive(bool),

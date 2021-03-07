@@ -49,6 +49,7 @@ class MetricsManager:
         self._gpus = config.gpus
         self._monitoring_interval = config.monitoring_interval
         self._perf_analyzer_path = config.perf_analyzer_path
+        self._config = config
         self._result_manager = result_manager
 
         self._dcgm_metrics = []
@@ -173,7 +174,9 @@ class MetricsManager:
 
         try:
             perf_analyzer = PerfAnalyzer(path=self._perf_analyzer_path,
-                                         config=perf_config)
+                                         config=perf_config,
+                                         timeout=self._config.perf_analyzer_timeout
+                                         )
             perf_analyzer.run(self._perf_metrics)
         except FileNotFoundError as e:
             raise TritonModelAnalyzerException(

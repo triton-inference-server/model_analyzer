@@ -127,6 +127,7 @@ class TritonClient:
         """
 
         retries = num_retries
+        error = None
         while retries > 0:
             try:
                 if self._client.is_model_ready(model_name):
@@ -135,11 +136,12 @@ class TritonClient:
                     time.sleep(0.05)
                     retries -= 1
             except Exception as e:
+                error = e
                 time.sleep(0.05)
                 retries -= 1
 
         logger.info(
-            f'Model readiness failed for model {model_name}. Error {e}')
+            f'Model readiness failed for model {model_name}. Error {error}')
         return -1
 
     def get_model_config(self, model_name, num_retries):

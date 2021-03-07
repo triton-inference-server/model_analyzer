@@ -211,13 +211,13 @@ class TestConfig(trc.TestResultCollector):
             ConfigModel('model_1',
                         parameters={
                             'batch_sizes': [1],
-                            'concurrency': [1]
+                            'concurrency': []
                         },
                         objectives={'perf_throughput': 10}),
             ConfigModel('model_2',
                         parameters={
                             'batch_sizes': [1],
-                            'concurrency': [1]
+                            'concurrency': []
                         },
                         objectives={'perf_throughput': 10})
         ]
@@ -332,7 +332,7 @@ model_names:
             ConfigModel('vgg_19_graphdef',
                         parameters={
                             'batch_sizes': [1],
-                            'concurrency': [1]
+                            'concurrency': []
                         },
                         objectives={'perf_throughput': 10})
         ]
@@ -453,7 +453,7 @@ model_names:
             ConfigModel('vgg_19_graphdef',
                         parameters={
                             'batch_sizes': [1],
-                            'concurrency': [1]
+                            'concurrency': []
                         },
                         objectives={'perf_throughput': 10})
         ]
@@ -603,7 +603,7 @@ model_names:
             ConfigModel('vgg_16_graphdef',
                         parameters={
                             'batch_sizes': [1],
-                            'concurrency': [1]
+                            'concurrency': []
                         },
                         objectives={'perf_throughput': 10},
                         model_config_parameters={
@@ -943,7 +943,7 @@ model_names:
             ConfigModel('vgg_16_graphdef',
                         parameters={
                             'batch_sizes': [1],
-                            'concurrency': [1]
+                            'concurrency': []
                         },
                         objectives={'perf_throughput': 10},
                         model_config_parameters={
