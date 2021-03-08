@@ -154,19 +154,8 @@ class ReportManager:
                                     title="Report Table")
 
         for model_config, measurement in self._measurements[model_name]:
-            if 'dynamic_batching' in model_config.get_config():
-                dynamic_batch_sizes = model_config.get_config(
-                )['dynamic_batching']['preferred_batch_size']
-                dynamic_batching_str = ','.join(
-                    [str(x) for x in dynamic_batch_sizes])
-            else:
-                dynamic_batching_str = "Disabled"
-            instance_group_list = model_config.get_config()['instance_group']
-            group_str_list = [
-                f"{group['count']}-{group['kind'].split('_')[1]}"
-                for group in instance_group_list
-            ]
-            instance_group_str = ','.join(group_str_list)
+            dynamic_batching_str = model_config.dynamic_batching_string()
+            instance_group_str = model_config.instance_group_string()
             row = [
                 model_config.get_field('name'), dynamic_batching_str,
                 instance_group_str,
@@ -196,6 +185,7 @@ class ReportManager:
                     gpu_names.append((gpu.name).decode('ascii'))
                     with gpu:
                         mems = cuda.current_context().get_memory_info()
+                        # convert bytes to GB
                         max_memories.append(mems.total // (2**30))
 
         return ','.join(gpu_names), ','.join(

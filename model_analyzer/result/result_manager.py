@@ -53,6 +53,9 @@ class ResultManager:
         ----------
         config : AnalyzerConfig
             the model analyzer config
+        statistics: AnalyzerStatistics
+            the statistics being collected for 
+            this instance of model analyzer
         """
 
         self._config = config
@@ -295,8 +298,10 @@ class ResultManager:
 
             # Get name, instance_group, and dynamic batching enabled info from result
             model_name = next_best_result.run_config().model_name()
-            instance_group_str = next_best_result.instance_group_string()
-            dynamic_batching_str = next_best_result.dynamic_batching_string()
+            instance_group_str = next_best_result.run_config().model_config(
+            ).instance_group_string()
+            dynamic_batching_str = next_best_result.run_config().model_config(
+            ).dynamic_batching_string()
             self._compile_measurements(next_best_result, model_name,
                                        instance_group_str,
                                        dynamic_batching_str)
