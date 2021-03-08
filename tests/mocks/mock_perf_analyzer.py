@@ -35,13 +35,15 @@ class MockPerfAnalyzerMethods(MockBase):
     """
 
     def __init__(self):
-        self.patcher_check_output = patch(
-            'model_analyzer.perf_analyzer.perf_analyzer.check_output')
+        self.mock_popen = MagicMock()
+        self.mock_popen.pid = 10
+        self.mock_popen.returncode = 0
+        self.patcher_popen_stdout_read = patch(
+            'model_analyzer.perf_analyzer.perf_analyzer.Popen', return_value=self.mock_popen)
         self.patcher_stdout = patch(
             'model_analyzer.perf_analyzer.perf_analyzer.STDOUT', MagicMock())
-        self.patcher_called_process_error = patch(
-            'model_analyzer.perf_analyzer.perf_analyzer.CalledProcessError',
-            MockCalledProcessError)
+        self.patcher_pipe = patch(
+            'model_analyzer.perf_analyzer.perf_analyzer.PIPE', MagicMock())
         super().__init__()
 
     def start(self):
@@ -49,45 +51,43 @@ class MockPerfAnalyzerMethods(MockBase):
         Start the patchers
         """
 
-        self.check_output_mock = self.patcher_check_output.start()
+        self.popen_stdout_read = self.patcher_popen_stdout_read.start()
         self.stdout_mock = self.patcher_stdout.start()
-        self.called_process_error_mock = self.patcher_called_process_error.start(
-        )
+        self.pipe_mock = self.patcher_pipe.start()
 
     def _fill_patchers(self):
         """
         Fills patcher list
         """
 
-        self._patchers.append(self.patcher_check_output)
+        self._patchers.append(self.patcher_popen_stdout_read)
         self._patchers.append(self.patcher_stdout)
-        self._patchers.append(self.patcher_called_process_error)
+        self._patchers.append(self.patcher_pipe)
 
     def assert_perf_analyzer_run_as(self, cmd):
         """
-        Checks that subprocess.check_output was run
-        with the given command.
+        Checks that Popen was run with the given command.
         """
 
-        self.check_output_mock.assert_called_with(cmd,
+        self.popen_stdout_read.assert_called_with(cmd,
                                                   start_new_session=True,
+                                                  stdout=self.pipe_mock,
                                                   stderr=self.stdout_mock,
                                                   encoding='utf-8')
 
-    def raise_exception_on_run(self):
-        """
-        Raises a CalledProcessError on call
-        check_output
-        """
-
-        self.check_output_mock.side_effect = self.called_process_error_mock
-
     def set_perf_analyzer_result_string(self, output_string):
         """
-        Sets the return value of subprocess.check_output
+        Sets the return value of mock_popen
         """
 
-        self.check_output_mock.return_value = output_string
+        self.mock_popen.stdout.read.return_value = output_string
+
+    def set_perf_analyzer_return_code(self, returncode):
+        """
+        Sets the returncode of Popen process
+        """
+
+        self.mock_popen.returncode = returncode
 
     def reset(self):
         """
@@ -96,5 +96,5 @@ class MockPerfAnalyzerMethods(MockBase):
         mocks in this module
         """
 
-        self.check_output_mock.side_effect = None
-        self.check_output_mock.return_value = None
+        self.mock_popen.stdout.read.side_effect = None
+        self.mock_popen.stdout.read.return_value = None

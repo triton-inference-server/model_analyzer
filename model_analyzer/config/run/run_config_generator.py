@@ -166,6 +166,7 @@ class RunConfigGenerator:
 
             self._result_manager.init_result(run_config)
 
+            received_result = False
             # Profile various batch size and concurrency values.
             # TODO: Need to sort the values for batch size and concurrency
             # for correct measurment of the GPU memory metrics.
@@ -177,11 +178,17 @@ class RunConfigGenerator:
                 measurement = self._metrics_manager.profile_model(
                     perf_config=perf_config,
                     perf_output_writer=perf_output_writer)
-                measurements[model_config].append(measurement)
+                if measurement is not None:
+                    measurements[model_config].append(measurement)
+                    received_result = True
             self._server.stop()
 
-            # Submit the result to be sorted
-            self._result_manager.complete_result()
+            if received_result:
+                # Submit the result to be sorted
+                self._result_manager.complete_result()
+            else:
+                # Remove the result from result manager
+                self._result_manager.reset_result()
         return measurements
 
     def _generate_run_config_for_model_sweep(self, model, model_sweep):

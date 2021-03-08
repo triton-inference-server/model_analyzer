@@ -41,7 +41,6 @@ class AnalyzerConfig:
     """
     Model Analyzer config object.
     """
-
     def __init__(self):
         """
         Create a new config.
@@ -259,12 +258,42 @@ class AnalyzerConfig:
                 "Comma-delimited list of concurrency values or ranges <start:end:step>"
                 " to be used during profiling"))
         self._add_config(
+            ConfigField('perf_analyzer_timeout',
+                        field_type=ConfigPrimitive(int),
+                        default_value=600,
+                        description="Perf analyzer timeout value in seconds."))
+        self._add_config(
             ConfigField(
-                'perf_analyzer_timeout',
-                field_type=ConfigPrimitive(int),
-                default_value=600,
+                'perf_analyzer_cpu_util',
+                field_type=ConfigPrimitive(float),
+                default_value=40,
                 description=
-                "Perf analyzer timeout value in seconds."))
+                "Maximum CPU utilization value allowed for the perf_analyzer.")
+        )
+        self._add_config(
+            ConfigField(
+                'run_config_search_max_concurrency',
+                field_type=ConfigPrimitive(int),
+                default_value=1024,
+                description=
+                "Max concurrency value that run config search should not go beyond that."
+            ))
+        self._add_config(
+            ConfigField(
+                'run_config_search_max_instance_count',
+                field_type=ConfigPrimitive(int),
+                default_value=5,
+                description=
+                "Max instance count value that run config search should not go beyond that."
+            ))
+        self._add_config(
+            ConfigField(
+                'run_config_search_max_preferred_batch_size',
+                field_type=ConfigPrimitive(int),
+                default_value=16,
+                description=
+                "Max preferred batch size value that run config search should not go beyond that."
+            ))
         self._add_config(
             ConfigField('export',
                         flags=['--export'],

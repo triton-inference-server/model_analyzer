@@ -212,7 +212,16 @@ class ResultManager:
         the ResultTable
         """
 
-        heapq.heappush(self._results, self._current_run_result)
+        if self._current_run_result is not None:
+            heapq.heappush(self._results, self._current_run_result)
+            self._current_run_result = None
+
+    def reset_result(self):
+        """
+        Submit the current RunResults into
+        the ResultTable
+        """
+
         self._current_run_result = None
 
     def top_n_results(self, n):
@@ -222,7 +231,7 @@ class ResultManager:
         n : int
             The number of  top results 
             to retrieve
-            
+
         Returns
         -------
         RunResult

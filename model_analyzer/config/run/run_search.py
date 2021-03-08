@@ -23,7 +23,11 @@ MAX_INSTANCE_COUNT = 5
 class RunSearch:
     """A class responsible for searching the config space.
     """
-    def __init__(self):
+    def __init__(self, max_concurrency, max_instance_count,
+                 max_preferred_batch_size):
+        self._max_concurrency = max_concurrency
+        self._max_instance_count = max_instance_count
+        self._max_preferred_batch_size = max_preferred_batch_size
         self._sweeps = []
         self._model_config = {'instance_count': 1}
         self._checked = False
@@ -66,11 +70,12 @@ class RunSearch:
             the values are measurements.
         """
 
-        self._last_batch_length = len(list(measurements.values()))
+        new_measurements = list(measurements.values())[0]
+        self._last_batch_length = len(new_measurements)
 
         # The list will contain one parameter, because we are experimenting
         # with one value at a time.
-        self._measurements += list(measurements.values())[0]
+        self._measurements += new_measurements
 
     def _step_instance_count(self):
         """
@@ -165,19 +170,20 @@ class RunSearch:
             # an error, or the throughput gain is not significant, step
             # advancing the concurrency value. TODO: add exponential backoff so
             # that the algorithm can step back and exactly find the points.
-            if new_concurrency > MAX_CONCURRENCY or self._last_batch_length == 0 \
+            if new_concurrency > self._max_concurrency or self._last_batch_length == 0 \
                 or not self._valid_throughput_gain():
+
                 # Reset concurrency
                 self._measurements = []
                 tmp_model.parameters()['concurrency'] = [1]
                 self._step_instance_count()
-                if self._model_config['instance_count'] == MAX_INSTANCE_COUNT:
+                if self._model_config['instance_count'] == self._max_instance_count:
                     # Reset instance_count
                     self._model_config['instance_count'] = 1
 
                     self._step_dynamic_batching()
                     if self._model_config[
-                            'dynamic_batching'] == MAX_DYNAMIC_BATCH_SIZE:
+                            'dynamic_batching'] == self._max_preferred_batch_size:
                         return tmp_model, []
             else:
                 tmp_model.parameters()['concurrency'] = [new_concurrency]
@@ -191,8 +197,9 @@ class RunSearch:
             message = 'dynamic batching is disabled.'
 
         concurrency = tmp_model.parameters()['concurrency'][0]
-        logging.info(f'Concurrency set to {concurrency}, '
-                     f"instance count set to {self._model_config['instance_count']}, and "
-                     f"{message}")
+        logging.info(
+            f'Concurrency set to {concurrency}, '
+            f"instance count set to {self._model_config['instance_count']}, and "
+            f"{message}")
 
         return tmp_model, [self._create_model_config()]

@@ -92,7 +92,11 @@ class Analyzer:
                 analyzer_config=self._config,
                 client=self._client,
                 server=self._server,
-                run_search=RunSearch())
+                run_search=RunSearch(
+                    self._config.run_config_search_max_concurrency,
+                    self._config.run_config_search_max_instance_count,
+                    self._config.run_config_search_max_preferred_batch_size,
+                ))
 
             run_config_generator.execute_run_configs()
 

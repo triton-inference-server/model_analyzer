@@ -24,7 +24,6 @@ from model_analyzer.record.types.perf_throughput import PerfThroughput
 
 MAX_INTERVAL_CHANGES = 20
 INTERVAL_DELTA = 1000
-MAX_ALLOWED_CPU_UTIL = 30
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ class PerfAnalyzer:
     # The metrics that PerfAnalyzer can collect
     perf_metrics = {PerfLatency, PerfThroughput}
 
-    def __init__(self, path, config, timeout):
+    def __init__(self, path, config, timeout, max_cpu_util):
         """
         Parameters
         ----------
@@ -50,6 +49,8 @@ class PerfAnalyzer:
         timeout : int
             Maximum number of seconds that perf_analyzer
             will wait until the execution is complete.
+        max_cpu_util : float
+            Maximum CPU utilization allowed for perf_analyzer 
         """
 
         self.bin_path = path
@@ -57,6 +58,7 @@ class PerfAnalyzer:
         self._timeout = timeout
         self._output = None
         self._perf_records = None
+        self._max_cpu_util = max_cpu_util
 
     def run(self, metrics):
         """
@@ -105,18 +107,22 @@ class PerfAnalyzer:
 
                     # perf_analyzer using too much CPU?
                     cpu_util = process_util.cpu_percent(interval_sleep_time)
-                    if cpu_util > MAX_ALLOWED_CPU_UTIL:
-                        logging.info('perf_analyzer used a lot CPU resources, killing perf_analyzer...')
+                    if cpu_util > self._max_cpu_util:
+                        logging.info(f'perf_analyzer used significant amount of CPU resources ({cpu_util}%), killing perf_analyzer...')
                         self._output = process.stdout.read()
                         process.kill()
-                        process_killed = True
-                        break
+
+                        # Failure
+                        return 1
+
                     current_timeout -= interval_sleep_time
                 else:
                     logging.info('perf_analyzer took very long to exit, killing perf_analyzer...')
                     self._output = process.stdout.read()
                     process.kill()
-                    process_killed = True
+
+                    # Failure
+                    return 1
 
                 if process_killed:
                     continue
@@ -129,17 +135,21 @@ class PerfAnalyzer:
                             f"increased to {self._config['measurement-interval']} ms."
                         )
                     else:
-                        raise TritonModelAnalyzerException(
+                        logging.info(
                             f"Running perf_analyzer {cmd} failed with"
                             f" exit status {process.returncode} : {self._output}")
+                        return 1
                 else:
                     self._parse_output()
                     break
             else:
-                raise TritonModelAnalyzerException(
+                logging.info(
                     f"Ran perf_analyzer {MAX_INTERVAL_CHANGES} times, "
                     "but no valid requests recorded in max time interval"
                     f" of {self._config['measurement-interval']} ")
+                return 1
+
+        return 0
 
     def output(self):
         """

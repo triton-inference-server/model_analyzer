@@ -54,6 +54,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         # PerfAnalyzer config for all tests
         self.config = PerfAnalyzerConfig()
         self.config['model-name'] = TEST_MODEL_NAME
+        self.config['measurement-interval'] = 1000
 
         # Triton Server
         self.server = None
@@ -97,7 +98,10 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         # Create server, client, PerfAnalyzer, and wait for server ready
         self.server = TritonServerFactory.create_server_local(
             path=TRITON_LOCAL_BIN_PATH, config=server_config)
-        perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH, config=self.config)
+        perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
+                                     config=self.config,
+                                     timeout=100,
+                                     max_cpu_util=50)
         self.client = TritonClientFactory.create_grpc_client(
             server_url=TEST_GRPC_URL)
         self.server.start()
@@ -108,8 +112,10 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         test_latency_output = "Avg latency: 5000 ms\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
         perf_analyzer.run(perf_metrics)
-        self.perf_mock.assert_perf_analyzer_run_as(
-            [PERF_BIN_PATH, '-m', TEST_MODEL_NAME])
+        self.perf_mock.assert_perf_analyzer_run_as([
+            PERF_BIN_PATH, '-m', TEST_MODEL_NAME, '--measurement-interval',
+            str(self.config['measurement-interval'])
+        ])
 
         # Test latency parsing
         test_latency_output = "Avg latency: 5000 ms\n\n\n\n"
@@ -140,14 +146,16 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(records[1].value(), 3.6)
 
         # Test exception handling
+        self.perf_mock.set_perf_analyzer_return_code(1)
         with self.assertRaisesRegex(
                 expected_exception=TritonModelAnalyzerException,
-                expected_regex="Running perf_analyzer with",
+                expected_regex="Running perf_analyzer ",
                 msg="Expected TritonModelAnalyzerException"):
-            self.perf_mock.raise_exception_on_run()
             perf_analyzer.run(perf_metrics)
-
         self.server.stop()
+
+        # TODO: test measurement interval timeout and increase.
+        # TODO: test perf_analyzer over utilization of resources.
 
     def tearDown(self):
         # In case test raises exception
