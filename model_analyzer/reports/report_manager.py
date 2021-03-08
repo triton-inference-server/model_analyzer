@@ -108,7 +108,7 @@ class ReportManager:
             summary.add_paragraph(
                 f"Client Request Batch Size: {static_batch_size}")
             summary.add_paragraph(
-                f"Request Protocol: {self._config.client_protocol}")
+                f"Request Protocol: {self._config.client_protocol.upper()}")
             summary.add_paragraph(
                 f"Constraint targets: {self._constraint_strs[model_name]}")
             summary.add_paragraph(
