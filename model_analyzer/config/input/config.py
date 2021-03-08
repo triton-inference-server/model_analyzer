@@ -287,6 +287,13 @@ class AnalyzerConfig:
                 "Max instance count value that run config search should not go beyond that."
             ))
         self._add_config(
+            ConfigField('run_config_search_disable',
+                        flags=['--run-config-search-disable'],
+                        field_type=ConfigPrimitive(bool),
+                        parser_args={'action': 'store_true'},
+                        default_value=False,
+                        description="Disable run config search."))
+        self._add_config(
             ConfigField(
                 'run_config_search_max_preferred_batch_size',
                 field_type=ConfigPrimitive(int),
@@ -521,6 +528,12 @@ class AnalyzerConfig:
                     "client-protocol is 'grpc'. Must specify triton-grpc-endpoint "
                     "if connecting to already running server or change protocol using "
                     "--client-protocol.")
+
+        # If run config search is disabled and no concurrency value is provided,
+        # set the default value.
+        if self.run_config_search_disable:
+            if len(self.concurrency) == 0:
+                self.concurrency = [1]
 
     def _load_config_file(self, file_path):
         """

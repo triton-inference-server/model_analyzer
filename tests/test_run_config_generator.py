@@ -19,6 +19,7 @@ from .mocks.mock_client import MockTritonClientMethods
 from model_analyzer.config.input.config import AnalyzerConfig
 from model_analyzer.cli.cli import CLI
 from model_analyzer.triton.client.grpc_client import TritonGRPCClient
+from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.config.run.run_config_generator \
     import RunConfigGenerator
 from unittest.mock import mock_open, patch
@@ -38,7 +39,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
     def test_parameter_sweep(self):
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
-            'path-to-config-file', '--model-names', 'vgg11'
+            'path-to-config-file', '--model-names', 'vgg11',
+            '--run-config-search-disable'
         ]
         yaml_content = ''
         config = self._evaluate_config(args, yaml_content)
@@ -48,6 +50,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         mock_client = MockTritonClientMethods()
         mock_client.start()
         client = TritonGRPCClient('localhost:8000')
+        run_search = RunSearch(16, 1, 16)
 
         # When there is not any sweep_parameter the length of
         # run_configs should be equal to the length of different
@@ -55,10 +58,16 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(
-                    model, config, client)
+                run_config_generator = RunConfigGenerator(model,
+                                                          config,
+                                                          client,
+                                                          None,
+                                                          None,
+                                                          None,
+                                                          run_search,
+                                                          generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
-                self.assertTrue(len(run_configs) == 1)
+                self.assertEqual(len(run_configs), 1)
                 self.assertTrue(
                     len(run_configs[0].perf_analyzer_configs()) == 1)
         mock_model_config.stop()
@@ -75,8 +84,14 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(
-                    model, config, client)
+                run_config_generator = RunConfigGenerator(model,
+                                                          config,
+                                                          client,
+                                                          None,
+                                                          None,
+                                                          None,
+                                                          run_search,
+                                                          generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 1)
                 self.assertTrue(
@@ -105,8 +120,14 @@ model_names:
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(
-                    model, config, client)
+                run_config_generator = RunConfigGenerator(model,
+                                                          config,
+                                                          client,
+                                                          None,
+                                                          None,
+                                                          None,
+                                                          run_search,
+                                                          generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 1)
                 self.assertTrue(
@@ -116,7 +137,7 @@ model_names:
 
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
-            'path-to-config-file'
+            'path-to-config-file', '--run-config-search-disable'
         ]
         yaml_content = """
 model_names:
@@ -141,9 +162,19 @@ model_names:
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(
-                    model, config, client)
+                run_config_generator = RunConfigGenerator(model,
+                                                          config,
+                                                          client,
+                                                          None,
+                                                          None,
+                                                          None,
+                                                          run_search,
+                                                          generate_only=True)
+
+
+
                 run_configs = run_config_generator.get_run_configs()
+                print(len(run_configs))
                 self.assertTrue(len(run_configs) == 2)
                 for run_config in run_configs:
                     self.assertTrue(
@@ -173,8 +204,14 @@ model_names:
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(
-                    model, config, client)
+                run_config_generator = RunConfigGenerator(model,
+                                                          config,
+                                                          client,
+                                                          None,
+                                                          None,
+                                                          None,
+                                                          run_search,
+                                                          generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 1)
                 for run_config in run_configs:
@@ -201,8 +238,14 @@ model_names:
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(
-                    model, config, client)
+                run_config_generator = RunConfigGenerator(model,
+                                                          config,
+                                                          client,
+                                                          None,
+                                                          None,
+                                                          None,
+                                                          run_search,
+                                                          generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 6)
                 for run_config in run_configs:
@@ -231,8 +274,14 @@ model_names:
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(
-                    model, config, client)
+                run_config_generator = RunConfigGenerator(model,
+                                                          config,
+                                                          client,
+                                                          None,
+                                                          None,
+                                                          None,
+                                                          run_search,
+                                                          generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 6)
                 instance_groups = []
@@ -287,8 +336,14 @@ model_names:
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(
-                    model, config, client)
+                run_config_generator = RunConfigGenerator(model,
+                                                          config,
+                                                          client,
+                                                          None,
+                                                          None,
+                                                          None,
+                                                          run_search,
+                                                          generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 6)
                 instance_groups = []
@@ -346,8 +401,14 @@ model_names:
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(
-                    model, config, client)
+                run_config_generator = RunConfigGenerator(model,
+                                                          config,
+                                                          client,
+                                                          None,
+                                                          None,
+                                                          None,
+                                                          run_search,
+                                                          generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 6)
                 instance_groups = []
@@ -406,8 +467,14 @@ model_names:
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(
-                    model, config, client)
+                run_config_generator = RunConfigGenerator(model,
+                                                          config,
+                                                          client,
+                                                          None,
+                                                          None,
+                                                          None,
+                                                          run_search,
+                                                          generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 24)
                 instance_groups = []
@@ -495,8 +562,14 @@ model_names:
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()):
             for model in config.model_names:
-                run_config_generator = RunConfigGenerator(
-                    model, config, client)
+                run_config_generator = RunConfigGenerator(model,
+                                                          config,
+                                                          client,
+                                                          None,
+                                                          None,
+                                                          None,
+                                                          run_search,
+                                                          generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertTrue(len(run_configs) == 12)
                 instance_groups = []

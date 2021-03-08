@@ -113,6 +113,14 @@ class ConfigListNumeric(ConfigValue):
                     step = 1
                     start = int(value['start'])
                     stop = int(value['stop'])
+                    if start > stop:
+                        return ConfigStatus(
+                            CONFIG_PARSER_FAILURE,
+                            f'When a dictionary is used for field "{self.name()}",'
+                            ' "start" should be less than "stop".'
+                            f' Current value is {value}.',
+                            config_object=self)
+
                     if 'step' in value:
                         step = int(value['step'])
                     new_value = list(range(start, stop + 1, step))

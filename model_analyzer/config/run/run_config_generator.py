@@ -34,7 +34,8 @@ class RunConfigGenerator:
                  server,
                  result_manager,
                  metrics_manager,
-                 run_search=None):
+                 run_search=None,
+                 generate_only=False):
         """
         analyzer_config : ModelAnalyzerConfig
             The config object parsed from
@@ -47,7 +48,6 @@ class RunConfigGenerator:
             TritonClient to be used for interacting with the Triton API
         """
 
-        super().__init__()
         self._analyzer_config = analyzer_config.get_all_config()
         self._model = model
         self._run_configs = []
@@ -59,6 +59,7 @@ class RunConfigGenerator:
         self._result_manager = result_manager
         self._model_name_index = 0
         self._model_configs = []
+        self._generate_only = generate_only
         self._generate_run_configs()
 
     def _generate_model_config_combinations(self, value):
@@ -131,6 +132,7 @@ class RunConfigGenerator:
             'output_model_repository_path']
         model_repository = self._analyzer_config['model_repository']
         perf_output = self._analyzer_config['perf_output']
+        triton_launch_mode = self._analyzer_config['triton_launch_mode']
 
         measurements = {}
         while self._run_configs:
@@ -144,7 +146,8 @@ class RunConfigGenerator:
 
             # If the model config already exists, do not recreate the
             # directory.
-            if not os.path.exists(f'{output_model_repo_path}/{model_name}'):
+            if not os.path.exists(f'{output_model_repo_path}/{model_name}'
+                                  ) and triton_launch_mode != 'remote':
                 # Create the directory for the new model
                 os.mkdir(f'{output_model_repo_path}/{model_name}')
                 model_config.write_config_to_file(
@@ -224,9 +227,9 @@ class RunConfigGenerator:
             model_tmp_name = f'{model.model_name()}_i{model_name_index}'
             model_config.set_field('name', model_tmp_name)
             perf_configs = self._generate_perf_config_for_model(
-                model.model_name(), model)
+                model_tmp_name, model)
             self._run_configs.append(
-                    RunConfig(model.model_name(), model_config, perf_configs))
+                RunConfig(model.model_name(), model_config, perf_configs))
         else:
             model_config = ModelConfig.create_from_triton_api(
                 self._client, model.model_name(), num_retries)
@@ -245,16 +248,29 @@ class RunConfigGenerator:
         model_config_parameters = model.model_config_parameters()
 
         if triton_launch_model == 'remote':
-            model_sweeps = []
+            model_sweeps = [None]
             search_model_config_parameters = False
-        elif model_config_parameters is not None:
+            model_config_parameters = None
+        else:
+            if model_config_parameters is not None:
+                model_sweeps = \
+                    self._generate_model_config_combinations(
+                        model_config_parameters)
+                search_model_config_parameters = False
+            else:
+                model_sweeps = []
+                search_model_config_parameters = True
+
+        if analyzer_config['run_config_search_disable']:
             model_sweeps = \
                 self._generate_model_config_combinations(
                     model_config_parameters)
-            search_model_config_parameters = False
-        else:
-            model_sweeps = []
-            search_model_config_parameters = True
+            for model_sweep in model_sweeps:
+                self._generate_run_config_for_model_sweep(model, model_sweep)
+
+            if not self._generate_only:
+                measurements = self.execute_run_configs()
+            return
 
         # Iterate until there are not any more model sweeps
         model, model_sweeps = \
@@ -265,21 +281,21 @@ class RunConfigGenerator:
 
         while model_sweeps:
             for model_sweep in model_sweeps:
-                self._generate_run_config_for_model_sweep(
-                    model, model_sweep)
+                self._generate_run_config_for_model_sweep(model, model_sweep)
 
             # Empty the model_sweeps after they are added to the
             # list
             model_sweeps = []
 
-            measurements = self.execute_run_configs()
-            self._run_search.add_run_results(measurements)
-            model, new_model_sweeps = \
-                self._run_search.get_model_sweeps(
-                    model,
-                    model_sweeps=model_sweeps,
-                    search_model_config_parameters=search_model_config_parameters)
-            model_sweeps += new_model_sweeps
+            if not self._generate_only:
+                measurements = self.execute_run_configs()
+                self._run_search.add_run_results(measurements)
+                model, new_model_sweeps = \
+                    self._run_search.get_model_sweeps(
+                        model,
+                        model_sweeps=model_sweeps,
+                        search_model_config_parameters=search_model_config_parameters)
+                model_sweeps += new_model_sweeps
 
     def get_run_configs(self):
         """

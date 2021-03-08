@@ -32,6 +32,7 @@ class RunSearch:
         self._model_config = {'instance_count': 1}
         self._checked = False
         self._measurements = []
+        self._mode = None
         self._last_batch_length = None
 
     def _create_model_config(self):
@@ -159,47 +160,106 @@ class RunSearch:
                     search_model_config_parameters is False:
                 return config_model, model_sweeps
 
-        if len(concurrency) == 0:
-            concurrency = 1
-            tmp_model.parameters()['concurrency'] = [1]
-        else:
-            # Exponentially increase concurrency
-            new_concurrency = concurrency[0] * 2
+            elif len(concurrency) != 0:
+                self._mode = 'model_config'
+                logging.info(
+                    'Will sweep only on the model config parameters...')
+                return tmp_model, [self._create_model_config()]
 
-            # If the concurrency limit has been reached, the last batch lead to
-            # an error, or the throughput gain is not significant, step
-            # advancing the concurrency value. TODO: add exponential backoff so
-            # that the algorithm can step back and exactly find the points.
-            if new_concurrency > self._max_concurrency or self._last_batch_length == 0 \
-                or not self._valid_throughput_gain():
+            elif search_model_config_parameters is False:
+                self._mode = 'concurrency'
+                logging.info(
+                    'Will sweep only through the concurrency values...')
+            else:
+                self._mode = 'concurrency_and_model_config'
+                logging.info(
+                    'Will sweep both the concurrency and model config parameters...'
+                )
 
-                # Reset concurrency
-                self._measurements = []
+        if self._mode == 'concurrency_and_model_config':
+            if len(concurrency) == 0:
+                concurrency = 1
                 tmp_model.parameters()['concurrency'] = [1]
-                self._step_instance_count()
-                if self._model_config['instance_count'] == self._max_instance_count:
-                    # Reset instance_count
-                    self._model_config['instance_count'] = 1
+            else:
+                # Exponentially increase concurrency
+                new_concurrency = concurrency[0] * 2
 
-                    self._step_dynamic_batching()
+                # If the concurrency limit has been reached, the last batch lead to
+                # an error, or the throughput gain is not significant, step
+                # the concurrency value. TODO: add exponential backoff so
+                # that the algorithm can step back and exactly find the points.
+                if new_concurrency > self._max_concurrency or self._last_batch_length == 0 \
+                    or not self._valid_throughput_gain():
+
+                    # Reset concurrency
+                    self._measurements = []
+                    tmp_model.parameters()['concurrency'] = [1]
+                    self._step_instance_count()
                     if self._model_config[
-                            'dynamic_batching'] == self._max_preferred_batch_size:
-                        return tmp_model, []
-            else:
-                tmp_model.parameters()['concurrency'] = [new_concurrency]
+                            'instance_count'] > self._max_instance_count:
+                        # Reset instance_count
+                        self._model_config['instance_count'] = 1
 
-        if 'dynamic_batching' in self._model_config:
-            if self._model_config['dynamic_batching'] is None:
-                message = 'dynamic batching is enabled.'
+                        self._step_dynamic_batching()
+                        if self._model_config['dynamic_batching'] is not None and \
+                            self._model_config[
+                                'dynamic_batching'] > self._max_preferred_batch_size:
+                            return tmp_model, []
+                else:
+                    tmp_model.parameters()['concurrency'] = [new_concurrency]
+
+            if 'dynamic_batching' in self._model_config:
+                if self._model_config['dynamic_batching'] is None:
+                    message = 'dynamic batching is enabled.'
+                else:
+                    message = f"preferred batch size is set to {self._model_config['dynamic_batching']}."
             else:
-                message = f"preferred batch size is set to {self._model_config['dynamic_batching']}."
+                message = 'dynamic batching is disabled.'
+
+            concurrency = tmp_model.parameters()['concurrency'][0]
+            logging.info(
+                f'Concurrency set to {concurrency}, '
+                f"instance count set to {self._model_config['instance_count']}, and "
+                f"{message}")
+        elif self._mode == 'model_config':
+            self._step_instance_count()
+            if self._model_config[
+                    'instance_count'] > self._max_instance_count:
+                # Reset instance_count
+                self._model_config['instance_count'] = 1
+
+                self._step_dynamic_batching()
+                if self._model_config[
+                        'dynamic_batching'] == self._max_preferred_batch_size:
+                    return tmp_model, []
+            if 'dynamic_batching' in self._model_config:
+                if self._model_config['dynamic_batching'] is None:
+                    message = 'dynamic batching is enabled.'
+                else:
+                    message = f"preferred batch size is set to {self._model_config['dynamic_batching']}."
+            else:
+                message = 'dynamic batching is disabled.'
+
+            logging.info(
+                f"Instance count set to {self._model_config['instance_count']} and "
+                f"{message}")
+
+        elif self._mode == 'concurrency':
+            if len(concurrency) == 0:
+                concurrency = 1
+                tmp_model.parameters()['concurrency'] = [1]
+            else:
+                # Exponentially increase concurrency
+                new_concurrency = concurrency[0] * 2
+                tmp_model.parameters()['concurrency'][0] = new_concurrency
+
+                if new_concurrency > self._max_concurrency or self._last_batch_length == 0 \
+                    or not self._valid_throughput_gain():
+                    return tmp_model, []
+            new_concurrency = tmp_model.parameters()['concurrency'][0]
+            logging.info(
+                f'Concurrency set to {new_concurrency}.')
         else:
-            message = 'dynamic batching is disabled.'
-
-        concurrency = tmp_model.parameters()['concurrency'][0]
-        logging.info(
-            f'Concurrency set to {concurrency}, '
-            f"instance count set to {self._model_config['instance_count']}, and "
-            f"{message}")
+            return tmp_model, []
 
         return tmp_model, [self._create_model_config()]

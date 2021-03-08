@@ -147,11 +147,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Test exception handling
         self.perf_mock.set_perf_analyzer_return_code(1)
-        with self.assertRaisesRegex(
-                expected_exception=TritonModelAnalyzerException,
-                expected_regex="Running perf_analyzer ",
-                msg="Expected TritonModelAnalyzerException"):
-            perf_analyzer.run(perf_metrics)
+        self.assertTrue(perf_analyzer.run(perf_metrics), 1)
         self.server.stop()
 
         # TODO: test measurement interval timeout and increase.

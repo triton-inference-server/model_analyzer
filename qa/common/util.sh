@@ -183,6 +183,18 @@ function check_csv_table_row_column() {
     return 0
 }
 
+function get_number_of_rows_logfile() {
+    local log_file=$1
+    num_rows_found=`awk  "BEGIN{i=0} /$tag/{flag=1;getline;getline} /^$/{flag=0} flag {i+=1} END{print i}" $log_file`
+    echo $number_row_found
+}
+
+function get_number_of_rows_csv() {
+    local csv_file=$1
+    num_rows=`awk -v pattern=$tag '$0 ~ pattern {getline; i=0; while(getline) {i+=1}; print i}' $csv_file`
+    echo $num_rows
+}
+
 # Check the output tables from the model-analyzer
 # This function simply ensures that there is a
 # Server-only table, a model table, and that

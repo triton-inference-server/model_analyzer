@@ -106,21 +106,13 @@ class TestTritonClientMethods(trc.TestResultCollector):
 
         # For reuse
         def _test_with_client(self, client):
-            with self.assertRaises(TritonModelAnalyzerException,
-                                   msg="Expected Exception trying"
-                                   " wait for server ready"):
-                self.tritonclient_mock.raise_exception_on_wait_for_model_ready(
-                )
-                client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
-                                            num_retries=1)
+            client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
+                                        num_retries=1)
             self.tritonclient_mock.reset()
 
-            with self.assertRaises(TritonModelAnalyzerException,
-                                   msg="Expected Exception on"
-                                   " server not ready"):
-                self.tritonclient_mock.set_model_not_ready()
-                client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
-                                            num_retries=5)
+            self.tritonclient_mock.set_model_not_ready()
+            self.assertTrue(client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
+                                        num_retries=5), -1)
             self.tritonclient_mock.reset()
             client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
                                         num_retries=1)
@@ -150,11 +142,8 @@ class TestTritonClientMethods(trc.TestResultCollector):
         client.wait_for_server_ready(num_retries=1)
 
         # Try to load a dummy model and expect error
-        with self.assertRaises(TritonModelAnalyzerException,
-                               msg="Expected Exception trying"
-                               " to load dummy model"):
-            self.tritonclient_mock.raise_exception_on_load()
-            client.load_model('dummy')
+        self.tritonclient_mock.raise_exception_on_load()
+        self.assertTrue(client.load_model('dummy'), -1)
 
         self.tritonclient_mock.reset()
 
@@ -163,11 +152,8 @@ class TestTritonClientMethods(trc.TestResultCollector):
         client.wait_for_model_ready(TEST_MODEL_NAME, num_retries=1)
 
         # Try to unload a dummy model and expect error
-        with self.assertRaises(TritonModelAnalyzerException,
-                               msg="Expected Exception trying"
-                               " to unload dummy model"):
-            self.tritonclient_mock.raise_exception_on_unload()
-            client.unload_model('dummy')
+        self.tritonclient_mock.raise_exception_on_unload()
+        self.assertTrue(client.unload_model('dummy'), -1)
 
         self.tritonclient_mock.reset()
 
