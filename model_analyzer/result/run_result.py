@@ -153,39 +153,6 @@ class RunResult:
         return heapq.nsmallest(min(n, len(self._passing_measurements)),
                                self._passing_measurements)
 
-    def instance_group_string(self):
-        """
-        Returns
-        -------
-        str
-            representation of the instance group used 
-            to generate this result
-        """
-        instance_group_list = self.run_config().model_config().get_config(
-        )['instance_group']
-        group_str_list = [
-            f"{group['count']}-{group['kind'].split('_')[1]}"
-            for group in instance_group_list
-        ]
-        return ','.join(group_str_list)
-
-    def dynamic_batching_string(self):
-        """
-        Returns
-        -------
-        str
-            representation of the dynamic batcher
-            configuration used to generate this result
-        """
-
-        model_config = self.run_config().model_config()
-        if 'dynamic_batching' in model_config.get_config():
-            dynamic_batch_sizes = model_config.get_config(
-            )['dynamic_batching']['preferred_batch_size']
-            return ','.join([str(x) for x in dynamic_batch_sizes])
-        else:
-            return "Disabled"
-
     def run_config(self):
         """
         Returns
