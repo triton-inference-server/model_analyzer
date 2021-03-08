@@ -21,57 +21,77 @@ class TritonServerConfig:
     A config class to set arguments to the Triton Inference
     Server. An argument set to None will use the server default.
     """
+    server_arg_keys = [
+        # Logging
+        'log-verbose',
+        'log-info',
+        'log-warning',
+        'log-error',
+        'id',
+        # Model Repository
+        'model-store',
+        'model-repository',
+        # Exit
+        'exit-timeout-secs',
+        'exit-on-error',
+        # Strictness
+        'strict-model-config',
+        'strict-readiness',
+        # API Servers
+        'allow-http',
+        'http-port',
+        'http-thread-count',
+        'allow-grpc',
+        'grpc-port',
+        'grpc-infer-allocation-pool-size',
+        'grpc-use-ssl',
+        'grpc-server-cert',
+        'grpc-server-key',
+        'grpc-root-cert',
+        'allow-metrics',
+        'allow-gpu-metrics',
+        'metrics-port',
+        # Tracing
+        'trace-file',
+        'trace-level',
+        'trace-rate',
+        # Model control
+        'model-control-mode',
+        'repository-poll-secs',
+        'load-model',
+        # Memory and GPU
+        'pinned-memory-pool-byte-size',
+        'cuda-memory-pool-byte-size',
+        'min-supported-compute-capability',
+        # Backend config
+        'backend-directory',
+        'backend-config',
+        'allow-soft-placement',
+        'gpu-memory-fraction',
+        'tensorflow-version'
+    ]
+
     def __init__(self):
-        # Args will be a dict with the string representation as key
-        self._server_args = {
-            # Logging
-            'log-verbose': None,
-            'log-info': None,
-            'log-warning': None,
-            'log-error': None,
-            'id': None,
-            # Model Repository
-            'model-store': None,
-            'model-repository': None,
-            # Exit
-            'exit-timeout-secs': None,
-            'exit-on-error': None,
-            # Strictness
-            'strict-model-config': None,
-            'strict-readiness': None,
-            # API Servers
-            'allow-http': None,
-            'http-port': None,
-            'http-thread-count': None,
-            'allow-grpc': None,
-            'grpc-port': None,
-            'grpc-infer-allocation-pool-size': None,
-            'grpc-use-ssl': None,
-            'grpc-server-cert': None,
-            'grpc-server-key': None,
-            'grpc-root-cert': None,
-            'allow-metrics': None,
-            'allow-gpu-metrics': None,
-            'metrics-port': None,
-            # Tracing
-            'trace-file': None,
-            'trace-level': None,
-            'trace-rate': None,
-            # Model control
-            'model-control-mode': None,
-            'repository-poll-secs': None,
-            'load-model': None,
-            # Memory and GPU
-            'pinned-memory-pool-byte-size': None,
-            'cuda-memory-pool-byte-size': None,
-            'min-supported-compute-capability': None,
-            # Backend config
-            'backend-directory': None,
-            'backend-config': None,
-            'allow-soft-placement': None,
-            'gpu-memory-fraction': None,
-            'tensorflow-version': None
-        }
+        """
+        Construct TritonServerConfig
+        """
+
+        self._server_args = {k: None for k in self.server_arg_keys}
+
+    def update_config(self, params=None):
+        """
+        Allows setting values from a
+        params dict
+
+        Parameters
+        ----------
+        params: dict
+            keys are allowed args to perf_analyzer
+        """
+
+        if params:
+            for key in params:
+                self[key] = params[key]
 
     def to_cli_string(self):
         """

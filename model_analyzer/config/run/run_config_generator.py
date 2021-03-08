@@ -27,6 +27,7 @@ class RunConfigGenerator:
     A class that handles ModelAnalyzerConfig parsing, generation, and
     exection of a list of run configurations.
     """
+
     def __init__(self,
                  model,
                  analyzer_config,
@@ -178,7 +179,8 @@ class RunConfigGenerator:
                 perf_output_writer = None if \
                     not perf_output else FileWriter()
 
-                logging.info(f"Profiling model {perf_config['model-name']}...")
+                logging.info(
+                    f"Profiling model {perf_config.to_cli_string()[3:]}...")
                 measurement = self._metrics_manager.profile_model(
                     perf_config=perf_config,
                     perf_output_writer=perf_output_writer)
@@ -254,7 +256,8 @@ class RunConfigGenerator:
                     model_config_parameters)
             if triton_launch_mode != 'remote':
                 for model_sweep in model_sweeps:
-                    self._generate_run_config_for_model_sweep(model, model_sweep)
+                    self._generate_run_config_for_model_sweep(
+                        model, model_sweep)
             else:
                 self._generate_run_config_for_model_sweep(model, None)
 
@@ -329,8 +332,7 @@ class RunConfigGenerator:
         if not has_run_once:
             has_run_once = True
             for model_sweep in recurring_model_sweeps:
-                self._generate_run_config_for_model_sweep(
-                    model, model_sweep)
+                self._generate_run_config_for_model_sweep(model, model_sweep)
 
             if len(recurring_model_sweeps) == 0:
                 self._generate_run_config_for_model_sweep(model, None)
@@ -370,7 +372,10 @@ class RunConfigGenerator:
         perf_configs = []
         for params in self._generate_parameter_combinations(
                 perf_config_params):
-            perf_configs.append(PerfAnalyzerConfig(params))
+            perf_config = PerfAnalyzerConfig()
+            perf_config.update_config(config_model.perf_analyzer_flags())
+            perf_config.update_config(params)
+            perf_configs.append(perf_config)
         return perf_configs
 
     def _generate_parameter_combinations(self, params):

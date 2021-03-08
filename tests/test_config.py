@@ -713,6 +713,7 @@ model_names:
                             }]]
                         })
         ]
+
         model_config = config.get_config()['model_names']
         self._assert_model_config_types(model_config)
 
@@ -725,6 +726,45 @@ model_names:
         self._assert_model_config_params(model_config_parameters)
         self._assert_equality_of_model_configs(model_configs,
                                                expected_model_configs)
+
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+        perf_analyzer_flags:
+            measurement-interval: 10000
+            model-version: 2
+            streaming: true
+
+"""
+        config = self._evaluate_config(args, yaml_content)
+        model_configs = config.get_all_config()['model_names']
+        expected_model_configs = [
+            ConfigModel('vgg_16_graphdef',
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': []
+                        },
+                        objectives={'perf_throughput': 10},
+                        perf_analyzer_flags={
+                            'measurement-interval': 10000,
+                            'model-version': 2,
+                            'streaming': True
+                        })
+        ]
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
+
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+        perf_analyzer_flags:
+            disallowed-perf-flag: some_value
+
+"""
+        with self.assertRaises(TritonModelAnalyzerException):
+            config = self._evaluate_config(args, yaml_content)
 
     def test_config_sweep(self):
         config_sweep = ConfigSweep(ConfigPrimitive(int))
@@ -1153,6 +1193,33 @@ model_names:
         ]
         self._assert_equality_of_model_configs(model_configs,
                                                expected_model_configs)
+
+    def test_triton_server_flags(self):
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file'
+        ]
+        yaml_content = """
+model_names: model1, model2
+triton_server_flags:
+    strict-model-config: false
+    backend-config: test_backend_config
+"""
+        config = self._evaluate_config(args, yaml_content)
+        self.assertDictEqual(
+            config.get_all_config()['triton_server_flags'], {
+                'strict-model-config': 'False',
+                'backend-config': 'test_backend_config'
+            })
+
+        yaml_content = """
+model_names: model1, model2
+triton_server_flags:
+    disallowed-config-option: some_value
+    backend-config: test_backend_config
+"""
+        with self.assertRaises(TritonModelAnalyzerException):
+            config = self._evaluate_config(args, yaml_content)
 
 
 if __name__ == '__main__':
