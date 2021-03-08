@@ -86,7 +86,8 @@ class Analyzer:
 
         # Phase 2: Profile each model
         for model in config.model_names:
-            self._metrics_manager.configure_result_manager(config_model=model)
+            self._result_manager.set_constraints_and_objectives(
+                config_model=model)
 
             run_config_generator = RunConfigGenerator(
                 model, client=self._client, analyzer_config=self._config)
