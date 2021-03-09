@@ -103,7 +103,6 @@ class PerfAnalyzer:
                     if process.poll() is not None:
                         self._output = process.stdout.read()
                         break
-                    time.sleep(interval_sleep_time)
 
                     # perf_analyzer using too much CPU?
                     cpu_util = process_util.cpu_percent(interval_sleep_time)

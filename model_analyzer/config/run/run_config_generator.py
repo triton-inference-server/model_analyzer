@@ -141,28 +141,29 @@ class RunConfigGenerator:
 
             model_config = run_config.model_config()
             original_model_name = run_config.model_name()
-            model_name = model_config.get_field('name')
+            model_config_name = model_config.get_field('name')
             measurements[model_config] = []
 
             # If the model config already exists, do not recreate the
             # directory.
-            if not os.path.exists(f'{output_model_repo_path}/{model_name}'
-                                  ) and triton_launch_mode != 'remote':
+            if not os.path.exists(
+                    f'{output_model_repo_path}/{model_config_name}'
+            ) and triton_launch_mode != 'remote':
                 # Create the directory for the new model
-                os.mkdir(f'{output_model_repo_path}/{model_name}')
+                os.mkdir(f'{output_model_repo_path}/{model_config_name}')
                 model_config.write_config_to_file(
-                    f'{output_model_repo_path}/{model_name}', True,
+                    f'{output_model_repo_path}/{model_config_name}', True,
                     f'{model_repository}/{original_model_name}')
 
             self._server.start()
             self._client.wait_for_server_ready(max_retries)
-            status = self._client.load_model(model_name=model_name)
+            status = self._client.load_model(model_name=model_config_name)
             if status == -1:
                 self._server.stop()
                 continue
 
-            status = self._client.wait_for_model_ready(model_name=model_name,
-                                                       num_retries=max_retries)
+            status = self._client.wait_for_model_ready(
+                model_name=model_config_name, num_retries=max_retries)
             if status == -1:
                 self._server.stop()
                 continue
@@ -243,59 +244,100 @@ class RunConfigGenerator:
     def _generate_run_configs(self):
         model = self._model
         analyzer_config = self._analyzer_config
-        triton_launch_model = analyzer_config['triton_launch_mode']
+        triton_launch_mode = analyzer_config['triton_launch_mode']
 
         model_config_parameters = model.model_config_parameters()
-
-        if triton_launch_model == 'remote':
-            model_sweeps = [None]
-            search_model_config_parameters = False
-            model_config_parameters = None
-        else:
-            if model_config_parameters is not None:
-                model_sweeps = \
-                    self._generate_model_config_combinations(
-                        model_config_parameters)
-                search_model_config_parameters = False
-            else:
-                model_sweeps = []
-                search_model_config_parameters = True
 
         if analyzer_config['run_config_search_disable']:
             model_sweeps = \
                 self._generate_model_config_combinations(
                     model_config_parameters)
-            for model_sweep in model_sweeps:
-                self._generate_run_config_for_model_sweep(model, model_sweep)
+            if triton_launch_mode != 'remote':
+                for model_sweep in model_sweeps:
+                    self._generate_run_config_for_model_sweep(model, model_sweep)
+            else:
+                self._generate_run_config_for_model_sweep(model, None)
 
             if not self._generate_only:
                 measurements = self.execute_run_configs()
             return
 
-        # Iterate until there are not any more model sweeps
-        model, model_sweeps = \
-            self._run_search.get_model_sweeps(
-                model,
-                model_sweeps=model_sweeps,
-                search_model_config_parameters=search_model_config_parameters)
+        if triton_launch_mode == 'remote':
+            search_model_config = False
+            model = self._run_search.init_model_sweep(model,
+                                                      search_model_config)
+            recurring_model_sweeps = []
+        else:
+            if model_config_parameters is not None:
+                recurring_model_sweeps = \
+                    self._generate_model_config_combinations(
+                        model_config_parameters)
+                search_model_config = False
+                model = self._run_search.init_model_sweep(
+                    model, search_model_config)
+            else:
+                recurring_model_sweeps = []
+                search_model_config = True
+                model = self._run_search.init_model_sweep(
+                    model, search_model_config)
 
-        while model_sweeps:
-            for model_sweep in model_sweeps:
-                self._generate_run_config_for_model_sweep(model, model_sweep)
-
-            # Empty the model_sweeps after they are added to the
-            # list
+        has_run_once = False
+        if len(recurring_model_sweeps) == 0:
             model_sweeps = []
+            model, new_model_sweeps = \
+                self._run_search.get_model_sweeps(model)
+            model_sweeps += new_model_sweeps
+
+            while model_sweeps:
+                for model_sweep in model_sweeps:
+                    has_run_once = True
+                    self._generate_run_config_for_model_sweep(
+                        model, model_sweep)
+
+                # Empty the model_sweeps after they are added to the
+                # list
+                model_sweeps = []
+
+                if not self._generate_only:
+                    measurements = self.execute_run_configs()
+                    self._run_search.add_run_results(measurements)
+                    model, new_model_sweeps = \
+                        self._run_search.get_model_sweeps(model)
+                    model_sweeps += new_model_sweeps
+
+        else:
+            for recurring_model_sweep in recurring_model_sweeps:
+                model = self._model
+                model = self._run_search.init_model_sweep(
+                    model, search_model_config)
+                model, model_sweeps = \
+                    self._run_search.get_model_sweeps(model)
+
+                while model_sweeps:
+                    has_run_once = True
+                    self._generate_run_config_for_model_sweep(
+                        model, recurring_model_sweep)
+                    model_sweeps = []
+
+                    if not self._generate_only:
+                        measurements = self.execute_run_configs()
+                        self._run_search.add_run_results(measurements)
+                        model, new_model_sweeps = \
+                            self._run_search.get_model_sweeps(model)
+                        model_sweeps += new_model_sweeps
+
+        if not has_run_once:
+            has_run_once = True
+            for model_sweep in recurring_model_sweeps:
+                self._generate_run_config_for_model_sweep(
+                    model, model_sweep)
+
+            if len(recurring_model_sweeps) == 0:
+                self._generate_run_config_for_model_sweep(model, None)
 
             if not self._generate_only:
                 measurements = self.execute_run_configs()
-                self._run_search.add_run_results(measurements)
-                model, new_model_sweeps = \
-                    self._run_search.get_model_sweeps(
-                        model,
-                        model_sweeps=model_sweeps,
-                        search_model_config_parameters=search_model_config_parameters)
-                model_sweeps += new_model_sweeps
+            return
 
     def get_run_configs(self):
         """

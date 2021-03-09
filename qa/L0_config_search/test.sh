@@ -27,7 +27,7 @@ EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
-TRITON_LAUNCH_MODES="docker remote"
+TRITON_LAUNCH_MODES="remote docker"
 TRITON_SERVER_VERSION="21.02-py3"
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
@@ -38,8 +38,6 @@ MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --model-repository $MODEL_RE
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-version=$TRITON_SERVER_VERSION"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --export -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
-MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
-MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY"
 
 LIST_OF_CONFIG_FILES=(`ls | grep .yml`)
@@ -60,13 +58,11 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         set +e
 
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $config --triton-launch-mode $launch_mode" 
+        ANALYZER_LOG=analyzer.${launch_mode}.${config}.log
 
         if [ $launch_mode == 'remote' ]; then
             NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-param-$launch_mode.txt
             NUM_MODELS_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-models-$launch_mode.txt
-            MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:8000 --triton-grpc-endpoint localhost:8001"
-            MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:8002/metrics"
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $MODEL_ANALYZER_PORTS"
 
             # For remote launch, set server args and start server
             SERVER=`which tritonserver`
@@ -79,10 +75,11 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
                 exit 1
             fi
         else
-            NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-models.txt
-            NUM_MODELS_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-param.txt
+            MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]} --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $MODEL_ANALYZER_PORTS"
+            NUM_MODELS_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-models.txt
+            NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-param.txt
         fi
-
 
         TEST_OUTPUT_NUM_ROWS=`cat $NUM_ROW_OUTPUT_FILE`
         TEST_MODELS_NUM=`cat $NUM_MODELS_OUTPUT_FILE`
@@ -92,58 +89,59 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
             cat $ANALYZER_LOG
             exit 1
         else
-            cat $ANALAYZER_LOG
+            if [ $launch_mode == 'remote' ]; then
+                    kill $SERVER_PID
+                    wait $SERVER_PID
+            fi
+            cat $ANALYZER_LOG
             SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
             MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
             MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
             METRICS_NUM_COLUMNS=8
             INFERENCE_NUM_COLUMNS=8
             SERVER_METRICS_NUM_COLUMNS=7
+            OUTPUT_TAG="Model"
 
-            # If TEST_OUTPUT_NUM_ROWS=0, we should skip the test count.
-            if [ $TEST_OUTPUT_NUM_ROWS -ne 0 ]; then
-                check_log_table_row_column $ANALYZER_LOG $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS "Models\ \(Inference\):"
-                if [ $? -ne 0 ]; then
-                    echo -e "\n***\n*** Test Output Verification Failed for $ANALAYZER_LOG.\n***"
-                    cat $ANALYZER_LOG
-                    RET=1
-                fi
-
-                check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) "Models\ \(GPU\ Metrics\):"
-                if [ $? -ne 0 ]; then
-                    echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
-                    cat $ANALYZER_LOG
-                    RET=1
-                fi
-
-                check_csv_table_row_column $MODEL_METRICS_GPU_FILE $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) $OUTPUT_TAG
-                if [ $? -ne 0 ]; then
-                    echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_GPU_FILE.\n***"
-                    cat $ANALYZER_LOG
-                    RET=1
-                fi
-
-                check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS $OUTPUT_TAG
-                if [ $? -ne 0 ]; then
-                    echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_INFERENCE_FILE.\n***"
-                    cat $ANALYZER_LOG
-                    RET=1
-                fi
+            check_log_table_row_column $ANALYZER_LOG $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS "Models\ \(Inference\):"
+            if [ $? -ne 0 ]; then
+                echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
+                cat $ANALYZER_LOG
+                exit 1
             fi
 
+            check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) "Models\ \(GPU\ Metrics\):"
+            if [ $? -ne 0 ]; then
+                echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
+                cat $ANALYZER_LOG
+                exit 1
+            fi
+
+            check_csv_table_row_column $MODEL_METRICS_GPU_FILE $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) $OUTPUT_TAG
+            if [ $? -ne 0 ]; then
+                echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_GPU_FILE.\n***"
+                cat $ANALYZER_LOG
+                exit 1
+            fi
+
+            check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS $OUTPUT_TAG
+            if [ $? -ne 0 ]; then
+                echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_INFERENCE_FILE.\n***"
+                cat $ANALYZER_LOG
+                exit 1
+            fi
+            
             check_log_table_row_column $ANALYZER_LOG $SERVER_METRICS_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
             if [ $? -ne 0 ]; then
                 echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
                 cat $ANALYZER_LOG
-                RET=1
+                exit 1
             fi
 
-            OUTPUT_TAG="Model"
             check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
             if [ $? -ne 0 ]; then
                 echo -e "\n***\n*** Test Output Verification Failed for $SERVER_METRICS_FILE.\n***"
                 cat $ANALYZER_LOG
-                RET=1
+                exit 1
             fi
         fi
 
@@ -154,4 +152,5 @@ done
 
 echo -e "\n***\n*** Test PASSED\n***"
 
-exit 0
+exit $RET
+

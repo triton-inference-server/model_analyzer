@@ -19,25 +19,56 @@ def _get_sweep_configs():
 
     sweep_configs = []
     model_config = {
-        'run_config_search_max_concurrency': 4,
+        'run_config_search_max_concurrency': 2,
         'run_config_search_max_instance_count': 2,
-        'run_config_search_max_preferred_batch_size': 4,
+        'run_config_search_max_preferred_batch_size': 2,
+        'model_names': {
+            'classification_chestxray_v1': {
+                'model_config_parameters': {
+                    'instance_group': [{
+                        'count': [1, 2],
+                        'kind': 'KIND_GPU'
+                    }]
+                }
+            }
+        },
+    }
+
+    model_config['total_param'] = 4
+    model_config['total_param_remote'] = 2
+    model_config['total_models'] = 2
+    model_config['total_models_remote'] = 1
+    sweep_configs.append(model_config)
+
+    model_config = {
+        'run_config_search_disable': True,
+        'model_names': ['classification_chestxray_v1']
+    }
+
+    model_config['total_param'] = 1
+    model_config['total_param_remote'] = 1
+    model_config['total_models'] = 1
+    model_config['total_models_remote'] = 1
+    sweep_configs.append(model_config)
+
+    model_config = {
+        'run_config_search_max_concurrency': 2,
+        'run_config_search_max_instance_count': 2,
+        'run_config_search_max_preferred_batch_size': 2,
         'model_names': ['classification_chestxray_v1'],
     }
 
-    # Dummy total value. It is hard to determine the number of expected runs
-    # when doing automatic config search.
-    model_config['total_param_remote'] = 6
+    model_config['total_param_remote'] = 2
     model_config['total_models_remote'] = 1
-    model_config['total_param'] = 6
-    model_config['total_models'] = 6
+    model_config['total_param'] = 16
+    model_config['total_models'] = 8
 
     sweep_configs.append(model_config)
 
     model_config = {
-        'run_config_search_max_concurrency': 4,
+        'run_config_search_max_concurrency': 2,
         'run_config_search_max_instance_count': 2,
-        'run_config_search_max_preferred_batch_size': 4,
+        'run_config_search_max_preferred_batch_size': 2,
         'model_names': {
             'classification_chestxray_v1': {
                 'parameters': {
@@ -47,16 +78,16 @@ def _get_sweep_configs():
         },
     }
 
-    model_config['total_param'] = 6
+    model_config['total_param'] = 8
     model_config['total_param_remote'] = 1
-    model_config['total_models'] = 6
+    model_config['total_models'] = 8
     model_config['total_models_remote'] = 1
     sweep_configs.append(model_config)
 
     model_config = {
-        'run_config_search_max_concurrency': 4,
+        'run_config_search_max_concurrency': 2,
         'run_config_search_max_instance_count': 2,
-        'run_config_search_max_preferred_batch_size': 4,
+        'run_config_search_max_preferred_batch_size': 2,
         'model_names': {
             'classification_chestxray_v1': {
                 'parameters': {
@@ -73,9 +104,9 @@ def _get_sweep_configs():
     }
 
     model_config['total_param'] = 2
-    model_config['total_param_remote'] = 2
+    model_config['total_param_remote'] = 1
     model_config['total_models'] = 2
-    model_config['total_models_remote'] = 2
+    model_config['total_models_remote'] = 1
     sweep_configs.append(model_config)
 
     model_config = {
@@ -111,9 +142,9 @@ def _get_sweep_configs():
     }
 
     model_config['total_param'] = 2
-    model_config['total_param_remote'] = 2
+    model_config['total_param_remote'] = 1
     model_config['total_models'] = 2
-    model_config['total_models_remote'] = 2
+    model_config['total_models_remote'] = 1
     sweep_configs.append(model_config)
 
     model_config = {
@@ -131,9 +162,9 @@ def _get_sweep_configs():
     }
 
     model_config['total_param'] = 2
-    model_config['total_param_remote'] = 2
+    model_config['total_param_remote'] = 1
     model_config['total_models'] = 2
-    model_config['total_models_remote'] = 2
+    model_config['total_models_remote'] = 1
     sweep_configs.append(model_config)
 
     return sweep_configs
@@ -164,3 +195,5 @@ if __name__ == "__main__":
             file.write(str(total_models))
         with open(f'./config-{i}-models-remote.txt', 'w') as file:
             file.write(str(total_models_remote))
+        with open(f'./config-{i}.yml', 'w') as file:
+            yaml.dump(configuration, file)

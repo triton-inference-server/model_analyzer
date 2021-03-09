@@ -34,8 +34,9 @@ class TestRunSearch(trc.TestResultCollector):
                                max_preferred_batch_size)
 
         config_model = ConfigModel('my-model', parameters={'concurrency': []})
+        run_search.init_model_sweep(config_model, True)
         config_model, model_sweeps = run_search.get_model_sweeps(
-            config_model, [])
+            config_model)
 
         start_throughput = 2
         expected_concurrency = 1
@@ -58,7 +59,7 @@ class TestRunSearch(trc.TestResultCollector):
                     expected_instance_count = 1
 
             config_model, model_sweeps = run_search.get_model_sweeps(
-                config_model, [])
+                config_model)
 
     def test_run_search_failing(self):
         max_concurrency = 128
@@ -68,8 +69,9 @@ class TestRunSearch(trc.TestResultCollector):
                                max_preferred_batch_size)
 
         config_model = ConfigModel('my-model', parameters={'concurrency': []})
+        run_search.init_model_sweep(config_model, True)
         config_model, model_sweeps = run_search.get_model_sweeps(
-            config_model, [])
+            config_model)
 
         start_throughput = 2
         expected_concurrency = 1
@@ -99,4 +101,4 @@ class TestRunSearch(trc.TestResultCollector):
                 expected_concurrency *= 2
 
             config_model, model_sweeps = run_search.get_model_sweeps(
-                config_model, [])
+                config_model)

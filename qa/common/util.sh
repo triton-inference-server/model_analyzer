@@ -156,33 +156,6 @@ function check_csv_table_row_column() {
     return 0
 }
 
-
-# Check row and columns of stdout
-function check_csv_table_row_column() {
-    local csv_file=$1
-    local expected_num_columns=$2
-    local expected_num_rows=$3
-    local tag=$4
-    if [[ ! -f "$csv_file" ]]; then
-        echo -e "\n***\n*** Test Failed: $csv_file does not exist\n***"
-        return 1
-    fi
-
-    num_rows=`awk -v pattern=$tag '$0 ~ pattern {getline; i=0; while(getline) {i+=1}; print i}' $csv_file`
-    if [[ "$num_rows" != "$expected_num_rows" ]]; then
-        echo -e "\n***\n*** Test Failed: Expected $expected_num_rows rows in $csv_file, got ${num_rows}\n***"
-        return 1
-    fi
-    for i in $( seq 1 $expected_num_rows ); do
-        num_columns_found=`awk -v pattern=$tag -F ',' -v row="$i" '$0 ~ pattern {for (n=0; n<row;n++) {getline}; print NF}' $csv_file`
-        if [[ "$num_columns_found" != "$expected_num_columns" ]]; then
-            echo -e "\n***\n*** Test Failed: Expected $expected_num_columns columns in row $i, got ${num_columns_found}\n***"
-            return 1
-        fi
-    done
-    return 0
-}
-
 function get_number_of_rows_logfile() {
     local log_file=$1
     num_rows_found=`awk  "BEGIN{i=0} /$tag/{flag=1;getline;getline} /^$/{flag=0} flag {i+=1} END{print i}" $log_file`

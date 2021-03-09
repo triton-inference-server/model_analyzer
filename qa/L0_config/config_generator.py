@@ -35,6 +35,8 @@ def _get_range_configs():
 
     shared_args = {
         'model_names': [['classification_breast_v1']],
+        'run_config_search_disable': [True],
+        'perf_analyzer_cpu_util': [600],
         'triton_launch_mode': ['docker'],
         'batch_sizes': [{
             'start': begin,
@@ -104,6 +106,8 @@ def _get_sweep_configs():
 
     sweep_configs = []
     model_config = {
+        'run_config_search_disable': True,
+        'perf_analyzer_cpu_util': 600,
         'model_names': {
             'classification_breast_v1': {
                 'model_config_parameters': {
@@ -120,6 +124,8 @@ def _get_sweep_configs():
     sweep_configs.append(model_config)
 
     model_config = {
+        'run_config_search_disable': True,
+        'perf_analyzer_cpu_util': 600,
         'model_names': {
             'classification_breast_v1': {
                 'model_config_parameters': {

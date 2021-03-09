@@ -17,6 +17,7 @@ import unittest
 from .mocks.mock_server_local import MockServerLocalMethods
 from .mocks.mock_perf_analyzer import MockPerfAnalyzerMethods
 from .mocks.mock_client import MockTritonClientMethods
+from .mocks.mock_psutil import MockPSUtil
 
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.server.server_factory import TritonServerFactory
@@ -47,6 +48,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.server_local_mock = MockServerLocalMethods()
         self.perf_mock = MockPerfAnalyzerMethods()
         self.client_mock = MockTritonClientMethods()
+        self.mock_psutil = MockPSUtil()
+        self.mock_psutil.start()
         self.server_local_mock.start()
         self.perf_mock.start()
         self.client_mock.start()
@@ -162,6 +165,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.server_local_mock.stop()
         self.perf_mock.stop()
         self.client_mock.stop()
+        self.mock_psutil.stop()
 
 
 if __name__ == '__main__':

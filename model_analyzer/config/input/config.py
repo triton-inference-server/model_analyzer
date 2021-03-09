@@ -266,7 +266,7 @@ class AnalyzerConfig:
             ConfigField(
                 'perf_analyzer_cpu_util',
                 field_type=ConfigPrimitive(float),
-                default_value=40,
+                default_value=80,
                 description=
                 "Maximum CPU utilization value allowed for the perf_analyzer.")
         )

@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Config constants
-CONFIG_PARSER_SUCCESS = 1
-CONFIG_PARSER_FAILURE = 0
+from .mock_base import MockBase
+from unittest.mock import MagicMock, patch
 
-# Result Table constants
-SERVER_ONLY_TABLE_DEFAULT_VALUE = '0'
-RESULT_TABLE_COLUMN_PADDING = 2
 
-# Result Comparator Constants
-COMPARISON_SCORE_THRESHOLD = 0.005
-
-# Run Search
-THROUGHPUT_GAIN = 0.05
+class MockPSUtil(MockBase):
+    def _fill_patchers(self):
+        mock_process = MagicMock()
+        mock_process().cpu_percent.return_value = 5
+        self._patchers.append(
+            patch('model_analyzer.perf_analyzer.perf_analyzer.psutil.Process', mock_process))
+        
