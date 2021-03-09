@@ -132,14 +132,14 @@ class RunResult:
 
         if len(self._passing_measurements) == 0:
             logging.warn(
-                f"Requested top {n} measurements, but none satisfied constraints."
+                f"Requested top {n} measurements, but none satisfied constraints. "
                 "Showing available constraint failing measurements for this config."
             )
 
             if n > len(self._failing_measurements):
                 logging.warn(
                     f"Requested top {n} failing measurements, "
-                    f"but found only {len(self._failing_measurements)}."
+                    f"but found only {len(self._failing_measurements)}. "
                     "Showing all available constraint failing measurements for this config."
                 )
             return heapq.nsmallest(min(n, len(self._failing_measurements)),

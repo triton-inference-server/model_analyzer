@@ -216,7 +216,7 @@ class ModelConfig:
 
         model_config = self.get_config()
         if 'dynamic_batching' in model_config:
-            if 'preferred_batch_size' in model_config:
+            if 'preferred_batch_size' in model_config['dynamic_batching']:
                 dynamic_batch_sizes = model_config['dynamic_batching'][
                     'preferred_batch_size']
             else:
