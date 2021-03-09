@@ -91,17 +91,21 @@ class ReportManager:
         """
 
         self._build_constraint_strings()
-        total_configurations = statistics.total_configurations()
-        passing_configurations = statistics.passing_configurations()
         num_best_configs = self._config.top_n_configs
 
         summary = PDFReport()
         summary.add_title(title="Result Summary")
         for model_name in self._measurements:
+            total_measurements = statistics.total_measurements(model_name)
+            total_configurations = statistics.total_configurations(model_name)
+            passing_configurations = statistics.passing_configurations(
+                model_name)
             gpu_names, max_memories = self._get_gpu_stats(
                 model_name=model_name)
             static_batch_size = self._measurements[model_name][0][
                 1].perf_config()['batch-size']
+
+            # Add summary sections
             summary.add_subheading(f"Model: {model_name}")
             summary.add_paragraph(f"GPUS: {gpu_names}")
             summary.add_paragraph(f"Total GPU Memory: {max_memories}")
@@ -112,10 +116,11 @@ class ReportManager:
             summary.add_paragraph(
                 f"Constraint targets: {self._constraint_strs[model_name]}")
             summary.add_paragraph(
-                f"Model Analyzer evaluated {total_configurations} model configurations"
-                f" and found {passing_configurations} that satisfy your constraints."
-                f" Of these {passing_configurations} configurations, the {num_best_configs}"
-                " best model configurations are shown in the plots.")
+                f"For {model_name}, Model Analyzer took {total_measurements} "
+                f"measurements across {total_configurations} model configurations "
+                f"and found {passing_configurations} configurations that satisfy your "
+                f"constraints. Curves corresponding to the {num_best_configs} "
+                "best model configurations are shown in the plots.")
             throughput_latency_plot = os.path.join(self._config.export_path,
                                                    'plots', model_name,
                                                    'throughput_v_latency.png')

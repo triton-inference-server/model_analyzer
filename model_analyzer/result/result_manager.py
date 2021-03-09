@@ -263,13 +263,13 @@ class ResultManager:
 
         if len(self._passing_results) == 0:
             logging.warn(
-                f"Requested top {n} configs, but none satisfied constraints."
+                f"Requested top {n} configs, but none satisfied constraints. "
                 "Showing available constraint failing configs for this model.")
 
             if n > len(self._failing_results):
                 logging.warn(
                     f"Requested top {n} failing configs, "
-                    f"but found only {len(self._failing_results)}."
+                    f"but found only {len(self._failing_results)}. "
                     "Showing all available constraint failing configs for this model."
                 )
             return heapq.nsmallest(min(n, len(self._failing_results)),
@@ -278,7 +278,7 @@ class ResultManager:
         if n > len(self._passing_results):
             logging.warn(
                 f"Requested top {n} configs, "
-                f"but found only {len(self._passing_results)} passing configs."
+                f"but found only {len(self._passing_results)} passing configs. "
                 "Showing all available constraint satisfying configs for this model."
             )
 
@@ -305,7 +305,6 @@ class ResultManager:
             self._compile_measurements(next_best_result, model_name,
                                        instance_group_str,
                                        dynamic_batching_str)
-        self._update_statistics()
 
     def _compile_measurements(self, run_result, model_name, instance_group,
                               dynamic_batching):
@@ -538,18 +537,38 @@ class ResultManager:
                                           ignore_widths=ignore_widths) +
                 "\n\n")
 
-    def _update_statistics(self):
+    def update_statistics(self, model_name):
         """
         This function computes statistics
-        with measurements currently in the 
-        result manager's tables
+        with results currently in the result
+        manager's heap
+
+        Parameters
+        ----------
+        model_name: str
+            The name of the model whose statistics to
+            update
         """
 
-        passing_configurations = self._result_tables[
-            self.model_inference_table_passing_key].size()
+        passing_measurements = 0
+        failing_measurements = 0
+        passing_configs = 0
+        failing_configs = 0
 
-        failing_configurations = self._result_tables[
-            self.model_inference_table_failing_key].size()
+        for result in self._results:
+            if result.failing():
+                failing_configs += 1
+                failing_measurements += len(result.measurements())
+            else:
+                passing_configs += 1
+                passing_measurements += len(result.passing_measurements())
+                failing_measurements += len(result.failing_measurements())
 
-        self._statistics.set_passing_configurations(passing_configurations)
-        self._statistics.set_failing_configurations(failing_configurations)
+        self._statistics.set_passing_configurations(model_name,
+                                                    passing_configs)
+        self._statistics.set_failing_configurations(model_name,
+                                                    failing_configs)
+        self._statistics.set_passing_measurements(model_name,
+                                                  passing_measurements)
+        self._statistics.set_failing_measurements(model_name,
+                                                  failing_measurements)
