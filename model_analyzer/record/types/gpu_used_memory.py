@@ -40,11 +40,11 @@ class GPUUsedMemory(GPURecord):
         super().__init__(value, device, timestamp)
 
     @staticmethod
-    def header(aggregation_tag=None):
+    def header(aggregation_tag=False):
         """
         Parameters
         ----------
-        aggregation_tag : str
+        aggregation_tag: bool
             An optional tag that may be displayed 
             as part of the header indicating that 
             this record has been aggregated using 
@@ -57,7 +57,7 @@ class GPUUsedMemory(GPURecord):
             metric.
         """
 
-        return aggregation_tag + "GPU Memory Usage (MB)"
+        return ("Max " if aggregation_tag else "") + "GPU Memory Usage (MB)"
 
     def __eq__(self, other):
         """

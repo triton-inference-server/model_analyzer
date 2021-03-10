@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from collections import defaultdict
-import logging
 
 from .record_aggregator import RecordAggregator
 from .record import RecordType
@@ -77,8 +76,7 @@ class MetricsManager:
 
         self._result_manager.create_tables(
             gpu_specific_metrics=self._dcgm_metrics,
-            non_gpu_specific_metrics=self._perf_metrics + self._cpu_metrics,
-            aggregation_tag='Max')
+            non_gpu_specific_metrics=self._perf_metrics + self._cpu_metrics)
 
     def profile_server(self, default_value):
         """

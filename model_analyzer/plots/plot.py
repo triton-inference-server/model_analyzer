@@ -29,7 +29,7 @@ class Plot:
     type of plot
     """
 
-    def __init__(self, name, title, x_axis, y_axis):
+    def __init__(self, name, title, x_axis, y_axis, monotonic=False):
         """
         Parameters
         ----------
@@ -42,12 +42,16 @@ class Plot:
             The metric tag for the x-axis of this plot
         y_axis : str
             The metric tag for the y-axis of this plot
+        monotonic: bool
+            Whether or not to prune decreasing points in this
+            plot
         """
 
         self._name = name
         self._title = title
         self._x_axis = x_axis
         self._y_axis = y_axis
+        self._monotonic = monotonic
 
         self._fig, self._ax = plt.subplots()
 
@@ -103,6 +107,15 @@ class Plot:
             x_data, y_data = (
                 list(t)
                 for t in zip(*sorted(zip(data['x_data'], data['y_data']))))
+
+            if self._monotonic:
+                filtered_x, filtered_y = [x_data[0]], [y_data[0]]
+                for i in range(1, len(x_data)):
+                    if y_data[i] > y_data[i - 1]:
+                        filtered_x.append(x_data[i])
+                        filtered_y.append(y_data[i])
+                x_data, y_data = filtered_x, filtered_y
+
             self._ax.plot(x_data, y_data, marker='o', label=model_config_name)
 
         # Plot constraints

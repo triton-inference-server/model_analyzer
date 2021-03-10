@@ -17,6 +17,7 @@ import unittest
 from model_analyzer.record.record_aggregator import RecordAggregator
 from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.record.types.perf_latency import PerfLatency
+from model_analyzer.record.types.gpu_utilization import GPUUtilization
 from .common import test_result_collector as trc
 
 
@@ -121,18 +122,16 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
             return record.timestamp()
 
         records = record_aggregator.groupby([PerfThroughput], groupby_criteria)
-        self.assertTrue(list(records[PerfThroughput]) == [0, 1])
-        self.assertTrue(
-            list(records[PerfThroughput].values()) ==
+        self.assertEqual(list(records[PerfThroughput]), [0, 1])
+        self.assertEqual(
+            list(records[PerfThroughput].values()),
             [PerfThroughput(5.0), PerfThroughput(10.0)])
 
-        records = record_aggregator.groupby([PerfThroughput],
-                                            groupby_criteria,
-                                            reduce_func=min)
-        self.assertTrue(list(records[PerfThroughput]) == [0, 1])
-        self.assertTrue(
-            list(records[PerfThroughput].values()) ==
-            [PerfThroughput(5.0), PerfThroughput(1.0)])
+        records = record_aggregator.groupby([PerfThroughput], groupby_criteria)
+        self.assertEqual(list(records[PerfThroughput]), [0, 1])
+        self.assertEqual(
+            list(records[PerfThroughput].values()),
+            [PerfThroughput(5.0), PerfThroughput(10.0)])
 
     def test_aggregate(self):
         record_aggregator = RecordAggregator()
@@ -141,27 +140,19 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         for i in range(10):
             record_aggregator.insert(PerfThroughput(i))
 
+        for i in range(10):
+            record_aggregator.insert(GPUUtilization(i))
         # Aggregate them with max, min and average
-        max_vals = record_aggregator.aggregate(record_types=[PerfThroughput],
-                                               reduce_func=max)
-        min_vals = record_aggregator.aggregate(record_types=[PerfThroughput],
-                                               reduce_func=min)
-
-        def average(seq):
-            return (sum(seq[1:], start=seq[0]) * 1.0) / len(seq)
-
-        average_vals = record_aggregator.aggregate(
-            record_types=[PerfThroughput], reduce_func=average)
+        max_vals = record_aggregator.aggregate(record_types=[PerfThroughput])
+        avg_vals = record_aggregator.aggregate(record_types=[GPUUtilization])
 
         self.assertEqual(max_vals[PerfThroughput],
                          PerfThroughput(9),
                          msg="Aggregation failed with max")
-        self.assertEqual(min_vals[PerfThroughput],
-                         PerfThroughput(0),
-                         msg="Aggregation failed with min")
-        self.assertEqual(average_vals[PerfThroughput],
-                         PerfThroughput(4.5),
-                         msg="Aggregation failed with average")
+
+        self.assertEqual(avg_vals[GPUUtilization],
+                         GPUUtilization(4.5),
+                         msg="Aggregation failed with max")
 
 
 if __name__ == "__main__":

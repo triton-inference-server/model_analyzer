@@ -54,7 +54,7 @@ fi
 rm -f $ANALYZER_LOG
 
 # Run the analyzer with perf-measurement-window=50ms and expect adjustment
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --perf-measurement-window=50"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --perf-measurement-window=50 --perf-output=True"
 
 run_analyzer
 if [ $? -ne 0 ]; then
@@ -70,7 +70,7 @@ fi
 rm -f $ANALYZER_LOG
 
 # Run the analyzer with no-perf-output and fail if output detected
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --no-perf-output"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS"
 
 run_analyzer
 if [ $? -ne 0 ]; then

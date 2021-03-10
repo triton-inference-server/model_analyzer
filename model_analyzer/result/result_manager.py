@@ -34,18 +34,16 @@ class ResultManager:
 
     non_gpu_specific_headers = [
         'Model', 'Batch', 'Concurrency', 'Model Config Path', 'Instance Group',
-        'Dynamic Batcher Sizes'
+        'Dynamic Batcher Sizes', 'Satisfies Constraints'
     ]
     gpu_specific_headers = [
         'Model', 'GPU ID', 'Batch', 'Concurrency', 'Model Config Path',
-        'Instance Group', 'Dynamic Batcher Sizes'
+        'Instance Group', 'Dynamic Batcher Sizes', 'Satisfies Constraints'
     ]
     server_table_headers = ['Model', 'GPU ID', 'Batch', 'Concurrency']
     server_only_table_key = 'server_gpu_metrics'
-    model_gpu_table_passing_key = 'model_gpu_metrics_passing'
-    model_inference_table_passing_key = 'model_inference_metrics_passing'
-    model_gpu_table_failing_key = 'model_gpu_metrics_failing'
-    model_inference_table_failing_key = 'model_inference_metrics_failing'
+    model_gpu_table_key = 'model_gpu_metrics'
+    model_inference_table_key = 'model_inference_metrics'
 
     def __init__(self, config, statistics):
         """
@@ -91,8 +89,7 @@ class ResultManager:
         self._result_comparator = ResultComparator(
             metric_objectives=config_model.objectives())
 
-    def create_tables(self, gpu_specific_metrics, non_gpu_specific_metrics,
-                      aggregation_tag):
+    def create_tables(self, gpu_specific_metrics, non_gpu_specific_metrics):
         """
         Creates the tables to print hold, display, and write
         results
@@ -103,43 +100,24 @@ class ResultManager:
             The metrics that have a GPU id associated with them
         non_gpu_specific_metrics : list of RecordTypes
             The metrics that do not have a GPU id associated with them
-        aggregation_tag : str
         """
 
         # Server only
         self._add_result_table(table_key=self.server_only_table_key,
                                title='Server Only',
                                headers=self.server_table_headers,
-                               metric_types=gpu_specific_metrics,
-                               aggregation_tag=aggregation_tag)
+                               metric_types=gpu_specific_metrics)
 
         # Model Inference Tables
-        self._add_result_table(table_key=self.model_gpu_table_passing_key,
+        self._add_result_table(table_key=self.model_gpu_table_key,
                                title='Models (GPU Metrics)',
                                headers=self.gpu_specific_headers,
-                               metric_types=gpu_specific_metrics,
-                               aggregation_tag=aggregation_tag)
+                               metric_types=gpu_specific_metrics)
 
-        self._add_result_table(
-            table_key=self.model_inference_table_passing_key,
-            title='Models (Inference)',
-            headers=self.non_gpu_specific_headers,
-            metric_types=non_gpu_specific_metrics,
-            aggregation_tag=aggregation_tag)
-
-        self._add_result_table(
-            table_key=self.model_gpu_table_failing_key,
-            title='Models (GPU Metrics - Failed Constraints)',
-            headers=self.gpu_specific_headers,
-            metric_types=gpu_specific_metrics,
-            aggregation_tag=aggregation_tag)
-
-        self._add_result_table(
-            table_key=self.model_inference_table_failing_key,
-            title='Models (Inference - Failed Constraints)',
-            headers=self.non_gpu_specific_headers,
-            metric_types=non_gpu_specific_metrics,
-            aggregation_tag=aggregation_tag)
+        self._add_result_table(table_key=self.model_inference_table_key,
+                               title='Models (Inference)',
+                               headers=self.non_gpu_specific_headers,
+                               metric_types=non_gpu_specific_metrics)
 
     def init_result(self, run_config):
         """
@@ -222,6 +200,7 @@ class ResultManager:
         """
 
         if self._current_run_result is not None:
+            heapq.heappush(self._results, self._current_run_result)
             if self._current_run_result.failing():
                 heapq.heappush(self._failing_results, self._current_run_result)
             else:
@@ -315,30 +294,19 @@ class ResultManager:
         """
 
         passing_measurements = run_result.passing_measurements()
-        while passing_measurements:
-            next_best_measurement = heapq.heappop(passing_measurements)
-            self._compile_measurement(
-                model_name=model_name,
-                instance_group=instance_group,
-                dynamic_batching=dynamic_batching,
-                measurement=next_best_measurement,
-                gpu_table_key=self.model_gpu_table_passing_key,
-                inference_table_key=self.model_inference_table_passing_key)
-
         failing_measurements = run_result.failing_measurements()
-        while failing_measurements:
-            next_best_measurement = heapq.heappop(failing_measurements)
-            self._compile_measurement(
-                model_name=model_name,
-                instance_group=instance_group,
-                dynamic_batching=dynamic_batching,
-                measurement=next_best_measurement,
-                gpu_table_key=self.model_gpu_table_failing_key,
-                inference_table_key=self.model_inference_table_failing_key)
+        for (measurements, passes) in [(passing_measurements, True),
+                                       (failing_measurements, False)]:
+            while measurements:
+                next_best_measurement = heapq.heappop(measurements)
+                self._compile_measurement(model_name=model_name,
+                                          instance_group=instance_group,
+                                          dynamic_batching=dynamic_batching,
+                                          measurement=next_best_measurement,
+                                          passes=passes)
 
     def _compile_measurement(self, model_name, instance_group,
-                             dynamic_batching, measurement, gpu_table_key,
-                             inference_table_key):
+                             dynamic_batching, measurement, passes):
         """
         Add a single measurement to the specified
         table
@@ -348,34 +316,31 @@ class ResultManager:
         tmp_model_name = perf_config['model-name']
         batch_size = perf_config['batch-size']
         concurrency = perf_config['concurrency-range']
+        satisfies = "Yes" if passes else "No"
 
         # Non GPU specific data
         inference_metrics = [
             model_name, batch_size, concurrency, tmp_model_name,
-            instance_group, dynamic_batching
+            instance_group, dynamic_batching, satisfies
         ]
         inference_metrics += [
-            metric.value() for metric in measurement.non_gpu_data()
+            round(metric.value(), 1) for metric in measurement.non_gpu_data()
         ]
-        self._result_tables[inference_table_key].insert_row_by_index(
-            row=inference_metrics)
+        self._result_tables[
+            self.model_inference_table_key].insert_row_by_index(
+                row=inference_metrics)
 
         # GPU specific data
         for gpu_id, metrics in measurement.gpu_data().items():
             gpu_metrics = [
                 model_name, gpu_id, batch_size, concurrency, tmp_model_name,
-                instance_group, dynamic_batching
+                instance_group, dynamic_batching, satisfies
             ]
-            gpu_metrics += [metric.value() for metric in metrics]
-            self._result_tables[gpu_table_key].insert_row_by_index(
+            gpu_metrics += [round(metric.value(), 1) for metric in metrics]
+            self._result_tables[self.model_gpu_table_key].insert_row_by_index(
                 row=gpu_metrics)
 
-    def _add_result_table(self,
-                          table_key,
-                          title,
-                          headers,
-                          metric_types,
-                          aggregation_tag='Max'):
+    def _add_result_table(self, table_key, title, headers, metric_types):
         """
         Utility function that creates a table with column
         headers corresponding to perf_analyzer arguments
@@ -386,7 +351,7 @@ class ResultManager:
         # Create headers
         table_headers = headers[:]
         for metric in metric_types:
-            table_headers.append(metric.header(aggregation_tag + " "))
+            table_headers.append(metric.header())
         self._result_tables[table_key] = ResultTable(headers=table_headers,
                                                      title=title)
 
@@ -467,17 +432,8 @@ class ResultManager:
         TritonModelAnalyzerException
         """
 
-        gpu_table = self._result_tables[self.model_gpu_table_passing_key]
-        non_gpu_table = self._result_tables[
-            self.model_inference_table_passing_key]
-
-        if non_gpu_table.empty() or gpu_table.empty():
-            logging.info(
-                "No results were found that satisfy specified constraints."
-                "Writing results that failed constraints in sorted order.")
-            gpu_table = self._result_tables[self.model_gpu_table_failing_key]
-            non_gpu_table = self._result_tables[
-                self.model_inference_table_failing_key]
+        gpu_table = self._result_tables[self.model_gpu_table_key]
+        non_gpu_table = self._result_tables[self.model_inference_table_key]
 
         self._write_result(table=gpu_table,
                            writer=gpu_metrics_writer,
@@ -552,22 +508,14 @@ class ResultManager:
 
         passing_measurements = 0
         failing_measurements = 0
-        passing_configs = 0
-        failing_configs = 0
+        total_configs = 0
 
         for result in self._results:
-            if result.failing():
-                failing_configs += 1
-                failing_measurements += len(result.measurements())
-            else:
-                passing_configs += 1
-                passing_measurements += len(result.passing_measurements())
-                failing_measurements += len(result.failing_measurements())
+            total_configs += 1
+            passing_measurements += len(result.passing_measurements())
+            failing_measurements += len(result.failing_measurements())
 
-        self._statistics.set_passing_configurations(model_name,
-                                                    passing_configs)
-        self._statistics.set_failing_configurations(model_name,
-                                                    failing_configs)
+        self._statistics.set_total_configurations(model_name, total_configs)
         self._statistics.set_passing_measurements(model_name,
                                                   passing_measurements)
         self._statistics.set_failing_measurements(model_name,

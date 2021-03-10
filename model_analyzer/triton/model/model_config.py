@@ -238,11 +238,11 @@ class ModelConfig:
         if 'instance_group' in model_config:
             instance_group_list = model_config['instance_group']
             group_str_list = [
-                f"{group['count']}-{group['kind'].split('_')[1]}"
+                f"{group['count']}/{group['kind'].split('_')[1]}"
                 for group in instance_group_list
             ]
             return ','.join(group_str_list)
         elif not cuda.is_available():
-            return '1-CPU'
+            return '1/CPU'
         else:
-            return '1-GPU'
+            return '1/GPU'

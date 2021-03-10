@@ -25,6 +25,8 @@ class RunConfig:
         """
         Parameters
         ----------
+        model_name: str
+            The name of the model
         model_config : ModelConfig
             The model config corresponding to this run
         perf_configs : list of PerfAnalyzerConfigs
@@ -38,12 +40,12 @@ class RunConfig:
 
     def model_name(self):
         """
-        Get the parameterized model name for this run config.
+        Get the original model name for this run config.
 
         Returns
         -------
         str
-            Parameterized model name
+            Original model name
         """
 
         return self._model_name
