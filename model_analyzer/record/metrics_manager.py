@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from collections import defaultdict
-import logging
 
 from .record_aggregator import RecordAggregator
 from .record import RecordType
@@ -29,6 +28,7 @@ class MetricsManager:
     This class handles the profiling
     categorization of metrics
     """
+
     def __init__(self, config, metric_tags, server, result_manager):
         """
         Parameters
@@ -77,8 +77,7 @@ class MetricsManager:
 
         self._result_manager.create_tables(
             gpu_specific_metrics=self._dcgm_metrics,
-            non_gpu_specific_metrics=self._perf_metrics + self._cpu_metrics,
-            aggregation_tag='Max')
+            non_gpu_specific_metrics=self._perf_metrics + self._cpu_metrics)
 
     def profile_server(self, default_value):
         """
@@ -113,6 +112,11 @@ class MetricsManager:
         perf_output_writer : OutputWriter
             Writer that writes the output from perf_analyzer to the output
             stream/file. If None, the output is not written
+        
+        Returns
+        -------
+        (dict of lists, list)
+            The gpu specific and non gpu metrics
         """
 
         # Start monitors and run perf_analyzer
@@ -124,21 +128,17 @@ class MetricsManager:
         if perf_analyzer_metrics_or_status == 1:
             self._stop_monitors()
             self._destroy_monitors()
-            return None
+            return None, None
         else:
             perf_analyzer_metrics = perf_analyzer_metrics_or_status
 
         # Get metrics for model inference and combine metrics that do not have GPU ID
         model_gpu_metrics = self._get_gpu_inference_metrics()
         model_cpu_metrics = self._get_cpu_inference_metrics()
-        model_non_gpu_metric_values = list(
-            perf_analyzer_metrics.values()) + list(model_cpu_metrics.values())
+        model_non_gpu_metrics = list(perf_analyzer_metrics.values()) + list(
+            model_cpu_metrics.values())
 
-        measurement = self._result_manager.add_model_data(
-            gpu_data=model_gpu_metrics,
-            non_gpu_data=model_non_gpu_metric_values,
-            perf_config=perf_config)
-        return measurement
+        return model_gpu_metrics, model_non_gpu_metrics
 
     def _start_monitors(self):
         """

@@ -18,32 +18,34 @@ class RunConfig:
     A class that encapsulates all the information
     needed to complete a single run of the Model
     Analyzer. One run corresponds to
-    one ModelConfig and produces one RunResult.
+    one ModelConfig and produces one ModelResult.
     """
 
-    def __init__(self, model_name, model_config, perf_configs):
+    def __init__(self, model_name, model_config, perf_config):
         """
         Parameters
         ----------
+        model_name: str
+            The name of the model
         model_config : ModelConfig
             The model config corresponding to this run
-        perf_configs : list of PerfAnalyzerConfigs
+        perf_config : PerfAnalyzerConfig
             list of possible run parameters to pass
             to Perf Analyzer
         """
 
         self._model_name = model_name
         self._model_config = model_config
-        self._perf_analyzer_configs = perf_configs
+        self._perf_config = perf_config
 
     def model_name(self):
         """
-        Get the parameterized model name for this run config.
+        Get the original model name for this run config.
 
         Returns
         -------
         str
-            Parameterized model name
+            Original model name
         """
 
         return self._model_name
@@ -58,12 +60,13 @@ class RunConfig:
 
         return self._model_config
 
-    def perf_analyzer_configs(self):
+    def perf_config(self):
         """
         Returns
         -------
-        List of PerfAnalyzerConfig objects
-            This list of run parameters corresponding to this run
+        PerfAnalyzerConfig
+            run parameters corresponding to this run of 
+            the perf analyzer
         """
 
-        return self._perf_analyzer_configs
+        return self._perf_config

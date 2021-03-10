@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.result.measurement import Measurement
-from model_analyzer.result.run_result import RunResult
+from model_analyzer.result.model_result import ModelResult
 from model_analyzer.record.metrics_manager import MetricsManager
 
 
@@ -42,10 +42,11 @@ def construct_measurement(gpu_metric_values, non_gpu_metric_values,
         non_gpu_data.append(
             metric(value=non_gpu_metric_values[non_gpu_metric_tags[i]]))
 
-    return Measurement(gpu_data=gpu_data,
-                       non_gpu_data=non_gpu_data,
-                       perf_config=None,
-                       comparator=comparator)
+    measurement = Measurement(gpu_data=gpu_data,
+                              non_gpu_data=non_gpu_data,
+                              perf_config=None)
+    measurement.set_result_comparator(comparator=comparator)
+    return measurement
 
 
 def construct_result(avg_gpu_metric_values, avg_non_gpu_metric_values,
@@ -60,7 +61,9 @@ def construct_result(avg_gpu_metric_values, avg_non_gpu_metric_values,
     num_vals = 10
 
     # Construct a result
-    run_result = RunResult(run_config=None, comparator=comparator)
+    model_result = ModelResult(model_name=None,
+                               model_config=None,
+                               comparator=comparator)
 
     # Get dict of list of metric values
     gpu_metric_values = {}
@@ -87,9 +90,9 @@ def construct_result(avg_gpu_metric_values, avg_non_gpu_metric_values,
             key: non_gpu_metric_values[key][i]
             for key in non_gpu_metric_values
         }
-        run_result.add_measurement(
+        model_result.add_measurement(
             construct_measurement(gpu_metric_values=gpu_metrics,
                                   non_gpu_metric_values=non_gpu_metrics,
                                   comparator=comparator))
 
-    return run_result
+    return model_result

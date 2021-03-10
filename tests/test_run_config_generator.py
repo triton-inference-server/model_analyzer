@@ -68,8 +68,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                                                           generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
                 self.assertEqual(len(run_configs), 1)
-                self.assertTrue(
-                    len(run_configs[0].perf_analyzer_configs()) == 1)
+
         mock_model_config.stop()
         mock_client.stop()
 
@@ -93,9 +92,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                                                           run_search,
                                                           generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
-                self.assertTrue(len(run_configs) == 1)
-                self.assertTrue(
-                    len(run_configs[0].perf_analyzer_configs()) == 9)
+                self.assertEqual(len(run_configs), 9)
+
         mock_model_config.stop()
         mock_client.stop()
 
@@ -129,9 +127,8 @@ model_names:
                                                           run_search,
                                                           generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
-                self.assertTrue(len(run_configs) == 1)
-                self.assertTrue(
-                    len(run_configs[0].perf_analyzer_configs()) == 1)
+                self.assertEqual(len(run_configs), 1)
+
         mock_model_config.stop()
         mock_client.stop()
 
@@ -172,11 +169,8 @@ model_names:
                                                           generate_only=True)
 
                 run_configs = run_config_generator.get_run_configs()
-                print(len(run_configs))
-                self.assertTrue(len(run_configs) == 2)
-                for run_config in run_configs:
-                    self.assertTrue(
-                        len(run_config.perf_analyzer_configs()) == 1)
+                self.assertEqual(len(run_configs), 2)
+
         mock_model_config.stop()
         mock_client.stop()
 
@@ -211,10 +205,8 @@ model_names:
                                                           run_search,
                                                           generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
-                self.assertTrue(len(run_configs) == 1)
-                for run_config in run_configs:
-                    self.assertTrue(
-                        len(run_config.perf_analyzer_configs()) == 1)
+                self.assertEqual(len(run_configs), 1)
+
         mock_model_config.stop()
         mock_client.stop()
 
@@ -245,10 +237,8 @@ model_names:
                                                           run_search,
                                                           generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
-                self.assertTrue(len(run_configs) == 6)
-                for run_config in run_configs:
-                    self.assertTrue(
-                        len(run_config.perf_analyzer_configs()) == 1)
+                self.assertEqual(len(run_configs), 6)
+
         mock_model_config.stop()
         mock_client.stop()
 
@@ -281,14 +271,12 @@ model_names:
                                                           run_search,
                                                           generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
-                self.assertTrue(len(run_configs) == 6)
+                self.assertEqual(len(run_configs), 54)
                 instance_groups = []
                 for run_config in run_configs:
                     instance_group = run_config.model_config().get_config(
                     )['instance_group']
                     instance_groups.append(instance_group)
-                    self.assertTrue(
-                        len(run_config.perf_analyzer_configs()) == 9)
 
                 expected_instance_groups = [[{
                     'count': 1,
@@ -343,14 +331,12 @@ model_names:
                                                           run_search,
                                                           generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
-                self.assertTrue(len(run_configs) == 6)
+                self.assertEqual(len(run_configs), 54)
                 instance_groups = []
                 for run_config in run_configs:
                     instance_group = run_config.model_config().get_config(
                     )['instance_group']
                     instance_groups.append(instance_group)
-                    self.assertTrue(
-                        len(run_config.perf_analyzer_configs()) == 9)
 
                 expected_instance_groups = [[{
                     'count': 1,
@@ -408,16 +394,14 @@ model_names:
                                                           run_search,
                                                           generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
-                self.assertTrue(len(run_configs) == 6)
+                self.assertEqual(len(run_configs), 54)
                 instance_groups = []
                 for run_config in run_configs:
                     instance_group = run_config.model_config().get_config(
                     )['instance_group']
                     instance_groups.append(instance_group)
-                    self.assertTrue(
-                        len(run_config.perf_analyzer_configs()) == 9)
 
-                expected_instance_groups = [[{
+                expected_instance_groups = 9 * [[{
                     'count': 1,
                     'kind': 'KIND_GPU'
                 }], [{
@@ -436,8 +420,8 @@ model_names:
                     'count': 3,
                     'kind': 'KIND_CPU'
                 }]]
-                self.assertTrue(
-                    len(expected_instance_groups) == len(instance_groups))
+                self.assertEqual(len(expected_instance_groups),
+                                 len(instance_groups))
                 for instance_group in instance_groups:
                     self.assertIn(instance_group, expected_instance_groups)
         mock_model_config.stop()
@@ -474,7 +458,7 @@ model_names:
                                                           run_search,
                                                           generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
-                self.assertTrue(len(run_configs) == 24)
+                self.assertEqual(len(run_configs), 216)
                 instance_groups = []
                 dynamic_batchings = []
                 for run_config in run_configs:
@@ -485,8 +469,6 @@ model_names:
 
                     dynamic_batchings.append(dynamic_batching)
                     instance_groups.append(instance_group)
-                    self.assertTrue(
-                        len(run_config.perf_analyzer_configs()) == 9)
 
                 expected_instance_groups = [[{
                     'count': 1,
@@ -525,8 +507,8 @@ model_names:
                     'max_queue_delay_microseconds':
                     '200'
                 }]
-                self.assertTrue(
-                    len(instance_groups) == len(expected_instance_groups) *
+                self.assertEqual(
+                    len(instance_groups), 9 * len(expected_instance_groups) *
                     len(expected_dynamic_batchings))
                 for instance_group in instance_groups:
                     self.assertIn(instance_group, expected_instance_groups)
@@ -569,7 +551,7 @@ model_names:
                                                           run_search,
                                                           generate_only=True)
                 run_configs = run_config_generator.get_run_configs()
-                self.assertTrue(len(run_configs) == 12)
+                self.assertEqual(len(run_configs), 12)
                 instance_groups = []
                 dynamic_batchings = []
                 for run_config in run_configs:
@@ -580,8 +562,6 @@ model_names:
 
                     dynamic_batchings.append(dynamic_batching)
                     instance_groups.append(instance_group)
-                    self.assertTrue(
-                        len(run_config.perf_analyzer_configs()) == 1)
 
                 expected_instance_groups = [[{
                     'count': 1,
@@ -612,8 +592,9 @@ model_names:
                     'max_queue_delay_microseconds':
                     '200'
                 }]
-                self.assertTrue(
-                    len(instance_groups) == len(expected_instance_groups) *
+                self.assertEqual(
+                    len(instance_groups),
+                    len(expected_instance_groups) *
                     len(expected_dynamic_batchings))
                 for instance_group in instance_groups:
                     self.assertIn(instance_group, expected_instance_groups)

@@ -31,9 +31,9 @@ OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 
 MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -n $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY --run-config-search-disable"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
-MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
-MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
-MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --export=False --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics --summarize=False --perf-analyzer-cpu-util=100000"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 
 # Run the analyzer with perf-measurement-window=1000ms and expect no adjustment
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --perf-measurement-window=5000"
@@ -54,7 +54,7 @@ fi
 rm -f $ANALYZER_LOG
 
 # Run the analyzer with perf-measurement-window=50ms and expect adjustment
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --perf-measurement-window=50"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --perf-measurement-window=50 --perf-output=True"
 
 run_analyzer
 if [ $? -ne 0 ]; then
@@ -70,7 +70,7 @@ fi
 rm -f $ANALYZER_LOG
 
 # Run the analyzer with no-perf-output and fail if output detected
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --no-perf-output"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS"
 
 run_analyzer
 if [ $? -ne 0 ]; then

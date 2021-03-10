@@ -44,9 +44,9 @@ class ResultComparator:
 
         Parameters
         ----------
-        result1 : RunResult
+        result1 : ModelResult
             first result to be compared
-        result2 : RunResult
+        result2 : ModelResult
             second result to be compared
 
         Returns
@@ -128,7 +128,8 @@ class ResultComparator:
             [measurement.data() for measurement in measurements])
 
         # Data must be passed in as non-gpu-specific here.
-        return Measurement(gpu_data={},
-                           non_gpu_data=aggregated_data,
-                           perf_config=None,
-                           comparator=self)
+        measurement = Measurement(gpu_data={},
+                                  non_gpu_data=aggregated_data,
+                                  perf_config=None)
+        measurement.set_result_comparator(self)
+        return measurement

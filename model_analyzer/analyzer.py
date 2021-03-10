@@ -109,6 +109,9 @@ class Analyzer:
 
             run_config_generator.execute_run_configs()
 
+            # Sort the results for this model before summarize
+            self._result_manager.sort_results()
+
             if self._config.summarize:
                 # Send requested best results to plot manager
                 self._process_top_results()
@@ -142,15 +145,9 @@ class Analyzer:
 
         for result in self._result_manager.top_n_results(
                 n=self._config.top_n_configs):
-            model_name = result.run_config().model_name()
-            model_config = result.run_config().model_config()
 
-            for measurement in result.measurements():
-                # Send all measurements to plots manager
-                self._plot_manager.add_measurement(measurement=measurement)
+            # Send all measurements to plots manager
+            self._plot_manager.add_result(result=result)
 
-            for measurement in result.top_n_measurements(n=1):
-                # Send top_n measurements to report manager
-                self._report_manager.add_measurement(model_name=model_name,
-                                                     model_config=model_config,
-                                                     measurement=measurement)
+            # Send top_n measurements to report manager
+            self._report_manager.add_result(result=result)

@@ -20,20 +20,21 @@ from functools import total_ordering
 
 
 @total_ordering
-class RunResult:
+class ModelResult:
     """
     A class that represents the result of
-    a single run. This RunResult belongs
+    a single run. This ModelResult belongs
     to a particular ResultTable
     """
 
-    def __init__(self, run_config, comparator, constraints=None):
+    def __init__(self, model_name, model_config, comparator, constraints=None):
         """
         Parameters
         ----------
-        run_config : RunConfig
-            The model config corresponding with the current
-            RunResult
+        model_name: str
+            The name of the model
+        model_config : ModelConfig
+            The model config corresponding to this run
         comparator : ResultComparator
             An object whose compare function receives two
             results and returns 1 if the first is better than
@@ -44,7 +45,8 @@ class RunResult:
             constraint_type:constraint_value pairs
         """
 
-        self._run_config = run_config
+        self._model_name = model_name
+        self._model_config = model_config
         self._comparator = comparator
         self._constraints = constraints
 
@@ -52,6 +54,27 @@ class RunResult:
         self._measurements = []
         self._passing_measurements = []
         self._failing_measurements = []
+
+    def model_name(self):
+        """
+        Returns
+        -------
+        str
+            returns the name of the model who ModelResult this is
+        """
+
+        return self._model_name
+
+    def model_config(self):
+        """
+        Returns
+        -------
+        ModelConfig
+            returns the model_config associated with this
+            ModelResult
+        """
+
+        return self._model_config
 
     def failing(self):
         """
@@ -90,7 +113,7 @@ class RunResult:
         Returns
         -------
         list
-            of measurements in this RunResult
+            of measurements in this ModelResult
         """
 
         return self._measurements
@@ -100,7 +123,7 @@ class RunResult:
         Returns
         -------
         list
-            of passing measurements in this RunResult
+            of passing measurements in this ModelResult
         """
 
         return self._passing_measurements
@@ -110,7 +133,7 @@ class RunResult:
         Returns
         -------
         list
-            of failing measurements in this RunResult
+            of failing measurements in this ModelResult
         """
 
         return self._failing_measurements
@@ -153,28 +176,17 @@ class RunResult:
         return heapq.nsmallest(min(n, len(self._passing_measurements)),
                                self._passing_measurements)
 
-    def run_config(self):
-        """
-        Returns
-        -------
-        RunConfig
-            returns the run_config associated with this
-            RunResult
-        """
-
-        return self._run_config
-
     def __eq__(self, other):
         """
         Checks for the equality of this and
-        another RunResult
+        another ModelResult
         """
 
         return (self._comparator.compare_results(self, other) == 0)
 
     def __lt__(self, other):
         """
-        Checks whether this RunResult is better
+        Checks whether this ModelResult is better
         than other
 
         If True, this means this result is better

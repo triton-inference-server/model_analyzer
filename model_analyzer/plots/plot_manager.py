@@ -57,23 +57,25 @@ class PlotManager:
             Plot(name=plot.name(),
                  title=plot.title(),
                  x_axis=plot.x_axis(),
-                 y_axis=plot.y_axis()) for plot in self._config.plots
+                 y_axis=plot.y_axis(),
+                 monotonic=plot.monotonic()) for plot in self._config.plots
         ]
 
-    def add_measurement(self, measurement):
+    def add_result(self, result):
         """
         Add a measurement to all plots
         
         Parameters
         ----------
-        measurement : Measurement
-            The measurment to add to this 
+        result : ModelResult
+            The result to add to this plot
         """
 
-        for plot in self._current_plots:
-            plot.add_measurement(
-                model_config_label=measurement.perf_config()['model-name'],
-                measurement=measurement)
+        for measurement in result.measurements():
+            for plot in self._current_plots:
+                plot.add_measurement(
+                    model_config_label=measurement.perf_config()['model-name'],
+                    measurement=measurement)
 
     def complete_plots(self, model_name):
         """
