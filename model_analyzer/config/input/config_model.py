@@ -97,6 +97,56 @@ class ConfigModel:
 
         return self._model_name
 
+    def set_objectives(self, objectives):
+        """
+        Parameters
+        -------
+        objectives : dict or None
+            A dictionary containing the parameters
+        """
+
+        self._objectives = objectives
+
+    def set_constraints(self, constraints):
+        """
+        Parameters
+        -------
+        constraints : dict or None
+            A dictionary containing the parameters
+        """
+
+        self._constraints = constraints
+
+    def set_parameters(self, parameters):
+        """
+        Parameters
+        -------
+        parameters : dict or None
+            A dictionary containing the parameters
+        """
+
+        self._parameters = parameters
+
+    def set_model_config_parameters(self, model_config_parameters):
+        """
+        Parameters
+        ----------
+        model_config_parameters : dict or None
+            A dictionary containing the model config parameters.
+        """
+
+        self._model_config_paramters = model_config_parameters
+
+    def set_model_name(self, model_name):
+        """
+        Parameters
+        -------
+        model_name : str
+            The model name used for this config.
+        """
+
+        self._model_name = model_name
+
     @staticmethod
     def model_object_to_config_model(value):
         """

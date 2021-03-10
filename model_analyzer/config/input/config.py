@@ -41,7 +41,6 @@ class AnalyzerConfig:
     """
     Model Analyzer config object.
     """
-
     def __init__(self):
         """
         Create a new config.
@@ -255,10 +254,53 @@ class AnalyzerConfig:
                 'concurrency',
                 flags=['-c', '--concurrency'],
                 field_type=ConfigListNumeric(int),
-                default_value=1,
                 description=
                 "Comma-delimited list of concurrency values or ranges <start:end:step>"
                 " to be used during profiling"))
+        self._add_config(
+            ConfigField('perf_analyzer_timeout',
+                        field_type=ConfigPrimitive(int),
+                        default_value=600,
+                        description="Perf analyzer timeout value in seconds."))
+        self._add_config(
+            ConfigField(
+                'perf_analyzer_cpu_util',
+                field_type=ConfigPrimitive(float),
+                default_value=80,
+                description=
+                "Maximum CPU utilization value allowed for the perf_analyzer.")
+        )
+        self._add_config(
+            ConfigField(
+                'run_config_search_max_concurrency',
+                field_type=ConfigPrimitive(int),
+                default_value=1024,
+                description=
+                "Max concurrency value that run config search should not go beyond that."
+            ))
+        self._add_config(
+            ConfigField(
+                'run_config_search_max_instance_count',
+                field_type=ConfigPrimitive(int),
+                default_value=5,
+                description=
+                "Max instance count value that run config search should not go beyond that."
+            ))
+        self._add_config(
+            ConfigField('run_config_search_disable',
+                        flags=['--run-config-search-disable'],
+                        field_type=ConfigPrimitive(bool),
+                        parser_args={'action': 'store_true'},
+                        default_value=False,
+                        description="Disable run config search."))
+        self._add_config(
+            ConfigField(
+                'run_config_search_max_preferred_batch_size',
+                field_type=ConfigPrimitive(int),
+                default_value=16,
+                description=
+                "Max preferred batch size value that run config search should not go beyond that."
+            ))
         self._add_config(
             ConfigField('export',
                         flags=['--export'],
@@ -486,6 +528,12 @@ class AnalyzerConfig:
                     "client-protocol is 'grpc'. Must specify triton-grpc-endpoint "
                     "if connecting to already running server or change protocol using "
                     "--client-protocol.")
+
+        # If run config search is disabled and no concurrency value is provided,
+        # set the default value.
+        if self.run_config_search_disable:
+            if len(self.concurrency) == 0:
+                self.concurrency = [1]
 
     def _load_config_file(self, file_path):
         """

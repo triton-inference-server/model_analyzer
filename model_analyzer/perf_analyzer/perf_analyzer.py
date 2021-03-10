@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from subprocess import check_output, CalledProcessError, STDOUT
+from subprocess import Popen, STDOUT, PIPE
 import logging
+import time
+import psutil
 
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
@@ -35,7 +37,7 @@ class PerfAnalyzer:
     # The metrics that PerfAnalyzer can collect
     perf_metrics = {PerfLatency, PerfThroughput}
 
-    def __init__(self, path, config):
+    def __init__(self, path, config, timeout, max_cpu_util):
         """
         Parameters
         ----------
@@ -44,12 +46,19 @@ class PerfAnalyzer:
         config : PerfAnalyzerConfig
             keys are names of arguments to perf_analyzer,
             values are their values.
+        timeout : int
+            Maximum number of seconds that perf_analyzer
+            will wait until the execution is complete.
+        max_cpu_util : float
+            Maximum CPU utilization allowed for perf_analyzer 
         """
 
         self.bin_path = path
         self._config = config
+        self._timeout = timeout
         self._output = None
         self._perf_records = None
+        self._max_cpu_util = max_cpu_util
 
     def run(self, metrics):
         """
@@ -78,30 +87,68 @@ class PerfAnalyzer:
             for _ in range(MAX_INTERVAL_CHANGES):
                 cmd = [self.bin_path]
                 cmd += self._config.to_cli_string().replace('=', ' ').split()
+                process_killed = False
 
-                try:
-                    self._output = check_output(cmd,
-                                                start_new_session=True,
-                                                stderr=STDOUT,
-                                                encoding='utf-8')
-                    self._parse_output()
-                    return
-                except CalledProcessError as e:
-                    if e.output.find("Please use a larger time window.") > 0:
+                process = Popen(cmd,
+                                start_new_session=True,
+                                stdout=PIPE,
+                                stderr=STDOUT,
+                                encoding='utf-8')
+                current_timeout = self._timeout
+                process_util = psutil.Process(process.pid)
+
+                # Convert to miliseconds
+                interval_sleep_time = self._config['measurement-interval'] // 1000
+                while current_timeout > 0:
+                    if process.poll() is not None:
+                        self._output = process.stdout.read()
+                        break
+
+                    # perf_analyzer using too much CPU?
+                    cpu_util = process_util.cpu_percent(interval_sleep_time)
+                    if cpu_util > self._max_cpu_util:
+                        logging.info(f'perf_analyzer used significant amount of CPU resources ({cpu_util}%), killing perf_analyzer...')
+                        self._output = process.stdout.read()
+                        process.kill()
+
+                        # Failure
+                        return 1
+
+                    current_timeout -= interval_sleep_time
+                else:
+                    logging.info('perf_analyzer took very long to exit, killing perf_analyzer...')
+                    self._output = process.stdout.read()
+                    process.kill()
+
+                    # Failure
+                    return 1
+
+                if process_killed:
+                    continue
+
+                if process.returncode != 0:
+                    if self._output.find("Please use a larger time window.") > 0:
                         self._config['measurement-interval'] += INTERVAL_DELTA
                         logger.info(
                             "perf_analyzer's measurement window is too small, "
                             f"increased to {self._config['measurement-interval']} ms."
                         )
                     else:
-                        raise TritonModelAnalyzerException(
-                            f"Running perf_analyzer with {e.cmd} failed with"
-                            f" exit status {e.returncode} : {e.output}")
+                        logging.info(
+                            f"Running perf_analyzer {cmd} failed with"
+                            f" exit status {process.returncode} : {self._output}")
+                        return 1
+                else:
+                    self._parse_output()
+                    break
+            else:
+                logging.info(
+                    f"Ran perf_analyzer {MAX_INTERVAL_CHANGES} times, "
+                    "but no valid requests recorded in max time interval"
+                    f" of {self._config['measurement-interval']} ")
+                return 1
 
-            raise TritonModelAnalyzerException(
-                f"Ran perf_analyzer {MAX_INTERVAL_CHANGES} times, "
-                "but no valid requests recorded in max time interval"
-                f" of {self._config['measurement-interval']} ")
+        return 0
 
     def output(self):
         """

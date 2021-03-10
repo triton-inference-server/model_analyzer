@@ -129,7 +129,7 @@ class TritonServerDocker(TritonServer):
 
         if self._tritonserver_container is not None:
             self._tritonserver_container.stop()
-            self._tritonserver_container.remove()
+            self._tritonserver_container.remove(force=True)
 
             self._tritonserver_container = None
             self._docker_client.close()

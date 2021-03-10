@@ -57,6 +57,7 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
     rm -rf results && mkdir -p results && rm -rf $OUTPUT_MODEL_REPOSITORY
     set +e
 
+    ANALYZER_LOG=analyzer.${config}.log
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $config"
     NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml/\.txt/'`
     TEST_OUTPUT_NUM_ROWS=`cat $NUM_ROW_OUTPUT_FILE`

@@ -45,7 +45,7 @@ class Measurement:
             Handle for ResultComparator that knows how to order measurements
         aggregation_func: callable(list) -> list
             A callable that receives a list and outputs a list used to aggregate
-            data across gpus. 
+            data across gpus.
         """
 
         # average values over all GPUs
@@ -103,11 +103,11 @@ class Measurement:
         tag : str
             A human readable tag that corresponds
             to a particular metric
-        
+
         Returns
         -------
         Record
-            metric Record corresponding to 
+            metric Record corresponding to
             the tag, in this measurement
         """
 

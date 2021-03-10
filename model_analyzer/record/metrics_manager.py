@@ -29,7 +29,6 @@ class MetricsManager:
     This class handles the profiling
     categorization of metrics
     """
-
     def __init__(self, config, metric_tags, server, result_manager):
         """
         Parameters
@@ -49,6 +48,7 @@ class MetricsManager:
         self._gpus = config.gpus
         self._monitoring_interval = config.monitoring_interval
         self._perf_analyzer_path = config.perf_analyzer_path
+        self._config = config
         self._result_manager = result_manager
 
         self._dcgm_metrics = []
@@ -117,8 +117,16 @@ class MetricsManager:
 
         # Start monitors and run perf_analyzer
         self._start_monitors()
-        perf_analyzer_metrics = self._get_perf_analyzer_metrics(
+        perf_analyzer_metrics_or_status = self._get_perf_analyzer_metrics(
             perf_config, perf_output_writer)
+
+        # Failed Status
+        if perf_analyzer_metrics_or_status == 1:
+            self._stop_monitors()
+            self._destroy_monitors()
+            return None
+        else:
+            perf_analyzer_metrics = perf_analyzer_metrics_or_status
 
         # Get metrics for model inference and combine metrics that do not have GPU ID
         model_gpu_metrics = self._get_gpu_inference_metrics()
@@ -126,10 +134,11 @@ class MetricsManager:
         model_non_gpu_metric_values = list(
             perf_analyzer_metrics.values()) + list(model_cpu_metrics.values())
 
-        self._result_manager.add_model_data(
+        measurement = self._result_manager.add_model_data(
             gpu_data=model_gpu_metrics,
             non_gpu_data=model_non_gpu_metric_values,
             perf_config=perf_config)
+        return measurement
 
     def _start_monitors(self):
         """
@@ -143,6 +152,14 @@ class MetricsManager:
 
         self._dcgm_monitor.start_recording_metrics()
         self._cpu_monitor.start_recording_metrics()
+
+    def _stop_monitors(self):
+        """
+        Stop any metrics monitors
+        """
+
+        self._dcgm_monitor.stop_recording_metrics()
+        self._cpu_monitor.stop_recording_metrics()
 
     def _destroy_monitors(self):
         """
@@ -171,9 +188,15 @@ class MetricsManager:
         """
 
         try:
-            perf_analyzer = PerfAnalyzer(path=self._perf_analyzer_path,
-                                         config=perf_config)
-            perf_analyzer.run(self._perf_metrics)
+            perf_analyzer = PerfAnalyzer(
+                path=self._perf_analyzer_path,
+                config=perf_config,
+                timeout=self._config.perf_analyzer_timeout,
+                max_cpu_util=self._config.perf_analyzer_cpu_util)
+            status = perf_analyzer.run(self._perf_metrics)
+            # PerfAnalzyer run was not succesful
+            if status == 1:
+                return 1
         except FileNotFoundError as e:
             raise TritonModelAnalyzerException(
                 f"perf_analyzer binary not found : {e}")
