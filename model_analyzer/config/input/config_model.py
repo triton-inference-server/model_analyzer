@@ -24,7 +24,8 @@ class ConfigModel:
                  objectives=None,
                  constraints=None,
                  parameters=None,
-                 model_config_parameters=None):
+                 model_config_parameters=None,
+                 perf_analyzer_flags=None):
         """
         Parameters
         ----------
@@ -39,6 +40,9 @@ class ConfigModel:
             specified here.
         model_config_parameters : None or dict
             Model config parameters that is used for this model
+        perf_analyzer_flags : dict
+            The custom perf analyzer configuration 
+            for this model
         """
 
         self._model_name = model_name
@@ -46,6 +50,7 @@ class ConfigModel:
         self._constraints = constraints
         self._parameters = parameters
         self._model_config_paramters = model_config_parameters
+        self._perf_analyzer_flags = perf_analyzer_flags
 
     def objectives(self):
         """
@@ -97,6 +102,16 @@ class ConfigModel:
 
         return self._model_name
 
+    def perf_analyzer_flags(self):
+        """
+        Returns
+        -------
+        dict:
+             the perf_analyzer_flags
+        """
+
+        return self._perf_analyzer_flags
+
     def set_objectives(self, objectives):
         """
         Parameters
@@ -146,6 +161,16 @@ class ConfigModel:
         """
 
         self._model_name = model_name
+
+    def set_perf_analyzer_flags(self, flags):
+        """
+        Parameters
+        -------
+        flags: dict
+             the perf_analyzer_flags
+        """
+
+        self._perf_analyzer_flags = flags
 
     @staticmethod
     def model_object_to_config_model(value):
@@ -250,5 +275,8 @@ class ConfigModel:
         if self._model_config_paramters:
             model_object['model_config_parameters'] = \
                 self._model_config_paramters
+
+        if self._perf_analyzer_flags:
+            model_object['perf_analyzer_flags'] = self._perf_analyzer_flags
 
         return str(model_object)

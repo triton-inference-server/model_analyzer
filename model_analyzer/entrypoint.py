@@ -74,6 +74,7 @@ def get_server_handle(config):
 
     if config.triton_launch_mode == 'remote':
         triton_config = TritonServerConfig()
+        triton_config.update_config(config.triton_server_flags)
         triton_config['model-repository'] = 'remote-model-repository'
         logger.info('Using remote Triton Server...')
         server = TritonServerFactory.create_server_local(path=None,
@@ -88,10 +89,10 @@ def get_server_handle(config):
         logger.warn(
             'Config sweep parameters are ignored in the "remote" mode because'
             ' Model Analyzer does not have access to the model repository of'
-            ' the remote Triton Server.'
-        )
+            ' the remote Triton Server.')
     elif config.triton_launch_mode == 'local':
         triton_config = TritonServerConfig()
+        triton_config.update_config(config.triton_server_flags)
         triton_config['model-repository'] = config.output_model_repository_path
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
@@ -103,6 +104,7 @@ def get_server_handle(config):
             path=config.triton_server_path, config=triton_config)
     elif config.triton_launch_mode == 'docker':
         triton_config = TritonServerConfig()
+        triton_config.update_config(config.triton_server_flags)
         triton_config['model-repository'] = os.path.abspath(
             config.output_model_repository_path)
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
@@ -137,7 +139,8 @@ def get_analyzer_gpus(config):
     if len(config.gpus) == 1 and config.gpus[0] == 'all':
         devices = numba.cuda.list_devices()
         for device in devices:
-            gpu_device = GPUDeviceFactory.create_device_by_cuda_index(device.id)
+            gpu_device = GPUDeviceFactory.create_device_by_cuda_index(
+                device.id)
             model_analyzer_gpus.append(
                 str(gpu_device.device_uuid(), encoding='ascii'))
     else:
@@ -296,8 +299,7 @@ def main():
                 f'Path "{output_model_repo_path}" already exists. '
                 'Please set or modify "--output-model-repository-path" flag or remove this directory.'
                 ' You can also allow overriding of the output directory using'
-                ' the "--override-output-model-repository" flag.'
-            )
+                ' the "--override-output-model-repository" flag.')
         else:
             shutil.rmtree(output_model_repo_path)
             logger.warn(

@@ -22,40 +22,28 @@ class PerfAnalyzerConfig:
     An argument set to None will use the perf_analyzer's default.
     """
 
-    def __init__(self, params=None):
-        """
-        Parameters
-        ----------
-        params : dict
-            allows initialization of a PerfAnalyzerConfig via a dictionary
+    perf_analyzer_args = [
+        'async', 'sync', 'measurement-interval', 'concurrency-range',
+        'request-rate-range', 'request-distribution', 'request-intervals',
+        'binary-search', 'num-of-sequence', 'latency-threshold', 'max-threads',
+        'stability-percentage', 'max-trials', 'percentile', 'input-data',
+        'shared-memory', 'output-shared-memory-size', 'shape',
+        'sequence-length', 'string-length', 'string-data'
+    ]
 
-        model : ConfigModel
-            Config model corresponding to these parameters.
+    input_to_options = [
+        'model-name', 'model-version', 'batch-size', 'url', 'protocol',
+        'latency-report-file', 'streaming'
+    ]
+
+    input_to_verbose = ['verbose', 'extra-verbose']
+
+    def __init__(self):
+        """
+        Construct a PerfAnalyzerConfig
         """
 
-        self._args = {
-            'async': None,
-            'sync': None,
-            'measurement-interval': None,
-            'concurrency-range': None,
-            'request-rate-range': None,
-            'request-distribution': None,
-            'request-intervals': None,
-            'binary-search': None,
-            'num-of-sequence': None,
-            'latency-threshold': None,
-            'max-threads': None,
-            'stability-percentage': None,
-            'max-trials': None,
-            'percentile': None,
-            'input-data': None,
-            'shared-memory': None,
-            'output-shared-memory-size': None,
-            'shape': None,
-            'sequence-length': None,
-            'string-length': None,
-            'string-data': None,
-        }
+        self._args = {k: None for k in self.perf_analyzer_args}
 
         self._options = {
             '-m': None,
@@ -66,7 +54,6 @@ class PerfAnalyzerConfig:
             '-f': None,
             '-H': None
         }
-
         self._verbose = {'-v': None, '-v -v': None}
 
         self._input_to_options = {
@@ -81,7 +68,30 @@ class PerfAnalyzerConfig:
 
         self._input_to_verbose = {'verbose': '-v', 'extra-verbose': '-v -v'}
 
-        # Initialize from config if given
+    @classmethod
+    def allowed_keys(cls):
+        """
+        Returns
+        -------
+        list of str
+            The keys that are allowed to be
+            passed into perf_analyzer
+        """
+
+        return list(cls.perf_analyzer_args) + list(
+            cls.input_to_options) + list(cls.input_to_verbose)
+
+    def update_config(self, params=None):
+        """
+        Allows setting values from a
+        params dict
+
+        Parameters
+        ----------
+        params: dict
+            keys are allowed args to perf_analyzer
+        """
+
         if params:
             for key in params:
                 self[key] = params[key]

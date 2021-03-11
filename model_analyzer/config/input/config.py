@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import yaml
-import logging
-import os
-
 from .config_field import ConfigField
 from .config_primitive import ConfigPrimitive
 from .config_list_string import ConfigListString
@@ -25,6 +21,10 @@ from .config_list_generic import ConfigListGeneric
 from .config_model import ConfigModel
 from .config_union import ConfigUnion
 from .config_plot import ConfigPlot
+from model_analyzer.triton.server.server_config import \
+    TritonServerConfig
+from model_analyzer.perf_analyzer.perf_config import \
+    PerfAnalyzerConfig
 from model_analyzer.record.record import RecordType
 from .config_sweep import ConfigSweep
 from model_analyzer.model_analyzer_exceptions \
@@ -36,11 +36,16 @@ from .config_protobuf_utils import \
 from tritonclient.grpc.model_config_pb2 import ModelConfig
 from google.protobuf.descriptor import FieldDescriptor
 
+import yaml
+import logging
+import os
+
 
 class AnalyzerConfig:
     """
     Model Analyzer config object.
     """
+
     def __init__(self):
         """
         Create a new config.
@@ -199,7 +204,13 @@ class AnalyzerConfig:
                         'constraints':
                         constraints_scheme,
                         'model_config_parameters':
-                        model_config_fields
+                        model_config_fields,
+                        'perf_analyzer_flags':
+                        ConfigObject(
+                            schema={
+                                k: ConfigPrimitive(type_=str)
+                                for k in PerfAnalyzerConfig.allowed_keys()
+                            })
                     })
             },
             output_mapper=ConfigModel.model_object_to_config_model)
@@ -417,13 +428,6 @@ class AnalyzerConfig:
                         default_value='20.12-py3',
                         description='Triton Server Docker version'))
         self._add_config(
-            ConfigField('log_level',
-                        flags=['--log-level'],
-                        default_value='INFO',
-                        field_type=ConfigPrimitive(str),
-                        choices=['INFO', 'DEBUG', 'ERROR', 'WARNING'],
-                        description='Logging levels'))
-        self._add_config(
             ConfigField(
                 'triton_http_endpoint',
                 default_value='localhost:8000',
@@ -464,6 +468,25 @@ class AnalyzerConfig:
                 description=
                 'The full path to a file to write the Triton Server log output to.'
             ))
+        self._add_config(
+            ConfigField(
+                'triton_server_flags',
+                field_type=ConfigObject(
+                    schema={
+                        k: ConfigPrimitive(str)
+                        for k in TritonServerConfig.server_arg_keys
+                    }),
+                flags=['--triton-server-flags'],
+                description=
+                'Allows custom configuration of the triton instances used by model analyzer.'
+            ))
+        self._add_config(
+            ConfigField('log_level',
+                        flags=['--log-level'],
+                        default_value='INFO',
+                        field_type=ConfigPrimitive(str),
+                        choices=['INFO', 'DEBUG', 'ERROR', 'WARNING'],
+                        description='Logging levels'))
         self._add_config(
             ConfigField(
                 'gpus',
@@ -602,11 +625,13 @@ class AnalyzerConfig:
             else:
                 new_model['parameters'] = model.parameters()
 
-            # Transfer model config parameters directly
+            # Transfer model config parameters and perf_analyzer_flags directly
             if model.model_config_parameters():
                 new_model[
                     'model_config_parameters'] = model.model_config_parameters(
                     )
+            if model.perf_analyzer_flags():
+                new_model['perf_analyzer_flags'] = model.perf_analyzer_flags()
 
             new_model_names[model.model_name()] = new_model
         self._fields['model_names'].set_value(new_model_names)

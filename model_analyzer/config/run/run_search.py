@@ -21,6 +21,7 @@ import copy
 class RunSearch:
     """A class responsible for searching the config space.
     """
+
     def __init__(self, max_concurrency, max_instance_count,
                  max_preferred_batch_size):
         self._max_concurrency = max_concurrency
@@ -124,11 +125,13 @@ class RunSearch:
             return False
 
     def init_model_sweep(self, config_model, search_model_config_parameters):
-        tmp_model = ConfigModel(copy.deepcopy(config_model.model_name()),
-                                copy.deepcopy(config_model.objectives()),
-                                copy.deepcopy(config_model.constraints()),
-                                copy.deepcopy(config_model.parameters()),
-                                copy.deepcopy(config_model.model_config_parameters()))
+        tmp_model = ConfigModel(
+            copy.deepcopy(config_model.model_name()),
+            copy.deepcopy(config_model.objectives()),
+            copy.deepcopy(config_model.constraints()),
+            copy.deepcopy(config_model.parameters()),
+            copy.deepcopy(config_model.model_config_parameters()),
+            copy.deepcopy(config_model.perf_analyzer_flags()))
 
         self._last_batch_length = None
         self._measurements = []
@@ -149,8 +152,7 @@ class RunSearch:
             self._mode = 'concurrency_and_model_config'
             return tmp_model
         else:
-            logging.info(
-                'Will sweep only through the concurrency values...')
+            logging.info('Will sweep only through the concurrency values...')
             self._mode = 'concurrency'
             return tmp_model
 
@@ -163,11 +165,14 @@ class RunSearch:
         config_model : ConfigModel
             The config model object of the model to sweep through
         """
-        tmp_model = ConfigModel(copy.deepcopy(config_model.model_name()),
-                                copy.deepcopy(config_model.objectives()),
-                                copy.deepcopy(config_model.constraints()),
-                                copy.deepcopy(config_model.parameters()),
-                                copy.deepcopy(config_model.model_config_parameters()))
+
+        tmp_model = ConfigModel(
+            copy.deepcopy(config_model.model_name()),
+            copy.deepcopy(config_model.objectives()),
+            copy.deepcopy(config_model.constraints()),
+            copy.deepcopy(config_model.parameters()),
+            copy.deepcopy(config_model.model_config_parameters()),
+            copy.deepcopy(config_model.perf_analyzer_flags()))
 
         concurrency = tmp_model.parameters()['concurrency']
 
@@ -220,8 +225,7 @@ class RunSearch:
             return tmp_model, [self._create_model_config()]
         elif self._mode == 'model_config':
             self._step_instance_count()
-            if self._model_config[
-                    'instance_count'] > self._max_instance_count:
+            if self._model_config['instance_count'] > self._max_instance_count:
                 # Reset instance_count
                 self._model_config['instance_count'] = 1
 
@@ -255,9 +259,7 @@ class RunSearch:
                     or not self._valid_throughput_gain():
                     return tmp_model, []
             new_concurrency = tmp_model.parameters()['concurrency'][0]
-            logging.info(
-                f'Concurrency set to {new_concurrency}.')
+            logging.info(f'Concurrency set to {new_concurrency}.')
             return tmp_model, [None]
         else:
             return tmp_model, []
-
