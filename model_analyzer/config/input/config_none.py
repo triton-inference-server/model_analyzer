@@ -14,17 +14,14 @@
 
 from .config_value import ConfigValue
 from .config_status import ConfigStatus
-from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+from model_analyzer.constants import CONFIG_PARSER_FAILURE
 
 
-class ConfigPrimitive(ConfigValue):
+class ConfigNone(ConfigValue):
     """
     A wrapper class for the primitive datatypes.
     """
-
     def __init__(self,
-                 type_,
                  preprocess=None,
                  required=False,
                  validator=None,
@@ -33,8 +30,6 @@ class ConfigPrimitive(ConfigValue):
         """
         Parameters
         ----------
-        type_ : type
-            Type of the field.
         preprocess : callable
             Function be called before setting new values.
         required : bool
@@ -49,7 +44,7 @@ class ConfigPrimitive(ConfigValue):
 
         super().__init__(preprocess, required, validator, output_mapper, name)
 
-        self._type = self._cli_type = type_
+        self._type = self._cli_type = type(None)
         self._value = None
 
     def set_value(self, value):
@@ -60,15 +55,10 @@ class ConfigPrimitive(ConfigValue):
             The value for this field.
         """
 
-        if self._is_primitive(value):
-            try:
-                value = self._type(value)
-            except ValueError as e:
-                message = f'Failed to set the value for field "{self.name()}". Error: {e}.'
-                return ConfigStatus(CONFIG_PARSER_FAILURE, message, self)
+        if value is None:
             return super().set_value(value)
         else:
             return ConfigStatus(
                 CONFIG_PARSER_FAILURE,
-                f'Value "{value}" for field "{self.name()}" should be a primitive type.',
+                f'Value "{value}" for field "{self.name()}" should be None',
                 self)
