@@ -160,14 +160,20 @@ class ReportManager:
         summary_sentence = ""
         for model_config, measurement in self._measurements[model_name]:
             dynamic_batching_str = model_config.dynamic_batching_string()
+            dynamic_batch_phrase = "dynamic batching disabled" \
+                if dynamic_batching_str == "Disabled" \
+                    else f"max dynamic batch size of {dynamic_batching_str}"
             instance_group_str = model_config.instance_group_string()
             if best:
+                model_config_dict = model_config.get_config()
+                platform = model_config_dict[
+                    'backend'] if 'backend' in model_config_dict else model_config_dict[
+                        'platform']
                 summary_sentence = (
                     f"In {num_measurements} measurements, "
-                    f"{instance_group_str} model instances at concurrency "
-                    f"{measurement.perf_config()['concurrency-range']} "
-                    f"and max dynamic batch size of {dynamic_batching_str} "
-                    f"on platform {model_config.get_field('platform')} delivers "
+                    f"{instance_group_str} model instances "
+                    f"with {dynamic_batch_phrase} "
+                    f"on platform {platform} delivers "
                     f"maximum throughput under the given constraints on GPU {gpu_name}."
                 )
                 best = False

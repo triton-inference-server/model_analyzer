@@ -221,7 +221,7 @@ class ModelConfig:
                     'preferred_batch_size']
             else:
                 dynamic_batch_sizes = [model_config['max_batch_size']]
-            return ','.join([str(x) for x in dynamic_batch_sizes])
+            return f"[{' '.join([str(x) for x in dynamic_batch_sizes])}]"
         else:
             return "Disabled"
 
