@@ -45,13 +45,13 @@ model_names:
 ```
 
 In the default mode, automatic config search will try values 1 until 1024
-for [concurrency](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md#request-concurrency) increased exponentially (i.e. 1, 2, 4, 8, ...). You can configure the maximum value using the `run_config_search_max_concurrency` key in
+for [concurrency](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md#request-concurrency) increased exponentially (i.e. 1, 2, 4, 8, ...). Maximum value can be configured using the `run_config_search_max_concurrency` key in
 the Model Analyzer Config. For [`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups), 
-Model Analyzer tries values from 1 to 5. You can change this value using the
+Model Analyzer tries values from 1 to 5. This value can be changed using the
 `run_config_search_max_instance_count` key in the Model Analyzer Config. For
 [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher) settings, Model Analyzer tries enabling/disabling
-dynamic batching plus values from 1 to 16 for the `preferred_batch_size`. You can
-change this value using the `run_config_search_max_preferred_batch_size` key
+dynamic batching plus values from 1 to 16 for the `preferred_batch_size`. 
+This value can be changed using the `run_config_search_max_preferred_batch_size` key
 in the Model Analyzer Config.
 
 An example config that limits the search space used by Model Analyzer is described
@@ -68,7 +68,7 @@ model_names:
   - model_2
 ```
 
-If you specify either `concurrency` or `model_config_parameters`,
+If either `concurrency` or `model_config_parameters` is specified
 for one of the models, it will disable the automatic config search for the parameter
 provided.
 
@@ -109,11 +109,11 @@ Triton Server. In this mode, only concurrency values can be swept.
 ## Manual Configuration Search
 
 In addition to the automatic config search, Model Analyzer supports a manual
-config search mode. To enable this mode, you should provide
-`--run-config-search-disable` flag in the CLI or `run_config_search_disable:
+config search mode. To enable this mode,
+`--run-config-search-disable` flag should be provided in the CLI or `run_config_search_disable:
 True` in the Model Analyzer Config.
 
-In this mode, you need to specify values for both `concurrency` and `model_config_parameters`. If no value for `concurrency` is specified,
+In this mode, values for both `concurrency` and `model_config_parameters` needs to be specified. If no value for `concurrency` is specified,
 the default value, 1, will be used. This mode in comparison to the
 automatic mode, is not limited to `dynamic_batching` and `instance_count`
 config parameters. In this mode you have complete control over the config
@@ -139,7 +139,7 @@ model_names:
             count: [1, 2]
 ```
 
-In this mode, you can sweep through every Triton model configuration
+In this mode, Model Analyzer can sweep through every Triton model configuration
 parameter available. For a complete list of parameters allowed under
 `model_config_parameters`, refer to the [Triton Model
 Configuration](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md).
@@ -153,6 +153,5 @@ The configuration sweep described above, will sweep through 24 configs = (2 `max
 Also note that we have to use a list of lists for the `preferred_batch_size` value
 in order to sweep through different values. The reason is that `preferred_batch_size`
 accepts a list of values by default. Using `preferred_batch_size: [1, 2, 3]` in the
-Model Analyzer Config, will lead to a single value for `preferred_batch_size`. You
-can check [Triton Dynamic Batching's Preferred Batch Sizes](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#preferred-batch-sizes) for more info.
-
+Model Analyzer Config, will lead to a single value for `preferred_batch_size`. Check out
+[Triton Dynamic Batching's Preferred Batch Sizes](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#preferred-batch-sizes) for more info.
