@@ -195,7 +195,7 @@ class ResultManager:
     def complete_result(self):
         """
         Submit the current RunResult into
-        the results heaps based on whether 
+        the results heaps based on whether
         it passes constraints or not.
         """
 
