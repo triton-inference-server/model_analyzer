@@ -29,7 +29,7 @@ EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
-TRITON_LAUNCH_MODE="docker"
+TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="docker"}
 TRITON_SERVER_VERSION="21.02-py3"
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
@@ -38,7 +38,7 @@ OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -n $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY --run-config-search-disable"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE --triton-version=$TRITON_SERVER_VERSION"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --export -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
@@ -65,8 +65,8 @@ else
     SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
     MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
     MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
-    METRICS_NUM_COLUMNS=8
-    INFERENCE_NUM_COLUMNS=8
+    METRICS_NUM_COLUMNS=11
+    INFERENCE_NUM_COLUMNS=11
     SERVER_NUM_COLUMNS=7
 
     check_log_table_row_column $ANALYZER_LOG $SERVER_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
@@ -109,6 +109,8 @@ else
     fi
 fi
 set -e
+
+rm -rf $EXPORT_PATH/*
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

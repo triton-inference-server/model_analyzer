@@ -19,24 +19,36 @@ class ConstraintManager:
     constraints on a given measurements
     """
 
-    def __init__(self, constraints):
+    @staticmethod
+    def get_constraints_for_all_models(config):
         """
         Parameters
         ----------
-        constraints : dict
-            keys are record_types and values are dicts
-            describing either max/min
+        config : AnalyzerConfig
+            The model analyzer config 
+        
+        Returns
+        -------
+        dict
+            keys are model names, and values are constraints
         """
 
-        self._constraints = constraints
+        constraints = {}
+        for model in config.model_names:
+            constraints[model.model_name()] = model.constraints()
+        return constraints
 
-    def check_constraints(self, measurement):
+    @staticmethod
+    def check_constraints(constraints, measurement):
         """
         Takes a measurement and
         checks it against the constraints.
 
         Parameters
         ----------
+        constraints: dict
+            keys are metrics and values are 
+            constraint_type:constraint_value pairs
         measurement : list of metrics
             The measurement to check against the constraints
 
@@ -46,10 +58,10 @@ class ConstraintManager:
         False otherwise
         """
 
-        if self._constraints:
+        if constraints:
             for metric in measurement.data():
-                if type(metric).tag in self._constraints:
-                    constraint = self._constraints[type(metric).tag]
+                if type(metric).tag in constraints:
+                    constraint = constraints[type(metric).tag]
                     if 'min' in constraint:
                         if metric.value() < constraint['min']:
                             return False

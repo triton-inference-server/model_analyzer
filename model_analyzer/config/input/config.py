@@ -270,12 +270,14 @@ class AnalyzerConfig:
                 " to be used during profiling"))
         self._add_config(
             ConfigField('perf_analyzer_timeout',
+                        flags=['--perf-analyzer-timeout'],
                         field_type=ConfigPrimitive(int),
                         default_value=600,
                         description="Perf analyzer timeout value in seconds."))
         self._add_config(
             ConfigField(
                 'perf_analyzer_cpu_util',
+                flags=['--perf-analyzer-cpu-util'],
                 field_type=ConfigPrimitive(float),
                 default_value=80,
                 description=
@@ -316,7 +318,7 @@ class AnalyzerConfig:
             ConfigField('export',
                         flags=['--export'],
                         field_type=ConfigPrimitive(bool),
-                        parser_args={'action': 'store_true'},
+                        default_value=True,
                         description="Enables exporting metrics to a file"))
         self._add_config(
             ConfigField(
@@ -326,6 +328,15 @@ class AnalyzerConfig:
                 field_type=ConfigPrimitive(str),
                 description=
                 "Full path to directory in which to store the results"))
+        self._add_config(
+            ConfigField(
+                'summarize',
+                flags=['--summarize'],
+                field_type=ConfigPrimitive(bool),
+                default_value=True,
+                description=
+                'Model Analyzer generates a brief summary of the collected data.'
+            ))
         self._add_config(
             ConfigField(
                 'filename_model_inference',
@@ -406,7 +417,6 @@ class AnalyzerConfig:
                         flags=['--perf-output'],
                         field_type=ConfigPrimitive(bool),
                         default_value=False,
-                        parser_args={'action': 'store_true'},
                         description=
                         'Enables the output from the perf_analyzer to stdout'))
         self._add_config(
@@ -649,6 +659,7 @@ class AnalyzerConfig:
                     'title': ConfigPrimitive(type_=str),
                     'x_axis': ConfigPrimitive(type_=str),
                     'y_axis': ConfigPrimitive(type_=str),
+                    'monotonic': ConfigPrimitive(type_=bool)
                 })
         },
                                     output_mapper=ConfigPlot.from_object)
@@ -664,12 +675,14 @@ class AnalyzerConfig:
                     'throughput_v_latency': {
                         'title': 'Throughput vs. Latency',
                         'x_axis': 'perf_latency',
-                        'y_axis': 'perf_throughput'
+                        'y_axis': 'perf_throughput',
+                        'monotonic': True
                     },
                     'gpu_mem_v_latency': {
                         'title': 'GPU Memory vs. Latency',
                         'x_axis': 'perf_latency',
-                        'y_axis': 'gpu_used_memory'
+                        'y_axis': 'gpu_used_memory',
+                        'monotonic': False
                     }
                 },
                 description=
@@ -681,17 +694,9 @@ class AnalyzerConfig:
                 field_type=ConfigPrimitive(int),
                 default_value=3,
                 description='The number of top model configurations to plot.'))
-        self._add_config(
-            ConfigField(
-                'top_n_measurements',
-                field_type=ConfigPrimitive(int),
-                default_value=5,
-                description=
-                'The number of top sets of measurements to plot per top model config.'
-            ))
 
         # Fill these in with their defaults
-        for key in ['plots', 'top_n_configs', 'top_n_measurements']:
+        for key in ['plots', 'top_n_configs']:
             self._fields[key].set_value(self._fields[key].default_value())
 
     def set_config_values(self, args):

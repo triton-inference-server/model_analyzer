@@ -140,7 +140,11 @@ class TritonServerDocker(TritonServer):
         as a str
         """
 
-        return b''.join(list(self._tritonserver_log_gen)).decode("utf-8")
+        logs = list(self._tritonserver_log_gen)
+        if logs:
+            return b''.join(logs).decode("utf-8")
+        else:
+            return ''
 
     def cpu_stats(self):
         """

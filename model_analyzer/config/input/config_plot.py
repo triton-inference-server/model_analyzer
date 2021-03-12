@@ -19,7 +19,12 @@ class ConfigPlot:
     a single plot.
     """
 
-    def __init__(self, name, title=None, x_axis=None, y_axis=None):
+    def __init__(self,
+                 name,
+                 title=None,
+                 x_axis=None,
+                 y_axis=None,
+                 monotonic=False):
         """
         Parameters
         ----------
@@ -31,12 +36,16 @@ class ConfigPlot:
             The metric tag for the x-axis of this plot
         y_axis : str
             The metric tag for the y-axis of this plot
+        monotonic: bool
+            Whether or not to prune decreasing points in this
+            plot
         """
 
         self._name = name
         self._title = title
         self._x_axis = x_axis
         self._y_axis = y_axis
+        self._monotonic = monotonic
 
     def name(self):
         """
@@ -77,6 +86,17 @@ class ConfigPlot:
         """
 
         return self._y_axis
+
+    def monotonic(self):
+        """
+        Returns
+        -------
+        bool
+            Whether or not to prune
+            decreasing points 
+        """
+
+        return self._monotonic
 
     @staticmethod
     def from_list(plots):
@@ -123,7 +143,8 @@ class ConfigPlot:
             'name': self._name,
             'title': self._title,
             'x_axis': self._x_axis,
-            'y_axis': self._y_axis
+            'y_axis': self._y_axis,
+            'monotonic': self._monotonic
         }
 
         return str(plot_object)

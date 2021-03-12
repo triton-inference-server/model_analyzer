@@ -20,6 +20,7 @@ from model_analyzer.output.file_writer import FileWriter
 from .run_config import RunConfig
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.result.measurement import Measurement
 
 
 class RunConfigGenerator:
@@ -142,6 +143,7 @@ class RunConfigGenerator:
 
             model_config = run_config.model_config()
             original_model_name = run_config.model_name()
+            perf_config = run_config.perf_config()
             model_config_name = model_config.get_field('name')
             measurements[model_config] = []
 
@@ -169,32 +171,23 @@ class RunConfigGenerator:
                 self._server.stop()
                 continue
 
-            self._result_manager.init_result(run_config)
-
-            received_result = False
             # Profile various batch size and concurrency values.
             # TODO: Need to sort the values for batch size and concurrency
             # for correct measurment of the GPU memory metrics.
-            for perf_config in run_config.perf_analyzer_configs():
-                perf_output_writer = None if \
-                    not perf_output else FileWriter()
+            perf_output_writer = None if \
+                not perf_output else FileWriter()
 
-                logging.info(
-                    f"Profiling model {perf_config.to_cli_string()[3:]}...")
-                measurement = self._metrics_manager.profile_model(
-                    perf_config=perf_config,
-                    perf_output_writer=perf_output_writer)
-                if measurement is not None:
-                    measurements[model_config].append(measurement)
-                    received_result = True
+            logging.info(f"Profiling model {perf_config['model-name']}...")
+            gpu_data, non_gpu_data = self._metrics_manager.profile_model(
+                perf_config=perf_config, perf_output_writer=perf_output_writer)
+            if gpu_data is not None and non_gpu_data is not None:
+                measurement = Measurement(gpu_data=gpu_data,
+                                          non_gpu_data=non_gpu_data,
+                                          perf_config=perf_config)
+                self._result_manager.add_measurement(run_config, measurement)
+                measurements[model_config].append(measurement)
+
             self._server.stop()
-
-            if received_result:
-                # Submit the result to be sorted
-                self._result_manager.complete_result()
-            else:
-                # Remove the result from result manager
-                self._result_manager.reset_result()
         return measurements
 
     def _generate_run_config_for_model_sweep(self, model, model_sweep):
@@ -231,17 +224,19 @@ class RunConfigGenerator:
             model_config.set_field('name', model_tmp_name)
             perf_configs = self._generate_perf_config_for_model(
                 model_tmp_name, model)
-            self._run_configs.append(
-                RunConfig(model.model_name(), model_config, perf_configs))
+            for perf_config in perf_configs:
+                self._run_configs.append(
+                    RunConfig(model.model_name(), model_config, perf_config))
         else:
             model_config = ModelConfig.create_from_triton_api(
                 self._client, model.model_name(), num_retries)
             perf_configs = self._generate_perf_config_for_model(
                 model.model_name(), model)
 
-            # Add the new run config.
-            self._run_configs.append(
-                RunConfig(model.model_name(), model_config, perf_configs))
+            for perf_config in perf_configs:
+                # Add the new run config.
+                self._run_configs.append(
+                    RunConfig(model.model_name(), model_config, perf_config))
 
     def _generate_run_configs(self):
         model = self._model

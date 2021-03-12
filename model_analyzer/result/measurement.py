@@ -30,7 +30,6 @@ class Measurement:
                  gpu_data,
                  non_gpu_data,
                  perf_config,
-                 comparator,
                  aggregation_func=average_list):
         """
         gpu_data : dict of list of Records
@@ -41,8 +40,7 @@ class Measurement:
         perf_config : PerfAnalyzerConfig
             The perf config that was used for the perf run that generated
             this data data
-        comparator : ResultComparator
-            Handle for ResultComparator that knows how to order measurements
+
         aggregation_func: callable(list) -> list
             A callable that receives a list and outputs a list used to aggregate
             data across gpus.
@@ -53,7 +51,6 @@ class Measurement:
         self._avg_gpu_data = aggregation_func(list(self._gpu_data.values()))
         self._non_gpu_data = non_gpu_data
         self._perf_config = perf_config
-        self._comparator = comparator
 
         self._gpu_data_from_tag = {
             type(metric).tag: metric
@@ -63,6 +60,18 @@ class Measurement:
             type(metric).tag: metric
             for metric in self._non_gpu_data
         }
+
+    def set_result_comparator(self, comparator):
+        """
+        Sets result comparator for this
+        measurement
+        Parameters
+        ----------
+        comparator : ResultComparator
+            Handle for ResultComparator that knows how to order measurements
+        """
+
+        self._comparator = comparator
 
     def data(self):
         """
@@ -119,6 +128,16 @@ class Measurement:
             raise TritonModelAnalyzerException(
                 f"No metric corresponding to tag {tag}"
                 " found in measurement")
+
+    def gpus_used(self):
+        """
+        Returns
+        -------
+        list of ints
+            list of device IDs used in this measurement
+        """
+
+        return list(self._gpu_data.keys())
 
     def __eq__(self, other):
         """

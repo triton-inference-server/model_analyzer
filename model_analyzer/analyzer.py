@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import logging
-
 from .config.run.run_config_generator import RunConfigGenerator
+from .analyzer_statistics import AnalyzerStatistics
 from .result.result_manager import ResultManager
 from .record.metrics_manager import MetricsManager
 from .plots.plot_manager import PlotManager
+from .reports.report_manager import ReportManager
 from .constants import SERVER_ONLY_TABLE_DEFAULT_VALUE
 from .config.run.run_search import RunSearch
+
+import logging
 
 
 class Analyzer:
@@ -29,6 +30,7 @@ class Analyzer:
     model_analyzer. Configured with metrics to monitor, exposes profiling and
     result writing methods.
     """
+
     def __init__(self, config, client, metric_tags, server):
         """
         Parameters
@@ -46,8 +48,12 @@ class Analyzer:
         self._client = client
         self._server = server
 
+        # Collect stats
+        self._statistics = AnalyzerStatistics(config=config)
+
         # Results Manager
-        self._result_manager = ResultManager(config=config)
+        self._result_manager = ResultManager(config=config,
+                                             statistics=self._statistics)
 
         # Metrics Manager
         self._metrics_manager = MetricsManager(
@@ -58,6 +64,9 @@ class Analyzer:
 
         # Plot manager
         self._plot_manager = PlotManager(config=config)
+
+        # Report manager
+        self._report_manager = ReportManager(config=config)
 
     def run(self):
         """
@@ -100,21 +109,18 @@ class Analyzer:
 
             run_config_generator.execute_run_configs()
 
-            # Add the best measurements from the best result to the plot for the model
-            for result in self._result_manager.top_n_results(
-                    n=config.top_n_configs):
-                model_config_name = result.run_config().model_config(
-                ).get_field('name')
-                for measurement in result.top_n_measurements(
-                        n=config.top_n_measurements):
-                    self._plot_manager.add_measurement(
-                        model_config_label=model_config_name,
-                        measurement=measurement)
+            # Sort the results for this model before summarize
+            self._result_manager.sort_results()
 
-            # Write plots to disk
-            self._plot_manager.complete_plots(model_name=model.model_name())
+            if self._config.summarize:
+                # Send requested best results to plot manager
+                self._process_top_results()
+                # Plot data to graphs
+                self._plot_manager.complete_plots(
+                    model_name=model.model_name())
 
-            # Write results to tables
+            # Dump results to tables
+            self._result_manager.update_statistics(model.model_name())
             self._result_manager.compile_results()
 
     def write_and_export_results(self):
@@ -124,4 +130,24 @@ class Analyzer:
         """
 
         self._result_manager.write_and_export_results()
-        self._plot_manager.export_plots()
+        if self._config.summarize:
+            self._plot_manager.export_plots()
+            self._report_manager.export_summary(statistics=self._statistics)
+
+    def _process_top_results(self):
+        """
+        Add the best measurements from the 
+        best result to the plot for the model.
+        This function must be called before 
+        corresponding plots are completed,
+        and results are
+        """
+
+        for result in self._result_manager.top_n_results(
+                n=self._config.top_n_configs):
+
+            # Send all measurements to plots manager
+            self._plot_manager.add_result(result=result)
+
+            # Send top_n measurements to report manager
+            self._report_manager.add_result(result=result)
