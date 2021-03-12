@@ -129,6 +129,25 @@ def _get_sweep_configs():
         'model_names': {
             'classification_breast_v1': {
                 'model_config_parameters': {
+                    'dynamic_batching': [{}, None],
+                    'instance_group': [{
+                        'count': [1],
+                        'kind': ['KIND_GPU', None]
+                    }]
+                }
+            }
+        },
+        'triton_launch_mode': ['docker'],
+    }
+    model_config['total_param'] = 4
+    sweep_configs.append(model_config)
+
+    model_config = {
+        'run_config_search_disable': True,
+        'perf_analyzer_cpu_util': 600,
+        'model_names': {
+            'classification_breast_v1': {
+                'model_config_parameters': {
                     'dynamic_batching': {
                         'preferred_batch_size': [[4, 8], [5, 6]],
                         'max_queue_delay_microseconds': [100, 200]

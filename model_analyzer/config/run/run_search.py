@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.input.config_model import ConfigModel
+from model_analyzer.config.input.objects.config_model import ConfigModel
 import logging
 from model_analyzer.constants import THROUGHPUT_GAIN
 import copy

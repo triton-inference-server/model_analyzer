@@ -21,8 +21,8 @@ from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config import AnalyzerConfig
-from model_analyzer.config.input.config_model import ConfigModel
-from model_analyzer.config.input.config_plot import ConfigPlot
+from model_analyzer.config.input.objects.config_model import ConfigModel
+from model_analyzer.config.input.objects.config_plot import ConfigPlot
 from model_analyzer.config.input.config_list_string import ConfigListString
 from model_analyzer.config.input.config_list_generic import ConfigListGeneric
 from model_analyzer.config.input.config_primitive import ConfigPrimitive
@@ -120,9 +120,9 @@ class TestConfig(trc.TestResultCollector):
 
         # Each subitem is also a list
         self.assertIsInstance(input_param.raw_value().container_type(),
-                              ConfigListGeneric)
+                              ConfigUnion)
 
-        single_sweep_param = input_param.raw_value().raw_value()[0]
+        single_sweep_param = input_param.raw_value().raw_value()[0].raw_value()
         self.assertIsInstance(single_sweep_param.raw_value()[0], ConfigObject)
 
         # Check types for 'name'
@@ -130,7 +130,7 @@ class TestConfig(trc.TestResultCollector):
         self.assertIsInstance(name_param, ConfigSweep)
         self.assertIsInstance(name_param.raw_value(), ConfigListGeneric)
         self.assertIsInstance(name_param.raw_value().container_type(),
-                              ConfigPrimitive)
+                              ConfigUnion)
 
         # Check types for 'data_type'
         data_type_param = single_sweep_param.raw_value()[0].raw_value(
@@ -138,6 +138,10 @@ class TestConfig(trc.TestResultCollector):
         self.assertIsInstance(data_type_param, ConfigSweep)
         self.assertIsInstance(data_type_param.raw_value(), ConfigListGeneric)
         self.assertIsInstance(data_type_param.raw_value().container_type(),
+                              ConfigUnion)
+        self.assertIsInstance(data_type_param.raw_value().raw_value()[0],
+                              ConfigUnion)
+        self.assertIsInstance(data_type_param.raw_value().raw_value()[0].raw_value(),
                               ConfigEnum)
 
         # Check types for 'dims'
@@ -145,11 +149,14 @@ class TestConfig(trc.TestResultCollector):
         self.assertIsInstance(dims_param, ConfigSweep)
         self.assertIsInstance(dims_param.raw_value(), ConfigListGeneric)
         self.assertIsInstance(dims_param.raw_value().container_type(),
-                              ConfigListGeneric)
+                              ConfigUnion)
         self.assertIsInstance(dims_param.raw_value().raw_value()[0],
-                              ConfigListGeneric)
+                              ConfigUnion)
         self.assertIsInstance(
-            dims_param.raw_value().raw_value()[0].container_type(),
+            dims_param.raw_value().raw_value()[0].raw_value(),
+            ConfigListGeneric)
+        self.assertIsInstance(
+            dims_param.raw_value().raw_value()[0].raw_value().raw_value()[0],
             ConfigPrimitive)
 
         # Check types for 'format'
@@ -157,7 +164,7 @@ class TestConfig(trc.TestResultCollector):
         self.assertIsInstance(format_param, ConfigSweep)
         self.assertIsInstance(format_param.raw_value(), ConfigListGeneric)
         self.assertIsInstance(format_param.raw_value().container_type(),
-                              ConfigEnum)
+                              ConfigUnion)
 
     def _assert_model_str_type(self, model_config):
         self.assertIsInstance(model_config, ConfigUnion)
@@ -194,7 +201,7 @@ class TestConfig(trc.TestResultCollector):
         cli = CLI(config)
 
         # When a required field is not specified, parse will lead to an
-        # exception
+        # exceptin
         with self.assertRaises(TritonModelAnalyzerException):
             cli.parse()
 
@@ -570,6 +577,36 @@ model_names:
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
             'path-to-config-file'
         ]
+        yaml_content = """
+model_names:
+  -
+    vgg_16_graphdef:
+        model_config_parameters:
+            instance_group:
+                -
+                    kind: KIND_GPU
+                    count: 1
+
+"""
+        config = self._evaluate_config(args, yaml_content)
+        model_configs = config.get_all_config()['model_names']
+        expected_model_configs = [
+            ConfigModel('vgg_16_graphdef',
+                        parameters={
+                            'batch_sizes': [1],
+                            'concurrency': []
+                        },
+                        objectives={'perf_throughput': 10},
+                        model_config_parameters={
+                            'instance_group': [[{
+                                'kind': ['KIND_GPU'],
+                                'count': [1]
+                            }]]
+                        })
+        ]
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
+
         yaml_content = """
 model_names:
   -

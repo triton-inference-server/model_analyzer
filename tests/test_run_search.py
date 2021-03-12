@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 from unittest.mock import MagicMock
 from .common import test_result_collector as trc
 
 from model_analyzer.config.run.run_search import RunSearch
-from model_analyzer.config.input.config_model import ConfigModel
+from model_analyzer.config.input.objects.config_model import ConfigModel
 
 
 class TestRunSearch(trc.TestResultCollector):
