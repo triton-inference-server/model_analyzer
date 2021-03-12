@@ -227,15 +227,15 @@ model_names:
 Objectives specify the sorting criteria for the final results.
 The fields below are supported under this object type:
 
-| Option Name       |   Units   | Description                                            |
-| :---------------- | :-------: | :----------------------------------------------------- |
-| `perf_throughput` | inf / sec | Use throughput as the objective.                       |
-| `perf_latency`    |    ms     | Use latency as the objective.                          |
-| `gpu_used_memory` |    MB     | Use GPU memory used by the model as the objective.     |
-| `gpu_free_memory` |    MB     | Use GPU memory not used by the model as the objective. |
-| `gpu_utilization` |     %     | Use the GPU utilization as the objective.              |
-| `cpu_used_ram`    |    MB     | Use RAM used by the model as the objective.            |
-| `cpu_free_ram`    |    MB     | Use RAM not used by the model as the objective.        |
+| Option Name       | Description                                            |
+| :---------------- | :----------------------------------------------------- |
+| `perf_throughput` | Use throughput as the objective.                       |
+| `perf_latency`    | Use latency as the objective.                          |
+| `gpu_used_memory` | Use GPU memory used by the model as the objective.     |
+| `gpu_free_memory` | Use GPU memory not used by the model as the objective. |
+| `gpu_utilization` | Use the GPU utilization as the objective.              |
+| `cpu_used_ram`    | Use RAM used by the model as the objective.            |
+| `cpu_free_ram`    | Use RAM not used by the model as the objective.        |
 
 An example `objectives` that will sort the results by throughput looks like below:
 
@@ -274,7 +274,9 @@ objectives:
     perf_throughput: 3
 ```
 
-The score for each measurement will be a weighted average using the weights specified here.
+The score for each measurement will be a weighted average using the weights
+specified here. The above config will multiply obtained throughput by 0.4 and
+latency by 0.6 and use the sum as the score for the measurement.
 
 `<objective>` can be specified both globally and on a per model basis.
 
@@ -287,10 +289,10 @@ cannot be specified globally.
 
 Options available under this parameter are described in table below:
 
-| Option Name   | Description                                                                                                          |
-| :------------ | :------------------------------------------------------------------------------------------------------------------- |
-| `concurrency` | Request concurrency used for generating the input load. Can be a `<range>`, `<comma-delimited-list>`, or a `<list>`. |
-| `batch_sizes` | Static batch size used for generating requests.  Can be a `<range>`, `<comma-delimited-list>`, or a `<list>`.        |
+| Option Name   | Description                                             | Supporting Types                                   |
+| :------------ | :------------------------------------------------------ | :------------------------------------------------- |
+| `concurrency` | Request concurrency used for generating the input load. | `<range>`, `<comma-delimited-list>`, or a `<list>` |
+| `batch_sizes` | Static batch size used for generating requests.         | `<range>`, `<comma-delimited-list>`, or a `<list>` |
 
 
 An example `<parameter>` looks like below:
@@ -332,11 +334,11 @@ specified on a per model basis and cannot be specified globally (like `<paramete
 
 Table below presents the list of common parameters that can be used for manual sweeping:
 
-|       Option       |                                                 Description                                                  |
-| :----------------: | :----------------------------------------------------------------------------------------------------------: |
-| `dynamic_batching` |  https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher   |
-|  `max_batch_size`  | https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#maximum-batch-size |
-|  `instance_group`  |  https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups   |
+|                                                              Option                                                              |                                                                                                                                                               Description                                                                                                                                                               |
+| :------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)  |                                                                                              Dynamic batching is a feature of Triton that allows inference requests to be combined by the server, so that a batch is created dynamically.                                                                                               |
+| [`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#maximum-batch-size) |                                       The max_batch_size property indicates the maximum batch size that the model supports for the [types of batching](https://github.com/triton-inference-server/server/blob/master/docs/architecture.md#models-and-schedulers) that can be exploited by Triton.                                       |
+|  [`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups)   | Triton can provide multiple instances of a model so that multiple inference requests for that model can be handled simultaneously. The model configuration ModelInstanceGroup property is used to specify the number of execution instances that should be made available and what compute resource should be used for those instances. |
 
 An example `<model-config-parameters>` look like below:
 ```yaml
