@@ -16,12 +16,13 @@ limitations under the License.
 
 # Model Analyzer Config
 
-In addition to the CLI flags, you can config the Model Analyzer
-using a [YAML](https://yaml.org/) file too. The scheme
-for this configuration file is described below. Brackets
-indicate that a parameter is optional. For non-list
-and non-object parameters the value is set to the
-specified default.
+The Model Analyzer can be configured with a [YAML](https://yaml.org/) file.
+The scheme for the configuration file is described below. Brackets indicate
+that a parameter is optional. For non-list and non-object parameters the
+value is set to the specified default.
+
+Every flag supported by the CLI is supported in the configuration file.
+But some configurations are only supported using the config file.
 
 The placeholders below are used throughout the configuration:
 
@@ -42,6 +43,7 @@ batch_sizes:
 ```
 
 This YAML represents the array `[2, 4, 6]`.
+* Other types are described in the end of this file.
 
 ```yaml
 # Path to the Model Repository
@@ -53,7 +55,7 @@ model_repository: <string>
 [ triton_launch_mode: <string> ]
 
 # List of the model names to be analyzed
-model_names: <comma-delimited-string|list>
+model_names: <comma-delimited-string|list|model>
 
 # Concurrency values to be used for the analysis
 [ concurrency: <comma-delimited-string|list|range> | default: 1 ]
@@ -62,7 +64,7 @@ model_names: <comma-delimited-string|list>
 [ batch_sizes: <comma-delimited-string|list|range> | default: 1 ]
 
 # Whether to export metrics to a file
-[ export: <boolean> | default: false ]
+[ export: <boolean> | default: true ]
 
 # Export path to be used
 [ export_path: <string> | default: '.' ]
@@ -122,18 +124,334 @@ model_names: <comma-delimited-string|list>
 
 # List of GPU UUIDs to be used for the profiling. Use 'all' to profile all the GPUs visible by CUDA."
 [ gpus: <string|comma-delimited-list-string> | default: 'all' ]
+
+# List of constraints placed on the config search results.
+[ constrains: <constraint> ]
+
+# List of objectives that user wants to sort the results by it.
+[ objectives: <objective|list> ]
+
+# Maximum concurrency used for the automatic config search.
+[ run_config_search_max_concurrency: <int> | default: 1024 ]
+
+# Maximum instance count used for the automatic config search.
+[ run_config_search_max_instance_count: <int> | default: 5 ]
+
+# Maximum instance count used for the automatic config search.
+[ run_config_search_max_preferred_batch_size: <int> | default: 16 ]
+
+# Disables automatic config search
+[ run_config_search_disable: <bool> | default: false ]
 ```
 
-If you save configuration file in `config.yml`, you can provide
-the path to the Model Analyzer config using the 
-`-f` flag.
+## `<constraint>`
+A constraint, specifies the bounds that determine a successful run. There are
+three constraints allowed:
 
-```
-model-analyzer -f config.yml
+| Option Name       |   Units   | Constraint | Description                                          |
+| :---------------- | :-------: | :--------: | :--------------------------------------------------- |
+| `perf_throughput` | inf / sec |    min     | Specify minimum desired throughput.                  |
+| `perf_latency`    |    ms     |    max     | Specify maximum tolerable latency or latency budget. |
+| `gpu_used_memory` |    MB     |    max     | Specify maximum GPU memory used by model.            |
+
+
+### Examples
+
+To filter out the results when `perf_throughput` is
+less than 5 infer/sec:
+
+```yaml
+perf_throughput:
+    min: 5
 ```
 
-All the flags supported in the CLI, are supported in the configuration file
-too.
+To filter out the results when `perf_latency` is larger than 100
+milliseconds:
+
+```yaml
+perf_latency:
+    max: 100
+```
+
+To filter out the results when `gpu_used_memory` is larger than 200
+MBs:
+```yaml
+gpu_used_memory:
+    max: 200
+```
+
+Keys can be combined for more complex constraints:
+```yaml
+gpu_used_memory:
+    max: 200
+perf_latency:
+    max: 100
+```
+
+This will filter out the results when `gpu_used_memory` is larger than 200 MBs and
+their latency is larger than 100 milliseconds.
+
+The values described above can be specified both globally and on a per model basis.
+
+The global example looks like below:
+
+```yaml
+model_repository: /path/to/model-repository
+model_names:
+  - model_1
+  - model_2
+
+constraints:
+    gpu_used_memory:
+        max: 200
+```
+
+In the global mode, the constraint specified will be enforced on every model.
+To have different constraints for each model, version below can be used:
+
+```yaml
+model_repository: /path/to/model-repository
+model_names:
+  model_1:
+    constraints:
+        gpu_used_memory:
+            max: 200
+  model_2:
+    constraints:
+        latency:
+            max: 50
+```
+
+## `<objective>`
+
+Objectives specify the sorting criteria for the final results.
+The fields below are supported under this object type:
+
+| Option Name       | Description                                            |
+| :---------------- | :----------------------------------------------------- |
+| `perf_throughput` | Use throughput as the objective.                       |
+| `perf_latency`    | Use latency as the objective.                          |
+| `gpu_used_memory` | Use GPU memory used by the model as the objective.     |
+| `gpu_free_memory` | Use GPU memory not used by the model as the objective. |
+| `gpu_utilization` | Use the GPU utilization as the objective.              |
+| `cpu_used_ram`    | Use RAM used by the model as the objective.            |
+| `cpu_free_ram`    | Use RAM not used by the model as the objective.        |
+
+An example `objectives` that will sort the results by throughput looks like below:
+
+```yaml
+objectives:
+- perf_throughput
+```
+
+To sort the results by latency, `objectives` should look like:
+
+```yaml
+objectives:
+- perf_latency
+```
+### Weighted Objectives
+
+In addition to the mode discussed above, multiple values can be provided in
+the objectives key. For example:
+
+```yaml
+objectives:
+- perf_latency
+- perf_throughput
+```
+
+The above config will multiply obtained throughput and latency for each
+measurement by 0.5 (i.e. 0.5 * latency + 0.5 * throughput) and use this as
+the "score" to sort the measurements according to. This mode can be useful
+if a more advanced criteria needs to be used for sorting.
+
+An extension of the above `objectives` is explicitly specifying the weights.
+For example:
+```yaml
+objectives:
+    perf_latency: 2
+    perf_throughput: 3
+```
+
+The score for each measurement will be a weighted average using the weights
+specified here. The above config will multiply obtained throughput by 0.4 and
+latency by 0.6 and use the sum as the score for the measurement.
+
+`<objective>` can be specified both globally and on a per model basis.
+
+## Test Configuration `<parameter>`
+
+A user can specify a range of test configurations that Model Analyzer will
+profile over. The possible configuration parameters are `concurrency` and
+`batch_sizes`. One or more parameters are specified per model only. Parameters
+cannot be specified globally.
+
+Options available under this parameter are described in table below:
+
+| Option Name   | Description                                             | Supporting Types                                   |
+| :------------ | :------------------------------------------------------ | :------------------------------------------------- |
+| `concurrency` | Request concurrency used for generating the input load. | `<range>`, `<comma-delimited-list>`, or a `<list>` |
+| `batch_sizes` | Static batch size used for generating requests.         | `<range>`, `<comma-delimited-list>`, or a `<list>` |
+
+
+An example `<parameter>` looks like below:
+
+```yaml
+parameters:
+    concurrency:
+        start: 2
+        stop: 64
+        step: 8
+    batch_sizes: 1,2,3
+```
+
+A complete config example looks like below:
+
+```yaml
+model_repository: /path/to/model-repository
+model_names:
+  model_1:
+    parameters:
+        concurrency:
+            start: 2
+            stop: 64
+            step: 8
+        batch_sizes: 1,2,3
+```
+
+These parameters will result in testing the concurrency configurations of 2,
+10, 18, 26, 34, 42, 50, 58, and 64, for each of different batch sizes of 1, 2
+and 3. This will result in 27 individual test runs of the model.
+
+## `<model-config-parameters>`
+
+This field represents the values that can be changed or swept through
+using Model Analyzer. All the values supported in the [Triton
+Config](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md)
+can be specified or swept through here. `<model-config-parameters>`  should be
+specified on a per model basis and cannot be specified globally (like `<parameter>`).
+
+Table below presents the list of common parameters that can be used for manual sweeping:
+
+|                                                              Option                                                              |                                                                                                                                                               Description                                                                                                                                                               |
+| :------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+| [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)  |                                                                                              Dynamic batching is a feature of Triton that allows inference requests to be combined by the server, so that a batch is created dynamically.                                                                                               |
+| [`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#maximum-batch-size) |                                       The max_batch_size property indicates the maximum batch size that the model supports for the [types of batching](https://github.com/triton-inference-server/server/blob/master/docs/architecture.md#models-and-schedulers) that can be exploited by Triton.                                       |
+|  [`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups)   | Triton can provide multiple instances of a model so that multiple inference requests for that model can be handled simultaneously. The model configuration ModelInstanceGroup property is used to specify the number of execution instances that should be made available and what compute resource should be used for those instances. |
+
+An example `<model-config-parameters>` look like below:
+```yaml
+model_config_parameters:
+    max_batch_size: [6, 8]
+    dynamic_batching:
+        preferred_batch_size: [[1], [2], [3]]
+        max_queue_delay_microseconds: [200, 300]
+    instance_group:
+    -
+        kind: KIND_GPU
+        count: [1, 2]
+```
+
+Note that for values that accept a list by default the user needs to specify
+an additional list if want to sweep through it. Otherwise, it will only
+change the original model config to the value specified and it will not sweep
+through it. `preferred_batch_size` is an example for this. To read more about
+the automatic config search, checkout [Config Search](./config_search.md)
+docs.
+
+A complete YAML config looks like below:
+```yaml
+model_repository: /path/to/model/repository/
+
+run_config_search_disable: True
+model_names:
+  model_1:
+    model_config_parameters:
+        max_batch_size: 2
+        dynamic_batching:
+            preferred_batch_size: [1, 2, 3]
+            max_queue_delay_microseconds: 200
+        instance_group:
+        -
+            kind: KIND_GPU
+            count: 1
+        -
+            kind: KIND_CPU
+            count: 1
+```
+
+Note that in the above configuration, it will not sweep through any of the parameters. The
+reason is that both `instance_group` and `preferred_batch_size` accept a list by default.
+Sweeping thorough different parameters can be achieved using the configuration below:
+```yaml
+model_repository: /path/to/model/repository/
+
+run_config_search_disable: True
+model_names:
+  model_1:
+    model_config_parameters:
+        max_batch_size: 2
+        dynamic_batching:
+            preferred_batch_size: [[1], [2], [3]]
+            max_queue_delay_microseconds: 200
+        instance_group:
+        -
+            -
+                kind: KIND_GPU
+                count: 1
+        -
+            -
+                kind: KIND_CPU
+                count: 1
+```
+
+This will lead to 6 different configurations (3 different preferred batch
+sizes and two instance group combinations). If both
+`model_config_parameters` and `parameters` keys are specified, the list of sweep
+configurations will be the cartesian product of both of the lists.
+
+## `<model>`
+The model object can contain `<constraint>`, `<objective>`,
+`<model-config-parameters>`, and `<parameter>`.
+
+A model object puts together all the different parameters specified above. An example
+will look like:
+```yaml
+model_repository: /path/to/model/repository/
+
+run_config_search_disable: True
+model_names:
+  model_1:
+    model_config_parameters:
+        max_batch_size: 2
+        dynamic_batching:
+            preferred_batch_size: [[1], [2], [3]]
+            max_queue_delay_microseconds: 200
+        instance_group:
+        -
+            -
+                kind: KIND_GPU
+                count: 1
+        -
+            -
+                kind: KIND_CPU
+                count: 1
+    parameters:
+        concurrency:
+            start: 2
+            stop: 64
+            step: 8
+        batch_sizes: 1,2,3
+    constraints:
+        gpu_used_memory:
+            max: 200
+    objectives:
+    - perf_throughput
+```
+
+Multiple models can be specified under the `model_names` key.
+
  ## Example
 
 An example configuration looks like below:
@@ -153,10 +471,14 @@ concurrency:
     - 8
 ```
 
-If you save this file to the `config.yml`, you can start
-Model Analyzer using the `-f`, or `--config-file` flag.
+If this file is saved to the `config.yml`, 
+Model Analyzer can be started using the `-f`, or `--config-file` flag.
+
+```
+model-analyzer -f config.yml
+```
 
 This config will analyze the models using batch sizes equal
 to `[4, 5, 6, 7, 8, 9]` and concurrency values equal to
-`[2, 4, 8]`. You can also specify the `step` value
-for batch size to change the step size.
+`[2, 4, 8]`.  `step` value
+for batch size can also be specified to change the step size.

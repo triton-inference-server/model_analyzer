@@ -35,6 +35,7 @@ for more information.
 * [Quick Start](docs/quick_start.md)
 * [Install](docs/install.md)
 * [Launch Modes](docs/launch_modes.md)
+* [Triton Model Config Search](docs/config_search.md)
 * [Config File](docs/config.md)
 
 # Reporting problems, asking questions
