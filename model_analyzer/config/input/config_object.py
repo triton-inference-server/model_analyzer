@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import abstractmethod
 from .config_value import ConfigValue
 from .config_status import ConfigStatus
 from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+    CONFIG_PARSER_FAILURE
 from copy import deepcopy
 
 
@@ -48,18 +47,6 @@ class ConfigObject(ConfigValue):
             Fully qualified name for this field.
         """
 
-        # default validator
-        if validator is None:
-
-            def validator(x):
-                if type(x) is dict and len(x) > 0:
-                    return ConfigStatus(CONFIG_PARSER_SUCCESS)
-
-                return ConfigStatus(
-                    CONFIG_PARSER_FAILURE,
-                    f'The value for field "{self.name()}" should be a dictionary'
-                    ' and the length must be larger than zero.')
-
         super().__init__(preprocess, required, validator, output_mapper, name)
         self._type = self
         self._cli_type = str
@@ -72,7 +59,7 @@ class ConfigObject(ConfigValue):
 
         Note: Because ConfigObjects can have nested
         ConfigValues and the schema contains these,
-        this function performs deep copies of the 
+        this function performs deep copies of the
         types of objects, and then sets their values.
 
         Parameters

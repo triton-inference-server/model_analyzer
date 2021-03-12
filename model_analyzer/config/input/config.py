@@ -18,9 +18,11 @@ from .config_list_string import ConfigListString
 from .config_list_numeric import ConfigListNumeric
 from .config_object import ConfigObject
 from .config_list_generic import ConfigListGeneric
-from .config_model import ConfigModel
 from .config_union import ConfigUnion
-from .config_plot import ConfigPlot
+from .config_none import ConfigNone
+
+from .objects.config_model import ConfigModel
+from .objects.config_plot import ConfigPlot
 from model_analyzer.triton.server.server_config import \
     TritonServerConfig
 from model_analyzer.perf_analyzer.perf_config import \
@@ -30,7 +32,7 @@ from .config_sweep import ConfigSweep
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from .config_enum import ConfigEnum
-from .config_protobuf_utils import \
+from .objects.config_protobuf_utils import \
     is_protobuf_type_primitive, protobuf_to_config_type
 
 from tritonclient.grpc.model_config_pb2 import ModelConfig
@@ -45,7 +47,6 @@ class AnalyzerConfig:
     """
     Model Analyzer config object.
     """
-
     def __init__(self):
         """
         Create a new config.
@@ -128,7 +129,7 @@ class AnalyzerConfig:
                 'The current version of Model Config is not supported by Model Analyzer.'
             )
 
-        return ConfigSweep(config_type)
+        return ConfigSweep(ConfigUnion([config_type, ConfigNone()]))
 
     def _get_model_config_fields(self):
         """
@@ -530,6 +531,7 @@ class AnalyzerConfig:
                         field_type=ConfigPrimitive(str),
                         flags=['-f', '--config-file'],
                         description="Path to Model Analyzer Config File."))
+        self._configure_plots()
 
     def _preprocess_and_verify_arguments(self):
         """
@@ -695,10 +697,6 @@ class AnalyzerConfig:
                 default_value=3,
                 description='The number of top model configurations to plot.'))
 
-        # Fill these in with their defaults
-        for key in ['plots', 'top_n_configs']:
-            self._fields[key].set_value(self._fields[key].default_value())
-
     def set_config_values(self, args):
         """
         Set the config values. This function sets all the values for the
@@ -738,7 +736,6 @@ class AnalyzerConfig:
         self._setup_logger()
         self._preprocess_and_verify_arguments()
         self._autofill_values()
-        self._configure_plots()
 
     def get_config(self):
         """

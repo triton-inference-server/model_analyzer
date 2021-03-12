@@ -81,9 +81,6 @@ class RunConfigGenerator:
             parameters.
         """
 
-        if value is None:
-            return [{}]
-
         if type(value) is dict:
             sweeped_dict = {}
             for key, sweep_choices in value.items():
@@ -202,7 +199,8 @@ class RunConfigGenerator:
             if model_sweep is not None:
                 model_config_dict = model_config.get_config()
                 for key, value in model_sweep.items():
-                    model_config_dict[key] = value
+                    if value is not None:
+                        model_config_dict[key] = value
                 model_config = ModelConfig.create_from_dictionary(
                     model_config_dict)
 

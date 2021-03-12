@@ -47,9 +47,12 @@ class ConfigSweep(ConfigValue):
         super().__init__(preprocess, required, validator, output_mapper)
 
     def set_value(self, value):
+        config_statuses = []
+
         sweep_type = self._sweep_type
         sweep_type.set_name(self._name)
         config_status = sweep_type.set_value(value)
+        config_statuses.append(config_status)
 
         if config_status.status() == CONFIG_PARSER_SUCCESS:
             self._is_sweepable = False
@@ -61,11 +64,17 @@ class ConfigSweep(ConfigValue):
             if config_status_list.status() == CONFIG_PARSER_SUCCESS:
                 self._is_sweepable = True
                 return super().set_value(config_list)
+            config_statuses.append(config_status_list)
+
+        message = (
+            f'Field "{self._name}" is a sweep parameter. If you intend to provide a sweep parameter, '
+            'fix the number one error, otherwise fix error number two: '
+            f'1. {config_statuses[0].message()}'
+            f' 2. {config_statuses[1].message()}')
 
         return ConfigStatus(
             CONFIG_PARSER_FAILURE,
-            f'Failed to set the value {value} for {self._name}',
-            self)
+            message)
 
     def is_sweepable(self):
         return self._is_sweepable
