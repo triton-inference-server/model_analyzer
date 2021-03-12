@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+from numba import cuda
 from distutils.dir_util import copy_tree
 from google.protobuf import text_format, json_format
 from google.protobuf.descriptor import FieldDescriptor
@@ -203,3 +204,45 @@ class ModelConfig:
 
         model_config = self._model_config
         return getattr(model_config, name)
+
+    def dynamic_batching_string(self):
+        """
+        Returns
+        -------
+        str
+            representation of the dynamic batcher
+            configuration used to generate this result
+        """
+
+        model_config = self.get_config()
+        if 'dynamic_batching' in model_config:
+            if 'preferred_batch_size' in model_config['dynamic_batching']:
+                dynamic_batch_sizes = model_config['dynamic_batching'][
+                    'preferred_batch_size']
+            else:
+                dynamic_batch_sizes = [model_config['max_batch_size']]
+            return f"[{' '.join([str(x) for x in dynamic_batch_sizes])}]"
+        else:
+            return "Disabled"
+
+    def instance_group_string(self):
+        """
+        Returns
+        -------
+        str
+            representation of the instance group used 
+            to generate this result
+        """
+
+        model_config = self.get_config()
+        if 'instance_group' in model_config:
+            instance_group_list = model_config['instance_group']
+            group_str_list = [
+                f"{group['count']}/{group['kind'].split('_')[1]}"
+                for group in instance_group_list
+            ]
+            return ','.join(group_str_list)
+        elif not cuda.is_available():
+            return '1/CPU'
+        else:
+            return '1/GPU'

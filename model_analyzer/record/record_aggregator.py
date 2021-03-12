@@ -134,7 +134,7 @@ class RecordAggregator:
 
         return filtered_records
 
-    def groupby(self, record_types, groupby_criterion, reduce_func=max):
+    def groupby(self, record_types, groupby_criterion):
         """
         Group all the records of a certain type together if they have the
         same value for a given groupbby criteria.
@@ -146,8 +146,6 @@ class RecordAggregator:
         groupby_criterion : callable
             This callable will receive a single record as the argument and
             must return the value that will be used for groupby
-        reduce_func : callable
-            A function to apply on the group of records
 
         Returns
         -------
@@ -171,8 +169,7 @@ class RecordAggregator:
                 aggregated_result = self.filter_records(
                     record_types=[record_type],
                     filters=[lambda r: groupby_criterion(r) == field_value
-                             ]).aggregate(record_types=[record_type],
-                                          reduce_func=reduce_func)
+                             ]).aggregate(record_types=[record_type])
                 groupby_result[record_type][field_value] = \
                     aggregated_result[record_type]
         return groupby_result
@@ -214,17 +211,13 @@ class RecordAggregator:
             return len(self._records[record_type])
         return sum(len(self._records[k]) for k in self._records)
 
-    def aggregate(self, record_types=None, reduce_func=max):
+    def aggregate(self, record_types=None):
         """
         Parameters
         ----------
         record_types : List of Record types
             The type of records to aggregate.
             If None, aggregates all records
-
-        reduce_func : callable
-            takes as input a list of values
-            and returns one
 
         Returns
         -------
@@ -236,7 +229,8 @@ class RecordAggregator:
         if not record_types:
             record_types = self.record_types()
         aggregated_records = {
-            record_type: reduce_func(self._records[record_type])
+            record_type:
+            record_type.aggregation_function()(self._records[record_type])
             for record_type in record_types
         }
         return aggregated_records

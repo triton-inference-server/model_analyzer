@@ -90,6 +90,7 @@ class Record(metaclass=RecordType):
     This class is used for representing
     records
     """
+
     def __init__(self, value, timestamp):
         """
         Parameters
@@ -107,12 +108,21 @@ class Record(metaclass=RecordType):
         self._timestamp = timestamp
 
     @staticmethod
+    def aggregation_function():
+        """
+        The function that is used to aggregate
+        this type of record
+        """
+
+        return max
+
+    @staticmethod
     @abstractmethod
-    def header(aggregation_tag=None):
+    def header(aggregation_tag=False):
         """
         Parameters
         ----------
-        aggregation_tag : str
+        aggregation_tag : boolean
             An optional tag that may be displayed as part of the header
             indicating that this record has been aggregated using max, min or
             average etc.

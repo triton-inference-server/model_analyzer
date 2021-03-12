@@ -21,7 +21,7 @@ from model_analyzer.record.record import Record
 class PerfLatency(Record):
     """
     A record for perf_analyzer
-    metric 'Avg Latency'
+    metric 'p99 Latency'
     """
 
     tag = "perf_latency"
@@ -39,11 +39,11 @@ class PerfLatency(Record):
         super().__init__(value, timestamp)
 
     @staticmethod
-    def header(aggregation_tag=None):
+    def header(aggregation_tag=False):
         """
         Parameters
         ----------
-        aggregation_tag : str
+        aggregation_tag: bool
             An optional tag that may be displayed 
             as part of the header indicating that 
             this record has been aggregated using 
@@ -56,7 +56,7 @@ class PerfLatency(Record):
             metric.
         """
 
-        return "Average Latency(us)"
+        return "p99 Latency (ms)"
 
     def __eq__(self, other):
         """

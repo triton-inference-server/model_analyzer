@@ -193,9 +193,11 @@ class PerfAnalyzer:
                 self._perf_records.append(PerfThroughput(value=throughput))
 
             # Get first word and first word after 'latency:'
-            elif 'latency:' in line:
+            elif 'p99 latency:' in line:
                 latency_tags = line.split(' latency: ')
-                latency = float(latency_tags[1].split()[0])
+
+                # Convert value to ms from us
+                latency = float(latency_tags[1].split()[0]) / 1e3
                 self._perf_records.append(PerfLatency(value=latency))
 
         if not self._perf_records:

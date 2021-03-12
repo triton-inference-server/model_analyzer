@@ -40,11 +40,23 @@ class GPUUtilization(GPURecord):
         super().__init__(value, device, timestamp)
 
     @staticmethod
-    def header(aggregation_tag=None):
+    def aggregation_function():
+        """
+        The function that is used to aggregate
+        this type of record
+        """
+
+        def average(seq):
+            return sum(seq[1:], start=seq[0]) / len(seq)
+
+        return average
+
+    @staticmethod
+    def header(aggregation_tag=False):
         """
         Parameters
         ----------
-        aggregation_tag : str
+        aggregation_tag: bool
             An optional tag that may be displayed 
             as part of the header indicating that 
             this record has been aggregated using 
@@ -57,7 +69,7 @@ class GPUUtilization(GPURecord):
             metric.
         """
 
-        return aggregation_tag + "GPU Utilization(%)"
+        return ("Average " if aggregation_tag else "") + "GPU Utilization (%)"
 
     def __eq__(self, other):
         """
