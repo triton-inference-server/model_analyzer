@@ -533,6 +533,32 @@ class AnalyzerConfig:
                         field_type=ConfigPrimitive(str),
                         flags=['-f', '--config-file'],
                         description="Path to Model Analyzer Config File."))
+        self._add_config(
+            ConfigField('inference_output_fields',
+                        field_type=ConfigListString(),
+                        default_value=[
+                            'model_name', 'batch_size', 'concurrency',
+                            'model_config_path', 'instance_group',
+                            'dynamic_batch_sizes', 'satisfies_constraints',
+                            'perf_throughput', 'perf_latency', 'cpu_used_ram'
+                        ]))
+        self._add_config(
+            ConfigField('gpu_output_fields',
+                        field_type=ConfigListString(),
+                        default_value=[
+                            'model_name', 'gpu_id', 'batch_size',
+                            'concurrency', 'model_config_path',
+                            'instance_group', 'dynamic_batch_sizes',
+                            'satisfies_constraints', 'gpu_used_memory',
+                            'gpu_utilization', 'gpu_power_usage'
+                        ]))
+        self._add_config(
+            ConfigField('server_output_fields',
+                        field_type=ConfigListString(),
+                        default_value=[
+                            'model_name', 'gpu_id', 'gpu_used_memory',
+                            'gpu_utilization', 'gpu_power_usage'
+                        ]))
         self._configure_plots()
 
     def _preprocess_and_verify_arguments(self):
@@ -652,8 +678,7 @@ class AnalyzerConfig:
 
     def _configure_plots(self):
         """
-        Sets up the plots that will be 
-        included in the summary
+        Sets up the plots that will be included in the summary
         """
 
         plots_scheme = ConfigObject(schema={

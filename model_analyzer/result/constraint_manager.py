@@ -25,8 +25,8 @@ class ConstraintManager:
         Parameters
         ----------
         config : AnalyzerConfig
-            The model analyzer config 
-        
+            The model analyzer config
+
         Returns
         -------
         dict

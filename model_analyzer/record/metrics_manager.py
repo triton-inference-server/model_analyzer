@@ -28,7 +28,6 @@ class MetricsManager:
     This class handles the profiling
     categorization of metrics
     """
-
     def __init__(self, config, metric_tags, server, result_manager):
         """
         Parameters
@@ -79,15 +78,9 @@ class MetricsManager:
             gpu_specific_metrics=self._dcgm_metrics,
             non_gpu_specific_metrics=self._perf_metrics + self._cpu_metrics)
 
-    def profile_server(self, default_value):
+    def profile_server(self):
         """
         Runs the DCGM monitor on the triton server without the perf_analyzer
-
-        Parameters
-        ----------
-        default_value : str
-            The value to fill in for columns in the table that don't apply to
-            profiling server only
 
         Raises
         ------
@@ -96,8 +89,7 @@ class MetricsManager:
 
         self._start_monitors()
         server_gpu_metrics = self._get_gpu_inference_metrics()
-        self._result_manager.add_server_data(data=server_gpu_metrics,
-                                             default_value=default_value)
+        self._result_manager.add_server_data(data=server_gpu_metrics)
 
     def profile_model(self, perf_config, perf_output_writer=None):
         """

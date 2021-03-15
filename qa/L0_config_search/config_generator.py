@@ -68,7 +68,7 @@ def _get_sweep_configs():
     model_config = {
         'run_config_search_max_concurrency': 2,
         'run_config_search_max_instance_count': 2,
-        'run_config_search_max_preferred_batch_size': 2,
+        'run_config_search_max_preferred_batch_size': 1,
         'model_names': {
             'classification_chestxray_v1': {
                 'parameters': {
@@ -78,9 +78,9 @@ def _get_sweep_configs():
         },
     }
 
-    model_config['total_param'] = 8
+    model_config['total_param'] = 6
     model_config['total_param_remote'] = 1
-    model_config['total_models'] = 8
+    model_config['total_models'] = 6
     model_config['total_models_remote'] = 1
     sweep_configs.append(model_config)
 

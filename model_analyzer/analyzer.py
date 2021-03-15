@@ -18,7 +18,6 @@ from .result.result_manager import ResultManager
 from .record.metrics_manager import MetricsManager
 from .plots.plot_manager import PlotManager
 from .reports.report_manager import ReportManager
-from .constants import SERVER_ONLY_TABLE_DEFAULT_VALUE
 from .config.run.run_search import RunSearch
 
 import logging
@@ -85,8 +84,7 @@ class Analyzer:
         # Phase 1: Profile server only metrics
         self._server.start()
         self._client.wait_for_server_ready(config.max_retries)
-        self._metrics_manager.profile_server(
-            default_value=SERVER_ONLY_TABLE_DEFAULT_VALUE)
+        self._metrics_manager.profile_server()
         self._server.stop()
 
         # Phase 2: Profile each model

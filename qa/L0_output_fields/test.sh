@@ -27,7 +27,7 @@ EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
-TRITON_LAUNCH_MODES="remote docker"
+TRITON_LAUNCH_MODES="docker"
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
@@ -60,8 +60,6 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         ANALYZER_LOG=analyzer.${launch_mode}.${config}.log
 
         if [ $launch_mode == 'remote' ]; then
-            NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-param-$launch_mode.txt
-            NUM_MODELS_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-models-$launch_mode.txt
 
             # For remote launch, set server args and start server
             SERVER=`which tritonserver`
@@ -76,12 +74,9 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         else
             MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]} --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
             MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $MODEL_ANALYZER_PORTS"
-            NUM_MODELS_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-models.txt
-            NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-param.txt
         fi
 
-        TEST_OUTPUT_NUM_ROWS=`cat $NUM_ROW_OUTPUT_FILE`
-        TEST_MODELS_NUM=`cat $NUM_MODELS_OUTPUT_FILE`
+        TEST_OUTPUT_NUM_ROWS=1
         run_analyzer
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
@@ -96,9 +91,13 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
             SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
             MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
             MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
-            METRICS_NUM_COLUMNS=11
-            INFERENCE_NUM_COLUMNS=10
-            SERVER_METRICS_NUM_COLUMNS=5
+
+            METRICS_NUM_COLUMNS_FILE=`echo $config | sed 's/\.yml//'`-param-gpu.txt
+            SERVER_NUM_COLUMNS_FILE=`echo $config | sed 's/\.yml//'`-param-server.txt
+            INFERENCE_NUM_COLUMNS_FILE=`echo $config | sed 's/\.yml//'`-param-inference.txt
+            METRICS_NUM_COLUMNS=`cat $METRICS_NUM_COLUMNS_FILE`
+            INFERENCE_NUM_COLUMNS=`cat $INFERENCE_NUM_COLUMNS_FILE`
+            SERVER_METRICS_NUM_COLUMNS=`cat $SERVER_NUM_COLUMNS_FILE`
             OUTPUT_TAG="Model"
 
             check_log_table_row_column $ANALYZER_LOG $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS "Models\ \(Inference\):"
@@ -153,4 +152,5 @@ done
 echo -e "\n***\n*** Test PASSED\n***"
 
 exit $RET
+
 

@@ -193,7 +193,7 @@ class ReportManager:
 
     def _get_gpu_stats(self, model_name):
         """
-        Gets names and memory infos 
+        Gets names and memory infos
         of GPUs used in best measurements
         """
 
