@@ -14,15 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Model Analyzer Config
+# Configuring Model Analyzer
 
-The Model Analyzer can be configured with a [YAML](https://yaml.org/) file.
-The scheme for the configuration file is described below. Brackets indicate
-that a parameter is optional. For non-list and non-object parameters the
-value is set to the specified default.
-
-Every flag supported by the CLI is supported in the configuration file.
-But some configurations are only supported using the config file.
+The Model Analyzer can be configured with a [YAML](https://yaml.org/) file or via the command line interface (CLI). Every flag supported by the CLI is supported in the configuration file, but some configurations are only supported using the config file.
 
 The placeholders below are used throughout the configuration:
 
@@ -42,20 +36,24 @@ batch_sizes:
     step: 2
 ```
 
-This YAML represents the array `[2, 4, 6]`.
-* Other types are described in the end of this file.
+The above YAML declares the value of batch_sizes to be an array `[2, 4, 6]`.
+
+## CLI and YAML Config Options
+
+A list of all the configuration options supported by both the CLI and YAML config file are shown below.
 
 ```yaml
 # Path to the Model Repository
 model_repository: <string>
 
-# How Model Analyzer will launch triton. It should
-# be either "docker", "local", or "remote".
-# See docs/launch_modes.md for more information.
-[ triton_launch_mode: <string> ]
-
 # List of the model names to be analyzed
-model_names: <comma-delimited-string|list|model>
+model_names: <comma-delimited-string>
+
+# The directory to which the modela analyzer will save model config variants
+[ output_model_repository_path: <string> | default: 'output_model_repository']
+
+# Allow model analyzer to overwrite contents of the output model repository
+[ override_output_model_repository: <boolean> | default: false ]
 
 # Concurrency values to be used for the analysis
 [ concurrency: <comma-delimited-string|list|range> | default: 1 ]
@@ -68,6 +66,9 @@ model_names: <comma-delimited-string|list|model>
 
 # Export path to be used
 [ export_path: <string> | default: '.' ]
+
+# Generate summary of results
+[ summarize: <boolean>  | default: true ]
 
 # File name to be used for the model inference results
 [ filename_model_inference: <string> | default: metrics-model-inference.csv ]
@@ -98,14 +99,17 @@ model_names: <comma-delimited-string|list|model>
 # this time interval.
 [ perf_measurement_window: <int> | default: 5000 ]
 
+# Perf analyzer timeout value in seconds.
+[ perf_analyzer_timeout: <int> | default: 600]
+
+# Maximum CPU utilization value allowed for the perf_analyzer.
+[ perf_analyzer_cpu_util: <float> | default: 80.0 ]
+
 # Enables writing the output from the perf_analyzer to stdout.
 [ perf_output: <bool> | default: false ]
 
 # Triton Docker image tag used when launching using Docker mode
 [ triton_docker_image: <string> | default: nvcr.io/nvidia/tritonserver:21.02-py3 ]
-
-# Logging level
-[ log_level: <string> | default: INFO ]
 
 # Triton Server HTTP endpoint url used by Model Analyzer client. Will be ignored if server-launch-mode is not 'remote'".
 [ triton_http_endpoint: <string> | default: localhost:8000 ]
@@ -122,14 +126,16 @@ model_names: <comma-delimited-string|list|model>
 # The full path to a file to write the Triton Server output log.
 [ triton_output_path: <string> ]
 
+# How Model Analyzer will launch triton. It should
+# be either "docker", "local", or "remote".
+# See docs/launch_modes.md for more information.
+[ triton_launch_mode: <string> ]
+
+# Logging level
+[ log_level: <string> | default: INFO ]
+
 # List of GPU UUIDs to be used for the profiling. Use 'all' to profile all the GPUs visible by CUDA."
 [ gpus: <string|comma-delimited-list-string> | default: 'all' ]
-
-# List of constraints placed on the config search results.
-[ constrains: <constraint> ]
-
-# List of objectives that user wants to sort the results by it.
-[ objectives: <objective|list> ]
 
 # Maximum concurrency used for the automatic config search.
 [ run_config_search_max_concurrency: <int> | default: 1024 ]
@@ -142,8 +148,30 @@ model_names: <comma-delimited-string|list|model>
 
 # Disables automatic config search
 [ run_config_search_disable: <bool> | default: false ]
+
+# Specify path to config yaml file
+[ config_file: <string> ]
 ```
 
+## YAML Only Options
+
+The following config options are supported only by the YAML config file.
+
+```yaml
+
+# List of the model names to be analyzed
+model_names: <comma-delimited-string|list|model>
+
+# List of constraints placed on the config search results.
+[ constraints: <constraint> ]
+
+# List of objectives that user wants to sort the results by it.
+[ objectives: <objective|list> ]
+
+# Specify flags to pass to the Triton instances launched by model analyzer
+[ triton_server_flags: <dict> ]
+
+```
 ## `<constraint>`
 A constraint, specifies the bounds that determine a successful run. There are
 three constraints allowed:
@@ -253,7 +281,8 @@ objectives:
 ### Weighted Objectives
 
 In addition to the mode discussed above, multiple values can be provided in
-the objectives key. For example:
+the objectives key in order to provide more generalized control over how model
+analyzer sorts results. For example:
 
 ```yaml
 objectives:
@@ -261,10 +290,18 @@ objectives:
 - perf_throughput
 ```
 
-The above config will multiply obtained throughput and latency for each
-measurement by 0.5 (i.e. 0.5 * latency + 0.5 * throughput) and use this as
-the "score" to sort the measurements according to. This mode can be useful
-if a more advanced criteria needs to be used for sorting.
+The above config is telling model analyzer to compare two measurements by finding relative gain from one measurement to the other, and computing the weighted average of this gain across all listed metrics. In the above example, the relative weights for each metric is equal by default. So if we have two measurements of latency and throughput, model analyzer employs the following logic.
+
+```python
+measurement_A = (latency_A, throughput_A)
+measurement_B = (latency_B, throughput_B)
+
+gain_A_B = (latency_A - latency_B, throughput_A - throughput_B)
+
+weighted_average_gain = 0.5*(latency_A - latency_B) + 0.5(throughput_A - throughput_B)
+```
+
+If `weighted_average_gain` exceeds a threshold then `measurement_A` is declared to be "better" than `measurement_B`. Model Analyzer will automatically account for metrics in which less is better and those which more is better.
 
 An extension of the above `objectives` is explicitly specifying the weights.
 For example:
@@ -275,10 +312,9 @@ objectives:
 ```
 
 The score for each measurement will be a weighted average using the weights
-specified here. The above config will multiply obtained throughput by 0.4 and
-latency by 0.6 and use the sum as the score for the measurement.
+specified here. The above config will tell Model Analyzer to multiply the throughput gain by `0.4` and latency gain by by `0.6`.
 
-`<objective>` can be specified both globally and on a per model basis.
+The `objectives` section can be specified both globally and on a per model basis.
 
 ## Test Configuration `<parameter>`
 
@@ -411,9 +447,27 @@ sizes and two instance group combinations). If both
 `model_config_parameters` and `parameters` keys are specified, the list of sweep
 configurations will be the cartesian product of both of the lists.
 
-## `<model>`
-The model object can contain `<constraint>`, `<objective>`,
-`<model-config-parameters>`, and `<parameter>`.
+## `<perf-analyzer-flags>`
+
+This field allows fine-grained control over the behavior of the `perf_analyzer` instances launched by Model Analyzer. `perf_analyzer` options and their values can be specified here, and will be passed to `perf_analyzer`. Refer to [the `perf_analyzer` docs](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md) for more information on these options.
+
+### Example
+
+```yaml
+model_repository: /path/to/model/repository/
+model_names:
+  model_1:
+    perf_analyzer_flags:
+        percentile: 95
+        latency-report-file: /path/to/latency/report/file
+```
+**Important Notes**: 
+1. The section name contains underscores `perf_analyzer_flags` as seen in the example above. However the arguments themselves should contain hyphens as seen with `latency-report-file`.
+2. The Model Analyzer also provides certain arguments to the `perf_analyzer` instances it launches. These ***cannot*** be overriden by providing those arguments in this section. An example of this is `perf_measurement_window`, which is an argument to Model Analyzer itself.
+
+## The `model-names` field and `<model>`
+The `model-names` argument can be provided as a list of strings (names of models) from the CLI interface, or as a more complex `<model>` object but only through the YAML configuration file. The model object can contain `<constraint>`, `<objective>`,
+`<model-config-parameters>`, `<parameter>` and `<perf_analyzer_flags>`.
 
 A model object puts together all the different parameters specified above. An example
 will look like:
@@ -423,6 +477,9 @@ model_repository: /path/to/model/repository/
 run_config_search_disable: True
 model_names:
   model_1:
+    perf_analyzer_flags:
+        percentile: 95
+        latency-report-file: /path/to/latency/report/file
     model_config_parameters:
         max_batch_size: 2
         dynamic_batching:
@@ -458,10 +515,36 @@ An example configuration looks like below:
 
 ```yaml
 model_repository: /path/to/model-repository
+run_config_search_disable: true
 triton_launch_mode: docker
 model_names:
-  - vgg_19_graphdef
-
+  vgg_19_graphdef:
+    parameters:
+        batch_sizes: 1, 2, 3
+    model_config_parameters:
+        dynamic_batching:
+            preferred_batch_size: [[2], [3]]
+            max_queue_delay_microseconds: 200
+        instance_group:
+        -
+            -
+                kind: KIND_CPU
+                count: 1
+    vgg_16_graphdef:
+      parameters:
+        concurrency:
+            start: 2
+            stop: 64
+            step: 8
+      model_config_parameters:
+        dynamic_batching:
+            preferred_batch_size: [[1], [2]]
+            max_queue_delay_microseconds: 200
+        instance_group:
+        -
+            -
+                kind: KIND_GPU
+                count: 1
 batch_sizes:
     start: 4
     stop: 9
@@ -478,7 +561,34 @@ Model Analyzer can be started using the `-f`, or `--config-file` flag.
 model-analyzer -f config.yml
 ```
 
-This config will analyze the models using batch sizes equal
-to `[4, 5, 6, 7, 8, 9]` and concurrency values equal to
-`[2, 4, 8]`.  `step` value
-for batch size can also be specified to change the step size.
+It will run the model `vgg_19_graphdef` over combinations of batch sizes `[1,2,3]`, `concurrency` `[2,4,8]` (taken from the global concurrency section), with dynamic batching enabled and preferred batch sizes `2` and `3` and a single CPU instance.
+
+It will also run the model `vgg_16_graphdef` over combinations of batch sizes `[4,5,6,7,8,9]`(taken from the global `batch_sizes` section), concurrency `[2,10,18,26,34,42,50,58]`, with dynamic batching enabled and preferred batch sizes `1` and `2` and a single GPU instance.
+
+## <triton_server_flags>
+
+This section of the config allows fine-grained control over the flags passed to the Triton instances launched by Model Analyzer when it is running in the `docker` or `local` Triton launch modes. Any argument to the server can be specified here.
+
+### Example
+
+```yaml
+model_repository: /path/to/model/repository/
+model_names:
+  model_1:
+    parameters:
+        batch_sizes:
+            start: 4
+            stop: 9
+        concurrency:
+            - 2
+            - 4
+            - 8
+triton_server_flags:
+    strict-model-config: False
+    log-verbose: True
+```
+
+**Important Notes**: 
+1. The section name contains underscores `triton_server_flags` as seen in the example above. However the arguments themselves should contain hyphens as seen with `strict-model-config`.
+2. The Model Analyzer also provides certain arguments to the `tritonserver` instances it launches. These ***cannot*** be overriden by providing those arguments in this section. An example of this is `http-port`, which is an argument to Model Analyzer itself.
+

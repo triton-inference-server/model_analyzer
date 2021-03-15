@@ -287,6 +287,7 @@ class AnalyzerConfig:
         self._add_config(
             ConfigField(
                 'run_config_search_max_concurrency',
+                flags=['--run-config-search-max-concurrency'],
                 field_type=ConfigPrimitive(int),
                 default_value=1024,
                 description=
@@ -295,6 +296,7 @@ class AnalyzerConfig:
         self._add_config(
             ConfigField(
                 'run_config_search_max_instance_count',
+                flags=['--run-config-search-max-instance-count'],
                 field_type=ConfigPrimitive(int),
                 default_value=5,
                 description=
@@ -310,6 +312,7 @@ class AnalyzerConfig:
         self._add_config(
             ConfigField(
                 'run_config_search_max_preferred_batch_size',
+                flags=['--run-config-search-max-preferred-batch-size'],
                 field_type=ConfigPrimitive(int),
                 default_value=16,
                 description=
@@ -487,7 +490,6 @@ class AnalyzerConfig:
                         k: ConfigPrimitive(str)
                         for k in TritonServerConfig.server_arg_keys
                     }),
-                flags=['--triton-server-flags'],
                 description=
                 'Allows custom configuration of the triton instances used by model analyzer.'
             ))

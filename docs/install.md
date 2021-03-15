@@ -14,14 +14,53 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Install 
+# Installation
 
 There are three ways to use Triton Model Analyzer:
 
-1. Using the `pip`:
+1. Building the Dockerfile:
+
+   The recommended way to use Model Analyzer is with [`docker`](https://docs.docker.com/get-docker/). First, clone the Model Analyzer's git repository,
+   then build the docker image.
+
    ```
-   $ pip3 install git+https://github.com/triton-inference-server/model_analyzer
+   $ git clone https://github.com/triton-inference-server/model_analyzer
+   $ docker build --pull -t model-analyzer .
    ```
+
+   The above command will pull all the containers that model analyzer needs to run. The Model Analyzer's Dockerfile bases the container on the latest `tritonserver` containers from NGC. Now you can run the container with:
+
+   ```
+   $ docker run -it --privileged --rm --gpus all \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v <model_repo_abs_path>:<model_repo_abs_path> \
+        -v <workspace_path>:/opt/triton-model-analyzer \
+        -v <output_repo_abs_path>:<output_repo_abs_path> \
+        --net=host --name model-analyzer 
+   
+   root@hostname:/opt/triton-model-analyzer# 
+   ```
+
+2. Using `pip3`:
+
+   You can install pip using:
+   ```
+   $ sudo apt-get update && sudo apt-get install python3-pip
+   ```
+   
+   Model analyzer can be installed with: 
+   ```
+   $ pip3 install nvidia-pyindex
+   $ pip3 install triton-model-analyzer
+   ```
+
+   If you encounter any errors installing dependencies like `numba`, make sure that you have the latest version of `pip` using:
+
+   ```
+   $ pip3 install --upgrade pip
+   ```
+   
+   You can then try installing model analyzer again.
 
    If you are using this approach you need to install [tritonclient](https://github.com/triton-inference-server/server/blob/master/docs/client_libraries.md) and DCGM on your
    machine.
@@ -33,23 +72,22 @@ There are three ways to use Triton Model Analyzer:
     dpkg -i datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb
    ```
 
-2. Building from source:
+3. Building from source:
 
-   Building from source is similar to installing using pip. You need
-   to install the same dependencies mentioned in the "Using pip section".
-   After that, you can use the following commands:
+   You may sometimes want to build from source, if for example you want to use a 
+   custom version of `perf_analyzer`. You'll need to install the same dependencies (tritonclient and DCGM) mentioned in the "Using pip section". After that, you can use the following commands:
 
    ```
    $ git clone https://github.com/triton-inference-server/model_analyzer
    $ cd model_analyzer
-   $ pip3 install setup.py
+   $ ./build_wheel.sh <path to perf_analyzer> true
+   ```
+
+   In the final command above we are building the triton-model-analyzer wheel. You will need to provide the `build_wheel.sh` script with two arguments. The first is the path to the `perf_analyzer` binary that you would like Model Analyzer to use. The second is whether you want this wheel to be linux specific. Currently, this argument must be set to `true` as perf analyzer is supported only on linux. This will create a wheel file in the `wheels` directory named `triton-model-analyzer-<version>-py3-none-manylinux1_x86_64.whl`. We can now install this with:
+
+   ```
+   $ pip3 install wheels/triton-model-analyzer-*.whl
    ```
 
    After these steps, `model-analyzer` executable should be available in
    `$PATH`.
-
-3. Building the Dockerfile:
-   ```
-   $ docker build --pull -t modelanalyzer .
-   $ docker run -ti -v <load triton models> --gpus 1 -v `pwd`/examples/quick-start:/workspace/examples modelanalyzer bash
-   ```
