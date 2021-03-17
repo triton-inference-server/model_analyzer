@@ -114,7 +114,7 @@ def get_server_handle(config):
         triton_config['model-control-mode'] = 'explicit'
         logger.info('Starting a Triton Server using docker...')
         server = TritonServerFactory.create_server_docker(
-            image='nvcr.io/nvidia/tritonserver:' + config.triton_version,
+            image=config.triton_docker_image,
             config=triton_config,
             gpus=get_analyzer_gpus(config))
     else:
