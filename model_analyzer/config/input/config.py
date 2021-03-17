@@ -433,11 +433,11 @@ class AnalyzerConfig:
                 "the specified version. 'remote' connects to a running "
                 "server using given http, grpc and metrics endpoints. "))
         self._add_config(
-            ConfigField('triton_version',
-                        flags=['--triton-version'],
+            ConfigField('triton_docker_image',
+                        flags=['--triton-docker-image'],
                         field_type=ConfigPrimitive(str),
-                        default_value='20.12-py3',
-                        description='Triton Server Docker version'))
+                        default_value='nvcr.io/nvidia/tritonserver:21.02-py3',
+                        description='Triton Server Docker image tag'))
         self._add_config(
             ConfigField(
                 'triton_http_endpoint',

@@ -101,8 +101,8 @@ model_names: <comma-delimited-string|list|model>
 # Enables writing the output from the perf_analyzer to stdout.
 [ perf_output: <bool> | default: false ]
 
-# Triton Server version used when launching using Docker mode
-[ triton_version: <string> | default: 21.02-py3 ]
+# Triton Docker image tag used when launching using Docker mode
+[ triton_docker_image: <string> | default: nvcr.io/nvidia/tritonserver:21.02-py3 ]
 
 # Logging level
 [ log_level: <string> | default: INFO ]
