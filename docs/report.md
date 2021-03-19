@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,17 +16,7 @@ limitations under the License.
 
 # Model Analyzer Reports
 
-The Model analyzer can run inferences with models across multiple parameters. It can also generate reports containing common statistics of interest such as the throughput versus latency curve obtained from these inference runs, as well as the best performing model configuration for each model.
-
-## Requirements
-
-Model Analyzer uses `pdfkit` for report generation. If you are using the recommended docker installation of Model Analyzer, all the necessary components are included. If you are however using other installations, such as running Model Analyzer inside the Triton SDK container, then you will need to download `wkhtmltopdf`.
-
-```
-$ sudo apt-get update && sudo apt-get install wkhtmltopdf
-```
-
-Once you do this, Model Analyzer will able to use `pdfkit` to generate reports.
+The Model analyzer can run inferences with models across multiple parameters. It can also generate reports containing useful plots such as the throughput versus latency curve obtained from these inference runs, as well as tables describing the best performing model configurations for each model.
 
 ## Summary Reports
 

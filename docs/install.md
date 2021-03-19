@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,10 +18,41 @@ limitations under the License.
 
 There are three ways to use Triton Model Analyzer:
 
-1. Building the Dockerfile:
+1. The recommended way to use Model Analyzer is with the Triton SDK docker container
+   available on the [NVIDIA GPU Cloud Catalog](https://ngc.nvidia.com/catalog/containers/nvidia:tritonserver). You can pull and run the SDK container with the following commands:
 
-   The recommended way to use Model Analyzer is with [`docker`](https://docs.docker.com/get-docker/). First, clone the Model Analyzer's git repository,
-   then build the docker image.
+   ```
+   $ docker pull nvcr.io/nvidia/tritonserver:21.02-py3-sdk
+   ```
+
+   If you are not planning to run Model Analyzer with `--triton-launch-mode=docker` you can run the container with the following command:
+
+   ```
+   $ docker run -it --privileged --gpus all --net=host nvcr.io/nvidia/tritonserver:21.02-py3-sdk
+   ```
+
+   If intend to use `--triton-launch-mode=docker`, you will need to mount the following: 
+      * `-v /var/run/docker.sock:/var/run/docker.sock` allows running docker containers as sibling containers from inside the Triton SDK container. Model Analyzer will require this if run  with `--triton-launch-mode=docker`.
+      * `-v <path-to-output-model-repo>:<path-to-output-model-repo>` The ***absolute*** path to the directory where the output model repository will be located (i.e. parent directory of the output model repository). This is so that the launched Triton container has access to the model config variants that Model Analyzer creates.
+   
+   ```
+   $ docker run -it --privileged --gpus all \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v <path-to-output-model-repo>:<path-to-output-model-repo> \
+        --net=host nvcr.io/nvidia/tritonserver:21.02-py3-sdk
+   ```
+   
+   Model Analyzer uses `pdfkit` for report generation. If you are running Model Analyzer inside the Triton SDK container, then you will need to download `wkhtmltopdf`.
+
+   ```
+   $ sudo apt-get update && sudo apt-get install wkhtmltopdf
+   ```
+   
+   Once you do this, Model Analyzer will able to use `pdfkit` to generate reports.
+
+2. Building the Dockerfile:
+
+   You can also build the Model Analyzer's dockerfile yourself. First, clone the Model Analyzer's git repository, then build the docker image.
 
    ```
    $ git clone https://github.com/triton-inference-server/model_analyzer
@@ -33,15 +64,14 @@ There are three ways to use Triton Model Analyzer:
    ```
    $ docker run -it --privileged --rm --gpus all \
         -v /var/run/docker.sock:/var/run/docker.sock \
-        -v <model_repo_abs_path>:<model_repo_abs_path> \
-        -v <workspace_path>:/opt/triton-model-analyzer \
-        -v <output_repo_abs_path>:<output_repo_abs_path> \
-        --net=host --name model-analyzer 
+        -v <path-to-triton-model-repository>:<path-to-triton-model-repository> \
+        -v <path-to-output-model-repo>:<path-to-output-model-repo> \
+        --net=host model-analyzer
    
    root@hostname:/opt/triton-model-analyzer# 
    ```
 
-2. Using `pip3`:
+3. Using `pip3`:
 
    You can install pip using:
    ```
@@ -72,10 +102,9 @@ There are three ways to use Triton Model Analyzer:
     dpkg -i datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb
    ```
 
-3. Building from source:
+4. Building from source:
 
-   You may sometimes want to build from source, if for example you want to use a 
-   custom version of `perf_analyzer`. You'll need to install the same dependencies (tritonclient and DCGM) mentioned in the "Using pip section". After that, you can use the following commands:
+   To build model analyzer form source, you'll need to install the same dependencies (tritonclient and DCGM) mentioned in the "Using pip section". After that, you can use the following commands:
 
    ```
    $ git clone https://github.com/triton-inference-server/model_analyzer

@@ -40,7 +40,10 @@ The above YAML declares the value of batch_sizes to be an array `[2, 4, 6]`.
 
 ## CLI and YAML Config Options
 
-A list of all the configuration options supported by both the CLI and YAML config file are shown below.
+A list of all the configuration options supported by both the CLI and YAML config file are shown below. Brackets indicate that a parameter is optional. For non-list and non-object parameters the value is set to the specified default.
+
+The CLI flags corresponding to each of the options below are obtained by converting the `snake_case` options to `--kebab-case`. For example, `export_path` in the YAML would be `--export-path` in the CLI.
+
 
 ```yaml
 # Path to the Model Repository
@@ -134,7 +137,7 @@ model_names: <comma-delimited-string>
 # Logging level
 [ log_level: <string> | default: INFO ]
 
-# List of GPU UUIDs to be used for the profiling. Use 'all' to profile all the GPUs visible by CUDA."
+# List of GPU UUIDs to be used for the profiling. Use 'all' to profile all the GPUs visible by CUDA.
 [ gpus: <string|comma-delimited-list-string> | default: 'all' ]
 
 # Maximum concurrency used for the automatic config search.
@@ -290,7 +293,7 @@ objectives:
 - perf_throughput
 ```
 
-The above config is telling model analyzer to compare two measurements by finding relative gain from one measurement to the other, and computing the weighted average of this gain across all listed metrics. In the above example, the relative weights for each metric is equal by default. So if we have two measurements of latency and throughput, model analyzer employs the following logic.
+The above config is telling model analyzer to compare two measurements by finding relative gain from one measurement to the other, and computing the weighted average of this gain across all listed metrics. In the above example, the relative weights for each metric is equal by default. So if we have two measurements of latency and throughput, model analyzer employs the following logic:
 
 ```python
 measurement_A = (latency_A, throughput_A)
@@ -298,7 +301,7 @@ measurement_B = (latency_B, throughput_B)
 
 gain_A_B = (latency_A - latency_B, throughput_A - throughput_B)
 
-weighted_average_gain = 0.5*(latency_A - latency_B) + 0.5(throughput_A - throughput_B)
+weighted_average_gain = 0.5*(latency_A - latency_B) + 0.5*(throughput_A - throughput_B)
 ```
 
 If `weighted_average_gain` exceeds a threshold then `measurement_A` is declared to be "better" than `measurement_B`. Model Analyzer will automatically account for metrics in which less is better and those which more is better.
@@ -466,8 +469,8 @@ model_names:
 2. The Model Analyzer also provides certain arguments to the `perf_analyzer` instances it launches. These ***cannot*** be overriden by providing those arguments in this section. An example of this is `perf_measurement_window`, which is an argument to Model Analyzer itself.
 
 ## The `model-names` field and `<model>`
-The `model-names` argument can be provided as a list of strings (names of models) from the CLI interface, or as a more complex `<model>` object but only through the YAML configuration file. The model object can contain `<constraint>`, `<objective>`,
-`<model-config-parameters>`, `<parameter>` and `<perf_analyzer_flags>`.
+The `--model-names` argument can be provided as a list of strings (names of models) from the CLI interface, or as a more complex `<model>` object but only through the YAML configuration file. The model object can contain `<constraint>`, `<objective>`,
+`<model-config-parameters>`, `<parameter>` and `<perf-analyzer-flags>`.
 
 A model object puts together all the different parameters specified above. An example
 will look like:
@@ -565,7 +568,7 @@ It will run the model `vgg_19_graphdef` over combinations of batch sizes `[1,2,3
 
 It will also run the model `vgg_16_graphdef` over combinations of batch sizes `[4,5,6,7,8,9]`(taken from the global `batch_sizes` section), concurrency `[2,10,18,26,34,42,50,58]`, with dynamic batching enabled and preferred batch sizes `1` and `2` and a single GPU instance.
 
-## <triton_server_flags>
+## <triton-server-flags>
 
 This section of the config allows fine-grained control over the flags passed to the Triton instances launched by Model Analyzer when it is running in the `docker` or `local` Triton launch modes. Any argument to the server can be specified here.
 
