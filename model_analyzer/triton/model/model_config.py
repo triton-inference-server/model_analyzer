@@ -26,7 +26,6 @@ class ModelConfig:
     """
     A class that encapsulates all the metadata about a Triton model.
     """
-
     def __init__(self, model_config):
         """
         Parameters
@@ -235,14 +234,25 @@ class ModelConfig:
         """
 
         model_config = self.get_config()
+
+        # TODO change when remote mode is fixed
+        # Set default count/kind
+        count = 1
+        if cuda.is_available():
+            kind = 'GPU'
+        else:
+            kind = 'CPU'
+
         if 'instance_group' in model_config:
             instance_group_list = model_config['instance_group']
-            group_str_list = [
-                f"{group['count']}/{group['kind'].split('_')[1]}"
-                for group in instance_group_list
-            ]
+            group_str_list = []
+            for group in instance_group_list:
+                group_kind, group_count = kind, count
+                # Update with instance group values
+                if 'kind' in group:
+                    group_kind = group['kind'].split('_')[1]
+                if 'count' in group:
+                    group_count = group['count']
+                group_str_list.append(f"{group_count}/{group_kind}")
             return ','.join(group_str_list)
-        elif not cuda.is_available():
-            return '1/CPU'
-        else:
-            return '1/GPU'
+        return f"{count}/{kind}"

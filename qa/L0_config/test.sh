@@ -73,24 +73,6 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
         INFERENCE_NUM_COLUMNS=11
         SERVER_METRICS_NUM_COLUMNS=7
 
-        check_log_table_row_column $ANALYZER_LOG $SERVER_METRICS_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
-        check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) "Models\ \(GPU\ Metrics\):"
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
-        check_log_table_row_column $ANALYZER_LOG $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS "Models\ \(Inference\):"
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $ANALAYZER_LOG.\n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
 
         OUTPUT_TAG="Model"
         check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
