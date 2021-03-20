@@ -28,7 +28,6 @@ class Plot:
     model configs, but only holds one
     type of plot
     """
-
     def __init__(self, name, title, x_axis, y_axis, monotonic=False):
         """
         Parameters
@@ -121,15 +120,13 @@ class Plot:
         # Plot constraints
         if constraints:
             if self._x_axis in constraints:
-                for constraint_type, constraint_val in constraints[
-                        self._x_axis].items():
+                for _, constraint_val in constraints[self._x_axis].items():
                     constraint_label = f"Target {self._x_header.rsplit(' ',1)[0]}"
                     self._ax.axvline(x=constraint_val,
                                      linestyle='--',
                                      label=constraint_label)
             if self._y_axis in constraints:
-                for constraint_type, constraint_val in constraints[
-                        self._y_axis].items():
+                for _, constraint_val in constraints[self._y_axis].items():
                     constraint_label = f"Target {self._y_header.rsplit(' ', 1)[0]}"
                     self._ax.axhline(y=constraint_val,
                                      linestyle='--',

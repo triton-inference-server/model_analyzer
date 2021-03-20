@@ -59,7 +59,6 @@ class ResultManager:
 
         self._config = config
         self._result_tables = {}
-        self._current_run_result = None
         self._result_comparator = None
         self._statistics = statistics
         self._results = {}
@@ -120,25 +119,6 @@ class ResultManager:
                                title='Models (Inference)',
                                headers=self.non_gpu_specific_headers,
                                metric_types=non_gpu_specific_metrics)
-
-    def init_result(self, run_config):
-        """
-        Initialize the ModelResults
-        for the current model run.
-        There will be one result per table.
-
-        Parameters
-        ----------
-        run_config : RunConfig
-            The run config corresponding to the current
-            run.
-        """
-
-        # Create ModelResult
-        self._current_run_result = ModelResult(
-            run_config=run_config,
-            comparator=self._result_comparator,
-            constraints=self._constraints)
 
     def add_server_data(self, data, default_value):
         """
@@ -204,6 +184,9 @@ class ResultManager:
             else:
                 heapq.heappush(self._passing_results, result)
 
+        # clear results for this model
+        self._results = {}
+
     def top_n_results(self, n):
         """
         Parameters
@@ -263,6 +246,11 @@ class ResultManager:
             self._compile_measurements(next_best_result, model_name,
                                        instance_group_str,
                                        dynamic_batching_str)
+
+        # Clear results heaps
+        self._sorted_results = []
+        self._passing_results = []
+        self._failing_results = []
 
     def _compile_measurements(self, result, model_name, instance_group,
                               dynamic_batching):
