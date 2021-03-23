@@ -28,7 +28,6 @@ class ReportManager:
     Manages the building and export of 
     various types of reports
     """
-
     def __init__(self, config):
         """
         Parameters
@@ -97,8 +96,10 @@ class ReportManager:
         num_best_configs = min(self._config.top_n_configs,
                                total_configurations)
         gpu_names, max_memories = self._get_gpu_stats(model_name=model_name)
-        static_batch_size = self._measurements[model_name][0][1].perf_config(
-        )['batch-size']
+        static_batch_sizes = ','.join([
+            str(measurement[1].perf_config()['batch-size'])
+            for measurement in self._measurements[model_name]
+        ])
         constraint_str = self._constraint_strs[
             model_name] if self._constraint_strs else "None"
         table, summary_sentence = self._build_summary_table(
@@ -112,7 +113,7 @@ class ReportManager:
         summary.add_paragraph(f"GPUS: {gpu_names}")
         summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
         summary.add_paragraph(
-            f"Client Request Batch Size: {static_batch_size}")
+            f"Client Request Batch Size: {static_batch_sizes}")
         summary.add_paragraph(
             f"Request Protocol: {self._config.client_protocol.upper()}")
         summary.add_paragraph(f"Constraint targets: {constraint_str}")
@@ -137,8 +138,7 @@ class ReportManager:
 
         summary.add_paragraph(
             "The following table summarizes each configuration at the measurement"
-            " that optimizes the desired metrics under the given constraints in"
-            " decreasing order of throughput.")
+            " that optimizes the desired metrics under the given constraints.")
         summary.add_table(table=table)
         return summary
 
