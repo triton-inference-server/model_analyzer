@@ -357,7 +357,7 @@ class ResultManager:
         # Batch Size
         batch_size_index = self._find_index_for_field(fields, 'batch_size')
         if batch_size_index is not None:
-            row[batch_size_index] = batch_size_index
+            row[batch_size_index] = batch_size
 
         # Concurrency
         concurrency_index = self._find_index_for_field(fields, 'concurrency')
