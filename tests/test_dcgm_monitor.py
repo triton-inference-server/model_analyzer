@@ -17,6 +17,7 @@ import time
 
 from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
 from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
+from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
 from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
 from model_analyzer.record.types.gpu_utilization import GPUUtilization
 from model_analyzer.device.gpu_device import GPUDevice
@@ -69,6 +70,32 @@ class TestDCGMMonitor(trc.TestResultCollector):
         metrics = ['UndefinedTag']
         with self.assertRaises(TritonModelAnalyzerException):
             DCGMMonitor(gpus, frequency, metrics)
+
+    def test_record_power(self):
+        # One measurement every 0.01 seconds
+        frequency = 0.01
+        monitoring_time = 10
+        metrics = [GPUPowerUsage]
+        gpus = ['all']
+        dcgm_monitor = DCGMMonitor(gpus, frequency, metrics)
+        dcgm_monitor.start_recording_metrics()
+        time.sleep(monitoring_time)
+        records = dcgm_monitor.stop_recording_metrics()
+
+        # Assert instance types
+        for record in records:
+            self.assertIsInstance(record.device(), GPUDevice)
+            self.assertIsInstance(record.value(), float)
+            self.assertTrue(record.value() == TEST_RECORD_VALUE)
+            self.assertIsInstance(record.timestamp(), int)
+
+        # The number of records should be dividable by number of metrics
+        self.assertTrue(len(records) % len(metrics) == 0)
+        self.assertTrue(len(records) > 0)
+        self.assertTrue(records[-1].timestamp() -
+                        records[0].timestamp() >= monitoring_time)
+
+        dcgm_monitor.destroy()
 
     def test_record_utilization(self):
         # One measurement every 0.01 seconds

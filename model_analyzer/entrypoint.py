@@ -272,7 +272,7 @@ def main():
     metric_tags = [
         "perf_throughput", "perf_latency", "gpu_used_memory",
         "gpu_free_memory", "gpu_utilization", "cpu_used_ram",
-        "cpu_available_ram"
+        "cpu_available_ram", "gpu_power_usage"
     ]
 
     signal.signal(signal.SIGINT, interrupt_handler)

@@ -190,7 +190,7 @@ function check_log_table_row_column() {
         # Columns in ith row
         num_columns_found=`awk -v row="$i" "/$tag/{getline; for (n=0; n<row;n++) {getline}; print NF}" $log_file`
         if [[ "$num_columns_found" != "$expected_num_columns" ]]; then
-            echo -e "\n***\n*** Test Failed: Expected $expected_num_columns columns in row $i of Model metrics table, got ${num_columns_found}\n***"
+            echo -e "\n***\n*** Test Failed: Expected $expected_num_columns columns in row $i of $tag, got ${num_columns_found}\n***"
             return 1
         fi
     done

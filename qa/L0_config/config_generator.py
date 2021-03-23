@@ -12,94 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from itertools import product
 import yaml
-
-
-def get_random_intervals():
-    # Beginning of the interval
-    begin = 10
-
-    # End of the interval
-    end = 12
-
-    # Step size
-    step = 2
-
-    return list(range(begin, end + 1, step)), begin, end, step
-
-
-def _get_range_configs():
-    intervals, begin, end, step = get_random_intervals()
-    intervals = [str(x) for x in intervals]
-
-    shared_args = {
-        'model_names': [['classification_breast_v1']],
-        'run_config_search_disable': [True],
-        'perf_analyzer_cpu_util': [600],
-        'triton_launch_mode': ['docker'],
-        'batch_sizes': [{
-            'start': begin,
-            'stop': end,
-            'step': step
-        }],
-        'concurrency': [{
-            'start': begin,
-            'stop': end,
-            'step': step
-        }],
-    }
-
-    # model names combinations
-    param_combs = []
-    model_names_combs = dict(shared_args)
-    model_names_combs['model_names'] = [
-        ['classification_breast_v1', 'classification_chestxray_v1'],
-        ['classification_chestxray_v1'],
-        'classification_breast_v1,classification_chestxray_v1'
-    ]
-
-    param_combs += list(product(*tuple(model_names_combs.values())))
-
-    range_combs = [{
-        'start': begin,
-        'stop': end,
-        'step': step
-    }, intervals, ','.join(intervals), '1']
-
-    # concurrency value combinations
-    concurrency_combs = dict(shared_args)
-    concurrency_combs['concurrency'] = range_combs
-    param_combs += list(product(*tuple(concurrency_combs.values())))
-
-    # batch size value combinations
-    batch_size_combs = dict(shared_args)
-    batch_size_combs['batch_sizes'] = range_combs
-    param_combs += list(product(*tuple(batch_size_combs.values())))
-
-    run_params = []
-    for param_combination in param_combs:
-        new_run = dict(zip(shared_args.keys(), param_combination))
-
-        if type(new_run['model_names']) is str:
-            number_of_models = len(new_run['model_names'].split(','))
-        else:
-            number_of_models = len(new_run['model_names'])
-
-        if type(new_run['concurrency']) is str:
-            concurrency_number = len(new_run['concurrency'].split(','))
-        else:
-            concurrency_number = len(intervals)
-
-        if type(new_run['batch_sizes']) is str:
-            batch_size_number = len(new_run['batch_sizes'].split(','))
-        else:
-            batch_size_number = len(intervals)
-        new_run['total_param'] = \
-            number_of_models * concurrency_number * batch_size_number
-        run_params.append(new_run)
-
-    return run_params
 
 
 def _get_sweep_configs():
@@ -165,7 +78,6 @@ def _get_sweep_configs():
 def get_all_configurations():
 
     run_params = []
-    run_params += _get_range_configs()
     run_params += _get_sweep_configs()
     return run_params
 

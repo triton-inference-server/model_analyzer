@@ -15,6 +15,7 @@
 from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
 from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
 from model_analyzer.record.types.gpu_utilization import GPUUtilization
+from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
 from model_analyzer.monitor.gpu_monitor import GPUMonitor
 from model_analyzer.model_analyzer_exceptions import \
     TritonModelAnalyzerException
@@ -37,7 +38,8 @@ class DCGMMonitor(GPUMonitor):
     model_analyzer_to_dcgm_field = {
         GPUUsedMemory: dcgm_fields.DCGM_FI_DEV_FB_USED,
         GPUFreeMemory: dcgm_fields.DCGM_FI_DEV_FB_FREE,
-        GPUUtilization: dcgm_fields.DCGM_FI_DEV_GPU_UTIL
+        GPUUtilization: dcgm_fields.DCGM_FI_DEV_GPU_UTIL,
+        GPUPowerUsage: dcgm_fields.DCGM_FI_DEV_POWER_USAGE
     }
 
     def __init__(self, gpus, frequency, metrics, dcgmPath=None):
@@ -102,11 +104,12 @@ class DCGMMonitor(GPUMonitor):
                     dcgm_field = self.model_analyzer_to_dcgm_field[metric_type]
                     for measurement in metrics[dcgm_field].values:
 
-                        # DCGM timestamp is in nanoseconds
-                        records.append(
-                            metric_type(value=float(measurement.value),
-                                        device=gpu,
-                                        timestamp=measurement.ts))
+                        if measurement.value is not None:
+                            # DCGM timestamp is in nanoseconds
+                            records.append(
+                                metric_type(value=float(measurement.value),
+                                            device=gpu,
+                                            timestamp=measurement.ts))
 
         return records
 

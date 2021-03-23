@@ -15,7 +15,6 @@
 from .result_table import ResultTable
 from .result_comparator import ResultComparator
 from .model_result import ModelResult
-from .measurement import Measurement
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
@@ -23,7 +22,6 @@ from model_analyzer.model_analyzer_exceptions \
 import os
 import heapq
 import logging
-from collections import defaultdict
 
 
 class ResultManager:
@@ -33,15 +31,17 @@ class ResultManager:
     multiple runs.
     """
 
-    non_gpu_specific_headers = [
-        'Model', 'Batch', 'Concurrency', 'Model Config Path', 'Instance Group',
-        'Dynamic Batcher Sizes', 'Satisfies Constraints'
-    ]
-    gpu_specific_headers = [
-        'Model', 'GPU ID', 'Batch', 'Concurrency', 'Model Config Path',
-        'Instance Group', 'Dynamic Batcher Sizes', 'Satisfies Constraints'
-    ]
-    server_table_headers = ['Model', 'GPU ID', 'Batch', 'Concurrency']
+    headers = {
+        'model_name': 'Model',
+        'batch_size': 'Batch',
+        'concurrency': 'Concurrency',
+        'model_config_path': 'Model Config Path',
+        'instance_group': 'Instance Group',
+        'dynamic_batch_sizes': 'Dynamic Batcher Sizes',
+        'satisfies_constraints': 'Satisfies Constraints',
+        'gpu_id': 'GPU ID'
+    }
+
     server_only_table_key = 'server_gpu_metrics'
     model_gpu_table_key = 'model_gpu_metrics'
     model_inference_table_key = 'model_inference_metrics'
@@ -53,8 +53,8 @@ class ResultManager:
         config : AnalyzerConfig
             the model analyzer config
         statistics: AnalyzerStatistics
-            the statistics being collected for 
-            this instance of model analyzer
+            the statistics being collected for this instance of model
+            analyzer
         """
 
         self._config = config
@@ -67,6 +67,10 @@ class ResultManager:
         self._sorted_results = []
         self._passing_results = []
         self._failing_results = []
+
+        # Headers Dictionary
+        self._gpu_metrics_to_headers = {}
+        self._non_gpu_metrics_to_headers = {}
 
         # Results exported to export_path/results
         self._results_export_directory = os.path.join(config.export_path,
@@ -102,25 +106,78 @@ class ResultManager:
         non_gpu_specific_metrics : list of RecordTypes
             The metrics that do not have a GPU id associated with them
         """
+        for metric in gpu_specific_metrics:
+            self._gpu_metrics_to_headers[metric.tag] = metric.header()
+
+        for metric in non_gpu_specific_metrics:
+            self._non_gpu_metrics_to_headers[metric.tag] = metric.header()
 
         # Server only
+        server_output_headers = []
+        server_output_fields = self._config.server_output_fields
+        for server_output_field in server_output_fields:
+            if server_output_field in self.headers:
+                server_output_headers.append(self.headers[server_output_field])
+            elif server_output_field in self._gpu_metrics_to_headers:
+                server_output_headers.append(
+                    self._gpu_metrics_to_headers[server_output_field])
+            else:
+                raise TritonModelAnalyzerException(
+                    f'Server output field "{server_output_field}", does not exist'
+                )
         self._add_result_table(table_key=self.server_only_table_key,
                                title='Server Only',
-                               headers=self.server_table_headers,
-                               metric_types=gpu_specific_metrics)
+                               headers=server_output_headers)
+        self._server_output_fields = server_output_fields
 
-        # Model Inference Tables
+        # Inference only
+        inference_output_headers = []
+        inference_output_fields = self._config.inference_output_fields
+        for inference_output_field in inference_output_fields:
+            if inference_output_field in self.headers:
+                inference_output_headers.append(
+                    self.headers[inference_output_field])
+            elif inference_output_field in self._non_gpu_metrics_to_headers:
+                inference_output_headers.append(
+                    self._non_gpu_metrics_to_headers[inference_output_field])
+            else:
+                raise TritonModelAnalyzerException(
+                    f'Inference output field "{inference_output_field}", does not exist'
+                )
+        self._inference_output_fields = inference_output_fields
+
+        self._add_result_table(
+            table_key=self.model_inference_table_key,
+            title='Models (Inference)',
+            headers=inference_output_headers,
+        )
+
+        gpu_output_headers = []
+        gpu_output_fields = self._config.gpu_output_fields
+        for gpu_output_field in gpu_output_fields:
+            if gpu_output_field in self.headers:
+                gpu_output_headers.append(self.headers[gpu_output_field])
+            elif gpu_output_field in self._gpu_metrics_to_headers:
+                gpu_output_headers.append(
+                    self._gpu_metrics_to_headers[gpu_output_field])
+            else:
+                raise TritonModelAnalyzerException(
+                    f'GPU output field "{gpu_output_field}", does not exist')
+        self._gpu_output_fields = gpu_output_fields
+
+        # Model GPU Metrics
         self._add_result_table(table_key=self.model_gpu_table_key,
                                title='Models (GPU Metrics)',
-                               headers=self.gpu_specific_headers,
-                               metric_types=gpu_specific_metrics)
+                               headers=gpu_output_headers)
 
-        self._add_result_table(table_key=self.model_inference_table_key,
-                               title='Models (Inference)',
-                               headers=self.non_gpu_specific_headers,
-                               metric_types=non_gpu_specific_metrics)
+    def _find_index_for_field(self, fields, field_name):
+        try:
+            index = fields.index(field_name)
+            return index
+        except ValueError:
+            return None
 
-    def add_server_data(self, data, default_value):
+    def add_server_data(self, data):
         """
         Adds data to directly to the server only table
 
@@ -128,13 +185,28 @@ class ResultManager:
         ----------
         data : dict
             keys are gpu ids and values are lists of metric values
-        default_value : val
-            A value for those columns not applicable to standalone server
         """
 
+        server_fields = self._server_output_fields
+
         for gpu_id, metrics in data.items():
-            data_row = ['triton-server', gpu_id, default_value, default_value]
-            data_row += [metric.value() for metric in metrics]
+            data_row = [None] * len(server_fields)
+
+            model_name_index = self._find_index_for_field(
+                server_fields, 'model_name')
+            if model_name_index is not None:
+                data_row[model_name_index] = 'triton-server'
+
+            gpu_id_index = self._find_index_for_field(server_fields, 'gpu_id')
+            if gpu_id_index is not None:
+                data_row[gpu_id_index] = gpu_id
+
+            for metric in metrics:
+                metric_tag_index = self._find_index_for_field(
+                    server_fields, metric.tag)
+
+                if metric_tag_index is not None:
+                    data_row[metric_tag_index] = round(metric.value(), 1)
             self._result_tables[
                 self.server_only_table_key].insert_row_by_index(data_row)
 
@@ -192,7 +264,7 @@ class ResultManager:
         Parameters
         ----------
         n : int
-            The number of  top results 
+            The number of  top results
             to retrieve
 
         Returns
@@ -272,6 +344,51 @@ class ResultManager:
                                           measurement=next_best_measurement,
                                           passes=passes)
 
+    def _get_common_row_items(self, fields, batch_size, concurrency, satisfies,
+                              model_name, model_config_path, dynamic_batching,
+                              instance_group):
+        row = [None] * len(fields)
+
+        # Model Name
+        model_name_index = self._find_index_for_field(fields, 'model_name')
+        if model_name_index is not None:
+            row[model_name_index] = model_name
+
+        # Batch Size
+        batch_size_index = self._find_index_for_field(fields, 'batch_size')
+        if batch_size_index is not None:
+            row[batch_size_index] = batch_size_index
+
+        # Concurrency
+        concurrency_index = self._find_index_for_field(fields, 'concurrency')
+        if concurrency_index is not None:
+            row[concurrency_index] = concurrency
+
+        # Satisfies
+        satisfies_constraints_index = self._find_index_for_field(
+            fields, 'satisfies_constraints')
+        if satisfies_constraints_index is not None:
+            row[satisfies_constraints_index] = satisfies
+
+        # Model Config Path
+        model_config_path_idx = self._find_index_for_field(
+            fields, 'model_config_path')
+        if model_config_path_idx is not None:
+            row[model_config_path_idx] = model_config_path
+
+        # Dynamic Batching
+        dynamic_batching_idx = self._find_index_for_field(
+            fields, 'dynamic_batch_sizes')
+        if dynamic_batching_idx is not None:
+            row[dynamic_batching_idx] = dynamic_batching
+
+        # Instance Group
+        instance_group_idx = self._find_index_for_field(
+            fields, 'instance_group')
+        if instance_group_idx is not None:
+            row[instance_group_idx] = instance_group
+        return row
+
     def _compile_measurement(self, model_name, instance_group,
                              dynamic_batching, measurement, passes):
         """
@@ -286,28 +403,41 @@ class ResultManager:
         satisfies = "Yes" if passes else "No"
 
         # Non GPU specific data
-        inference_metrics = [
-            model_name, batch_size, concurrency, tmp_model_name,
-            instance_group, dynamic_batching, satisfies
-        ]
-        inference_metrics += [
-            round(metric.value(), 1) for metric in measurement.non_gpu_data()
-        ]
+        inference_fields = self._inference_output_fields
+        inference_row = self._get_common_row_items(
+            inference_fields, batch_size, concurrency, satisfies, model_name,
+            tmp_model_name, dynamic_batching, instance_group)
+
+        for metric in measurement.non_gpu_data():
+            metric_tag_index = self._find_index_for_field(
+                inference_fields, metric.tag)
+
+            if metric_tag_index is not None:
+                inference_row[metric_tag_index] = round(metric.value(), 1)
+
         self._result_tables[
-            self.model_inference_table_key].insert_row_by_index(
-                row=inference_metrics)
+            self.model_inference_table_key].insert_row_by_index(inference_row)
 
         # GPU specific data
         for gpu_id, metrics in measurement.gpu_data().items():
-            gpu_metrics = [
-                model_name, gpu_id, batch_size, concurrency, tmp_model_name,
-                instance_group, dynamic_batching, satisfies
-            ]
-            gpu_metrics += [round(metric.value(), 1) for metric in metrics]
+            gpu_fields = self._gpu_output_fields
+            gpu_row = self._get_common_row_items(gpu_fields, batch_size,
+                                                 concurrency, satisfies,
+                                                 model_name, tmp_model_name,
+                                                 dynamic_batching,
+                                                 instance_group)
+            gpu_id_index = self._find_index_for_field(gpu_fields, 'gpu_id')
+            if gpu_id_index is not None:
+                gpu_row[gpu_id_index] = gpu_id
+            for metric in metrics:
+                metric_tag_index = self._find_index_for_field(
+                    gpu_fields, metric.tag)
+                if metric_tag_index is not None:
+                    gpu_row[metric_tag_index] = round(metric.value(), 1)
             self._result_tables[self.model_gpu_table_key].insert_row_by_index(
-                row=gpu_metrics)
+                row=gpu_row)
 
-    def _add_result_table(self, table_key, title, headers, metric_types):
+    def _add_result_table(self, table_key, title, headers):
         """
         Utility function that creates a table with column
         headers corresponding to perf_analyzer arguments
@@ -316,10 +446,7 @@ class ResultManager:
         """
 
         # Create headers
-        table_headers = headers[:]
-        for metric in metric_types:
-            table_headers.append(metric.header())
-        self._result_tables[table_key] = ResultTable(headers=table_headers,
+        self._result_tables[table_key] = ResultTable(headers=headers,
                                                      title=title)
 
     def write_and_export_results(self):

@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -65,8 +65,8 @@ else
     MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
     MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
     METRICS_NUM_COLUMNS=11
-    INFERENCE_NUM_COLUMNS=11
-    SERVER_NUM_COLUMNS=7
+    INFERENCE_NUM_COLUMNS=10
+    SERVER_NUM_COLUMNS=5
 
     check_log_table_row_column $ANALYZER_LOG $SERVER_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
     if [ $? -ne 0 ]; then
