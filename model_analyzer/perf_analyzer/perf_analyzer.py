@@ -14,7 +14,6 @@
 
 from subprocess import Popen, STDOUT, PIPE
 import logging
-import time
 import psutil
 
 from model_analyzer.model_analyzer_exceptions \
@@ -50,7 +49,7 @@ class PerfAnalyzer:
             Maximum number of seconds that perf_analyzer
             will wait until the execution is complete.
         max_cpu_util : float
-            Maximum CPU utilization allowed for perf_analyzer 
+            Maximum CPU utilization allowed for perf_analyzer
         """
 
         self.bin_path = path
@@ -117,7 +116,6 @@ class PerfAnalyzer:
                     current_timeout -= interval_sleep_time
                 else:
                     logging.info('perf_analyzer took very long to exit, killing perf_analyzer...')
-                    self._output = process.stdout.read()
                     process.kill()
 
                     # Failure
