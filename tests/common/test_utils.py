@@ -50,7 +50,7 @@ def construct_measurement(gpu_metric_values, non_gpu_metric_values,
 
 
 def construct_result(avg_gpu_metric_values, avg_non_gpu_metric_values,
-                     comparator):
+                     value_step, comparator):
     """
     Takes a dictionary whose keys are average
     metric values, constructs artificial data 
@@ -69,12 +69,16 @@ def construct_result(avg_gpu_metric_values, avg_non_gpu_metric_values,
     gpu_metric_values = {}
     for gpu_id, metric_values in avg_gpu_metric_values.items():
         gpu_metric_values[gpu_id] = {
-            key: list(range(val - num_vals, val + num_vals))
+            key: list(
+                range(val - value_step * num_vals, val + value_step * num_vals,
+                      value_step))
             for key, val in metric_values.items()
         }
 
     non_gpu_metric_values = {
-        key: list(range(val - num_vals, val + num_vals))
+        key: list(
+            range(val - value_step * num_vals, val + value_step * num_vals,
+                  value_step))
         for key, val in avg_non_gpu_metric_values.items()
     }
 

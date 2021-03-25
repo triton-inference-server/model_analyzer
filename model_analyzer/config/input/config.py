@@ -343,6 +343,18 @@ class AnalyzerConfig:
             ))
         self._add_config(
             ConfigField(
+                'top_n_configs',
+                field_type=ConfigPrimitive(int),
+                default_value=3,
+                description='The number of top model configurations to plot.'))
+        self._add_config(
+            ConfigField('top_n_models',
+                        field_type=ConfigPrimitive(int),
+                        default_value=0,
+                        description='The number of top models to save.'))
+
+        self._add_config(
+            ConfigField(
                 'filename_model_inference',
                 flags=['--filename-model-inference'],
                 default_value='metrics-model-inference.csv',
@@ -717,12 +729,6 @@ class AnalyzerConfig:
                 description=
                 'Model analyzer uses the information in this section to construct plots of the results.'
             ))
-        self._add_config(
-            ConfigField(
-                'top_n_configs',
-                field_type=ConfigPrimitive(int),
-                default_value=3,
-                description='The number of top model configurations to plot.'))
 
     def set_config_values(self, args):
         """

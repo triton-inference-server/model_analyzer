@@ -289,23 +289,6 @@ def main():
         f'Triton Model Analyzer started: config={config.get_all_config()}')
 
     server = None
-    # Generate the output model repository path folder.
-    output_model_repo_path = config.output_model_repository_path
-    try:
-        os.mkdir(output_model_repo_path)
-    except OSError:
-        if not config.override_output_model_repository:
-            raise TritonModelAnalyzerException(
-                f'Path "{output_model_repo_path}" already exists. '
-                'Please set or modify "--output-model-repository-path" flag or remove this directory.'
-                ' You can also allow overriding of the output directory using'
-                ' the "--override-output-model-repository" flag.')
-        else:
-            shutil.rmtree(output_model_repo_path)
-            logger.warn(
-                f'Overriding the output model repo path "{output_model_repo_path}"...'
-            )
-            os.mkdir(output_model_repo_path)
     try:
         client, server = get_triton_handles(config)
 

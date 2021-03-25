@@ -84,9 +84,9 @@ class Plot:
             self._data[model_config_label] = defaultdict(list)
 
         self._data[model_config_label]['x_data'].append(
-            measurement.get_value_of_metric(tag=self._x_axis).value())
+            measurement.get_metric(tag=self._x_axis).value())
         self._data[model_config_label]['y_data'].append(
-            measurement.get_value_of_metric(tag=self._y_axis).value())
+            measurement.get_metric(tag=self._y_axis).value())
 
     def plot_data_and_constraints(self, constraints):
         """

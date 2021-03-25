@@ -18,7 +18,6 @@ class ConfigModel:
     A class representing the configuration used for
     a single model.
     """
-
     def __init__(self,
                  model_name,
                  objectives=None,
@@ -49,7 +48,7 @@ class ConfigModel:
         self._objectives = objectives
         self._constraints = constraints
         self._parameters = parameters
-        self._model_config_paramters = model_config_parameters
+        self._model_config_parameters = model_config_parameters
         self._perf_analyzer_flags = perf_analyzer_flags
 
     def objectives(self):
@@ -90,7 +89,7 @@ class ConfigModel:
             A dictionary containing the model config parameters.
         """
 
-        return self._model_config_paramters
+        return self._model_config_parameters
 
     def model_name(self):
         """
@@ -150,7 +149,7 @@ class ConfigModel:
             A dictionary containing the model config parameters.
         """
 
-        self._model_config_paramters = model_config_parameters
+        self._model_config_parameters = model_config_parameters
 
     def set_model_name(self, model_name):
         """
@@ -272,9 +271,9 @@ class ConfigModel:
         if self._constraints:
             model_object['constraints'] = self._constraints
 
-        if self._model_config_paramters:
+        if self._model_config_parameters:
             model_object['model_config_parameters'] = \
-                self._model_config_paramters
+                self._model_config_parameters
 
         if self._perf_analyzer_flags:
             model_object['perf_analyzer_flags'] = self._perf_analyzer_flags

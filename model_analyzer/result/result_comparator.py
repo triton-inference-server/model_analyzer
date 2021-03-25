@@ -12,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .result_utils import average_list
 from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
-from model_analyzer.result.measurement import Measurement
 
 
 class ResultComparator:
     """
     Stores information needed to compare results and measurements.
     """
-
     def __init__(self, metric_objectives):
         """
         Parameters
@@ -62,10 +59,10 @@ class ResultComparator:
         """
 
         # For now create an average measurment
-        agg_measurement1 = self._aggregate_measurements(
-            result=result1, aggregation_func=average_list)
-        agg_measurement2 = self._aggregate_measurements(
-            result=result2, aggregation_func=average_list)
+        agg_measurement1 = self._aggregate_measurements(result=result1,
+                                                        aggregation_func=max)
+        agg_measurement2 = self._aggregate_measurements(result=result2,
+                                                        aggregation_func=max)
 
         return self.compare_measurements(measurement1=agg_measurement1,
                                          measurement2=agg_measurement2)
@@ -98,8 +95,8 @@ class ResultComparator:
 
         score_gain = 0.0
         for objective, weight in self._metric_weights.items():
-            metric1 = measurement1.get_value_of_metric(tag=objective)
-            metric2 = measurement2.get_value_of_metric(tag=objective)
+            metric1 = measurement1.get_metric(tag=objective)
+            metric2 = measurement2.get_metric(tag=objective)
             metric_diff = metric1 - metric2
             score_gain += (weight * (metric_diff.value() / metric1.value()))
 
@@ -123,13 +120,10 @@ class ResultComparator:
         # Assumption here is that its okay to average over all GPUs over all perf runs
         # This is done within the measurement itself
 
-        measurements = result.measurements()
-        aggregated_data = aggregation_func(
-            [measurement.data() for measurement in measurements])
-
-        # Data must be passed in as non-gpu-specific here.
-        measurement = Measurement(gpu_data={},
-                                  non_gpu_data=aggregated_data,
-                                  perf_config=None)
-        measurement.set_result_comparator(self)
-        return measurement
+        if result.passing_measurements():
+            aggregated_measurement = aggregation_func(
+                result.passing_measurements())
+        else:
+            aggregated_measurement = aggregation_func(result.measurements())
+        aggregated_measurement.set_result_comparator(self)
+        return aggregated_measurement

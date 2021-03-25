@@ -15,27 +15,53 @@
 from unittest.mock import MagicMock
 from .common import test_result_collector as trc
 
+from model_analyzer.config.input.config import AnalyzerConfig
 from model_analyzer.config.run.run_search import RunSearch
-from model_analyzer.config.input.objects.config_model import ConfigModel
+from model_analyzer.cli.cli import CLI
+
+from .mocks.mock_config import MockConfig
 
 
 class TestRunSearch(trc.TestResultCollector):
-    def _create_throughput(self, value):
-        throughput = MagicMock()
-        throughput.get_value_of_metric().value.return_value = value
-        return throughput
+    def _evaluate_config(self, args, yaml_content):
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = AnalyzerConfig()
+        cli = CLI(config)
+        cli.parse()
+        mock_config.stop()
+        return config
+
+    def _create_measurement(self, value):
+        metric_attrs = {'value': MagicMock(return_value=value)}
+        measurement_attrs = {
+            'get_metric': MagicMock(return_value=MagicMock(**metric_attrs))
+        }
+        return MagicMock(**measurement_attrs)
 
     def test_run_search(self):
-        max_concurrency = 128
-        max_preferred_batch_size = 16
-        max_instance_count = 5
-        run_search = RunSearch(max_concurrency, max_instance_count,
-                               max_preferred_batch_size)
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file', '--model-names', 'vgg11'
+        ]
 
-        config_model = ConfigModel('my-model', parameters={'concurrency': []})
-        run_search.init_model_sweep(config_model, True)
-        config_model, model_sweeps = run_search.get_model_sweeps(
-            config_model)
+        # Empty yaml
+        yaml_content = """
+            run_config_search_max_concurrency: 128
+            run_config_search_max_preferred_batch_size: 16
+            run_config_search_max_instance_count: 5
+            concurrency: []
+            model_names:
+                - my-model
+            """
+
+        config = self._evaluate_config(args, yaml_content)
+        run_search = RunSearch(config=config)
+
+        concurrencies = config.model_names[0].parameters()['concurrency']
+        run_search.init_model_sweep(concurrencies, True)
+        config_model, model_sweeps = run_search.get_model_sweep(
+            config.model_names[0])
 
         start_throughput = 2
         expected_concurrency = 1
@@ -44,33 +70,45 @@ class TestRunSearch(trc.TestResultCollector):
             model_sweep = model_sweeps.pop()
             current_concurrency = config_model.parameters()['concurrency'][0]
             self.assertEqual(expected_concurrency, current_concurrency)
-            run_search.add_run_results(
-                {'*': [self._create_throughput(start_throughput)]})
+            run_search.add_measurements(
+                [self._create_measurement(start_throughput)])
             start_throughput *= 2
             expected_concurrency *= 2
             current_instance_count = model_sweep['instance_group'][0]['count']
 
             self.assertEqual(current_instance_count, expected_instance_count)
-            if expected_concurrency > max_concurrency:
+            if expected_concurrency > config.run_config_search_max_concurrency:
                 expected_concurrency = 1
                 expected_instance_count += 1
-                if expected_instance_count > max_instance_count:
+                if expected_instance_count > config.run_config_search_max_instance_count:
                     expected_instance_count = 1
 
-            config_model, model_sweeps = run_search.get_model_sweeps(
+            config_model, model_sweeps = run_search.get_model_sweep(
                 config_model)
 
     def test_run_search_failing(self):
-        max_concurrency = 128
-        max_preferred_batch_size = 16
-        max_instance_count = 5
-        run_search = RunSearch(max_concurrency, max_instance_count,
-                               max_preferred_batch_size)
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file', '--model-names', 'vgg11'
+        ]
 
-        config_model = ConfigModel('my-model', parameters={'concurrency': []})
-        run_search.init_model_sweep(config_model, True)
-        config_model, model_sweeps = run_search.get_model_sweeps(
-            config_model)
+        # Empty yaml
+        yaml_content = """
+            run_config_search_max_concurrency: 128
+            run_config_search_max_preferred_batch_size: 16
+            run_config_search_max_instance_count: 5
+            concurrency: []
+            model_names:
+                - my-model
+            """
+
+        config = self._evaluate_config(args, yaml_content)
+        run_search = RunSearch(config=config)
+
+        concurrencies = config.model_names[0].parameters()['concurrency']
+        run_search.init_model_sweep(concurrencies, True)
+        config_model, model_sweeps = run_search.get_model_sweep(
+            config.model_names[0])
 
         start_throughput = 2
         expected_concurrency = 1
@@ -79,8 +117,8 @@ class TestRunSearch(trc.TestResultCollector):
         while model_sweeps:
             model_sweep = model_sweeps.pop()
             current_concurrency = config_model.parameters()['concurrency'][0]
-            run_search.add_run_results(
-                {'*': [self._create_throughput(start_throughput)]})
+            run_search.add_measurements(
+                [self._create_measurement(start_throughput)])
             start_throughput *= 1.02
             self.assertEqual(expected_concurrency, current_concurrency)
             current_instance_count = model_sweep['instance_group'][0]['count']
@@ -94,10 +132,10 @@ class TestRunSearch(trc.TestResultCollector):
                 total_runs = 0
                 expected_concurrency = 1
                 expected_instance_count += 1
-                if expected_instance_count > max_instance_count:
+                if expected_instance_count > config.run_config_search_max_instance_count:
                     expected_instance_count = 1
             else:
                 expected_concurrency *= 2
 
-            config_model, model_sweeps = run_search.get_model_sweeps(
+            config_model, model_sweeps = run_search.get_model_sweep(
                 config_model)

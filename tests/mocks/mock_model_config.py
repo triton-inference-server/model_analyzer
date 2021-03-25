@@ -25,25 +25,18 @@ class MockModelConfig(MockBase):
         patchers = self._patchers
 
         patchers.append(
-            patch(
-                'builtins.open',
-                mock_open(
-                    read_data=self._model_file_content)))
+            patch('builtins.open',
+                  mock_open(read_data=self._model_file_content)))
         patchers.append(
-            patch(
-                'model_analyzer.triton.model.model_config.os.path.exists',
-                MagicMock(return_value=True)
-            )
-        )
+            patch('model_analyzer.triton.model.model_config.os.path.exists',
+                  MagicMock(return_value=True)))
 
         def isfile(file_name):
             if file_name.endswith('.pbtxt'):
                 return True
             else:
                 return False
+
         patchers.append(
-            patch(
-                'model_analyzer.triton.model.model_config.os.path.isfile',
-                isfile
-            )
-        )
+            patch('model_analyzer.triton.model.model_config.os.path.isfile',
+                  isfile))

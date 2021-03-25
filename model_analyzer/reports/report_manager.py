@@ -96,10 +96,12 @@ class ReportManager:
         num_best_configs = min(self._config.top_n_configs,
                                total_configurations)
         gpu_names, max_memories = self._get_gpu_stats(model_name=model_name)
-        static_batch_sizes = ','.join([
-            str(measurement[1].perf_config()['batch-size'])
-            for measurement in self._measurements[model_name]
-        ])
+        static_batch_sizes = ','.join(
+            sorted(
+                set([
+                    str(measurement[1].perf_config()['batch-size'])
+                    for measurement in self._measurements[model_name]
+                ])))
         constraint_str = self._constraint_strs[
             model_name] if self._constraint_strs else "None"
         table, summary_sentence = self._build_summary_table(
@@ -181,12 +183,10 @@ class ReportManager:
             row = [
                 model_config.get_field('name'), dynamic_batching_str,
                 instance_group_str,
-                measurement.get_value_of_metric('perf_latency').value(),
-                measurement.get_value_of_metric('perf_throughput').value(),
-                measurement.get_value_of_metric('gpu_used_memory').value(),
-                round(
-                    measurement.get_value_of_metric('gpu_utilization').value(),
-                    1)
+                measurement.get_metric('perf_latency').value(),
+                measurement.get_metric('perf_throughput').value(),
+                measurement.get_metric('gpu_used_memory').value(),
+                round(measurement.get_metric('gpu_utilization').value(), 1)
             ]
             summary_table.insert_row_by_index(row)
         return summary_table, summary_sentence

@@ -115,9 +115,15 @@ class TestResultComparatorMethods(trc.TestResultCollector):
             non_gpu_metric_values2=non_gpu_metric_values2,
             expected_result=1)
 
-    def _check_result_comparison(self, objective_spec, avg_gpu_metrics1,
-                                 avg_gpu_metrics2, avg_non_gpu_metrics1,
-                                 avg_non_gpu_metrics2, expected_result):
+    def _check_result_comparison(self,
+                                 objective_spec,
+                                 avg_gpu_metrics1,
+                                 avg_gpu_metrics2,
+                                 avg_non_gpu_metrics1,
+                                 avg_non_gpu_metrics2,
+                                 value_step1=1,
+                                 value_step2=1,
+                                 expected_result=0):
         """
         Helper function that takes all the data needed to
         construct two results, constructs and runs a result
@@ -128,10 +134,13 @@ class TestResultComparatorMethods(trc.TestResultCollector):
         result_comparator = ResultComparator(metric_objectives=objective_spec)
 
         result1 = construct_result(avg_gpu_metrics1, avg_non_gpu_metrics1,
-                                   result_comparator)
+                                   value_step1, result_comparator)
         result2 = construct_result(avg_gpu_metrics2, avg_non_gpu_metrics2,
-                                   result_comparator)
-
+                                   value_step2, result_comparator)
+        [top_measurement1] = result1.top_n_measurements(1)
+        [top_measurement2] = result2.top_n_measurements(1)
+        print([d.value() for d in top_measurement1.data()])
+        print([d.value() for d in top_measurement2.data()])
         self.assertEqual(result_comparator.compare_results(result1, result2),
                          expected_result)
 
@@ -183,4 +192,5 @@ class TestResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metrics1=avg_non_gpu_metrics1,
             avg_gpu_metrics2=avg_gpu_metrics2,
             avg_non_gpu_metrics2=avg_non_gpu_metrics2,
+            value_step2=2,
             expected_result=0)

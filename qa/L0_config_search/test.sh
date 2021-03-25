@@ -45,8 +45,7 @@ RET=0
 
 if [ ${#LIST_OF_CONFIG_FILES[@]} -lt 0 ]; then
     echo -e "\n***\n*** Test Failed. No config file exists. \n***"
-    RET=1
-    exit $RET
+    exit 1
 fi
 
 for launch_mode in $TRITON_LAUNCH_MODES; do
@@ -71,7 +70,7 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
             if [ "$SERVER_PID" == "0" ]; then
                 echo -e "\n***\n*** Failed to start $SERVER\n***"
                 cat $SERVER_LOG
-                exit 1
+                RET=1
             fi
         else
             MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]} --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
@@ -86,11 +85,11 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
             cat $ANALYZER_LOG
-            exit 1
+            RET=1
         else
             if [ $launch_mode == 'remote' ]; then
-                    kill $SERVER_PID
-                    wait $SERVER_PID
+                kill $SERVER_PID
+                wait $SERVER_PID
             fi
             cat $ANALYZER_LOG
             SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
@@ -105,42 +104,42 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
             if [ $? -ne 0 ]; then
                 echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
                 cat $ANALYZER_LOG
-                exit 1
+                RET=1
             fi
 
             check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) "Models\ \(GPU\ Metrics\):"
             if [ $? -ne 0 ]; then
                 echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
                 cat $ANALYZER_LOG
-                exit 1
+                RET=1
             fi
 
             check_csv_table_row_column $MODEL_METRICS_GPU_FILE $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) $OUTPUT_TAG
             if [ $? -ne 0 ]; then
                 echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_GPU_FILE.\n***"
                 cat $ANALYZER_LOG
-                exit 1
+                RET=1
             fi
 
             check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS $OUTPUT_TAG
             if [ $? -ne 0 ]; then
                 echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_INFERENCE_FILE.\n***"
                 cat $ANALYZER_LOG
-                exit 1
+                RET=1
             fi
             
             check_log_table_row_column $ANALYZER_LOG $SERVER_METRICS_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
             if [ $? -ne 0 ]; then
                 echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
                 cat $ANALYZER_LOG
-                exit 1
+                RET=1
             fi
 
             check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
             if [ $? -ne 0 ]; then
                 echo -e "\n***\n*** Test Output Verification Failed for $SERVER_METRICS_FILE.\n***"
                 cat $ANALYZER_LOG
-                exit 1
+                RET=1
             fi
         fi
 
@@ -150,7 +149,11 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
     done
 done
 
-echo -e "\n***\n*** Test PASSED\n***"
+if [ $RET -eq 0 ]; then
+    echo -e "\n***\n*** Test PASSED\n***"
+else
+    echo -e "\n***\n*** Test FAILED\n***"
+fi
 
 exit $RET
 

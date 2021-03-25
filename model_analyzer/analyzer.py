@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .config.run.run_config_generator import RunConfigGenerator
+from model_analyzer.model_manager import ModelManager
 from .analyzer_statistics import AnalyzerStatistics
 from .result.result_manager import ResultManager
 from .record.metrics_manager import MetricsManager
 from .plots.plot_manager import PlotManager
 from .reports.report_manager import ReportManager
-from .config.run.run_search import RunSearch
 
 import logging
+import os
 
 
 class Analyzer:
@@ -29,7 +29,6 @@ class Analyzer:
     model_analyzer. Configured with metrics to monitor, exposes profiling and
     result writing methods.
     """
-
     def __init__(self, config, client, metric_tags, server):
         """
         Parameters
@@ -47,24 +46,27 @@ class Analyzer:
         self._client = client
         self._server = server
 
-        # Collect stats
         self._statistics = AnalyzerStatistics(config=config)
 
-        # Results Manager
         self._result_manager = ResultManager(config=config,
                                              statistics=self._statistics)
 
-        # Metrics Manager
         self._metrics_manager = MetricsManager(
             config=config,
             metric_tags=metric_tags,
             server=server,
             result_manager=self._result_manager)
 
-        # Plot manager
+        self._model_manager = ModelManager(
+            config=config,
+            client=client,
+            server=server,
+            result_manager=self._result_manager,
+            metrics_manager=self._metrics_manager,
+        )
+
         self._plot_manager = PlotManager(config=config)
 
-        # Report manager
         self._report_manager = ReportManager(config=config)
 
     def run(self):
@@ -92,34 +94,20 @@ class Analyzer:
             self._result_manager.set_constraints_and_objectives(
                 config_model=model)
 
-            run_config_generator = RunConfigGenerator(
-                model=model,
-                result_manager=self._result_manager,
-                metrics_manager=self._metrics_manager,
-                analyzer_config=self._config,
-                client=self._client,
-                server=self._server,
-                run_search=RunSearch(
-                    self._config.run_config_search_max_concurrency,
-                    self._config.run_config_search_max_instance_count,
-                    self._config.run_config_search_max_preferred_batch_size,
-                ))
-
-            run_config_generator.execute_run_configs()
-
-            # Sort the results for this model before summarize
-            self._result_manager.sort_results()
+            self._model_manager.run_model(model=model)
 
             if self._config.summarize:
                 # Send requested best results to plot manager
                 self._process_top_results()
                 # Plot data to graphs
-                self._plot_manager.complete_plots(
-                    model_name=model.model_name())
+                self._plot_manager.compile_plots(model_name=model.model_name())
 
             # Dump results to tables
             self._result_manager.update_statistics(model.model_name())
             self._result_manager.compile_results()
+
+        # If requested, save top n models
+        self._save_top_models()
 
     def write_and_export_results(self):
         """
@@ -149,3 +137,31 @@ class Analyzer:
 
             # Send top_n measurements to report manager
             self._report_manager.add_result(result=result)
+
+    def _save_top_models(self):
+        """
+        If requested, save the top models to a directory in
+        the export path
+        """
+
+        # Create top model directory
+        top_model_export_directory = os.path.join(self._config.export_path,
+                                                  'best_models')
+        os.makedirs(top_model_export_directory, exist_ok=True)
+
+        for result, model_name in self._model_manager.top_n_models(
+                n=self._config.top_n_models):
+
+            # Create model directory for best model
+            next_model_dir = os.path.join(top_model_export_directory,
+                                          model_name)
+            os.makedirs(next_model_dir, exist_ok=True)
+
+            # Ensure model config name is correct, and write
+            next_model_config = result.model_config()
+            next_model_config.set_field('name', model_name)
+
+            original_model_dir = os.path.join(self._config.model_repository,
+                                              model_name)
+            next_model_config.write_config_to_file(next_model_dir, True,
+                                                   original_model_dir)
