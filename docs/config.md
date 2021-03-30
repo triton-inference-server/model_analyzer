@@ -175,7 +175,10 @@ model_names: <comma-delimited-string|list|model>
 [ triton_server_flags: <dict> ]
 
 ```
-## `<constraint>`
+
+## Field Descriptions
+
+### `<constraint>`
 A constraint, specifies the bounds that determine a successful run. There are
 three constraints allowed:
 
@@ -186,7 +189,7 @@ three constraints allowed:
 | `gpu_used_memory` |    MB     |    max     | Specify maximum GPU memory used by model.            |
 
 
-### Examples
+#### Examples
 
 To filter out the results when `perf_throughput` is
 less than 5 infer/sec:
@@ -253,7 +256,7 @@ model_names:
             max: 50
 ```
 
-## `<objective>`
+### `<objective>`
 
 Objectives specify the sorting criteria for the final results.
 The fields below are supported under this object type:
@@ -281,7 +284,7 @@ To sort the results by latency, `objectives` should look like:
 objectives:
 - perf_latency
 ```
-### Weighted Objectives
+#### Weighted Objectives
 
 In addition to the mode discussed above, multiple values can be provided in
 the objectives key in order to provide more generalized control over how model
@@ -319,7 +322,7 @@ specified here. The above config will tell Model Analyzer to multiply the throug
 
 The `objectives` section can be specified both globally and on a per model basis.
 
-## Test Configuration `<parameter>`
+### Test Configuration `<parameter>`
 
 A user can specify a range of test configurations that Model Analyzer will
 profile over. The possible configuration parameters are `concurrency` and
@@ -363,7 +366,7 @@ These parameters will result in testing the concurrency configurations of 2,
 10, 18, 26, 34, 42, 50, 58, and 64, for each of different batch sizes of 1, 2
 and 3. This will result in 27 individual test runs of the model.
 
-## `<model-config-parameters>`
+### `<model-config-parameters>`
 
 This field represents the values that can be changed or swept through
 using Model Analyzer. All the values supported in the [Triton
@@ -450,11 +453,11 @@ sizes and two instance group combinations). If both
 `model_config_parameters` and `parameters` keys are specified, the list of sweep
 configurations will be the cartesian product of both of the lists.
 
-## `<perf-analyzer-flags>`
+### `<perf-analyzer-flags>`
 
 This field allows fine-grained control over the behavior of the `perf_analyzer` instances launched by Model Analyzer. `perf_analyzer` options and their values can be specified here, and will be passed to `perf_analyzer`. Refer to [the `perf_analyzer` docs](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md) for more information on these options.
 
-### Example
+#### Example
 
 ```yaml
 model_repository: /path/to/model/repository/
@@ -468,7 +471,7 @@ model_names:
 1. The section name contains underscores `perf_analyzer_flags` as seen in the example above. However the arguments themselves should contain hyphens as seen with `latency-report-file`.
 2. The Model Analyzer also provides certain arguments to the `perf_analyzer` instances it launches. These ***cannot*** be overriden by providing those arguments in this section. An example of this is `perf_measurement_window`, which is an argument to Model Analyzer itself.
 
-## The `model-names` field and `<model>`
+### The `model-names` field and `<model>`
 The `--model-names` argument can be provided as a list of strings (names of models) from the CLI interface, or as a more complex `<model>` object but only through the YAML configuration file. The model object can contain `<constraint>`, `<objective>`,
 `<model-config-parameters>`, `<parameter>` and `<perf-analyzer-flags>`.
 
@@ -512,7 +515,7 @@ model_names:
 
 Multiple models can be specified under the `model_names` key.
 
- ## Example
+ #### Example
 
 An example configuration looks like below:
 
@@ -568,11 +571,11 @@ It will run the model `vgg_19_graphdef` over combinations of batch sizes `[1,2,3
 
 It will also run the model `vgg_16_graphdef` over combinations of batch sizes `[4,5,6,7,8,9]`(taken from the global `batch_sizes` section), concurrency `[2,10,18,26,34,42,50,58]`, with dynamic batching enabled and preferred batch sizes `1` and `2` and a single GPU instance.
 
-## <triton-server-flags>
+### `<triton-server-flags>`
 
 This section of the config allows fine-grained control over the flags passed to the Triton instances launched by Model Analyzer when it is running in the `docker` or `local` Triton launch modes. Any argument to the server can be specified here.
 
-### Example
+#### Example
 
 ```yaml
 model_repository: /path/to/model/repository/
