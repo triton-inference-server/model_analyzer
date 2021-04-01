@@ -73,6 +73,12 @@ model_names: <comma-delimited-string>
 # Generate summary of results
 [ summarize: <boolean>  | default: true ]
 
+# Number of top configs to show in summary plots
+[ configs_shown_per_model: <int> | default: 3]
+
+# Number of top model configs to save across ALL models, none saved by default
+[ top_n_models: <int> | default: 0 ]
+
 # File name to be used for the model inference results
 [ filename_model_inference: <string> | default: metrics-model-inference.csv ]
 

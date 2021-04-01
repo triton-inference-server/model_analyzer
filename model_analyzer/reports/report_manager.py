@@ -93,7 +93,7 @@ class ReportManager:
 
         total_measurements = statistics.total_measurements(model_name)
         total_configurations = statistics.total_configurations(model_name)
-        num_best_configs = min(self._config.top_n_configs,
+        num_best_configs = min(self._config.configs_shown_per_model,
                                total_configurations)
         gpu_names, max_memories = self._get_gpu_stats(model_name=model_name)
         static_batch_sizes = ','.join(

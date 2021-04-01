@@ -130,7 +130,7 @@ class Analyzer:
         """
 
         for result in self._result_manager.top_n_results(
-                n=self._config.top_n_configs):
+                n=self._config.configs_shown_per_model):
 
             # Send all measurements to plots manager
             self._plot_manager.add_result(result=result)
@@ -152,14 +152,13 @@ class Analyzer:
         for result, model_name in self._model_manager.top_n_models(
                 n=self._config.top_n_models):
 
-            # Create model directory for best model
-            next_model_dir = os.path.join(top_model_export_directory,
-                                          model_name)
-            os.makedirs(next_model_dir, exist_ok=True)
-
             # Ensure model config name is correct, and write
             next_model_config = result.model_config()
-            next_model_config.set_field('name', model_name)
+
+            # Create model directory for best model
+            next_model_dir = os.path.join(top_model_export_directory,
+                                          next_model_config.get_field('name'))
+            os.makedirs(next_model_dir, exist_ok=True)
 
             original_model_dir = os.path.join(self._config.model_repository,
                                               model_name)

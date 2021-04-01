@@ -45,7 +45,6 @@ class TestRunSearch(trc.TestResultCollector):
             'path-to-config-file', '--model-names', 'vgg11'
         ]
 
-        # Empty yaml
         yaml_content = """
             run_config_search_max_concurrency: 128
             run_config_search_max_preferred_batch_size: 16
@@ -92,7 +91,6 @@ class TestRunSearch(trc.TestResultCollector):
             'path-to-config-file', '--model-names', 'vgg11'
         ]
 
-        # Empty yaml
         yaml_content = """
             run_config_search_max_concurrency: 128
             run_config_search_max_preferred_batch_size: 16

@@ -265,7 +265,7 @@ class ResultManager:
         ----------
         n : int
             The number of  top results
-            to retrieve
+            to retrieve, get all if n==-1
 
         Returns
         -------
@@ -279,6 +279,9 @@ class ResultManager:
                 f"Requested top {n} configs, but none satisfied constraints. "
                 "Showing available constraint failing configs for this model.")
 
+            if n == -1:
+                return heapq.nsmallest(len(self._failing_results),
+                                       self._failing_results)
             if n > len(self._failing_results):
                 logging.warn(
                     f"Requested top {n} failing configs, "
@@ -288,6 +291,9 @@ class ResultManager:
             return heapq.nsmallest(min(n, len(self._failing_results)),
                                    self._failing_results)
 
+        if n == -1:
+            return heapq.nsmallest(len(self._passing_results),
+                                   self._passing_results)
         if n > len(self._passing_results):
             logging.warn(
                 f"Requested top {n} configs, "

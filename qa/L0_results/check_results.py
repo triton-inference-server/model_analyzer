@@ -64,7 +64,13 @@ def check_best_models(config, export_path):
     if not os.path.exists(top_model_dir):
         return True
     num_best_models = len(os.listdir(top_model_dir))
-    return config['top_n_models'] == num_best_models
+    if config['top_n_models'] == num_best_models:
+        return True
+    else:
+        print(
+            f"\n***\n*** Expected {config['top_n_models']} best models. Found {num_best_models}.\n***"
+        )
+        return False
 
 
 if __name__ == '__main__':

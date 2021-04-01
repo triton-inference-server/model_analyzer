@@ -92,9 +92,9 @@ class ModelManager:
         # Sort the results for this model
         self._result_manager.sort_results()
 
-        # Save the best result
-        [top_result] = self._result_manager.top_n_results(n=1)
-        heapq.heappush(self._model_results, (top_result, model.model_name()))
+        # Save all results
+        for result in self._result_manager.top_n_results(n=-1):
+            heapq.heappush(self._model_results, (result, model.model_name()))
 
     def top_n_models(self, n):
         """

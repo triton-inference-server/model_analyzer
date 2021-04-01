@@ -52,10 +52,26 @@ def construct_measurement(gpu_metric_values, non_gpu_metric_values,
 def construct_result(avg_gpu_metric_values, avg_non_gpu_metric_values,
                      value_step, comparator):
     """
-    Takes a dictionary whose keys are average
+    Takes a dictionary whose values are average
     metric values, constructs artificial data 
     around these averages, and then constructs
     a result from this data.
+
+    Parameters
+    ----------
+    avg_gpu_metric_values: dict
+        The dict where keys are gpu based metric tags
+        and values are the average values around which 
+        we want data
+    avg_non_gpu_metric_values: dict
+        Keys are non gpu perf metrics, values are their 
+        average values.
+    value_step: int 
+        The step value between two adjacent data values.
+        Can be used to control the max/min of the data
+        distribution in the construction result
+    comparator: ResultComparator
+        The comparator used to compare measurements/results
     """
 
     num_vals = 10

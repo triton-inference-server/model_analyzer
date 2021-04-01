@@ -343,7 +343,7 @@ class AnalyzerConfig:
             ))
         self._add_config(
             ConfigField(
-                'top_n_configs',
+                'configs_shown_per_model',
                 field_type=ConfigPrimitive(int),
                 default_value=3,
                 description='The number of top model configurations to plot.'))
