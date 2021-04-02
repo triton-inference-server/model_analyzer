@@ -102,7 +102,7 @@ model_names: <comma-delimited-string|list|model>
 [ perf_output: <bool> | default: false ]
 
 # Triton Server version used when launching using Docker mode
-[ triton_version: <string> | default: 21.02-py3 ]
+[ triton_version: <string> | default: 21.03-py3 ]
 
 # Logging level
 [ log_level: <string> | default: INFO ]

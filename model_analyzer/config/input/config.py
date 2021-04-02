@@ -436,7 +436,7 @@ class AnalyzerConfig:
             ConfigField('triton_version',
                         flags=['--triton-version'],
                         field_type=ConfigPrimitive(str),
-                        default_value='20.12-py3',
+                        default_value='21.03-py3',
                         description='Triton Server Docker version'))
         self._add_config(
             ConfigField(
