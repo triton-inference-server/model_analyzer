@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import defaultdict
+
 from model_analyzer.result.constraint_manager import ConstraintManager
 import os
 from .plot import Plot
@@ -37,22 +39,19 @@ class PlotManager:
         self._plot_export_directory = os.path.join(config.export_path, 'plots')
         os.makedirs(self._plot_export_directory, exist_ok=True)
 
-        # Add all required plots
-        self._current_plots = self._new_plots()
-
         # Constraints should be plotted as well
         self._constraints = ConstraintManager.get_constraints_for_all_models(
             self._config)
 
-        # List of plots per model
-        self._completed_plots = {}
+        # Dict of list of plots
+        self._plots = defaultdict(list)
 
-    def _new_plots(self):
+    def init_plots(self, plots_key):
         """
         Constructs new plots based on config
         """
 
-        return [
+        self._plots[plots_key] = [
             Plot(name=plot.name(),
                  title=plot.title(),
                  x_axis=plot.x_axis(),
@@ -60,52 +59,38 @@ class PlotManager:
                  monotonic=plot.monotonic()) for plot in self._config.plots
         ]
 
-    def add_result(self, result):
+    def add_result(self, plots_key, result):
         """
-        Add a measurement to all plots
+        Add a result to all plots
         
         Parameters
         ----------
+        plots_key: str
+            The name of the directory these plots will
+            end up under
         result : ModelResult
             The result to add to this plot
         """
 
         for measurement in result.measurements():
-            for plot in self._current_plots:
+            for plot in self._plots[plots_key]:
                 plot.add_measurement(
                     model_config_label=measurement.perf_config()['model-name'],
                     measurement=measurement)
 
-    def compile_plots(self, model_name):
+    def compile_and_export_plots(self):
         """
         Finish plotting the data
         and write the plots to disk
-
-        Parameters
-        ----------
-        model_name : str
-            The name of the model whose 
-            plots are being finished
         """
 
-        completed_plots = []
-        for plot in self._current_plots:
-            plot.plot_data_and_constraints(
-                constraints=self._constraints[model_name])
-            completed_plots.append(plot)
-
-        self._completed_plots[model_name] = completed_plots
-        self._current_plots = self._new_plots()
-
-    def export_plots(self):
-        """
-        Save all plots to disk in 
-        plot directory
-        """
-
-        for model_name, completed_plots in self._completed_plots.items():
+        for plots_key, plots in self._plots.items():
             model_plot_dir = os.path.join(self._plot_export_directory,
-                                          model_name)
+                                          plots_key)
             os.makedirs(model_plot_dir, exist_ok=True)
-            for plot in completed_plots:
+            for plot in plots:
+                constraints = self._constraints['default']
+                if plots_key in self._constraints:
+                    constraints = self._constraints[plots_key]
+                plot.plot_data_and_constraints(constraints=constraints)
                 plot.save(filepath=model_plot_dir)

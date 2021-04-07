@@ -48,7 +48,7 @@ class TestConfigGenerator:
         self.config['model_names'] = {
             model_name: {
                 'parameters': {
-                    'concurrency': [1, 2],
+                    'concurrency': [1, 4],
                     'batch_sizes': [8, 16]
                 },
                 'model_config_parameters': {
@@ -66,8 +66,9 @@ class TestConfigGenerator:
         with open('config-summarize.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
-    def generate_top_n_models(self):
-        self.config['top_n_models'] = 2
+    def generate_num_top_model_configs(self):
+        self.config['summarize'] = True
+        self.config['num_top_model_configs'] = 2
         with open('config-top-models.yml', 'w+') as f:
             yaml.dump(self.config, f)
 

@@ -49,8 +49,11 @@ def construct_measurement(gpu_metric_values, non_gpu_metric_values,
     return measurement
 
 
-def construct_result(avg_gpu_metric_values, avg_non_gpu_metric_values,
-                     value_step, comparator):
+def construct_result(avg_gpu_metric_values,
+                     avg_non_gpu_metric_values,
+                     comparator,
+                     value_step=1,
+                     model_name=None):
     """
     Takes a dictionary whose values are average
     metric values, constructs artificial data 
@@ -72,12 +75,14 @@ def construct_result(avg_gpu_metric_values, avg_non_gpu_metric_values,
         distribution in the construction result
     comparator: ResultComparator
         The comparator used to compare measurements/results
+    model_name: str
+        The name of the model that generated this result
     """
 
     num_vals = 10
 
     # Construct a result
-    model_result = ModelResult(model_name=None,
+    model_result = ModelResult(model_name=model_name,
                                model_config=None,
                                comparator=comparator)
 

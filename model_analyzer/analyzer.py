@@ -18,6 +18,7 @@ from .result.result_manager import ResultManager
 from .record.metrics_manager import MetricsManager
 from .plots.plot_manager import PlotManager
 from .reports.report_manager import ReportManager
+from .constants import TOP_MODELS_REPORT_KEY
 
 import logging
 import os
@@ -67,7 +68,8 @@ class Analyzer:
 
         self._plot_manager = PlotManager(config=config)
 
-        self._report_manager = ReportManager(config=config)
+        self._report_manager = ReportManager(config=config,
+                                             statistics=self._statistics)
 
     def run(self):
         """
@@ -96,15 +98,11 @@ class Analyzer:
 
             self._model_manager.run_model(model=model)
 
-            if self._config.summarize:
-                # Send requested best results to plot manager
-                self._process_top_results()
-                # Plot data to graphs
-                self._plot_manager.compile_plots(model_name=model.model_name())
+        # Process results
+        self._process_top_results()
 
-            # Dump results to tables
-            self._result_manager.update_statistics(model.model_name())
-            self._result_manager.compile_results()
+        # Dump results to tables
+        self._result_manager.compile_results()
 
         # If requested, save top n models
         self._save_top_models()
@@ -117,8 +115,15 @@ class Analyzer:
 
         self._result_manager.write_and_export_results()
         if self._config.summarize:
-            self._plot_manager.export_plots()
-            self._report_manager.export_summary(statistics=self._statistics)
+            self._plot_manager.compile_and_export_plots()
+
+            # Export individual model summaries
+            for model in self._config.model_names:
+                self._report_manager.export_summary(
+                    report_key=model.model_name())
+            if self._config.num_top_model_configs:
+                self._report_manager.export_summary(
+                    report_key=TOP_MODELS_REPORT_KEY)
 
     def _process_top_results(self):
         """
@@ -129,14 +134,33 @@ class Analyzer:
         and results are
         """
 
-        for result in self._result_manager.top_n_results(
-                n=self._config.configs_shown_per_model):
+        if self._config.summarize:
+            self._result_manager.update_statistics()
 
-            # Send all measurements to plots manager
-            self._plot_manager.add_result(result=result)
+            # Create individual model reports
+            for model in self._config.model_names:
+                self._plot_manager.init_plots(plots_key=model.model_name())
+                for result in self._result_manager.top_n_results(
+                        model_name=model.model_name(),
+                        n=self._config.num_configs_per_model):
 
-            # Send top_n measurements to report manager
-            self._report_manager.add_result(result=result)
+                    # Send all measurements to plots manager
+                    self._plot_manager.add_result(plots_key=model.model_name(),
+                                                  result=result)
+
+                    # Send top_n measurements to report manager
+                    self._report_manager.add_result(
+                        report_key=model.model_name(), result=result)
+
+            # Add best model plots and results
+            if self._config.num_top_model_configs:
+                self._plot_manager.init_plots(plots_key=TOP_MODELS_REPORT_KEY)
+                for result in self._result_manager.top_n_results(
+                        n=self._config.num_top_model_configs):
+                    self._plot_manager.add_result(
+                        plots_key=TOP_MODELS_REPORT_KEY, result=result)
+                    self._report_manager.add_result(
+                        report_key=TOP_MODELS_REPORT_KEY, result=result)
 
     def _save_top_models(self):
         """
@@ -149,8 +173,8 @@ class Analyzer:
                                                   'best_models')
         os.makedirs(top_model_export_directory, exist_ok=True)
 
-        for result, model_name in self._model_manager.top_n_models(
-                n=self._config.top_n_models):
+        for result in self._result_manager.top_n_results(
+                n=self._config.num_top_model_configs):
 
             # Ensure model config name is correct, and write
             next_model_config = result.model_config()
@@ -161,6 +185,6 @@ class Analyzer:
             os.makedirs(next_model_dir, exist_ok=True)
 
             original_model_dir = os.path.join(self._config.model_repository,
-                                              model_name)
+                                              result.model_name())
             next_model_config.write_config_to_file(next_model_dir, True,
                                                    original_model_dir)

@@ -27,7 +27,7 @@ EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
-TRITON_LAUNCH_MODE="local"
+TRITON_LAUNCH_MODE="docker"
 CLIENT_PROTOCOL="http"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
@@ -73,9 +73,10 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         fi
     fi
     set -e
+    rm -rf $EXPORT_PATH/*
 done
 
-rm -r *.yml && rm -rf $EXPORT_PATH/*
+rm -r *.yml
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import defaultdict
+from model_analyzer.result.result_heap import ResultHeap
 from .result_table import ResultTable
 from .result_comparator import ResultComparator
 from .model_result import ModelResult
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
+from model_analyzer.constants import TOP_MODELS_REPORT_KEY
 
 import os
 import heapq
@@ -61,12 +64,11 @@ class ResultManager:
         self._result_tables = {}
         self._result_comparator = None
         self._statistics = statistics
-        self._results = {}
+        self._results = defaultdict(dict)
 
         # Results are stored in a heap queue
-        self._sorted_results = []
-        self._passing_results = []
-        self._failing_results = []
+        self._per_model_sorted_results = defaultdict(ResultHeap)
+        self._across_model_sorted_results = ResultHeap()
 
         # Headers Dictionary
         self._gpu_metrics_to_headers = {}
@@ -231,41 +233,48 @@ class ResultManager:
             raise TritonModelAnalyzerException(
                 "Cannot add measurements without setting result comparator")
 
+        model_name = run_config.model_name()
         model_config_name = run_config.model_config().get_field('name')
-        if model_config_name not in self._results:
-            self._results[model_config_name] = ModelResult(
+        if model_config_name not in self._results[model_name]:
+            self._results[model_name][model_config_name] = ModelResult(
                 model_name=run_config.model_name(),
                 model_config=run_config.model_config(),
                 comparator=self._result_comparator,
                 constraints=self._constraints)
         measurement.set_result_comparator(comparator=self._result_comparator)
-        self._results[model_config_name].add_measurement(measurement)
+        self._results[model_name][model_config_name].add_measurement(
+            measurement)
 
-    def sort_results(self):
+    def sort_results(self, model_name):
         """
-        Sorts the results for all the model
-        configs in the results structure,
-        and puts them in the correct heap
-        in descending order
+        Takes the results constructed by adding 
+        measurements and puts them in ResultHeaps
+        to be sorted.
+
+        Parameters
+        ----------
+        model_name: str
+            The name of the model whose results are being sorted
+
         """
 
-        for result in self._results.values():
-            heapq.heappush(self._sorted_results, result)
-            if result.failing():
-                heapq.heappush(self._failing_results, result)
-            else:
-                heapq.heappush(self._passing_results, result)
+        # Add results to individual result heaps as well as global result heap
+        for result in self._results[model_name].values():
+            self._per_model_sorted_results[model_name].add_result(result)
+            self._across_model_sorted_results.add_result(result)
 
-        # clear results for this model
-        self._results = {}
-
-    def top_n_results(self, n):
+    def top_n_results(self, model_name=None, n=-1):
         """
         Parameters
         ----------
+        model_name: str
+            The name of the model
+            for which we need the top 
+            n results.
         n : int
             The number of  top results
-            to retrieve, get all if n==-1
+            to retrieve. Returns all by 
+            default
 
         Returns
         -------
@@ -274,69 +283,34 @@ class ResultManager:
             must all be passing results
         """
 
-        if len(self._passing_results) == 0:
-            logging.warn(
-                f"Requested top {n} configs, but none satisfied constraints. "
-                "Showing available constraint failing configs for this model.")
-
-            if n == -1:
-                return heapq.nsmallest(len(self._failing_results),
-                                       self._failing_results)
-            if n > len(self._failing_results):
-                logging.warn(
-                    f"Requested top {n} failing configs, "
-                    f"but found only {len(self._failing_results)}. "
-                    "Showing all available constraint failing configs for this model."
-                )
-            return heapq.nsmallest(min(n, len(self._failing_results)),
-                                   self._failing_results)
-
-        if n == -1:
-            return heapq.nsmallest(len(self._passing_results),
-                                   self._passing_results)
-        if n > len(self._passing_results):
-            logging.warn(
-                f"Requested top {n} configs, "
-                f"but found only {len(self._passing_results)} passing configs. "
-                "Showing all available constraint satisfying configs for this model."
-            )
-
-        return heapq.nsmallest(min(n, len(self._passing_results)),
-                               self._passing_results)
+        if model_name:
+            result_heap = self._per_model_sorted_results[model_name]
+        else:
+            result_heap = self._across_model_sorted_results
+        return result_heap.top_n_results(n)
 
     def compile_results(self):
         """
         The function called at the end of all runs
-        FOR A MODEL that compiles all result and
+        FOR ALL MODELs that compiles all results and
         dumps the data into tables for exporting.
         """
 
         # Fill rows in descending order
-        while self._sorted_results:
-            next_best_result = heapq.heappop(self._sorted_results)
+        for result_heap in self._per_model_sorted_results.values():
+            while not result_heap.empty():
+                self._compile_measurements(result_heap.next_best_result())
 
-            # Get name, instance_group, and dynamic batching enabled info from result
-            model_name = next_best_result.model_name()
-            instance_group_str = next_best_result.model_config(
-            ).instance_group_string()
-            dynamic_batching_str = next_best_result.model_config(
-            ).dynamic_batching_string()
-            self._compile_measurements(next_best_result, model_name,
-                                       instance_group_str,
-                                       dynamic_batching_str)
-
-        # Clear results heaps
-        self._sorted_results = []
-        self._passing_results = []
-        self._failing_results = []
-
-    def _compile_measurements(self, result, model_name, instance_group,
-                              dynamic_batching):
+    def _compile_measurements(self, result):
         """
         checks measurement against constraints,
         and puts it into the correct (passing or failing)
         table
         """
+
+        model_name = result.model_name()
+        instance_group = result.model_config().instance_group_string()
+        dynamic_batching = result.model_config().dynamic_batching_string()
 
         passing_measurements = result.passing_measurements()
         failing_measurements = result.failing_measurements()
@@ -593,30 +567,29 @@ class ResultManager:
                                           ignore_widths=ignore_widths) +
                 "\n\n")
 
-    def update_statistics(self, model_name):
+    def update_statistics(self):
         """
         This function computes statistics
         with results currently in the result
         manager's heap
-
-        Parameters
-        ----------
-        model_name: str
-            The name of the model whose statistics to
-            update
         """
+        def _update_stats(statistics, result_heap, stats_key):
+            passing_measurements = 0
+            failing_measurements = 0
+            total_configs = 0
+            for result in result_heap.results():
+                total_configs += 1
+                passing_measurements += len(result.passing_measurements())
+                failing_measurements += len(result.failing_measurements())
 
-        passing_measurements = 0
-        failing_measurements = 0
-        total_configs = 0
+            statistics.set_total_configurations(stats_key, total_configs)
+            statistics.set_passing_measurements(stats_key,
+                                                passing_measurements)
+            statistics.set_failing_measurements(stats_key,
+                                                failing_measurements)
 
-        for result in self._sorted_results:
-            total_configs += 1
-            passing_measurements += len(result.passing_measurements())
-            failing_measurements += len(result.failing_measurements())
+        for model_name, result_heap in self._per_model_sorted_results.items():
+            _update_stats(self._statistics, result_heap, model_name)
 
-        self._statistics.set_total_configurations(model_name, total_configs)
-        self._statistics.set_passing_measurements(model_name,
-                                                  passing_measurements)
-        self._statistics.set_failing_measurements(model_name,
-                                                  failing_measurements)
+        _update_stats(self._statistics, self._across_model_sorted_results,
+                      TOP_MODELS_REPORT_KEY)

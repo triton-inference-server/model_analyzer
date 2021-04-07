@@ -60,15 +60,30 @@ def check_best_models(config, export_path):
     True if correct number exist, False otherwise
     """
 
+    # First check for the best models report
+    model_names = set(config['model_names'].keys())
+    report_dirs = set(os.listdir(os.path.join(export_path, 'reports')))
+    if len(report_dirs - model_names) != 1:
+        print("\n***\n*** Top models summary not found.\n***")
+        return False
+
+    # Should be only 1 element in intersection
+    for dir in (report_dirs - model_names):
+        if not os.path.exists(
+                os.path.join(export_path, 'reports', dir,
+                             'result_summary.pdf')):
+            print("\n***\n*** Top models summary not found.\n***")
+            return False
+
     top_model_dir = os.path.join(export_path, 'best_models')
     if not os.path.exists(top_model_dir):
         return True
     num_best_models = len(os.listdir(top_model_dir))
-    if config['top_n_models'] == num_best_models:
+    if config['num_top_model_configs'] == num_best_models:
         return True
     else:
         print(
-            f"\n***\n*** Expected {config['top_n_models']} best models. Found {num_best_models}.\n***"
+            f"\n***\n*** Expected {config['num_top_model_configs']} best models. Found {num_best_models}.\n***"
         )
         return False
 
@@ -85,7 +100,8 @@ if __name__ == '__main__':
     if 'summarize' in config and config['summarize']:
         passed_test &= check_summary(config, args.export_path)
 
-    if 'top_n_models' in config and config['top_n_models'] != 0:
+    if 'num_top_model_configs' in config and config[
+            'num_top_model_configs'] != 0:
         passed_test &= check_best_models(config, args.export_path)
 
     if passed_test:

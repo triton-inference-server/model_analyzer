@@ -67,9 +67,6 @@ class ModelManager:
                 )
                 os.mkdir(self._output_model_repo_path)
 
-        # Model results
-        self._model_results = []
-
     def run_model(self, model):
         """
         Generates configs, runs inferences, gets
@@ -90,29 +87,7 @@ class ModelManager:
             self._run_model_with_search(model)
 
         # Sort the results for this model
-        self._result_manager.sort_results()
-
-        # Save all results
-        for result in self._result_manager.top_n_results(n=-1):
-            heapq.heappush(self._model_results, (result, model.model_name()))
-
-    def top_n_models(self, n):
-        """
-        Parameters
-        ----------
-        n : int
-            The number of top models that need to be returned
-
-        Returns
-        -------
-        list of tuples (best_result, model_name)
-            for the n best performing models
-
-
-        """
-
-        return heapq.nsmallest(min(n, len(self._model_results)),
-                               self._model_results)
+        self._result_manager.sort_results(model_name=model.model_name())
 
     def _run_model_no_search(self, model):
         """

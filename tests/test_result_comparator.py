@@ -16,6 +16,8 @@ from model_analyzer.result.result_comparator import ResultComparator
 from .common import test_result_collector as trc
 from .common.test_utils import construct_measurement, construct_result
 
+import unittest
+
 
 class TestResultComparatorMethods(trc.TestResultCollector):
     def _check_measurement_comparison(self, objective_spec, gpu_metric_values1,
@@ -134,13 +136,9 @@ class TestResultComparatorMethods(trc.TestResultCollector):
         result_comparator = ResultComparator(metric_objectives=objective_spec)
 
         result1 = construct_result(avg_gpu_metrics1, avg_non_gpu_metrics1,
-                                   value_step1, result_comparator)
+                                   result_comparator, value_step1)
         result2 = construct_result(avg_gpu_metrics2, avg_non_gpu_metrics2,
-                                   value_step2, result_comparator)
-        [top_measurement1] = result1.top_n_measurements(1)
-        [top_measurement2] = result2.top_n_measurements(1)
-        print([d.value() for d in top_measurement1.data()])
-        print([d.value() for d in top_measurement2.data()])
+                                   result_comparator, value_step2)
         self.assertEqual(result_comparator.compare_results(result1, result2),
                          expected_result)
 
@@ -194,3 +192,7 @@ class TestResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metrics2=avg_non_gpu_metrics2,
             value_step2=2,
             expected_result=0)
+
+
+if __name__ == '__main__':
+    unittest.main()
