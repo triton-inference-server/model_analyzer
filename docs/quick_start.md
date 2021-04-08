@@ -35,7 +35,7 @@ $HOME
 
 ## Step 1: Install Model Analyzer and Run Container
 
-Install Model Analyzer by following the instructions in the [Installation](docs/install.md) section, and run the Triton Model Analyzer container as shown below. 
+Install Model Analyzer by following the instructions in the [Installation](./install.md) section, and run the Triton Model Analyzer container as shown below. 
 
 ```
 $ docker run -it --privileged --rm --gpus all \
