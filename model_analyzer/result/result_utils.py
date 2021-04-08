@@ -16,14 +16,18 @@ A module for various functions
 needed across the result module
 """
 
+from .measurement import Measurement
 
-def average_list(row_list):
+
+def average_measurements(measurements):
     """
-    Averages a 2d list over the rows
+    Averages measurements
     """
+
+    row_list = [measurement.data() for measurement in measurements]
 
     if not row_list:
-        return row_list
+        avg = row_list
     else:
         N = len(row_list)
         d = len(row_list[0])
@@ -31,4 +35,6 @@ def average_list(row_list):
         for i in range(d):
             avg[i] = (sum([row_list[j][i] for j in range(1, N)],
                           start=row_list[0][i]) * 1.0) / N
-        return avg
+
+    # Data must be passed in as non-gpu-specific here.
+    return Measurement(gpu_data={}, non_gpu_data=avg, perf_config=None)

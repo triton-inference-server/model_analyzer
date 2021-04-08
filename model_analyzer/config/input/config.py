@@ -343,6 +343,18 @@ class AnalyzerConfig:
             ))
         self._add_config(
             ConfigField(
+                'num_configs_per_model',
+                field_type=ConfigPrimitive(int),
+                default_value=3,
+                description='The number of top model configurations to plot.'))
+        self._add_config(
+            ConfigField('num_top_model_configs',
+                        field_type=ConfigPrimitive(int),
+                        default_value=0,
+                        description='The number of top models to save.'))
+
+        self._add_config(
+            ConfigField(
                 'filename_model_inference',
                 flags=['--filename-model-inference'],
                 default_value='metrics-model-inference.csv',
@@ -559,7 +571,7 @@ class AnalyzerConfig:
                             'model_name', 'gpu_id', 'gpu_used_memory',
                             'gpu_utilization', 'gpu_power_usage'
                         ]))
-        self._configure_plots()
+        self._add_plot_config()
 
     def _preprocess_and_verify_arguments(self):
         """
@@ -676,7 +688,7 @@ class AnalyzerConfig:
             new_model_names[model.model_name()] = new_model
         self._fields['model_names'].set_value(new_model_names)
 
-    def _configure_plots(self):
+    def _add_plot_config(self):
         """
         Sets up the plots that will be included in the summary
         """
@@ -717,12 +729,6 @@ class AnalyzerConfig:
                 description=
                 'Model analyzer uses the information in this section to construct plots of the results.'
             ))
-        self._add_config(
-            ConfigField(
-                'top_n_configs',
-                field_type=ConfigPrimitive(int),
-                default_value=3,
-                description='The number of top model configurations to plot.'))
 
     def set_config_values(self, args):
         """

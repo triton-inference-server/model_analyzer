@@ -24,3 +24,6 @@ COMPARISON_SCORE_THRESHOLD = 0.005
 
 # Run Search
 THROUGHPUT_GAIN = 0.05
+
+# Reports
+TOP_MODELS_REPORT_KEY = "Best Configs Across All Models"

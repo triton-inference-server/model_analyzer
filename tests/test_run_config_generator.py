@@ -19,11 +19,8 @@ from .mocks.mock_client import MockTritonClientMethods
 from model_analyzer.config.input.config import AnalyzerConfig
 from model_analyzer.cli.cli import CLI
 from model_analyzer.triton.client.grpc_client import TritonGRPCClient
-from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.config.run.run_config_generator \
     import RunConfigGenerator
-from unittest.mock import mock_open, patch
-import yaml
 
 
 class TestRunConfigGenerator(trc.TestResultCollector):
@@ -36,570 +33,517 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         mock_config.stop()
         return config
 
-    def test_parameter_sweep(self):
+    def setUp(self):
+        self.mock_model_config = MockModelConfig()
+        self.mock_model_config.start()
+        self.mock_client = MockTritonClientMethods()
+        self.mock_client.start()
+        self.client = TritonGRPCClient('localhost:8000')
+
+    def test_generate_model_config_combinations(self):
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
-            'path-to-config-file', '--model-names', 'vgg11',
-            '--run-config-search-disable'
+            'path-to-config-file', '--model-names', 'vgg11'
         ]
+
+        # Empty yaml
         yaml_content = ''
         config = self._evaluate_config(args, yaml_content)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        self.assertEqual([None], model_configs)
 
-        mock_model_config = MockModelConfig()
-        mock_model_config.start()
-        mock_client = MockTritonClientMethods()
-        mock_client.start()
-        client = TritonGRPCClient('localhost:8000')
-        run_search = RunSearch(16, 1, 16)
-
-        # When there is not any sweep_parameter the length of
-        # run_configs should be equal to the length of different
-        # sweep configurations per model
-        with patch('model_analyzer.triton.model.model_config.open',
-                   mock_open()):
-            for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model,
-                                                          config,
-                                                          client,
-                                                          None,
-                                                          None,
-                                                          None,
-                                                          run_search,
-                                                          generate_only=True)
-                run_configs = run_config_generator.get_run_configs()
-                self.assertEqual(len(run_configs), 1)
-
-        mock_model_config.stop()
-        mock_client.stop()
-
-        yaml_content = yaml.dump({
-            'concurrency': [2, 3, 4],
-            'batch_sizes': [4, 5, 6]
-        })
-        config = self._evaluate_config(args, yaml_content)
-        mock_model_config = MockModelConfig()
-        mock_model_config.start()
-        mock_client.start()
-        with patch('model_analyzer.triton.model.model_config.open',
-                   mock_open()):
-            for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model,
-                                                          config,
-                                                          client,
-                                                          None,
-                                                          None,
-                                                          None,
-                                                          run_search,
-                                                          generate_only=True)
-                run_configs = run_config_generator.get_run_configs()
-                self.assertEqual(len(run_configs), 9)
-
-        mock_model_config.stop()
-        mock_client.stop()
-
-        yaml_content = """
-model_names:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            instance_group:
-                -
-                    kind: KIND_GPU
-                    count: 1
-                -
-                    kind: KIND_CPU
-                    count: 1
-
-"""
-        config = self._evaluate_config(args, yaml_content)
-        mock_model_config = MockModelConfig()
-        mock_model_config.start()
-        mock_client.start()
-        with patch('model_analyzer.triton.model.model_config.open',
-                   mock_open()):
-            for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model,
-                                                          config,
-                                                          client,
-                                                          None,
-                                                          None,
-                                                          None,
-                                                          run_search,
-                                                          generate_only=True)
-                run_configs = run_config_generator.get_run_configs()
-                self.assertEqual(len(run_configs), 1)
-
-        mock_model_config.stop()
-        mock_client.stop()
-
+        # Use yaml model names
         args = [
             'model-analyzer', '--model-repository', 'cli_repository', '-f',
-            'path-to-config-file', '--run-config-search-disable'
+            'path-to-config-file'
+        ]
+
+        # List of instance groups
+        yaml_content = """
+            model_names:
+            -
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        instance_group:
+                            -
+                                kind: KIND_GPU
+                                count: 1
+                            -
+                                kind: KIND_CPU
+                                count: 1
+
+            """
+        config = self._evaluate_config(args, yaml_content)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        expected_model_configs = [{
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 1
+            }, {
+                'kind': 'KIND_CPU',
+                'count': 1
+            }]
+        }]
+        self.assertEqual(expected_model_configs, model_configs)
+
+        yaml_content = """
+            model_names:
+            -
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        instance_group:
+                        -
+                            -
+                                kind: KIND_GPU
+                                count: 1
+                        -
+                            -
+                                kind: KIND_CPU
+                                count: 1
+
+            """
+        config = self._evaluate_config(args, yaml_content)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        expected_model_configs = [{
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 1
+            }]
+        }, {
+            'instance_group': [{
+                'kind': 'KIND_CPU',
+                'count': 1
+            }]
+        }]
+        self.assertEqual(expected_model_configs, model_configs)
+
+        yaml_content = """
+            model_names:
+            -
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        instance_group:
+                        -
+                            -
+                                kind: KIND_GPU
+                                count: 1
+                            -
+                                kind: KIND_CPU
+                                count: 1
+
+            """
+        config = self._evaluate_config(args, yaml_content)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        expected_model_configs = [{
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 1
+            }, {
+                'kind': 'KIND_CPU',
+                'count': 1
+            }]
+        }]
+        self.assertEqual(expected_model_configs, model_configs)
+
+        yaml_content = """
+            model_names:
+            -
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        instance_group:
+                        -
+                            -
+                                kind: [KIND_GPU, KIND_CPU]
+                                count: [1, 2, 3]
+            """
+        config = self._evaluate_config(args, yaml_content)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        expected_model_configs = [{
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 1
+            }]
+        }, {
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 2
+            }]
+        }, {
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 3
+            }]
+        }, {
+            'instance_group': [{
+                'kind': 'KIND_CPU',
+                'count': 1
+            }]
+        }, {
+            'instance_group': [{
+                'kind': 'KIND_CPU',
+                'count': 2
+            }]
+        }, {
+            'instance_group': [{
+                'kind': 'KIND_CPU',
+                'count': 3
+            }]
+        }]
+        self.assertEqual(expected_model_configs, model_configs)
+
+        yaml_content = """
+            model_names:
+            -
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        instance_group:
+                        -
+                            kind: [KIND_GPU, KIND_CPU]
+                            count: [1, 2, 3]
+            """
+        config = self._evaluate_config(args, yaml_content)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        self.assertEqual(expected_model_configs, model_configs)
+
+        yaml_content = """
+            model_names:
+            -
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        dynamic_batching:
+                            preferred_batch_size: [ 4, 8 ]
+                            max_queue_delay_microseconds: 100
+                        instance_group:
+                        -
+                            -
+                                kind: KIND_GPU
+                                count: 1
+                        -
+                            -
+                                kind: KIND_CPU
+                                count: 1
+            """
+        config = self._evaluate_config(args, yaml_content)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        expected_model_configs = [{
+            'dynamic_batching': {
+                'preferred_batch_size': [4, 8],
+                'max_queue_delay_microseconds': 100
+            },
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 1
+            }]
+        }, {
+            'dynamic_batching': {
+                'preferred_batch_size': [4, 8],
+                'max_queue_delay_microseconds': 100
+            },
+            'instance_group': [{
+                'kind': 'KIND_CPU',
+                'count': 1
+            }]
+        }]
+        self.assertEqual(expected_model_configs, model_configs)
+
+        yaml_content = """
+            model_names:
+            -
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        dynamic_batching:
+                            preferred_batch_size: [[ 4, 8 ], [ 5, 6 ]]
+                            max_queue_delay_microseconds: [100, 200]
+                        instance_group:
+                        -
+                            kind: KIND_GPU
+                            count: 1
+            """
+        config = self._evaluate_config(args, yaml_content)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        expected_model_configs = [{
+            'dynamic_batching': {
+                'preferred_batch_size': [4, 8],
+                'max_queue_delay_microseconds': 100
+            },
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 1
+            }]
+        }, {
+            'dynamic_batching': {
+                'preferred_batch_size': [4, 8],
+                'max_queue_delay_microseconds': 200
+            },
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 1
+            }]
+        }, {
+            'dynamic_batching': {
+                'preferred_batch_size': [5, 6],
+                'max_queue_delay_microseconds': 100
+            },
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 1
+            }]
+        }, {
+            'dynamic_batching': {
+                'preferred_batch_size': [5, 6],
+                'max_queue_delay_microseconds': 200
+            },
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 1
+            }]
+        }]
+        self.assertEqual(expected_model_configs, model_configs)
+
+        # list under dynamic batching
+        yaml_content = """
+            model_names:
+            -
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        dynamic_batching:
+                        -
+                            preferred_batch_size: [ 4, 8 ]
+                            max_queue_delay_microseconds: 100
+                        -
+                            preferred_batch_size: [ 5, 6 ]
+                            max_queue_delay_microseconds: 200
+                        instance_group:
+                        -
+                            kind: [KIND_GPU, KIND_CPU]
+                            count: [1, 2]
+            """
+        config = self._evaluate_config(args, yaml_content)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        self.assertEqual(len(model_configs), 8)
+        expected_model_configs = [{
+            'dynamic_batching': {
+                'preferred_batch_size': [4, 8],
+                'max_queue_delay_microseconds': 100
+            },
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 1
+            }]
+        }, {
+            'dynamic_batching': {
+                'preferred_batch_size': [4, 8],
+                'max_queue_delay_microseconds': 100
+            },
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 2
+            }]
+        }, {
+            'dynamic_batching': {
+                'preferred_batch_size': [4, 8],
+                'max_queue_delay_microseconds': 100
+            },
+            'instance_group': [{
+                'kind': 'KIND_CPU',
+                'count': 1
+            }]
+        }, {
+            'dynamic_batching': {
+                'preferred_batch_size': [4, 8],
+                'max_queue_delay_microseconds': 100
+            },
+            'instance_group': [{
+                'kind': 'KIND_CPU',
+                'count': 2
+            }]
+        }, {
+            'dynamic_batching': {
+                'preferred_batch_size': [5, 6],
+                'max_queue_delay_microseconds': 200
+            },
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 1
+            }]
+        }, {
+            'dynamic_batching': {
+                'preferred_batch_size': [5, 6],
+                'max_queue_delay_microseconds': 200
+            },
+            'instance_group': [{
+                'kind': 'KIND_GPU',
+                'count': 2
+            }]
+        }, {
+            'dynamic_batching': {
+                'preferred_batch_size': [5, 6],
+                'max_queue_delay_microseconds': 200
+            },
+            'instance_group': [{
+                'kind': 'KIND_CPU',
+                'count': 1
+            }]
+        }, {
+            'dynamic_batching': {
+                'preferred_batch_size': [5, 6],
+                'max_queue_delay_microseconds': 200
+            },
+            'instance_group': [{
+                'kind': 'KIND_CPU',
+                'count': 2
+            }]
+        }]
+        self.assertEqual(expected_model_configs, model_configs)
+
+    def test_generate_run_config_for_model_sweep(self):
+        # remote launch mode, no model sweeps
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file', '--triton-launch-mode', 'remote'
         ]
         yaml_content = """
-model_names:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            instance_group:
-            -
-                -
-                    kind: KIND_GPU
-                    count: 1
-            -
-                -
-                    kind: KIND_CPU
-                    count: 1
-
-"""
+            concurrency: [1, 2, 3]
+            batch_sizes: [2, 3, 4]
+            model_names:
+            - vgg_16_graphdef
+            """
         config = self._evaluate_config(args, yaml_content)
-        mock_model_config = MockModelConfig()
-        mock_client.start()
-        mock_model_config.start()
-        with patch('model_analyzer.triton.model.model_config.open',
-                   mock_open()):
-            for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model,
-                                                          config,
-                                                          client,
-                                                          None,
-                                                          None,
-                                                          None,
-                                                          run_search,
-                                                          generate_only=True)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        self.assertEqual(len(model_configs), 1)
+        self.mock_client.set_model_config(
+            {'config': {
+                'name': 'vgg_16_graphdef'
+            }})
+        run_config_generator.generate_run_config_for_model_sweep(
+            config.model_names[0], model_configs[0])
+        self.assertEqual(len(run_config_generator.run_configs()), 9)
+        self.assertEqual(
+            run_config_generator.run_configs()[0].model_config().get_field(
+                'name'), 'vgg_16_graphdef')
 
-                run_configs = run_config_generator.get_run_configs()
-                self.assertEqual(len(run_configs), 2)
-
-        mock_model_config.stop()
-        mock_client.stop()
-
+        # remote mode, with model sweeps
         yaml_content = """
-model_names:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            instance_group:
+            concurrency: [1, 2, 3]
+            batch_sizes: [2, 3, 4]
+            model_names:
             -
-                -
-                    kind: KIND_GPU
-                    count: 1
-                -
-                    kind: KIND_CPU
-                    count: 1
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        instance_group:
+                        -
+                            kind: KIND_GPU
+                            count: [1, 2]
+            """
 
-"""
         config = self._evaluate_config(args, yaml_content)
-        mock_model_config = MockModelConfig()
-        mock_model_config.start()
-        mock_client.start()
-        with patch('model_analyzer.triton.model.model_config.open',
-                   mock_open()):
-            for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model,
-                                                          config,
-                                                          client,
-                                                          None,
-                                                          None,
-                                                          None,
-                                                          run_search,
-                                                          generate_only=True)
-                run_configs = run_config_generator.get_run_configs()
-                self.assertEqual(len(run_configs), 1)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        self.assertEqual(len(model_configs), 2)
+        self.mock_client.set_model_config(
+            {'config': {
+                'name': 'vgg_16_graphdef'
+            }})
+        for model_config in model_configs:
+            run_config_generator.generate_run_config_for_model_sweep(
+                config.model_names[0], model_config)
+        self.assertEqual(len(run_config_generator.run_configs()), 18)
+        self.assertEqual(
+            run_config_generator.run_configs()[0].model_config().get_field(
+                'name'), 'vgg_16_graphdef')
 
-        mock_model_config.stop()
-        mock_client.stop()
-
+        # Not remote, no model sweep
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file'
+        ]
         yaml_content = """
-model_names:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            instance_group:
-            -
-                -
-                    kind: [KIND_GPU, KIND_CPU]
-                    count: [1, 2, 3]
-"""
+            concurrency: [1, 2, 3]
+            batch_sizes: [2, 3, 4]
+            model_names:
+            - vgg_16_graphdef
+            """
+
         config = self._evaluate_config(args, yaml_content)
-        mock_model_config = MockModelConfig()
-        mock_model_config.start()
-        mock_client.start()
-        with patch('model_analyzer.triton.model.model_config.open',
-                   mock_open()):
-            for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model,
-                                                          config,
-                                                          client,
-                                                          None,
-                                                          None,
-                                                          None,
-                                                          run_search,
-                                                          generate_only=True)
-                run_configs = run_config_generator.get_run_configs()
-                self.assertEqual(len(run_configs), 6)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        self.assertEqual(len(model_configs), 1)
+        run_config_generator.generate_run_config_for_model_sweep(
+            config.model_names[0], model_configs[0])
+        self.assertEqual(len(run_config_generator.run_configs()), 9)
+        self.assertEqual(
+            run_config_generator.run_configs()[0].model_config().get_field(
+                'name'), 'vgg_16_graphdef_i0')
 
-        mock_model_config.stop()
-        mock_client.stop()
-
+        # Not remote, with model sweep
+        args = [
+            'model-analyzer', '--model-repository', 'cli_repository', '-f',
+            'path-to-config-file'
+        ]
         yaml_content = """
-concurrency: [1, 2, 3]
-batch_sizes: [2, 3, 4]
-model_names:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            instance_group:
+            concurrency: [1, 2, 3]
+            batch_sizes: [2, 3, 4]
+            model_names:
             -
-                -
-                    kind: [KIND_GPU, KIND_CPU]
-                    count: [1, 2, 3]
-"""
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        instance_group:
+                        -
+                            kind: KIND_GPU
+                            count: [1, 2]
+            """
+
         config = self._evaluate_config(args, yaml_content)
-        mock_model_config = MockModelConfig()
-        mock_model_config.start()
-        mock_client.start()
-        with patch('model_analyzer.triton.model.model_config.open',
-                   mock_open()):
-            for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model,
-                                                          config,
-                                                          client,
-                                                          None,
-                                                          None,
-                                                          None,
-                                                          run_search,
-                                                          generate_only=True)
-                run_configs = run_config_generator.get_run_configs()
-                self.assertEqual(len(run_configs), 54)
-                instance_groups = []
-                for run_config in run_configs:
-                    instance_group = run_config.model_config().get_config(
-                    )['instance_group']
-                    instance_groups.append(instance_group)
+        run_config_generator = RunConfigGenerator(config=config,
+                                                  client=self.client)
+        model_configs = run_config_generator.generate_model_config_combinations(
+            config.model_names[0].model_config_parameters())
+        self.assertEqual(len(model_configs), 2)
+        for model_config in model_configs:
+            run_config_generator.generate_run_config_for_model_sweep(
+                config.model_names[0], model_config)
+        self.assertEqual(len(run_config_generator.run_configs()), 18)
+        self.assertEqual(
+            run_config_generator.run_configs()[0].model_config().get_field(
+                'name'), 'vgg_16_graphdef_i0')
+        self.assertEqual(
+            run_config_generator.run_configs()[9].model_config().get_field(
+                'name'), 'vgg_16_graphdef_i1')
 
-                expected_instance_groups = [[{
-                    'count': 1,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 2,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 3,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 1,
-                    'kind': 'KIND_CPU'
-                }], [{
-                    'count': 2,
-                    'kind': 'KIND_CPU'
-                }], [{
-                    'count': 3,
-                    'kind': 'KIND_CPU'
-                }]]
-                self.assertTrue(len(expected_instance_groups), instance_groups)
-                for instance_group in instance_groups:
-                    self.assertIn(instance_group, expected_instance_groups)
-        mock_model_config.stop()
-        mock_client.stop()
-
-        yaml_content = """
-concurrency: [1, 2, 3]
-batch_sizes: [2, 3, 4]
-model_names:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            instance_group:
-            -
-                kind: [KIND_GPU, KIND_CPU]
-                count: [1, 2, 3]
-"""
-        config = self._evaluate_config(args, yaml_content)
-        mock_model_config = MockModelConfig()
-        mock_model_config.start()
-        mock_client.start()
-        with patch('model_analyzer.triton.model.model_config.open',
-                   mock_open()):
-            for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model,
-                                                          config,
-                                                          client,
-                                                          None,
-                                                          None,
-                                                          None,
-                                                          run_search,
-                                                          generate_only=True)
-                run_configs = run_config_generator.get_run_configs()
-                self.assertEqual(len(run_configs), 54)
-                instance_groups = []
-                for run_config in run_configs:
-                    instance_group = run_config.model_config().get_config(
-                    )['instance_group']
-                    instance_groups.append(instance_group)
-
-                expected_instance_groups = [[{
-                    'count': 1,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 2,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 3,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 1,
-                    'kind': 'KIND_CPU'
-                }], [{
-                    'count': 2,
-                    'kind': 'KIND_CPU'
-                }], [{
-                    'count': 3,
-                    'kind': 'KIND_CPU'
-                }]]
-                self.assertTrue(len(expected_instance_groups), instance_groups)
-                for instance_group in instance_groups:
-                    self.assertIn(instance_group, expected_instance_groups)
-        mock_model_config.stop()
-        mock_client.stop()
-
-        yaml_content = """
-concurrency: [1, 2, 3]
-batch_sizes: [2, 3, 4]
-model_names:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            dynamic_batching:
-              preferred_batch_size: [ 4, 8 ]
-              max_queue_delay_microseconds: 100
-            instance_group:
-            -
-                kind: [KIND_GPU, KIND_CPU]
-                count: [1, 2, 3]
-"""
-        config = self._evaluate_config(args, yaml_content)
-        mock_model_config = MockModelConfig()
-        mock_model_config.start()
-        mock_client.start()
-        with patch('model_analyzer.triton.model.model_config.open',
-                   mock_open()):
-            for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model,
-                                                          config,
-                                                          client,
-                                                          None,
-                                                          None,
-                                                          None,
-                                                          run_search,
-                                                          generate_only=True)
-                run_configs = run_config_generator.get_run_configs()
-                self.assertEqual(len(run_configs), 54)
-                instance_groups = []
-                for run_config in run_configs:
-                    instance_group = run_config.model_config().get_config(
-                    )['instance_group']
-                    instance_groups.append(instance_group)
-
-                expected_instance_groups = 9 * [[{
-                    'count': 1,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 2,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 3,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 1,
-                    'kind': 'KIND_CPU'
-                }], [{
-                    'count': 2,
-                    'kind': 'KIND_CPU'
-                }], [{
-                    'count': 3,
-                    'kind': 'KIND_CPU'
-                }]]
-                self.assertEqual(len(expected_instance_groups),
-                                 len(instance_groups))
-                for instance_group in instance_groups:
-                    self.assertIn(instance_group, expected_instance_groups)
-        mock_model_config.stop()
-        mock_client.stop()
-
-        yaml_content = """
-concurrency: [1, 2, 3]
-batch_sizes: [2, 3, 4]
-model_names:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            dynamic_batching:
-              preferred_batch_size: [[ 4, 8 ], [ 5, 6 ]]
-              max_queue_delay_microseconds: [100, 200]
-            instance_group:
-            -
-                kind: [KIND_GPU, KIND_CPU]
-                count: [1, 2, 3]
-"""
-        config = self._evaluate_config(args, yaml_content)
-        mock_model_config = MockModelConfig()
-        mock_model_config.start()
-        mock_client.start()
-        with patch('model_analyzer.triton.model.model_config.open',
-                   mock_open()):
-            for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model,
-                                                          config,
-                                                          client,
-                                                          None,
-                                                          None,
-                                                          None,
-                                                          run_search,
-                                                          generate_only=True)
-                run_configs = run_config_generator.get_run_configs()
-                self.assertEqual(len(run_configs), 216)
-                instance_groups = []
-                dynamic_batchings = []
-                for run_config in run_configs:
-                    instance_group = run_config.model_config().get_config(
-                    )['instance_group']
-                    dynamic_batching = run_config.model_config().get_config(
-                    )['dynamic_batching']
-
-                    dynamic_batchings.append(dynamic_batching)
-                    instance_groups.append(instance_group)
-
-                expected_instance_groups = [[{
-                    'count': 1,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 2,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 3,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 1,
-                    'kind': 'KIND_CPU'
-                }], [{
-                    'count': 2,
-                    'kind': 'KIND_CPU'
-                }], [{
-                    'count': 3,
-                    'kind': 'KIND_CPU'
-                }]]
-
-                expected_dynamic_batchings = [{
-                    'preferred_batch_size': [4, 8],
-                    'max_queue_delay_microseconds':
-                    '100'
-                }, {
-                    'preferred_batch_size': [4, 8],
-                    'max_queue_delay_microseconds':
-                    '200'
-                }, {
-                    'preferred_batch_size': [5, 6],
-                    'max_queue_delay_microseconds':
-                    '100'
-                }, {
-                    'preferred_batch_size': [5, 6],
-                    'max_queue_delay_microseconds':
-                    '200'
-                }]
-                self.assertEqual(
-                    len(instance_groups), 9 * len(expected_instance_groups) *
-                    len(expected_dynamic_batchings))
-                for instance_group in instance_groups:
-                    self.assertIn(instance_group, expected_instance_groups)
-
-                for dynamic_batching in dynamic_batchings:
-                    self.assertIn(dynamic_batching, expected_dynamic_batchings)
-        mock_model_config.stop()
-        mock_client.stop()
-
-        yaml_content = """
-model_names:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            dynamic_batching:
-                -
-                  preferred_batch_size: [ 4, 8 ]
-                  max_queue_delay_microseconds: 100
-                -
-                  preferred_batch_size: [ 5, 6 ]
-                  max_queue_delay_microseconds: 200
-            instance_group:
-            -
-                kind: [KIND_GPU, KIND_CPU]
-                count: [1, 2, 3]
-"""
-        config = self._evaluate_config(args, yaml_content)
-        mock_model_config = MockModelConfig()
-        mock_model_config.start()
-        mock_client.start()
-        with patch('model_analyzer.triton.model.model_config.open',
-                   mock_open()):
-            for model in config.model_names:
-                run_config_generator = RunConfigGenerator(model,
-                                                          config,
-                                                          client,
-                                                          None,
-                                                          None,
-                                                          None,
-                                                          run_search,
-                                                          generate_only=True)
-                run_configs = run_config_generator.get_run_configs()
-                self.assertEqual(len(run_configs), 12)
-                instance_groups = []
-                dynamic_batchings = []
-                for run_config in run_configs:
-                    instance_group = run_config.model_config().get_config(
-                    )['instance_group']
-                    dynamic_batching = run_config.model_config().get_config(
-                    )['dynamic_batching']
-
-                    dynamic_batchings.append(dynamic_batching)
-                    instance_groups.append(instance_group)
-
-                expected_instance_groups = [[{
-                    'count': 1,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 2,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 3,
-                    'kind': 'KIND_GPU'
-                }], [{
-                    'count': 1,
-                    'kind': 'KIND_CPU'
-                }], [{
-                    'count': 2,
-                    'kind': 'KIND_CPU'
-                }], [{
-                    'count': 3,
-                    'kind': 'KIND_CPU'
-                }]]
-
-                expected_dynamic_batchings = [{
-                    'preferred_batch_size': [4, 8],
-                    'max_queue_delay_microseconds':
-                    '100'
-                }, {
-                    'preferred_batch_size': [5, 6],
-                    'max_queue_delay_microseconds':
-                    '200'
-                }]
-                self.assertEqual(
-                    len(instance_groups),
-                    len(expected_instance_groups) *
-                    len(expected_dynamic_batchings))
-                for instance_group in instance_groups:
-                    self.assertIn(instance_group, expected_instance_groups)
-
-                for dynamic_batching in dynamic_batchings:
-                    self.assertIn(dynamic_batching, expected_dynamic_batchings)
-        mock_model_config.stop()
-        mock_client.stop()
+    def tearDown(self):
+        self.mock_model_config.stop()
+        self.mock_client.stop()

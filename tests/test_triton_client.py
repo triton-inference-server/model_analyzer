@@ -111,8 +111,9 @@ class TestTritonClientMethods(trc.TestResultCollector):
             self.tritonclient_mock.reset()
 
             self.tritonclient_mock.set_model_not_ready()
-            self.assertTrue(client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
-                                        num_retries=5), -1)
+            self.assertTrue(
+                client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
+                                            num_retries=5), -1)
             self.tritonclient_mock.reset()
             client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
                                         num_retries=1)
@@ -161,6 +162,22 @@ class TestTritonClientMethods(trc.TestResultCollector):
         client.unload_model(TEST_MODEL_NAME)
 
         self.server.stop()
+
+    def test_get_model_config(self):
+        # Create client
+        client = TritonClientFactory.create_grpc_client(server_url=GRPC_URL)
+        self.tritonclient_mock.assert_created_grpc_client_with_args(GRPC_URL)
+
+        # Start the server and wait till it is ready
+        self.server.start()
+        client.wait_for_server_ready(num_retries=1)
+
+        # Set model config, and try to get it
+        test_model_config_dict = {'config': 'test_config'}
+        self.tritonclient_mock.set_model_config(test_model_config_dict)
+        self.assertEqual(
+            client.get_model_config(TEST_MODEL_NAME, num_retries=1),
+            'test_config')
 
     def tearDown(self):
         # In case test raises exception

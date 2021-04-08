@@ -49,19 +49,40 @@ def construct_measurement(gpu_metric_values, non_gpu_metric_values,
     return measurement
 
 
-def construct_result(avg_gpu_metric_values, avg_non_gpu_metric_values,
-                     comparator):
+def construct_result(avg_gpu_metric_values,
+                     avg_non_gpu_metric_values,
+                     comparator,
+                     value_step=1,
+                     model_name=None):
     """
-    Takes a dictionary whose keys are average
+    Takes a dictionary whose values are average
     metric values, constructs artificial data 
     around these averages, and then constructs
     a result from this data.
+
+    Parameters
+    ----------
+    avg_gpu_metric_values: dict
+        The dict where keys are gpu based metric tags
+        and values are the average values around which 
+        we want data
+    avg_non_gpu_metric_values: dict
+        Keys are non gpu perf metrics, values are their 
+        average values.
+    value_step: int 
+        The step value between two adjacent data values.
+        Can be used to control the max/min of the data
+        distribution in the construction result
+    comparator: ResultComparator
+        The comparator used to compare measurements/results
+    model_name: str
+        The name of the model that generated this result
     """
 
     num_vals = 10
 
     # Construct a result
-    model_result = ModelResult(model_name=None,
+    model_result = ModelResult(model_name=model_name,
                                model_config=None,
                                comparator=comparator)
 
@@ -69,12 +90,16 @@ def construct_result(avg_gpu_metric_values, avg_non_gpu_metric_values,
     gpu_metric_values = {}
     for gpu_id, metric_values in avg_gpu_metric_values.items():
         gpu_metric_values[gpu_id] = {
-            key: list(range(val - num_vals, val + num_vals))
+            key: list(
+                range(val - value_step * num_vals, val + value_step * num_vals,
+                      value_step))
             for key, val in metric_values.items()
         }
 
     non_gpu_metric_values = {
-        key: list(range(val - num_vals, val + num_vals))
+        key: list(
+            range(val - value_step * num_vals, val + value_step * num_vals,
+                  value_step))
         for key, val in avg_non_gpu_metric_values.items()
     }
 

@@ -14,7 +14,6 @@
 
 from functools import total_ordering
 
-from model_analyzer.result.result_utils import average_list
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
@@ -25,12 +24,7 @@ class Measurement:
     Encapsulates the set of metrics obtained from a single
     perf_analyzer run
     """
-
-    def __init__(self,
-                 gpu_data,
-                 non_gpu_data,
-                 perf_config,
-                 aggregation_func=average_list):
+    def __init__(self, gpu_data, non_gpu_data, perf_config):
         """
         gpu_data : dict of list of Records
             These are the values from the monitors that have a GPU ID
@@ -40,15 +34,11 @@ class Measurement:
         perf_config : PerfAnalyzerConfig
             The perf config that was used for the perf run that generated
             this data data
-
-        aggregation_func: callable(list) -> list
-            A callable that receives a list and outputs a list used to aggregate
-            data across gpus.
         """
 
         # average values over all GPUs
         self._gpu_data = gpu_data
-        self._avg_gpu_data = aggregation_func(list(self._gpu_data.values()))
+        self._avg_gpu_data = self._average_list(list(self._gpu_data.values()))
         self._non_gpu_data = non_gpu_data
         self._perf_config = perf_config
 
@@ -105,7 +95,7 @@ class Measurement:
 
         return self._perf_config
 
-    def get_value_of_metric(self, tag):
+    def get_metric(self, tag):
         """
         Parameters
         ----------
@@ -157,3 +147,19 @@ class Measurement:
 
         # seems like this should be == -1 but we're using a min heap
         return self._comparator.compare_measurements(self, other) == 1
+
+    def _average_list(self, row_list):
+        """
+        Average a 2d list
+        """
+
+        if not row_list:
+            return row_list
+        else:
+            N = len(row_list)
+            d = len(row_list[0])
+            avg = [0 for _ in range(d)]
+            for i in range(d):
+                avg[i] = (sum([row_list[j][i] for j in range(1, N)],
+                              start=row_list[0][i]) * 1.0) / N
+            return avg

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import TOP_MODELS_REPORT_KEY
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.result.result_table import ResultTable
@@ -28,23 +29,28 @@ class ReportManager:
     Manages the building and export of 
     various types of reports
     """
-    def __init__(self, config):
+    def __init__(self, config, statistics):
         """
         Parameters
         ----------
         config : AnalyzerConfig
             The model analyzer's config containing information
             about the kind of reports to generate
+        statistics : AnalyzerStatistics
+            The statistics object that contains information about
+            the model anlyzer's runs.
         """
 
-        self._measurements = defaultdict(list)
         self._config = config
+        self._statistics = statistics
+
+        self._measurements = defaultdict(list)
         self._constraint_strs = self._build_constraint_strings()
         self._reports_export_directory = os.path.join(config.export_path,
                                                       'reports')
         os.makedirs(self._reports_export_directory, exist_ok=True)
 
-    def add_result(self, result):
+    def add_result(self, report_key, result):
         """
         Adds measurements on which the report manager
         can do complex analyses or with which it can
@@ -52,38 +58,36 @@ class ReportManager:
 
         Parameters
         ----------
+        report_key: str
+            The name of the directory that the corresponding
+            summary will end up under
         result: ModelResult
             result to be added to report
         """
 
         for measurement in result.top_n_measurements(n=1):
-            model_name = result.model_name()
             model_config = result.model_config()
-            self._measurements[model_name].append((model_config, measurement))
+            self._measurements[report_key].append((model_config, measurement))
 
-    def export_summary(self, statistics):
+    def export_summary(self, report_key):
         """
         Write a PDF summary to disk
 
         Parameters
         ----------
-        statistics: AnalyzerStatistics
-            Object containing all necessary
-            information about this analyzer run
+        report_key : str
+            The key for the report we are exporting (e.g. the model name)
         """
 
-        for model_name in self._measurements:
-            model_report_dir = os.path.join(self._reports_export_directory,
-                                            model_name)
-            os.makedirs(model_report_dir, exist_ok=True)
-            output_filename = os.path.join(model_report_dir,
-                                           'result_summary.pdf')
-            summary = self._build_summary_report(model_name=model_name,
-                                                 statistics=statistics)
-            logging.info(f"Exporting Summary Report to {output_filename}...")
-            summary.write_report(filename=output_filename)
+        model_report_dir = os.path.join(self._reports_export_directory,
+                                        report_key)
+        os.makedirs(model_report_dir, exist_ok=True)
+        output_filename = os.path.join(model_report_dir, 'result_summary.pdf')
+        summary = self._build_summary_report(report_key=report_key)
+        logging.info(f"Exporting Summary Report to {output_filename}...")
+        summary.write_report(filename=output_filename)
 
-    def _build_summary_report(self, model_name, statistics):
+    def _build_summary_report(self, report_key):
         """
         Builder method for a summary
         report.
@@ -91,25 +95,34 @@ class ReportManager:
 
         summary = PDFReport()
 
-        total_measurements = statistics.total_measurements(model_name)
-        total_configurations = statistics.total_configurations(model_name)
-        num_best_configs = min(self._config.top_n_configs,
+        total_measurements = self._statistics.total_measurements(report_key)
+        total_configurations = self._statistics.total_configurations(
+            report_key)
+        num_best_configs = min(self._config.num_configs_per_model,
                                total_configurations)
-        gpu_names, max_memories = self._get_gpu_stats(model_name=model_name)
-        static_batch_sizes = ','.join([
-            str(measurement[1].perf_config()['batch-size'])
-            for measurement in self._measurements[model_name]
-        ])
-        constraint_str = self._constraint_strs[
-            model_name] if self._constraint_strs else "None"
+        gpu_names, max_memories = self._get_gpu_stats(report_key=report_key)
+        static_batch_sizes = ','.join(
+            sorted(
+                set([
+                    str(measurement[1].perf_config()['batch-size'])
+                    for measurement in self._measurements[report_key]
+                ])))
+
+        constraint_str = "None"
+        if self._constraint_strs:
+            if report_key in self._constraint_strs:
+                constraint_str = self._constraint_strs[report_key]
+            elif report_key == TOP_MODELS_REPORT_KEY:
+                constraint_str = self._constraint_strs['default']
+
         table, summary_sentence = self._build_summary_table(
-            model_name=model_name,
+            report_key=report_key,
             num_measurements=total_measurements,
             gpu_name=gpu_names)
 
         # Add summary sections
         summary.add_title(title="Result Summary")
-        summary.add_subheading(f"Model: {model_name}")
+        summary.add_subheading(f"Model: {report_key}")
         summary.add_paragraph(f"GPUS: {gpu_names}")
         summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
         summary.add_paragraph(
@@ -123,12 +136,12 @@ class ReportManager:
             f"configurations out of a total of {total_configurations} are "
             "shown in the plots.")
         throughput_latency_plot = os.path.join(self._config.export_path,
-                                               'plots', model_name,
+                                               'plots', report_key,
                                                'throughput_v_latency.png')
-        caption1 = f"Throughput vs. Latency curves for {num_best_configs} configurations of {model_name}"
+        caption1 = f"Throughput vs. Latency curves for {num_best_configs} best configurations."
         memory_latency_plot = os.path.join(self._config.export_path, 'plots',
-                                           model_name, 'gpu_mem_v_latency.png')
-        caption2 = f"GPU Memory vs. Latency curves for {num_best_configs} configurations of {model_name}"
+                                           report_key, 'gpu_mem_v_latency.png')
+        caption2 = f"GPU Memory vs. Latency curves for {num_best_configs} best configurations."
         summary.add_images([throughput_latency_plot, memory_latency_plot],
                            [caption1, caption2])
         summary.add_paragraph(
@@ -142,7 +155,7 @@ class ReportManager:
         summary.add_table(table=table)
         return summary
 
-    def _build_summary_table(self, model_name, num_measurements, gpu_name):
+    def _build_summary_table(self, report_key, num_measurements, gpu_name):
         """
         Creates a result table corresponding
         to the best measurements for a particular
@@ -158,7 +171,7 @@ class ReportManager:
 
         best = True
         summary_sentence = ""
-        for model_config, measurement in self._measurements[model_name]:
+        for model_config, measurement in self._measurements[report_key]:
             dynamic_batching_str = model_config.dynamic_batching_string()
             dynamic_batch_phrase = "dynamic batching disabled" \
                 if dynamic_batching_str == "Disabled" \
@@ -181,17 +194,15 @@ class ReportManager:
             row = [
                 model_config.get_field('name'), dynamic_batching_str,
                 instance_group_str,
-                measurement.get_value_of_metric('perf_latency').value(),
-                measurement.get_value_of_metric('perf_throughput').value(),
-                measurement.get_value_of_metric('gpu_used_memory').value(),
-                round(
-                    measurement.get_value_of_metric('gpu_utilization').value(),
-                    1)
+                measurement.get_metric('perf_latency').value(),
+                measurement.get_metric('perf_throughput').value(),
+                measurement.get_metric('gpu_used_memory').value(),
+                round(measurement.get_metric('gpu_utilization').value(), 1)
             ]
             summary_table.insert_row_by_index(row)
         return summary_table, summary_sentence
 
-    def _get_gpu_stats(self, model_name):
+    def _get_gpu_stats(self, report_key):
         """
         Gets names and memory infos
         of GPUs used in best measurements
@@ -201,7 +212,7 @@ class ReportManager:
         max_memories = []
         seen_gpus = set()
 
-        for _, measurement in self._measurements[model_name]:
+        for _, measurement in self._measurements[report_key]:
             for gpu in cuda.gpus:
                 if gpu.id in measurement.gpus_used(
                 ) and gpu.id not in seen_gpus:

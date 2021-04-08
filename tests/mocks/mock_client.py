@@ -23,12 +23,15 @@ class MockTritonClientMethods(MockBase):
     Provides functions to check operation.
     """
 
+    TEST_MODEL_CONFIG = {}
+
     def __init__(self):
         client_attrs = {
             'load_model': MagicMock(),
             'unload_model': MagicMock(),
             'is_model_ready': MagicMock(return_value=True),
-            'is_server_ready': MagicMock(return_value=True)
+            'is_server_ready': MagicMock(return_value=True),
+            'get_model_config': MagicMock()
         }
         mock_http_client = Mock(**client_attrs)
         mock_grpc_client = Mock(**client_attrs)
@@ -158,6 +161,14 @@ class MockTritonClientMethods(MockBase):
         self.grpc_mock.return_value.is_model_ready.return_value = False
         self.http_mock.return_value.is_model_ready.return_value = False
 
+    def set_model_config(self, model_config_dict):
+        """
+        Sets the value returned by client.get_model_config
+        """
+
+        self.grpc_mock.return_value.get_model_config.return_value = model_config_dict
+        self.http_mock.return_value.get_model_config.return_value = model_config_dict
+
     def reset(self):
         """
         Reset the client mocks
@@ -175,3 +186,5 @@ class MockTritonClientMethods(MockBase):
         self.http_mock.return_value.is_server_ready.return_value = True
         self.grpc_mock.return_value.is_model_ready.return_value = True
         self.http_mock.return_value.is_model_ready.return_value = True
+        self.grpc_mock.return_value.get_model_config.return_value = None
+        self.http_mock.return_value.get_model_config.return_value = None
