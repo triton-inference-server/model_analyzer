@@ -38,7 +38,7 @@ $HOME
 Install Model Analyzer by following the instructions in the [Installation](./install.md) section, and run the Triton Model Analyzer container as shown below. 
 
 ```
-$ docker run -it --privileged --rm --gpus all \
+$ docker run -it --rm --gpus all \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v $HOME/model_analyzer/examples/quick-start:/quick_start_repository \
         --net=host --name model-analyzer \
