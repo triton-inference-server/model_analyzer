@@ -28,7 +28,7 @@ There are three ways to use Triton Model Analyzer:
    If you are not planning to run Model Analyzer with `--triton-launch-mode=docker` you can run the container with the following command:
 
    ```
-   $ docker run -it --privileged --gpus all --net=host nvcr.io/nvidia/tritonserver:21.03-py3-sdk
+   $ docker run -it --gpus all --net=host nvcr.io/nvidia/tritonserver:21.03-py3-sdk
    ```
 
    If intend to use `--triton-launch-mode=docker`, you will need to mount the following: 
@@ -36,7 +36,7 @@ There are three ways to use Triton Model Analyzer:
       * `-v <path-to-output-model-repo>:<path-to-output-model-repo>` The ***absolute*** path to the directory where the output model repository will be located (i.e. parent directory of the output model repository). This is so that the launched Triton container has access to the model config variants that Model Analyzer creates.
    
    ```
-   $ docker run -it --privileged --gpus all \
+   $ docker run -it --gpus all \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v <path-to-output-model-repo>:<path-to-output-model-repo> \
         --net=host nvcr.io/nvidia/tritonserver:21.03-py3-sdk
@@ -62,7 +62,7 @@ There are three ways to use Triton Model Analyzer:
    The above command will pull all the containers that model analyzer needs to run. The Model Analyzer's Dockerfile bases the container on the latest `tritonserver` containers from NGC. Now you can run the container with:
 
    ```
-   $ docker run -it --privileged --rm --gpus all \
+   $ docker run -it --rm --gpus all \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v <path-to-triton-model-repository>:<path-to-triton-model-repository> \
         -v <path-to-output-model-repo>:<path-to-output-model-repo> \

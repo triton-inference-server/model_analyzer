@@ -31,7 +31,7 @@ Server.
    make sure that the container is launched with appropriate flags.
    The following flags are mandatory for correct behavior:
    ```
-   --gpus 1 -v /var/run/docker.sock:/var/run/docker.sock --net host --privileged
+   --gpus 1 -v /var/run/docker.sock:/var/run/docker.sock --net host
    ```
 
    You should use `--triton-launch-mode docker` flag for the Model Analyzer to use this mode.
