@@ -81,6 +81,9 @@ class ModelManager:
         # Clear any configs from previous model run
         self._run_config_generator.clear_configs()
 
+        # Update the server's config for this model run
+        self._server.update_config(params=model.triton_server_flags())
+
         if self._config.run_config_search_disable:
             self._run_model_no_search(model)
         else:
@@ -183,8 +186,8 @@ class ModelManager:
             # Remove one run config from the list
             run_config = self._run_config_generator.next_config()
 
-            # If the model config already exists, do not recreate the
-            # directory.
+            # Start server, and load model variant
+            self._server.start()
             if not self._create_and_load_model_variant(
                     original_name=run_config.model_name(),
                     variant_config=run_config.model_config()):
@@ -208,6 +211,8 @@ class ModelManager:
                 measurements.append(measurement)
 
             self._server.stop()
+            if self._config.triton_output_path:
+                self._server.write_server_logs(self._config.triton_output_path)
         return measurements
 
     def _create_and_load_model_variant(self, original_name, variant_config):
@@ -231,7 +236,6 @@ class ModelManager:
             except FileExistsError:
                 pass
 
-        self._server.start()
         self._client.wait_for_server_ready(self._config.max_retries)
 
         if self._client.load_model(model_name=variant_name) == -1:

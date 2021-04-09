@@ -186,6 +186,15 @@ class AnalyzerConfig:
                     'max': ConfigPrimitive(int),
                 }),
             })
+        triton_server_flags_scheme = ConfigObject(schema={
+            k: ConfigPrimitive(str)
+            for k in TritonServerConfig.server_arg_keys
+        })
+        perf_analyzer_flags_scheme = ConfigObject(
+            schema={
+                k: ConfigPrimitive(type_=str)
+                for k in PerfAnalyzerConfig.allowed_keys()
+            })
         model_object_constraint = ConfigObject(
             required=True,
             schema={
@@ -207,11 +216,9 @@ class AnalyzerConfig:
                         'model_config_parameters':
                         model_config_fields,
                         'perf_analyzer_flags':
-                        ConfigObject(
-                            schema={
-                                k: ConfigPrimitive(type_=str)
-                                for k in PerfAnalyzerConfig.allowed_keys()
-                            })
+                        perf_analyzer_flags_scheme,
+                        'triton_server_flags':
+                        triton_server_flags_scheme
                     })
             },
             output_mapper=ConfigModel.model_object_to_config_model)
@@ -437,6 +444,13 @@ class AnalyzerConfig:
                         'Enables the output from the perf_analyzer to stdout'))
         self._add_config(
             ConfigField(
+                'perf_analyzer_flags',
+                field_type=perf_analyzer_flags_scheme,
+                description=
+                'Allows custom configuration of the perf analyzer instances used by model analyzer.'
+            ))
+        self._add_config(
+            ConfigField(
                 'triton_launch_mode',
                 field_type=ConfigPrimitive(str),
                 flags=['--triton-launch-mode'],
@@ -497,11 +511,7 @@ class AnalyzerConfig:
         self._add_config(
             ConfigField(
                 'triton_server_flags',
-                field_type=ConfigObject(
-                    schema={
-                        k: ConfigPrimitive(str)
-                        for k in TritonServerConfig.server_arg_keys
-                    }),
+                field_type=triton_server_flags_scheme,
                 description=
                 'Allows custom configuration of the triton instances used by model analyzer.'
             ))
@@ -677,13 +687,23 @@ class AnalyzerConfig:
             else:
                 new_model['parameters'] = model.parameters()
 
+            # Perf analyzer flags
+            if not model.perf_analyzer_flags():
+                new_model['perf_analyzer_flags'] = self.perf_analyzer_flags
+            else:
+                new_model['perf_analyzer_flags'] = model.perf_analyzer_flags()
+
+            # Perf analyzer flags
+            if not model.triton_server_flags():
+                new_model['triton_server_flags'] = self.triton_server_flags
+            else:
+                new_model['triton_server_flags'] = model.triton_server_flags()
+
             # Transfer model config parameters and perf_analyzer_flags directly
             if model.model_config_parameters():
                 new_model[
                     'model_config_parameters'] = model.model_config_parameters(
                     )
-            if model.perf_analyzer_flags():
-                new_model['perf_analyzer_flags'] = model.perf_analyzer_flags()
 
             new_model_names[model.model_name()] = new_model
         self._fields['model_names'].set_value(new_model_names)

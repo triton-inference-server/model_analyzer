@@ -14,7 +14,6 @@
 
 import sys
 import os
-import shutil
 from prometheus_client.parser import text_string_to_metric_families
 import requests
 import numba.cuda
@@ -29,7 +28,6 @@ from .model_analyzer_exceptions import TritonModelAnalyzerException
 from .triton.server.server_factory import TritonServerFactory
 from .triton.server.server_config import TritonServerConfig
 from .triton.client.client_factory import TritonClientFactory
-from .output.file_writer import FileWriter
 from .device.gpu_device_factory import GPUDeviceFactory
 from .config.input.config import AnalyzerConfig
 
@@ -222,26 +220,6 @@ def get_triton_handles(config):
     return client, server
 
 
-def write_server_logs(config, server):
-    """
-    Checks if server logs have been
-    requested, and writes them
-    to the specified file
-
-    Parameters
-    ----------
-    config : namespace
-        The arguments passed into the CLI
-    server : TritonServer
-        The triton server instance whose logs
-        we may want to write out.
-    """
-
-    if config.triton_output_path:
-        server_log_writer = FileWriter(filename=config.triton_output_path)
-        server_log_writer.write(server.logs())
-
-
 def interrupt_handler(signal, frame):
     """
     A signal handler to properly
@@ -313,7 +291,6 @@ def main():
     finally:
         if server is not None:
             server.stop()
-            write_server_logs(config, server)
 
 
 if __name__ == '__main__':
