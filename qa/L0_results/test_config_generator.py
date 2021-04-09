@@ -63,13 +63,8 @@ class TestConfigGenerator:
 
     def generate_summarize(self):
         self.config['summarize'] = True
-        with open('config-summarize.yml', 'w+') as f:
-            yaml.dump(self.config, f)
-
-    def generate_num_top_model_configs(self):
-        self.config['summarize'] = True
         self.config['num_top_model_configs'] = 2
-        with open('config-top-models.yml', 'w+') as f:
+        with open('config-summarize.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
 

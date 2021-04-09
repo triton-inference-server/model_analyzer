@@ -21,7 +21,6 @@ from .reports.report_manager import ReportManager
 from .constants import TOP_MODELS_REPORT_KEY
 
 import logging
-import os
 
 
 class Analyzer:
@@ -104,9 +103,6 @@ class Analyzer:
         # Dump results to tables
         self._result_manager.compile_results()
 
-        # If requested, save top n models
-        self._save_top_models()
-
     def write_and_export_results(self):
         """
         Tells the results manager and plot managers
@@ -120,16 +116,18 @@ class Analyzer:
             # Export individual model summaries
             for model in self._config.model_names:
                 self._report_manager.export_summary(
-                    report_key=model.model_name())
+                    report_key=model.model_name(),
+                    num_configs=self._config.num_configs_per_model)
             if self._config.num_top_model_configs:
                 self._report_manager.export_summary(
-                    report_key=TOP_MODELS_REPORT_KEY)
+                    report_key=TOP_MODELS_REPORT_KEY,
+                    num_configs=self._config.num_top_model_configs)
 
     def _process_top_results(self):
         """
-        Add the best measurements from the 
+        Add the best measurements from the
         best result to the plot for the model.
-        This function must be called before 
+        This function must be called before
         corresponding plots are completed,
         and results are
         """
@@ -161,30 +159,3 @@ class Analyzer:
                         plots_key=TOP_MODELS_REPORT_KEY, result=result)
                     self._report_manager.add_result(
                         report_key=TOP_MODELS_REPORT_KEY, result=result)
-
-    def _save_top_models(self):
-        """
-        If requested, save the top models to a directory in
-        the export path
-        """
-
-        # Create top model directory
-        top_model_export_directory = os.path.join(self._config.export_path,
-                                                  'best_models')
-        os.makedirs(top_model_export_directory, exist_ok=True)
-
-        for result in self._result_manager.top_n_results(
-                n=self._config.num_top_model_configs):
-
-            # Ensure model config name is correct, and write
-            next_model_config = result.model_config()
-
-            # Create model directory for best model
-            next_model_dir = os.path.join(top_model_export_directory,
-                                          next_model_config.get_field('name'))
-            os.makedirs(next_model_dir, exist_ok=True)
-
-            original_model_dir = os.path.join(self._config.model_repository,
-                                              result.model_name())
-            next_model_config.write_config_to_file(next_model_dir, True,
-                                                   original_model_dir)

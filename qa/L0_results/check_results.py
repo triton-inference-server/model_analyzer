@@ -47,18 +47,6 @@ def check_summary(config, export_path):
                              'result_summary.pdf')):
             print(f"\n***\n*** Summary not found for {model}.\n***")
             return False
-    return True
-
-
-def check_best_models(config, export_path):
-    """
-    Checks if the required number of best model 
-    folders exist in the required location
-
-    Returns
-    -------
-    True if correct number exist, False otherwise
-    """
 
     # First check for the best models report
     model_names = set(config['model_names'].keys())
@@ -75,17 +63,7 @@ def check_best_models(config, export_path):
             print("\n***\n*** Top models summary not found.\n***")
             return False
 
-    top_model_dir = os.path.join(export_path, 'best_models')
-    if not os.path.exists(top_model_dir):
-        return True
-    num_best_models = len(os.listdir(top_model_dir))
-    if config['num_top_model_configs'] == num_best_models:
-        return True
-    else:
-        print(
-            f"\n***\n*** Expected {config['num_top_model_configs']} best models. Found {num_best_models}.\n***"
-        )
-        return False
+    return True
 
 
 if __name__ == '__main__':
@@ -99,10 +77,6 @@ if __name__ == '__main__':
 
     if 'summarize' in config and config['summarize']:
         passed_test &= check_summary(config, args.export_path)
-
-    if 'num_top_model_configs' in config and config[
-            'num_top_model_configs'] != 0:
-        passed_test &= check_best_models(config, args.export_path)
 
     if passed_test:
         sys.exit(0)
