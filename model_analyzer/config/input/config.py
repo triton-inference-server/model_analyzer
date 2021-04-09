@@ -370,7 +370,6 @@ class AnalyzerConfig:
                         field_type=ConfigPrimitive(int),
                         default_value=0,
                         description='The number of top models to save.'))
-
         self._add_config(
             ConfigField(
                 'filename_model_inference',

@@ -12,19 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import defaultdict
-from model_analyzer.result.result_heap import ResultHeap
+from model_analyzer.output.file_writer import FileWriter
+from model_analyzer.constants import TOP_MODELS_REPORT_KEY
+from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
+
+from .result_heap import ResultHeap
 from .result_table import ResultTable
 from .result_comparator import ResultComparator
 from .model_result import ModelResult
-from model_analyzer.output.file_writer import FileWriter
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
-from model_analyzer.constants import TOP_MODELS_REPORT_KEY
 
 import os
 import heapq
 import logging
+from collections import defaultdict
 
 
 class ResultManager:
@@ -49,7 +51,7 @@ class ResultManager:
     model_gpu_table_key = 'model_gpu_metrics'
     model_inference_table_key = 'model_inference_metrics'
 
-    def __init__(self, config, statistics):
+    def __init__(self, config, statistics, state_manager):
         """
         Parameters
         ----------
@@ -58,43 +60,38 @@ class ResultManager:
         statistics: AnalyzerStatistics
             the statistics being collected for this instance of model
             analyzer
+        state_manager: AnalyzerStateManager
+            The object that allows control and update of state
         """
 
         self._config = config
-        self._result_tables = {}
-        self._result_comparator = None
         self._statistics = statistics
-        self._results = defaultdict(dict)
+        self._state_manager = state_manager
 
-        # Results are stored in a heap queue
+        if state_manager.starting_fresh_run():
+            self._init_state()
+
+        # Data structures for sorting results
         self._per_model_sorted_results = defaultdict(ResultHeap)
         self._across_model_sorted_results = ResultHeap()
 
-        # Headers Dictionary
+        # Headers Dictionary and result tables
         self._gpu_metrics_to_headers = {}
         self._non_gpu_metrics_to_headers = {}
+        self._result_tables = {}
 
         # Results exported to export_path/results
         self._results_export_directory = os.path.join(config.export_path,
                                                       'results')
         os.makedirs(self._results_export_directory, exist_ok=True)
 
-    def set_constraints_and_objectives(self, config_model):
+    def _init_state(self):
         """
-        Processes the constraints and objectives
-        for given ConfigModel and creates a result
-        comparator and constraint manager
-
-        Parameters
-        ----------
-        config_model : ConfigModel
-            The config model object for the model that is currently being
-            run
+        Sets ResultManager object managed
+        state variables in AnalyerState
         """
 
-        self._constraints = config_model.constraints()
-        self._result_comparator = ResultComparator(
-            metric_objectives=config_model.objectives())
+        self._state_manager.set_state_variable('ResultManager.results', {})
 
     def create_tables(self, gpu_specific_metrics, non_gpu_specific_metrics):
         """
@@ -108,6 +105,7 @@ class ResultManager:
         non_gpu_specific_metrics : list of RecordTypes
             The metrics that do not have a GPU id associated with them
         """
+
         for metric in gpu_specific_metrics:
             self._gpu_metrics_to_headers[metric.tag] = metric.header()
 
@@ -229,39 +227,54 @@ class ResultManager:
         if len(self._result_tables) == 0:
             raise TritonModelAnalyzerException(
                 "Cannot add measurements without tables")
-        elif not self._result_comparator:
-            raise TritonModelAnalyzerException(
-                "Cannot add measurements without setting result comparator")
 
         model_name = run_config.model_name()
-        model_config_name = run_config.model_config().get_field('name')
-        if model_config_name not in self._results[model_name]:
-            self._results[model_name][model_config_name] = ModelResult(
-                model_name=run_config.model_name(),
-                model_config=run_config.model_config(),
-                comparator=self._result_comparator,
-                constraints=self._constraints)
-        measurement.set_result_comparator(comparator=self._result_comparator)
-        self._results[model_name][model_config_name].add_measurement(
-            measurement)
+        model_config = run_config.model_config()
+        model_config_name = model_config.get_field('name')
 
-    def sort_results(self, model_name):
+        # Get reference to results state and modify it
+        results = self._state_manager.get_state_variable(
+            'ResultManager.results')
+
+        if model_name not in results:
+            results[model_name] = {}
+        if model_config_name not in results[model_name]:
+            results[model_name][model_config_name] = (model_config, [])
+
+        results[model_name][model_config_name][1].append(measurement)
+
+    def collect_and_sort_results(self):
         """
-        Takes the results constructed by adding 
-        measurements and puts them in ResultHeaps
-        to be sorted.
-
-        Parameters
-        ----------
-        model_name: str
-            The name of the model whose results are being sorted
-
+        Collects objectives and constraints for
+        each model, constructs results from the
+        measurements obtained, and sorts and 
+        filters them according to constraints
+        and objectives.
         """
 
-        # Add results to individual result heaps as well as global result heap
-        for result in self._results[model_name].values():
-            self._per_model_sorted_results[model_name].add_result(result)
-            self._across_model_sorted_results.add_result(result)
+        # Collect objectives and constraints
+        comparators = {}
+        constraints = {}
+        for model in self._config.model_names:
+            comparators[model.model_name()] = ResultComparator(
+                metric_objectives=model.objectives())
+            constraints[model.model_name()] = model.constraints()
+
+        # Construct and add results to individual result heaps as well as global result heap
+        results = self._state_manager.get_state_variable(
+            'ResultManager.results')
+        for model_name, result_dict in results.items():
+            for (model_config, measurements) in result_dict.values():
+                result = ModelResult(model_name=model_name,
+                                     model_config=model_config,
+                                     comparator=comparators[model_name],
+                                     constraints=constraints[model_name])
+                for measurement in measurements:
+                    measurement.set_result_comparator(
+                        comparator=comparators[model_name])
+                    result.add_measurement(measurement)
+                self._per_model_sorted_results[model_name].add_result(result)
+                self._across_model_sorted_results.add_result(result)
 
     def top_n_results(self, model_name=None, n=-1):
         """
@@ -289,19 +302,21 @@ class ResultManager:
             result_heap = self._across_model_sorted_results
         return result_heap.top_n_results(n)
 
-    def compile_results(self):
+    def tabulate_results(self):
         """
         The function called at the end of all runs
         FOR ALL MODELs that compiles all results and
         dumps the data into tables for exporting.
         """
 
+        self._update_statistics()
+
         # Fill rows in descending order
         for result_heap in self._per_model_sorted_results.values():
             while not result_heap.empty():
-                self._compile_measurements(result_heap.next_best_result())
+                self._tabulate_measurements(result_heap.next_best_result())
 
-    def _compile_measurements(self, result):
+    def _tabulate_measurements(self, result):
         """
         checks measurement against constraints,
         and puts it into the correct (passing or failing)
@@ -314,15 +329,16 @@ class ResultManager:
 
         passing_measurements = result.passing_measurements()
         failing_measurements = result.failing_measurements()
+
         for (measurements, passes) in [(passing_measurements, True),
                                        (failing_measurements, False)]:
             while measurements:
                 next_best_measurement = heapq.heappop(measurements)
-                self._compile_measurement(model_name=model_name,
-                                          instance_group=instance_group,
-                                          dynamic_batching=dynamic_batching,
-                                          measurement=next_best_measurement,
-                                          passes=passes)
+                self._tabulate_measurement(model_name=model_name,
+                                           instance_group=instance_group,
+                                           dynamic_batching=dynamic_batching,
+                                           measurement=next_best_measurement,
+                                           passes=passes)
 
     def _get_common_row_items(self, fields, batch_size, concurrency, satisfies,
                               model_name, model_config_path, dynamic_batching,
@@ -369,8 +385,8 @@ class ResultManager:
             row[instance_group_idx] = instance_group
         return row
 
-    def _compile_measurement(self, model_name, instance_group,
-                             dynamic_batching, measurement, passes):
+    def _tabulate_measurement(self, model_name, instance_group,
+                              dynamic_batching, measurement, passes):
         """
         Add a single measurement to the specified
         table
@@ -567,7 +583,7 @@ class ResultManager:
                                           ignore_widths=ignore_widths) +
                 "\n\n")
 
-    def update_statistics(self):
+    def _update_statistics(self):
         """
         This function computes statistics
         with results currently in the result

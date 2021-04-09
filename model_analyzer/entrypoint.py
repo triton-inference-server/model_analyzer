@@ -12,27 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import os
-from prometheus_client.parser import text_string_to_metric_families
-import requests
-import numba.cuda
-import signal
-import logging
-from urllib.parse import urlparse
-
-from .cli.cli import CLI
-
 from .analyzer import Analyzer
+from .cli.cli import CLI
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from .triton.server.server_factory import TritonServerFactory
 from .triton.server.server_config import TritonServerConfig
 from .triton.client.client_factory import TritonClientFactory
 from .device.gpu_device_factory import GPUDeviceFactory
 from .config.input.config import AnalyzerConfig
+from .state.analyzer_state_manager import AnalyzerStateManager
 
-logger = logging.getLogger(__name__)
-MAX_NUMBER_OF_INTERRUPTS = 3
+import sys
+import os
+from prometheus_client.parser import text_string_to_metric_families
+import requests
+import numba.cuda
+import logging
+from urllib.parse import urlparse
 
 
 def get_client_handle(config):
@@ -74,17 +70,17 @@ def get_server_handle(config):
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
         triton_config['model-repository'] = 'remote-model-repository'
-        logger.info('Using remote Triton Server...')
+        logging.info('Using remote Triton Server...')
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config)
-        logger.warn(
+        logging.warn(
             'GPU memory metrics reported in the remote mode are not'
             ' accuracte. Model Analyzer uses Triton explicit model control to'
             ' load/unload models. Some frameworks do not release the GPU'
             ' memory even when the memory is not being used. Consider'
             ' using the "local" or "docker" mode if you want to accurately'
             ' monitor the GPU memory usage for different models.')
-        logger.warn(
+        logging.warn(
             'Config sweep parameters are ignored in the "remote" mode because'
             ' Model Analyzer does not have access to the model repository of'
             ' the remote Triton Server.')
@@ -97,7 +93,7 @@ def get_server_handle(config):
         triton_config['metrics-port'] = urlparse(
             config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
-        logger.info('Starting a local Triton Server...')
+        logging.info('Starting a local Triton Server...')
         server = TritonServerFactory.create_server_local(
             path=config.triton_server_path, config=triton_config)
     elif config.triton_launch_mode == 'docker':
@@ -110,7 +106,7 @@ def get_server_handle(config):
         triton_config['metrics-port'] = urlparse(
             config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
-        logger.info('Starting a Triton Server using docker...')
+        logging.info('Starting a Triton Server using docker...')
         server = TritonServerFactory.create_server_docker(
             image=config.triton_docker_image,
             config=triton_config,
@@ -220,32 +216,10 @@ def get_triton_handles(config):
     return client, server
 
 
-def interrupt_handler(signal, frame):
-    """
-    A signal handler to properly
-    shutdown the model analyzer on
-    interrupt
-    """
-
-    global exiting
-    exiting += 1
-    logging.info(
-        f'Received SIGINT. Exiting ({exiting}/{MAX_NUMBER_OF_INTERRUPTS})...')
-
-    if exiting == MAX_NUMBER_OF_INTERRUPTS:
-        sys.exit(1)
-    return
-
-
 def main():
     """
     Main entrypoint of model_analyzer
     """
-
-    global exiting
-
-    # Number of Times User Requested Exit
-    exiting = 0
 
     metric_tags = [
         "perf_throughput", "perf_latency", "gpu_used_memory",
@@ -253,8 +227,7 @@ def main():
         "cpu_available_ram", "gpu_power_usage"
     ]
 
-    signal.signal(signal.SIGINT, interrupt_handler)
-
+    # Instantiate state manager
     try:
         config = AnalyzerConfig()
         cli = CLI(config)
@@ -266,15 +239,14 @@ def main():
     logging.info(
         f'Triton Model Analyzer started: config={config.get_all_config()}')
 
+    state_manager = AnalyzerStateManager(config=config)
     server = None
     try:
         client, server = get_triton_handles(config)
 
         # Only check for exit after the events that take a long time.
-        if exiting:
+        if state_manager.exiting():
             return
-
-        analyzer = Analyzer(config, client, metric_tags, server)
 
         # Check TritonServer GPUs
         server.start()
@@ -282,10 +254,10 @@ def main():
         check_triton_and_model_analyzer_gpus(config)
         server.stop()
 
-        if exiting:
+        if state_manager.exiting():
             return
 
-        logging.info('Starting perf_analyzer...')
+        analyzer = Analyzer(config, metric_tags, client, server, state_manager)
         analyzer.run()
         analyzer.write_and_export_results()
     finally:

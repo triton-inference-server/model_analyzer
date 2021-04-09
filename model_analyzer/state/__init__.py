@@ -11,22 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# Config constants
-CONFIG_PARSER_SUCCESS = 1
-CONFIG_PARSER_FAILURE = 0
-
-# Result Table constants
-RESULT_TABLE_COLUMN_PADDING = 2
-
-# Result Comparator Constants
-COMPARISON_SCORE_THRESHOLD = 0.005
-
-# Run Search
-THROUGHPUT_GAIN = 0.05
-
-# Reports
-TOP_MODELS_REPORT_KEY = "Best Configs Across All Models"
-
-# State Management
-MAX_NUMBER_OF_INTERRUPTS = 3

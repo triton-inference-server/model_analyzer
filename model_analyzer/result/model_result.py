@@ -59,7 +59,7 @@ class ModelResult:
         Returns
         -------
         str
-            returns the name of the model who ModelResult this is
+            returns the name of the model whose ModelResult this is
         """
 
         return self._model_name

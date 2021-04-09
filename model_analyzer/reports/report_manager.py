@@ -220,6 +220,7 @@ class ReportManager:
         # Construct table
         for model_config, measurement in sorted_measurements:
             instance_group_str = model_config.instance_group_string()
+            dynamic_batching_str = model_config.dynamic_batching_string()
             row = [
                 model_config.get_field('name'), dynamic_batching_str,
                 instance_group_str,

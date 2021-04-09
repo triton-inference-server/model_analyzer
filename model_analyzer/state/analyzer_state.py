@@ -12,21 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Config constants
-CONFIG_PARSER_SUCCESS = 1
-CONFIG_PARSER_FAILURE = 0
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
-# Result Table constants
-RESULT_TABLE_COLUMN_PADDING = 2
 
-# Result Comparator Constants
-COMPARISON_SCORE_THRESHOLD = 0.005
+class AnalyzerState:
+    """
+    All the state information needed by 
+    Model Analyzer in one place
+    """
+    def __init__(self):
+        self._state_dict = {}
 
-# Run Search
-THROUGHPUT_GAIN = 0.05
+    def get(self, name):
+        if name in self._state_dict:
+            return self._state_dict[name]
+        else:
+            return None
 
-# Reports
-TOP_MODELS_REPORT_KEY = "Best Configs Across All Models"
-
-# State Management
-MAX_NUMBER_OF_INTERRUPTS = 3
+    def set(self, name, value):
+        self._state_dict[name] = value

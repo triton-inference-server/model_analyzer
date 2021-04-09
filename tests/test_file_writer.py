@@ -19,13 +19,15 @@ from model_analyzer.model_analyzer_exceptions \
 from .mocks.mock_io import MockIOMethods
 import unittest
 
-
 TEST_FILENAME = 'test_filename'
 
 
 class TestFileWriterMethods(trc.TestResultCollector):
     def setUp(self):
-        self.io_mock = MockIOMethods()
+        self._mock_path = 'model_analyzer.output.file_writer'
+        self.io_mock = MockIOMethods(
+            mock_paths=['model_analyzer.output.file_writer'])
+        self.io_mock.start()
 
     def test_write(self):
         # Create and use writer
@@ -46,12 +48,12 @@ class TestFileWriterMethods(trc.TestResultCollector):
 
         # Check mock call on successful write
         writer.write('test')
-        self.io_mock.assert_write_called_with_args('test')
+        self.io_mock.assert_write_called_with_args(self._mock_path, 'test')
 
         # Perform checks for stdout
         writer = FileWriter()
         writer.write('test')
-        self.io_mock.assert_print_called_with_args('test')
+        self.io_mock.assert_print_called_with_args(self._mock_path, 'test')
 
     def tearDown(self):
         self.io_mock.stop()

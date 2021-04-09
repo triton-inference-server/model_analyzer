@@ -35,6 +35,24 @@ class ModelConfig:
 
         self._model_config = model_config
 
+    def __getstate__(self):
+        """
+        Allows serialization of
+        ModelConfig object
+        """
+
+        return json_format.MessageToDict(self._model_config)
+
+    def __setstate__(self, model_dict):
+        """
+        Allows deserialization of
+        ModelConfig object
+        """
+
+        protobuf_message = json_format.ParseDict(
+            model_dict, model_config_pb2.ModelConfig())
+        self._model_config = protobuf_message
+
     @staticmethod
     def create_from_file(model_path):
         """

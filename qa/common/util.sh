@@ -98,6 +98,22 @@ function run_analyzer() {
     return $?
 }
 
+# Run model-analyzer with args to completion.
+function run_analyzer_nohup() {
+    if [[ -z "$MODEL_ANALYZER" ]]; then
+        echo -e "=== model-analyzer executable not found"
+        return 1
+    fi
+
+    if [ ! -f "$MODEL_ANALYZER" ]; then
+        echo "=== $MODEL_ANALYZER does not exist"
+        return 1
+    fi
+
+    echo -e "=== Running $MODEL_ANALYZER $MODEL_ANALYZER_ARGS"
+    $MODEL_ANALYZER $MODEL_ANALYZER_ARGS >> $ANALYZER_LOG 2>&1 &
+}
+
 # Check Python unittest results.
 function check_test_results () {
     local log_file=$1

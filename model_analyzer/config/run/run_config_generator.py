@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from itertools import product
-from sys import flags
 
 from .run_config import RunConfig
 from model_analyzer.triton.model.model_config import ModelConfig
