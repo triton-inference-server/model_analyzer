@@ -21,7 +21,6 @@ class FileWriter(OutputWriter):
     """
     Writes table to a file or stdout
     """
-
     def __init__(self, filename=None):
         """
         Parameters
@@ -33,7 +32,7 @@ class FileWriter(OutputWriter):
 
         self._filename = filename
 
-    def write(self, out):
+    def write(self, out, append=False):
         """
         Writes the output to a file or stdout
 
@@ -50,9 +49,10 @@ class FileWriter(OutputWriter):
             the output.
         """
 
+        write_mode = 'a+' if append else 'w+'
         if self._filename:
             try:
-                with open(self._filename, 'w+') as f:
+                with open(self._filename, write_mode) as f:
                     f.write(out)
             except OSError as e:
                 raise TritonModelAnalyzerException(e)
