@@ -53,7 +53,8 @@ def construct_result(avg_gpu_metric_values,
                      avg_non_gpu_metric_values,
                      comparator,
                      value_step=1,
-                     model_name=None):
+                     model_name=None,
+                     model_config=None):
     """
     Takes a dictionary whose values are average
     metric values, constructs artificial data 
@@ -77,13 +78,15 @@ def construct_result(avg_gpu_metric_values,
         The comparator used to compare measurements/results
     model_name: str
         The name of the model that generated this result
+    model_config: ModelConfig
+        The model config used to generate this result
     """
 
     num_vals = 10
 
     # Construct a result
     model_result = ModelResult(model_name=model_name,
-                               model_config=None,
+                               model_config=model_config,
                                comparator=comparator)
 
     # Get dict of list of metric values

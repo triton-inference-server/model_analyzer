@@ -44,11 +44,38 @@ class ReportManager:
         self._config = config
         self._statistics = statistics
 
-        self._measurements = defaultdict(list)
+        self._data = defaultdict(list)
         self._constraint_strs = self._build_constraint_strings()
         self._reports_export_directory = os.path.join(config.export_path,
                                                       'reports')
         os.makedirs(self._reports_export_directory, exist_ok=True)
+
+    def report_keys(self):
+        """
+        Returns
+        -------
+        list of str
+            identifiers for all the
+            reports in this report manager
+        """
+
+        return list(self._data.keys())
+
+    def data(self, report_key):
+        """
+        Parameters
+        ----------
+        report_key: str
+            An identifier for a particular report
+
+        Returns
+        -------
+        dict
+            The data in the report corresponding with
+            the report key
+        """
+
+        return self._data[report_key]
 
     def add_result(self, report_key, result):
         """
@@ -67,9 +94,9 @@ class ReportManager:
 
         for measurement in result.top_n_measurements(n=1):
             model_config = result.model_config()
-            self._measurements[report_key].append((model_config, measurement))
+            self._data[report_key].append((model_config, measurement))
 
-    def export_summary(self, report_key):
+    def export_summary(self, report_key, num_configs):
         """
         Write a PDF summary to disk
 
@@ -83,11 +110,12 @@ class ReportManager:
                                         report_key)
         os.makedirs(model_report_dir, exist_ok=True)
         output_filename = os.path.join(model_report_dir, 'result_summary.pdf')
-        summary = self._build_summary_report(report_key=report_key)
+        summary = self._build_summary_report(report_key=report_key,
+                                             num_configs=num_configs)
         logging.info(f"Exporting Summary Report to {output_filename}...")
         summary.write_report(filename=output_filename)
 
-    def _build_summary_report(self, report_key):
+    def _build_summary_report(self, report_key, num_configs):
         """
         Builder method for a summary
         report.
@@ -98,14 +126,13 @@ class ReportManager:
         total_measurements = self._statistics.total_measurements(report_key)
         total_configurations = self._statistics.total_configurations(
             report_key)
-        num_best_configs = min(self._config.num_configs_per_model,
-                               total_configurations)
+        num_best_configs = min(num_configs, total_configurations)
         gpu_names, max_memories = self._get_gpu_stats(report_key=report_key)
         static_batch_sizes = ','.join(
             sorted(
                 set([
                     str(measurement[1].perf_config()['batch-size'])
-                    for measurement in self._measurements[report_key]
+                    for measurement in self._data[report_key]
                 ])))
 
         constraint_str = "None"
@@ -169,28 +196,30 @@ class ReportManager:
         ],
                                     title="Report Table")
 
-        best = True
-        summary_sentence = ""
-        for model_config, measurement in self._measurements[report_key]:
-            dynamic_batching_str = model_config.dynamic_batching_string()
-            dynamic_batch_phrase = "dynamic batching disabled" \
-                if dynamic_batching_str == "Disabled" \
-                    else f"max dynamic batch size of {dynamic_batching_str}"
-            instance_group_str = model_config.instance_group_string()
-            if best:
-                model_config_dict = model_config.get_config()
-                platform = model_config_dict[
-                    'backend'] if 'backend' in model_config_dict else model_config_dict[
-                        'platform']
-                summary_sentence = (
-                    f"In {num_measurements} measurements, "
-                    f"{instance_group_str} model instances "
-                    f"with {dynamic_batch_phrase} "
-                    f"on platform {platform} delivers "
-                    f"maximum throughput under the given constraints on GPU {gpu_name}."
-                )
-                best = False
+        sorted_measurements = sorted(self._data[report_key],
+                                     key=lambda x: x[1])
 
+        # Construct summary sentence using best config
+        best_config = sorted_measurements[0][0]
+        dynamic_batching_str = best_config.dynamic_batching_string()
+        dynamic_batch_phrase = "dynamic batching disabled" if \
+            dynamic_batching_str == "Disabled" else \
+            f"max dynamic batch size of {dynamic_batching_str}"
+        model_config_dict = best_config.get_config()
+        platform = model_config_dict['backend'] if \
+            'backend' in model_config_dict \
+            else model_config_dict['platform']
+        summary_sentence = (
+            f"In {num_measurements} measurement(s), "
+            f"{best_config.instance_group_string()} model instance(s) "
+            f"with {dynamic_batch_phrase} "
+            f"on platform {platform} delivers "
+            f"maximum throughput under the given constraints on GPU(s) {gpu_name}."
+        )
+
+        # Construct table
+        for model_config, measurement in sorted_measurements:
+            instance_group_str = model_config.instance_group_string()
             row = [
                 model_config.get_field('name'), dynamic_batching_str,
                 instance_group_str,
@@ -212,7 +241,7 @@ class ReportManager:
         max_memories = []
         seen_gpus = set()
 
-        for _, measurement in self._measurements[report_key]:
+        for _, measurement in self._data[report_key]:
             for gpu in cuda.gpus:
                 if gpu.id in measurement.gpus_used(
                 ) and gpu.id not in seen_gpus:
