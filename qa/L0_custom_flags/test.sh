@@ -22,8 +22,9 @@ rm -rf results && mkdir -p results
 MODEL_ANALYZER="`which model-analyzer`"
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_clara_pipelines"}
 QA_MODELS="`ls $MODEL_REPOSITORY | head -2`"
+MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
 CONFIG_FILE="config.yaml"
-TRITON_LOG="triton_output.log"
+TRITON_LOG_BASE="triton.log"
 BATCH_SIZES="1"
 CONCURRENCY="1"
 EXPORT_PATH="`pwd`/results"
@@ -36,43 +37,52 @@ PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 
-MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -b $BATCH_SIZES -c $CONCURRENCY"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics --triton-output-path=${TRITON_LOG}"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY -f config.yaml --override-output-model-repository"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --run-config-search-disable"
+MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -b $BATCH_SIZES -c $CONCURRENCY"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE --export=True --export-path=$EXPORT_PATH"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --run-config-search-disable"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
-# Run the analyzer and check the results
+python3 test_config_generator.py -m $MODEL_NAMES
+
+LIST_OF_CONFIG_FILES=(`ls | grep .yml`)
+
+if [ ${#LIST_OF_CONFIG_FILES[@]} -lt 0 ]; then
+    echo -e "\n***\n*** Test Failed. No config file exists. \n***"
+    exit 1
+fi
+
 RET=0
 
-set +e
+for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
+    set +e
 
-run_analyzer
-if [ $? -ne 0 ]; then
-    echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
-    cat $ANALYZER_LOG
-    RET=1
-else
-    # Check the triton log for all flags
-    STRICT_MODEL_CONFIG=(`awk '/strict_model_config/ {print $4}' ${TRITON_LOG}`)
-    if [[ "$STRICT_MODEL_CONFIG" != "0" ]]; then
-        echo -e "\n***\n*** Test Output Verification failed. strict-model-config flag not passed to Triton. \n***"
-        echo $TRITON_LOG
-        RET=1
-    fi
+    # Run the analyzer and check the results
+    TRITON_LOG_PREFIX=${CONFIG_FILE#"config-"}
+    TRITON_LOG_PREFIX=${TRITON_LOG_PREFIX%".yml"}
+    TRITON_LOG=${TRITON_LOG_PREFIX}.${TRITON_LOG_BASE}
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-output-path=${TRITON_LOG} -f $CONFIG_FILE"
 
-    # Check analyzer log for perf flag
-    P95_STABILIZATION=(`grep 'Stabilizing using p95 latency' ${ANALYZER_LOG}`)
-    if [[ -z $P95_STABILIZATION ]]; then
-        echo -e "\n***\n*** Test Output Verification failed. percentile flag not passed to perf_analyzer. \n***"
+    run_analyzer
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
         cat $ANALYZER_LOG
         RET=1
+    else
+        python3 check_results.py -f $CONFIG_FILE -m $MODEL_NAMES --analyzer-log-file $ANALYZER_LOG --triton-log-file $TRITON_LOG 
+        if [ $? -ne 0 ]; then
+            echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
+            cat $ANALYZER_LOG
+            RET=1
+        fi
     fi
-fi
-set -e
+    set -e
+done
+
+rm -rf $EXPORT_PATH && rm -r *.yml
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

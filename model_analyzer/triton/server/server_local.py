@@ -27,7 +27,6 @@ class TritonServerLocal(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     tritonserver locally as as subprocess.
     """
-
     def __init__(self, path, config):
         """
         Parameters
@@ -54,7 +53,8 @@ class TritonServerLocal(TritonServer):
         if self._server_path:
             # Create command list and run subprocess
             cmd = [self._server_path]
-            cmd += self._server_config.to_cli_string().replace('=', ' ').split()
+            cmd += self._server_config.to_cli_string().replace('=',
+                                                               ' ').split()
 
             self._tritonserver_process = Popen(cmd,
                                                start_new_session=True,

@@ -24,7 +24,8 @@ class ConfigModel:
                  constraints=None,
                  parameters=None,
                  model_config_parameters=None,
-                 perf_analyzer_flags=None):
+                 perf_analyzer_flags=None,
+                 triton_server_flags=None):
         """
         Parameters
         ----------
@@ -42,6 +43,9 @@ class ConfigModel:
         perf_analyzer_flags : dict
             The custom perf analyzer configuration 
             for this model
+        triton_server_flags : dict
+            The configuration for the triton server instance launched
+            for this model
         """
 
         self._model_name = model_name
@@ -50,6 +54,7 @@ class ConfigModel:
         self._parameters = parameters
         self._model_config_parameters = model_config_parameters
         self._perf_analyzer_flags = perf_analyzer_flags
+        self._triton_server_flags = triton_server_flags
 
     def objectives(self):
         """
@@ -111,6 +116,16 @@ class ConfigModel:
 
         return self._perf_analyzer_flags
 
+    def triton_server_flags(self):
+        """
+        Returns
+        -------
+        dict:
+             the triton_server_flags
+        """
+
+        return self._triton_server_flags
+
     def set_objectives(self, objectives):
         """
         Parameters
@@ -170,6 +185,16 @@ class ConfigModel:
         """
 
         self._perf_analyzer_flags = flags
+
+    def set_triton_server_flags(self, flags):
+        """
+        Parameters
+        -------
+        flags: dict
+             the triton_server_flags
+        """
+
+        self._triton_server_flags = flags
 
     @staticmethod
     def model_object_to_config_model(value):
