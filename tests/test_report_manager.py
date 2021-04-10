@@ -143,10 +143,10 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 gpu_name='TITAN RTX')
 
         expected_summary_sentence = (
-            "In 10 measurements, 1/GPU model instances"
+            "In 10 measurement(s), 1/GPU model instance(s)"
             " with max dynamic batch size of [4 8] on"
             " platform tensorflow_graphdef delivers maximum"
-            " throughput under the given constraints on GPU TITAN RTX.")
+            " throughput under the given constraints on GPU(s) TITAN RTX.")
         self.assertEqual(expected_summary_sentence, summary_sentence)
 
         # Get throughput index and make sure results are sorted

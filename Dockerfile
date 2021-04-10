@@ -33,12 +33,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y python3-dev python3-pdfkit
 
-# Install tritonclient from the SDK container
-COPY --from=sdk /workspace/install/python /tmp/tritonclient
-RUN find /tmp/tritonclient -maxdepth 1 -type f -name \
-    "tritonclient-*-manylinux1_x86_64.whl" | xargs printf -- '%s[all]' | \
-    xargs pip3 install --upgrade && rm -rf /tmp/tritonclient/
-
 RUN mkdir -p /opt/triton-model-analyzer
 
 # Install DCGM
@@ -53,6 +47,7 @@ RUN chmod +x build_wheel.sh && \
     ./build_wheel.sh perf_analyzer true && \
     rm -f perf_analyzer
 RUN python3 -m pip install --upgrade pip && \
+    python3 -m pip install nvidia-pyindex && \
     python3 -m pip install wheels/triton_model_analyzer-*-manylinux1_x86_64.whl
 
 ENTRYPOINT []

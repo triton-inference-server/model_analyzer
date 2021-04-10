@@ -92,7 +92,7 @@ There are three ways to use Triton Model Analyzer:
    
    You can then try installing model analyzer again.
 
-   If you are using this approach you need to install [tritonclient](https://github.com/triton-inference-server/server/blob/master/docs/client_libraries.md) and DCGM on your
+   If you are using this approach you need to install DCGM on your
    machine.
 
    For installing DCGM on Ubuntu 20.04 you can use the following commands:
