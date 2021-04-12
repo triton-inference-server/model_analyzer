@@ -17,7 +17,6 @@ import sys
 
 from setuptools import find_packages
 from setuptools import setup
-from itertools import chain
 
 if "--dependency-dir" in sys.argv:
     idx = sys.argv.index("--dependency-dir")
@@ -106,6 +105,7 @@ setup(
         'console_scripts': ['model-analyzer = model_analyzer.entrypoint:main']
     },
     install_requires=install_requires,
+    dependency_links=['https://pypi.ngc.nvidia.com/tritonclient'],
     packages=find_packages(exclude=("tests", )),
     zip_safe=False,
     data_files=data_files,
