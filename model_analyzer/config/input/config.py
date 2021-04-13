@@ -109,15 +109,26 @@ class AnalyzerConfig:
             # message of type ConfigObject
             sub_field_schema = {}
 
-            fields = field.message_type.fields
-            for sub_field in fields:
-                sub_field_schema[
-                    sub_field.name] = self._resolve_protobuf_field(sub_field)
-            if field.label == FieldDescriptor.LABEL_REPEATED:
-                config_type = ConfigListGeneric(
-                    ConfigObject(schema=sub_field_schema))
-            else:
+            # Custom handling for map field
+            # TODO: Add support for types in the keys
+            if field.message_type.has_options and field.message_type.GetOptions(
+            ).map_entry:
+                value_field_type = self._resolve_protobuf_field(
+                    field.message_type.fields_by_name['value'])
+                sub_field_schema['*'] = value_field_type
                 config_type = ConfigObject(schema=sub_field_schema)
+
+            else:
+                fields = field.message_type.fields
+                for sub_field in fields:
+                    sub_field_schema[
+                        sub_field.name] = self._resolve_protobuf_field(
+                            sub_field)
+                if field.label == FieldDescriptor.LABEL_REPEATED:
+                    config_type = ConfigListGeneric(
+                        ConfigObject(schema=sub_field_schema))
+                else:
+                    config_type = ConfigObject(schema=sub_field_schema)
         elif field.type == FieldDescriptor.TYPE_ENUM:
             choices = []
             enum_values = field.enum_type.values

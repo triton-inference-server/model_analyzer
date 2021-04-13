@@ -23,6 +23,7 @@ from .mocks.mock_config import MockConfig
 
 
 class TestRunSearch(trc.TestResultCollector):
+
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
@@ -103,37 +104,38 @@ class TestRunSearch(trc.TestResultCollector):
         config = self._evaluate_config(args, yaml_content)
         run_search = RunSearch(config=config)
 
-        concurrencies = config.model_names[0].parameters()['concurrency']
-        run_search.init_model_sweep(concurrencies, True)
-        config_model, model_sweeps = run_search.get_model_sweep(
-            config.model_names[0])
+        # Simulate running multiple sweeps
+        for i in range(2):
+            concurrencies = config.model_names[0].parameters()['concurrency']
+            run_search.init_model_sweep(concurrencies, True)
+            config_model, model_sweeps = run_search.get_model_sweep(config.model_names[0])
 
-        start_throughput = 2
-        expected_concurrency = 1
-        expected_instance_count = 1
-        total_runs = 0
-        while model_sweeps:
-            model_sweep = model_sweeps.pop()
-            current_concurrency = config_model.parameters()['concurrency'][0]
-            run_search.add_measurements(
-                [self._create_measurement(start_throughput)])
-            start_throughput *= 1.02
-            self.assertEqual(expected_concurrency, current_concurrency)
-            current_instance_count = model_sweep['instance_group'][0]['count']
+            start_throughput = 2
+            expected_concurrency = 1
+            expected_instance_count = 1
+            total_runs = 0
+            while model_sweeps:
+                model_sweep = model_sweeps.pop()
+                current_concurrency = config_model.parameters()['concurrency'][0]
+                run_search.add_measurements(
+                    [self._create_measurement(start_throughput)])
+                start_throughput *= 1.02
+                self.assertEqual(expected_concurrency, current_concurrency)
+                current_instance_count = model_sweep['instance_group'][0]['count']
 
-            self.assertEqual(current_instance_count, expected_instance_count)
-            total_runs += 1
+                self.assertEqual(current_instance_count, expected_instance_count)
+                total_runs += 1
 
-            # Because the growth of throughput is not substantial, the algorithm
-            # will stop execution.
-            if total_runs == 4:
-                total_runs = 0
-                expected_concurrency = 1
-                expected_instance_count += 1
-                if expected_instance_count > config.run_config_search_max_instance_count:
-                    expected_instance_count = 1
-            else:
-                expected_concurrency *= 2
+                # Because the growth of throughput is not substantial, the algorithm
+                # will stop execution.
+                if total_runs == 4:
+                    total_runs = 0
+                    expected_concurrency = 1
+                    expected_instance_count += 1
+                    if expected_instance_count > config.run_config_search_max_instance_count:
+                        expected_instance_count = 1
+                else:
+                    expected_concurrency *= 2
 
-            config_model, model_sweeps = run_search.get_model_sweep(
-                config_model)
+                config_model, model_sweeps = run_search.get_model_sweep(
+                    config_model)
