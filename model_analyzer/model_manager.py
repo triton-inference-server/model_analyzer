@@ -22,7 +22,6 @@ from model_analyzer.model_analyzer_exceptions \
 
 import logging
 import os
-import heapq
 import shutil
 
 
@@ -150,7 +149,7 @@ class ModelManager:
                                 user_model_config_sweep=None):
         """
         Initializes the model sweep, iterates until search bounds,
-        and executes run configs 
+        and executes run configs
         """
 
         self._run_search.init_model_sweep(model.parameters()['concurrency'],

@@ -126,6 +126,8 @@ class RunSearch:
         Intiliazes the sweep mode, and model config parameters in some cases.
         """
 
+        # Reset the measurements after each init
+        self._measurements = []
         if len(concurrency) != 0 and search_model_config_parameters:
             self._model_config_parameters = {'instance_count': 0}
             self._sweep_mode_function = self._sweep_model_config_only
@@ -164,7 +166,10 @@ class RunSearch:
 
         if self._sweep_mode_function:
             new_model, model_sweep = self._sweep_mode_function(new_model)
-            self._log_message(new_model)
+
+            # Only log message if there is new runs.
+            if model_sweep:
+                self._log_message(new_model)
             return new_model, model_sweep
         return new_model, []
 
@@ -264,10 +269,18 @@ class RunSearch:
                 message = (
                     "preferred batch size is set to "
                     f"{self._model_config_parameters['dynamic_batching']}.")
-        else:
-            message = 'dynamic batching is disabled.'
-        logging.info(
-            f"Concurrency set to {concurrency}. "
-            f"Instance count set to "
-            f"{self._model_config_parameters['instance_count']}, and {message}"
-        )
+        message = 'dynamic batching is disabled.'
+
+        if self._sweep_mode_function == self._sweep_concurrency_only:
+            logging.info(f"Concurrency set to {concurrency}. ")
+        elif self._sweep_mode_function == self._sweep_concurrency_and_model_config:
+            logging.info(
+                f"Concurrency set to {concurrency}. "
+                f"Instance count set to "
+                f"{self._model_config_parameters['instance_count']}, and {message}"
+            )
+        elif self._sweep_mode_function == self._sweep_model_config_only:
+            logging.info(
+                f"Instance count set to "
+                f"{self._model_config_parameters['instance_count']}, and {message}"
+            )
