@@ -258,7 +258,7 @@ model_names:
             max: 200
   model_2:
     constraints:
-        latency:
+        perf_latency:
             max: 50
 ```
 
