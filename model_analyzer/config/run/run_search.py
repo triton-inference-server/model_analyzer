@@ -262,6 +262,7 @@ class RunSearch:
         """
 
         concurrency = model.parameters()['concurrency'][0]
+        message = 'dynamic batching is disabled.'
         if 'dynamic_batching' in self._model_config_parameters:
             if self._model_config_parameters['dynamic_batching'] is None:
                 message = 'dynamic batching is enabled.'
@@ -269,7 +270,6 @@ class RunSearch:
                 message = (
                     "preferred batch size is set to "
                     f"{self._model_config_parameters['dynamic_batching']}.")
-        message = 'dynamic batching is disabled.'
 
         if self._sweep_mode_function == self._sweep_concurrency_only:
             logging.info(f"Concurrency set to {concurrency}. ")
