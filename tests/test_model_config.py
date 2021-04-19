@@ -15,7 +15,6 @@
 import os
 from .common import test_result_collector as trc
 from .mocks.mock_model_config import MockModelConfig
-from .mocks.mock_client import Mock
 from unittest.mock import mock_open, patch, MagicMock
 
 from model_analyzer.triton.model.model_config import ModelConfig
@@ -104,7 +103,10 @@ instance_group [
         # Write the model config to output
         with patch('model_analyzer.triton.model.model_config.open',
                    mock_open()) as mocked_file:
-            model_config.write_config_to_file(model_output_path)
+            with patch('model_analyzer.triton.model.model_config.copy_tree',
+                       MagicMock()):
+                model_config.write_config_to_file(model_output_path,
+                                                  '/mock/path', None)
             content = mocked_file().write.call_args.args[0]
         mock_model_config.stop()
 

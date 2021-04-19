@@ -45,6 +45,7 @@ class ModelManager:
         self._metrics_manager = metrics_manager
         self._result_manager = result_manager
         self._run_search = RunSearch(config=config)
+        self._last_config_variant = None
         self._run_config_generator = RunConfigGenerator(config=config,
                                                         client=self._client)
 
@@ -230,8 +231,11 @@ class ModelManager:
             try:
                 # Create the directory for the new model
                 os.makedirs(new_model_dir, exist_ok=False)
-                variant_config.write_config_to_file(new_model_dir, True,
-                                                    original_model_dir)
+                variant_config.write_config_to_file(new_model_dir,
+                                                    original_model_dir,
+                                                    self._last_config_variant)
+                self._last_config_variant = os.path.join(
+                    self._output_model_repo_path, variant_name)
             except FileExistsError:
                 pass
 

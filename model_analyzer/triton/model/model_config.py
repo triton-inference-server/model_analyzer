@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import os
+import re
 from numba import cuda
+from pathlib import Path
 from distutils.dir_util import copy_tree
 from google.protobuf import text_format, json_format
 from google.protobuf.descriptor import FieldDescriptor
@@ -112,10 +114,8 @@ class ModelConfig:
 
         return ModelConfig.create_from_dictionary(model_config_dict)
 
-    def write_config_to_file(self,
-                             model_path,
-                             copy_original_model=False,
-                             src_model_path=None):
+    def write_config_to_file(self, model_path, src_model_path,
+                             last_model_path):
         """
         Writes a protobuf config file.
 
@@ -124,8 +124,11 @@ class ModelConfig:
         model_path : str
             Path to write the model config.
 
-        copy_original_model : bool
-            Whether or not to copy the original model.
+        src_model_path : str
+            Path to the source model in the Triton Model Repository
+
+        last_model_path : str
+            Indicates the path to the last model variant.
 
         Raises
         ------
@@ -143,7 +146,23 @@ class ModelConfig:
 
         model_config_bytes = text_format.MessageToBytes(self._model_config)
 
-        if copy_original_model:
+        reusued_previous_model_dir = False
+        if last_model_path is not None:
+            src_model_name = Path(src_model_path).name
+            last_model_name = Path(last_model_path).name
+
+            # If the model files have been copied once, do not copy it again
+            if re.search(f'^{src_model_name}_i\d+$', last_model_name):
+                reusued_previous_model_dir = True
+                for file in os.listdir(last_model_path):
+                    # Do not copy the config.pbtxt file
+                    if file == 'config.pbtxt':
+                        continue
+                    else:
+                        os.rename(os.path.join(last_model_path, file),
+                                  os.path.join(model_path, file))
+
+        if not reusued_previous_model_dir:
             copy_tree(src_model_path, model_path)
 
         with open(os.path.join(model_path, "config.pbtxt"), 'wb') as f:
