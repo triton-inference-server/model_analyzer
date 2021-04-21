@@ -20,4 +20,7 @@ requests>=2.24.0
 pyyaml>=5.3.1
 psutil>=5.8.0
 matplotlib>=3.3.4
+pdfkit>=0.6.1
+cryptography>=3.3.2
+httplib2>=0.19.0
 tritonclient[all]>=2.4.0

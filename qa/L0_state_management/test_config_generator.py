@@ -45,7 +45,7 @@ class TestConfigGenerator:
                             help='The config file for this test')
 
         args = parser.parse_args()
-        model_names = args.model_names.split(',')
+        self.model_names = args.model_names.split(',')
         self.config = {'batch_sizes': 1, 'num_top_model_configs': 3}
         self.config['model_names'] = {
             model_name: {
@@ -59,11 +59,17 @@ class TestConfigGenerator:
                     }]
                 }
             }
-            for model_name in model_names
+            for model_name in self.model_names
         }
 
-    def generate_config(self):
-        with open('config.yml', 'w+') as f:
+    def generate_config_single(self):
+        with open('config-single.yml', 'w+') as f:
+            yaml.dump(self.config, f)
+
+    def generate_config_multi(self):
+        self.config['model_names'][
+            self.model_names[2]]['parameters']['concurrency'] = [16, 32]
+        with open('config-multi.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
 

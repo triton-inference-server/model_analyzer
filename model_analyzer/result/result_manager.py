@@ -239,9 +239,11 @@ class ResultManager:
         if model_name not in results:
             results[model_name] = {}
         if model_config_name not in results[model_name]:
-            results[model_name][model_config_name] = (model_config, [])
+            results[model_name][model_config_name] = (model_config, {})
 
-        results[model_name][model_config_name][1].append(measurement)
+        measurement_key = measurement.perf_config().to_cli_string()
+        results[model_name][model_config_name][1][
+            measurement_key] = measurement
 
     def collect_and_sort_results(self):
         """
@@ -269,7 +271,7 @@ class ResultManager:
                                      model_config=model_config,
                                      comparator=comparators[model_name],
                                      constraints=constraints[model_name])
-                for measurement in measurements:
+                for measurement in measurements.values():
                     measurement.set_result_comparator(
                         comparator=comparators[model_name])
                     result.add_measurement(measurement)

@@ -203,6 +203,10 @@ class ModelManager:
             # Remove one run config from the list
             run_config = self._run_config_generator.next_config()
 
+            # If this run config was already run, do not run again
+            if self._already_ran_config(run_config):
+                continue
+
             # Start server, and load model variant
             self._server.start()
             if not self._create_and_load_model_variant(
@@ -264,3 +268,23 @@ class ModelManager:
                 num_retries=self._config.max_retries) == -1:
             return False
         return True
+
+    def _already_ran_config(self, run_config):
+        """
+        Checks whether this run config has measurements
+        in the state manager's results object
+        """
+
+        model_name = run_config.model_name()
+        model_config_name = run_config.model_config().get_field('name')
+        perf_config_str = run_config.perf_config().to_cli_string()
+
+        results = self._state_manager.get_state_variable(
+            'ResultManager.results')
+
+        # check whether perf config string is a key in result dict
+        if model_name not in results:
+            return False
+        if model_config_name not in results[model_name]:
+            return False
+        return (perf_config_str in results[model_name][model_config_name][1])

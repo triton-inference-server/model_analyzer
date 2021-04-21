@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import defaultdict
 import argparse
 import yaml
 import sys
@@ -64,6 +65,8 @@ class TestOutputValidator:
         Open the checkpoints file and make sure there
         are only 3 checkpoints. Additionally
         check the analyzer log for a SIGINT.
+        Also check that the 3rd model has
+        been run once
         """
 
         checkpoint_files = os.listdir(
@@ -74,20 +77,34 @@ class TestOutputValidator:
         with open(self._analyzer_log, 'r') as f:
             log_contents = f.read()
 
+        # check for SIGINT
         token = "SIGINT"
-        return log_contents.find(token) != -1
+        if log_contents.find(token) == -1:
+            return False
+
+        # check that 3rd model is profiled once
+        token = f"Profiling model {self._model_names[2]}"
+        token_idx = 0
+        found_count = 0
+        while True:
+            token_idx = log_contents.find(token, token_idx + 1)
+            if token_idx == -1:
+                break
+            found_count += 1
+
+        return found_count == 1
 
     def check_continue_after_checkpoint(self):
         """
-        Open the analyzer log and ensure that only 2 models are 
-        profiled.
+        Check that the 3rd model has been run once 
+        and the remaining have been run twice each.
         """
 
-        profiled_models = set(self._model_names[-2:])
+        profiled_models = self._model_names[-3:]
         with open(self._analyzer_log, 'r') as f:
             log_contents = f.read()
 
-        found_models = set()
+        found_models_count = defaultdict(int)
         token_idx = 0
         while True:
             token_idx = log_contents.find('Profiling model ', token_idx + 1)
@@ -96,8 +113,12 @@ class TestOutputValidator:
             end_of_model_name = log_contents.find('...', token_idx)
             model_name = log_contents[token_idx + len('Profiling model '
                                                       ):end_of_model_name]
-            found_models.add(model_name.rsplit('_', 1)[0])
-        return profiled_models == found_models
+            found_models_count[model_name.rsplit('_', 1)[0]] += 1
+
+        for i in range(3):
+            if found_models_count[profiled_models[i]] != 1:
+                return False
+        return True
 
 
 if __name__ == '__main__':

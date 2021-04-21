@@ -49,11 +49,7 @@ class Analyzer:
         self._client = client
         self._server = server
         self._state_manager = state_manager
-
-        # Load state
         state_manager.load_checkpoint()
-        if state_manager.starting_fresh_run():
-            self._init_state()
 
         # Create managers
         self._statistics = AnalyzerStatistics(config=config)
@@ -81,14 +77,6 @@ class Analyzer:
         self._report_manager = ReportManager(config=config,
                                              statistics=self._statistics)
 
-    def _init_state(self):
-        """
-        Sets Analyzer object managed
-        state variables in Analyer State
-        """
-
-        self._state_manager.set_state_variable('Analyzer.next_model_index', 0)
-
     def run(self):
         """
         Configures RunConfigGenerator, then
@@ -111,19 +99,17 @@ class Analyzer:
 
         # Phase 2: Profile each model
         while True:
-            next_model_index = self._state_manager.get_state_variable(
-                'Analyzer.next_model_index')
+            next_model_index = self._state_manager.checkpoint_index()
             if next_model_index >= len(
                     self._config.model_names) or self._state_manager.exiting():
                 break
-            self._model_manager.run_model(
-                model=self._config.model_names[next_model_index])
 
-            self._state_manager.set_state_variable('Analyzer.next_model_index',
-                                                   next_model_index + 1)
-
-            # Save state
-            self._state_manager.save_checkpoint()
+            try:
+                self._model_manager.run_model(
+                    model=self._config.model_names[next_model_index])
+            finally:
+                # Save state
+                self._state_manager.save_checkpoint()
 
         # Phase 3: Process results, and dump to tables
         self._result_manager.collect_and_sort_results()
@@ -136,8 +122,7 @@ class Analyzer:
         to dump the results onto disk
         """
 
-        next_model_index = self._state_manager.get_state_variable(
-            'Analyzer.next_model_index')
+        next_model_index = self._state_manager.checkpoint_index()
 
         self._result_manager.write_and_export_results()
         if self._config.summarize:
@@ -162,8 +147,7 @@ class Analyzer:
         and results are
         """
 
-        next_model_index = self._state_manager.get_state_variable(
-            'Analyzer.next_model_index')
+        next_model_index = self._state_manager.checkpoint_index()
 
         if self._config.summarize:
             # Create individual model reports

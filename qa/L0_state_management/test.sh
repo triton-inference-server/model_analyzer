@@ -15,8 +15,7 @@
 ANALYZER_LOG_BASE="test.log"
 source ../common/util.sh
 
-rm -f *.log
-rm -rf results && mkdir -p results
+rm -f *.log && rm -rf *.yml
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -24,7 +23,7 @@ MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer
 QA_MODELS="`ls $MODEL_REPOSITORY | head -5`"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
 EXPORT_PATH="`pwd`/results"
-CONFIG_FILE="config.yml"
+CONFIG_FILE="config-single.yml"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
@@ -47,6 +46,8 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE"
 python3 test_config_generator.py -m $MODEL_NAMES
 
 RET=0
+
+rm -rf $EXPORT_PATH && mkdir -p $EXPORT_PATH
 
 # First run the config and count the number of checkpoints
 TEST_NAME="num_checkpoints"
@@ -93,6 +94,8 @@ rm -rf $EXPORT_PATH/*
 
 # Third run the config again and send SIGINT after 3 models run
 TEST_NAME="interrupt_handling"
+CONFIG_FILE="config-multi.yml"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE"
 ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
 
 set +e
@@ -113,13 +116,11 @@ if [ $? -ne 0 ]; then
     cat $ANALYZER_LOG
     RET=1
 fi
-set -e
 
-# Fourth run the config again and check that profiling starts from next model
+# Fourth run config multple and send SIGINT after 3 models run
 TEST_NAME="continue_after_checkpoint"
 ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
 
-set +e
 run_analyzer
 if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
@@ -135,6 +136,7 @@ else
 fi
 set -e
 
+# Clear checkpoints and results
 rm -rf $EXPORT_PATH/*
 
 if [ $RET -eq 0 ]; then

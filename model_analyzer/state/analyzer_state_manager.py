@@ -33,7 +33,7 @@ class AnalyzerStateManager:
         self._checkpoint_dir = os.path.join(config.export_path, 'checkpoints')
 
         if os.path.exists(self._checkpoint_dir):
-            self._checkpoint_index = self._latest_checkpoint() + 1
+            self._checkpoint_index = self._latest_checkpoint()
         else:
             os.makedirs(self._checkpoint_dir)
             self._checkpoint_index = 0
@@ -48,6 +48,16 @@ class AnalyzerStateManager:
         """
 
         return self._starting_fresh_run
+
+    def checkpoint_index(self):
+        """
+        Returns 
+        -------
+        int
+            the index of the current checkpoint
+        """
+
+        return self._checkpoint_index
 
     def exiting(self):
         """
