@@ -248,6 +248,8 @@ def main():
         if state_manager.exiting():
             return
 
+        analyzer = Analyzer(config, metric_tags, client, server, state_manager)
+
         # Check TritonServer GPUs
         server.start()
         client.wait_for_server_ready(config.max_retries)
@@ -257,7 +259,6 @@ def main():
         if state_manager.exiting():
             return
 
-        analyzer = Analyzer(config, metric_tags, client, server, state_manager)
         analyzer.run()
         analyzer.write_and_export_results()
     finally:

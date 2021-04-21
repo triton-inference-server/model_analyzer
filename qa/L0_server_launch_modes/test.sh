@@ -100,7 +100,7 @@ function run_server_launch_modes() {
     for PROTOCOL in $CLIENT_PROTOCOLS; do
         MODEL_ANALYZER_ARGS_WITH_PROTOCOL="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$PROTOCOL `convert_gpu_array_to_flag $gpus`"
         for LAUNCH_MODE in $TRITON_LAUNCH_MODES; do
-            rm -rf $OUTPUT_MODEL_REPOSITORY
+            rm -rf $OUTPUT_MODEL_REPOSITORY && rm -f checkpoints/*
             MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE="$MODEL_ANALYZER_ARGS_WITH_PROTOCOL --triton-launch-mode=$LAUNCH_MODE"
             ANALYZER_LOG=analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
             SERVER_LOG=${LAUNCH_MODE}.${PROTOCOL}.server.log

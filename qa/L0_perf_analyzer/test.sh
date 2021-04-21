@@ -51,7 +51,7 @@ elif [[ ! -z `grep "perf_analyzer's measurement window is too small" ${ANALYZER_
     RET=1
 fi
 
-rm -f $ANALYZER_LOG
+rm -f $ANALYZER_LOG && rm -f checkpoints/*
 
 # Run the analyzer with perf-measurement-window=50ms and expect adjustment
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --perf-measurement-window=50 --perf-output=True"
@@ -67,7 +67,7 @@ elif [[ -z `grep "measurement window is too small, increased to" ${ANALYZER_LOG}
     RET=1
 fi
 
-rm -f $ANALYZER_LOG
+rm -f $ANALYZER_LOG && rm -f checkpoints/*
 
 # Run the analyzer with no-perf-output and fail if output detected
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS"

@@ -80,6 +80,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         fi
     fi
     set -e
+    rm -f $EXPORT_PATH/checkpoints/*
 done
 
 rm -rf $EXPORT_PATH && rm -r *.yml
