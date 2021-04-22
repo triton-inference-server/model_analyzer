@@ -203,8 +203,10 @@ class ModelManager:
             # Remove one run config from the list
             run_config = self._run_config_generator.next_config()
 
-            # If this run config was already run, do not run again
-            if self._already_ran_config(run_config):
+            # If this run config was already run, do not run again, just get the measurement
+            measurement = self._get_measurement_if_config_duplicate(run_config)
+            if measurement:
+                measurements.append(measurement)
                 continue
 
             # Start server, and load model variant
@@ -269,7 +271,7 @@ class ModelManager:
             return False
         return True
 
-    def _already_ran_config(self, run_config):
+    def _get_measurement_if_config_duplicate(self, run_config):
         """
         Checks whether this run config has measurements
         in the state manager's results object
@@ -287,4 +289,8 @@ class ModelManager:
             return False
         if model_config_name not in results[model_name]:
             return False
-        return (perf_config_str in results[model_name][model_config_name][1])
+        measurements = results[model_name][model_config_name][1]
+        if perf_config_str in measurements:
+            return measurements[perf_config_str]
+        else:
+            return None
