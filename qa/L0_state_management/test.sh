@@ -110,11 +110,17 @@ done
 kill -2 $ANALYZER_PID
 wait $ANALYZER_PID
 
-python3 check_results.py -f $CONFIG_FILE -m $MODEL_NAMES -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
 if [ $? -ne 0 ]; then
-    echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
+    echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
     cat $ANALYZER_LOG
     RET=1
+else
+    python3 check_results.py -f $CONFIG_FILE -m $MODEL_NAMES -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
+        cat $ANALYZER_LOG
+        RET=1
+    fi
 fi
 
 # Fourth run config multple and send SIGINT after 3 models run
@@ -137,6 +143,40 @@ fi
 set -e
 
 # Clear checkpoints and results
+rm -rf $EXPORT_PATH/*
+
+# For the fifth test we will have results mixed across runs
+CONFIG_FILE="config-mixed-first.yml"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE"
+ANALYZER_LOG="measurement_consistent_prep.${ANALYZER_LOG_BASE}"
+
+set +e
+run_analyzer
+if [ $? -ne 0 ]; then
+    echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
+    cat $ANALYZER_LOG
+    RET=1
+fi
+
+TEST_NAME="measurements_consistent_with_config"
+CONFIG_FILE="config-mixed-second.yml"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE"
+ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
+
+run_analyzer
+if [ $? -ne 0 ]; then
+    echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
+    cat $ANALYZER_LOG
+    RET=1
+else
+    python3 check_results.py -f $CONFIG_FILE -m $MODEL_NAMES -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
+        cat $ANALYZER_LOG
+        RET=1
+    fi
+fi
+
 rm -rf $EXPORT_PATH/*
 
 if [ $RET -eq 0 ]; then

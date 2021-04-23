@@ -162,7 +162,7 @@ class AnalyzerStateManager:
         checkpoint_files = glob.glob(
             os.path.join(self._checkpoint_dir, '*.ckpt'))
         if not checkpoint_files:
-            return -1
+            return 0
         try:
             return max([
                 int(os.path.split(f)[1].split('.')[0])

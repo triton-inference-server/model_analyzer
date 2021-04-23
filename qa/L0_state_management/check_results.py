@@ -120,6 +120,44 @@ class TestOutputValidator:
                 return False
         return True
 
+    def check_measurements_consistent_with_config(self):
+        """
+        Check that each of the last 3 models is profiled
+        once, only the last 3 models appear in the results
+        and that the first of the 3 profiled models appears
+        twice in the result table
+        """
+
+        # Make sure first model out 3 was only profiled only once
+        if not self.check_continue_after_checkpoint():
+            return False
+
+        profiled_models = self._model_names[-3:]
+        with open(self._analyzer_log, 'r') as f:
+            log_contents = f.read()
+
+        # Find table title and offset by token length and single newline character
+        token = 'Models (Inference):'
+        inference_table_start = log_contents.find(token)
+        inference_table_start += len(token) + 1
+
+        # Find gpu table title
+        token = 'Models (GPU Metrics):'
+        inference_table_end = log_contents.find(token)
+
+        inference_table_contents = log_contents[
+            inference_table_start:inference_table_end].strip()
+
+        table_measurement_count = defaultdict(int)
+        for line in inference_table_contents.split('\n'):
+            model_name = line.split()[0]
+            table_measurement_count[model_name] += 1
+
+        return table_measurement_count[
+            profiled_models[0]] == 2 and table_measurement_count[
+                profiled_models[1]] == 1 and table_measurement_count[
+                    profiled_models[2]] == 1
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

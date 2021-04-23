@@ -72,6 +72,29 @@ class TestConfigGenerator:
         with open('config-multi.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
+    def generate_config_mixed_first(self):
+        """
+        Generate a config where last two models
+        are removed
+        """
+
+        for model_name in self.model_names[-2:]:
+            del self.config['model_names'][model_name]
+        with open('config-mixed-first.yml', 'w+') as f:
+            yaml.dump(self.config, f)
+
+    def generate_config_mixed_second(self):
+        """
+        Generate config where first two models are
+        removed, and 3rd model has changed run parameters
+        """
+        for model_name in self.model_names[:2]:
+            del self.config['model_names'][model_name]
+        self.config['model_names'][
+            self.model_names[2]]['parameters']['concurrency'] = [32]
+        with open('config-mixed-second.yml', 'w+') as f:
+            yaml.dump(self.config, f)
+
 
 if __name__ == '__main__':
     TestConfigGenerator()

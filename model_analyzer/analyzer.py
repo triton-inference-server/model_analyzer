@@ -76,6 +76,7 @@ class Analyzer:
 
         self._report_manager = ReportManager(config=config,
                                              statistics=self._statistics)
+        self._model_index = 0
 
     def run(self):
         """
@@ -99,20 +100,20 @@ class Analyzer:
 
         # Phase 2: Profile each model
         while True:
-            next_model_index = self._state_manager.checkpoint_index()
-            if next_model_index >= len(
+            if self._model_index >= len(
                     self._config.model_names) or self._state_manager.exiting():
                 break
-
             try:
                 self._model_manager.run_model(
-                    model=self._config.model_names[next_model_index])
+                    model=self._config.model_names[self._model_index])
             finally:
                 # Save state
                 self._state_manager.save_checkpoint()
+            self._model_index += 1
 
         # Phase 3: Process results, and dump to tables
-        self._result_manager.collect_and_sort_results()
+        self._result_manager.collect_and_sort_results(
+            num_models=self._model_index)
         self._process_top_results()
         self._result_manager.tabulate_results()
 
@@ -122,14 +123,12 @@ class Analyzer:
         to dump the results onto disk
         """
 
-        next_model_index = self._state_manager.checkpoint_index()
-
         self._result_manager.write_and_export_results()
         if self._config.summarize:
             self._plot_manager.compile_and_export_plots()
 
             # Export individual model summaries
-            for model in self._config.model_names[:next_model_index]:
+            for model in self._config.model_names[:self._model_index]:
                 self._report_manager.export_summary(
                     report_key=model.model_name(),
                     num_configs=self._config.num_configs_per_model)
@@ -147,11 +146,9 @@ class Analyzer:
         and results are
         """
 
-        next_model_index = self._state_manager.checkpoint_index()
-
         if self._config.summarize:
             # Create individual model reports
-            for model in self._config.model_names[:next_model_index]:
+            for model in self._config.model_names[:self._model_index]:
                 self._plot_manager.init_plots(plots_key=model.model_name())
                 for result in self._result_manager.top_n_results(
                         model_name=model.model_name(),

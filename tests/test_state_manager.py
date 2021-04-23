@@ -112,7 +112,7 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
     def test_latest_checkpoint(self):
         # No checkpoints
         self.mock_glob.set_glob_return_value([])
-        self.assertEqual(self.state_manager._latest_checkpoint(), -1)
+        self.assertEqual(self.state_manager._latest_checkpoint(), 0)
 
         # single checkpoint file
         for i in range(5):

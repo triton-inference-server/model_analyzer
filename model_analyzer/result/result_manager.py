@@ -245,13 +245,19 @@ class ResultManager:
         results[model_name][model_config_name][1][
             measurement_key] = measurement
 
-    def collect_and_sort_results(self):
+    def collect_and_sort_results(self, num_models):
         """
         Collects objectives and constraints for
         each model, constructs results from the
         measurements obtained, and sorts and 
         filters them according to constraints
         and objectives.
+
+        Parameters
+        ----------
+        num_models: int
+            The number of config models to be included in the
+            results
         """
 
         # Collect objectives and constraints
@@ -265,7 +271,11 @@ class ResultManager:
         # Construct and add results to individual result heaps as well as global result heap
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
-        for model_name, result_dict in results.items():
+        for model_name in [
+                model.model_name()
+                for model in self._config.model_names[:num_models]
+        ]:
+            result_dict = results[model_name]
             for (model_config, measurements) in result_dict.values():
                 result = ModelResult(model_name=model_name,
                                      model_config=model_config,
