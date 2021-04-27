@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-docker>=4.3.1
-distro>=1.5.0
-numba>=0.51.2
-prometheus_client>=0.9.0
-requests>=2.24.0
-pyyaml>=5.3.1
-psutil>=5.8.0
-matplotlib>=3.3.4
-pdfkit>=0.6.1
-cryptography>=3.3.2
-httplib2>=0.19.0
-tritonclient[all]>=2.4.0
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
+
+
+class AnalyzerState:
+    """
+    All the state information needed by 
+    Model Analyzer in one place
+    """
+    def __init__(self):
+        self._state_dict = {}
+
+    def get(self, name):
+        if name in self._state_dict:
+            return self._state_dict[name]
+        else:
+            return None
+
+    def set(self, name, value):
+        self._state_dict[name] = value

@@ -14,6 +14,7 @@
 
 from .mock_base import MockBase
 from unittest.mock import Mock, MagicMock, patch
+import os
 
 
 class MockOSMethods(MockBase):
@@ -26,7 +27,8 @@ class MockOSMethods(MockBase):
             'abspath': MagicMock(return_value=""),
             'isdir': MagicMock(return_value=True),
             'exists': MagicMock(return_value=True),
-            'isfile': MagicMock(return_value=True)
+            'isfile': MagicMock(return_value=True),
+            'split': os.path.split
         }
         os_attrs = {
             'path': Mock(**path_attrs),
@@ -39,7 +41,7 @@ class MockOSMethods(MockBase):
         self._patchers_os = {}
         self._os_mocks = {}
         for path in mock_paths:
-            self._patchers_os[path] = patch(path, Mock(**os_attrs))
+            self._patchers_os[path] = patch(f"{path}.os", Mock(**os_attrs))
         super().__init__()
 
     def start(self):
@@ -57,3 +59,19 @@ class MockOSMethods(MockBase):
 
         for patcher in self._patchers_os.values():
             self._patchers.append(patcher)
+
+    def set_os_path_exists_return_value(self, value):
+        """
+        Sets the return value for os.path.exists
+        """
+
+        for mock in self._os_mocks.values():
+            mock.path.exists.return_value = value
+
+    def set_os_path_join_return_value(self, value):
+        """
+        Sets the return value for os.path.join
+        """
+
+        for mock in self._os_mocks.values():
+            mock.path.join.return_value = value

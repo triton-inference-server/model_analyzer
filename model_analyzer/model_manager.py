@@ -30,13 +30,23 @@ class ModelManager:
     This class handles the search for, creation of, and execution of run configs.
     It also records the best results for each model.
     """
-    def __init__(self, config, client, server, metrics_manager,
-                 result_manager):
+    def __init__(self, config, client, server, metrics_manager, result_manager,
+                 state_manager):
         """
         Parameters
         ----------
         config: AnalyzerConfig
             The config for the model analyzer
+        client: TritonClient
+            The client handle used to send requests to Triton
+        server: TritonServer
+            The server handle used to start and stop Triton instances
+        metrics_manager: MetricsManager
+            The object that handles launching perf analyzer instances and profiling.
+        result_manager: ResultManager
+            The object that handles storing and sorting the results from the perf analyzer
+        state_manager: AnalyzerStateManager
+            The object that handles serializing the state of the analyzer and saving.
         """
 
         self._config = config
@@ -44,6 +54,7 @@ class ModelManager:
         self._server = server
         self._metrics_manager = metrics_manager
         self._result_manager = result_manager
+        self._state_manager = state_manager
         self._run_search = RunSearch(config=config)
         self._last_config_variant = None
         self._run_config_generator = RunConfigGenerator(config=config,
@@ -84,13 +95,11 @@ class ModelManager:
         # Update the server's config for this model run
         self._server.update_config(params=model.triton_server_flags())
 
+        # Run model inferencing
         if self._config.run_config_search_disable:
             self._run_model_no_search(model)
         else:
             self._run_model_with_search(model)
-
-        # Sort the results for this model
-        self._result_manager.sort_results(model_name=model.model_name())
 
     def _run_model_no_search(self, model):
         """
@@ -136,6 +145,8 @@ class ModelManager:
                 else:
                     # Search through concurrency values only
                     for user_model_config_sweep in user_model_config_sweeps:
+                        if self._state_manager.exiting():
+                            return
                         self._run_model_config_sweep(
                             model,
                             search_model_config=False,
@@ -157,7 +168,9 @@ class ModelManager:
                                           search_model_config)
 
         next_model = model
-        while True:
+        while not self._state_manager.exiting():
+
+            # Get next model sweep
             next_model, auto_model_config_sweep = self._run_search.get_model_sweep(
                 next_model)
 
@@ -183,8 +196,18 @@ class ModelManager:
 
         measurements = []
         while self._run_config_generator.run_configs():
+            # Check if exiting
+            if self._state_manager.exiting():
+                return measurements
+
             # Remove one run config from the list
             run_config = self._run_config_generator.next_config()
+
+            # If this run config was already run, do not run again, just get the measurement
+            measurement = self._get_measurement_if_config_duplicate(run_config)
+            if measurement:
+                measurements.append(measurement)
+                continue
 
             # Start server, and load model variant
             self._server.start()
@@ -213,6 +236,7 @@ class ModelManager:
             self._server.stop()
             if self._config.triton_output_path:
                 self._server.write_server_logs(self._config.triton_output_path)
+
         return measurements
 
     def _create_and_load_model_variant(self, original_name, variant_config):
@@ -249,3 +273,27 @@ class ModelManager:
                 num_retries=self._config.max_retries) == -1:
             return False
         return True
+
+    def _get_measurement_if_config_duplicate(self, run_config):
+        """
+        Checks whether this run config has measurements
+        in the state manager's results object
+        """
+
+        model_name = run_config.model_name()
+        model_config_name = run_config.model_config().get_field('name')
+        perf_config_str = run_config.perf_config().to_cli_string()
+
+        results = self._state_manager.get_state_variable(
+            'ResultManager.results')
+
+        # check whether perf config string is a key in result dict
+        if model_name not in results:
+            return False
+        if model_config_name not in results[model_name]:
+            return False
+        measurements = results[model_name][model_config_name][1]
+        if perf_config_str in measurements:
+            return measurements[perf_config_str]
+        else:
+            return None

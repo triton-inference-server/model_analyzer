@@ -12,68 +12,88 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import Mock, MagicMock, patch, mock_open
+from .mock_base import MockBase
+
+from unittest.mock import MagicMock, patch, mock_open
 
 
-class MockIOMethods:
+class MockIOMethods(MockBase):
     """
     A class that mocks filesystem
     operations open and write
     """
+    def __init__(self, mock_paths):
+        self._mock_paths = mock_paths
+        self._patchers_open = {}
+        self._patchers_print = {}
+        self._open_mocks = {}
+        self._print_mocks = {}
+        for path in mock_paths:
+            self._patchers_open[path] = patch(f"{path}.open", mock_open())
+            self._patchers_print[path] = patch(f"{path}.print", MagicMock())
+        super().__init__()
 
-    def __init__(self):
-        self.patcher_open = patch('model_analyzer.output.file_writer.open',
-                                  mock_open())
-        self.patcher_print = patch('model_analyzer.output.file_writer.print',
-                                   MagicMock())
-        self.open_mock = self.patcher_open.start()
-        self.print_mock = self.patcher_print.start()
-
-    def stop(self):
+    def start(self):
         """
-        Stops the mock of io functions
-        in file_writer
+        start the patchers
         """
 
-        self.patcher_open.stop()
-        self.patcher_print.stop()
+        for path in self._patchers_open:
+            self._open_mocks[path] = self._patchers_open[path].start()
+            self._print_mocks[path] = self._patchers_print[path].start()
+
+    def _fill_patchers(self):
+        """
+        Loads patchers into list 
+        """
+
+        for patcher in self._patchers_open.values():
+            self._patchers.append(patcher)
+
+        for patcher in self._patchers_print.values():
+            self._patchers.append(patcher)
 
     def raise_exception_on_open(self):
         """
         Raises an OSError when open is called
         """
-        self.open_mock.side_effect = OSError
+
+        for mock in self._open_mocks.values():
+            mock.side_effect = OSError
 
     def raise_exception_on_write(self):
         """
         Raises an OSError when write is called
         """
-        self.open_mock.return_value.write.side_effect = OSError
 
-    def assert_open_called_with_args(self, filename):
+        for mock in self._open_mocks.values():
+            mock.return_value.write.side_effect = OSError
+
+    def assert_open_called_with_args(self, path, filename):
         """
         Asserts that file open was called
         with given arguments 
         """
 
-        self.open_mock.assert_called_with(filename)
+        self._open_mocks[path].assert_called_with(filename)
 
-    def assert_write_called_with_args(self, out):
+    def assert_write_called_with_args(self, path, out):
         """
         Asserts that file write was called
         with given arguments 
         """
 
-        self.open_mock.return_value.write.assert_called_with(out)
+        self._open_mocks[path].return_value.write.assert_called_with(out)
 
-    def assert_print_called_with_args(self, out):
+    def assert_print_called_with_args(self, path, out):
         """
         Asserts that print was called
         with given arguments
         """
 
-        self.print_mock.assert_called_with(out, end='')
+        self._print_mocks[path].assert_called_with(out, end='')
 
     def reset(self):
-        self.open_mock.side_effect = None
-        self.open_mock.return_value.write.side_effect = None
+        for mock in self._open_mocks.values():
+            mock.side_effect = None
+            mock.return_value.write.side_effect = None

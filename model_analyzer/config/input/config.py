@@ -370,7 +370,6 @@ class AnalyzerConfig:
                         field_type=ConfigPrimitive(int),
                         default_value=0,
                         description='The number of top models to save.'))
-
         self._add_config(
             ConfigField(
                 'filename_model_inference',
@@ -399,7 +398,7 @@ class AnalyzerConfig:
                 'max_retries',
                 flags=['-r', '--max-retries'],
                 field_type=ConfigPrimitive(int),
-                default_value=100,
+                default_value=1000,
                 description=
                 'Specifies the max number of retries for any retry attempt'))
         self._add_config(

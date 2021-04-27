@@ -110,7 +110,7 @@ class Plot:
             if self._monotonic:
                 filtered_x, filtered_y = [x_data[0]], [y_data[0]]
                 for i in range(1, len(x_data)):
-                    if y_data[i] > y_data[i - 1]:
+                    if y_data[i] > filtered_y[-1]:
                         filtered_x.append(x_data[i])
                         filtered_y.append(y_data[i])
                 x_data, y_data = filtered_x, filtered_y

@@ -31,7 +31,7 @@ ENV DCGM_VERSION=2.0.13
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y python3-dev python3-pdfkit
+    apt-get install -y python3-dev wkhtmltopdf
 
 RUN mkdir -p /opt/triton-model-analyzer
 

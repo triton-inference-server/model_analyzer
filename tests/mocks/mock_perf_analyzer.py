@@ -20,7 +20,6 @@ class MockCalledProcessError(Exception):
     """
     A mock of subprocess.CalledProcessError
     """
-
     def __init__(self):
         self.returncode = 1
         self.cmd = ["dummy command"]
@@ -33,13 +32,13 @@ class MockPerfAnalyzerMethods(MockBase):
     model_analyzer/perf_analyzer/perf_analyzer.py
     Provides functions to check operation.
     """
-
     def __init__(self):
         self.mock_popen = MagicMock()
         self.mock_popen.pid = 10
         self.mock_popen.returncode = 0
         self.patcher_popen_stdout_read = patch(
-            'model_analyzer.perf_analyzer.perf_analyzer.Popen', return_value=self.mock_popen)
+            'model_analyzer.perf_analyzer.perf_analyzer.Popen',
+            Mock(return_value=self.mock_popen))
         self.patcher_stdout = patch(
             'model_analyzer.perf_analyzer.perf_analyzer.STDOUT', MagicMock())
         self.patcher_pipe = patch(

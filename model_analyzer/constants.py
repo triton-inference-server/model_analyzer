@@ -27,3 +27,6 @@ THROUGHPUT_GAIN = 0.05
 
 # Reports
 TOP_MODELS_REPORT_KEY = "Best Configs Across All Models"
+
+# State Management
+MAX_NUMBER_OF_INTERRUPTS = 3

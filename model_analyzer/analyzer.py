@@ -29,27 +29,34 @@ class Analyzer:
     model_analyzer. Configured with metrics to monitor, exposes profiling and
     result writing methods.
     """
-    def __init__(self, config, client, metric_tags, server):
+    def __init__(self, config, metric_tags, client, server, state_manager):
         """
         Parameters
         ----------
         config : Config
             Model Analyzer config
-        client : TritonClient
-            Instance used to load/unload models
         metric_tags : List of str
             The list of metric tags corresponding to the metrics to monitor.
-        server : TritonServer handle
+        client : TritonClient
+            Instance used to load/unload models
+        server : TritonServer
+            Server handle
+        state_manager: AnalyzerStateManager
+            The object that maintains Model Analyzer State
         """
 
         self._config = config
         self._client = client
         self._server = server
+        self._state_manager = state_manager
+        state_manager.load_checkpoint()
 
+        # Create managers
         self._statistics = AnalyzerStatistics(config=config)
 
         self._result_manager = ResultManager(config=config,
-                                             statistics=self._statistics)
+                                             statistics=self._statistics,
+                                             state_manager=state_manager)
 
         self._metrics_manager = MetricsManager(
             config=config,
@@ -63,12 +70,13 @@ class Analyzer:
             server=server,
             result_manager=self._result_manager,
             metrics_manager=self._metrics_manager,
-        )
+            state_manager=self._state_manager)
 
         self._plot_manager = PlotManager(config=config)
 
         self._report_manager = ReportManager(config=config,
                                              statistics=self._statistics)
+        self._model_index = 0
 
     def run(self):
         """
@@ -91,17 +99,23 @@ class Analyzer:
         self._server.stop()
 
         # Phase 2: Profile each model
-        for model in config.model_names:
-            self._result_manager.set_constraints_and_objectives(
-                config_model=model)
+        while True:
+            if self._model_index >= len(
+                    self._config.model_names) or self._state_manager.exiting():
+                break
+            try:
+                self._model_manager.run_model(
+                    model=self._config.model_names[self._model_index])
+            finally:
+                # Save state
+                self._state_manager.save_checkpoint()
+            self._model_index += 1
 
-            self._model_manager.run_model(model=model)
-
-        # Process results
+        # Phase 3: Process results, and dump to tables
+        self._result_manager.collect_and_sort_results(
+            num_models=self._model_index)
         self._process_top_results()
-
-        # Dump results to tables
-        self._result_manager.compile_results()
+        self._result_manager.tabulate_results()
 
     def write_and_export_results(self):
         """
@@ -114,7 +128,7 @@ class Analyzer:
             self._plot_manager.compile_and_export_plots()
 
             # Export individual model summaries
-            for model in self._config.model_names:
+            for model in self._config.model_names[:self._model_index]:
                 self._report_manager.export_summary(
                     report_key=model.model_name(),
                     num_configs=self._config.num_configs_per_model)
@@ -133,10 +147,8 @@ class Analyzer:
         """
 
         if self._config.summarize:
-            self._result_manager.update_statistics()
-
             # Create individual model reports
-            for model in self._config.model_names:
+            for model in self._config.model_names[:self._model_index]:
                 self._plot_manager.init_plots(plots_key=model.model_name())
                 for result in self._result_manager.top_n_results(
                         model_name=model.model_name(),

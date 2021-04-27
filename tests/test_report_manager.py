@@ -50,8 +50,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
             }
         }
         mock_paths = [
-            'model_analyzer.reports.report_manager.os',
-            'model_analyzer.config.input.config.os'
+            'model_analyzer.reports.report_manager',
+            'model_analyzer.config.input.config'
         ]
         self.os_mock = MockOSMethods(mock_paths=mock_paths)
         self.os_mock.start()
