@@ -167,10 +167,9 @@ class ModelManager:
                                           search_model_config)
 
         next_model = model
-        while True:
-            if self._state_manager.exiting():
-                return
+        while not self._state_manager.exiting():
 
+            # Get next model sweep
             next_model, auto_model_config_sweep = self._run_search.get_model_sweep(
                 next_model)
 
