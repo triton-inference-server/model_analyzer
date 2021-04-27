@@ -22,13 +22,14 @@ class RunSearch:
     """
     A class responsible for searching the config space.
     """
-    def __init__(self, config):
+    def __init__(self, config, cpu_only=False):
         self._max_concurrency = config.run_config_search_max_concurrency
         self._max_instance_count = config.run_config_search_max_instance_count
         self._max_preferred_batch_size = config.run_config_search_max_preferred_batch_size
         self._model_config_parameters = {'instance_count': 1}
         self._measurements = []
         self._last_batch_length = None
+        self._cpu_only = cpu_only
 
         # Run search operating mode
         self._sweep_mode_function = None
@@ -50,12 +51,18 @@ class RunSearch:
                 }
 
         if 'instance_count' in model_config:
-            new_config['instance_group'] = [{
-                'count':
-                model_config['instance_count'],
-                'kind':
-                'KIND_GPU'
-            }]
+            if not self._cpu_only:
+                new_config['instance_group'] = [{
+                    'count':
+                    model_config['instance_count'],
+                    'kind':
+                    'KIND_GPU'
+                }]
+            else:
+                new_config['instance_group'] = [{
+                    'count': model_config['instance_count'],
+                    'kind': 'KIND_CPU'
+                }]
         return new_config
 
     def add_measurements(self, measurements):

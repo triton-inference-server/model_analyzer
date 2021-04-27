@@ -145,3 +145,32 @@ class GPUDeviceFactory:
             dcgm_agent.dcgmShutdown()
             raise TritonModelAnalyzerException(
                 f'GPU UUID {uuid} was not found.')
+
+    @staticmethod
+    def get_analyzer_gpus(requested_gpus):
+        """
+        Creates a list of GPU UUIDs corresponding to the GPUs visible to
+        model_analyzer.
+
+        Parameters
+        ----------
+        requested_gpus : list
+        """
+
+        model_analyzer_gpus = []
+        if numba.cuda.is_available():
+            if len(requested_gpus) == 1 and requested_gpus[0] == 'all':
+                devices = numba.cuda.list_devices()
+                for device in devices:
+                    gpu_device = GPUDeviceFactory.create_device_by_cuda_index(
+                        device.id)
+                    model_analyzer_gpus.append(
+                        str(gpu_device.device_uuid(), encoding='ascii'))
+            else:
+                devices = requested_gpus
+                for device in devices:
+                    gpu_device = GPUDeviceFactory.create_device_by_uuid(device)
+                    model_analyzer_gpus.append(
+                        str(gpu_device.device_uuid(), encoding='ascii'))
+
+        return model_analyzer_gpus

@@ -42,7 +42,7 @@ class ResultManager:
         'concurrency': 'Concurrency',
         'model_config_path': 'Model Config Path',
         'instance_group': 'Instance Group',
-        'dynamic_batch_sizes': 'Dynamic Batcher Sizes',
+        'dynamic_batch_sizes': 'Preferred Batch Sizes',
         'satisfies_constraints': 'Satisfies Constraints',
         'gpu_id': 'GPU ID'
     }
@@ -65,6 +65,8 @@ class ResultManager:
         """
 
         self._config = config
+        self._is_cpu_only = config.cpu_only
+        self._result_tables = {}
         self._statistics = statistics
         self._state_manager = state_manager
 
@@ -112,24 +114,6 @@ class ResultManager:
         for metric in non_gpu_specific_metrics:
             self._non_gpu_metrics_to_headers[metric.tag] = metric.header()
 
-        # Server only
-        server_output_headers = []
-        server_output_fields = self._config.server_output_fields
-        for server_output_field in server_output_fields:
-            if server_output_field in self.headers:
-                server_output_headers.append(self.headers[server_output_field])
-            elif server_output_field in self._gpu_metrics_to_headers:
-                server_output_headers.append(
-                    self._gpu_metrics_to_headers[server_output_field])
-            else:
-                raise TritonModelAnalyzerException(
-                    f'Server output field "{server_output_field}", does not exist'
-                )
-        self._add_result_table(table_key=self.server_only_table_key,
-                               title='Server Only',
-                               headers=server_output_headers)
-        self._server_output_fields = server_output_fields
-
         # Inference only
         inference_output_headers = []
         inference_output_fields = self._config.inference_output_fields
@@ -152,23 +136,44 @@ class ResultManager:
             headers=inference_output_headers,
         )
 
-        gpu_output_headers = []
-        gpu_output_fields = self._config.gpu_output_fields
-        for gpu_output_field in gpu_output_fields:
-            if gpu_output_field in self.headers:
-                gpu_output_headers.append(self.headers[gpu_output_field])
-            elif gpu_output_field in self._gpu_metrics_to_headers:
-                gpu_output_headers.append(
-                    self._gpu_metrics_to_headers[gpu_output_field])
-            else:
-                raise TritonModelAnalyzerException(
-                    f'GPU output field "{gpu_output_field}", does not exist')
-        self._gpu_output_fields = gpu_output_fields
+        if not self._is_cpu_only:
+            gpu_output_headers = []
+            gpu_output_fields = self._config.gpu_output_fields
+            for gpu_output_field in gpu_output_fields:
+                if gpu_output_field in self.headers:
+                    gpu_output_headers.append(self.headers[gpu_output_field])
+                elif gpu_output_field in self._gpu_metrics_to_headers:
+                    gpu_output_headers.append(
+                        self._gpu_metrics_to_headers[gpu_output_field])
+                else:
+                    raise TritonModelAnalyzerException(
+                        f'GPU output field "{gpu_output_field}", does not exist')
+            self._gpu_output_fields = gpu_output_fields
 
-        # Model GPU Metrics
-        self._add_result_table(table_key=self.model_gpu_table_key,
-                               title='Models (GPU Metrics)',
-                               headers=gpu_output_headers)
+            # Model GPU Metrics
+            self._add_result_table(table_key=self.model_gpu_table_key,
+                                   title='Models (GPU Metrics)',
+                                   headers=gpu_output_headers)
+
+            # Server only
+            server_output_headers = []
+            server_output_fields = self._config.server_output_fields
+            for server_output_field in server_output_fields:
+                if server_output_field in self.headers:
+                    server_output_headers.append(self.headers[server_output_field])
+                elif server_output_field in self._gpu_metrics_to_headers:
+                    server_output_headers.append(
+                        self._gpu_metrics_to_headers[server_output_field])
+                else:
+                    raise TritonModelAnalyzerException(
+                        f'Server output field "{server_output_field}", does not exist'
+                    )
+            self._add_result_table(table_key=self.server_only_table_key,
+                                   title='Server Only',
+                                   headers=server_output_headers)
+            self._server_output_fields = server_output_fields
+        else:
+            logging.info('No GPU detected, will only export inference results.')
 
     def _find_index_for_field(self, fields, field_name):
         try:
@@ -466,16 +471,16 @@ class ResultManager:
 
         self._write_results(writer=FileWriter(), column_separator=' ')
         if self._config.export:
-
-            # Configure server only results path and export results
-            server_metrics_path = os.path.join(
-                self._results_export_directory,
-                self._config.filename_server_only)
-            logging.info(
-                f"Exporting server only metrics to {server_metrics_path}...")
-            self._export_server_only_csv(
-                writer=FileWriter(filename=server_metrics_path),
-                column_separator=',')
+            if not self._is_cpu_only:
+                # Configure server only results path and export results
+                server_metrics_path = os.path.join(
+                    self._results_export_directory,
+                    self._config.filename_server_only)
+                logging.info(
+                    f"Exporting server only metrics to {server_metrics_path}...")
+                self._export_server_only_csv(
+                    writer=FileWriter(filename=server_metrics_path),
+                    column_separator=',')
 
             # Configure model metrics results path and export results
             metrics_inference_path = os.path.join(
@@ -534,15 +539,15 @@ class ResultManager:
         TritonModelAnalyzerException
         """
 
-        gpu_table = self._result_tables[self.model_gpu_table_key]
+        if not self._is_cpu_only:
+            gpu_table = self._result_tables[self.model_gpu_table_key]
+            self._write_result(table=gpu_table,
+                               writer=gpu_metrics_writer,
+                               column_separator=column_separator,
+                               ignore_widths=True,
+                               include_title=False)
+
         non_gpu_table = self._result_tables[self.model_inference_table_key]
-
-        self._write_result(table=gpu_table,
-                           writer=gpu_metrics_writer,
-                           column_separator=column_separator,
-                           ignore_widths=True,
-                           include_title=False)
-
         self._write_result(table=non_gpu_table,
                            writer=inference_writer,
                            column_separator=column_separator,

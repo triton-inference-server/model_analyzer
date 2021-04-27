@@ -63,4 +63,4 @@ class MockMatplotlibMethods(MockBase):
         """
 
         self.pyplot_mock.subplots.return_value[0].savefig.assert_called_with(
-            filepath)
+            filepath, dpi=100, bbox_inches='tight')

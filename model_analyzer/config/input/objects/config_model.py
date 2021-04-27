@@ -41,7 +41,7 @@ class ConfigModel:
         model_config_parameters : None or dict
             Model config parameters that is used for this model
         perf_analyzer_flags : dict
-            The custom perf analyzer configuration 
+            The custom perf analyzer configuration
             for this model
         triton_server_flags : dict
             The configuration for the triton server instance launched

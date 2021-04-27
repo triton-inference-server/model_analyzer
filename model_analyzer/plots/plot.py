@@ -28,6 +28,7 @@ class Plot:
     model configs, but only holds one
     type of plot
     """
+
     def __init__(self, name, title, x_axis, y_axis, monotonic=False):
         """
         Parameters
@@ -158,4 +159,4 @@ class Plot:
             this plot should be saved to
         """
 
-        self._fig.savefig(os.path.join(filepath, self._name))
+        self._fig.savefig(os.path.join(filepath, self._name), dpi=100, bbox_inches='tight')

@@ -42,6 +42,7 @@ class ReportManager:
         """
 
         self._config = config
+        self._is_cpu_only = config.cpu_only
         self._statistics = statistics
 
         self._data = defaultdict(list)
@@ -127,7 +128,9 @@ class ReportManager:
         total_configurations = self._statistics.total_configurations(
             report_key)
         num_best_configs = min(num_configs, total_configurations)
-        gpu_names, max_memories = self._get_gpu_stats(report_key=report_key)
+
+        if cuda.is_available():
+            gpu_names, max_memories = self._get_gpu_stats(report_key=report_key)
         static_batch_sizes = ','.join(
             sorted(
                 set([
@@ -142,16 +145,22 @@ class ReportManager:
             elif report_key == TOP_MODELS_REPORT_KEY:
                 constraint_str = self._constraint_strs['default']
 
-        table, summary_sentence = self._build_summary_table(
-            report_key=report_key,
-            num_measurements=total_measurements,
-            gpu_name=gpu_names)
+        if cuda.is_available():
+            table, summary_sentence = self._build_summary_table(
+                report_key=report_key,
+                num_measurements=total_measurements,
+                gpu_name=gpu_names)
+        else:
+            table, summary_sentence = self._build_summary_cpu_table(
+                report_key=report_key,
+                num_measurements=total_measurements)
 
         # Add summary sections
         summary.add_title(title="Result Summary")
         summary.add_subheading(f"Model: {report_key}")
-        summary.add_paragraph(f"GPUS: {gpu_names}")
-        summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
+        if cuda.is_available():
+            summary.add_paragraph(f"GPU(s): {gpu_names}")
+            summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
         summary.add_paragraph(
             f"Client Request Batch Size: {static_batch_sizes}")
         summary.add_paragraph(
@@ -160,21 +169,26 @@ class ReportManager:
         summary.add_paragraph(summary_sentence)
         summary.add_paragraph(
             f"Curves corresponding to the {num_best_configs} best model "
-            f"configurations out of a total of {total_configurations} are "
+            f"configuration(s) out of a total of {total_configurations} are "
             "shown in the plots.")
         throughput_latency_plot = os.path.join(self._config.export_path,
                                                'plots', report_key,
                                                'throughput_v_latency.png')
-        caption1 = f"Throughput vs. Latency curves for {num_best_configs} best configurations."
-        memory_latency_plot = os.path.join(self._config.export_path, 'plots',
-                                           report_key, 'gpu_mem_v_latency.png')
-        caption2 = f"GPU Memory vs. Latency curves for {num_best_configs} best configurations."
-        summary.add_images([throughput_latency_plot, memory_latency_plot],
-                           [caption1, caption2])
-        summary.add_paragraph(
-            "The maximum GPU memory consumption for each of the above points is"
-            f" shown in the second plot. The GPUs {gpu_names} have"
-            f" a total available memory of {max_memories} respectively.")
+        caption_throughput_latency = f"Throughput vs. Latency curves for {num_best_configs} best configurations."
+
+        if not self._is_cpu_only:
+            summary.add_paragraph(
+                "The maximum GPU memory consumption for each of the above points is"
+                f" shown in the second plot. The GPUs {gpu_names} have"
+                f" a total available memory of {max_memories} respectively.")
+            memory_latency_plot = os.path.join(self._config.export_path, 'plots',
+                                               report_key, 'gpu_mem_v_latency.png')
+            caption_memory_latency = f"GPU Memory vs. Latency curves for {num_best_configs} best configurations."
+            summary.add_images([throughput_latency_plot, memory_latency_plot],
+                               [caption_throughput_latency, caption_memory_latency])
+        else:
+            summary.add_images([throughput_latency_plot],
+                               [caption_throughput_latency])
 
         summary.add_paragraph(
             "The following table summarizes each configuration at the measurement"
@@ -190,7 +204,7 @@ class ReportManager:
         """
 
         summary_table = ResultTable(headers=[
-            'Model Config Name', 'Max Dynamic Batch Size', 'Instance Count',
+            'Model Config Name', 'Preferred Batch Size', 'Instance Count',
             'p99 Latency (ms)', 'Throughput (infer/sec)',
             'Max GPU Memory Usage (MB)', 'Average GPU Utilization (%)'
         ],
@@ -228,6 +242,51 @@ class ReportManager:
                 measurement.get_metric('perf_throughput').value(),
                 measurement.get_metric('gpu_used_memory').value(),
                 round(measurement.get_metric('gpu_utilization').value(), 1)
+            ]
+            summary_table.insert_row_by_index(row)
+        return summary_table, summary_sentence
+
+    def _build_summary_cpu_table(self, report_key, num_measurements):
+        """
+        Creates a result table corresponding
+        to the best measurements for a particular
+        model in the CPU only mode.
+        """
+
+        summary_table = ResultTable(headers=[
+            'Model Config Name', 'Dynamic Batcher\'s Preferred Batch Size', 'Instance Count',
+            'p99 Latency (ms)', 'Throughput (infer/sec)'
+        ], title="Report Table")
+
+        sorted_measurements = sorted(self._data[report_key],
+                                     key=lambda x: x[1])
+
+        # Construct summary sentence using best config
+        best_config = sorted_measurements[0][0]
+        dynamic_batching_str = best_config.dynamic_batching_string()
+        dynamic_batch_phrase = "dynamic batching disabled" if \
+            dynamic_batching_str == "Disabled" else \
+            f"max dynamic batch size of {dynamic_batching_str}"
+        model_config_dict = best_config.get_config()
+        platform = model_config_dict['backend'] if \
+            'backend' in model_config_dict \
+            else model_config_dict['platform']
+        summary_sentence = (
+            f"In {num_measurements} measurement(s), "
+            f"{best_config.instance_group_string()} model instance(s) "
+            f"with {dynamic_batch_phrase} "
+            f"on platform {platform} delivers "
+            f"maximum throughput."
+        )
+
+        # Construct table
+        for model_config, measurement in sorted_measurements:
+            instance_group_str = model_config.instance_group_string()
+            row = [
+                model_config.get_field('name'), dynamic_batching_str,
+                instance_group_str,
+                measurement.get_metric('perf_latency').value(),
+                measurement.get_metric('perf_throughput').value()
             ]
             summary_table.insert_row_by_index(row)
         return summary_table, summary_sentence

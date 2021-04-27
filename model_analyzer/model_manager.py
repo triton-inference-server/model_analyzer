@@ -14,6 +14,7 @@
 
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.result.measurement import Measurement
+from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.config.run.run_config_generator \
     import RunConfigGenerator
@@ -55,13 +56,15 @@ class ModelManager:
         self._metrics_manager = metrics_manager
         self._result_manager = result_manager
         self._state_manager = state_manager
-        self._run_search = RunSearch(config=config)
+        self._is_cpu_only = config.cpu_only
+        self._run_search = RunSearch(config=config, cpu_only=self._is_cpu_only)
         self._last_config_variant = None
         self._run_config_generator = RunConfigGenerator(config=config,
                                                         client=self._client)
 
         # Generate the output model repository path folder.
         self._output_model_repo_path = config.output_model_repository_path
+        print(config.output_model_repository_path)
         try:
             os.mkdir(self._output_model_repo_path)
         except OSError:
@@ -224,13 +227,9 @@ class ModelManager:
             perf_config = run_config.perf_config()
 
             logging.info(f"Profiling model {perf_config['model-name']}...")
-            gpu_data, non_gpu_data = self._metrics_manager.profile_model(
-                perf_config=perf_config, perf_output_writer=perf_output_writer)
-            if gpu_data is not None and non_gpu_data is not None:
-                measurement = Measurement(gpu_data=gpu_data,
-                                          non_gpu_data=non_gpu_data,
-                                          perf_config=perf_config)
-                self._result_manager.add_measurement(run_config, measurement)
+            measurement = self._metrics_manager.profile_model(
+                run_config=run_config, perf_output_writer=perf_output_writer)
+            if measurement is not None:
                 measurements.append(measurement)
 
             self._server.stop()

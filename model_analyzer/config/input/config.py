@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from .config_field import ConfigField
 from .config_primitive import ConfigPrimitive
 from .config_list_string import ConfigListString
@@ -41,6 +42,7 @@ from google.protobuf.descriptor import FieldDescriptor
 import yaml
 import logging
 import os
+import numba.cuda
 
 
 class AnalyzerConfig:
@@ -341,7 +343,13 @@ class AnalyzerConfig:
                         flags=['--export'],
                         field_type=ConfigPrimitive(bool),
                         default_value=True,
-                        description="Enables exporting metrics to a file"))
+                        description="Enables exporting metrics to a file."))
+        self._add_config(
+            ConfigField('cpu_only',
+                        flags=['--cpu-only'],
+                        field_type=ConfigPrimitive(bool),
+                        default_value=False,
+                        description="Only use CPU during the profiling."))
         self._add_config(
             ConfigField(
                 'export_path',
@@ -591,7 +599,42 @@ class AnalyzerConfig:
                             'model_name', 'gpu_id', 'gpu_used_memory',
                             'gpu_utilization', 'gpu_power_usage'
                         ]))
-        self._add_plot_config()
+        plots_scheme = ConfigObject(schema={
+            '*':
+            ConfigObject(
+                schema={
+                    'title': ConfigPrimitive(type_=str),
+                    'x_axis': ConfigPrimitive(type_=str),
+                    'y_axis': ConfigPrimitive(type_=str),
+                    'monotonic': ConfigPrimitive(type_=bool)
+                })
+        },
+                                    output_mapper=ConfigPlot.from_object)
+        self._add_config(
+            ConfigField(
+                'plots',
+                field_type=ConfigUnion([
+                    plots_scheme,
+                    ConfigListGeneric(type_=plots_scheme,
+                                      output_mapper=ConfigPlot.from_list)
+                ]),
+                default_value={
+                    'throughput_v_latency': {
+                        'title': 'Throughput vs. Latency',
+                        'x_axis': 'perf_latency',
+                        'y_axis': 'perf_throughput',
+                        'monotonic': True
+                    },
+                    'gpu_mem_v_latency': {
+                        'title': 'GPU Memory vs. Latency',
+                        'x_axis': 'perf_latency',
+                        'y_axis': 'gpu_used_memory',
+                        'monotonic': False
+                    }
+                },
+                description=
+                'Model analyzer uses the information in this section to construct plots of the results.'
+            ))
 
     def _preprocess_and_verify_arguments(self):
         """
@@ -653,6 +696,27 @@ class AnalyzerConfig:
                             format="%(asctime)s.%(msecs)d %(levelname)-4s"
                             "[%(filename)s:%(lineno)d] %(message)s",
                             datefmt="%Y-%m-%d %H:%M:%S")
+
+    def _prefill_cpu_only(self):
+        self._fields['inference_output_fields'].set_default_value([
+            'model_name', 'batch_size', 'concurrency', 'model_config_path',
+            'instance_group', 'dynamic_batch_sizes', 'satisfies_constraints'
+        ])
+
+        self._fields['gpu_output_fields'].set_default_value([
+            'model_name', 'batch_size', 'concurrency', 'model_config_path',
+            'instance_group', 'dynamic_batch_sizes', 'satisfies_constraints'
+        ])
+
+        self._fields['plots'].set_default_value({
+            'throughput_v_latency': {
+                'title': 'Throughput vs. Latency',
+                'x_axis': 'perf_latency',
+                'y_axis': 'perf_throughput',
+                'monotonic': True
+            }
+        })
+        self._fields['cpu_only'].set_default_value(True)
 
     def _autofill_values(self):
         """
@@ -718,48 +782,6 @@ class AnalyzerConfig:
             new_model_names[model.model_name()] = new_model
         self._fields['model_names'].set_value(new_model_names)
 
-    def _add_plot_config(self):
-        """
-        Sets up the plots that will be included in the summary
-        """
-
-        plots_scheme = ConfigObject(schema={
-            '*':
-            ConfigObject(
-                schema={
-                    'title': ConfigPrimitive(type_=str),
-                    'x_axis': ConfigPrimitive(type_=str),
-                    'y_axis': ConfigPrimitive(type_=str),
-                    'monotonic': ConfigPrimitive(type_=bool)
-                })
-        },
-                                    output_mapper=ConfigPlot.from_object)
-        self._add_config(
-            ConfigField(
-                'plots',
-                field_type=ConfigUnion([
-                    plots_scheme,
-                    ConfigListGeneric(type_=plots_scheme,
-                                      output_mapper=ConfigPlot.from_list)
-                ]),
-                default_value={
-                    'throughput_v_latency': {
-                        'title': 'Throughput vs. Latency',
-                        'x_axis': 'perf_latency',
-                        'y_axis': 'perf_throughput',
-                        'monotonic': True
-                    },
-                    'gpu_mem_v_latency': {
-                        'title': 'GPU Memory vs. Latency',
-                        'x_axis': 'perf_latency',
-                        'y_axis': 'gpu_used_memory',
-                        'monotonic': False
-                    }
-                },
-                description=
-                'Model analyzer uses the information in this section to construct plots of the results.'
-            ))
-
     def set_config_values(self, args):
         """
         Set the config values. This function sets all the values for the
@@ -777,6 +799,9 @@ class AnalyzerConfig:
             If the required fields are not specified, it will raise
             this exception
         """
+
+        if not numba.cuda.is_available():
+            self._prefill_cpu_only()
 
         # Config file has been specified
         if 'config_file' in args:

@@ -18,6 +18,7 @@ from .record import RecordType
 from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
+from model_analyzer.result.measurement import Measurement
 
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
@@ -28,7 +29,7 @@ class MetricsManager:
     This class handles the profiling
     categorization of metrics
     """
-    def __init__(self, config, metric_tags, server, result_manager):
+    def __init__(self, config, metric_tags, server, result_manager, gpus):
         """
         Parameters
         ----------
@@ -41,13 +42,16 @@ class MetricsManager:
         result_manager : ResultManager
             instance that manages the result tables and 
             adding results
+        gpus : list
+            A list of GPUDevice
         """
 
         self._server = server
-        self._gpus = config.gpus
+        self._gpus = gpus
         self._monitoring_interval = config.monitoring_interval
         self._perf_analyzer_path = config.perf_analyzer_path
         self._config = config
+        self._is_cpu_only = config.cpu_only
         self._result_manager = result_manager
 
         self._dcgm_metrics = []
@@ -88,28 +92,30 @@ class MetricsManager:
         """
 
         self._start_monitors()
-        server_gpu_metrics = self._get_gpu_inference_metrics()
-        self._result_manager.add_server_data(data=server_gpu_metrics)
+        if not self._is_cpu_only:
+            server_gpu_metrics = self._get_gpu_inference_metrics()
+            self._result_manager.add_server_data(data=server_gpu_metrics)
 
-    def profile_model(self, perf_config, perf_output_writer=None):
+    def profile_model(self, run_config, perf_output_writer=None):
         """
         Runs monitors while running perf_analyzer with a specific set of
         arguments. This will profile model inferencing.
 
         Parameters
         ----------
-        perf_config : dict
-            The keys are arguments to perf_analyzer The values are their
-            values
+        run_config : RunConfig
+            run_config object corresponding to the model being profiled.
         perf_output_writer : OutputWriter
             Writer that writes the output from perf_analyzer to the output
             stream/file. If None, the output is not written
-        
+
         Returns
         -------
         (dict of lists, list)
             The gpu specific and non gpu metrics
         """
+
+        perf_config = run_config.perf_config()
 
         # Start monitors and run perf_analyzer
         self._start_monitors()
@@ -120,7 +126,7 @@ class MetricsManager:
         if perf_analyzer_metrics_or_status == 1:
             self._stop_monitors()
             self._destroy_monitors()
-            return None, None
+            return None
         else:
             perf_analyzer_metrics = perf_analyzer_metrics_or_status
 
@@ -130,19 +136,28 @@ class MetricsManager:
         model_non_gpu_metrics = list(perf_analyzer_metrics.values()) + list(
             model_cpu_metrics.values())
 
-        return model_gpu_metrics, model_non_gpu_metrics
+        measurement = None
+        if model_gpu_metrics is not None and model_non_gpu_metrics is not None:
+            measurement = Measurement(gpu_data=model_gpu_metrics,
+                                      non_gpu_data=model_non_gpu_metrics,
+                                      perf_config=perf_config)
+            self._result_manager.add_measurement(run_config, measurement)
+        return measurement
 
     def _start_monitors(self):
         """
         Start any metrics monitors
         """
 
-        self._dcgm_monitor = DCGMMonitor(self._gpus, self._monitoring_interval,
-                                         self._dcgm_metrics)
+        # Start DCGM Monitor only if there are GPUs available
+        if not self._is_cpu_only:
+            self._dcgm_monitor = DCGMMonitor(self._gpus,
+                                             self._monitoring_interval,
+                                             self._dcgm_metrics)
+            self._dcgm_monitor.start_recording_metrics()
         self._cpu_monitor = CPUMonitor(self._server, self._monitoring_interval,
                                        self._cpu_metrics)
 
-        self._dcgm_monitor.start_recording_metrics()
         self._cpu_monitor.start_recording_metrics()
 
     def _stop_monitors(self):
@@ -150,7 +165,9 @@ class MetricsManager:
         Stop any metrics monitors
         """
 
-        self._dcgm_monitor.stop_recording_metrics()
+        # Start DCGM Monitor only if there are GPUs available
+        if not self._is_cpu_only:
+            self._dcgm_monitor.stop_recording_metrics()
         self._cpu_monitor.stop_recording_metrics()
 
     def _destroy_monitors(self):
@@ -158,7 +175,8 @@ class MetricsManager:
         Destroy the monitors created by start
         """
 
-        self._dcgm_monitor.destroy()
+        if not self._is_cpu_only:
+            self._dcgm_monitor.destroy()
         self._cpu_monitor.destroy()
 
     def _get_perf_analyzer_metrics(self, perf_config, perf_output_writer=None):
@@ -214,24 +232,28 @@ class MetricsManager:
             in the order specified in self._dcgm_metrics
         """
 
-        # Stop and destroy DCGM monitor
-        dcgm_records = self._dcgm_monitor.stop_recording_metrics()
-        self._destroy_monitors()
+        if not self._is_cpu_only:
+            # Stop and destroy DCGM monitor
+            dcgm_records = self._dcgm_monitor.stop_recording_metrics()
 
-        # Insert all records into aggregator and get aggregated DCGM records
-        dcgm_record_aggregator = RecordAggregator()
-        dcgm_record_aggregator.insert_all(dcgm_records)
+            # Insert all records into aggregator and get aggregated DCGM records
+            dcgm_record_aggregator = RecordAggregator()
+            dcgm_record_aggregator.insert_all(dcgm_records)
 
-        records_groupby_gpu = {}
-        records_groupby_gpu = dcgm_record_aggregator.groupby(
-            self._dcgm_metrics, lambda record: record.device().device_id())
+            records_groupby_gpu = {}
+            records_groupby_gpu = dcgm_record_aggregator.groupby(
+                self._dcgm_metrics, lambda record: record.device().device_id())
 
-        gpu_metrics = defaultdict(list)
-        for _, metric in records_groupby_gpu.items():
-            for gpu_id, metric_value in metric.items():
-                gpu_metrics[gpu_id].append(metric_value)
+            gpu_metrics = defaultdict(list)
+            for _, metric in records_groupby_gpu.items():
+                for gpu_id, metric_value in metric.items():
+                    gpu_metrics[gpu_id].append(metric_value)
 
-        return gpu_metrics
+            self._destroy_monitors()
+            return gpu_metrics
+        else:
+            self._destroy_monitors()
+            return {}
 
     def _get_cpu_inference_metrics(self):
         """
@@ -252,7 +274,7 @@ class MetricsManager:
         Parameters
         ----------
         tags : list of str
-            Human readable names for the 
+            Human readable names for the
             metrics to monitor. They correspond
             to actual record types.
 

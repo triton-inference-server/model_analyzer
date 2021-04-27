@@ -26,7 +26,6 @@ class TestPDFReportMethods(trc.TestResultCollector):
     """
     Tests the methods of the PDFReport class
     """
-
     def setUp(self):
         self.maxDiff = None
         self.report = PDFReport()
@@ -56,11 +55,10 @@ class TestPDFReportMethods(trc.TestResultCollector):
         img_content = base64.b64encode(bytes(
             '>:('.encode('ascii'))).decode('ascii')
         expected_report_body = (
-            "<html><head><style></style></head><body><div><div class=\"image\""
-            " style=\"float:left;width:50%\">"
-            f"<img src=\"data:image/png;base64,{img_content}\" style=\"width:100%\">"
-            "<center><div style=\"font-weight:bold;font-size:12;padding-bottom:20px\">test_caption</div></center>"
-            "</div></div></body></html>")
+            f'<html><head><style></style></head><body><div><center><div class="image" style="width:50%"><img src="data:image/png;base64,{img_content}"'
+            ' style="width:100%"><div style="font-weight:bold;font-size:12;padding-bottom:20px">'
+            'test_caption</div></center></div></div></body></html>'
+        )
         self.assertEqual(self.report.document(), expected_report_body)
 
     def test_add_paragraph(self):

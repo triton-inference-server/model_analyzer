@@ -100,7 +100,7 @@ class ConfigField:
         """
 
         return self._field_type
-
+    
     def cli_type(self):
         """
         Get the equivalent CLI type of the field.
@@ -158,9 +158,20 @@ class ConfigField:
 
         if config_status.status() == CONFIG_PARSER_FAILURE:
             raise TritonModelAnalyzerException(
-                f'Can\'t set the value for field "{self._name}". '
-                'The error below occured when parsing the config:\n'
-                f'{config_status.message()}')
+                f'Failed to set the value for field "{self._name}". ')
+
+    def set_default_value(self, default_value):
+        """
+        Set the default value for a config field.
+
+        Parameters
+        ----------
+        default_value : object
+            New default value
+        """
+
+        self._default_value = default_value
+
 
     def value(self):
         """

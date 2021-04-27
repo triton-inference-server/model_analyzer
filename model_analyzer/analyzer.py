@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.model_manager import ModelManager
 from .analyzer_statistics import AnalyzerStatistics
 from .result.result_manager import ResultManager
@@ -62,7 +63,8 @@ class Analyzer:
             config=config,
             metric_tags=metric_tags,
             server=server,
-            result_manager=self._result_manager)
+            result_manager=self._result_manager,
+            gpus=GPUDeviceFactory.get_analyzer_gpus(config.gpus))
 
         self._model_manager = ModelManager(
             config=config,
