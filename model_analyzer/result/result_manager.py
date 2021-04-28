@@ -114,6 +114,26 @@ class ResultManager:
         for metric in non_gpu_specific_metrics:
             self._non_gpu_metrics_to_headers[metric.tag] = metric.header()
 
+    def _create_server_table(self):
+        # Server only
+        server_output_headers = []
+        server_output_fields = self._config.server_output_fields
+        for server_output_field in server_output_fields:
+            if server_output_field in self.headers:
+                server_output_headers.append(self.headers[server_output_field])
+            elif server_output_field in self._gpu_metrics_to_headers:
+                server_output_headers.append(
+                    self._gpu_metrics_to_headers[server_output_field])
+            else:
+                raise TritonModelAnalyzerException(
+                    f'Server output field "{server_output_field}", does not exist'
+                )
+        self._add_result_table(table_key=self.server_only_table_key,
+                               title='Server Only',
+                               headers=server_output_headers)
+        self._server_output_fields = server_output_fields
+    
+    def _create_inference_table(self):
         # Inference only
         inference_output_headers = []
         inference_output_fields = self._config.inference_output_fields
@@ -135,43 +155,49 @@ class ResultManager:
             title='Models (Inference)',
             headers=inference_output_headers,
         )
+    
+    def _create_gpu_table(self):
+        gpu_output_headers = []
+        gpu_output_fields = self._config.gpu_output_fields
+        for gpu_output_field in gpu_output_fields:
+            if gpu_output_field in self.headers:
+                gpu_output_headers.append(self.headers[gpu_output_field])
+            elif gpu_output_field in self._gpu_metrics_to_headers:
+                gpu_output_headers.append(
+                    self._gpu_metrics_to_headers[gpu_output_field])
+            else:
+                raise TritonModelAnalyzerException(
+                    f'GPU output field "{gpu_output_field}", does not exist')
+        self._gpu_output_fields = gpu_output_fields
+
+        # Model GPU Metrics
+        self._add_result_table(table_key=self.model_gpu_table_key,
+                               title='Models (GPU Metrics)',
+                               headers=gpu_output_headers)
+
+    def create_tables(self, gpu_specific_metrics, non_gpu_specific_metrics):
+        """
+        Creates the tables to print hold, display, and write
+        results
+
+        Parameters
+        ----------
+        gpu_specific_metrics : list of RecordTypes
+            The metrics that have a GPU id associated with them
+        non_gpu_specific_metrics : list of RecordTypes
+            The metrics that do not have a GPU id associated with them
+        """
+        for metric in gpu_specific_metrics:
+            self._gpu_metrics_to_headers[metric.tag] = metric.header()
+
+        for metric in non_gpu_specific_metrics:
+            self._non_gpu_metrics_to_headers[metric.tag] = metric.header()
+        
+        self._create_inference_table()
 
         if not self._is_cpu_only:
-            gpu_output_headers = []
-            gpu_output_fields = self._config.gpu_output_fields
-            for gpu_output_field in gpu_output_fields:
-                if gpu_output_field in self.headers:
-                    gpu_output_headers.append(self.headers[gpu_output_field])
-                elif gpu_output_field in self._gpu_metrics_to_headers:
-                    gpu_output_headers.append(
-                        self._gpu_metrics_to_headers[gpu_output_field])
-                else:
-                    raise TritonModelAnalyzerException(
-                        f'GPU output field "{gpu_output_field}", does not exist')
-            self._gpu_output_fields = gpu_output_fields
-
-            # Model GPU Metrics
-            self._add_result_table(table_key=self.model_gpu_table_key,
-                                   title='Models (GPU Metrics)',
-                                   headers=gpu_output_headers)
-
-            # Server only
-            server_output_headers = []
-            server_output_fields = self._config.server_output_fields
-            for server_output_field in server_output_fields:
-                if server_output_field in self.headers:
-                    server_output_headers.append(self.headers[server_output_field])
-                elif server_output_field in self._gpu_metrics_to_headers:
-                    server_output_headers.append(
-                        self._gpu_metrics_to_headers[server_output_field])
-                else:
-                    raise TritonModelAnalyzerException(
-                        f'Server output field "{server_output_field}", does not exist'
-                    )
-            self._add_result_table(table_key=self.server_only_table_key,
-                                   title='Server Only',
-                                   headers=server_output_headers)
-            self._server_output_fields = server_output_fields
+            self._create_gpu_table()
+            self._create_server_table()
         else:
             logging.info('No GPU detected, will only export inference results.')
 
@@ -431,24 +457,25 @@ class ResultManager:
         self._result_tables[
             self.model_inference_table_key].insert_row_by_index(inference_row)
 
-        # GPU specific data
-        for gpu_id, metrics in measurement.gpu_data().items():
-            gpu_fields = self._gpu_output_fields
-            gpu_row = self._get_common_row_items(gpu_fields, batch_size,
-                                                 concurrency, satisfies,
-                                                 model_name, tmp_model_name,
-                                                 dynamic_batching,
-                                                 instance_group)
-            gpu_id_index = self._find_index_for_field(gpu_fields, 'gpu_id')
-            if gpu_id_index is not None:
-                gpu_row[gpu_id_index] = gpu_id
-            for metric in metrics:
-                metric_tag_index = self._find_index_for_field(
-                    gpu_fields, metric.tag)
-                if metric_tag_index is not None:
-                    gpu_row[metric_tag_index] = round(metric.value(), 1)
-            self._result_tables[self.model_gpu_table_key].insert_row_by_index(
-                row=gpu_row)
+        if not self._is_cpu_only:
+            # GPU specific data
+            for gpu_id, metrics in measurement.gpu_data().items():
+                gpu_fields = self._gpu_output_fields
+                gpu_row = self._get_common_row_items(gpu_fields, batch_size,
+                                                     concurrency, satisfies,
+                                                     model_name, tmp_model_name,
+                                                     dynamic_batching,
+                                                     instance_group)
+                gpu_id_index = self._find_index_for_field(gpu_fields, 'gpu_id')
+                if gpu_id_index is not None:
+                    gpu_row[gpu_id_index] = gpu_id
+                for metric in metrics:
+                    metric_tag_index = self._find_index_for_field(
+                        gpu_fields, metric.tag)
+                    if metric_tag_index is not None:
+                        gpu_row[metric_tag_index] = round(metric.value(), 1)
+                self._result_tables[self.model_gpu_table_key].insert_row_by_index(
+                    row=gpu_row)
 
     def _add_result_table(self, table_key, title, headers):
         """

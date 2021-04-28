@@ -64,7 +64,6 @@ class ModelManager:
 
         # Generate the output model repository path folder.
         self._output_model_repo_path = config.output_model_repository_path
-        print(config.output_model_repository_path)
         try:
             os.mkdir(self._output_model_repo_path)
         except OSError:

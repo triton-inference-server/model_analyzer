@@ -123,7 +123,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
         for i in range(10, 0, -1):
             avg_non_gpu_metrics = {
                 'perf_throughput': 100 + 10 * i,
-                'perf_latency': 4000
+                'perf_latency': 4000,
+                'cpu_used_ram': 1000
             }
             self.model_config['name'] = f'model_{i}'
             model_config = ModelConfig.create_from_dictionary(
@@ -144,7 +145,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         expected_summary_sentence = (
             "In 10 measurement(s), 1/GPU model instance(s)"
-            " with max dynamic batch size of [4 8] on"
+            " with preferred batch size of [4 8] on"
             " platform tensorflow_graphdef delivers maximum"
             " throughput under the given constraints on GPU(s) TITAN RTX.")
         self.assertEqual(expected_summary_sentence, summary_sentence)

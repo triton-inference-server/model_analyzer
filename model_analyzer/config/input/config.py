@@ -700,13 +700,11 @@ class AnalyzerConfig:
     def _prefill_cpu_only(self):
         self._fields['inference_output_fields'].set_default_value([
             'model_name', 'batch_size', 'concurrency', 'model_config_path',
-            'instance_group', 'dynamic_batch_sizes', 'satisfies_constraints'
+            'instance_group', 'dynamic_batch_sizes', 'satisfies_constraints',
+            'perf_throughput', 'perf_latency', 'cpu_used_ram'
         ])
 
-        self._fields['gpu_output_fields'].set_default_value([
-            'model_name', 'batch_size', 'concurrency', 'model_config_path',
-            'instance_group', 'dynamic_batch_sizes', 'satisfies_constraints'
-        ])
+        self._fields['gpu_output_fields'].set_default_value([])
 
         self._fields['plots'].set_default_value({
             'throughput_v_latency': {
@@ -714,6 +712,12 @@ class AnalyzerConfig:
                 'x_axis': 'perf_latency',
                 'y_axis': 'perf_throughput',
                 'monotonic': True
+            },
+            'cpu_mem_v_latency': {
+                'title': 'CPU Memory vs. Latency',
+                'x_axis': 'perf_latency',
+                'y_axis': 'cpu_used_ram',
+                'monotonic': False
             }
         })
         self._fields['cpu_only'].set_default_value(True)
@@ -808,6 +812,18 @@ class AnalyzerConfig:
             yaml_config = self._load_config_file(args.config_file)
         else:
             yaml_config = None
+
+        # If `cpu_only` is specified we need to change, the default value
+        # for other paramters.  TODO: Allow creation of dependencies
+        # between configs.
+        cpu_only_set = False
+        if 'cpu_only' in args:
+            cpu_only_set = getattr(args, 'cpu_only')
+        elif yaml_config is not None and 'cpu_only' in yaml_config:
+            cpu_only_set = yaml_config['cpu_only']
+        if cpu_only_set:
+            self._prefill_cpu_only()
+
         for key, value in self._fields.items():
             self._fields[key].set_name(key)
             if key in args:

@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG="test.log"
+ANALYZER_LOG="cpu.log"
 source ../common/util.sh
 
-rm -f *.log logs/
+rm -rf *.log logs/
 rm -rf results && mkdir -p results
 
 # Set test parameters
@@ -28,15 +28,12 @@ FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="grpc"
-PORTS=(`find_available_ports 3`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 mkdir $EXPORT_PATH
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -n resnet_v1_50_cpu_graphdef --run-config-search-max-concurrency 4 --run-config-search-max-instance-count 2 --export-path logs"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
