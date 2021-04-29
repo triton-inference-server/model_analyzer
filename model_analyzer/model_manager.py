@@ -36,7 +36,7 @@ class ModelManager:
         """
         Parameters
         ----------
-        config: AnalyzerConfig
+        config:ConfigCommandProfile
             The config for the model analyzer
         client: TritonClient
             The client handle used to send requests to Triton
@@ -56,8 +56,7 @@ class ModelManager:
         self._metrics_manager = metrics_manager
         self._result_manager = result_manager
         self._state_manager = state_manager
-        self._is_cpu_only = config.cpu_only
-        self._run_search = RunSearch(config=config, cpu_only=self._is_cpu_only)
+        self._run_search = RunSearch(config=config)
         self._last_config_variant = None
         self._run_config_generator = RunConfigGenerator(config=config,
                                                         client=self._client)
@@ -87,7 +86,7 @@ class ModelManager:
 
         Parameters
         ----------
-        model : ConfigModel
+        model : ConfigModelProfileSpec
             The model being run
         """
 

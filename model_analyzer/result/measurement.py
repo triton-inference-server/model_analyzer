@@ -110,10 +110,10 @@ class Measurement:
             the tag, in this measurement
         """
 
-        if tag in self._gpu_data_from_tag:
-            return self._gpu_data_from_tag[tag]
-        elif tag in self._non_gpu_data_from_tag:
+        if tag in self._non_gpu_data_from_tag:
             return self._non_gpu_data_from_tag[tag]
+        elif tag in self._gpu_data_from_tag:
+            return self._gpu_data_from_tag[tag]
         else:
             raise TritonModelAnalyzerException(
                 f"No metric corresponding to tag {tag}"

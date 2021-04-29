@@ -18,7 +18,6 @@ class ConfigPlot:
     A class representing the configuration used for
     a single plot.
     """
-
     def __init__(self,
                  name,
                  title=None,
@@ -111,7 +110,7 @@ class ConfigPlot:
         Returns
         -------
         list
-            A list of ConfigModel objects.
+            A list of ConfigPlot objects.
         """
 
         plot_list = []

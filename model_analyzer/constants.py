@@ -30,3 +30,7 @@ TOP_MODELS_REPORT_KEY = "Best Configs Across All Models"
 
 # State Management
 MAX_NUMBER_OF_INTERRUPTS = 3
+
+# Perf Analyzer
+MAX_INTERVAL_CHANGES = 20
+INTERVAL_DELTA = 1000

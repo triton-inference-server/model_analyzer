@@ -100,7 +100,7 @@ class ConfigField:
         """
 
         return self._field_type
-    
+
     def cli_type(self):
         """
         Get the equivalent CLI type of the field.
@@ -171,7 +171,6 @@ class ConfigField:
         """
 
         self._default_value = default_value
-
 
     def value(self):
         """

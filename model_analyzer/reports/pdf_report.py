@@ -23,7 +23,6 @@ class PDFReport(Report):
     constructed in html and
     written to disk as a PDF
     """
-
     def __init__(self):
         self._head = ""
         self._body = ""
@@ -87,7 +86,7 @@ class PDFReport(Report):
         for img, caption in zip(images, image_captions):
             with open(img, "rb") as image_file:
                 data_uri = base64.b64encode(image_file.read()).decode('ascii')
-                image_row += f"<div class=\"image\" style=\"float:left;width:50%\">"
+                image_row += f"<div class=\"image\" style=\"float:left;width:{100//len(images)}%\">"
                 image_row += f"<img src=\"data:image/png;base64,{data_uri}\" style=\"width:100%\">"
                 image_row += f"<center><div style=\"font-weight:bold;font-size:12;padding-bottom:20px\">{caption}</div></center>"
                 image_row += "</div>"
@@ -112,7 +111,6 @@ class PDFReport(Report):
         table: ResultTable
             The table we want to add
         """
-
         def table_style(border="1px solid black",
                         padding="5px 10px",
                         font_size="11pt",

@@ -97,6 +97,15 @@ class ResultComparator:
         for objective, weight in self._metric_weights.items():
             metric1 = measurement1.get_metric(tag=objective)
             metric2 = measurement2.get_metric(tag=objective)
+
+            # Handle the case where objective GPU metric is queried on CPU only
+            if metric1 and metric2 is None:
+                return 1
+            elif metric2 and metric1 is None:
+                return -1
+            elif metric1 is None and metric2 is None:
+                return 0
+
             metric_diff = metric1 - metric2
             score_gain += (weight * (metric_diff.value() / metric1.value()))
 

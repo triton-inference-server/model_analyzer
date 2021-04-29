@@ -15,12 +15,30 @@
 from model_analyzer.result.measurement import Measurement
 from model_analyzer.result.model_result import ModelResult
 from model_analyzer.record.metrics_manager import MetricsManager
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 
-def construct_measurement(gpu_metric_values, non_gpu_metric_values,
+def construct_measurement(model_name, gpu_metric_values, non_gpu_metric_values,
                           comparator):
     """
     Construct a measurement from the given data
+
+    Parameters
+    ----------
+    model_name: str
+        The name of the model that generated this result
+    avg_gpu_metric_values: dict
+        The dict where keys are gpu based metric tags
+        and values are the data
+    avg_non_gpu_metric_values: dict
+        Keys are non gpu perf metrics, values are their values
+    comparator: ResultComparator
+        The comparator used to compare measurements/results
+    
+    Returns
+    -------
+    Measurement
+        constructed with all of the above data.
     """
 
     # gpu_data will be a dict whose keys are gpu_ids and values
@@ -42,9 +60,14 @@ def construct_measurement(gpu_metric_values, non_gpu_metric_values,
         non_gpu_data.append(
             metric(value=non_gpu_metric_values[non_gpu_metric_tags[i]]))
 
+    # Perf Config needs a protocol
+    perf_config = PerfAnalyzerConfig()
+    perf_config['model-name'] = model_name
+    perf_config['protocol'] = 'http'
+
     measurement = Measurement(gpu_data=gpu_data,
                               non_gpu_data=non_gpu_data,
-                              perf_config=None)
+                              perf_config=perf_config)
     measurement.set_result_comparator(comparator=comparator)
     return measurement
 
@@ -119,7 +142,8 @@ def construct_result(avg_gpu_metric_values,
             for key in non_gpu_metric_values
         }
         model_result.add_measurement(
-            construct_measurement(gpu_metric_values=gpu_metrics,
+            construct_measurement(model_name=model_name,
+                                  gpu_metric_values=gpu_metrics,
                                   non_gpu_metric_values=non_gpu_metrics,
                                   comparator=comparator))
 

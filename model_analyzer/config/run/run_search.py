@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.input.objects.config_model import ConfigModel
-import logging
+from model_analyzer.config.input.objects.config_model_profile_spec \
+    import ConfigModelProfileSpec
 from model_analyzer.constants import THROUGHPUT_GAIN
+
+import logging
 import copy
 
 
@@ -22,19 +24,18 @@ class RunSearch:
     """
     A class responsible for searching the config space.
     """
-    def __init__(self, config, cpu_only=False):
+    def __init__(self, config):
         self._max_concurrency = config.run_config_search_max_concurrency
         self._max_instance_count = config.run_config_search_max_instance_count
         self._max_preferred_batch_size = config.run_config_search_max_preferred_batch_size
         self._model_config_parameters = {'instance_count': 1}
         self._measurements = []
         self._last_batch_length = None
-        self._cpu_only = cpu_only
 
         # Run search operating mode
         self._sweep_mode_function = None
 
-    def _create_model_config(self):
+    def _create_model_config(self, cpu_only=False):
         """
         Generate the model config sweep to be used.
         """
@@ -51,7 +52,7 @@ class RunSearch:
                 }
 
         if 'instance_count' in model_config:
-            if not self._cpu_only:
+            if not cpu_only:
                 new_config['instance_group'] = [{
                     'count':
                     model_config['instance_count'],
@@ -60,8 +61,10 @@ class RunSearch:
                 }]
             else:
                 new_config['instance_group'] = [{
-                    'count': model_config['instance_count'],
-                    'kind': 'KIND_CPU'
+                    'count':
+                    model_config['instance_count'],
+                    'kind':
+                    'KIND_CPU'
                 }]
         return new_config
 
@@ -154,7 +157,7 @@ class RunSearch:
 
         Parameters
         ----------
-        config_model : ConfigModel
+        config_model : ConfigModelProfileSpec
             The config model object of the model to sweep through
 
         Returns
@@ -163,8 +166,9 @@ class RunSearch:
             The list may be empty, contain a model config dict or None
         """
 
-        new_model = ConfigModel(
+        new_model = ConfigModelProfileSpec(
             copy.deepcopy(config_model.model_name()),
+            copy.deepcopy(config_model.cpu_only()),
             copy.deepcopy(config_model.objectives()),
             copy.deepcopy(config_model.constraints()),
             copy.deepcopy(config_model.parameters()),
@@ -187,7 +191,7 @@ class RunSearch:
 
         Parameters
         ----------
-        model : ConfigModel
+        model : ConfigModelProfileSpec
             The model whose parameters are being swept over
         """
 
@@ -235,7 +239,8 @@ class RunSearch:
             model.parameters()['concurrency'] = [new_concurrency]
 
         return model, [
-            self._create_model_config() if sweep_model_configs else None
+            self._create_model_config(
+                cpu_only=model.cpu_only()) if sweep_model_configs else None
         ]
 
     def _sweep_model_config_only(self, model):
@@ -261,7 +266,7 @@ class RunSearch:
                     'dynamic_batching'] > self._max_preferred_batch_size
                 if batch_size_limit_reached:
                     return model, []
-        return model, [self._create_model_config()]
+        return model, [self._create_model_config(cpu_only=model.cpu_only())]
 
     def _log_message(self, model):
         """

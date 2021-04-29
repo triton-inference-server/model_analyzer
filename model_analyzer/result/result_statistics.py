@@ -13,21 +13,12 @@
 # limitations under the License.
 
 
-class AnalyzerStatistics:
+class ResultStatistics:
     """
     An object containing all statistics relevant
     to an instance of Analyzer
     """
-
-    def __init__(self, config):
-        """
-        Parameters
-        ----------
-        config: AnalyzerConfig
-            The config for this model analyzer
-        """
-
-        self._config = config
+    def __init__(self):
         self._total_configurations = {}
         self._passing_measurements = {}
         self._failing_measurements = {}

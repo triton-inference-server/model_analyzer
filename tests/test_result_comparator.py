@@ -33,10 +33,10 @@ class TestResultComparatorMethods(trc.TestResultCollector):
 
         result_comparator = ResultComparator(metric_objectives=objective_spec)
 
-        measurement1 = construct_measurement(gpu_metric_values1,
+        measurement1 = construct_measurement('test_model', gpu_metric_values1,
                                              non_gpu_metric_values1,
                                              result_comparator)
-        measurement2 = construct_measurement(gpu_metric_values2,
+        measurement2 = construct_measurement('test_model', gpu_metric_values2,
                                              non_gpu_metric_values2,
                                              result_comparator)
         self.assertEqual(

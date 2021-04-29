@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
-from model_analyzer.config.input.config import AnalyzerConfig
+from model_analyzer.config.input.config_command_profile \
+    import ConfigCommandProfile
 from model_analyzer.cli.cli import CLI
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
@@ -33,16 +34,22 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
-        config = AnalyzerConfig()
-        cli = CLI(config)
+        config = ConfigCommandProfile()
+        cli = CLI()
+        cli.add_subcommand(
+            cmd='profile',
+            help=
+            'Run model inference profiling based on specified CLI or config options.',
+            config=config)
         cli.parse()
         mock_config.stop()
         return config
 
     def setUp(self):
         args = [
-            'model-analyzer', '--model-repository', 'cli_repository', '-f',
-            'path-to-config-file', '--model-names', 'test_model'
+            'model-analyzer', 'profile', '--model-repository',
+            'cli_repository', '-f', 'path-to-config-file', '--profile-models',
+            'test_model'
         ]
         yaml_content = """
             export_path: /test_export_path/
@@ -52,10 +59,8 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
         self.mock_io = MockIOMethods(
             mock_paths=['model_analyzer.state.analyzer_state_manager'])
         self.mock_pickle = MockPickleMethods()
-        self.mock_os = MockOSMethods(mock_paths=[
-            'model_analyzer.config.input.config',
-            'model_analyzer.state.analyzer_state_manager'
-        ])
+        self.mock_os = MockOSMethods(
+            mock_paths=['model_analyzer.state.analyzer_state_manager'])
         self.mock_glob = MockGlobMethods()
 
         self.mock_io.start()
@@ -112,7 +117,7 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
     def test_latest_checkpoint(self):
         # No checkpoints
         self.mock_glob.set_glob_return_value([])
-        self.assertEqual(self.state_manager._latest_checkpoint(), 0)
+        self.assertEqual(self.state_manager._latest_checkpoint(), -1)
 
         # single checkpoint file
         for i in range(5):

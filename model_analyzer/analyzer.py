@@ -12,14 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
-from model_analyzer.model_manager import ModelManager
-from .analyzer_statistics import AnalyzerStatistics
+from .model_manager import ModelManager
 from .result.result_manager import ResultManager
 from .record.metrics_manager import MetricsManager
-from .plots.plot_manager import PlotManager
 from .reports.report_manager import ReportManager
-from .constants import TOP_MODELS_REPORT_KEY
+
+from .config.input.config_command_analyze \
+    import ConfigCommandAnalyze
+from .config.input.config_command_report \
+    import ConfigCommandReport
+from .config.input.config_command_profile \
+    import ConfigCommandProfile
+from .model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 import logging
 
@@ -30,16 +35,12 @@ class Analyzer:
     model_analyzer. Configured with metrics to monitor, exposes profiling and
     result writing methods.
     """
-    def __init__(self, config, metric_tags, client, server, state_manager):
+    def __init__(self, config, server, state_manager):
         """
         Parameters
         ----------
         config : Config
             Model Analyzer config
-        metric_tags : List of str
-            The list of metric tags corresponding to the metrics to monitor.
-        client : TritonClient
-            Instance used to load/unload models
         server : TritonServer
             Server handle
         state_manager: AnalyzerStateManager
@@ -47,128 +48,111 @@ class Analyzer:
         """
 
         self._config = config
-        self._client = client
         self._server = server
         self._state_manager = state_manager
         state_manager.load_checkpoint()
 
-        # Create managers
-        self._statistics = AnalyzerStatistics(config=config)
-
         self._result_manager = ResultManager(config=config,
-                                             statistics=self._statistics,
-                                             state_manager=state_manager)
-
+                                             state_manager=self._state_manager)
         self._metrics_manager = MetricsManager(
-            config=config,
-            metric_tags=metric_tags,
-            server=server,
-            result_manager=self._result_manager)
+            config=config, server=server, result_manager=self._result_manager)
 
-        self._model_manager = ModelManager(
-            config=config,
-            client=client,
-            server=server,
-            result_manager=self._result_manager,
-            metrics_manager=self._metrics_manager,
-            state_manager=self._state_manager)
-
-        self._plot_manager = PlotManager(config=config)
-
-        self._report_manager = ReportManager(config=config,
-                                             statistics=self._statistics)
-        self._model_index = 0
-
-    def run(self):
+    def profile(self, client):
         """
+        Subcommand: PROFILE
+
         Configures RunConfigGenerator, then
         profiles for each run_config
 
+        Parameters
+        ----------
+        client : TritonClient
+            Instance used to load/unload models
+        
         Raises
         ------
         TritonModelAnalyzerException
         """
 
-        config = self._config
+        if not isinstance(self._config, ConfigCommandProfile):
+            raise TritonModelAnalyzerException(
+                f"Expected config of type {ConfigCommandProfile},"
+                " got {type(self._config)}.")
 
         logging.info('Profiling server only metrics...')
 
-        # Phase 1: Profile server only metrics
+        self._model_manager = ModelManager(
+            config=self._config,
+            client=client,
+            server=self._server,
+            result_manager=self._result_manager,
+            metrics_manager=self._metrics_manager,
+            state_manager=self._state_manager)
+
+        # Get metrics for server only
         self._server.start()
-        self._client.wait_for_server_ready(config.max_retries)
+        client.wait_for_server_ready(self._config.max_retries)
         self._metrics_manager.profile_server()
         self._server.stop()
 
-        # Phase 2: Profile each model
-        while True:
-            if self._model_index >= len(
-                    self._config.model_names) or self._state_manager.exiting():
+        # Profile each model, save state after each
+        for model in self._config.profile_models:
+            if self._state_manager.exiting():
                 break
             try:
-                self._model_manager.run_model(
-                    model=self._config.model_names[self._model_index])
+                self._model_manager.run_model(model=model)
             finally:
-                # Save state
                 self._state_manager.save_checkpoint()
-            self._model_index += 1
 
-        # Phase 3: Process results, and dump to tables
-        self._result_manager.collect_and_sort_results(
-            num_models=self._model_index)
-        self._process_top_results()
+        profiled_model_list = list(
+            self._state_manager.get_state_variable(
+                'ResultManager.results').keys())
+        logging.info(
+            f"Finished profiling. Obtained measurements for models: {profiled_model_list}"
+        )
+
+    def analyze(self):
+        """
+        subcommand: ANALYZE
+
+        Constructs results from measurements,
+        sorts them, and dumps them to tables.
+        """
+
+        if not isinstance(self._config, ConfigCommandAnalyze):
+            raise TritonModelAnalyzerException(
+                f"Expected config of type {ConfigCommandAnalyze}, got {type(self._config)}."
+            )
+
+        self._report_manager = ReportManager(
+            config=self._config, result_manager=self._result_manager)
+
+        # Create result tables, put top results and get stats
+        self._metrics_manager.create_metric_tables()
+        self._result_manager.compile_and_sort_results()
+        if self._config.summarize:
+            self._report_manager.create_summaries()
+            self._report_manager.export_summaries()
+
+        # Dump to tables and write to disk
         self._result_manager.tabulate_results()
-
-    def write_and_export_results(self):
-        """
-        Tells the results manager and plot managers
-        to dump the results onto disk
-        """
-
         self._result_manager.write_and_export_results()
-        if self._config.summarize:
-            self._plot_manager.compile_and_export_plots()
 
-            # Export individual model summaries
-            for model in self._config.model_names[:self._model_index]:
-                self._report_manager.export_summary(
-                    report_key=model.model_name(),
-                    num_configs=self._config.num_configs_per_model)
-            if self._config.num_top_model_configs:
-                self._report_manager.export_summary(
-                    report_key=TOP_MODELS_REPORT_KEY,
-                    num_configs=self._config.num_top_model_configs)
-
-    def _process_top_results(self):
+    def report(self):
         """
-        Add the best measurements from the
-        best result to the plot for the model.
-        This function must be called before
-        corresponding plots are completed,
-        and results are
+        Subcommand: REPORT
+
+        Generates detailed information on
+        one or more model configs
         """
 
-        if self._config.summarize:
-            # Create individual model reports
-            for model in self._config.model_names[:self._model_index]:
-                self._plot_manager.init_plots(plots_key=model.model_name())
-                for result in self._result_manager.top_n_results(
-                        model_name=model.model_name(),
-                        n=self._config.num_configs_per_model):
+        if not isinstance(self._config, ConfigCommandReport):
+            raise TritonModelAnalyzerException(
+                f"Expected config of type {ConfigCommandReport}, got {type(self._config)}."
+            )
 
-                    # Send all measurements to plots manager
-                    self._plot_manager.add_result(plots_key=model.model_name(),
-                                                  result=result)
+        self._report_manager = ReportManager(
+            config=self._config, result_manager=self._result_manager)
 
-                    # Send top_n measurements to report manager
-                    self._report_manager.add_result(
-                        report_key=model.model_name(), result=result)
-
-            # Add best model plots and results
-            if self._config.num_top_model_configs:
-                self._plot_manager.init_plots(plots_key=TOP_MODELS_REPORT_KEY)
-                for result in self._result_manager.top_n_results(
-                        n=self._config.num_top_model_configs):
-                    self._plot_manager.add_result(
-                        plots_key=TOP_MODELS_REPORT_KEY, result=result)
-                    self._report_manager.add_result(
-                        report_key=TOP_MODELS_REPORT_KEY, result=result)
+        self._report_manager.create_detailed_reports()
+        self._report_manager.export_detailed_reports()
