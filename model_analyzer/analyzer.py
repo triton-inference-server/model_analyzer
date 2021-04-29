@@ -63,8 +63,7 @@ class Analyzer:
             config=config,
             metric_tags=metric_tags,
             server=server,
-            result_manager=self._result_manager,
-            gpus=GPUDeviceFactory.get_analyzer_gpus(config.gpus))
+            result_manager=self._result_manager)
 
         self._model_manager = ModelManager(
             config=config,

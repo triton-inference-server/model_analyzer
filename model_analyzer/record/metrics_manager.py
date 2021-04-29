@@ -15,6 +15,7 @@ from collections import defaultdict
 
 from .record_aggregator import RecordAggregator
 from .record import RecordType
+from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
@@ -29,7 +30,7 @@ class MetricsManager:
     This class handles the profiling
     categorization of metrics
     """
-    def __init__(self, config, metric_tags, server, result_manager, gpus):
+    def __init__(self, config, metric_tags, server, result_manager):
         """
         Parameters
         ----------
@@ -47,7 +48,7 @@ class MetricsManager:
         """
 
         self._server = server
-        self._gpus = gpus
+        self._gpus = GPUDeviceFactory.get_analyzer_gpus(config.gpus)
         self._monitoring_interval = config.monitoring_interval
         self._perf_analyzer_path = config.perf_analyzer_path
         self._config = config
