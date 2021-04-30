@@ -28,6 +28,7 @@ class Plot:
     model configs, but only holds one
     type of plot
     """
+
     def __init__(self, name, title, x_axis, y_axis, monotonic=False):
         """
         Parameters

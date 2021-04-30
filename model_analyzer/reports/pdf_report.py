@@ -87,10 +87,11 @@ class PDFReport(Report):
         for img, caption in zip(images, image_captions):
             with open(img, "rb") as image_file:
                 data_uri = base64.b64encode(image_file.read()).decode('ascii')
-            image_row += f"<div class=\"image\" style=\"float:left;width:50%\">"
-            image_row += f"<img src=\"data:image/png;base64,{data_uri}\" style=\"width:100%\">"
-            image_row += f"<center><div style=\"font-weight:bold;font-size:12;padding-bottom:20px\">{caption}</div></center>"
-            image_row += "</div>"
+                image_row += f"<div class=\"image\" style=\"float:left;width:50%\">"
+                image_row += f"<img src=\"data:image/png;base64,{data_uri}\" style=\"width:100%\">"
+                image_row += f"<center><div style=\"font-weight:bold;font-size:12;padding-bottom:20px\">{caption}</div></center>"
+                image_row += "</div>"
+
         self._body += f"<div>{image_row}</div>"
 
     def add_paragraph(self, paragraph, font_size=14):

@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,9 +24,6 @@ import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
 import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 import model_analyzer.monitor.dcgm.dcgm_field_helpers as dcgm_field_helpers
 import model_analyzer.monitor.dcgm.dcgm_structs as structs
-
-from multiprocessing.pool import ThreadPool
-import time
 
 
 class DCGMMonitor(GPUMonitor):

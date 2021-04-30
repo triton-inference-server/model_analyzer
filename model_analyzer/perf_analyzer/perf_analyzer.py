@@ -21,7 +21,7 @@ from model_analyzer.model_analyzer_exceptions \
 from model_analyzer.record.types.perf_latency import PerfLatency
 from model_analyzer.record.types.perf_throughput import PerfThroughput
 
-MAX_INTERVAL_CHANGES = 20
+MAX_INTERVAL_CHANGES = 5
 INTERVAL_DELTA = 1000
 
 logger = logging.getLogger(__name__)
