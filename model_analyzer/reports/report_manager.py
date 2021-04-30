@@ -194,7 +194,7 @@ class ReportManager:
                 [caption_throughput_latency, caption_memory_latency])
         else:
             summary.add_paragraph(
-                "The maximum CPU memory consumption for each of the above points is"
+                "The maximum GPU memory consumption for each of the above points is"
                 f" shown in the second plot.")
             memory_latency_plot = os.path.join(self._config.export_path,
                                                'plots', report_key,

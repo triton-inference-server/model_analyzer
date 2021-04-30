@@ -159,4 +159,4 @@ class Plot:
             this plot should be saved to
         """
 
-        self._fig.savefig(os.path.join(filepath, self._name), dpi=100, bbox_inches='tight')
+        self._fig.savefig(os.path.join(filepath, self._name))
