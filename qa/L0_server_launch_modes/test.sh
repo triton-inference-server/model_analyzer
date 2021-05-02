@@ -20,8 +20,9 @@ rm -rf $OUTPUT_MODEL_REPOSITORY
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_clara_pipelines"}
-MODEL_NAMES="classification_chestxray_v1"
+REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/$REPO_VERSION/libtorch_model_store"}
+MODEL_NAMES="vgg19_libtorch"
 BATCH_SIZES="4"
 CONCURRENCY="4"
 PORTS=(`find_available_ports 3`)

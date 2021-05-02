@@ -34,7 +34,7 @@ def _get_range_configs():
     intervals = [str(x) for x in intervals]
 
     shared_args = {
-        'model_names': [['classification_breast_v1']],
+        'model_names': [['resnet50_libtorch']],
         'run_config_search_disable': [True],
         'perf_analyzer_cpu_util': [600],
         'triton_launch_mode': ['docker'],
@@ -54,9 +54,9 @@ def _get_range_configs():
     param_combs = []
     model_names_combs = dict(shared_args)
     model_names_combs['model_names'] = [
-        ['classification_breast_v1', 'classification_chestxray_v1'],
-        ['classification_chestxray_v1'],
-        'classification_breast_v1,classification_chestxray_v1'
+        ['resnet50_libtorch', 'vgg19_libtorch'],
+        ['vgg19_libtorch'],
+        'resnet50_libtorch,vgg19_libtorch'
     ]
 
     param_combs += list(product(*tuple(model_names_combs.values())))

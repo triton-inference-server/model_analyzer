@@ -20,7 +20,8 @@ rm -rf results && mkdir -p results
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_clara_pipelines"}
+REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 QA_MODELS="`ls $MODEL_REPOSITORY | head -3`"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
 EXPORT_PATH="`pwd`/results"

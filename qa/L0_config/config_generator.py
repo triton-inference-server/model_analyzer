@@ -22,7 +22,7 @@ def _get_sweep_configs():
         'run_config_search_disable': True,
         'perf_analyzer_cpu_util': 600,
         'model_names': {
-            'classification_breast_v1': {
+            'resnet50_libtorch': {
                 'model_config_parameters': {
                     'instance_group': [{
                         'count': [1, 2, 3, 4],
@@ -40,7 +40,7 @@ def _get_sweep_configs():
         'run_config_search_disable': True,
         'perf_analyzer_cpu_util': 600,
         'model_names': {
-            'classification_breast_v1': {
+            'resnet50_libtorch': {
                 'model_config_parameters': {
                     'dynamic_batching': [{}, None],
                     'instance_group': [{
@@ -59,7 +59,7 @@ def _get_sweep_configs():
         'run_config_search_disable': True,
         'perf_analyzer_cpu_util': 600,
         'model_names': {
-            'classification_breast_v1': {
+            'resnet50_libtorch': {
                 'model_config_parameters': {
                     'dynamic_batching': {
                         'preferred_batch_size': [[4, 8], [5, 6]],
