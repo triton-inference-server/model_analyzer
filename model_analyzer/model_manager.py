@@ -216,6 +216,10 @@ class ModelManager:
             if not self._create_and_load_model_variant(
                     original_name=run_config.model_name(),
                     variant_config=run_config.model_config()):
+                self._server.stop()
+                if self._config.triton_output_path:
+                    self._server.write_server_logs(
+                        self._config.triton_output_path)
                 continue
 
             # Profile various batch size and concurrency values.
