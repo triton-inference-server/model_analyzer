@@ -306,18 +306,24 @@ class ResultManager:
                 model.model_name()
                 for model in self._config.model_names[:num_models]
         ]:
-            result_dict = results[model_name]
-            for (model_config, measurements) in result_dict.values():
-                result = ModelResult(model_name=model_name,
-                                     model_config=model_config,
-                                     comparator=comparators[model_name],
-                                     constraints=constraints[model_name])
-                for measurement in measurements.values():
-                    measurement.set_result_comparator(
-                        comparator=comparators[model_name])
-                    result.add_measurement(measurement)
-                self._per_model_sorted_results[model_name].add_result(result)
-                self._across_model_sorted_results.add_result(result)
+            if model_name not in results:
+                logging.warn(
+                    f"Model {model_name} requested for analysis but no results were found. "
+                    "Ensure that this model was actually profiled.")
+            else:
+                result_dict = results[model_name]
+                for (model_config, measurements) in result_dict.values():
+                    result = ModelResult(model_name=model_name,
+                                         model_config=model_config,
+                                         comparator=comparators[model_name],
+                                         constraints=constraints[model_name])
+                    for measurement in measurements.values():
+                        measurement.set_result_comparator(
+                            comparator=comparators[model_name])
+                        result.add_measurement(measurement)
+                    self._per_model_sorted_results[model_name].add_result(
+                        result)
+                    self._across_model_sorted_results.add_result(result)
 
     def top_n_results(self, model_name=None, n=-1):
         """
