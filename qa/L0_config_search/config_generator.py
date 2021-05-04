@@ -23,7 +23,7 @@ def _get_sweep_configs():
         'run_config_search_max_instance_count': 2,
         'run_config_search_max_preferred_batch_size': 2,
         'model_names': {
-            'classification_chestxray_v1': {
+            'vgg19_libtorch': {
                 'model_config_parameters': {
                     'instance_group': [{
                         'count': [1, 2],
@@ -42,7 +42,7 @@ def _get_sweep_configs():
 
     model_config = {
         'run_config_search_disable': True,
-        'model_names': ['classification_chestxray_v1']
+        'model_names': ['vgg19_libtorch']
     }
 
     model_config['total_param'] = 1
@@ -55,7 +55,7 @@ def _get_sweep_configs():
         'run_config_search_max_concurrency': 2,
         'run_config_search_max_instance_count': 2,
         'run_config_search_max_preferred_batch_size': 2,
-        'model_names': ['classification_chestxray_v1'],
+        'model_names': ['vgg19_libtorch'],
     }
 
     model_config['total_param_remote'] = 2
@@ -70,7 +70,7 @@ def _get_sweep_configs():
         'run_config_search_max_instance_count': 2,
         'run_config_search_max_preferred_batch_size': 1,
         'model_names': {
-            'classification_chestxray_v1': {
+            'vgg19_libtorch': {
                 'parameters': {
                     'concurrency': [1]
                 },
@@ -89,7 +89,7 @@ def _get_sweep_configs():
         'run_config_search_max_instance_count': 2,
         'run_config_search_max_preferred_batch_size': 2,
         'model_names': {
-            'classification_chestxray_v1': {
+            'vgg19_libtorch': {
                 'parameters': {
                     'concurrency': [1]
                 },
@@ -112,7 +112,7 @@ def _get_sweep_configs():
     model_config = {
         'run_config_search_disable': True,
         'model_names': {
-            'classification_chestxray_v1': {
+            'vgg19_libtorch': {
                 'parameters': {
                     'concurrency': [1]
                 }
@@ -130,7 +130,7 @@ def _get_sweep_configs():
         'run_config_search_disable': True,
         'concurrency': [1],
         'model_names': {
-            'classification_chestxray_v1': {
+            'vgg19_libtorch': {
                 'model_config_parameters': {
                     'instance_group': [{
                         'count': [1, 2],
@@ -150,7 +150,7 @@ def _get_sweep_configs():
     model_config = {
         'run_config_search_disable': True,
         'model_names': {
-            'classification_chestxray_v1': {
+            'vgg19_libtorch': {
                 'model_config_parameters': {
                     'instance_group': [{
                         'count': [1, 2],

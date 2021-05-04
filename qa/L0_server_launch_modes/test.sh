@@ -20,20 +20,22 @@ rm -rf $OUTPUT_MODEL_REPOSITORY
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_clara_pipelines"}
-MODEL_NAMES="classification_chestxray_v1"
+REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/$REPO_VERSION/libtorch_model_store"}
+MODEL_NAMES="vgg19_libtorch"
 BATCH_SIZES="4"
 CONCURRENCY="4"
 PORTS=(`find_available_ports 3`)
 http_port="${PORTS[0]}"
 grpc_port="${PORTS[1]}"
 metrics_port="${PORTS[2]}"
-MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -n $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY --run-config-search-disable"
+MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -n $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY --run-config-search-disable --perf-analyzer-cpu-util 600"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY"
 MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
 MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:$metrics_port/metrics"
 TRITON_LAUNCH_MODES="docker remote local"
 CLIENT_PROTOCOLS="http grpc"
+TRITON_DOCKER_IMAGE="nvcr.io/nvidia/tritonserver:21.03-py3"
 
 # Run the model-analyzer, both client protocols
 RET=0
@@ -109,7 +111,7 @@ function run_server_launch_modes() {
             if [ "$LAUNCH_MODE" == "local" ]; then    
                 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG}"
             elif [ "$LAUNCH_MODE" == "docker" ]; then
-                MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG}"
+                MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_DOCKER_IMAGE"
             elif [ "$LAUNCH_MODE" == "remote" ]; then
                 MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:8000 --triton-grpc-endpoint localhost:8001"
                 MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:8002/metrics"

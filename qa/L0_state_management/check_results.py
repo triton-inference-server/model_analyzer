@@ -24,10 +24,9 @@ class TestOutputValidator:
     Functions that validate the output
     of the L0_results test
     """
-    def __init__(self, config, test_name, export_path, model_names,
-                 analyzer_log):
+    def __init__(self, config, test_name, export_path, analyzer_log):
         self._config = config
-        self._model_names = model_names.split(',')
+        self._model_names = list(config['model_names'])
         self._analyzer_log = analyzer_log
         self._export_path = export_path
 
@@ -41,7 +40,7 @@ class TestOutputValidator:
     def check_num_checkpoints(self):
         """
         Open the checkpoints directory and 
-        check that there is 5 checkpoints
+        check that there is 3 checkpoints
         """
 
         checkpoint_files = os.listdir(
@@ -71,7 +70,7 @@ class TestOutputValidator:
 
         checkpoint_files = os.listdir(
             os.path.join(self._export_path, 'checkpoints'))
-        if len(checkpoint_files) != 3:
+        if len(checkpoint_files) != 2:
             return False
 
         with open(self._analyzer_log, 'r') as f:
@@ -82,8 +81,8 @@ class TestOutputValidator:
         if log_contents.find(token) == -1:
             return False
 
-        # check that 3rd model is profiled once
-        token = f"Profiling model {self._model_names[2]}"
+        # check that 2nd model is profiled once
+        token = f"Profiling model {self._model_names[1]}"
         token_idx = 0
         found_count = 0
         while True:
@@ -96,11 +95,11 @@ class TestOutputValidator:
 
     def check_continue_after_checkpoint(self):
         """
-        Check that the 3rd model has been run once 
-        and the remaining have been run twice each.
+        Check that the 2nd model onwards have been run
+        once
         """
 
-        profiled_models = self._model_names[-3:]
+        profiled_models = self._model_names[-2:]
         with open(self._analyzer_log, 'r') as f:
             log_contents = f.read()
 
@@ -115,24 +114,24 @@ class TestOutputValidator:
                                                       ):end_of_model_name]
             found_models_count[model_name.rsplit('_', 1)[0]] += 1
 
-        for i in range(3):
+        for i in range(2):
             if found_models_count[profiled_models[i]] != 1:
                 return False
         return True
 
     def check_measurements_consistent_with_config(self):
         """
-        Check that each of the last 3 models is profiled
-        once, only the last 3 models appear in the results
-        and that the first of the 3 profiled models appears
+        Check that each of the last 2 models is profiled
+        once, only the last 2 models appear in the results
+        and that the first of the 2 profiled models appears
         twice in the result table
         """
 
-        # Make sure first model out 3 was only profiled only once
+        # Make sure first model out 2 was only profiled only once
         if not self.check_continue_after_checkpoint():
             return False
 
-        profiled_models = self._model_names[-3:]
+        profiled_models = self._model_names[-2:]
         with open(self._analyzer_log, 'r') as f:
             log_contents = f.read()
 
@@ -153,10 +152,8 @@ class TestOutputValidator:
             model_name = line.split()[0]
             table_measurement_count[model_name] += 1
 
-        return table_measurement_count[
-            profiled_models[0]] == 2 and table_measurement_count[
-                profiled_models[1]] == 1 and table_measurement_count[
-                    profiled_models[2]] == 1
+        return table_measurement_count[profiled_models[
+            0]] == 2 and table_measurement_count[profiled_models[1]] == 1
 
 
 if __name__ == '__main__':
@@ -171,11 +168,6 @@ if __name__ == '__main__':
                         type=str,
                         required=True,
                         help='The export path for the model analyzer.')
-    parser.add_argument('-m',
-                        '--model-names',
-                        type=str,
-                        required=True,
-                        help='The models being used for this test.')
     parser.add_argument('-l',
                         '--analyzer-log-file',
                         type=str,
@@ -192,4 +184,4 @@ if __name__ == '__main__':
         config = yaml.load(f, Loader=yaml.FullLoader)
 
     TestOutputValidator(config, args.test_name, args.export_path,
-                        args.model_names, args.analyzer_log_file)
+                        args.analyzer_log_file)
