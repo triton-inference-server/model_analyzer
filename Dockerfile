@@ -43,6 +43,7 @@ WORKDIR /opt/triton-model-analyzer
 RUN rm -fr *
 COPY --from=sdk /usr/local/bin/perf_analyzer .
 COPY . .
+RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
 RUN chmod +x build_wheel.sh && \
     ./build_wheel.sh perf_analyzer true && \
     rm -f perf_analyzer
@@ -50,6 +51,6 @@ RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install nvidia-pyindex && \
     python3 -m pip install wheels/triton_model_analyzer-*-manylinux1_x86_64.whl
 
-ENTRYPOINT []
+ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
 ENV MODEL_ANALYZER_VERSION ${MODEL_ANALYZER_VERSION}
 ENV NVIDIA_MODEL_ANALYZER_VERSION ${MODEL_ANALYZER_CONTAINER_VERSION}
