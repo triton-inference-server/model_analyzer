@@ -45,7 +45,7 @@ class TestConfigGenerator:
                             help='The config file for this test')
 
         args = parser.parse_args()
-        self.model_names = args.model_names.split(',')
+        self.model_names = sorted(args.model_names.split(','))
         self.config = {'batch_sizes': 1, 'num_top_model_configs': 3}
         self.config['model_names'] = {
             model_name: {
@@ -68,7 +68,7 @@ class TestConfigGenerator:
 
     def generate_config_multi(self):
         self.config['model_names'][
-            self.model_names[2]]['parameters']['concurrency'] = [16, 32]
+            self.model_names[1]]['parameters']['concurrency'] = [16, 32]
         with open('config-multi.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
@@ -78,7 +78,7 @@ class TestConfigGenerator:
         are removed
         """
 
-        for model_name in self.model_names[-2:]:
+        for model_name in self.model_names[-1:]:
             del self.config['model_names'][model_name]
         with open('config-mixed-first.yml', 'w+') as f:
             yaml.dump(self.config, f)
@@ -88,10 +88,10 @@ class TestConfigGenerator:
         Generate config where first two models are
         removed, and 3rd model has changed run parameters
         """
-        for model_name in self.model_names[:2]:
+        for model_name in self.model_names[:1]:
             del self.config['model_names'][model_name]
         self.config['model_names'][
-            self.model_names[2]]['parameters']['concurrency'] = [32]
+            self.model_names[1]]['parameters']['concurrency'] = [32]
         with open('config-mixed-second.yml', 'w+') as f:
             yaml.dump(self.config, f)
 

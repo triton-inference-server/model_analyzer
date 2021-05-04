@@ -61,7 +61,7 @@ if [ $? -ne 0 ]; then
     cat $ANALYZER_LOG
     RET=1
 else
-    python3 check_results.py -f $CONFIG_FILE -m $MODEL_NAMES -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
+    python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
@@ -81,7 +81,7 @@ if [ $? -ne 0 ]; then
     cat $ANALYZER_LOG
     RET=1
 else
-    python3 check_results.py -f $CONFIG_FILE -m $MODEL_NAMES -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
+    python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
@@ -93,7 +93,7 @@ set -e
 # Clear checkpoints and results
 rm -rf $EXPORT_PATH/*
 
-# Third run the config again and send SIGINT after 3 models run
+# Fourth run config multple and send SIGINT after 2 models run
 TEST_NAME="interrupt_handling"
 CONFIG_FILE="config-multi.yml"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE"
@@ -104,7 +104,7 @@ run_analyzer_nohup
 ANALYZER_PID=$!
 
 sleep 5
-until [[ $(ls $EXPORT_PATH/checkpoints | wc -l) == "2" ]]; do
+until [[ $(ls $EXPORT_PATH/checkpoints | wc -l) == "1" ]]; do
     sleep 1
 done
 
@@ -116,7 +116,7 @@ if [ $? -ne 0 ]; then
     cat $ANALYZER_LOG
     RET=1
 else
-    python3 check_results.py -f $CONFIG_FILE -m $MODEL_NAMES -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
+    python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
@@ -124,7 +124,6 @@ else
     fi
 fi
 
-# Fourth run config multple and send SIGINT after 3 models run
 TEST_NAME="continue_after_checkpoint"
 ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
 
@@ -134,7 +133,7 @@ if [ $? -ne 0 ]; then
     cat $ANALYZER_LOG
     RET=1
 else
-    python3 check_results.py -f $CONFIG_FILE -m $MODEL_NAMES -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
+    python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
@@ -170,7 +169,7 @@ if [ $? -ne 0 ]; then
     cat $ANALYZER_LOG
     RET=1
 else
-    python3 check_results.py -f $CONFIG_FILE -m $MODEL_NAMES -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
+    python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $EXPORT_PATH -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
