@@ -21,7 +21,7 @@ rm -f *.log
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/$REPO_VERSION/libtorch_model_store"}
-MODEL_NAMES="inception_v1_graphdef"
+MODEL_NAMES="vgg19_libtorch"
 BATCH_SIZES="1"
 CONCURRENCY="1"
 TRITON_LAUNCH_MODE="local"

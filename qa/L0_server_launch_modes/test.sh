@@ -35,6 +35,7 @@ MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:$http_port --triton-grpc-
 MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:$metrics_port/metrics"
 TRITON_LAUNCH_MODES="docker remote local"
 CLIENT_PROTOCOLS="http grpc"
+TRITON_DOCKER_IMAGE="gitlab-master.nvidia.com:5005/dl/dgx/tritonserver:21.03-py3-base"
 
 # Run the model-analyzer, both client protocols
 RET=0
@@ -110,7 +111,7 @@ function run_server_launch_modes() {
             if [ "$LAUNCH_MODE" == "local" ]; then    
                 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG}"
             elif [ "$LAUNCH_MODE" == "docker" ]; then
-                MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG}"
+                MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_DOCKER_IMAGE"
             elif [ "$LAUNCH_MODE" == "remote" ]; then
                 MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:8000 --triton-grpc-endpoint localhost:8001"
                 MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:8002/metrics"
