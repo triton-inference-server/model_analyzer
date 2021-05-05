@@ -18,10 +18,6 @@ limitations under the License.
 
 # Triton Model Analyzer
 
-**NOTE: You are currently on main branch. This branch is tracking 
-development for the new version of Model Analyzer and is not currently 
-usable.**
-
 Triton Model Analyzer is a CLI tool to help with better understanding of the
 compute and memory requirements of the Triton Inference Server models. These
 reports will help the user better understand the trade-offs in different
