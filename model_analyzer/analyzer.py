@@ -108,7 +108,7 @@ class Analyzer:
             self._state_manager.get_state_variable(
                 'ResultManager.results').keys())
         logging.info(
-            f"Finished profiling. Obtained measurements for models: {profiled_model_list}"
+            f"Finished profiling. Obtained measurements for models: {profiled_model_list}."
         )
 
     def analyze(self):

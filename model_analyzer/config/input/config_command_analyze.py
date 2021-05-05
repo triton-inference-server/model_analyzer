@@ -42,12 +42,6 @@ class ConfigCommandAnalyze(ConfigCommand):
     """
     Model Analyzer config object.
     """
-    def __init__(self):
-        """
-        Create a new config.
-        """
-        super().__init__()
-
     def _fill_config(self):
         """
         Builder function makes calls to add config to 
@@ -247,6 +241,7 @@ class ConfigCommandAnalyze(ConfigCommand):
         self._add_config(
             ConfigField(
                 'num_configs_per_model',
+                flags=['--num-configs-per-model'],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_NUM_CONFIGS_PER_MODEL,
                 description=
@@ -255,6 +250,7 @@ class ConfigCommandAnalyze(ConfigCommand):
         self._add_config(
             ConfigField(
                 'num_top_model_configs',
+                flags=['--num-top-model-configs'],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_NUM_TOP_MODEL_CONFIGS,
                 description=

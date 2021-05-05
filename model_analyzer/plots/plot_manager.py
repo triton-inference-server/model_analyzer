@@ -123,7 +123,7 @@ class PlotManager:
                 model_config_label=measurement.perf_config()['model-name'],
                 measurement=measurement)
 
-        # clear and replot points
+        # In case this plot already had lines, we want to clear and replot
         self._simple_plots[plots_key][plot_config.name()].clear()
         self._simple_plots[plots_key][plot_config.name(
         )].plot_data_and_constraints(constraints=constraints)
@@ -141,10 +141,13 @@ class PlotManager:
                 f'latency_breakdown', 'Online Performance')
             measurements = self._result_manager.get_model_config_measurements(
                 model_config_name)[1]
-            for measurement in measurements:
-                self._detailed_plots[model_config_name].add_measurement(
-                    measurement)
-            self._detailed_plots[model_config_name].plot_data()
+
+            # If model_config_name was present in results
+            if measurements:
+                for measurement in measurements:
+                    self._detailed_plots[model_config_name].add_measurement(
+                        measurement)
+                self._detailed_plots[model_config_name].plot_data()
 
             # Create the simple plots for the detailed reports
             for plot_config in model.plots():

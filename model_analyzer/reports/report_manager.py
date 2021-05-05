@@ -229,7 +229,7 @@ class ReportManager:
         # First add row of detailed
         detailed_report.add_images([detailed_plot], [detailed_caption])
 
-        # Next add the simple plots created for this detailed report
+        # Next add the SimplePlots created for this detailed report
         plot_stack = []
         caption_stack = []
         plot_path = os.path.join(self._config.export_path, 'plots', 'simple',
@@ -242,6 +242,7 @@ class ReportManager:
             if len(plot_stack) == 2:
                 detailed_report.add_images(plot_stack, caption_stack)
                 plot_stack = []
+                caption_stack = []
 
         # Odd number of plots
         if plot_stack:

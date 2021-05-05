@@ -15,7 +15,6 @@
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 import yaml
-import numba
 
 
 class ConfigCommand:

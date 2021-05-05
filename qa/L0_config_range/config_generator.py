@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 from itertools import product
 import yaml
 
@@ -34,7 +35,7 @@ def _get_range_configs():
     intervals = [str(x) for x in intervals]
 
     shared_args = {
-        'model_names': [['resnet50_libtorch']],
+        'profile_models': [['resnet50_libtorch']],
         'run_config_search_disable': [True],
         'perf_analyzer_cpu_util': [600],
         'triton_launch_mode': ['docker'],
@@ -52,14 +53,12 @@ def _get_range_configs():
 
     # model names combinations
     param_combs = []
-    model_names_combs = dict(shared_args)
-    model_names_combs['model_names'] = [
-        ['resnet50_libtorch', 'vgg19_libtorch'],
-        ['vgg19_libtorch'],
-        'resnet50_libtorch,vgg19_libtorch'
-    ]
+    profile_models_combs = dict(shared_args)
+    profile_models_combs['profile_models'] = [[
+        'resnet50_libtorch', 'vgg19_libtorch'
+    ], ['vgg19_libtorch'], 'resnet50_libtorch,vgg19_libtorch']
 
-    param_combs += list(product(*tuple(model_names_combs.values())))
+    param_combs += list(product(*tuple(profile_models_combs.values())))
 
     range_combs = [{
         'start': begin,
@@ -81,10 +80,10 @@ def _get_range_configs():
     for param_combination in param_combs:
         new_run = dict(zip(shared_args.keys(), param_combination))
 
-        if type(new_run['model_names']) is str:
-            number_of_models = len(new_run['model_names'].split(','))
+        if type(new_run['profile_models']) is str:
+            number_of_models = len(new_run['profile_models'].split(','))
         else:
-            number_of_models = len(new_run['model_names'])
+            number_of_models = len(new_run['profile_models'])
 
         if type(new_run['concurrency']) is str:
             concurrency_number = len(new_run['concurrency'].split(','))
@@ -115,5 +114,13 @@ if __name__ == "__main__":
         del configuration['total_param']
         with open(f'./config-{i}.yml', 'w') as file:
             yaml.dump(configuration, file)
+        with open(f'./config-{i}.yml', 'r') as file:
+            config = yaml.load(file, Loader=yaml.FullLoader)
         with open(f'./config-{i}.txt', 'w') as file:
             file.write(str(total_param))
+
+        with open(f'./config-{i}.models', 'w') as file:
+            if isinstance(config['profile_models'], str):
+                file.write(config['profile_models'])
+            else:
+                file.write(','.join(config['profile_models']))

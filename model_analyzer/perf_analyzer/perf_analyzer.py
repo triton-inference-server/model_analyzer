@@ -47,9 +47,14 @@ class PerfAnalyzer:
 
     # The metrics that PerfAnalyzer can collect
     perf_metrics = {
-        PerfLatency, PerfThroughput, PerfClientSendRecv,
-        PerfClientResponseWait, PerfServerQueue, PerfServerComputeInfer,
-        PerfServerComputeInput, PerfServerComputeOutput
+        PerfLatency: "_parse_perf_latency",
+        PerfThroughput: "_parse_perf_throughput",
+        PerfClientSendRecv: "_parse_perf_client_send_recv",
+        PerfClientResponseWait: "_parse_perf_client_response_wait",
+        PerfServerQueue: "_parse_perf_server_queue",
+        PerfServerComputeInfer: "_parse_perf_server_compute_infer",
+        PerfServerComputeInput: "_parse_perf_server_compute_input",
+        PerfServerComputeOutput: "_parse_perf_server_compute_output"
     }
 
     def __init__(self, path, config, timeout, max_cpu_util):
@@ -160,7 +165,7 @@ class PerfAnalyzer:
                         )
                         return 1
                 else:
-                    self._parse_output()
+                    self._parse_output(metrics)
                     break
             else:
                 logging.info(
@@ -199,7 +204,7 @@ class PerfAnalyzer:
             "Attempted to get perf_analyzer resultss"
             "without calling run first.")
 
-    def _parse_output(self):
+    def _parse_output(self, metrics):
         """
         Extract metrics from the output of
         the perf_analyzer
@@ -217,23 +222,22 @@ class PerfAnalyzer:
         server_section = self._output[
             server_section_start:server_section_end].strip()
 
-        # Parse client values
-        self._perf_records.append(
-            self._parse_perf_client_send_recv(client_section))
-        self._perf_records.append(
-            self._parse_perf_client_response_wait(client_section))
-        self._perf_records.append(self._parse_perf_througput(client_section))
-        self._perf_records.append(self._parse_perf_latency(client_section))
+        server_perf_metrics = {
+            PerfServerQueue, PerfServerComputeInput, PerfServerComputeInfer,
+            PerfServerComputeOutput
+        }
 
-        # Parse Server values
-        self._perf_records.append(
-            self._parse_perf_server_queue(server_section))
-        self._perf_records.append(
-            self._parse_perf_server_compute_input(server_section))
-        self._perf_records.append(
-            self._parse_perf_server_compute_infer(server_section))
-        self._perf_records.append(
-            self._parse_perf_server_compute_output(server_section))
+        # Parse client values
+        for metric in metrics:
+            if metric not in self.perf_metrics:
+                raise TritonModelAnalyzerException(
+                    f"Perf metric : {metric} not found or supported.")
+            if metric in server_perf_metrics:
+                parse_func = getattr(self, self.perf_metrics[metric])
+                self._perf_records.append(parse_func(server_section))
+            else:
+                parse_func = getattr(self, self.perf_metrics[metric])
+                self._perf_records.append(parse_func(client_section))
 
         if not self._perf_records:
             raise TritonModelAnalyzerException(
@@ -244,6 +248,7 @@ class PerfAnalyzer:
         Parses Client send/recv values from the perf output
         """
 
+        client_send_recv = None
         if self._config['protocol'] == 'http':
             # Http terminology
             client_send_recv = re.search('send/recv (\d+)', section)
@@ -268,7 +273,7 @@ class PerfAnalyzer:
         raise TritonModelAnalyzerException(
             'perf_analyzer output did not contain client response wait time.')
 
-    def _parse_perf_througput(self, section):
+    def _parse_perf_throughput(self, section):
         """
         Parses throughput from the perf analyzer output
         """

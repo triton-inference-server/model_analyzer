@@ -83,6 +83,8 @@ class ResultManager:
         """
 
         self._state_manager.set_state_variable('ResultManager.results', {})
+        self._state_manager.set_state_variable(
+            'ResultManager.server_only_data', {})
 
     def _create_server_table(self):
         # Server only
@@ -185,7 +187,6 @@ class ResultManager:
             keys are gpu ids and values are lists of metric values
         """
 
-        self._server_only_data = data
         self._state_manager.set_state_variable(
             'ResultManager.server_only_data', data)
 

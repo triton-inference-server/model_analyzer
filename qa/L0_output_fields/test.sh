@@ -78,14 +78,14 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
             RET=1
         fi
 
-        check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) "Models\ \(GPU\ Metrics\):"
+        check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS "Models\ \(GPU\ Metrics\):"
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
             cat $ANALYZER_LOG
             RET=1
         fi
 
-        check_csv_table_row_column $MODEL_METRICS_GPU_FILE $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) $OUTPUT_TAG
+        check_csv_table_row_column $MODEL_METRICS_GPU_FILE $METRICS_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS $OUTPUT_TAG
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_GPU_FILE.\n***"
             cat $ANALYZER_LOG
@@ -99,14 +99,14 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
             RET=1
         fi
         
-        check_log_table_row_column $ANALYZER_LOG $SERVER_METRICS_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
+        check_log_table_row_column $ANALYZER_LOG $SERVER_METRICS_NUM_COLUMNS 1 "Server\ Only:"
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
             cat $ANALYZER_LOG
             RET=1
         fi
 
-        check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
+        check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_METRICS_NUM_COLUMNS 1 $OUTPUT_TAG
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Output Verification Failed for $SERVER_METRICS_FILE.\n***"
             cat $ANALYZER_LOG

@@ -157,7 +157,7 @@ class AnalyzerStateManager:
                 f'Received SIGINT maximum number of times. Saving state and exiting immediately. '
                 'perf_analyzer and tritonserver may still be running...')
             self.save_checkpoint()
-            sys.exit(0)
+            sys.exit(1)
 
     def _latest_checkpoint(self):
         """

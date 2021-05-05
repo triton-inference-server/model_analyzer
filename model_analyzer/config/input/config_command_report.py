@@ -36,12 +36,6 @@ class ConfigCommandReport(ConfigCommand):
     """
     Model Analyzer config object.
     """
-    def __init__(self):
-        """
-        Create a new config.
-        """
-        super().__init__()
-
     def _fill_config(self):
         """
         Builder function makes calls to add config to 

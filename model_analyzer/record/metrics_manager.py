@@ -141,7 +141,7 @@ class MetricsManager:
             model_gpu_metrics = self._get_gpu_inference_metrics()
         model_cpu_metrics = self._get_cpu_inference_metrics()
 
-        self._destroy_monitors()
+        self._destroy_monitors(cpu_only=cpu_only)
 
         model_non_gpu_metrics = list(perf_analyzer_metrics.values()) + list(
             model_cpu_metrics.values())

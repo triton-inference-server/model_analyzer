@@ -60,12 +60,6 @@ class ConfigCommandProfile(ConfigCommand):
     """
     Model Analyzer config object.
     """
-    def __init__(self):
-        """
-        Create a new config.
-        """
-        super().__init__()
-
     def _resolve_protobuf_field(self, field):
         """
         Recursively resolve protobuf fields.

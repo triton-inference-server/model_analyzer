@@ -112,16 +112,13 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Run perf analyzer with dummy metrics to check command parsing
         perf_metrics = [id]
-        test_latency_output = "p99 latency: 5000 us\n\n\n\n"
+        test_latency_output = "Client:\n  p99 latency: 5000 us\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
-        perf_analyzer.run(perf_metrics)
-        self.perf_mock.assert_perf_analyzer_run_as([
-            PERF_BIN_PATH, '-m', TEST_MODEL_NAME, '--measurement-interval',
-            str(self.config['measurement-interval'])
-        ])
+        with self.assertRaises(TritonModelAnalyzerException):
+            perf_analyzer.run(perf_metrics)
 
         # Test latency parsing
-        test_latency_output = "p99 latency: 5000 us\n\n\n\n"
+        test_latency_output = "Client:\n  p99 latency: 5000 us\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
         perf_metrics = [PerfLatency]
         perf_analyzer.run(perf_metrics)
@@ -130,7 +127,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(records[0].value(), 5)
 
         # Test throughput parsing
-        test_throughput_output = "Throughput: 46.8 infer/sec\n\n\n\n"
+        test_throughput_output = "Client:\n  Throughput: 46.8 infer/sec\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_throughput_output)
         perf_metrics = [PerfThroughput]
         perf_analyzer.run(perf_metrics)
@@ -139,7 +136,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(records[0].value(), 46.8)
 
         # Test parsing for both
-        test_both_output = "Throughput: 0.001 infer/sec\np99 latency: 3600 us\n\n\n\n"
+        test_both_output = "Client:\n  Throughput: 0.001 infer/sec\np99 latency: 3600 us\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_both_output)
         perf_metrics = [PerfThroughput, PerfLatency]
         perf_analyzer.run(perf_metrics)
