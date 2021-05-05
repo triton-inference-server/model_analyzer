@@ -483,7 +483,7 @@ class AnalyzerConfig:
             ConfigField('triton_docker_image',
                         flags=['--triton-docker-image'],
                         field_type=ConfigPrimitive(str),
-                        default_value='nvcr.io/nvidia/tritonserver:21.04-py3',
+                        default_value='nvcr.io/nvidia/tritonserver:21.05-py3',
                         description='Triton Server Docker image tag'))
         self._add_config(
             ConfigField(
