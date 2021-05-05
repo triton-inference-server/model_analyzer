@@ -29,6 +29,7 @@ import os
 from prometheus_client.parser import text_string_to_metric_families
 import requests
 import logging
+import shutil
 from urllib.parse import urlparse
 
 
@@ -263,6 +264,32 @@ def setup_logging(args):
                         datefmt="%Y-%m-%d %H:%M:%S")
 
 
+def create_output_model_repository(config):
+    """
+    Creates 
+
+    Parameters
+    ----------
+    ConfigCommandProfile
+        The config containing the output_model_repository_path
+    """
+
+    try:
+        os.mkdir(config.output_model_repository_path)
+    except OSError:
+        if not config.override_output_model_repository:
+            raise TritonModelAnalyzerException(
+                f'Path "{config.output_model_repository_path}" already exists. '
+                'Please set or modify "--output-model-repository-path" flag or remove this directory.'
+                ' You can also allow overriding of the output directory using'
+                ' the "--override-output-model-repository" flag.')
+        else:
+            shutil.rmtree(config.output_model_repository_path)
+            logging.warn('Overriding the output model repo path '
+                         f'"{config.output_model_repository_path}"...')
+            os.mkdir(config.output_model_repository_path)
+
+
 def main():
     """
     Main entrypoint of model_analyzer
@@ -276,8 +303,11 @@ def main():
     try:
         # Make calls to correct analyzer subcommand functions
         if args.subcommand == 'profile':
-            # Only check for exit after the events that take a long time.
+            # Check/create output model repository
+            create_output_model_repository(config)
+
             client, server = get_triton_handles(config)
+            # Only check for exit after the events that take a long time.
             if state_manager.exiting():
                 return
             check_triton_and_model_analyzer_gpus(client, server, config)

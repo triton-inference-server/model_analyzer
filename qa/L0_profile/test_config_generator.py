@@ -20,6 +20,8 @@ class TestConfigGenerator:
     """
     This class contains functions that
     create configs for various test scenarios.
+    
+    The `setup` function does the work common to all tests
 
     TO ADD A TEST: Simply add a member function whose name starts
                     with 'generate'.
@@ -31,45 +33,25 @@ class TestConfigGenerator:
         ]
 
         for test_function in test_functions:
-            self.setUp()
+            self.setup()
             test_function()
 
-    def setUp(self):
-        pass
-
-    def generate_config_summaries(self):
+    def setup(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('-m',
-                            '--analysis-models',
+                            '--profile-models',
                             type=str,
                             required=True,
-                            help='The models to be analyzed')
+                            help='The config file for this test')
 
         args = parser.parse_args()
-        analysis_models = args.analysis_models.split(',')
+        self.profile_models = sorted(args.profile_models.split(','))
+        self.config = {'batch_sizes': [1, 2], 'concurrency': [1, 2]}
+        self.config['profile_models'] = self.profile_models
+        self.config['run_config_search_disable'] = True
 
-        self.config = {'constraints': {'perf_latency': {'max': 50}}}
-        self.config['analysis_models'] = analysis_models
-
-        self.config['summarize'] = True
-        self.config['num_top_model_configs'] = 2
-        with open('config-summaries.yml', 'w+') as f:
-            yaml.dump(self.config, f)
-
-    def generate_config_detailed_reports(self):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('-m',
-                            '--report-model-configs',
-                            type=str,
-                            required=True,
-                            help='The mdoel config files for this test')
-        args = parser.parse_args()
-        self.config = {}
-        self.config['report_model_configs'] = [
-            f"{model}_i0" for model in args.report_model_configs.split(',')
-        ]
-        self.config['output_format'] = ['pdf']
-        with open('config-detailed-reports.yml', 'w+') as f:
+    def generate_config(self):
+        with open('config.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
 

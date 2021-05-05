@@ -12,18 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import yaml
 
 
-def _get_sweep_configs():
+def _get_sweep_configs(profile_models):
 
     sweep_configs = []
     model_config = {
         'run_config_search_max_concurrency': 2,
         'run_config_search_max_instance_count': 2,
         'run_config_search_max_preferred_batch_size': 2,
-        'model_names': {
-            'vgg19_libtorch': {
+        'profile_models': {
+            model: {
                 'model_config_parameters': {
                     'instance_group': [{
                         'count': [1, 2],
@@ -31,6 +32,7 @@ def _get_sweep_configs():
                     }]
                 }
             }
+            for model in profile_models
         },
     }
 
@@ -42,7 +44,7 @@ def _get_sweep_configs():
 
     model_config = {
         'run_config_search_disable': True,
-        'model_names': ['vgg19_libtorch']
+        'profile_models': ['vgg19_libtorch']
     }
 
     model_config['total_param'] = 1
@@ -55,7 +57,7 @@ def _get_sweep_configs():
         'run_config_search_max_concurrency': 2,
         'run_config_search_max_instance_count': 2,
         'run_config_search_max_preferred_batch_size': 2,
-        'model_names': ['vgg19_libtorch'],
+        'profile_models': profile_models,
     }
 
     model_config['total_param_remote'] = 2
@@ -69,12 +71,13 @@ def _get_sweep_configs():
         'run_config_search_max_concurrency': 2,
         'run_config_search_max_instance_count': 2,
         'run_config_search_max_preferred_batch_size': 1,
-        'model_names': {
-            'vgg19_libtorch': {
+        'profile_models': {
+            model: {
                 'parameters': {
                     'concurrency': [1]
                 },
             }
+            for model in profile_models
         },
     }
 
@@ -88,8 +91,8 @@ def _get_sweep_configs():
         'run_config_search_max_concurrency': 2,
         'run_config_search_max_instance_count': 2,
         'run_config_search_max_preferred_batch_size': 2,
-        'model_names': {
-            'vgg19_libtorch': {
+        'profile_models': {
+            model: {
                 'parameters': {
                     'concurrency': [1]
                 },
@@ -100,6 +103,7 @@ def _get_sweep_configs():
                     }]
                 }
             }
+            for model in profile_models
         },
     }
 
@@ -111,12 +115,13 @@ def _get_sweep_configs():
 
     model_config = {
         'run_config_search_disable': True,
-        'model_names': {
-            'vgg19_libtorch': {
+        'profile_models': {
+            model: {
                 'parameters': {
                     'concurrency': [1]
                 }
             }
+            for model in profile_models
         },
     }
 
@@ -129,8 +134,8 @@ def _get_sweep_configs():
     model_config = {
         'run_config_search_disable': True,
         'concurrency': [1],
-        'model_names': {
-            'vgg19_libtorch': {
+        'profile_models': {
+            model: {
                 'model_config_parameters': {
                     'instance_group': [{
                         'count': [1, 2],
@@ -138,6 +143,7 @@ def _get_sweep_configs():
                     }]
                 }
             }
+            for model in profile_models
         },
     }
 
@@ -149,8 +155,8 @@ def _get_sweep_configs():
 
     model_config = {
         'run_config_search_disable': True,
-        'model_names': {
-            'vgg19_libtorch': {
+        'profile_models': {
+            model: {
                 'model_config_parameters': {
                     'instance_group': [{
                         'count': [1, 2],
@@ -158,6 +164,7 @@ def _get_sweep_configs():
                     }]
                 }
             }
+            for model in profile_models
         },
     }
 
@@ -170,15 +177,24 @@ def _get_sweep_configs():
     return sweep_configs
 
 
-def get_all_configurations():
+def get_all_configurations(profile_models):
 
     run_params = []
-    run_params += _get_sweep_configs()
+    run_params += _get_sweep_configs(profile_models)
     return run_params
 
 
 if __name__ == "__main__":
-    for i, configuration in enumerate(get_all_configurations()):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-m',
+                        '--profile-models',
+                        type=str,
+                        required=True,
+                        help='The models to be profiled for this test')
+
+    args = parser.parse_args()
+    for i, configuration in enumerate(
+            get_all_configurations(args.profile_models.split(','))):
         total_param = configuration['total_param']
         total_param_remote = configuration['total_param_remote']
         total_models_remote = configuration['total_models_remote']

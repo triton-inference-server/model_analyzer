@@ -19,9 +19,7 @@ def _get_sweep_configs():
 
     sweep_configs = []
     model_config = {
-        'run_config_search_disable':
-        True,
-        'model_names': ['vgg19_libtorch'],
+        'analysis_models': ['vgg19_libtorch'],
         'server_output_fields':
         ['model_name', 'gpu_id', 'gpu_used_memory', 'gpu_utilization'],
         'gpu_output_fields': [

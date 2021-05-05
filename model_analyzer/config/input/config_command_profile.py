@@ -562,58 +562,6 @@ class ConfigCommandProfile(ConfigCommand):
                         description=
                         'Enables the output from the perf_analyzer to stdout'))
 
-    # def set_config_values(self, args):
-    #     """
-    #     Set the config values. This function sets all the values for the
-    #     config. CLI arguments have the highest priority, then YAML config
-    #     values and then default values.
-
-    #     Parameters
-    #     ----------
-    #     args : argparse.Namespace
-    #         Parsed arguments from the CLI
-
-    #     Raises
-    #     ------
-    #     TritonModelAnalyzerException
-    #         If the required fields are not specified, it will raise
-    #         this exception
-    #     """
-
-    #     if not numba.cuda.is_available():
-    #         self._prefill_cpu_only()
-
-    #     # If `cpu_only` is specified we need to change, the default value
-    #     # for other paramters.  TODO: Allow creation of dependencies
-    #     # between configs.
-    #     cpu_only_set = False
-    #     if 'cpu_only' in args:
-    #         cpu_only_set = getattr(args, 'cpu_only')
-    #     elif yaml_config is not None and 'cpu_only' in yaml_config:
-    #         cpu_only_set = yaml_config['cpu_only']
-    #     if cpu_only_set:
-    #         self._prefill_cpu_only()
-
-    # def _prefill_cpu_only(self):
-
-    #     self._fields['gpu_output_fields'].set_default_value([])
-
-    #     self._fields['plots'].set_default_value({
-    #         'throughput_v_latency': {
-    #             'title': 'Throughput vs. Latency',
-    #             'x_axis': 'perf_latency',
-    #             'y_axis': 'perf_throughput',
-    #             'monotonic': True
-    #         },
-    #         'cpu_mem_v_latency': {
-    #             'title': 'CPU Memory vs. Latency',
-    #             'x_axis': 'perf_latency',
-    #             'y_axis': 'cpu_used_ram',
-    #             'monotonic': False
-    #         }
-    #     })
-    #     self._fields['cpu_only'].set_default_value(True)
-
     def _preprocess_and_verify_arguments(self):
         """
         Enforces some rules on the config.

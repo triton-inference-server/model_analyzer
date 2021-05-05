@@ -39,15 +39,15 @@ class TestConfigGenerator:
     def setup(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('-m',
-                            '--model-names',
+                            '--profile-models',
                             type=str,
                             required=True,
-                            help='The config file for this test')
+                            help='The models being profiled')
 
         args = parser.parse_args()
-        self.model_names = sorted(args.model_names.split(','))
-        self.config = {'batch_sizes': 1, 'num_top_model_configs': 3}
-        self.config['model_names'] = {
+        self.profile_models = sorted(args.profile_models.split(','))
+        self.config = {'batch_sizes': 1}
+        self.config['profile_models'] = {
             model_name: {
                 'parameters': {
                     'concurrency': [16],
@@ -59,7 +59,7 @@ class TestConfigGenerator:
                     }]
                 }
             }
-            for model_name in self.model_names
+            for model_name in self.profile_models
         }
 
     def generate_config_single(self):
@@ -67,8 +67,8 @@ class TestConfigGenerator:
             yaml.dump(self.config, f)
 
     def generate_config_multi(self):
-        self.config['model_names'][
-            self.model_names[1]]['parameters']['concurrency'] = [16, 32]
+        self.config['profile_models'][
+            self.profile_models[1]]['parameters']['concurrency'] = [16, 32]
         with open('config-multi.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
@@ -78,8 +78,8 @@ class TestConfigGenerator:
         are removed
         """
 
-        for model_name in self.model_names[-1:]:
-            del self.config['model_names'][model_name]
+        for model_name in self.profile_models[-1:]:
+            del self.config['profile_models'][model_name]
         with open('config-mixed-first.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
@@ -88,10 +88,10 @@ class TestConfigGenerator:
         Generate config where first two models are
         removed, and 3rd model has changed run parameters
         """
-        for model_name in self.model_names[:1]:
-            del self.config['model_names'][model_name]
-        self.config['model_names'][
-            self.model_names[1]]['parameters']['concurrency'] = [32]
+        for model_name in self.profile_models[:1]:
+            del self.config['profile_models'][model_name]
+        self.config['profile_models'][
+            self.profile_models[1]]['parameters']['concurrency'] = [32]
         with open('config-mixed-second.yml', 'w+') as f:
             yaml.dump(self.config, f)
 

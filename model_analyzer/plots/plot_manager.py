@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.input.config_defaults import DEFAULT_CPU_MEM_PLOT
+from model_analyzer.config.input.objects.config_plot import ConfigPlot
 from model_analyzer.constants import TOP_MODELS_REPORT_KEY
 from model_analyzer.result.constraint_manager import ConstraintManager
 
@@ -88,6 +90,11 @@ class PlotManager:
                 constraints = self._constraints[plots_key]
             for result in self._result_manager.top_n_results(
                     model_name=model_name, n=num_results):
+                if result.model_config().cpu_only():
+                    if plot_config.y_axis() == 'gpu_used_memory':
+                        plot_name, plot_config_dict = list(
+                            DEFAULT_CPU_MEM_PLOT.items())[0]
+                        plot_config = ConfigPlot(plot_name, **plot_config_dict)
                 self._create_update_simple_plot(
                     plots_key=plots_key,
                     plot_config=plot_config,

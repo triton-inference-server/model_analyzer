@@ -50,8 +50,8 @@ class ConfigPlot:
         """
         Returns
         -------
-        list or None
-            A list containing the objectives.
+        str
+            Name of plot (to which it will be saved)
         """
 
         return self._name
@@ -60,8 +60,8 @@ class ConfigPlot:
         """
         Returns
         -------
-        dict or None
-            A dictionary containing the constraints
+        str
+            title of the plot
         """
 
         return self._title
@@ -70,8 +70,8 @@ class ConfigPlot:
         """
         Returns
         -------
-        dict or None
-            A dictionary containing the model config parameters.
+        str
+            tag for x_axis of the plot
         """
 
         return self._x_axis
@@ -81,7 +81,7 @@ class ConfigPlot:
         Returns
         -------
         str
-            The model name used for this config.
+            tag for y axis of the plot
         """
 
         return self._y_axis
@@ -96,6 +96,57 @@ class ConfigPlot:
         """
 
         return self._monotonic
+
+    def set_name(self, name):
+        """
+        Parameters
+        -------
+        name: str
+            Name of plot (to which it will be saved)
+        """
+
+        self._name = name
+
+    def set_title(self, title):
+        """
+        Parameters
+        -------
+        str
+            title of the plot
+        """
+
+        self._title = title
+
+    def set_x_axis(self, x_axis):
+        """
+        Parameters
+        -------
+        x_axis: str
+            tag for x_axis of the plot
+        """
+
+        self._x_axis = x_axis
+
+    def set_y_axis(self, y_axis):
+        """
+        Parameters
+        -------
+        y_axis: str
+            tag for x_axis of the plot
+        """
+
+        self._y_axis = y_axis
+
+    def set_monotonic(self, monotonic):
+        """
+        Parameters
+        -------
+        monotonic: str
+            Whether or not to prune
+            decreasing points 
+        """
+
+        self._monotonic = monotonic
 
     @staticmethod
     def from_list(plots):

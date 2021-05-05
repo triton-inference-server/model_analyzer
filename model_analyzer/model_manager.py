@@ -13,17 +13,12 @@
 # limitations under the License.
 
 from model_analyzer.output.file_writer import FileWriter
-from model_analyzer.result.measurement import Measurement
-from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.config.run.run_config_generator \
     import RunConfigGenerator
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
 
 import logging
 import os
-import shutil
 
 
 class ModelManager:
@@ -63,21 +58,6 @@ class ModelManager:
 
         # Generate the output model repository path folder.
         self._output_model_repo_path = config.output_model_repository_path
-        try:
-            os.mkdir(self._output_model_repo_path)
-        except OSError:
-            if not config.override_output_model_repository:
-                raise TritonModelAnalyzerException(
-                    f'Path "{self._output_model_repo_path}" already exists. '
-                    'Please set or modify "--output-model-repository-path" flag or remove this directory.'
-                    ' You can also allow overriding of the output directory using'
-                    ' the "--override-output-model-repository" flag.')
-            else:
-                shutil.rmtree(self._output_model_repo_path)
-                logging.warn(
-                    f'Overriding the output model repo path "{self._output_model_repo_path}"...'
-                )
-                os.mkdir(self._output_model_repo_path)
 
     def run_model(self, model):
         """

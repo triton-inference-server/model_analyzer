@@ -15,39 +15,53 @@
 ANALYZER_LOG="cpu.log"
 source ../common/util.sh
 
-rm -rf *.log logs/
 rm -rf results && mkdir -p results
+rm -rf checkpoints && mkdir checkpoints
+rm -f $ANALYZER_LOG
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/data/inferenceserver/$REPO_VERSION/tf_model_store"}
-EXPORT_PATH="`pwd`/logs"
+EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="grpc"
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-mkdir $EXPORT_PATH
-MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -n resnet_v1_50_cpu_graphdef --run-config-search-max-concurrency 4 --run-config-search-max-instance-count 2 --export-path logs"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
+CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
+
+python3 test_config_generator.py --model-names resnet_v1_50_cpu_graphdef
 
 # Compute expected columns (2 instance count * conccurrency * 7 dynamic batch size)
 let "TEST_OUTPUT_NUM_ROWS = 42"
 
-# Run the analyzer and check the results
 RET=0
 
+# Run the profiler
 set +e
+PROFILE_CONFIG='config-profile.yml'
+MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE --checkpoint-directory $CHECKPOINT_DIRECTORY -f $PROFILE_CONFIG"
+MODEL_ANALYZER_SUBCOMMAND="profile"
 run_analyzer
 if [ $? -ne 0 ]; then
-    echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
+    echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"
+    cat $ANALYZER_LOG
+    RET=1
+fi
+
+# Run analyze to generate reports
+MODEL_ANALYZER_ARGS="--analysis-models resnet_v1_50_cpu_graphdef -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY  --checkpoint-directory $CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS "
+MODEL_ANALYZER_SUBCOMMAND="analyze"
+run_analyzer
+if [ $? -ne 0 ]; then
+    echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"
     cat $ANALYZER_LOG
     RET=1
 else

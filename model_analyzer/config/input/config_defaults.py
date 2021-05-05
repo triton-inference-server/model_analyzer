@@ -67,6 +67,15 @@ DEFAULT_ANALYSIS_PLOTS = {
     }
 }
 
+DEFAULT_CPU_MEM_PLOT = {
+    'cpu_mem_v_latency': {
+        'title': 'CPU Memory vs. Latency',
+        'x_axis': 'perf_latency',
+        'y_axis': 'cpu_used_ram',
+        'monotonic': False
+    }
+}
+
 DEFAULT_EXPORT_PATH = '.'
 DEFAULT_FILENAME_MODEL_INFERENCE = 'metrics-model-inference.csv'
 DEFAULT_FILENAME_MODEL_GPU = 'metrics-model-gpu.csv'

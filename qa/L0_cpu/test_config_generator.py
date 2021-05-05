@@ -35,41 +35,27 @@ class TestConfigGenerator:
             test_function()
 
     def setUp(self):
-        pass
-
-    def generate_config_summaries(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('-m',
-                            '--analysis-models',
+                            '--model-names',
                             type=str,
                             required=True,
-                            help='The models to be analyzed')
+                            help='The config file for this test')
 
         args = parser.parse_args()
-        analysis_models = args.analysis_models.split(',')
+        self.model_names = args.model_names.split(',')
 
-        self.config = {'constraints': {'perf_latency': {'max': 50}}}
-        self.config['analysis_models'] = analysis_models
-
-        self.config['summarize'] = True
-        self.config['num_top_model_configs'] = 2
-        with open('config-summaries.yml', 'w+') as f:
-            yaml.dump(self.config, f)
-
-    def generate_config_detailed_reports(self):
-        parser = argparse.ArgumentParser()
-        parser.add_argument('-m',
-                            '--report-model-configs',
-                            type=str,
-                            required=True,
-                            help='The mdoel config files for this test')
-        args = parser.parse_args()
+    def generate_profile_config(self):
         self.config = {}
-        self.config['report_model_configs'] = [
-            f"{model}_i0" for model in args.report_model_configs.split(',')
-        ]
-        self.config['output_format'] = ['pdf']
-        with open('config-detailed-reports.yml', 'w+') as f:
+        self.config['run_config_search_max_concurrency'] = 4
+        self.config['run_config_search_max_instance_count'] = 2
+        self.config['profile_models'] = {
+            model_name: {
+                'cpu_only': True
+            }
+            for model_name in self.model_names
+        }
+        with open('config-profile.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
 

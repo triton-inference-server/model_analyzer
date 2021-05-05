@@ -12,17 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import yaml
 
 
-def _get_sweep_configs():
+def _get_sweep_configs(profile_models):
 
     sweep_configs = []
     model_config = {
         'run_config_search_disable': True,
         'perf_analyzer_cpu_util': 600,
-        'model_names': {
-            'resnet50_libtorch': {
+        'profile_models': {
+            model: {
                 'model_config_parameters': {
                     'instance_group': [{
                         'count': [1, 2, 3, 4],
@@ -30,6 +31,7 @@ def _get_sweep_configs():
                     }]
                 }
             }
+            for model in profile_models
         },
         'triton_launch_mode': ['docker'],
     }
@@ -39,8 +41,8 @@ def _get_sweep_configs():
     model_config = {
         'run_config_search_disable': True,
         'perf_analyzer_cpu_util': 600,
-        'model_names': {
-            'resnet50_libtorch': {
+        'profile_models': {
+            model: {
                 'model_config_parameters': {
                     'dynamic_batching': [{}, None],
                     'instance_group': [{
@@ -49,6 +51,7 @@ def _get_sweep_configs():
                     }]
                 }
             }
+            for model in profile_models
         },
         'triton_launch_mode': ['docker'],
     }
@@ -58,8 +61,8 @@ def _get_sweep_configs():
     model_config = {
         'run_config_search_disable': True,
         'perf_analyzer_cpu_util': 600,
-        'model_names': {
-            'resnet50_libtorch': {
+        'profile_models': {
+            model: {
                 'model_config_parameters': {
                     'dynamic_batching': {
                         'preferred_batch_size': [[4, 8], [5, 6]],
@@ -67,6 +70,7 @@ def _get_sweep_configs():
                     }
                 }
             }
+            for model in profile_models
         },
         'triton_launch_mode': ['docker'],
     }
@@ -75,15 +79,23 @@ def _get_sweep_configs():
     return sweep_configs
 
 
-def get_all_configurations():
+def get_all_configurations(profile_models):
 
     run_params = []
-    run_params += _get_sweep_configs()
+    run_params += _get_sweep_configs(profile_models)
     return run_params
 
 
 if __name__ == "__main__":
-    for i, configuration in enumerate(get_all_configurations()):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-m',
+                        '--profile-models',
+                        type=str,
+                        required=True,
+                        help='The models to be profiled for this test')
+
+    args = parser.parse_args()
+    for i, configuration in enumerate(get_all_configurations(args.profile_models.split(','))):
         total_param = configuration['total_param']
         del configuration['total_param']
         with open(f'./config-{i}.yml', 'w') as file:

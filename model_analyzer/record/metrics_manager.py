@@ -136,7 +136,7 @@ class MetricsManager:
             perf_analyzer_metrics = perf_analyzer_metrics_or_status
 
         # Get metrics for model inference and combine metrics that do not have GPU ID
-        model_gpu_metrics = []
+        model_gpu_metrics = {}
         if not cpu_only:
             model_gpu_metrics = self._get_gpu_inference_metrics()
         model_cpu_metrics = self._get_cpu_inference_metrics()
@@ -290,3 +290,37 @@ class MetricsManager:
         """
 
         return [RecordType.get(tag) for tag in tags]
+
+    @staticmethod
+    def is_gpu_metric(tag):
+        """
+        Returns
+        ------
+        True if the given tag is a supported gpu metric
+        False otherwise
+        """
+        metric = MetricsManager.get_metric_types([tag])
+        return metric in DCGMMonitor.model_analyzer_to_dcgm_field
+
+    @staticmethod
+    def is_perf_analyzer_metric(tag):
+        """
+        Returns
+        ------
+        True if the given tag is a supported perf_analyzer metric
+        False otherwise
+        """
+        metric = MetricsManager.get_metric_types([tag])
+        return metric in PerfAnalyzer.perf_metrics
+
+    @staticmethod
+    def is_perf_analyzer_metric(tag):
+        """
+        Returns
+        ------
+        True if the given tag is a supported cpu metric
+        False otherwise
+        """
+
+        metric = MetricsManager.get_metric_types([tag])
+        return metric in CPUMonitor.cpu_metrics
