@@ -34,6 +34,8 @@ from model_analyzer.config.input.config_command_profile \
     import ConfigCommandProfile
 from model_analyzer.config.input.config_command_analyze \
     import ConfigCommandAnalyze
+from model_analyzer.config.input.config_command_report \
+    import ConfigCommandReport
 from model_analyzer.config.input.objects.config_model_profile_spec \
     import ConfigModelProfileSpec
 from model_analyzer.constants import \
@@ -41,16 +43,19 @@ from model_analyzer.constants import \
 
 
 class TestConfig(trc.TestResultCollector):
-    def _evaluate_config(self, args, yaml_content):
+    def _evaluate_config(self, args, yaml_content, subcommand='profile'):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
-        config = ConfigCommandProfile()
+        if subcommand == 'report':
+            config = ConfigCommandReport()
+        elif subcommand == 'analyze':
+            config = ConfigCommandAnalyze()
+        else:
+            config = ConfigCommandProfile()
         cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config)
+        cli.add_subcommand(cmd=subcommand,
+                           config=config,
+                           help="Test subcommand help")
         cli.parse()
         mock_config.stop()
 
@@ -1223,6 +1228,112 @@ profile_models:
         ]
         self._assert_equality_of_model_configs(model_configs,
                                                expected_model_configs)
+
+    def test_config_shorthands(self):
+        """
+        test flags like --latency-budget
+        """
+
+        args = [
+            'model-analyzer', 'analyze', '--analysis-models', 'test_model',
+            '--latency-budget', '40'
+        ]
+        # check that global and model specific constraints are filled
+        yaml_content = ""
+        config = self._evaluate_config(args,
+                                       yaml_content,
+                                       subcommand='analyze')
+        self.assertDictEqual(config.get_all_config()['constraints'],
+                             {'perf_latency': {
+                                 'max': 40
+                             }})
+
+        self.assertDictEqual(
+            config.get_all_config()['analysis_models'][0].constraints(),
+            {'perf_latency': {
+                'max': 40
+            }})
+
+        # check that model specific constraints are appended to
+        args = [
+            'model-analyzer', 'analyze', '--latency-budget', '40', '-f',
+            'path-to-config-file'
+        ]
+        yaml_content = """
+        analysis_models:
+            test_model:
+                constraints:
+                    gpu_used_memory:
+                        max : 100
+        """
+        config = self._evaluate_config(args,
+                                       yaml_content,
+                                       subcommand='analyze')
+        self.assertDictEqual(config.get_all_config()['constraints'],
+                             {'perf_latency': {
+                                 'max': 40
+                             }})
+        self.assertDictEqual(
+            config.get_all_config()['analysis_models'][0].constraints(), {
+                'perf_latency': {
+                    'max': 40
+                },
+                'gpu_used_memory': {
+                    'max': 100
+                }
+            })
+
+        # check that model specific constraints are replaced
+        yaml_content = """
+        analysis_models:
+            test_model:
+                constraints:
+                    perf_latency:
+                        max : 100
+        """
+        config = self._evaluate_config(args,
+                                       yaml_content,
+                                       subcommand='analyze')
+        self.assertDictEqual(
+            config.get_all_config()['analysis_models'][0].constraints(),
+            {'perf_latency': {
+                'max': 40
+            }})
+
+        # check that global constraints are appended to
+        yaml_content = """
+        analysis_models: test_model
+        constraints:
+            gpu_used_memory:
+                max : 100
+        """
+
+        config = self._evaluate_config(args,
+                                       yaml_content,
+                                       subcommand='analyze')
+        self.assertDictEqual(config.get_all_config()['constraints'], {
+            'perf_latency': {
+                'max': 40
+            },
+            'gpu_used_memory': {
+                'max': 100
+            }
+        })
+
+        # check that global constraints are replaced
+        yaml_content = """
+        analysis_models: test_model
+        constraints:
+            perf_latency:
+                max : 100
+        """
+        config = self._evaluate_config(args,
+                                       yaml_content,
+                                       subcommand='analyze')
+        self.assertDictEqual(config.get_all_config()['constraints'],
+                             {'perf_latency': {
+                                 'max': 40
+                             }})
 
     def test_triton_server_flags(self):
         args = [
