@@ -71,7 +71,7 @@ class PDFReport(Report):
 
         self._body += f'<h3>{subheading}</h3>'
 
-    def add_images(self, images, image_captions):
+    def add_images(self, images, image_captions, image_width=100):
         """
         Parameters
         ----------
@@ -80,18 +80,21 @@ class PDFReport(Report):
             be added to this image row
         image_captions : list of str
             List of image captions
+        image_width: int 
+            Percentage of the the row of images
+            will occupy.
         """
 
         image_row = ""
         for img, caption in zip(images, image_captions):
             with open(img, "rb") as image_file:
                 data_uri = base64.b64encode(image_file.read()).decode('ascii')
-                image_row += f"<div class=\"image\" style=\"float:left;width:{100//len(images)}%\">"
+                image_row += f"<div class=\"image\" style=\"float:center;width:{image_width//len(images)}%\">"
                 image_row += f"<img src=\"data:image/png;base64,{data_uri}\" style=\"width:100%\">"
                 image_row += f"<center><div style=\"font-weight:bold;font-size:12;padding-bottom:20px\">{caption}</div></center>"
                 image_row += "</div>"
 
-        self._body += f"<div>{image_row}</div>"
+        self._body += f"<center><div>{image_row}</div><center>"
 
     def add_paragraph(self, paragraph, font_size=14):
         """
