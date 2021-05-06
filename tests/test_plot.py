@@ -16,7 +16,7 @@ from .common import test_result_collector as trc
 from .common.test_utils import construct_measurement
 
 from .mocks.mock_matplotlib import MockMatplotlibMethods
-from model_analyzer.plots.plot import Plot
+from model_analyzer.plots.simple_plot import SimplePlot
 from model_analyzer.result.result_comparator import ResultComparator
 
 
@@ -28,24 +28,24 @@ class TestPlotMethods(trc.TestResultCollector):
 
     def test_create_plot(self):
         # Create a plot and check for call to subplots
-        Plot(name='test_plot',
-             title='test_title',
-             x_axis='perf_throughput',
-             y_axis='perf_latency')
+        SimplePlot(name='test_plot',
+                   title='test_title',
+                   x_axis='perf_throughput',
+                   y_axis='perf_latency')
 
         self.matplotlib_mock.assert_called_subplots()
 
     def test_add_measurement(self):
-        plot = Plot(name='test_plot',
-                    title='test_title',
-                    x_axis='perf_throughput',
-                    y_axis='perf_latency')
+        plot = SimplePlot(name='test_plot',
+                          title='test_title',
+                          x_axis='perf_throughput',
+                          y_axis='perf_latency')
 
         gpu_data = {0: {'gpu_used_memory': 5000, 'gpu_utilization': 50}}
         non_gpu_data = {'perf_throughput': 200, 'perf_latency': 8000}
         objective_spec = {'perf_throughput': 10, 'perf_latency': 5}
         measurement = construct_measurement(
-            gpu_data, non_gpu_data,
+            'test_model', gpu_data, non_gpu_data,
             ResultComparator(metric_objectives=objective_spec))
 
         # Add above measurement
@@ -72,16 +72,16 @@ class TestPlotMethods(trc.TestResultCollector):
             })
 
     def test_plot_data(self):
-        plot = Plot(name='test_plot',
-                    title='test_title',
-                    x_axis='perf_throughput',
-                    y_axis='perf_latency')
+        plot = SimplePlot(name='test_plot',
+                          title='test_title',
+                          x_axis='perf_throughput',
+                          y_axis='perf_latency')
 
         gpu_data = {0: {'gpu_used_memory': 5000, 'gpu_utilization': 50}}
         non_gpu_data = {'perf_throughput': 200, 'perf_latency': 8000}
         objective_spec = {'perf_throughput': 10, 'perf_latency': 5}
         measurement = construct_measurement(
-            gpu_data, non_gpu_data,
+            'test_model', gpu_data, non_gpu_data,
             ResultComparator(metric_objectives=objective_spec))
         plot.add_measurement('test_model_label', measurement=measurement)
 
@@ -91,10 +91,10 @@ class TestPlotMethods(trc.TestResultCollector):
             x_data=[200], y_data=[8000], marker='o', label='test_model_label')
 
     def test_save(self):
-        plot = Plot(name='test_plot',
-                    title='test_title',
-                    x_axis='perf_throughput',
-                    y_axis='perf_latency')
+        plot = SimplePlot(name='test_plot',
+                          title='test_title',
+                          x_axis='perf_throughput',
+                          y_axis='perf_latency')
 
         plot.save('test_path')
         self.matplotlib_mock.assert_called_save_with_args(

@@ -27,7 +27,6 @@ class GPUMonitor(Monitor):
     """
     Monitor abstract class is a parent class used for monitoring devices.
     """
-
     def __init__(self, gpus, frequency, metrics):
         """
         Parameters
@@ -71,5 +70,5 @@ class GPUMonitor(Monitor):
             gpu_uuids.append(str(gpu.device_uuid(), encoding='ascii'))
         gpu_uuids_str = ','.join(gpu_uuids)
         logger.info(
-            f'Using GPU(s) with UUID(s) = {{ {gpu_uuids_str} }} for the analysis.'
+            f'Using GPU(s) with UUID(s) = {{ {gpu_uuids_str} }} for profiling.'
         )

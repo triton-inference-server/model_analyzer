@@ -58,11 +58,12 @@ class ResultComparator:
                 if result1 < result2
         """
 
-        # For now create an average measurment
+        ########## IMPORTANT measurment comparators return 1 on a < b (for min heap) ###########
+        ########## Here we want the max measurement, we must pass in min() ###########
         agg_measurement1 = self._aggregate_measurements(result=result1,
-                                                        aggregation_func=max)
+                                                        aggregation_func=min)
         agg_measurement2 = self._aggregate_measurements(result=result2,
-                                                        aggregation_func=max)
+                                                        aggregation_func=min)
 
         return self.compare_measurements(measurement1=agg_measurement1,
                                          measurement2=agg_measurement2)
@@ -97,6 +98,15 @@ class ResultComparator:
         for objective, weight in self._metric_weights.items():
             metric1 = measurement1.get_metric(tag=objective)
             metric2 = measurement2.get_metric(tag=objective)
+
+            # Handle the case where objective GPU metric is queried on CPU only
+            if metric1 and metric2 is None:
+                return 1
+            elif metric2 and metric1 is None:
+                return -1
+            elif metric1 is None and metric2 is None:
+                return 0
+
             metric_diff = metric1 - metric2
             score_gain += (weight * (metric_diff.value() / metric1.value()))
 

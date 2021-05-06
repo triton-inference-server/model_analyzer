@@ -15,7 +15,8 @@
 from unittest.mock import MagicMock
 from .common import test_result_collector as trc
 
-from model_analyzer.config.input.config import AnalyzerConfig
+from model_analyzer.config.input.config_command_profile \
+     import ConfigCommandProfile
 from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.cli.cli import CLI
 
@@ -23,12 +24,16 @@ from .mocks.mock_config import MockConfig
 
 
 class TestRunSearch(trc.TestResultCollector):
-
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
-        config = AnalyzerConfig()
-        cli = CLI(config)
+        config = ConfigCommandProfile()
+        cli = CLI()
+        cli.add_subcommand(
+            cmd='profile',
+            help=
+            'Run model inference profiling based on specified CLI or config options.',
+            config=config)
         cli.parse()
         mock_config.stop()
         return config
@@ -42,8 +47,9 @@ class TestRunSearch(trc.TestResultCollector):
 
     def test_run_search(self):
         args = [
-            'model-analyzer', '--model-repository', 'cli_repository', '-f',
-            'path-to-config-file', '--model-names', 'vgg11'
+            'model-analyzer', 'profile', '--model-repository',
+            'cli_repository', '-f', 'path-to-config-file', '--profile-models',
+            'vgg11'
         ]
 
         yaml_content = """
@@ -51,17 +57,17 @@ class TestRunSearch(trc.TestResultCollector):
             run_config_search_max_preferred_batch_size: 16
             run_config_search_max_instance_count: 5
             concurrency: []
-            model_names:
+            profile_models:
                 - my-model
             """
 
         config = self._evaluate_config(args, yaml_content)
         run_search = RunSearch(config=config)
 
-        concurrencies = config.model_names[0].parameters()['concurrency']
+        concurrencies = config.profile_models[0].parameters()['concurrency']
         run_search.init_model_sweep(concurrencies, True)
         config_model, model_sweeps = run_search.get_model_sweep(
-            config.model_names[0])
+            config.profile_models[0])
 
         start_throughput = 2
         expected_concurrency = 1
@@ -88,8 +94,9 @@ class TestRunSearch(trc.TestResultCollector):
 
     def test_run_search_failing(self):
         args = [
-            'model-analyzer', '--model-repository', 'cli_repository', '-f',
-            'path-to-config-file', '--model-names', 'vgg11'
+            'model-analyzer', 'profile', '--model-repository',
+            'cli_repository', '-f', 'path-to-config-file', '--profile-models',
+            'vgg11'
         ]
 
         yaml_content = """
@@ -97,7 +104,7 @@ class TestRunSearch(trc.TestResultCollector):
             run_config_search_max_preferred_batch_size: 16
             run_config_search_max_instance_count: 5
             concurrency: []
-            model_names:
+            profile_models:
                 - my-model
             """
 
@@ -106,9 +113,11 @@ class TestRunSearch(trc.TestResultCollector):
 
         # Simulate running multiple sweeps
         for i in range(2):
-            concurrencies = config.model_names[0].parameters()['concurrency']
+            concurrencies = config.profile_models[0].parameters(
+            )['concurrency']
             run_search.init_model_sweep(concurrencies, True)
-            config_model, model_sweeps = run_search.get_model_sweep(config.model_names[0])
+            config_model, model_sweeps = run_search.get_model_sweep(
+                config.profile_models[0])
 
             start_throughput = 2
             expected_concurrency = 1
@@ -116,14 +125,17 @@ class TestRunSearch(trc.TestResultCollector):
             total_runs = 0
             while model_sweeps:
                 model_sweep = model_sweeps.pop()
-                current_concurrency = config_model.parameters()['concurrency'][0]
+                current_concurrency = config_model.parameters(
+                )['concurrency'][0]
                 run_search.add_measurements(
                     [self._create_measurement(start_throughput)])
                 start_throughput *= 1.02
                 self.assertEqual(expected_concurrency, current_concurrency)
-                current_instance_count = model_sweep['instance_group'][0]['count']
+                current_instance_count = model_sweep['instance_group'][0][
+                    'count']
 
-                self.assertEqual(current_instance_count, expected_instance_count)
+                self.assertEqual(current_instance_count,
+                                 expected_instance_count)
                 total_runs += 1
 
                 # Because the growth of throughput is not substantial, the algorithm

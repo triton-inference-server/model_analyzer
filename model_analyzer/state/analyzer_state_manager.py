@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+from model_analyzer.constants import MAX_NUMBER_OF_INTERRUPTS
 from model_analyzer.state.analyzer_state import AnalyzerState
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
@@ -30,10 +32,11 @@ class AnalyzerStateManager:
     def __init__(self, config):
         self._config = config
         self._exiting = 0
-        self._checkpoint_dir = os.path.join(config.export_path, 'checkpoints')
+        self._checkpoint_dir = config.checkpoint_directory
+        self._state_changed = False
 
         if os.path.exists(self._checkpoint_dir):
-            self._checkpoint_index = self._latest_checkpoint()
+            self._checkpoint_index = self._latest_checkpoint() + 1
         else:
             os.makedirs(self._checkpoint_dir)
             self._checkpoint_index = 0
@@ -48,16 +51,6 @@ class AnalyzerStateManager:
         """
 
         return self._starting_fresh_run
-
-    def checkpoint_index(self):
-        """
-        Returns 
-        -------
-        int
-            the index of the current checkpoint
-        """
-
-        return self._checkpoint_index
 
     def exiting(self):
         """
@@ -94,6 +87,7 @@ class AnalyzerStateManager:
             the value to set for that variable
         """
 
+        self._state_changed = True
         self._current_state.set(name, value)
 
     def load_checkpoint(self):
@@ -126,6 +120,7 @@ class AnalyzerStateManager:
     def save_checkpoint(self):
         """
         Saves the state of the model analyzer to disk
+        if there has been a change since the last checkpoint
 
         Parameters
         ----------
@@ -135,11 +130,16 @@ class AnalyzerStateManager:
 
         ckpt_filename = os.path.join(self._checkpoint_dir,
                                      f"{self._checkpoint_index}.ckpt")
-        with open(ckpt_filename, 'wb') as f:
-            pickle.dump(self._current_state, f)
-        logging.info(f"Saved checkpoint to {ckpt_filename}.")
+        if self._state_changed:
+            with open(ckpt_filename, 'wb') as f:
+                pickle.dump(self._current_state, f)
+            logging.info(f"Saved checkpoint to {ckpt_filename}.")
 
-        self._checkpoint_index += 1
+            self._checkpoint_index += 1
+            self._state_changed = False
+        else:
+            logging.info(
+                f"No changes made to analyzer data, no checkpoint saved.")
 
     def interrupt_handler(self, signal, frame):
         """
@@ -150,8 +150,14 @@ class AnalyzerStateManager:
 
         self._exiting += 1
         logging.info(
-            'Received SIGINT. Stopping profiling and proceeding to process results.'
-        )
+            f'Received SIGINT {self._exiting}/{MAX_NUMBER_OF_INTERRUPTS}. '
+            'Will attempt to exit after current measurement.')
+        if self._exiting >= MAX_NUMBER_OF_INTERRUPTS:
+            logging.info(
+                f'Received SIGINT maximum number of times. Saving state and exiting immediately. '
+                'perf_analyzer and tritonserver may still be running...')
+            self.save_checkpoint()
+            sys.exit(1)
 
     def _latest_checkpoint(self):
         """
@@ -162,7 +168,7 @@ class AnalyzerStateManager:
         checkpoint_files = glob.glob(
             os.path.join(self._checkpoint_dir, '*.ckpt'))
         if not checkpoint_files:
-            return 0
+            return -1
         try:
             return max([
                 int(os.path.split(f)[1].split('.')[0])

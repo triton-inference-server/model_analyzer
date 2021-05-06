@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.input.config_command_analyze \
+    import ConfigCommandAnalyze
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.reports.report_manager import ReportManager
 from model_analyzer.result.result_comparator import ResultComparator
-from model_analyzer.config.input.config import AnalyzerConfig
-from model_analyzer.analyzer_statistics import AnalyzerStatistics
 from model_analyzer.cli.cli import CLI
 
 from .common import test_result_collector as trc
@@ -28,12 +28,18 @@ from .mocks.mock_model_config import MockModelConfig
 import unittest
 
 
+@unittest.skip("Under Construction")
 class TestReportManagerMethods(trc.TestResultCollector):
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
-        config = AnalyzerConfig()
-        cli = CLI(config)
+        config = ConfigCommandAnalyze()
+        cli = CLI()
+        cli.add_subcommand(
+            cmd='analyze',
+            help=
+            'Collect and sort profiling results and generate data and summaries.',
+            config=config)
         cli.parse()
         mock_config.stop()
         return config
@@ -51,13 +57,13 @@ class TestReportManagerMethods(trc.TestResultCollector):
         }
         mock_paths = [
             'model_analyzer.reports.report_manager',
-            'model_analyzer.config.input.config'
+            'model_analyzer.config.input.config_command_analyze'
         ]
         self.os_mock = MockOSMethods(mock_paths=mock_paths)
         self.os_mock.start()
         args = [
-            'model-analyzer', '--model-repository', 'cli_repository', '-f',
-            'path-to-config-file', '--model-names', 'test_model'
+            'model-analyzer', 'analyze', '-f', 'path-to-config-file',
+            '--analysis-models', 'test_model'
         ]
 
         yaml_content = """
@@ -69,8 +75,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 max: 100
         """
         config = self._evaluate_config(args, yaml_content)
-        self.report_manager = ReportManager(
-            config=config, statistics=AnalyzerStatistics(config=config))
+        self.report_manager = ReportManager(config=config)
 
     def test_add_results(self):
         objective_spec = {'perf_throughput': 10}

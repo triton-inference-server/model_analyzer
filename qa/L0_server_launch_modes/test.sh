@@ -29,10 +29,11 @@ PORTS=(`find_available_ports 3`)
 http_port="${PORTS[0]}"
 grpc_port="${PORTS[1]}"
 metrics_port="${PORTS[2]}"
-MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -n $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY --run-config-search-disable --perf-analyzer-cpu-util 600"
-MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY"
+CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
+MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY --profile-models $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY --run-config-search-disable --perf-analyzer-cpu-util 600"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
-MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:$metrics_port/metrics"
+MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PORTS --triton-metrics-url http://localhost:$metrics_port/metrics"
 TRITON_LAUNCH_MODES="docker remote local"
 CLIENT_PROTOCOLS="http grpc"
 TRITON_DOCKER_IMAGE="nvcr.io/nvidia/tritonserver:21.03-py3"
@@ -102,7 +103,7 @@ function run_server_launch_modes() {
     for PROTOCOL in $CLIENT_PROTOCOLS; do
         MODEL_ANALYZER_ARGS_WITH_PROTOCOL="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$PROTOCOL `convert_gpu_array_to_flag $gpus`"
         for LAUNCH_MODE in $TRITON_LAUNCH_MODES; do
-            rm -rf $OUTPUT_MODEL_REPOSITORY && rm -f checkpoints/*
+            rm -rf $OUTPUT_MODEL_REPOSITORY && rm -rf $CHECKPOINT_DIRECTORY/*
             MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE="$MODEL_ANALYZER_ARGS_WITH_PROTOCOL --triton-launch-mode=$LAUNCH_MODE"
             ANALYZER_LOG=analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
             SERVER_LOG=${LAUNCH_MODE}.${PROTOCOL}.server.log
@@ -114,13 +115,13 @@ function run_server_launch_modes() {
                 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_DOCKER_IMAGE"
             elif [ "$LAUNCH_MODE" == "remote" ]; then
                 MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:8000 --triton-grpc-endpoint localhost:8001"
-                MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PROTS --triton-metrics-url http://localhost:8002/metrics"
+                MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PORTS --triton-metrics-url http://localhost:8002/metrics"
                 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS"
 
                 # For remote launch, set server args and start server
                 SERVER=`which tritonserver`
                 SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit"
-
+                
                 run_server
                 if [ "$SERVER_PID" == "0" ]; then
                     echo -e "\n***\n*** Failed to start $SERVER\n***"
@@ -131,6 +132,7 @@ function run_server_launch_modes() {
 
             # Run the analyzer and check the results
             set +e
+            MODEL_ANALYZER_SUBCOMMAND="profile"
             run_analyzer
             if [ $? -ne 0 ]; then
                 echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\

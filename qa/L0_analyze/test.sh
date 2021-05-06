@@ -24,41 +24,22 @@ REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 QA_MODELS="vgg19_libtorch resnet50_libtorch"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
-BATCH_SIZES="1,2"
-CONCURRENCY="1,2"
 EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
-TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
-CLIENT_PROTOCOL="grpc"
-PORTS=(`find_available_ports 3`)
-GPUS=(`get_all_gpus_uuids`)
-OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-
-MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -n $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY --run-config-search-disable"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
-
-rm -rf $OUTPUT_MODEL_REPOSITORY
-
-# Compute expected columns
-NUM_MODELS=`echo $QA_MODELS | awk '{print NF}'`
-NUM_BATCHES=`echo $BATCH_SIZES | awk -F ',' '{print NF}'`
-NUM_CONCURRENCIES=`echo $CONCURRENCY | awk -F ',' '{print NF}'`
-let "TEST_OUTPUT_NUM_ROWS = $NUM_MODELS * $NUM_BATCHES * $NUM_CONCURRENCIES"
 
 # Run the analyzer and check the results
 RET=0
 
 set +e
+
+MODEL_ANALYZER_ARGS="--analysis-models $MODEL_NAMES -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
+MODEL_ANALYZER_SUBCOMMAND="analyze"
 run_analyzer
 if [ $? -ne 0 ]; then
-    echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
+    echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"
     cat $ANALYZER_LOG
     RET=1
 else
@@ -66,22 +47,24 @@ else
     MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
     MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
     METRICS_NUM_COLUMNS=11
+    METRICS_NUM_ROWS=8
     INFERENCE_NUM_COLUMNS=10
     SERVER_NUM_COLUMNS=5
+    SERVER_NUM_ROWS=1
 
-    check_log_table_row_column $ANALYZER_LOG $SERVER_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
+    check_log_table_row_column $ANALYZER_LOG $SERVER_NUM_COLUMNS $SERVER_NUM_ROWS "Server\ Only:"
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
         cat $ANALYZER_LOG
         RET=1
     fi
-    check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) "Models\ \(GPU\ Metrics\):"
+    check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS $METRICS_NUM_ROWS "Models\ \(GPU\ Metrics\):"
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
         cat $ANALYZER_LOG
         RET=1
     fi
-    check_log_table_row_column $ANALYZER_LOG $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS "Models\ \(Inference\):"
+    check_log_table_row_column $ANALYZER_LOG $INFERENCE_NUM_COLUMNS $METRICS_NUM_ROWS "Models\ \(Inference\):"
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
         cat $ANALYZER_LOG
@@ -89,19 +72,19 @@ else
     fi
 
     OUTPUT_TAG="Model"
-    check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
+    check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_NUM_COLUMNS $SERVER_NUM_ROWS $OUTPUT_TAG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $SERVER_METRICS_FILE.\n***"
         cat $ANALYZER_LOG
         RET=1
     fi
-    check_csv_table_row_column $MODEL_METRICS_GPU_FILE $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) $OUTPUT_TAG
+    check_csv_table_row_column $MODEL_METRICS_GPU_FILE $METRICS_NUM_COLUMNS $METRICS_NUM_ROWS $OUTPUT_TAG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_GPU_FILE.\n***"
         cat $ANALYZER_LOG
         RET=1
     fi
-    check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS $OUTPUT_TAG
+    check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $METRICS_NUM_ROWS $OUTPUT_TAG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_INFERENCE_FILE.\n***"
         cat $ANALYZER_LOG

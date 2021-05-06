@@ -17,8 +17,8 @@ import psutil
 import logging
 
 from .server import TritonServer
+from model_analyzer.constants import SERVER_OUTPUT_TIMEOUT_SECS
 
-SERVER_OUTPUT_TIMEOUT_SECS = 5
 logger = logging.getLogger(__name__)
 
 
@@ -55,12 +55,12 @@ class TritonServerLocal(TritonServer):
             cmd = [self._server_path]
             cmd += self._server_config.to_cli_string().replace('=',
                                                                ' ').split()
-
             self._tritonserver_process = Popen(cmd,
                                                start_new_session=True,
                                                stdout=PIPE,
                                                stderr=STDOUT,
                                                universal_newlines=True)
+
             logger.info('Triton Server started.')
 
     def stop(self):

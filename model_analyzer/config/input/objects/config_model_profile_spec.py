@@ -13,13 +13,14 @@
 # limitations under the License.
 
 
-class ConfigModel:
+class ConfigModelProfileSpec:
     """
     A class representing the configuration used for
     a single model.
     """
     def __init__(self,
                  model_name,
+                 cpu_only=False,
                  objectives=None,
                  constraints=None,
                  parameters=None,
@@ -31,6 +32,8 @@ class ConfigModel:
         ----------
         model_name : str
            Name used for the model
+        cpu_only: bool
+            Whether this model should be run on CPU only
         objectives : None or list
            List of the objectives required by the model
         constraints : None or dict
@@ -49,12 +52,23 @@ class ConfigModel:
         """
 
         self._model_name = model_name
+        self._cpu_only = cpu_only
         self._objectives = objectives
         self._constraints = constraints
         self._parameters = parameters
         self._model_config_parameters = model_config_parameters
         self._perf_analyzer_flags = perf_analyzer_flags
         self._triton_server_flags = triton_server_flags
+
+    def cpu_only(self):
+        """
+        Returns
+        -------
+        bool
+            Whether this model is run on cpu only
+        """
+
+        return self._cpu_only
 
     def objectives(self):
         """
@@ -125,6 +139,16 @@ class ConfigModel:
         """
 
         return self._triton_server_flags
+
+    def set_cpu_only(self, cpu_only):
+        """
+        Parameters
+        -------
+        cpu_only: bool
+            Set whether this model is run on cpu only
+        """
+
+        self._cpu_only = cpu_only
 
     def set_objectives(self, objectives):
         """
@@ -197,9 +221,9 @@ class ConfigModel:
         self._triton_server_flags = flags
 
     @staticmethod
-    def model_object_to_config_model(value):
+    def model_object_to_config_model_profile_spec(value):
         """
-        Converts a ConfigObject to ConfigModel.
+        Converts a ConfigObject to ConfigModelProfileSpec.
 
         Parameters
         ----------
@@ -210,19 +234,20 @@ class ConfigModel:
         Returns
         -------
         list
-            A list of ConfigModel objects.
+            A list of ConfigModelProfileSpec objects.
         """
 
         models = []
         for model_name, model_properties in value.items():
-            models.append(ConfigModel(model_name, **model_properties.value()))
+            models.append(
+                ConfigModelProfileSpec(model_name, **model_properties.value()))
 
         return models
 
     @staticmethod
-    def model_str_to_config_model(model_name):
+    def model_str_to_config_model_profile_spec(model_name):
         """
-        Constructs a ConfigModel from a given
+        Constructs a ConfigModelProfileSpec from a given
         model_name.
 
         Parameters
@@ -232,48 +257,48 @@ class ConfigModel:
 
         Returns
         -------
-        ConfigModel
-            ConfigModel object with the given model name.
+        ConfigModelProfileSpec
+            ConfigModelProfileSpec object with the given model name.
         """
 
-        return ConfigModel(model_name)
+        return ConfigModelProfileSpec(model_name)
 
     @staticmethod
-    def model_list_to_config_model(model_names):
+    def model_list_to_config_model_profile_spec(profile_models):
         """
-        Construct ConfigModel objects from a list of strings.
+        Construct ConfigModelProfileSpec objects from a list of strings.
 
         Parameters
         ----------
-        model_names : list
+        profile_models : list
             A list of strings containing model names.
 
         Returns
         -------
         list
-            A list of ConfigModel objects.
+            A list of ConfigModelProfileSpec objects.
         """
 
         models = []
-        for model_name in model_names:
-            models.append(ConfigModel(model_name))
+        for model_name in profile_models:
+            models.append(ConfigModelProfileSpec(model_name))
         return models
 
     @staticmethod
-    def model_mixed_to_config_model(models):
+    def model_mixed_to_config_model_profile_spec(models):
         """
-        Unifies a mixed list of ConfigModel objects
-        and list of ConfigModel objects.
+        Unifies a mixed list of ConfigModelProfileSpec objects
+        and list of ConfigModelProfileSpec objects.
 
         Parameters
         ----------
         models : list
-            A mixed list containing lists or ConfigModel objects.
+            A mixed list containing lists or ConfigModelProfileSpec objects.
 
         Returns
         -------
         list
-            A list only containing ConfigModel objects.
+            A list only containing ConfigModelProfileSpec objects.
         """
 
         new_models = []
@@ -287,6 +312,7 @@ class ConfigModel:
 
     def __repr__(self):
         model_object = {'model_name': self._model_name}
+        model_object['cpu_only'] = self._cpu_only
         if self._objectives:
             model_object['objectives'] = self._objectives
 

@@ -36,6 +36,7 @@ class ModelConfig:
         """
 
         self._model_config = model_config
+        self._cpu_only = False
 
     def __getstate__(self):
         """
@@ -43,16 +44,20 @@ class ModelConfig:
         ModelConfig object
         """
 
-        return json_format.MessageToDict(self._model_config)
+        model_config_dict = json_format.MessageToDict(self._model_config)
+        model_config_dict['cpu_only'] = self._cpu_only
+        return model_config_dict
 
-    def __setstate__(self, model_dict):
+    def __setstate__(self, model_config_dict):
         """
         Allows deserialization of
         ModelConfig object
         """
 
+        self._cpu_only = model_config_dict['cpu_only']
+        del model_config_dict['cpu_only']
         protobuf_message = json_format.ParseDict(
-            model_dict, model_config_pb2.ModelConfig())
+            model_config_dict, model_config_pb2.ModelConfig())
         self._model_config = protobuf_message
 
     @staticmethod
@@ -131,6 +136,27 @@ class ModelConfig:
         model_config_dict = client.get_model_config(model_name, num_retries)
 
         return ModelConfig.create_from_dictionary(model_config_dict)
+
+    def set_cpu_only(self, cpu_only):
+        """
+        Parameters
+        ----------
+        bool
+            Whether this model config has only
+            CPU instance groups
+        """
+
+        self._cpu_only = cpu_only
+
+    def cpu_only(self):
+        """
+        Return
+        -------
+        bool
+            Whether the model should be run on CPU only
+        """
+
+        return self._cpu_only
 
     def write_config_to_file(self, model_path, src_model_path,
                              last_model_path):
@@ -256,7 +282,11 @@ class ModelConfig:
                 dynamic_batch_sizes = model_config['dynamic_batching'][
                     'preferred_batch_size']
             else:
-                return "Enabled"
+                if 'max_batch_size' in model_config:
+                    dynamic_batch_sizes = [model_config['max_batch_size']]
+                else:
+                    # Model doesn't support batching
+                    return 'N/A'
             return f"[{' '.join([str(x) for x in dynamic_batch_sizes])}]"
         else:
             return "Disabled"

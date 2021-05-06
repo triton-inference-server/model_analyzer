@@ -22,13 +22,13 @@ import os
 class TestOutputValidator:
     """
     Functions that validate the output
-    of the L0_results test
+    of the test
     """
-    def __init__(self, config, test_name, export_path, analyzer_log):
+    def __init__(self, config, test_name, checkpoint_dir, analyzer_log):
         self._config = config
-        self._model_names = list(config['model_names'])
+        self._profile_models = list(config['profile_models'])
         self._analyzer_log = analyzer_log
-        self._export_path = export_path
+        self._checkpoint_dir = checkpoint_dir
 
         check_function = self.__getattribute__(f'check_{test_name}')
 
@@ -43,9 +43,8 @@ class TestOutputValidator:
         check that there is 3 checkpoints
         """
 
-        checkpoint_files = os.listdir(
-            os.path.join(self._export_path, 'checkpoints'))
-        return len(checkpoint_files) == len(self._model_names)
+        checkpoint_files = os.listdir(self._checkpoint_dir)
+        return len(checkpoint_files) == len(self._profile_models)
 
     def check_loading_checkpoints(self):
         """
@@ -68,8 +67,7 @@ class TestOutputValidator:
         been run once
         """
 
-        checkpoint_files = os.listdir(
-            os.path.join(self._export_path, 'checkpoints'))
+        checkpoint_files = os.listdir(self._checkpoint_dir)
         if len(checkpoint_files) != 2:
             return False
 
@@ -82,7 +80,7 @@ class TestOutputValidator:
             return False
 
         # check that 2nd model is profiled once
-        token = f"Profiling model {self._model_names[1]}"
+        token = f"Profiling model {self._profile_models[1]}"
         token_idx = 0
         found_count = 0
         while True:
@@ -99,7 +97,7 @@ class TestOutputValidator:
         once
         """
 
-        profiled_models = self._model_names[-2:]
+        profiled_models = self._profile_models[-2:]
         with open(self._analyzer_log, 'r') as f:
             log_contents = f.read()
 
@@ -131,7 +129,7 @@ class TestOutputValidator:
         if not self.check_continue_after_checkpoint():
             return False
 
-        profiled_models = self._model_names[-2:]
+        profiled_models = self._profile_models[-2:]
         with open(self._analyzer_log, 'r') as f:
             log_contents = f.read()
 
@@ -163,11 +161,12 @@ if __name__ == '__main__':
                         type=str,
                         required=True,
                         help='The path to the config yaml file.')
-    parser.add_argument('-d',
-                        '--export-path',
-                        type=str,
-                        required=True,
-                        help='The export path for the model analyzer.')
+    parser.add_argument(
+        '-d',
+        '--checkpoint-dir',
+        type=str,
+        required=True,
+        help='The checkpoint directory for the model analyzer.')
     parser.add_argument('-l',
                         '--analyzer-log-file',
                         type=str,
@@ -183,5 +182,5 @@ if __name__ == '__main__':
     with open(args.config_file, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
-    TestOutputValidator(config, args.test_name, args.export_path,
+    TestOutputValidator(config, args.test_name, args.checkpoint_dir,
                         args.analyzer_log_file)

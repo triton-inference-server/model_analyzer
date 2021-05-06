@@ -18,17 +18,16 @@ from collections import defaultdict
 from model_analyzer.record.metrics_manager import MetricsManager
 
 
-class Plot:
+class SimplePlot:
     """
     A wrapper class around a matplotlib
     plot that adapts with the kinds of 
     plots the model analyzer wants to generates
 
-    A singe plot holds data for all 
+    A singe plot holds data for multiple 
     model configs, but only holds one
     type of plot
     """
-
     def __init__(self, name, title, x_axis, y_axis, monotonic=False):
         """
         Parameters
@@ -57,16 +56,6 @@ class Plot:
 
         self._data = {}
 
-        self._ax.set_title(title)
-
-        self._x_header, self._y_header = [
-            metric.header(aggregation_tag='')
-            for metric in MetricsManager.get_metric_types([x_axis, y_axis])
-        ]
-
-        self._ax.set_xlabel(self._x_header)
-        self._ax.set_ylabel(self._y_header)
-
     def add_measurement(self, model_config_label, measurement):
         """
         Adds a measurment to this plot
@@ -89,6 +78,13 @@ class Plot:
         self._data[model_config_label]['y_data'].append(
             measurement.get_metric(tag=self._y_axis).value())
 
+    def clear(self):
+        """
+        Clear the contents of the current Axes object
+        """
+
+        self._ax.clear()
+
     def plot_data_and_constraints(self, constraints):
         """
         Calls plotting function
@@ -101,6 +97,16 @@ class Plot:
             keys are constraint types (min, max) and values are their 
             values
         """
+
+        self._ax.set_title(self._title)
+
+        self._x_header, self._y_header = [
+            metric.header(aggregation_tag='') for metric in
+            MetricsManager.get_metric_types([self._x_axis, self._y_axis])
+        ]
+
+        self._ax.set_xlabel(self._x_header)
+        self._ax.set_ylabel(self._y_header)
 
         for model_config_name, data in self._data.items():
             # Sort the data by x-axis

@@ -20,7 +20,6 @@ class RunConfig:
     Analyzer. One run corresponds to
     one ModelConfig and produces one ModelResult.
     """
-
     def __init__(self, model_name, model_config, perf_config):
         """
         Parameters

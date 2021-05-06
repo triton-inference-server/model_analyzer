@@ -22,7 +22,6 @@ class ConfigEnum(ConfigValue):
     """
     Enum type support for config.
     """
-
     def __init__(self,
                  choices,
                  preprocess=None,
@@ -35,7 +34,7 @@ class ConfigEnum(ConfigValue):
 
         Parameters
         ----------
-        types : A list of allowed types
+        choices : A list of allowed choices
             The type of elements in the list
         preprocess : callable
             Function be called before setting new values.

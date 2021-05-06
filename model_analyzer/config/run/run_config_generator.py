@@ -113,6 +113,7 @@ class RunConfigGenerator:
             # of the model config alternative.
             model_tmp_name = f'{model.model_name()}_i{model_name_index}'
             model_config.set_field('name', model_tmp_name)
+            model_config.set_cpu_only(model.cpu_only())
             perf_configs = self._generate_perf_config_for_model(
                 model_tmp_name, model)
             for perf_config in perf_configs:
@@ -121,6 +122,7 @@ class RunConfigGenerator:
         else:
             model_config = ModelConfig.create_from_triton_api(
                 self._client, model.model_name(), num_retries)
+            model_config.set_cpu_only(model.cpu_only())
             perf_configs = self._generate_perf_config_for_model(
                 model.model_name(), model)
 
