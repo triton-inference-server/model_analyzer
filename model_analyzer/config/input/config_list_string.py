@@ -22,7 +22,6 @@ class ConfigListString(ConfigValue):
     """
     A list of string values.
     """
-
     def __init__(self,
                  preprocess=None,
                  required=False,

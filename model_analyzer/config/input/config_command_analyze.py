@@ -62,10 +62,12 @@ class ConfigCommandAnalyze(ConfigCommand):
                 description=
                 "Full path to directory to which to read and write checkpoints and profile data."
             ))
+
         self._add_model_spec_configs()
         self._add_export_configs()
         self._add_report_configs()
         self._add_table_configs()
+        self._add_shorthand_configs()
 
     def _add_model_spec_configs(self):
         """
@@ -257,6 +259,19 @@ class ConfigCommandAnalyze(ConfigCommand):
                 'Model Analyzer will compare this many of the top models configs across all models.'
             ))
 
+    def _add_shorthand_configs(self):
+        """
+        Adds configs for various shorthands
+        """
+
+        self._add_config(
+            ConfigField(
+                'latency_budget',
+                flags=['--latency-budget'],
+                field_type=ConfigPrimitive(int),
+                description=
+                "Shorthand flag for specifying a maximum latency in ms."))
+
     def _preprocess_and_verify_arguments(self):
         """
         Enforces some rules on the config.
@@ -338,6 +353,18 @@ class ConfigCommandAnalyze(ConfigCommand):
         config values.
         """
 
+        # Set global constraints if latency budget is specified
+        if self.latency_budget:
+            if self.constraints:
+                constraints = self.constraints
+                constraints['perf_latency'] = {'max': self.latency_budget}
+                self._fields['constraints'].set_value(constraints)
+            else:
+                self._fields['constraints'].set_value(
+                    {'perf_latency': {
+                        'max': self.latency_budget
+                    }})
+
         new_analysis_models = {}
         for model in self.analysis_models:
             new_model = {}
@@ -347,14 +374,24 @@ class ConfigCommandAnalyze(ConfigCommand):
                 new_model['objectives'] = self.objectives
             else:
                 new_model['objectives'] = model.objectives()
-
             # Constraints
             if not model.constraints():
-                if 'constraints' in self._fields and self._fields[
-                        'constraints'].value():
+                if 'constraints' in self._fields and self.constraints:
                     new_model['constraints'] = self.constraints
             else:
                 new_model['constraints'] = model.constraints()
 
+            # Shorthands
+            if self.latency_budget:
+                if 'constraints' in new_model:
+                    new_model['constraints']['perf_latency'] = {
+                        'max': self.latency_budget
+                    }
+                else:
+                    new_model['constraints'] = {
+                        'perf_latency': {
+                            'max': self.latency_budget
+                        }
+                    }
             new_analysis_models[model.model_name()] = new_model
         self._fields['analysis_models'].set_value(new_analysis_models)
