@@ -276,7 +276,7 @@ def create_output_model_repository(config):
 
     try:
         os.mkdir(config.output_model_repository_path)
-    except OSError:
+    except FileExistsError:
         if not config.override_output_model_repository:
             raise TritonModelAnalyzerException(
                 f'Path "{config.output_model_repository_path}" already exists. '
