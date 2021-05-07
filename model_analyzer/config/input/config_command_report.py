@@ -101,7 +101,7 @@ class ConfigCommandReport(ConfigCommand):
         self._add_config(
             ConfigField(
                 'report_model_configs',
-                flags=['--report_model_configs', '-n'],
+                flags=['--report-model-configs', '-n'],
                 field_type=ConfigUnion([
                     report_model_scheme,
                     ConfigListGeneric(ConfigUnion([
