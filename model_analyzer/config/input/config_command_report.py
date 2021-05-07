@@ -121,11 +121,14 @@ class ConfigCommandReport(ConfigCommand):
                     'Comma delimited list of the names of model configs'
                     ' for which to generate detailed reports.')))
         self._add_config(
-            ConfigField('output_format',
-                        flags=['--output-format', '-o'],
+            ConfigField('output_formats',
+                        flags=['--output-formats', '-o'],
                         default_value=DEFAULT_REPORT_FORMAT,
-                        field_type=ConfigListGeneric(type_=ConfigEnum(
-                            choices=['pdf', 'csv', 'png'])),
+                        field_type=ConfigUnion([
+                            ConfigListGeneric(type_=ConfigEnum(
+                                choices=['pdf', 'csv', 'png'])),
+                            ConfigListString()
+                        ]),
                         description='Output file format for detailed report.'))
 
     def _preprocess_and_verify_arguments(self):

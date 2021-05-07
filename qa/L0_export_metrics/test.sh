@@ -63,7 +63,7 @@ else
         cat $ANALYZER_LOG
         RET=1
     fi
-    check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $NUM_ROWS $OUTPUT_TAG
+    check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $METRICS_NUM_ROWS $OUTPUT_TAG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_INFERENCE_FILE.\n***"
         cat $ANALYZER_LOG

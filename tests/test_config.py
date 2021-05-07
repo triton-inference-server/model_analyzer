@@ -61,16 +61,22 @@ class TestConfig(trc.TestResultCollector):
 
         return config
 
-    def _assert_error_on_evaluate_config(self, args, yaml_content):
+    def _assert_error_on_evaluate_config(self,
+                                         args,
+                                         yaml_content,
+                                         subcommand='profile'):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
-        config = ConfigCommandProfile()
+        if subcommand == 'report':
+            config = ConfigCommandReport()
+        elif subcommand == 'analyze':
+            config = ConfigCommandAnalyze()
+        else:
+            config = ConfigCommandProfile()
         cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config)
+        cli.add_subcommand(cmd=subcommand,
+                           config=config,
+                           help="Test subcommand help")
         # When a required field is not specified, parse will lead to an
         # exceptin
         with self.assertRaises(TritonModelAnalyzerException):
@@ -984,16 +990,16 @@ plots:
             'cli_repository', '-f', 'path-to-config-file'
         ]
         yaml_content = """
-profile_models:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            instance_group:
-                -
-                    kind: KIND_GPU
-                    count: 1
+        profile_models:
+        -
+            vgg_16_graphdef:
+                model_config_parameters:
+                    instance_group:
+                        -
+                            kind: KIND_GPU
+                            count: 1
 
-"""
+        """
         # Test defaults
         config = self._evaluate_config(args, yaml_content)
         model_configs = config.get_all_config()['profile_models']
@@ -1361,6 +1367,135 @@ triton_server_flags:
 """
         with self.assertRaises(TritonModelAnalyzerException):
             config = self._evaluate_config(args, yaml_content)
+
+    def test_report_configs(self):
+        args = [
+            'model-analyzer', 'report', '--report_model_configs', 'test-model'
+        ]
+        yaml_content = ""
+        config = self._evaluate_config(args, yaml_content, subcommand='report')
+        self.assertEqual(
+            config.get_all_config()['report_model_configs']
+            [0].model_config_name(), 'test-model')
+
+        # check output format
+        args = [
+            'model-analyzer', 'report', '--report_model_configs', 'test-model',
+            '--output-formats', 'pdf'
+        ]
+        config = self._evaluate_config(args, yaml_content, subcommand='report')
+        self.assertEqual(config.get_all_config()['output_formats'], ['pdf'])
+        args = [
+            'model-analyzer', 'report', '--report_model_configs', 'test-model',
+            '--output-formats', 'pdf,csv,svg'
+        ]
+        config = self._evaluate_config(args, yaml_content, subcommand='report')
+        self.assertEqual(config.get_all_config()['output_formats'],
+                         ['pdf', 'csv', 'svg'])
+
+        # Check yaml report model config
+        args = ['model-analyzer', 'report', '-f', 'path-to-config-file']
+        yaml_content = """
+        report_model_configs:
+            - test_model_i0
+        output_formats:
+          - pdf
+          - csv
+          - png
+        """
+
+        config = self._evaluate_config(args, yaml_content, subcommand='report')
+        self.assertEqual(
+            config.get_all_config()['report_model_configs']
+            [0].model_config_name(), 'test_model_i0')
+        self.assertEqual(config.get_all_config()['output_formats'],
+                         ['pdf', 'csv', 'png'])
+
+        # Check plots
+        args = ['model-analyzer', 'report', '-f', 'path-to-config-file']
+        yaml_content = """
+        report_model_configs:
+           - test_model_i0
+           - test_model_i1
+        plots:
+            throughput_v_latency:
+                title: Throughput vs. Latency
+                x_axis: perf_latency
+                y_axis: perf_throughput
+                monotonic: True
+        """
+
+        config = self._evaluate_config(args, yaml_content, subcommand='report')
+        self.assertEqual(
+            config.get_all_config()['report_model_configs']
+            [0].model_config_name(), 'test_model_i0')
+        self.assertEqual(
+            config.get_all_config()['report_model_configs']
+            [1].model_config_name(), 'test_model_i1')
+        expected_config_plot = {
+            'throughput_v_latency': {
+                'title': 'Throughput vs. Latency',
+                'x_axis': 'perf_latency',
+                'y_axis': 'perf_throughput',
+                'monotonic': True
+            }
+        }
+        config_plot = config.get_all_config()['plots'][0]
+        config_plot_dict = {
+            config_plot.name(): {
+                'title': config_plot.title(),
+                'x_axis': config_plot.x_axis(),
+                'y_axis': config_plot.y_axis(),
+                'monotonic': config_plot.monotonic()
+            }
+        }
+        self.assertDictEqual(config_plot_dict, expected_config_plot)
+        for report_model_config in config.report_model_configs:
+            config_plot = report_model_config.plots()[0]
+            config_plot_dict = {
+                config_plot.name(): {
+                    'title': config_plot.title(),
+                    'x_axis': config_plot.x_axis(),
+                    'y_axis': config_plot.y_axis(),
+                    'monotonic': config_plot.monotonic()
+                }
+            }
+            self.assertDictEqual(config_plot_dict, expected_config_plot)
+
+        # Check individual plots
+        yaml_content = """
+        report_model_configs:
+            test_model_i0:
+                plots:
+                  model_specific_throughput_v_latency:
+                    title: model specific title
+                    x_axis: perf_latency
+                    y_axis: perf_throughput
+                    monotonic: True
+        plots:
+            throughput_v_latency:
+                title: Throughput vs. Latency
+                x_axis: perf_latency
+                y_axis: perf_throughput
+                monotonic: True
+        """
+
+        config = self._evaluate_config(args, yaml_content, subcommand='report')
+        global_config_plot = config.get_all_config()['plots'][0]
+        global_config_plot_dict = {
+            config_plot.name(): {
+                'title': global_config_plot.title(),
+                'x_axis': global_config_plot.x_axis(),
+                'y_axis': global_config_plot.y_axis(),
+                'monotonic': global_config_plot.monotonic()
+            }
+        }
+        self.assertDictEqual(expected_config_plot, global_config_plot_dict)
+        model_specific_plot = config.get_all_config(
+        )['report_model_configs'][0].plots()[0]
+        self.assertEqual(model_specific_plot.name(),
+                         'model_specific_throughput_v_latency')
+        self.assertEqual(model_specific_plot.title(), 'model specific title')
 
 
 if __name__ == '__main__':
