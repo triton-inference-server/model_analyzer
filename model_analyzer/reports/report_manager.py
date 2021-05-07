@@ -324,9 +324,11 @@ class ReportManager:
                                                'plots', 'simple', report_key,
                                                'gpu_mem_v_latency.png')
             caption_memory_latency = f"GPU Memory vs. Latency curves for {num_best_configs} best configurations."
-            summary.add_images(
-                [throughput_latency_plot, memory_latency_plot],
-                [caption_throughput_latency, caption_memory_latency])
+            summary.add_images([throughput_latency_plot],
+                               [caption_throughput_latency],
+                               image_width=66)
+            summary.add_images([memory_latency_plot], [caption_memory_latency],
+                               image_width=66)
         else:
             summary.add_paragraph(
                 "The maximum GPU memory consumption for each of the above points is"
@@ -335,9 +337,11 @@ class ReportManager:
                                                'plots', 'simple', report_key,
                                                'cpu_mem_v_latency.png')
             caption_memory_latency = f"CPU Memory vs. Latency curves for {num_best_configs} best configurations."
-            summary.add_images(
-                [throughput_latency_plot, memory_latency_plot],
-                [caption_throughput_latency, caption_memory_latency])
+            summary.add_images([throughput_latency_plot],
+                               [caption_throughput_latency],
+                               image_width=66)
+            summary.add_images([memory_latency_plot], [caption_memory_latency],
+                               image_width=66)
 
         summary.add_paragraph(
             "The following table summarizes each configuration at the measurement"
