@@ -1370,7 +1370,7 @@ triton_server_flags:
 
     def test_report_configs(self):
         args = [
-            'model-analyzer', 'report', '--report_model_configs', 'test-model'
+            'model-analyzer', 'report', '--report-model-configs', 'test-model'
         ]
         yaml_content = ""
         config = self._evaluate_config(args, yaml_content, subcommand='report')
@@ -1380,13 +1380,13 @@ triton_server_flags:
 
         # check output format
         args = [
-            'model-analyzer', 'report', '--report_model_configs', 'test-model',
+            'model-analyzer', 'report', '--report-model-configs', 'test-model',
             '--output-formats', 'pdf'
         ]
         config = self._evaluate_config(args, yaml_content, subcommand='report')
         self.assertEqual(config.get_all_config()['output_formats'], ['pdf'])
         args = [
-            'model-analyzer', 'report', '--report_model_configs', 'test-model',
+            'model-analyzer', 'report', '--report-model-configs', 'test-model',
             '--output-formats', 'pdf,csv,svg'
         ]
         config = self._evaluate_config(args, yaml_content, subcommand='report')
