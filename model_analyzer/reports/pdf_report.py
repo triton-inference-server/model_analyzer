@@ -94,7 +94,7 @@ class PDFReport(Report):
                 image_row += f"<center><div style=\"font-weight:bold;font-size:12;padding-bottom:20px\">{caption}</div></center>"
                 image_row += "</div>"
 
-        self._body += f"<center><div>{image_row}</div><center>"
+        self._body += f"<center><div>{image_row}</div></center>"
 
     def add_paragraph(self, paragraph, font_size=14):
         """
