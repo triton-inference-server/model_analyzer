@@ -22,6 +22,7 @@ class ConfigUnion(ConfigValue):
     """
     ConfigUnion allows the value to be any of multiple ConfigValue types.
     """
+
     def __init__(self,
                  types,
                  preprocess=None,

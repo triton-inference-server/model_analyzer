@@ -21,6 +21,7 @@ class ConfigNone(ConfigValue):
     """
     A wrapper class for the primitive datatypes.
     """
+
     def __init__(self,
                  preprocess=None,
                  required=False,

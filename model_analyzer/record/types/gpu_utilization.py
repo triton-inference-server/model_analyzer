@@ -94,8 +94,7 @@ class GPUUtilization(GPURecord):
         to produce a brand new record.
         """
 
-        return GPUUtilization(device=None,
-                              value=(self.value() + other.value()))
+        return GPUUtilization(device=None, value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
@@ -103,5 +102,4 @@ class GPUUtilization(GPURecord):
         to produce a brand new record.
         """
 
-        return GPUUtilization(device=None,
-                              value=(self.value() - other.value()))
+        return GPUUtilization(device=None, value=(self.value() - other.value()))

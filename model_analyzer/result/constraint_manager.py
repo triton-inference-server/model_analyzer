@@ -18,6 +18,7 @@ class ConstraintManager:
     Handles processing and applying
     constraints on a given measurements
     """
+
     @staticmethod
     def get_constraints_for_all_models(config):
         """

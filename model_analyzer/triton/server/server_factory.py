@@ -20,6 +20,7 @@ class TritonServerFactory:
     """
     A factory for creating TritonServer instances
     """
+
     @staticmethod
     def create_server_docker(image, config, gpus):
         """

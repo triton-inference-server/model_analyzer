@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG="test.log"
 source ../common/util.sh
 
 rm -f *.log
@@ -55,8 +54,8 @@ fi
 RET=0
 
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
+    ANALYZER_LOG="$CONFIG_FILE.log"
     set +e
-    
     rm -f $CHECKPOINT_DIRECTORY/*
     
     # Run the analyzer and check the results

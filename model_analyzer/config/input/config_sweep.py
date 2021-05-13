@@ -23,6 +23,7 @@ class ConfigSweep(ConfigValue):
     """
     Representation of dictionaries in Config
     """
+
     def __init__(self,
                  sweep_type,
                  preprocess=None,
@@ -72,9 +73,7 @@ class ConfigSweep(ConfigValue):
             f'1. {config_statuses[0].message()}'
             f' 2. {config_statuses[1].message()}')
 
-        return ConfigStatus(
-            CONFIG_PARSER_FAILURE,
-            message)
+        return ConfigStatus(CONFIG_PARSER_FAILURE, message)
 
     def is_sweepable(self):
         return self._is_sweepable

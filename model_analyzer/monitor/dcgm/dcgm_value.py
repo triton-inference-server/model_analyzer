@@ -74,6 +74,7 @@ def DCGM_STR_IS_BLANK(val):
 
 
 class DcgmValue:
+
     def __init__(self, value):
         # Contains either an integer (int64), string, or double of the actual
         # value

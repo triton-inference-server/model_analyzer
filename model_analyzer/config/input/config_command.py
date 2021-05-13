@@ -21,6 +21,7 @@ class ConfigCommand:
     """
     Model Analyzer config object.
     """
+
     def __init__(self):
         """
         Create a new config.

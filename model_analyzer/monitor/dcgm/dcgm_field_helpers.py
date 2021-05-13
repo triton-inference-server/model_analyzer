@@ -77,6 +77,7 @@ class DcgmFieldValue():
 
 
 class DcgmFieldValueTimeSeries:
+
     def __init__(self):
         # Values in timestamp order
         self.values = []
@@ -263,8 +264,7 @@ class DcgmFieldGroupWatcher(DcgmFieldValueCollection):
         """
         ret = dcgm_agent.dcgmWatchFields(self._handle, self._groupId,
                                          self._fieldGroup, self._updateFreq,
-                                         self._maxKeepAge,
-                                         self._maxKeepSamples)
+                                         self._maxKeepAge, self._maxKeepSamples)
         # Will throw exception on error
         dcgm_structs._dcgmCheckReturn(ret)
 

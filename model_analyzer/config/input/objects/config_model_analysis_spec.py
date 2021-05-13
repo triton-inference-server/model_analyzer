@@ -18,6 +18,7 @@ class ConfigModelAnalysisSpec:
     A class representing the configuration used for
     a single model.
     """
+
     def __init__(self, model_name, objectives=None, constraints=None):
         """
         Parameters
@@ -114,8 +115,7 @@ class ConfigModelAnalysisSpec:
         models = []
         for model_name, model_properties in value.items():
             models.append(
-                ConfigModelAnalysisSpec(model_name,
-                                        **model_properties.value()))
+                ConfigModelAnalysisSpec(model_name, **model_properties.value()))
 
         return models
 

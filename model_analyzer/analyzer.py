@@ -35,6 +35,7 @@ class Analyzer:
     model_analyzer. Configured with metrics to monitor, exposes profiling and
     result writing methods.
     """
+
     def __init__(self, config, server, state_manager):
         """
         Parameters

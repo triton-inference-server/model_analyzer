@@ -18,6 +18,7 @@ class ConfigModelProfileSpec:
     A class representing the configuration used for
     a single model.
     """
+
     def __init__(self,
                  model_name,
                  cpu_only=False,

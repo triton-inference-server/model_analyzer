@@ -14,6 +14,7 @@
 
 
 class ConfigStatus:
+
     def __init__(self, status, message=None, config_object=None):
         """
         Create a new ConfigStatus

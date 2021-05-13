@@ -21,6 +21,7 @@ class TritonGRPCClient(TritonClient):
     Concrete implementation of TritonClient
     for GRPC
     """
+
     def __init__(self, server_url):
         """
         Parameters
