@@ -23,52 +23,52 @@ class TritonServerConfig:
     """
     server_arg_keys = [
         # Logging
-        'log_verbose',
-        'log_info',
-        'log_warning',
-        'log_error',
+        'log-verbose',
+        'log-info',
+        'log-warning',
+        'log-error',
         'id',
         # Model Repository
-        'model_store',
-        'model_repository',
+        'model-store',
+        'model-repository',
         # Exit
-        'exit_timeout_secs',
-        'exit_on_error',
+        'exit-timeout-secs',
+        'exit-on-error',
         # Strictness
-        'strict_model_config',
-        'strict_readiness',
+        'strict-model-config',
+        'strict-readiness',
         # API Servers
-        'allow_http',
-        'http_port',
-        'http_thread_count',
-        'allow_grpc',
-        'grpc_port',
-        'grpc_infer_allocation_pool_size',
-        'grpc_use_ssl',
-        'grpc_server_cert',
-        'grpc_server_key',
-        'grpc_root_cert',
-        'allow_metrics',
-        'allow_gpu_metrics',
-        'metrics_port',
+        'allow-http',
+        'http-port',
+        'http-thread-count',
+        'allow-grpc',
+        'grpc-port',
+        'grpc-infer-allocation-pool-size',
+        'grpc-use-ssl',
+        'grpc-server-cert',
+        'grpc-server-key',
+        'grpc-root-cert',
+        'allow-metrics',
+        'allow-gpu-metrics',
+        'metrics-port',
         # Tracing
-        'trace_file',
-        'trace_level',
-        'trace_rate',
+        'trace-file',
+        'trace-level',
+        'trace-rate',
         # Model control
-        'model_control_mode',
-        'repository_poll_secs',
-        'load_model',
+        'model-control-mode',
+        'repository-poll-secs',
+        'load-model',
         # Memory and GPU
-        'pinned_memory_pool_byte_size',
-        'cuda_memory_pool_byte_size',
-        'min_supported_compute_capability',
+        'pinned-memory-pool-byte-size',
+        'cuda-memory-pool-byte-size',
+        'min-supported-compute-capability',
         # Backend config
-        'backend_directory',
-        'backend_config',
-        'allow_soft_placement',
-        'gpu_memory_fraction',
-        'tensorflow_version'
+        'backend-directory',
+        'backend-config',
+        'allow-soft-placement',
+        'gpu-memory-fraction',
+        'tensorflow-version'
     ]
 
     def __init__(self):
@@ -77,6 +77,20 @@ class TritonServerConfig:
         """
 
         self._server_args = {k: None for k in self.server_arg_keys}
+
+    @classmethod
+    def allowed_keys(cls):
+        """
+        Returns
+        -------
+        list of str
+            The keys that can be used to configure tritonserver instance
+        """
+
+        snake_cased_keys = [
+            key.replace('-', '_') for key in cls.server_arg_keys
+        ]
+        return cls.server_arg_keys + snake_cased_keys
 
     def update_config(self, params=None):
         """
@@ -91,7 +105,7 @@ class TritonServerConfig:
 
         if params:
             for key in params:
-                self[key.strip().replace('-', '_')] = params[key]
+                self[key.strip().replace('_', '-')] = params[key]
 
     def to_cli_string(self):
         """
@@ -107,8 +121,7 @@ class TritonServerConfig:
         """
 
         return ' '.join([
-            f'--{key.strip().replace("_", "-")}={val}'
-            for key, val in self._server_args.items() if val
+            f'--{key}={val}' for key, val in self._server_args.items() if val
         ])
 
     def __getitem__(self, key):
@@ -125,7 +138,7 @@ class TritonServerConfig:
             The value that the argument is set to in this config
         """
 
-        return self._server_args[key.strip().replace('-', '_')]
+        return self._server_args[key.strip().replace('_', '-')]
 
     def __setitem__(self, key, value):
         """
@@ -146,9 +159,9 @@ class TritonServerConfig:
             config class
         """
 
-        snake_case_key = key.strip().replace('-', '_')
-        if snake_case_key in self._server_args:
-            self._server_args[snake_case_key] = value
+        kebab_cased_key = key.strip().replace('_', '-')
+        if kebab_cased_key in self._server_args:
+            self._server_args[kebab_cased_key] = value
         else:
             raise TritonModelAnalyzerException(
                 f"The argument '{key}' to the Triton Inference "
