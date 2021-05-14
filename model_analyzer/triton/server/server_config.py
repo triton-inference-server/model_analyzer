@@ -23,52 +23,52 @@ class TritonServerConfig:
     """
     server_arg_keys = [
         # Logging
-        'log-verbose',
-        'log-info',
-        'log-warning',
-        'log-error',
+        'log_verbose',
+        'log_info',
+        'log_warning',
+        'log_error',
         'id',
         # Model Repository
-        'model-store',
-        'model-repository',
+        'model_store',
+        'model_repository',
         # Exit
-        'exit-timeout-secs',
-        'exit-on-error',
+        'exit_timeout_secs',
+        'exit_on_error',
         # Strictness
-        'strict-model-config',
-        'strict-readiness',
+        'strict_model_config',
+        'strict_readiness',
         # API Servers
-        'allow-http',
-        'http-port',
-        'http-thread-count',
-        'allow-grpc',
-        'grpc-port',
-        'grpc-infer-allocation-pool-size',
-        'grpc-use-ssl',
-        'grpc-server-cert',
-        'grpc-server-key',
-        'grpc-root-cert',
-        'allow-metrics',
-        'allow-gpu-metrics',
-        'metrics-port',
+        'allow_http',
+        'http_port',
+        'http_thread_count',
+        'allow_grpc',
+        'grpc_port',
+        'grpc_infer_allocation_pool_size',
+        'grpc_use_ssl',
+        'grpc_server_cert',
+        'grpc_server_key',
+        'grpc_root_cert',
+        'allow_metrics',
+        'allow_gpu_metrics',
+        'metrics_port',
         # Tracing
-        'trace-file',
-        'trace-level',
-        'trace-rate',
+        'trace_file',
+        'trace_level',
+        'trace_rate',
         # Model control
-        'model-control-mode',
-        'repository-poll-secs',
-        'load-model',
+        'model_control_mode',
+        'repository_poll_secs',
+        'load_model',
         # Memory and GPU
-        'pinned-memory-pool-byte-size',
-        'cuda-memory-pool-byte-size',
-        'min-supported-compute-capability',
+        'pinned_memory_pool_byte_size',
+        'cuda_memory_pool_byte_size',
+        'min_supported_compute_capability',
         # Backend config
-        'backend-directory',
-        'backend-config',
-        'allow-soft-placement',
-        'gpu-memory-fraction',
-        'tensorflow-version'
+        'backend_directory',
+        'backend_config',
+        'allow_soft_placement',
+        'gpu_memory_fraction',
+        'tensorflow_version'
     ]
 
     def __init__(self):
@@ -91,7 +91,7 @@ class TritonServerConfig:
 
         if params:
             for key in params:
-                self[key] = params[key]
+                self[key.strip().replace('-', '_')] = params[key]
 
     def to_cli_string(self):
         """
@@ -107,7 +107,8 @@ class TritonServerConfig:
         """
 
         return ' '.join([
-            f'--{key}={val}' for key, val in self._server_args.items() if val
+            f'--{key.strip().replace("_", "-")}={val}'
+            for key, val in self._server_args.items() if val
         ])
 
     def __getitem__(self, key):
@@ -124,7 +125,7 @@ class TritonServerConfig:
             The value that the argument is set to in this config
         """
 
-        return self._server_args[key]
+        return self._server_args[key.strip().replace('-', '_')]
 
     def __setitem__(self, key, value):
         """
@@ -145,8 +146,9 @@ class TritonServerConfig:
             config class
         """
 
-        if key in self._server_args:
-            self._server_args[key] = value
+        snake_case_key = key.strip().replace('-', '_')
+        if snake_case_key in self._server_args:
+            self._server_args[snake_case_key] = value
         else:
             raise TritonModelAnalyzerException(
                 f"The argument '{key}' to the Triton Inference "
