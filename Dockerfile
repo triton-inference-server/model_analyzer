@@ -42,6 +42,7 @@ RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/
 WORKDIR /opt/triton-model-analyzer
 RUN rm -fr *
 COPY --from=sdk /usr/local/bin/perf_analyzer .
+RUN chmod +x ./perf_analyzer
 COPY . .
 RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
 RUN chmod +x build_wheel.sh && \

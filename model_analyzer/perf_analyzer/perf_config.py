@@ -29,7 +29,7 @@ class PerfAnalyzerConfig:
         'stability-percentage', 'max-trials', 'percentile', 'input-data',
         'shared-memory', 'output-shared-memory-size', 'shape',
         'sequence-length', 'string-length', 'string-data', 'measurement-mode',
-        'measurement-request-control'
+        'measurement-request-count'
     ]
 
     input_to_options = [
@@ -79,8 +79,8 @@ class PerfAnalyzerConfig:
             passed into perf_analyzer
         """
 
-        return list(cls.perf_analyzer_args) + list(cls.input_to_options) + list(
-            cls.input_to_verbose)
+        return list(cls.perf_analyzer_args) + list(
+            cls.input_to_options) + list(cls.input_to_verbose)
 
     def update_config(self, params=None):
         """
@@ -143,7 +143,8 @@ class PerfAnalyzerConfig:
         elif key in self._input_to_verbose:
             return self._verbose[self._input_to_verbose[key]]
         else:
-            raise KeyError
+            raise TritonModelAnalyzerException(
+                f'Key {key} does not exist in perf_analyzer_flags.')
 
     def __setitem__(self, key, value):
         """

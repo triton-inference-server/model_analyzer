@@ -145,28 +145,33 @@ class PerfAnalyzer:
 
                 if process.returncode != 0:
                     if self._output.find(
-                            "Failed to obtain stable measurement") > 0:
-                        if self._config[
-                                'measurement-mode'] is None or self._config[
-                                    'measurement-mode'] == 'time_windows':
+                            "Failed to obtain stable measurement"
+                    ) or self._output.find(
+                            "Please use a larger time window") != -1:
+                        if self._config['measurement-mode'] == 'time_windows':
                             if self._config['measurement-interval'] is None:
                                 self._config[
                                     'measurement-interval'] = PERF_ANALYZER_MEASUREMENT_WINDOW + MEASUREMENT_WINDOW_STEP
                             else:
-                                self._config[
-                                    'measurement-interval'] += MEASUREMENT_WINDOW_STEP
+                                self._config['measurement-interval'] = int(
+                                    self._config['measurement-interval']
+                                ) + MEASUREMENT_WINDOW_STEP
                             logger.info(
                                 "perf_analyzer's measurement window is too small, "
                                 f"increased to {self._config['measurement-interval']} ms."
                             )
                         elif self._config[
-                                'measurement-mode'] == 'count_windows':
-                            if self._config['measurement-request-count'] is None:
+                                'measurement-mode'] is None or self._config[
+                                    'measurement-mode'] == 'count_windows':
+                            if self._config[
+                                    'measurement-request-count'] is None:
                                 self._config[
                                     'measurement-request-count'] = PERF_ANALYZER_MEASUREMENT_REQUEST_COUNT + MEASUREMENT_REQUEST_COUNT_STEP
                             else:
                                 self._config[
-                                    'measurement-request-count'] += MEASUREMENT_REQUEST_COUNT_STEP
+                                    'measurement-request-count'] = MEASUREMENT_REQUEST_COUNT_STEP + int(
+                                        self.
+                                        _config['measurement-request-count'])
                             logger.info(
                                 "perf_analyzer's request count is small, "
                                 f"increased to {self._config['measurement-request-count']}."

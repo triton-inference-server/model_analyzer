@@ -91,7 +91,7 @@ class TestOutputValidator:
 
             # Ensure the token appears in the text
             token_idx = contents.find(token)
-            if token_idx != -1:
+            if token_idx == -1:
                 return False
         return True
 
