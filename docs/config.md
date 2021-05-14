@@ -471,11 +471,10 @@ model_names:
   model_1:
     perf_analyzer_flags:
         percentile: 95
-        latency-report-file: /path/to/latency/report/file
+        latency_report_file: /path/to/latency/report/file
 ```
 **Important Notes**: 
-1. The section name contains underscores `perf_analyzer_flags` as seen in the example above. However the arguments themselves should contain hyphens as seen with `latency-report-file`.
-2. The Model Analyzer also provides certain arguments to the `perf_analyzer` instances it launches. These ***cannot*** be overriden by providing those arguments in this section. An example of this is `perf_measurement_window`, which is an argument to Model Analyzer itself.
+* The Model Analyzer also provides certain arguments to the `perf_analyzer` instances it launches. These ***cannot*** be overriden by providing those arguments in this section. An example of this is `perf_measurement_window`, which is an argument to Model Analyzer itself.
 
 ### The `model-names` field and `<model>`
 The `--model-names` argument can be provided as a list of strings (names of models) from the CLI interface, or as a more complex `<model>` object but only through the YAML configuration file. The model object can contain `<constraint>`, `<objective>`,
@@ -491,7 +490,7 @@ model_names:
   model_1:
     perf_analyzer_flags:
         percentile: 95
-        latency-report-file: /path/to/latency/report/file
+        latency_report_file: /path/to/latency/report/file
     model_config_parameters:
         max_batch_size: 2
         dynamic_batching:
@@ -596,11 +595,10 @@ model_names:
             - 4
             - 8
 triton_server_flags:
-    strict-model-config: False
-    log-verbose: True
+    strict_model_config: False
+    log_verbose: True
 ```
 
 **Important Notes**: 
-1. The section name contains underscores `triton_server_flags` as seen in the example above. However the arguments themselves should contain hyphens as seen with `strict-model-config`.
-2. The Model Analyzer also provides certain arguments to the `tritonserver` instances it launches. These ***cannot*** be overriden by providing those arguments in this section. An example of this is `http-port`, which is an argument to Model Analyzer itself.
+* The Model Analyzer also provides certain arguments to the `tritonserver` instances it launches. These ***cannot*** be overriden by providing those arguments in this section. An example of this is `http-port`, which is an argument to Model Analyzer itself.
 

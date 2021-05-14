@@ -79,13 +79,13 @@ class TestConfigGenerator:
         for i, model_name in enumerate(self.config['profile_models']):
             self.config['profile_models'][model_name][
                 'triton_server_flags'] = {
-                    'exit-timeout-secs': 100 + i
+                    'exit_timeout_secs': 100 + i
                 }
         with open('config-triton-per-model.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
     def generate_triton_flags_global(self):
-        self.config['triton_server_flags'] = {'strict-model-config': False}
+        self.config['triton_server_flags'] = {'strict_model_config': False}
         with open('config-triton-global.yml', 'w+') as f:
             yaml.dump(self.config, f)
 

@@ -126,7 +126,7 @@ class TestOutputValidator:
                 strict_model_config_val = bool(
                     int(line.replace(' ', '').split('|')[2]))
                 if strict_model_config_val != self._config[
-                        'triton_server_flags']['strict-model-config']:
+                        'triton_server_flags']['strict_model_config']:
                     print(
                         f"\n***\n*** strict-model-config value does not match for model {profile_model}.\n***"
                     )
