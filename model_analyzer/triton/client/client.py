@@ -26,6 +26,7 @@ class TritonClient:
     Defines the interface for the objects created by
     TritonClientFactory
     """
+
     def wait_for_server_ready(self, num_retries):
         """
         Parameters

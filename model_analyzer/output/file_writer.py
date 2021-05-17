@@ -21,6 +21,7 @@ class FileWriter(OutputWriter):
     """
     Writes table to a file or stdout
     """
+
     def __init__(self, filename=None):
         """
         Parameters

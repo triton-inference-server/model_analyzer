@@ -45,6 +45,7 @@ class GPUPowerUsage(GPURecord):
         The function that is used to aggregate
         this type of record
         """
+
         def average(seq):
             return sum(seq[1:], start=seq[0]) / len(seq)
 

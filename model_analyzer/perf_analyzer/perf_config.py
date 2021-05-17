@@ -28,7 +28,8 @@ class PerfAnalyzerConfig:
         'binary-search', 'num-of-sequence', 'latency-threshold', 'max-threads',
         'stability-percentage', 'max-trials', 'percentile', 'input-data',
         'shared-memory', 'output-shared-memory-size', 'shape',
-        'sequence-length', 'string-length', 'string-data'
+        'sequence-length', 'string-length', 'string-data', 'measurement-mode',
+        'measurement-request-count'
     ]
 
     input_to_options = [
@@ -83,8 +84,7 @@ class PerfAnalyzerConfig:
 
     def update_config(self, params=None):
         """
-        Allows setting values from a
-        params dict
+        Allows setting values from a params dict
 
         Parameters
         ----------
@@ -92,7 +92,7 @@ class PerfAnalyzerConfig:
             keys are allowed args to perf_analyzer
         """
 
-        if params:
+        if params and type(params) is dict:
             for key in params:
                 self[key] = params[key]
 
@@ -123,15 +123,16 @@ class PerfAnalyzerConfig:
         Parameters
         ----------
         key : str
-            The name of the argument to the tritonserver
+            The name of the argument to the perf config
 
         Returns
         -------
+        object
             The value that the argument is set to in this config
 
         Raises
         ------
-        TritonModelAnalyzerException
+        KeyError
             If argument not found in the config
         """
 
@@ -143,7 +144,7 @@ class PerfAnalyzerConfig:
             return self._verbose[self._input_to_verbose[key]]
         else:
             raise TritonModelAnalyzerException(
-                f"'{key}' Key not found in config")
+                f'Key {key} does not exist in perf_analyzer_flags.')
 
     def __setitem__(self, key, value):
         """
@@ -153,7 +154,7 @@ class PerfAnalyzerConfig:
         Parameters
         ----------
         key : str
-            The name of the argument to the tritonserver
+            The name of the argument in perf_analyzer
         value : (any)
             The value to which the argument is being set
 

@@ -19,6 +19,7 @@ from model_analyzer.constants import \
 
 
 class ConfigField:
+
     def __init__(self,
                  name=None,
                  flags=None,

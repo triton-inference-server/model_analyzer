@@ -18,6 +18,7 @@ class ResultStatistics:
     An object containing all statistics relevant
     to an instance of Analyzer
     """
+
     def __init__(self):
         self._total_configurations = {}
         self._passing_measurements = {}

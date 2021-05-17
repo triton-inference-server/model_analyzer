@@ -81,6 +81,13 @@ class MockPerfAnalyzerMethods(MockBase):
 
         self.mock_popen.stdout.read.return_value = output_string
 
+    def get_perf_analyzer_popen_read_call_count(self):
+        """
+        Get perf_analyzer popen read count
+        """
+
+        return self.mock_popen.stdout.read.call_count
+
     def set_perf_analyzer_return_code(self, returncode):
         """
         Sets the returncode of Popen process

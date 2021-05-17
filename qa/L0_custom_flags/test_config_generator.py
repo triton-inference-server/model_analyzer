@@ -75,6 +75,13 @@ class TestConfigGenerator:
         with open('config-perf-global.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
+    def generate_perf_flags_time_windows(self):
+        self.config['perf_analyzer_flags'] = {
+            'measurement-mode': 'time_windows'
+        }
+        with open('config-measurement-window.yml', 'w+') as f:
+            yaml.dump(self.config, f)
+
     def generate_triton_flags_per_model(self):
         for i, model_name in enumerate(self.config['profile_models']):
             self.config['profile_models'][model_name][

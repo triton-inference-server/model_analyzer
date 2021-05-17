@@ -29,6 +29,7 @@ class AnalyzerStateManager:
     """
     Maintains the state of the Model Analyzer
     """
+
     def __init__(self, config):
         self._config = config
         self._exiting = 0
@@ -171,8 +172,7 @@ class AnalyzerStateManager:
             return -1
         try:
             return max([
-                int(os.path.split(f)[1].split('.')[0])
-                for f in checkpoint_files
+                int(os.path.split(f)[1].split('.')[0]) for f in checkpoint_files
             ])
         except Exception as e:
             raise TritonModelAnalyzerException(e)

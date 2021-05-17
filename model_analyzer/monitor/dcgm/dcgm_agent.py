@@ -82,9 +82,7 @@ def dcgmGetAllSupportedDevices(dcgm_handle):
     fn = dcgmFP("dcgmGetAllSupportedDevices")
     ret = fn(dcgm_handle, c_gpuid_list, byref(c_count))
     dcgm_structs._dcgmCheckReturn(ret)
-    return [
-        c_gpuid_list[i] for i in range(c_count.value)[0:int(c_count.value)]
-    ]
+    return [c_gpuid_list[i] for i in range(c_count.value)[0:int(c_count.value)]]
 
 
 def dcgmGetAllDevices(dcgm_handle):
@@ -94,9 +92,7 @@ def dcgmGetAllDevices(dcgm_handle):
     fn = dcgmFP("dcgmGetAllDevices")
     ret = fn(dcgm_handle, c_gpuid_list, byref(c_count))
     dcgm_structs._dcgmCheckReturn(ret)
-    return [
-        c_gpuid_list[i] for i in range(c_count.value)[0:int(c_count.value)]
-    ]
+    return [c_gpuid_list[i] for i in range(c_count.value)[0:int(c_count.value)]]
 
 
 def dcgmGetDeviceAttributes(dcgm_handle, gpuId):
@@ -436,8 +432,7 @@ def dcgmHealthSet(dcgm_handle, groupId, systems):
     return ret
 
 
-def dcgmHealthSet_v2(dcgm_handle, groupId, systems, updateInterval,
-                     maxKeepAge):
+def dcgmHealthSet_v2(dcgm_handle, groupId, systems, updateInterval, maxKeepAge):
     params = dcgm_structs.c_dcgmHealthSetParams_v2()
     params.version = dcgm_structs.dcgmHealthSetParams_version2
     params.groupId = groupId

@@ -24,6 +24,7 @@ class CLI:
     """
     CLI class to parse the commandline arguments
     """
+
     def __init__(self):
         self._parser = ArgumentParser()
         self._add_global_options()
@@ -99,8 +100,8 @@ class CLI:
             # 'store_true' and 'store_false' does not
             # allow 'type' or 'choices' parameters
             if 'action' in parser_args and (
-                    parser_args['action'] == 'store_true'
-                    or parser_args['action'] == 'store_false'):
+                    parser_args['action'] == 'store_true' or
+                    parser_args['action'] == 'store_false'):
                 subparser.add_argument(
                     *config.flags(),
                     default=argparse.SUPPRESS,

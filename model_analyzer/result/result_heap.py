@@ -21,6 +21,7 @@ class ResultHeap:
     A data structure used by the result manager 
     to store and sort results
     """
+
     def __init__(self):
         self._sorted_results = []
         self._failing_results = []

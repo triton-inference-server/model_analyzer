@@ -26,6 +26,7 @@ class ModelManager:
     This class handles the search for, creation of, and execution of run configs.
     It also records the best results for each model.
     """
+
     def __init__(self, config, client, server, metrics_manager, result_manager,
                  state_manager):
         """

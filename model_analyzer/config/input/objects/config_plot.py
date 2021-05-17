@@ -18,6 +18,7 @@ class ConfigPlot:
     A class representing the configuration used for
     a single plot.
     """
+
     def __init__(self,
                  name,
                  title=None,

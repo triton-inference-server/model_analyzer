@@ -30,6 +30,7 @@ class ReportManager:
     Manages the building and export of 
     various types of reports
     """
+
     def __init__(self, config, result_manager):
         """
         Parameters
@@ -114,11 +115,10 @@ class ReportManager:
                 )
 
         if self._config.num_top_model_configs and at_least_one_summary:
-            self._summaries[
-                TOP_MODELS_REPORT_KEY] = self._build_summary_report(
-                    report_key=TOP_MODELS_REPORT_KEY,
-                    num_configs=self._config.num_top_model_configs,
-                    statistics=statistics)
+            self._summaries[TOP_MODELS_REPORT_KEY] = self._build_summary_report(
+                report_key=TOP_MODELS_REPORT_KEY,
+                num_configs=self._config.num_top_model_configs,
+                statistics=statistics)
 
     def export_summaries(self):
         """
@@ -217,8 +217,7 @@ class ReportManager:
         report_key = report_model_config.model_config_name()
 
         detailed_report.add_title(title="Detailed Report")
-        detailed_report.add_subheading(
-            subheading=f"Model Config: {report_key}")
+        detailed_report.add_subheading(subheading=f"Model Config: {report_key}")
 
         # Add main latency breakdown image
         detailed_plot = os.path.join(self._config.export_path, 'plots',
@@ -300,8 +299,7 @@ class ReportManager:
         summary.add_subheading(f"Model: {report_key}")
         if not cpu_only:
             summary.add_paragraph(f"GPU(s): {gpu_names}")
-            summary.add_paragraph(
-                f"Total Available GPU Memory: {max_memories}")
+            summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
         summary.add_paragraph(
             f"Client Request Batch Size: {static_batch_sizes}")
         summary.add_paragraph(f"Constraint targets: {constraint_str}")
@@ -424,8 +422,7 @@ class ReportManager:
                     measurement.get_metric('perf_throughput').value(),
                     measurement.get_metric('cpu_used_ram').value(),
                     measurement.get_metric('gpu_used_memory').value(),
-                    round(
-                        measurement.get_metric('gpu_utilization').value(), 1)
+                    round(measurement.get_metric('gpu_utilization').value(), 1)
                 ]
                 summary_table.insert_row_by_index(row)
         else:
@@ -474,18 +471,14 @@ class ReportManager:
                 row = [
                     model_config.dynamic_batching_string(), instance_group_str,
                     measurement.get_metric('perf_latency').value(),
-                    measurement.get_metric(
-                        'perf_client_response_wait').value(),
+                    measurement.get_metric('perf_client_response_wait').value(),
                     measurement.get_metric('perf_server_queue').value(),
-                    measurement.get_metric(
-                        'perf_server_compute_input').value(),
-                    measurement.get_metric(
-                        'perf_server_compute_infer').value(),
+                    measurement.get_metric('perf_server_compute_input').value(),
+                    measurement.get_metric('perf_server_compute_infer').value(),
                     measurement.get_metric('perf_throughput').value(),
                     measurement.get_metric('cpu_used_ram').value(),
                     measurement.get_metric('gpu_used_memory').value(),
-                    round(
-                        measurement.get_metric('gpu_utilization').value(), 1)
+                    round(measurement.get_metric('gpu_utilization').value(), 1)
                 ]
                 detailed_table.insert_row_by_index(row)
         else:
@@ -495,13 +488,10 @@ class ReportManager:
                     model_config.get_field('name'),
                     model_config.dynamic_batching_string(), instance_group_str,
                     measurement.get_metric('perf_latency').value(),
-                    measurement.get_metric(
-                        'perf_client_response_wait').value(),
+                    measurement.get_metric('perf_client_response_wait').value(),
                     measurement.get_metric('perf_server_queue').value(),
-                    measurement.get_metric(
-                        'perf_server_compute_input').value(),
-                    measurement.get_metric(
-                        'perf_server_compute_infer').value(),
+                    measurement.get_metric('perf_server_compute_input').value(),
+                    measurement.get_metric('perf_server_compute_infer').value(),
                     measurement.get_metric('perf_throughput').value(),
                     measurement.get_metric('cpu_used_ram').value()
                 ]

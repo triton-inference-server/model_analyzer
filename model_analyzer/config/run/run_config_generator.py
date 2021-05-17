@@ -24,6 +24,7 @@ class RunConfigGenerator:
     A class that handles ModelAnalyzerConfig parsing, generation, and
     exection of a list of run configurations.
     """
+
     def __init__(self, config, client):
         """
         Parameters
@@ -198,26 +199,23 @@ class RunConfigGenerator:
 
         perf_config_params = {
             'model-name': [model_name],
-            'batch-size':
-            config_model.parameters()['batch_sizes'],
-            'concurrency-range':
-            config_model.parameters()['concurrency'],
+            'batch-size': config_model.parameters()['batch_sizes'],
+            'concurrency-range': config_model.parameters()['concurrency'],
             'protocol': [self._analyzer_config['client_protocol']],
             'url': [
                 self._analyzer_config['triton_http_endpoint']
                 if self._analyzer_config['client_protocol'] == 'http' else
                 self._analyzer_config['triton_grpc_endpoint']
             ],
-            'measurement-interval':
-            [self._analyzer_config['perf_measurement_window']],
+            'measurement-mode': ['count_windows']
         }
 
         perf_configs = []
-        for params in self._generate_parameter_combinations(
-                perf_config_params):
+        for params in self._generate_parameter_combinations(perf_config_params):
             perf_config = PerfAnalyzerConfig()
-            perf_config.update_config(config_model.perf_analyzer_flags())
             perf_config.update_config(params)
+            # User provided flags can override the search parameters
+            perf_config.update_config(config_model.perf_analyzer_flags())
             perf_configs.append(perf_config)
         return perf_configs
 

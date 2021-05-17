@@ -26,6 +26,7 @@ class ModelResult:
     a single run. This ModelResult belongs
     to a particular ResultTable
     """
+
     def __init__(self, model_name, model_config, comparator, constraints=None):
         """
         Parameters

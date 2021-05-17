@@ -52,7 +52,7 @@ class TestOutputValidator:
         True if test passes else False
         """
 
-        if 'perf_analyzer_flags' in self._config:
+        if 'perf_analyzer_flags' in self._config and 'percentile' in self._config['perf_analyzer_flags']:
             with open(self._analyzer_log, 'r') as f:
                 contents = f.read()
 
@@ -69,6 +69,30 @@ class TestOutputValidator:
                         f"\n***\n***  Perf Analyzer not stabilizing on p{percentile} latency"
                         f"for {profile_model}. \n***")
                     return False
+        return True
+
+    def check_perf_mode_time_window(self):
+        """
+        Checks if the time_window mode can be applied properly
+
+        Returns
+        -------
+        True if test passes else False
+        """
+
+        if 'perf_analyzer_flags' in self._config and 'measurement-mode' in self._config['perf_analyzer_flags']:
+            with open(self._analyzer_log, 'r') as f:
+                contents = f.read()
+
+            # In contents, search for "stabilizing with px latency"
+            measurement_mode = self._config['perf_analyzer_flags']['measurement-mode']
+            assert(measurement_mode == 'time_windows')
+            token = "time_windows"
+
+            # Ensure the token appears in the text
+            token_idx = contents.find(token)
+            if token_idx == -1:
+                return False
         return True
 
     def check_perf_per_model(self):
