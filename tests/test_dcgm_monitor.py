@@ -34,7 +34,8 @@ from .mocks.mock_dcgm_field_group_watcher import TEST_RECORD_VALUE
 class TestDCGMMonitor(trc.TestResultCollector):
     def setUp(self):
         self.mock_dcgm = MockDCGM()
-        self.mock_numba = MockNumba()
+        self.mock_numba = MockNumba(
+            mock_paths=['model_analyzer.device.gpu_device_factory'])
         self.mock_dcgm.start()
         self.mock_numba.start()
 

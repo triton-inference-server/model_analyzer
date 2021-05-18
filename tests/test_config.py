@@ -15,6 +15,8 @@
 import unittest
 import re
 from .mocks.mock_config import MockConfig
+from .mocks.mock_numba import MockNumba
+
 from .common import test_result_collector as trc
 
 from model_analyzer.model_analyzer_exceptions \
@@ -44,8 +46,12 @@ from model_analyzer.constants import \
 
 class TestConfig(trc.TestResultCollector):
     def _evaluate_config(self, args, yaml_content, subcommand='profile'):
+        mock_numba = MockNumba(
+            mock_paths=['model_analyzer.config.input.config_command_profile'])
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
+        mock_numba.start()
+
         if subcommand == 'report':
             config = ConfigCommandReport()
         elif subcommand == 'analyze':
@@ -58,7 +64,7 @@ class TestConfig(trc.TestResultCollector):
                            help="Test subcommand help")
         cli.parse()
         mock_config.stop()
-
+        mock_numba.stop()
         return config
 
     def _assert_error_on_evaluate_config(self,
@@ -110,6 +116,8 @@ class TestConfig(trc.TestResultCollector):
                              plot_config.x_axis())
             self.assertEqual(expected_plot_config.y_axis(),
                              plot_config.y_axis())
+            self.assertEqual(expected_plot_config.monotonic(),
+                             plot_config.monotonic())
 
     def _assert_model_config_types(self, model_config):
         self.assertIsInstance(model_config.field_type(), ConfigUnion)
@@ -643,19 +651,19 @@ profile_models:
             'cli_repository', '-f', 'path-to-config-file'
         ]
         yaml_content = """
-profile_models:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            instance_group:
-                -
-                    kind: KIND_GPU
-                    count: 1
-                -
-                    kind: KIND_CPU
-                    count: 1
+            profile_models:
+            -
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        instance_group:
+                            -
+                                kind: KIND_GPU
+                                count: 1
+                            -
+                                kind: KIND_CPU
+                                count: 1
 
-"""
+            """
         config = self._evaluate_config(args, yaml_content)
         model_configs = config.get_all_config()['profile_models']
         expected_model_configs = [
@@ -683,21 +691,21 @@ profile_models:
             'cli_repository', '-f', 'path-to-config-file'
         ]
         yaml_content = """
-profile_models:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            instance_group:
+            profile_models:
             -
-                -
-                    kind: KIND_GPU
-                    count: 1
-            -
-                -
-                    kind: KIND_CPU
-                    count: 1
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        instance_group:
+                        -
+                            -
+                                kind: KIND_GPU
+                                count: 1
+                        -
+                            -
+                                kind: KIND_CPU
+                                count: 1
 
-"""
+            """
         config = self._evaluate_config(args, yaml_content)
         model_configs = config.get_all_config()['profile_models']
         expected_model_configs = [
@@ -723,18 +731,18 @@ profile_models:
                                                expected_model_configs)
 
         yaml_content = """
-profile_models:
-  -
-    vgg_16_graphdef:
-        model_config_parameters:
-            input:
-              -
-                name: NV_MODEL_INPUT
-                data_type: TYPE_FP32
-                format: FORMAT_NHWC
-                dims: [256, 256, 3]
+            profile_models:
+            -
+                vgg_16_graphdef:
+                    model_config_parameters:
+                        input:
+                        -
+                            name: NV_MODEL_INPUT
+                            data_type: TYPE_FP32
+                            format: FORMAT_NHWC
+                            dims: [256, 256, 3]
 
-"""
+            """
         config = self._evaluate_config(args, yaml_content)
         model_configs = config.get_all_config()['profile_models']
         expected_model_configs = [
@@ -768,15 +776,15 @@ profile_models:
                                                expected_model_configs)
 
         yaml_content = """
-profile_models:
-  -
-    vgg_16_graphdef:
-        perf_analyzer_flags:
-            measurement-interval: 10000
-            model-version: 2
-            streaming: true
+            profile_models:
+            -
+                vgg_16_graphdef:
+                    perf_analyzer_flags:
+                        measurement-interval: 10000
+                        model-version: 2
+                        streaming: true
 
-"""
+            """
         config = self._evaluate_config(args, yaml_content)
         model_configs = config.get_all_config()['profile_models']
         expected_model_configs = [
@@ -796,13 +804,13 @@ profile_models:
                                                expected_model_configs)
 
         yaml_content = """
-profile_models:
-  -
-    vgg_16_graphdef:
-        perf_analyzer_flags:
-            disallowed-perf-flag: some_value
+            profile_models:
+            -
+                vgg_16_graphdef:
+                    perf_analyzer_flags:
+                        disallowed-perf-flag: some_value
 
-"""
+            """
         with self.assertRaises(TritonModelAnalyzerException):
             config = self._evaluate_config(args, yaml_content)
 
@@ -810,21 +818,17 @@ profile_models:
         config_sweep = ConfigSweep(ConfigPrimitive(int))
         config_sweep.set_value(2)
 
-    @unittest.skip("We have temporarily disabled plot configs.")
     def test_config_plot(self):
-        args = [
-            'model-analyzer', 'profile', '--model-repository',
-            'cli_repository', '-f', 'path-to-config-file'
-        ]
+        args = ['model-analyzer', 'report', '-f', 'path-to-config-file']
         yaml_content = """
-profile_models: vgg_16_graphdef
-plots:
-  test_plot:
-    title: Throughput vs. Latency
-    x_axis: perf_throughput
-    y_axis: perf_latency
-"""
-        config = self._evaluate_config(args, yaml_content)
+            report_model_configs: vgg_16_graphdef
+            plots:
+                test_plot:
+                    title: Throughput vs. Latency
+                    x_axis: perf_throughput
+                    y_axis: perf_latency
+            """
+        config = self._evaluate_config(args, yaml_content, subcommand='report')
         plot_configs = config.get_all_config()['plots']
         expected_plot_configs = [
             ConfigPlot('test_plot',
@@ -836,18 +840,18 @@ plots:
                                               expected_plot_configs)
 
         yaml_content = """
-profile_models: vgg_16_graphdef
-plots:
-  - test_plot1:
-      title: Throughput vs. Latency
-      x_axis: perf_throughput
-      y_axis: perf_latency
-  - test_plot2:
-      title: GPU Memory vs. Latency
-      x_axis: gpu_used_memory
-      y_axis: perf_latency
-"""
-        config = self._evaluate_config(args, yaml_content)
+            report_model_configs: vgg_16_graphdef
+            plots:
+            - test_plot1:
+                title: Throughput vs. Latency
+                x_axis: perf_throughput
+                y_axis: perf_latency
+            - test_plot2:
+                title: GPU Memory vs. Latency
+                x_axis: gpu_used_memory
+                y_axis: perf_latency
+            """
+        config = self._evaluate_config(args, yaml_content, subcommand='report')
         plot_configs = config.get_all_config()['plots']
         expected_plot_configs = [
             ConfigPlot('test_plot1',
@@ -863,18 +867,18 @@ plots:
                                               expected_plot_configs)
 
         yaml_content = """
-profile_models: vgg_16_graphdef
-plots:
-  test_plot1:
-    title: Throughput vs. Latency
-    x_axis: perf_throughput
-    y_axis: perf_latency
-  test_plot2:
-    title: GPU Memory vs. Latency
-    x_axis: gpu_used_memory
-    y_axis: perf_latency
-"""
-        config = self._evaluate_config(args, yaml_content)
+            report_model_configs: vgg_16_graphdef
+            plots:
+                test_plot1:
+                    title: Throughput vs. Latency
+                    x_axis: perf_throughput
+                    y_axis: perf_latency
+                test_plot2:
+                    title: GPU Memory vs. Latency
+                    x_axis: gpu_used_memory
+                    y_axis: perf_latency
+            """
+        config = self._evaluate_config(args, yaml_content, subcommand='report')
         plot_configs = config.get_all_config()['plots']
         expected_plot_configs = [
             ConfigPlot('test_plot1',
@@ -885,6 +889,39 @@ plots:
                        title='GPU Memory vs. Latency',
                        x_axis='gpu_used_memory',
                        y_axis='perf_latency')
+        ]
+        self._assert_equality_of_plot_configs(plot_configs,
+                                              expected_plot_configs)
+
+        yaml_content = """
+            report_model_configs: 
+              vgg_16_graphdef:
+                plots:
+                    test_plot1:
+                        title: Throughput vs. Latency
+                        x_axis: perf_throughput
+                        y_axis: perf_latency
+                        monotonic: True
+                    test_plot2:
+                        title: GPU Memory vs. Latency
+                        x_axis: gpu_used_memory
+                        y_axis: perf_latency
+                        monotonic: False
+            """
+        config = self._evaluate_config(args, yaml_content, subcommand='report')
+        plot_configs = config.get_all_config(
+        )['report_model_configs'][0].plots()
+        expected_plot_configs = [
+            ConfigPlot('test_plot1',
+                       title='Throughput vs. Latency',
+                       x_axis='perf_throughput',
+                       y_axis='perf_latency',
+                       monotonic=True),
+            ConfigPlot('test_plot2',
+                       title='GPU Memory vs. Latency',
+                       x_axis='gpu_used_memory',
+                       y_axis='perf_latency',
+                       monotonic=False)
         ]
         self._assert_equality_of_plot_configs(plot_configs,
                                               expected_plot_configs)
@@ -1367,6 +1404,21 @@ triton_server_flags:
 """
         with self.assertRaises(TritonModelAnalyzerException):
             config = self._evaluate_config(args, yaml_content)
+
+        yaml_content = """
+profile_models: 
+   model1:
+    triton_server_flags:
+        strict_model_config: false
+        backend_config: test_backend_config
+"""
+        config = self._evaluate_config(args, yaml_content)
+        self.assertDictEqual(
+            config.get_all_config()['profile_models'][0].triton_server_flags(),
+            {
+                'strict_model_config': 'False',
+                'backend_config': 'test_backend_config'
+            })
 
     def test_report_configs(self):
         args = [
