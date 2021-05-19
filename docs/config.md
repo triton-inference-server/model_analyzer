@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,7 +16,10 @@ limitations under the License.
 
 # Configuring Model Analyzer
 
-The Model Analyzer can be configured with a [YAML](https://yaml.org/) file or via the command line interface (CLI). Every flag supported by the CLI is supported in the configuration file, but some configurations are only supported using the config file.
+Each subcommand in the Model Analyzer can be configured with a
+[YAML](https://yaml.org/) file or via the command line interface (CLI). Every
+flag supported by the CLI is supported in the configuration file, but some
+configurations are only supported using the config file.
 
 The placeholders below are used throughout the configuration:
 
@@ -25,10 +28,10 @@ The placeholders below are used throughout the configuration:
 * `<comma-delimited-list>`: a list of comma separated items.
 * `<int>`: a regular integer value.
 * `<list>`: a list of values.
-* `<range>`: An object containing `start` and `stop` key with an optional
-`step` value. If `step` is not defined, we use 1 as the default value for
-`step`. The types that support `<range>` can be described by a list or using
-the example structure below:
+* `<range>`: An object containing `start` and `stop` key with an optional `step`
+  value. If `step` is not defined, we use 1 as the default value for `step`. The
+  types that support `<range>` can be described by a list or using the example
+  structure below:
 ```yaml
 batch_sizes:
     start: 2
@@ -38,22 +41,32 @@ batch_sizes:
 
 The above YAML declares the value of batch_sizes to be an array `[2, 4, 6]`.
 
-## CLI and YAML Config Options
+The following sections describe the configuration options for each of the
+subcommands of the Model Analyzer.
+## Config options for `profile`
+### CLI and YAML Config Options
 
-A list of all the configuration options supported by both the CLI and YAML config file are shown below. Brackets indicate that a parameter is optional. For non-list and non-object parameters the value is set to the specified default.
+A list of all the configuration options supported by both the CLI and YAML
+config file are shown below. Brackets indicate that a parameter is optional. For
+non-list and non-object parameters the value is set to the specified default.
 
-The CLI flags corresponding to each of the options below are obtained by converting the `snake_case` options to `--kebab-case`. For example, `export_path` in the YAML would be `--export-path` in the CLI.
+The CLI flags corresponding to each of the options below are obtained by
+converting the `snake_case` options to `--kebab-case`. For example,
+`profile_models` in the YAML would be `--profile-models` in the CLI.
 
 
 ```yaml
 # Path to the Model Repository
 model_repository: <string>
 
-# List of the model names to be analyzed
-model_names: <comma-delimited-string>
+# List of the model names to be profiled
+profile_models: <comma-delimited-string-list>
+
+# Full path to directory to which to read and write checkpoints and profile data.
+[ checkpoint_directory: <string> | default: '.' ]
 
 # The directory to which the modela analyzer will save model config variants
-[ output_model_repository_path: <string> | default: 'output_model_repository']
+[ output_model_repository_path: <string> | default: 'output_model_repository' ]
 
 # Allow model analyzer to overwrite contents of the output model repository
 [ override_output_model_repository: <boolean> | default: false ]
@@ -63,30 +76,6 @@ model_names: <comma-delimited-string>
 
 # Batch size values to be used for the analysis
 [ batch_sizes: <comma-delimited-string|list|range> | default: 1 ]
-
-# Whether to export metrics to a file
-[ export: <boolean> | default: true ]
-
-# Export path to be used
-[ export_path: <string> | default: '.' ]
-
-# Generate summary of results
-[ summarize: <boolean>  | default: true ]
-
-# Number of top configs to show in summary plots
-[ num_configs_per_model: <int> | default: 3]
-
-# Number of top model configs to save across ALL models, none saved by default
-[ num_top_model_configs: <int> | default: 0 ]
-
-# File name to be used for the model inference results
-[ filename_model_inference: <string> | default: metrics-model-inference.csv ]
-
-# File name to be used for the GPU metrics results
-[ filename_model_gpu: <string> | default: metrics-model-gpu.csv ]
-
-# File name to be used for storing the server only metrics.
-[ filename_server_only: <string> | default: metrics-server-only.csv ]
 
 # Specifies the maximum number of retries for any retry attempt.
 [ max_retries: <int> | default: 100 ]
@@ -138,10 +127,7 @@ model_names: <comma-delimited-string>
 # How Model Analyzer will launch triton. It should
 # be either "docker", "local", or "remote".
 # See docs/launch_modes.md for more information.
-[ triton_launch_mode: <string> ]
-
-# Logging level
-[ log_level: <string> | default: INFO ]
+[ triton_launch_mode: <string> | default: 'local' ]
 
 # List of GPU UUIDs to be used for the profiling. Use 'all' to profile all the GPUs visible by CUDA.
 [ gpus: <string|comma-delimited-list-string> | default: 'all' ]
@@ -162,14 +148,14 @@ model_names: <comma-delimited-string>
 [ config_file: <string> ]
 ```
 
-## YAML Only Options
+### YAML Only Options
 
 The following config options are supported only by the YAML config file.
 
 ```yaml
 
-# List of the model names to be analyzed
-model_names: <comma-delimited-string|list|model>
+# yaml config section for each model to be profiled
+profile_models: <comma-delimited-string-list|list|profile_model>
 
 # List of constraints placed on the config search results.
 [ constraints: <constraint> ]
@@ -180,10 +166,118 @@ model_names: <comma-delimited-string|list|model>
 # Specify flags to pass to the Triton instances launched by model analyzer
 [ triton_server_flags: <dict> ]
 
+# Allows custom configuration of perf analyzer instances used by model analyzer
+[ perf_analyzer_flags: <dict>]
+```
+
+## Config Options for `analyze`
+### CLI and YAML Options
+
+The config options for the `analyze` subcommand supported by both the CLI and
+YAML config file are shown below. Brackets indicate that a parameter is
+optional. For non-list and non-object parameters the value is set to the
+specified default.
+
+
+```yaml
+
+# Comma-delimited list of the model names for which to generate summary reports and tables.
+analysis_models: <comma-delimited-string-list>
+
+# Full path to directory to which to read and write checkpoints and profile data.
+[ checkpoint_directory: <string> | default: '.' ]
+
+# Export path to be used
+[ export_path: <string> | default: '.' ]
+
+# Generate summary of results
+[ summarize: <boolean>  | default: true ]
+
+# Number of top configs to show in summary plots
+[ num_configs_per_model: <int> | default: 3]
+
+# Number of top model configs to save across ALL models, none saved by default
+[ num_top_model_configs: <int> | default: 0 ]
+
+# File name to be used for the model inference results
+[ filename_model_inference: <string> | default: metrics-model-inference.csv ]
+
+# File name to be used for the GPU metrics results
+[ filename_model_gpu: <string> | default: metrics-model-gpu.csv ]
+
+# File name to be used for storing the server only metrics.
+[ filename_server_only: <string> | default: metrics-server-only.csv ]
+
+# Specifies columns keys for model inference metrics table
+[ inference_output_fields: <comma-delimited-string-list> | default: See Config Defaults section]
+
+# Specifies columns keys for model gpu metrics table
+[ gpu_output_fields: <comma-delimited-string-list> | default: See Config Defaults section]
+
+# Specifies columns keys for server only metrics table
+[ server_output_fields: <comma-delimited-string-list> | default: See Config Defaults section]
+
+# Shorthand that allows a user to specify a max latency constraint in ms
+[ latency_budget: <int>]
+
+# Specify path to config yaml file
+[ config_file: <string> ]
+```
+
+### YAML only options
+
+The following config options are support by the YAML config file only.
+
+```yaml
+# yaml config section for each model for which to generate summary reports and tables.
+analysis_models: <comma-delimited-string|list|analysis_model>
+
+# List of constraints placed on the config search results.
+[ constraints: <constraint> ]
+
+# List of objectives that user wants to sort the results by it.
+[ objectives: <objective|list> ]
+```
+
+## Config Options for `report`
+### CLI and YAML options
+
+The config options for the `report` subcommand supported by both the CLI and
+YAML config file are shown below. Brackets indicate that a parameter is
+optional. For non-list and non-object parameters the value is set to the
+specified default.
+
+```yaml
+# Comma-delimited list of the model names for which to generate detailed reports.
+report_model_configs: <comma-delimited-string-list>
+
+# Full path to directory to which to read and write checkpoints and profile data.
+[ checkpoint_directory: <string> | default: '.' ]
+
+# Export path to be used
+[ export_path: <string> | default: '.' ]
+
+# Specify path to config yaml file
+[ config_file: <string> ]
+```
+
+### YAML only options
+
+The following config options are support by the YAML config file only.
+
+```yaml
+
+# yaml config section for each model config for which to generate detailed reports.
+report_model_configs: <comma-delimited-string-list|list|report_model_config>
+
+# yaml sections to configure the plots that should be shown in the detaild report
+[ plots: <dict-plot-configs> | default: See Config Defaults section ]
+
 ```
 
 ## Field Descriptions
 
+Before proceeding, it will be helpful to see the documentation on [Model Analyzer Metrics](./metrics.md) regarding what metric tags are and how to use them.
 ### `<constraint>`
 A constraint, specifies the bounds that determine a successful run. There are
 three constraints allowed:
@@ -197,24 +291,21 @@ three constraints allowed:
 
 #### Examples
 
-To filter out the results when `perf_throughput` is
-less than 5 infer/sec:
+To filter out the results when `perf_throughput` is less than 5 infer/sec:
 
 ```yaml
 perf_throughput:
     min: 5
 ```
 
-To filter out the results when `perf_latency` is larger than 100
-milliseconds:
+To filter out the results when `perf_latency` is larger than 100 milliseconds:
 
 ```yaml
 perf_latency:
     max: 100
 ```
 
-To filter out the results when `gpu_used_memory` is larger than 200
-MBs:
+To filter out the results when `gpu_used_memory` is larger than 200 MBs:
 ```yaml
 gpu_used_memory:
     max: 200
@@ -228,16 +319,17 @@ perf_latency:
     max: 100
 ```
 
-This will filter out the results when `gpu_used_memory` is larger than 200 MBs and
-their latency is larger than 100 milliseconds.
+This will filter out the results when `gpu_used_memory` is larger than 200 MBs
+and their latency is larger than 100 milliseconds.
 
-The values described above can be specified both globally and on a per model basis.
+The values described above can be specified both globally and on a per model
+basis.
 
 The global example looks like below:
 
 ```yaml
 model_repository: /path/to/model-repository
-model_names:
+analysis_models:
   - model_1
   - model_2
 
@@ -246,12 +338,12 @@ constraints:
         max: 200
 ```
 
-In the global mode, the constraint specified will be enforced on every model.
-To have different constraints for each model, version below can be used:
+In the global mode, the constraint specified will be enforced on every model. To
+have different constraints for each model, version below can be used:
 
 ```yaml
 model_repository: /path/to/model-repository
-model_names:
+analysis_models:
   model_1:
     constraints:
         gpu_used_memory:
@@ -264,8 +356,8 @@ model_names:
 
 ### `<objective>`
 
-Objectives specify the sorting criteria for the final results.
-The fields below are supported under this object type:
+Objectives specify the sorting criteria for the final results. The fields below
+are supported under this object type:
 
 | Option Name       | Description                                            |
 | :---------------- | :----------------------------------------------------- |
@@ -277,7 +369,8 @@ The fields below are supported under this object type:
 | `cpu_used_ram`    | Use RAM used by the model as the objective.            |
 | `cpu_free_ram`    | Use RAM not used by the model as the objective.        |
 
-An example `objectives` that will sort the results by throughput looks like below:
+An example `objectives` that will sort the results by throughput looks like
+below:
 
 ```yaml
 objectives:
@@ -292,8 +385,8 @@ objectives:
 ```
 #### Weighted Objectives
 
-In addition to the mode discussed above, multiple values can be provided in
-the objectives key in order to provide more generalized control over how model
+In addition to the mode discussed above, multiple values can be provided in the
+objectives key in order to provide more generalized control over how model
 analyzer sorts results. For example:
 
 ```yaml
@@ -302,7 +395,12 @@ objectives:
 - perf_throughput
 ```
 
-The above config is telling model analyzer to compare two measurements by finding relative gain from one measurement to the other, and computing the weighted average of this gain across all listed metrics. In the above example, the relative weights for each metric is equal by default. So if we have two measurements of latency and throughput, model analyzer employs the following logic:
+The above config is telling model analyzer to compare two measurements by
+finding relative gain from one measurement to the other, and computing the
+weighted average of this gain across all listed metrics. In the above example,
+the relative weights for each metric is equal by default. So if we have two
+measurements of latency and throughput, model analyzer employs the following
+logic:
 
 ```python
 measurement_A = (latency_A, throughput_A)
@@ -313,10 +411,12 @@ gain_A_B = (latency_A - latency_B, throughput_A - throughput_B)
 weighted_average_gain = 0.5*(latency_A - latency_B) + 0.5*(throughput_A - throughput_B)
 ```
 
-If `weighted_average_gain` exceeds a threshold then `measurement_A` is declared to be "better" than `measurement_B`. Model Analyzer will automatically account for metrics in which less is better and those which more is better.
+If `weighted_average_gain` exceeds a threshold then `measurement_A` is declared
+to be "better" than `measurement_B`. Model Analyzer will automatically account
+for metrics in which less is better and those which more is better.
 
-An extension of the above `objectives` is explicitly specifying the weights.
-For example:
+An extension of the above `objectives` is explicitly specifying the weights. For
+example:
 ```yaml
 objectives:
     perf_latency: 2
@@ -324,9 +424,11 @@ objectives:
 ```
 
 The score for each measurement will be a weighted average using the weights
-specified here. The above config will tell Model Analyzer to multiply the throughput gain by `0.4` and latency gain by by `0.6`.
+specified here. The above config will tell Model Analyzer to multiply the
+throughput gain by `0.4` and latency gain by by `0.6`.
 
-The `objectives` section can be specified both globally and on a per model basis.
+The `objectives` section can be specified both globally and on a per model
+basis.
 
 ### Test Configuration `<parameter>`
 
@@ -358,7 +460,7 @@ A complete config example looks like below:
 
 ```yaml
 model_repository: /path/to/model-repository
-model_names:
+profile_models:
   model_1:
     parameters:
         concurrency:
@@ -368,19 +470,21 @@ model_names:
         batch_sizes: 1,2,3
 ```
 
-These parameters will result in testing the concurrency configurations of 2,
-10, 18, 26, 34, 42, 50, 58, and 64, for each of different batch sizes of 1, 2
-and 3. This will result in 27 individual test runs of the model.
+These parameters will result in testing the concurrency configurations of 2, 10,
+18, 26, 34, 42, 50, 58, and 64, for each of different batch sizes of 1, 2 and 3.
+This will result in 27 individual test runs of the model.
 
 ### `<model-config-parameters>`
 
-This field represents the values that can be changed or swept through
-using Model Analyzer. All the values supported in the [Triton
+This field represents the values that can be changed or swept through using
+Model Analyzer. All the values supported in the [Triton
 Config](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md)
 can be specified or swept through here. `<model-config-parameters>`  should be
-specified on a per model basis and cannot be specified globally (like `<parameter>`).
+specified on a per model basis and cannot be specified globally (like
+`<parameter>`).
 
-Table below presents the list of common parameters that can be used for manual sweeping:
+Table below presents the list of common parameters that can be used for manual
+sweeping:
 
 |                                                              Option                                                              |                                                                                                                                                               Description                                                                                                                                                               |
 | :------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
@@ -401,19 +505,18 @@ model_config_parameters:
         count: [1, 2]
 ```
 
-Note that for values that accept a list by default the user needs to specify
-an additional list if want to sweep through it. Otherwise, it will only
-change the original model config to the value specified and it will not sweep
-through it. `preferred_batch_size` is an example for this. To read more about
-the automatic config search, checkout [Config Search](./config_search.md)
-docs.
+Note that for values that accept a list by default the user needs to specify an
+additional list if want to sweep through it. Otherwise, it will only change the
+original model config to the value specified and it will not sweep through it.
+`preferred_batch_size` is an example for this. To read more about the automatic
+config search, checkout [Config Search](./config_search.md) docs.
 
-A complete YAML config looks like below:
+A complete `profile` YAML config looks like below:
 ```yaml
 model_repository: /path/to/model/repository/
 
 run_config_search_disable: True
-model_names:
+profile_models:
   model_1:
     model_config_parameters:
         max_batch_size: 2
@@ -429,14 +532,15 @@ model_names:
             count: 1
 ```
 
-Note that in the above configuration, it will not sweep through any of the parameters. The
-reason is that both `instance_group` and `preferred_batch_size` accept a list by default.
-Sweeping thorough different parameters can be achieved using the configuration below:
+Note that in the above configuration, it will not sweep through any of the
+parameters. The reason is that both `instance_group` and `preferred_batch_size`
+accept a list by default. Sweeping thorough different parameters can be achieved
+using the configuration below:
 ```yaml
 model_repository: /path/to/model/repository/
 
 run_config_search_disable: True
-model_names:
+profile_models:
   model_1:
     model_config_parameters:
         max_batch_size: 2
@@ -454,39 +558,144 @@ model_names:
                 count: 1
 ```
 
-This will lead to 6 different configurations (3 different preferred batch
-sizes and two instance group combinations). If both
-`model_config_parameters` and `parameters` keys are specified, the list of sweep
-configurations will be the cartesian product of both of the lists.
+This will lead to 6 different configurations (3 different preferred batch sizes
+and two instance group combinations). If both `model_config_parameters` and
+`parameters` keys are specified, the list of sweep configurations will be the
+cartesian product of both of the lists.
 
 ### `<perf-analyzer-flags>`
 
-This field allows fine-grained control over the behavior of the `perf_analyzer` instances launched by Model Analyzer. `perf_analyzer` options and their values can be specified here, and will be passed to `perf_analyzer`. Refer to [the `perf_analyzer` docs](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md) for more information on these options.
+This field allows fine-grained control over the behavior of the `perf_analyzer`
+instances launched by Model Analyzer. `perf_analyzer` options and their values
+can be specified here, and will be passed to `perf_analyzer`. Refer to [the
+`perf_analyzer`
+docs](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md)
+for more information on these options.
 
 #### Example
 
 ```yaml
 model_repository: /path/to/model/repository/
-model_names:
+profile_models:
   model_1:
     perf_analyzer_flags:
         percentile: 95
         latency_report_file: /path/to/latency/report/file
 ```
+
+The `perf_analyzer_flags` section can also be specified globally to affect
+perf_analyzer instances across all models in the following way:
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    parameters:
+        batch_sizes: 4
+perf_analyzer_flags:
+    percentile: 95
+    latency_report_file: /path/to/latency/report/file
+```
+
 **Important Notes**: 
-* The Model Analyzer also provides certain arguments to the `perf_analyzer` instances it launches. These ***cannot*** be overriden by providing those arguments in this section. An example of this is `perf_measurement_window`, which is an argument to Model Analyzer itself.
+* The Model Analyzer also provides certain arguments to the `perf_analyzer`
+  instances it launches. These ***cannot*** be overriden by providing those
+  arguments in this section. An example of this is `perf_measurement_window`,
+  which is an argument to Model Analyzer itself.
 
-### The `model-names` field and `<model>`
-The `--model-names` argument can be provided as a list of strings (names of models) from the CLI interface, or as a more complex `<model>` object but only through the YAML configuration file. The model object can contain `<constraint>`, `<objective>`,
-`<model-config-parameters>`, `<parameter>` and `<perf-analyzer-flags>`.
+### `<triton-server-flags>`
 
-A model object puts together all the different parameters specified above. An example
-will look like:
+This section of the config allows fine-grained control over the flags passed to
+the Triton instances launched by Model Analyzer when it is running in the
+`docker` or `local` Triton launch modes. Any argument to the server can be
+specified here.
+
+#### Example
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    parameters:
+        batch_sizes:
+            start: 4
+            stop: 9
+        concurrency:
+            - 2
+            - 4
+            - 8
+triton_server_flags:
+    strict_model_config: False
+    log_verbose: True
+```
+
+Since Model Analyzer relaunches Triton Server each time a model config is
+loaded, you can also specify `triton_server_flags` on a per model basis. For
+examples:
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    triton_server_flags:
+        strict_model_config: False
+        log_verbose: True
+  model_1:
+    triton_server_flags:
+        exit_timeout_secs: 120
+```
+
+**Important Notes**: 
+* The Model Analyzer also provides certain arguments to the `tritonserver`
+  instances it launches. These ***cannot*** be overriden by providing those
+  arguments in this section. An example of this is `http-port`, which is an
+  argument to Model Analyzer itself.
+
+### `<plots>`
+
+This section is used to specify the kind of plots that will be displayed in the
+detailed report. The section is structured as a list of `<plot>` objects as
+follows:
+
+```yaml
+plots:
+  plot_name_1:
+    title: Title
+    x_axis: perf_latency
+    y_axis: perf_throughput
+    monotonic: True
+  plot_name_2:
+    .
+    .
+    .
+```
+
+Each `<plot>` object consists of the `plot_name` which is also the name of the
+file to which the plot will be saved as a `.png`. Each plot object also requires
+specifying each of the following:
+* `title` : The title of the plot
+* `x_axis` : The metric tag for the metric that should appear in the x-axis,
+  e.g. `perf_latency`. The plotted points are also sorted by the values of this
+  metric.
+* `y_axis` : The metric tag for the metric that should appear in the y-axis. 
+* `monotonic` : Some plots may require consecutive points to be strictly
+  increasing. A boolean value of `true` can be specified here to require this.
+
+## `<profile-model>`
+The `--profile-models` argument can be provided as a list of strings (names of
+models) from the CLI interface, or as a more complex `<profile-model>` object
+but only through the YAML configuration file. The model object can contain
+`<model-config-parameters>`, `<parameter>`,
+`<perf-analyzer-flags>`,`<triton-server-flags>` and a flag `cpu_only`.
+
+A profile model object puts together all the different parameters specified
+above. An example will look like:
+
 ```yaml
 model_repository: /path/to/model/repository/
 
 run_config_search_disable: True
-model_names:
+profile_models:
   model_1:
     perf_analyzer_flags:
         percentile: 95
@@ -511,14 +720,9 @@ model_names:
             stop: 64
             step: 8
         batch_sizes: 1,2,3
-    constraints:
-        gpu_used_memory:
-            max: 200
-    objectives:
-    - perf_throughput
 ```
 
-Multiple models can be specified under the `model_names` key.
+Multiple models can be specified under the `profile_models` key.
 
  #### Example
 
@@ -528,7 +732,7 @@ An example configuration looks like below:
 model_repository: /path/to/model-repository
 run_config_search_disable: true
 triton_launch_mode: docker
-model_names:
+profile_models:
   vgg_19_graphdef:
     parameters:
         batch_sizes: 1, 2, 3
@@ -565,40 +769,90 @@ concurrency:
     - 8
 ```
 
-If this file is saved to the `config.yml`, 
-Model Analyzer can be started using the `-f`, or `--config-file` flag.
+If this file is saved to the `config.yml`, Model Analyzer can be started using
+the `-f`, or `--config-file` flag.
 
 ```
 model-analyzer -f config.yml
 ```
 
-It will run the model `vgg_19_graphdef` over combinations of batch sizes `[1,2,3]`, `concurrency` `[2,4,8]` (taken from the global concurrency section), with dynamic batching enabled and preferred batch sizes `2` and `3` and a single CPU instance.
+It will run the model `vgg_19_graphdef` over combinations of batch sizes
+`[1,2,3]`, `concurrency` `[2,4,8]` (taken from the global concurrency section),
+with dynamic batching enabled and preferred batch sizes `2` and `3` and a single
+CPU instance.
 
-It will also run the model `vgg_16_graphdef` over combinations of batch sizes `[4,5,6,7,8,9]`(taken from the global `batch_sizes` section), concurrency `[2,10,18,26,34,42,50,58]`, with dynamic batching enabled and preferred batch sizes `1` and `2` and a single GPU instance.
+It will also run the model `vgg_16_graphdef` over combinations of batch sizes
+`[4,5,6,7,8,9]`(taken from the global `batch_sizes` section), concurrency
+`[2,10,18,26,34,42,50,58]`, with dynamic batching enabled and preferred batch
+sizes `1` and `2` and a single GPU instance.
 
-### `<triton-server-flags>`
-
-This section of the config allows fine-grained control over the flags passed to the Triton instances launched by Model Analyzer when it is running in the `docker` or `local` Triton launch modes. Any argument to the server can be specified here.
-
-#### Example
+## `<analysis-model>`
+The `--analysis-models` argument can be provided as a list of strings (names of
+models) from the CLI interface, or as a more complex `<analysis-model>` object
+but only through the YAML configuration file. The model object can contain
+`<objectives>` and `<constraints>`. An example looks like:
 
 ```yaml
-model_repository: /path/to/model/repository/
-model_names:
-  model_1:
-    parameters:
-        batch_sizes:
-            start: 4
-            stop: 9
-        concurrency:
-            - 2
-            - 4
-            - 8
-triton_server_flags:
-    strict_model_config: False
-    log_verbose: True
+analysis_models:
+  model_1:  
+    constraints:
+        gpu_used_memory:
+            max: 200
+    objectives:
+    - perf_throughput
 ```
 
-**Important Notes**: 
-* The Model Analyzer also provides certain arguments to the `tritonserver` instances it launches. These ***cannot*** be overriden by providing those arguments in this section. An example of this is `http-port`, which is an argument to Model Analyzer itself.
+Multiple models can be specified under the `analysis_models` key as well.
 
+```yaml
+analysis_models:
+  model_1:  
+    constraints:
+        gpu_used_memory:
+            max: 200
+  model_1:  
+    constraints:
+        perf_latency:
+            max: 80
+objectives:
+- perf_throughput
+```
+
+## `<report-model-config>`
+The `--report-model-configs` argument can be provided as a list of strings
+(names of models) from the CLI interface, or as a more complex
+`<report-model-config>` object but only through the YAML configuration file. The
+model object can contain `<plots>` objects. An example looks like:
+
+```yaml
+report_model_configs:
+  model_1_i0:
+    throughput_v_latency:
+      title: Title
+      x_axis: perf_latency
+      y_axis: perf_throughput
+      monotonic: True
+```
+
+Multiple models can be specified under the `analysis_models` key as well.
+
+```yaml
+report_model_configs:
+  model_1_i0:
+    throughput_v_latency:
+        title: Title
+        x_axis: perf_latency
+        y_axis: perf_throughput
+        monotonic: True
+  model_2_i0:
+    gpu_mem_v_latency:
+        title: Title
+        x_axis: perf_latency
+        y_axis: gpu_used_memory
+        monotonic: False
+```
+
+## Config Defaults
+
+Up to date config defaults can be found in
+[config_defaults.py](../model_analyzer/config/input/config_defaults.py)
