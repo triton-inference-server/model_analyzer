@@ -42,7 +42,6 @@ class ConfigCommandAnalyze(ConfigCommand):
     """
     Model Analyzer config object.
     """
-
     def _fill_config(self):
         """
         Builder function makes calls to add config to 
@@ -76,7 +75,6 @@ class ConfigCommandAnalyze(ConfigCommand):
         model objectives and constraints, 
         as well as plots
         """
-
         def objective_list_output_mapper(objectives):
             # Takes a list of objectives and maps them
             # into a dict
@@ -106,17 +104,17 @@ class ConfigCommandAnalyze(ConfigCommand):
         constraints_scheme = ConfigObject(
             schema={
                 'perf_throughput':
-                    ConfigObject(schema={
-                        'min': ConfigPrimitive(int),
-                    }),
+                ConfigObject(schema={
+                    'min': ConfigPrimitive(int),
+                }),
                 'perf_latency':
-                    ConfigObject(schema={
-                        'max': ConfigPrimitive(int),
-                    }),
+                ConfigObject(schema={
+                    'max': ConfigPrimitive(int),
+                }),
                 'gpu_used_memory':
-                    ConfigObject(schema={
-                        'max': ConfigPrimitive(int),
-                    }),
+                ConfigObject(schema={
+                    'max': ConfigPrimitive(int),
+                }),
             })
         self._add_config(
             ConfigField(
@@ -132,11 +130,11 @@ class ConfigCommandAnalyze(ConfigCommand):
                 # Any key is allowed, but the keys must follow the pattern
                 # below
                 '*':
-                    ConfigObject(
-                        schema={
-                            'objectives': objectives_scheme,
-                            'constraints': constraints_scheme,
-                        })
+                ConfigObject(
+                    schema={
+                        'objectives': objectives_scheme,
+                        'constraints': constraints_scheme,
+                    })
             },
             output_mapper=ConfigModelAnalysisSpec.
             model_object_to_config_model_analysis_spec)
@@ -162,7 +160,8 @@ class ConfigCommandAnalyze(ConfigCommand):
                 ],
                                        required=True),
                 description=
-                'Comma-delimited list of the model names to be profiled'))
+                'Comma-delimited list of the model names for whom to generate reports.'
+            ))
 
     def _add_export_configs(self):
         """
@@ -170,12 +169,13 @@ class ConfigCommandAnalyze(ConfigCommand):
         """
 
         self._add_config(
-            ConfigField('export_path',
-                        flags=['--export-path', '-e'],
-                        default_value=DEFAULT_EXPORT_PATH,
-                        field_type=ConfigPrimitive(str),
-                        description=
-                        "Full path to directory in which to store the results"))
+            ConfigField(
+                'export_path',
+                flags=['--export-path', '-e'],
+                default_value=DEFAULT_EXPORT_PATH,
+                field_type=ConfigPrimitive(str),
+                description=
+                "Full path to directory in which to store the results"))
         self._add_config(
             ConfigField(
                 'filename_model_inference',
@@ -190,7 +190,8 @@ class ConfigCommandAnalyze(ConfigCommand):
                 flags=['--filename-model-gpu'],
                 field_type=ConfigPrimitive(str),
                 default_value=DEFAULT_FILENAME_MODEL_GPU,
-                description='Specifies filename for storing model GPU metrics'))
+                description='Specifies filename for storing model GPU metrics')
+        )
         self._add_config(
             ConfigField(
                 'filename_server_only',
@@ -208,6 +209,7 @@ class ConfigCommandAnalyze(ConfigCommand):
         self._add_config(
             ConfigField(
                 'inference_output_fields',
+                flags=['--inference-output-fields'],
                 field_type=ConfigListString(),
                 default_value=DEFAULT_INFERENCE_OUTPUT_FIELDS,
                 description=
@@ -215,17 +217,18 @@ class ConfigCommandAnalyze(ConfigCommand):
         self._add_config(
             ConfigField(
                 'gpu_output_fields',
+                flags=['--gpu-output-fields'],
                 field_type=ConfigListString(),
                 default_value=DEFAULT_GPU_OUTPUT_FIELDS,
-                description='Specifies column keys for model gpu metrics table')
-        )
-        self._add_config(
-            ConfigField(
-                'server_output_fields',
-                field_type=ConfigListString(),
-                default_value=DEFAULT_SERVER_OUTPUT_FIELDS,
-                description='Specifies column keys for server-only metrics table'
+                description='Specifies column keys for model gpu metrics table'
             ))
+        self._add_config(
+            ConfigField('server_output_fields',
+                        flags=['--server-output-fields'],
+                        field_type=ConfigListString(),
+                        default_value=DEFAULT_SERVER_OUTPUT_FIELDS,
+                        description=
+                        'Specifies column keys for server-only metrics table'))
 
     def _add_report_configs(self):
         """
@@ -327,13 +330,13 @@ class ConfigCommandAnalyze(ConfigCommand):
         """
         plots_scheme = ConfigObject(schema={
             '*':
-                ConfigObject(
-                    schema={
-                        'title': ConfigPrimitive(type_=str),
-                        'x_axis': ConfigPrimitive(type_=str),
-                        'y_axis': ConfigPrimitive(type_=str),
-                        'monotonic': ConfigPrimitive(type_=bool)
-                    })
+            ConfigObject(
+                schema={
+                    'title': ConfigPrimitive(type_=str),
+                    'x_axis': ConfigPrimitive(type_=str),
+                    'y_axis': ConfigPrimitive(type_=str),
+                    'monotonic': ConfigPrimitive(type_=bool)
+                })
         },
                                     output_mapper=ConfigPlot.from_object)
         self._add_config(

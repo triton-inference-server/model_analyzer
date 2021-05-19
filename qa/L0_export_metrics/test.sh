@@ -28,8 +28,9 @@ FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 GPUS=(`get_all_gpus_uuids`)
+CHECKPOINT_DIRECTORY="."
 
-MODEL_ANALYZER_ARGS="-e $EXPORT_PATH --analysis-models $MODEL_NAMES --summarize=False --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ARGS="-e $EXPORT_PATH --analysis-models $MODEL_NAMES --checkpoint-directory $CHECKPOINT_DIRECTORY --summarize=False --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_SUBCOMMAND="analyze"
 

@@ -16,7 +16,7 @@
 # Common defaults
 #
 
-DEFAULT_CHECKPOINT_DIRECTORY = '.'
+DEFAULT_CHECKPOINT_DIRECTORY = './checkpoints'
 DEFAULT_OBJECTIVES = {'perf_throughput': 10}
 
 #
