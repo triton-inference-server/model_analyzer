@@ -364,3 +364,6 @@ FodyWeavers.xsd
 # .vscode and execution script
 .vscode
 run_container.sh
+
+# qa_model_repository
+qa_model_repository
