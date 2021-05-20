@@ -130,7 +130,7 @@ function run_server_launch_modes() {
                 fi
             fi
 
-            # Run the analyzer and check the results
+            # Run the analyzer and check the results, enough to just profile the server
             set +e
             MODEL_ANALYZER_SUBCOMMAND="profile"
             run_analyzer

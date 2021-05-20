@@ -177,13 +177,6 @@ def _get_sweep_configs(profile_models):
     return sweep_configs
 
 
-def get_all_configurations(profile_models):
-
-    run_params = []
-    run_params += _get_sweep_configs(profile_models)
-    return run_params
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-m',
@@ -194,7 +187,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     for i, configuration in enumerate(
-            get_all_configurations(args.profile_models.split(','))):
+            _get_sweep_configs(args.profile_models.split(','))):
         total_param = configuration['total_param']
         total_param_remote = configuration['total_param_remote']
         total_models_remote = configuration['total_models_remote']

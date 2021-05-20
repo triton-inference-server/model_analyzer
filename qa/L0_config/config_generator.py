@@ -79,13 +79,6 @@ def _get_sweep_configs(profile_models):
     return sweep_configs
 
 
-def get_all_configurations(profile_models):
-
-    run_params = []
-    run_params += _get_sweep_configs(profile_models)
-    return run_params
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-m',
@@ -95,7 +88,8 @@ if __name__ == "__main__":
                         help='The models to be profiled for this test')
 
     args = parser.parse_args()
-    for i, configuration in enumerate(get_all_configurations(args.profile_models.split(','))):
+    for i, configuration in enumerate(
+            _get_sweep_configs(args.profile_models.split(','))):
         total_param = configuration['total_param']
         del configuration['total_param']
         with open(f'./config-{i}.yml', 'w') as file:
