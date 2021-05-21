@@ -50,7 +50,7 @@ LIST_OF_CONFIG_FILES=(`ls | grep .yml`)
 
 RET=0
 
-if [ ${#LIST_OF_CONFIG_FILES[@]} -lt 0 ]; then
+if [ ${#LIST_OF_CONFIG_FILES[@]} -le 0 ]; then
     echo -e "\n***\n*** Test Failed. No config file exists. \n***"
     RET=1
     exit $RET
