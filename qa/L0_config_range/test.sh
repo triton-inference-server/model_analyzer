@@ -14,6 +14,7 @@
 
 ANALYZER_LOG="test.log"
 source ../common/util.sh
+source ../common/check_analyzer_results.sh
 
 rm -f *.log
 rm -rf results && mkdir -p results
@@ -88,23 +89,14 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
         INFERENCE_NUM_COLUMNS=10
         SERVER_METRICS_NUM_COLUMNS=5
 
-
-        OUTPUT_TAG="Model"
-        check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
+        check_table_row_column \
+            "" "" "" \
+            $MODEL_METRICS_INFERENCE_FILE $MODEL_METRICS_GPU_FILE $SERVER_METRICS_FILE \
+            $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS \
+            $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) \
+            $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]}))
         if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $SERVER_METRICS_FILE.\n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
-        check_csv_table_row_column $MODEL_METRICS_GPU_FILE $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) $OUTPUT_TAG
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_GPU_FILE.\n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
-        check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS $OUTPUT_TAG
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_INFERENCE_FILE.\n***"
+            echo -e "\n***\n*** Test Output Verification Failed.\n***"
             cat $ANALYZER_LOG
             RET=1
         fi

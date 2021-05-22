@@ -14,6 +14,7 @@
 
 ANALYZER_LOG="test.log"
 source ../common/util.sh
+source ../common/check_analyzer_results.sh
 
 rm -f *.log
 rm -rf results && mkdir -p results
@@ -109,46 +110,15 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
             METRICS_NUM_COLUMNS=11
             INFERENCE_NUM_COLUMNS=10
             SERVER_METRICS_NUM_COLUMNS=5
-            OUTPUT_TAG="Model"
-
-            check_log_table_row_column $ANALYZER_LOG $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS "Models\ \(Inference\):"
-            if [ $? -ne 0 ]; then
-                echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
-                cat $ANALYZER_LOG
-                RET=1
-            fi
-
-            check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) "Models\ \(GPU\ Metrics\):"
-            if [ $? -ne 0 ]; then
-                echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
-                cat $ANALYZER_LOG
-                RET=1
-            fi
-
-            check_csv_table_row_column $MODEL_METRICS_GPU_FILE $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) $OUTPUT_TAG
-            if [ $? -ne 0 ]; then
-                echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_GPU_FILE.\n***"
-                cat $ANALYZER_LOG
-                RET=1
-            fi
-
-            check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS $OUTPUT_TAG
-            if [ $? -ne 0 ]; then
-                echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_INFERENCE_FILE.\n***"
-                cat $ANALYZER_LOG
-                RET=1
-            fi
             
-            check_log_table_row_column $ANALYZER_LOG $SERVER_METRICS_NUM_COLUMNS ${#GPUS[@]} "Server\ Only:"
+            check_table_row_column \
+                $ANALYZER_LOG $ANALYZER_LOG $ANALYZER_LOG \
+                $MODEL_METRICS_INFERENCE_FILE $MODEL_METRICS_GPU_FILE $SERVER_METRICS_FILE \
+                $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS \
+                $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) \
+                $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]}))
             if [ $? -ne 0 ]; then
-                echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
-                cat $ANALYZER_LOG
-                RET=1
-            fi
-
-            check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) $OUTPUT_TAG
-            if [ $? -ne 0 ]; then
-                echo -e "\n***\n*** Test Output Verification Failed for $SERVER_METRICS_FILE.\n***"
+                echo -e "\n***\n*** Test Output Verification Failed.\n***"
                 cat $ANALYZER_LOG
                 RET=1
             fi
@@ -167,4 +137,3 @@ else
 fi
 
 exit $RET
-

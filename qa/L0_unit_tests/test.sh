@@ -14,7 +14,7 @@
 
 TEST_LOG='test.log'
 EXPECTED_NUM_TESTS=`python3 count_tests.py --path ../../tests/`
-source ../common/util.sh
+source ../common/check_analyzer_results.sh
 
 RET=0
 
@@ -23,7 +23,7 @@ python3 -m unittest discover -v -s ../../tests  -t ../../ > $TEST_LOG 2>&1
 if [ $? -ne 0 ]; then
     RET=1
 else
-    check_test_results $TEST_LOG $EXPECTED_NUM_TESTS
+    check_unit_test_results $TEST_LOG $EXPECTED_NUM_TESTS
     if [ $? -ne 0 ]; then
         cat $TEST_LOG
         echo -e "\n***\n*** Test Result Verification Failed\n***"
