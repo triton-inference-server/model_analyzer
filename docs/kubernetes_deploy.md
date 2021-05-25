@@ -115,7 +115,7 @@ images:
 
   triton:
     image: nvcr.io/nvidia/tritonserver
-    tag: 21.04-py3
+    tag: 21.05-py3
 ```
 
 Now from the Model Analyzer root directory, we can deploy the helm chart.
