@@ -177,13 +177,6 @@ class ConfigCommandProfile(ConfigCommand):
                 description=
                 'Specifies how long (seconds) to gather server-only metrics'))
         self._add_config(
-            ConfigField('log_level',
-                        flags=['--log-level'],
-                        default_value=DEFAULT_LOG_LEVEL,
-                        field_type=ConfigPrimitive(str),
-                        choices=['INFO', 'DEBUG', 'ERROR', 'WARNING'],
-                        description='Logging levels'))
-        self._add_config(
             ConfigField(
                 'gpus',
                 flags=['--gpus'],

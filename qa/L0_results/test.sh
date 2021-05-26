@@ -33,10 +33,11 @@ CLIENT_PROTOCOL="http"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
+CHECKPOINT_DIRECTORY="."
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
 
-MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 
 python3 test_config_generator.py -m $MODEL_NAMES
@@ -66,7 +67,7 @@ fi
 CONFIG_FILE='config-detailed-reports.yml'
 TEST_NAME='detailed_reports'
 MODEL_ANALYZER_SUBCOMMAND="report"
-MODEL_ANALYZER_ARGS="-e $EXPORT_PATH -f $CONFIG_FILE"
+MODEL_ANALYZER_ARGS="-e $EXPORT_PATH -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY"
 run_analyzer
 if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
