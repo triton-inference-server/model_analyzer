@@ -40,7 +40,7 @@ Triton Inference Server.
 * [Configuring Model Analyzer](docs/config.md)
 * [Model Config Search](docs/config_search.md)
 * [Checkpointing](docs/checkpoints.md)
-* [Model Analyzer Reports](docs.report.md)
+* [Model Analyzer Reports](docs/report.md)
 * [Deployment with Kubernetes](docs/kubernetes_deploy.md)
 
 # Reporting problems, asking questions
