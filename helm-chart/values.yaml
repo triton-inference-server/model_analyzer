@@ -16,8 +16,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-# The mandatory fields to update are modelPath, resultsPath, and modelName
-
 # Job timeout value specified in seconds
 jobTimeout: 900
 
@@ -26,29 +24,14 @@ jobTimeout: 900
 # Local path to model directory
 modelPath: /home/models
 
+# Local path export model config variants
+outputModelPath: /home/output_models
+
 # Local path to export data
 resultsPath: /home/results
 
-## Arguments
-
-#Specifies how long to gather server-only metrics in seconds
-durationSeconds: 5
-
-#Specifies list of model batch sizes
-batchSizes: 1,2
-
-#Specifies comma-delimited list of concurrency values
-concurrency: 1,2
-
-#Specifies frequency of metric gathering in seconds
-monitoringInterval: 0.01
-
-#Specifies the max number of any retry attempt in seconds
-maxRetries: 100
-
-#Specifies list of model names
-#This should match the names Triton is expecting, based on the model's configuration file.
-modelNames: classification_chestxray_v1
+# Local path to store checkpoints
+checkpointPath: /home/checkpoints
 
 ## Images
 images:
