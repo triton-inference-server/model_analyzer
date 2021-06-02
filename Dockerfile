@@ -31,7 +31,7 @@ ENV DCGM_VERSION=2.0.13
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
-    apt-get install -y python3-dev wkhtmltopdf
+    apt-get install -y python3-dev
 
 RUN mkdir -p /opt/triton-model-analyzer
 
@@ -49,6 +49,7 @@ WORKDIR /opt/triton-model-analyzer
 RUN rm -fr *
 COPY --from=sdk /usr/local/bin/perf_analyzer .
 RUN chmod +x ./perf_analyzer
+
 COPY . .
 RUN chmod +x /opt/triton-model-analyzer/nvidia_entrypoint.sh
 RUN chmod +x build_wheel.sh && \
@@ -58,6 +59,9 @@ RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install nvidia-pyindex && \
     python3 -m pip install wheels/triton_model_analyzer-*-manylinux1_x86_64.whl
 
+RUN apt-get install -y wkhtmltopdf
+
 ENTRYPOINT ["/opt/triton-model-analyzer/nvidia_entrypoint.sh"]
 ENV MODEL_ANALYZER_VERSION ${MODEL_ANALYZER_VERSION}
 ENV MODEL_ANALYZER_CONTAINER_VERSION ${MODEL_ANALYZER_CONTAINER_VERSION}
+
