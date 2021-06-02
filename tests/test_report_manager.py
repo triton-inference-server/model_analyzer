@@ -71,6 +71,18 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.report_manager = ReportManager(config=config,
                                             result_manager=self.result_manager)
 
+    def _add_result_measurement(self, model_config_name, model_name,
+                                avg_gpu_metrics, avg_non_gpu_metrics,
+                                result_comparator):
+        self.model_config["name"] = model_config_name
+        measurement = construct_measurement(model_name, avg_gpu_metrics,
+                                            avg_non_gpu_metrics,
+                                            result_comparator)
+        run_config = RunConfig(
+            model_name, ModelConfig.create_from_dictionary(self.model_config),
+            measurement.perf_config())
+        self.result_manager.add_measurement(run_config, measurement)
+
     def setUp(self):
         self.model_config = {
             "platform": "tensorflow_graphdef",
@@ -108,16 +120,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 "perf_latency": 4000,
                 "cpu_used_ram": 1000
             }
-            self.model_config["name"] = f"test_model1_report_{i}"
-
-            measurement = construct_measurement("test_model1", avg_gpu_metrics,
-                                                avg_non_gpu_metrics,
-                                                result_comparator)
-            run_config = RunConfig(
-                "test_model1",
-                ModelConfig.create_from_dictionary(self.model_config),
-                measurement.perf_config())
-            self.result_manager.add_measurement(run_config, measurement)
+            self._add_result_measurement(f"test_model1_report_{i}",
+                                         "test_model1", avg_gpu_metrics,
+                                         avg_non_gpu_metrics, result_comparator)
 
         for i in range(5):
             avg_non_gpu_metrics = {
@@ -125,16 +130,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 "perf_latency": 4000,
                 "cpu_used_ram": 1000
             }
-            self.model_config["name"] = f"test_model2_report_{i}"
-
-            measurement = construct_measurement("test_model2", avg_gpu_metrics,
-                                                avg_non_gpu_metrics,
-                                                result_comparator)
-            run_config = RunConfig(
-                "test_model2",
-                ModelConfig.create_from_dictionary(self.model_config),
-                measurement.perf_config())
-            self.result_manager.add_measurement(run_config, measurement)
+            self._add_result_measurement(f"test_model2_report_{i}",
+                                         "test_model2", avg_gpu_metrics,
+                                         avg_non_gpu_metrics, result_comparator)
 
         self.result_manager.compile_and_sort_results()
         self.report_manager.create_summaries()
@@ -161,16 +159,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 "perf_latency": 4000,
                 "cpu_used_ram": 1000
             }
-            self.model_config["name"] = f"model_{i}"
-
-            measurement = construct_measurement("test_model", avg_gpu_metrics,
-                                                avg_non_gpu_metrics,
-                                                result_comparator)
-            run_config = RunConfig(
-                "test_model",
-                ModelConfig.create_from_dictionary(self.model_config),
-                measurement.perf_config())
-            self.result_manager.add_measurement(run_config, measurement)
+            self._add_result_measurement(f"model_{i}", "test_model",
+                                         avg_gpu_metrics, avg_non_gpu_metrics,
+                                         result_comparator)
 
         self.result_manager.compile_and_sort_results()
         self.report_manager.create_summaries()
