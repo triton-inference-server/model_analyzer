@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,15 +15,8 @@
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
 from model_analyzer.config.run.run_config import RunConfig
-from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
-from model_analyzer.record.types.cpu_used_ram import CPUUsedRAM
-from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
-from model_analyzer.record.types.gpu_utilization import GPUUtilization
-from model_analyzer.record.types.perf_latency import PerfLatency
-from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.reports.report_manager import ReportManager
-from model_analyzer.result.measurement import Measurement
 from model_analyzer.result.result_comparator import ResultComparator
 from model_analyzer.result.result_manager import ResultManager
 
@@ -31,7 +24,9 @@ from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
 
 from .common import test_result_collector as trc
+from .common.test_utils import construct_measurement
 from .mocks.mock_config import MockConfig
+from .mocks.mock_io import MockIOMethods
 from .mocks.mock_matplotlib import MockMatplotlibMethods
 from .mocks.mock_os import MockOSMethods
 import unittest
@@ -45,17 +40,17 @@ class TestReportManagerMethods(trc.TestResultCollector):
         config = ConfigCommandAnalyze()
         cli = CLI()
         cli.add_subcommand(
-            cmd='analyze',
+            cmd="analyze",
             help=
-            'Collect and sort profiling results and generate data and summaries.',
+            "Collect and sort profiling results and generate data and summaries.",
             config=config)
         cli.parse()
         mock_config.stop()
         return config
 
-    def _setUp_managers(self,
-                        analysis_models="test_model",
-                        num_configs_per_model=10):
+    def _init_managers(self,
+                       analysis_models="test_model",
+                       num_configs_per_model=10):
         args = [
             "model-analyzer", "analyze", "-f", "path-to-config-file",
             "--analysis-models", analysis_models
@@ -78,79 +73,75 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
     def setUp(self):
         self.model_config = {
-            'platform': 'tensorflow_graphdef',
-            'instance_group': [{
-                'count': 1,
-                'kind': 'KIND_GPU'
+            "platform": "tensorflow_graphdef",
+            "instance_group": [{
+                "count": 1,
+                "kind": "KIND_GPU"
             }],
-            'dynamic_batching': {
-                'preferred_batch_size': [4, 8],
+            "dynamic_batching": {
+                "preferred_batch_size": [4, 8],
             }
         }
 
-        mock_paths = [
-            'model_analyzer.reports.report_manager',
-            'model_analyzer.config.input.config_command_analyze'
-        ]
-        self.os_mock = MockOSMethods(mock_paths=mock_paths)
+        self.os_mock = MockOSMethods(mock_paths=[
+            "model_analyzer.reports.report_manager",
+            "model_analyzer.config.input.config_command_analyze"
+        ])
         self.os_mock.start()
+        self.io_mock = MockIOMethods(
+            mock_paths=["model_analyzer.reports.pdf_report"],
+            read_data=[bytes(">:(".encode("ascii"))])
+        self.io_mock.start()
         self.matplotlib_mock = MockMatplotlibMethods()
         self.matplotlib_mock.start()
 
-        self.perf_config = PerfAnalyzerConfig()
-
     def test_add_results(self):
-        self._setUp_managers("test_model1,test_model2")
+        self._init_managers("test_model1,test_model2")
         result_comparator = ResultComparator(
             metric_objectives={"perf_throughput": 10})
 
-        avg_gpu_metrics = {0: [GPUUsedMemory(6000), GPUUtilization(60)]}
+        avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
 
         for i in range(10):
+            avg_non_gpu_metrics = {
+                "perf_throughput": 100 + 10 * i,
+                "perf_latency": 4000,
+                "cpu_used_ram": 1000
+            }
             self.model_config["name"] = f"test_model1_report_{i}"
-            model_config = ModelConfig.create_from_dictionary(self.model_config)
-            run_config = RunConfig("test_model1", model_config,
-                                   self.perf_config)
 
-            avg_non_gpu_metrics = [
-                PerfThroughput(100 + 10 * i),
-                PerfLatency(4000),
-                CPUUsedRAM(1000)
-            ]
-            measurement = Measurement(gpu_data=avg_gpu_metrics,
-                                      non_gpu_data=avg_non_gpu_metrics,
-                                      perf_config=self.perf_config)
-            measurement.set_result_comparator(result_comparator)
-
+            measurement = construct_measurement("test_model1", avg_gpu_metrics,
+                                                avg_non_gpu_metrics,
+                                                result_comparator)
+            run_config = RunConfig(
+                "test_model1",
+                ModelConfig.create_from_dictionary(self.model_config),
+                measurement.perf_config())
             self.result_manager.add_measurement(run_config, measurement)
 
         for i in range(5):
+            avg_non_gpu_metrics = {
+                "perf_throughput": 200 + 10 * i,
+                "perf_latency": 4000,
+                "cpu_used_ram": 1000
+            }
             self.model_config["name"] = f"test_model2_report_{i}"
-            model_config = ModelConfig.create_from_dictionary(self.model_config)
-            run_config = RunConfig("test_model2", model_config,
-                                   self.perf_config)
 
-            avg_non_gpu_metrics = [
-                PerfThroughput(200 + 10 * i),
-                PerfLatency(4000),
-                CPUUsedRAM(1000)
-            ]
-            measurement = Measurement(gpu_data=avg_gpu_metrics,
-                                      non_gpu_data=avg_non_gpu_metrics,
-                                      perf_config=self.perf_config)
-            measurement.set_result_comparator(result_comparator)
-
+            measurement = construct_measurement("test_model2", avg_gpu_metrics,
+                                                avg_non_gpu_metrics,
+                                                result_comparator)
+            run_config = RunConfig(
+                "test_model2",
+                ModelConfig.create_from_dictionary(self.model_config),
+                measurement.perf_config())
             self.result_manager.add_measurement(run_config, measurement)
 
         self.result_manager.compile_and_sort_results()
-        with unittest.mock.patch(
-                "model_analyzer.reports.pdf_report.open",
-                unittest.mock.mock_open(
-                    read_data=bytes(">:(".encode("ascii")))):
-            self.report_manager.create_summaries()
+        self.report_manager.create_summaries()
 
         self.assertEqual(self.report_manager.report_keys(),
                          ["test_model1", "test_model2"])
+
         report1_data = self.report_manager.data("test_model1")
         report2_data = self.report_manager.data("test_model2")
 
@@ -158,35 +149,31 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.assertEqual(len(report2_data), 5)
 
     def test_build_summary_table(self):
-        self._setUp_managers()
+        self._init_managers()
         result_comparator = ResultComparator(
             metric_objectives={"perf_throughput": 10})
 
-        avg_gpu_metrics = {0: [GPUUsedMemory(6000), GPUUtilization(60)]}
+        avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
 
         for i in range(10, 0, -1):
+            avg_non_gpu_metrics = {
+                "perf_throughput": 100 + 10 * i,
+                "perf_latency": 4000,
+                "cpu_used_ram": 1000
+            }
             self.model_config["name"] = f"model_{i}"
-            model_config = ModelConfig.create_from_dictionary(self.model_config)
-            run_config = RunConfig("test_model", model_config, self.perf_config)
 
-            avg_non_gpu_metrics = [
-                PerfThroughput(100 + 10 * i),
-                PerfLatency(4000),
-                CPUUsedRAM(1000)
-            ]
-            measurement = Measurement(gpu_data=avg_gpu_metrics,
-                                      non_gpu_data=avg_non_gpu_metrics,
-                                      perf_config=self.perf_config)
-            measurement.set_result_comparator(result_comparator)
-
+            measurement = construct_measurement("test_model", avg_gpu_metrics,
+                                                avg_non_gpu_metrics,
+                                                result_comparator)
+            run_config = RunConfig(
+                "test_model",
+                ModelConfig.create_from_dictionary(self.model_config),
+                measurement.perf_config())
             self.result_manager.add_measurement(run_config, measurement)
 
         self.result_manager.compile_and_sort_results()
-        with unittest.mock.patch(
-                "model_analyzer.reports.pdf_report.open",
-                unittest.mock.mock_open(
-                    read_data=bytes(">:(".encode("ascii")))):
-            self.report_manager.create_summaries()
+        self.report_manager.create_summaries()
 
         summary_table, summary_sentence = \
             self.report_manager._build_summary_table(
@@ -214,6 +201,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
     def tearDown(self):
         self.matplotlib_mock.stop()
+        self.io_mock.stop()
         self.os_mock.stop()
 
 

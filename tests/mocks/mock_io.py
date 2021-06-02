@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020,21 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,14 +22,18 @@ class MockIOMethods(MockBase):
     A class that mocks filesystem
     operations open and write
     """
-    def __init__(self, mock_paths):
+
+    def __init__(self, mock_paths, read_data=[]):
         self._mock_paths = mock_paths
         self._patchers_open = {}
         self._patchers_print = {}
         self._open_mocks = {}
         self._print_mocks = {}
-        for path in mock_paths:
-            self._patchers_open[path] = patch(f"{path}.open", mock_open())
+        for i in range(len(mock_paths)):
+            path = mock_paths[i]
+            data = read_data[i] if i < len(read_data) else None
+            self._patchers_open[path] = patch(f"{path}.open",
+                                              mock_open(read_data=data))
             self._patchers_print[path] = patch(f"{path}.print", MagicMock())
         super().__init__()
 
