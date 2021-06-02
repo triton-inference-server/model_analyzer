@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,24 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.input.config_command_analyze \
-    import ConfigCommandAnalyze
-from model_analyzer.triton.model.model_config import ModelConfig
-from model_analyzer.reports.report_manager import ReportManager
-from model_analyzer.result.result_comparator import ResultComparator
 from model_analyzer.cli.cli import CLI
+from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
+from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+
+from model_analyzer.record.types.cpu_used_ram import CPUUsedRAM
+from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
+from model_analyzer.record.types.gpu_utilization import GPUUtilization
+from model_analyzer.record.types.perf_latency import PerfLatency
+from model_analyzer.record.types.perf_throughput import PerfThroughput
+from model_analyzer.reports.report_manager import ReportManager
+from model_analyzer.result.measurement import Measurement
+from model_analyzer.result.result_comparator import ResultComparator
+from model_analyzer.result.result_manager import ResultManager
+
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.triton.model.model_config import ModelConfig
 
 from .common import test_result_collector as trc
-from .common.test_utils import construct_result
-
 from .mocks.mock_config import MockConfig
+from .mocks.mock_matplotlib import MockMatplotlibMethods
 from .mocks.mock_os import MockOSMethods
-from .mocks.mock_model_config import MockModelConfig
 import unittest
 
 
-@unittest.skip("Under Construction")
 class TestReportManagerMethods(trc.TestResultCollector):
+
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
@@ -44,6 +53,29 @@ class TestReportManagerMethods(trc.TestResultCollector):
         mock_config.stop()
         return config
 
+    def _setUp_managers(self,
+                        analysis_models="test_model",
+                        num_configs_per_model=10):
+        args = [
+            "model-analyzer", "analyze", "-f", "path-to-config-file",
+            "--analysis-models", analysis_models
+        ]
+        yaml_content = """
+            num_configs_per_model: """ + str(num_configs_per_model) + """
+            client_protocol: grpc
+            export_path: /test/export/path
+            constraints:
+              perf_latency:
+                max: 100
+        """
+        config = self._evaluate_config(args, yaml_content)
+        state_manager = AnalyzerStateManager(config=config)
+        state_manager.load_checkpoint()
+        self.result_manager = ResultManager(config=config,
+                                            state_manager=state_manager)
+        self.report_manager = ReportManager(config=config,
+                                            result_manager=self.result_manager)
+
     def setUp(self):
         self.model_config = {
             'platform': 'tensorflow_graphdef',
@@ -55,98 +87,112 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 'preferred_batch_size': [4, 8],
             }
         }
+
         mock_paths = [
             'model_analyzer.reports.report_manager',
             'model_analyzer.config.input.config_command_analyze'
         ]
         self.os_mock = MockOSMethods(mock_paths=mock_paths)
         self.os_mock.start()
-        args = [
-            'model-analyzer', 'analyze', '-f', 'path-to-config-file',
-            '--analysis-models', 'test_model'
-        ]
+        self.matplotlib_mock = MockMatplotlibMethods()
+        self.matplotlib_mock.start()
 
-        yaml_content = """
-            num_configs_per_model: 5
-            client_protocol: grpc
-            export_path: /test/export/path
-            constraints:
-              perf_latency:
-                max: 100
-        """
-        config = self._evaluate_config(args, yaml_content)
-        self.report_manager = ReportManager(config=config)
+        self.perf_config = PerfAnalyzerConfig()
 
     def test_add_results(self):
-        objective_spec = {'perf_throughput': 10}
-        self.result_comparator = ResultComparator(
-            metric_objectives=objective_spec)
+        self._setUp_managers("test_model1,test_model2")
+        result_comparator = ResultComparator(
+            metric_objectives={"perf_throughput": 10})
 
-        avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
+        avg_gpu_metrics = {0: [GPUUsedMemory(6000), GPUUtilization(60)]}
 
         for i in range(10):
-            avg_non_gpu_metrics = {
-                'perf_throughput': 100 + 10 * i,
-                'perf_latency': 4000
-            }
-            self.report_manager.add_result(
-                report_key='test_report1',
-                result=construct_result(
-                    avg_gpu_metric_values=avg_gpu_metrics,
-                    avg_non_gpu_metric_values=avg_non_gpu_metrics,
-                    comparator=self.result_comparator))
+            self.model_config["name"] = f"test_model1_report_{i}"
+            model_config = ModelConfig.create_from_dictionary(self.model_config)
+            run_config = RunConfig("test_model1", model_config,
+                                   self.perf_config)
+
+            avg_non_gpu_metrics = [
+                PerfThroughput(100 + 10 * i),
+                PerfLatency(4000),
+                CPUUsedRAM(1000)
+            ]
+            measurement = Measurement(gpu_data=avg_gpu_metrics,
+                                      non_gpu_data=avg_non_gpu_metrics,
+                                      perf_config=self.perf_config)
+            measurement.set_result_comparator(result_comparator)
+
+            self.result_manager.add_measurement(run_config, measurement)
 
         for i in range(5):
-            avg_non_gpu_metrics = {
-                'perf_throughput': 200 + 10 * i,
-                'perf_latency': 4000
-            }
-            self.report_manager.add_result(
-                report_key='test_report2',
-                result=construct_result(
-                    avg_gpu_metric_values=avg_gpu_metrics,
-                    avg_non_gpu_metric_values=avg_non_gpu_metrics,
-                    comparator=self.result_comparator))
+            self.model_config["name"] = f"test_model2_report_{i}"
+            model_config = ModelConfig.create_from_dictionary(self.model_config)
+            run_config = RunConfig("test_model2", model_config,
+                                   self.perf_config)
+
+            avg_non_gpu_metrics = [
+                PerfThroughput(200 + 10 * i),
+                PerfLatency(4000),
+                CPUUsedRAM(1000)
+            ]
+            measurement = Measurement(gpu_data=avg_gpu_metrics,
+                                      non_gpu_data=avg_non_gpu_metrics,
+                                      perf_config=self.perf_config)
+            measurement.set_result_comparator(result_comparator)
+
+            self.result_manager.add_measurement(run_config, measurement)
+
+        self.result_manager.compile_and_sort_results()
+        with unittest.mock.patch(
+                "model_analyzer.reports.pdf_report.open",
+                unittest.mock.mock_open(
+                    read_data=bytes(">:(".encode("ascii")))):
+            self.report_manager.create_summaries()
 
         self.assertEqual(self.report_manager.report_keys(),
-                         ['test_report1', 'test_report2'])
-        report1_data = self.report_manager.data('test_report1')
-        report2_data = self.report_manager.data('test_report2')
+                         ["test_model1", "test_model2"])
+        report1_data = self.report_manager.data("test_model1")
+        report2_data = self.report_manager.data("test_model2")
 
         self.assertEqual(len(report1_data), 10)
         self.assertEqual(len(report2_data), 5)
 
     def test_build_summary_table(self):
-        mock_model_config = MockModelConfig()
-        mock_model_config.start()
-        objective_spec = {'perf_throughput': 10}
-        self.result_comparator = ResultComparator(
-            metric_objectives=objective_spec)
+        self._setUp_managers()
+        result_comparator = ResultComparator(
+            metric_objectives={"perf_throughput": 10})
 
-        avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
+        avg_gpu_metrics = {0: [GPUUsedMemory(6000), GPUUtilization(60)]}
 
         for i in range(10, 0, -1):
-            avg_non_gpu_metrics = {
-                'perf_throughput': 100 + 10 * i,
-                'perf_latency': 4000,
-                'cpu_used_ram': 1000
-            }
-            self.model_config['name'] = f'model_{i}'
-            model_config = ModelConfig.create_from_dictionary(
-                self.model_config)
-            self.report_manager.add_result(
-                report_key='test_report',
-                result=construct_result(
-                    avg_gpu_metric_values=avg_gpu_metrics,
-                    avg_non_gpu_metric_values=avg_non_gpu_metrics,
-                    comparator=self.result_comparator,
-                    model_config=model_config))
+            self.model_config["name"] = f"model_{i}"
+            model_config = ModelConfig.create_from_dictionary(self.model_config)
+            run_config = RunConfig("test_model", model_config, self.perf_config)
+
+            avg_non_gpu_metrics = [
+                PerfThroughput(100 + 10 * i),
+                PerfLatency(4000),
+                CPUUsedRAM(1000)
+            ]
+            measurement = Measurement(gpu_data=avg_gpu_metrics,
+                                      non_gpu_data=avg_non_gpu_metrics,
+                                      perf_config=self.perf_config)
+            measurement.set_result_comparator(result_comparator)
+
+            self.result_manager.add_measurement(run_config, measurement)
+
+        self.result_manager.compile_and_sort_results()
+        with unittest.mock.patch(
+                "model_analyzer.reports.pdf_report.open",
+                unittest.mock.mock_open(
+                    read_data=bytes(">:(".encode("ascii")))):
+            self.report_manager.create_summaries()
 
         summary_table, summary_sentence = \
             self.report_manager._build_summary_table(
-                report_key='test_report',
+                report_key="test_model",
                 num_measurements=10,
-                gpu_name='TITAN RTX')
+                gpu_name="TITAN RTX")
 
         expected_summary_sentence = (
             "In 10 measurement(s), 1/GPU model instance(s)"
@@ -157,16 +203,17 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         # Get throughput index and make sure results are sorted
         throughput_index = summary_table.headers().index(
-            'Throughput (infer/sec)')
-        model_name_index = summary_table.headers().index('Model Config Name')
+            "Throughput (infer/sec)")
+        model_name_index = summary_table.headers().index("Model Config Name")
         for i in range(9):
             current_row = summary_table.get_row_by_index(i)
             next_row = summary_table.get_row_by_index(i + 1)
-            self.assertEqual(current_row[model_name_index], f'model_{10-i}')
+            self.assertEqual(current_row[model_name_index], f"model_{10-i}")
             self.assertGreaterEqual(current_row[throughput_index],
                                     next_row[throughput_index])
 
     def tearDown(self):
+        self.matplotlib_mock.stop()
         self.os_mock.stop()
 
 
