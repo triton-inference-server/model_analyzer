@@ -24,7 +24,7 @@ SKIP_PATHS = ('VERSION', 'LICENSE', 'model_analyzer.egg-info')
 COPYRIGHT_YEAR_RE0 = 'Copyright \\(c\\) (20[0-9][0-9]), NVIDIA CORPORATION. All rights reserved.'
 COPYRIGHT_YEAR_RE1 = 'Copyright \\(c\\) (20[0-9][0-9])-(20[0-9][0-9]), NVIDIA CORPORATION. All rights reserved.'
 # COPYRIGHT for new or significantly modified files
-COPYRIGHT_YEAR_RE2 = 'Copyright \\(c\\) (20[2-9][0-9])(,[2-9][0-9](-[2-9][0-9])*)* NVIDIA CORPORATION & AFFILIATES. All rights reserved.'
+COPYRIGHT_YEAR_RE2 = 'Copyright \\(c\\) (20[2-9][0-9])(,[2-9][0-9](-[2-9][0-9])?)* NVIDIA CORPORATION & AFFILIATES. All rights reserved.'
 
 COPYRIGHT = '''
 
