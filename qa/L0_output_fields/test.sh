@@ -14,6 +14,7 @@
 
 ANALYZER_LOG="test.log"
 source ../common/util.sh
+source ../common/check_analyzer_results.sh
 
 rm -f *.log
 rm -rf results && mkdir -p results
@@ -45,13 +46,14 @@ if [ ${#LIST_OF_CONFIG_FILES[@]} -le 0 ]; then
 fi
 
 # Run the analyzer with various configurations and check the results
+RET=0
+
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     rm -rf results && mkdir -p results
     set +e
 
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -f $CONFIG_FILE" 
     ANALYZER_LOG=analyzer.${CONFIG_FILE}.log
-
 
     TEST_OUTPUT_NUM_ROWS=1
     run_analyzer
@@ -70,46 +72,15 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         METRICS_NUM_COLUMNS=`cat $METRICS_NUM_COLUMNS_FILE`
         INFERENCE_NUM_COLUMNS=`cat $INFERENCE_NUM_COLUMNS_FILE`
         SERVER_METRICS_NUM_COLUMNS=`cat $SERVER_NUM_COLUMNS_FILE`
-        OUTPUT_TAG="Model"
 
-        check_log_table_row_column $ANALYZER_LOG $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS "Models\ \(Inference\):"
+        check_table_row_column \
+            $ANALYZER_LOG $ANALYZER_LOG $ANALYZER_LOG \
+            $MODEL_METRICS_INFERENCE_FILE $MODEL_METRICS_GPU_FILE $SERVER_METRICS_FILE \
+            $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS \
+            $METRICS_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS \
+            $SERVER_METRICS_NUM_COLUMNS 1
         if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
-
-        check_log_table_row_column $ANALYZER_LOG $METRICS_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS "Models\ \(GPU\ Metrics\):"
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
-
-        check_csv_table_row_column $MODEL_METRICS_GPU_FILE $METRICS_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS $OUTPUT_TAG
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_GPU_FILE.\n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
-
-        check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS $OUTPUT_TAG
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_INFERENCE_FILE.\n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
-        
-        check_log_table_row_column $ANALYZER_LOG $SERVER_METRICS_NUM_COLUMNS 1 "Server\ Only:"
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
-
-        check_csv_table_row_column $SERVER_METRICS_FILE $SERVER_METRICS_NUM_COLUMNS 1 $OUTPUT_TAG
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed for $SERVER_METRICS_FILE.\n***"
+            echo -e "\n***\n*** Test Output Verification Failed.\n***"
             cat $ANALYZER_LOG
             RET=1
         fi

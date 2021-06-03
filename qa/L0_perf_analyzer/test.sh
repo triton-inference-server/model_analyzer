@@ -29,9 +29,8 @@ PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
-rm -rf *.yml
-python3 config_generator.py
 
+rm -rf *.yml
 rm -rf $CHECKPOINT_DIRECTORY && mkdir -p $CHECKPOINT_DIRECTORY
 
 MODEL_ANALYZER_PROFILE_BASE_ARGS="-m $MODEL_REPOSITORY -b $BATCH_SIZES -c $CONCURRENCY --run-config-search-disable"
@@ -41,39 +40,48 @@ MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-met
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 
+python3 test_config_generator.py
+
+LIST_OF_CONFIG_FILES=(`ls | grep .yml`)
+
+if [ ${#LIST_OF_CONFIG_FILES[@]} -le 0 ]; then
+    echo -e "\n***\n*** Test Failed. No config file exists. \n***"
+    RET=1
+    exit $RET
+fi
+
 # Run the analyzer with perf-measurement-window=5000ms and expect no adjustment
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f config-time-window-5000.yml"
-
 RET=0
-set +e
-run_analyzer
-if [ $? -ne 0 ]; then
-    echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
-    cat $ANALYZER_LOG
-    RET=1
-elif [[ ! -z `grep "perf_analyzer's measurement window is too small" ${ANALYZER_LOG}` ]]; then
-    echo -e "\n***\n*** Unexpected perf window adjustment was made. \n***"
-    cat $ANALYZER_LOG
-    RET=1
-fi
 
-rm -f $ANALYZER_LOG && rm -f checkpoints/*
+for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
+    TEST_NAME="time_window_5000"
+    if [ $CONFIG_FILE = "config-time-window-50.yml" ]; then
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE --perf-output=True"
+        TEST_NAME="time_window_50"
+    fi
 
-# Run the analyzer with perf-measurement-window=50ms and expect adjustment
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f config-time-window-50.yml --perf-output=True"
+    set +e
 
-run_analyzer
-if [ $? -ne 0 ]; then
-    echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
-    cat $ANALYZER_LOG
-    RET=1
-elif [[ -z `grep "measurement window is too small, increased to" ${ANALYZER_LOG}` ]]; then
-    echo -e "\n***\n*** Expected perf window adjustment. \n***"
-    cat $ANALYZER_LOG
-    RET=1
-fi
+    run_analyzer
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
+        cat $ANALYZER_LOG
+        RET=1
+    else
+        # Check for the correct output
+        python3 check_results.py -f $CONFIG_FILE --test-name $TEST_NAME --analyzer-log $ANALYZER_LOG
+        if [ $? -ne 0 ]; then
+            echo -e "\n***\n*** Test Output Verification Failed.\n***"
+            cat $ANALYZER_LOG
+            RET=1
+        fi
+    fi
 
-set -e
+    rm -f $ANALYZER_LOG && rm -f checkpoints/*
+
+    set -e
+done
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

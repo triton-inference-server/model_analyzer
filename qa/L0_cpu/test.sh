@@ -14,6 +14,7 @@
 
 ANALYZER_LOG="cpu.log"
 source ../common/util.sh
+source ../common/check_analyzer_results.sh
 
 rm -rf results && mkdir -p results
 rm -rf checkpoints && mkdir checkpoints
@@ -70,17 +71,13 @@ else
     MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
     INFERENCE_NUM_COLUMNS=10
 
-    check_log_table_row_column $ANALYZER_LOG $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS "Models\ \(Inference\):"
+    check_table_row_column \
+        $ANALYZER_LOG "" "" \
+        $MODEL_METRICS_INFERENCE_FILE "" "" \
+        $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS \
+        0 0 0 0
     if [ $? -ne 0 ]; then
-        echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
-        cat $ANALYZER_LOG
-        RET=1
-    fi
-
-    OUTPUT_TAG="Model"
-    check_csv_table_row_column $MODEL_METRICS_INFERENCE_FILE $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS $OUTPUT_TAG
-    if [ $? -ne 0 ]; then
-        echo -e "\n***\n*** Test Output Verification Failed for $MODEL_METRICS_INFERENCE_FILE.\n***"
+        echo -e "\n***\n*** Test Output Verification Failed.\n***"
         cat $ANALYZER_LOG
         RET=1
     fi
