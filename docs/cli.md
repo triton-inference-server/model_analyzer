@@ -203,7 +203,7 @@ for more details).
 1. Generate detailed reports for a model configs of `resnet50_libtorch` called `resnet50_libtorch_i1` and `resnet50_libtorch_i2`. Read from `checkpoints` and write to `export_directory`.
 
   ```
-  $ model-analyzer --reort-model-configs resnet50_libtorch_i1,resnet50_libtorch_i2 --checkpoint-directory checkpoints -e export_directory
+  $ model-analyzer --report-model-configs resnet50_libtorch_i1,resnet50_libtorch_i2 --checkpoint-directory checkpoints -e export_directory
   ```
 
 2. Generate detailed report for `resnet50_libtorch_i2` with a custom plot using YAML config file

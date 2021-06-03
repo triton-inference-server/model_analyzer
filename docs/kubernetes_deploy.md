@@ -51,30 +51,9 @@ kube-system   kube-scheduler-user.nvidia.com                   1/1     Running  
 kube-system   nvidia-device-plugin-1607379880-dblhc            1/1     Running   0          11m
 ```
 
-Before deploying the model analyzer, you can provide arguments to the model-analyzer executable at `helm-chart/values.yaml`.
+Before deploying the model analyzer, the directories that the container will mount must be specified in `helm-chart/values.yaml`.
 
 ```
-~/model_analyzer$ cat helm-chart/values.yaml 
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# Values for Triton Model Analyzer
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-# The mandatory fields to update are modelPath, resultsPath, and modelName
-
 # Job timeout value specified in seconds
 jobTimeout: 900
 
@@ -83,29 +62,14 @@ jobTimeout: 900
 # Local path to model directory
 modelPath: /home/models
 
+# Local path export model config variants
+outputModelPath: /home/output_models
+
 # Local path to export data
 resultsPath: /home/results
 
-## Arguments
-
-#Specifies how long to gather server-only metrics in seconds
-durationSeconds: 5
-
-#Specifies list of model batch sizes
-batchSizes: 1,2
-
-#Specifies comma-delimited list of concurrency values
-concurrency: 1,2
-
-#Specifies frequency of metric gathering in seconds
-monitoringInterval: 0.01
-
-#Specifies the max number of any retry attempt in seconds
-maxRetries: 100
-
-#Specifies list of model names
-#This should match the names Triton is expecting, based on the model's configuration file.
-modelNames: classification_chestxray_v1
+# Local path to store checkpoints
+checkpointPath: /home/checkpoints
 
 ## Images
 images:
@@ -118,6 +82,60 @@ images:
     tag: 21.05-py3
 ```
 
+The model analyzer executable uses the config file defined in `helm-chart/templates/config-map.yaml`. This config can be modified to supply arguments to model analyzer. Only the content under the `config.yaml` section of the file should be modified.
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: analyzer-config
+  namespace: default
+data:
+  config.yaml: |
+    ######################
+    # Config for profile #
+    ######################
+
+    override_output_model_repository: True
+    run_config_search_disable: True
+    triton_http_endpoint: localhost:8000
+    triton_grpc_endpoint: localhost:8001
+    triton_metrics_url: http://localhost:8002/metrics
+
+    concurrency: 1,2
+    batch_sizes: 1
+
+    profile_models: 
+      resnet50_libtorch:
+        model_config_parameters:
+          instance_group:
+            -
+              kind: KIND_GPU
+              count: [1]
+          dynamic_batching:
+            preferred_batch_size: [[32]]
+
+    ######################
+    # Config for analyze #
+    ######################
+    
+    num_configs_per_model: 3
+
+    analysis_models: 
+      resnet50_libtorch:
+        objectives:
+          perf_throughput: 10
+        constraints:
+          perf_latency:
+            max: 15
+
+    ######################
+    # Config for report #
+    ######################
+
+    report_model_configs:
+      - resnet50_libtorch_i0
+```
 Now from the Model Analyzer root directory, we can deploy the helm chart.
 
 ```
@@ -130,12 +148,12 @@ REVISION: 1
 TEST SUITE: None
 ```
 
-Check that the model analyzer pod is running and that it has two containers.
+Check that the model analyzer pod is running.
 
 ```
 ~/model_analyzer$ kubectl get pods -A
 NAMESPACE     NAME                                             READY   STATUS    RESTARTS   AGE
-default       model-analyzer-model-analyzer-t9rsl              2/2     Running   0          23s
+default       model-analyzer-model-analyzer-t9rsl              1/1     Running   0          23s
 kube-system   calico-kube-controllers-5dc87d545c-5c9sp         1/1     Running   0          54m
 kube-system   calico-node-8dcn5                                1/1     Running   0          54m
 kube-system   coredns-f9fd979d6-9l29n                          1/1     Running   0          69m
@@ -148,16 +166,25 @@ kube-system   kube-scheduler-user.nvidia.com                   1/1     Running  
 kube-system   nvidia-device-plugin-1607379880-dblhc            1/1     Running   0          44m
 ```
 
-You can find the results upon completion of the job in the directory you passed as the `resultsPath` in `helm-chart/values.yaml`.
+You can find the results upon completion of the job in the directory passed as the `resultsPath` in `helm-chart/values.yaml`.
 
 ```
-~/model_analyzer$ cat /home/results/*
-Model,Batch,Concurrency,Throughput(infer/sec),Max GPU Utilization(%),Max GPU Used Memory(MB),Max GPU Free Memory(MB)
-classification_chestxray_v1,1,1,50.8,38.0,5215.0,23332.0
-classification_chestxray_v1,1,2,66.2,40.0,5215.0,19004.0
-classification_chestxray_v1,2,1,102.0,39.0,5215.0,19004.0
-classification_chestxray_v1,2,2,134.0,42.0,5215.0,19004.0
+~/model_analyzer$ ls -l /home/results
+total 12
+drwxr-xr-x 4 root root 4096 Jun  2 17:00 plots
+drwxr-xr-x 4 root root 4096 Jun  2 17:00 reports
+drwxr-xr-x 2 root root 4096 Jun  2 17:00 results
+```
+```
+~/model_analyzer$ cat /home/results/results/*
+Model,GPU ID,Batch,Concurrency,Model Config Path,Instance Group,Preferred Batch Sizes,Satisfies Constraints,GPU Memory Usage (MB),GPU Utilization (%),GPU Power Usage (W)
+resnet50_libtorch,0,1,2,resnet50_libtorch_i0,1/GPU,[32],Yes,1099.0,16.2,85.3
+resnet50_libtorch,0,1,1,resnet50_libtorch_i0,1/GPU,[32],Yes,1099.0,14.4,82.2
 
-Model,Batch,Concurrency,Throughput(infer/sec),Max GPU Utilization(%),Max GPU Used Memory(MB),Max GPU Free Memory(MB)
-triton-server,0,0,0,0.0,279.0,23940.0
+Model,Batch,Concurrency,Model Config Path,Instance Group,Preferred Batch Sizes,Satisfies Constraints,Throughput (infer/sec),p99 Latency (ms),RAM Usage (MB)
+resnet50_libtorch,1,2,resnet50_libtorch_i0,1/GPU,[32],Yes,195.0,11.0,2897.0
+resnet50_libtorch,1,1,resnet50_libtorch_i0,1/GPU,[32],Yes,164.0,8.1,2937.0
+
+Model,GPU ID,GPU Memory Usage (MB),GPU Utilization (%),GPU Power Usage (W)
+triton-server,0,277.0,0.0,56.5
 ```

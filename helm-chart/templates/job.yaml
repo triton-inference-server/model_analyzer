@@ -27,46 +27,48 @@ spec:
     spec:
       shareProcessNamespace: true
       containers:
-      - name: triton
-        image: {{ .Values.images.triton.image }}:{{ .Values.images.triton.tag }}
-        imagePullPolicy: IfNotPresent
-        volumeMounts:
-            - name: model
-              mountPath: /model
-        args: ["./bin/tritonserver", "--model-repository=/model", "--model-control-mode=explicit"]
-        resources:
-            limits:
-                nvidia.com/gpu: 1
       - name: analyzer
         image: {{ .Values.images.analyzer.image }}
         imagePullPolicy: IfNotPresent
         securityContext:
             privileged: true
         args: [
-          "model-analyzer",
-          "--model-repository", "/model",
-          "--duration-seconds", "{{ .Values.durationSeconds }}",
-          "--batch-sizes", "{{ .Values.batchSizes }}",
-          "--concurrency", "{{ .Values.concurrency }}",
-          "--export",
-          "--export-path", "/results/",
-          "--filename-model", "{{ .Release.Name }}-metrics-model.csv",
-          "--filename-server-only", "{{ .Release.Name }}-metrics-server-only.csv",
-          "--monitoring-interval", "{{ .Values.monitoringInterval }}",
-          "--max-retries", "{{ .Values.maxRetries }}",
-          "--model-names", "{{ .Values.modelNames }}",
-          "--triton-launch-mode", "remote",
-          "--client-protocol", "grpc",
-          "--triton-grpc-endpoint", "localhost:8001",
-          ]
+          "/bin/bash", "-c",
+          "model-analyzer profile -m /models --output-model-repository
+          /output_models/output --checkpoint-directory /checkpoints/
+          --triton-launch-mode local -f /config/config.yaml && model-analyzer
+          analyze -e /results/ --checkpoint-directory /checkpoints/ -f
+          /config/config.yaml && model-analyzer report -e /results/
+          --checkpoint-directory /checkpoints/ -f /config/config.yaml"]
         volumeMounts:
             - name: results
               mountPath: /results
+            - name: models
+              mountPath: /models
+            - name: output-models
+              mountPath: /output_models
+            - name: checkpoints
+              mountPath: /checkpoints
+            - name: config
+              mountPath: /config
+        resources:
+            limits:
+                nvidia.com/gpu: 1
       restartPolicy: OnFailure
       volumes:
       - name: results
         hostPath:
             path:  {{ .Values.resultsPath }}
-      - name: model
+      - name: models
         hostPath:
             path:  {{ .Values.modelPath }}
+      - name: output-models
+        hostPath:
+            path:  {{ .Values.outputModelPath }}
+      - name: checkpoints
+        hostPath:
+            path:  {{ .Values.checkpointPath }}
+      - name: config
+        configMap:
+          name: analyzer-config
+
