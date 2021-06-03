@@ -51,28 +51,9 @@ kube-system   kube-scheduler-user.nvidia.com                   1/1     Running  
 kube-system   nvidia-device-plugin-1607379880-dblhc            1/1     Running   0          11m
 ```
 
-Before deploying the model analyzer, you must specify the directories that the model analyzer container will mount and use in `helm-chart/values.yaml`.
+Before deploying the model analyzer, the directories that the container will mount must be specified in `helm-chart/values.yaml`.
 
 ```
-~/model_analyzer$ cat helm-chart/values.yaml 
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# Values for Triton Model Analyzer
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
 # Job timeout value specified in seconds
 jobTimeout: 900
 
@@ -101,24 +82,9 @@ images:
     tag: 21.05-py3
 ```
 
-Additionally, the model analyzer executable uses the config file defined in `helm-chart/templates/config-map.yaml`. You can modify this to supply arguments to model analyzer. Make sure you only modify the content under the `config.yaml` section of the file.
+The model analyzer executable uses the config file defined in `helm-chart/templates/config-map.yaml`. This config can be modified to supply arguments to model analyzer. Only the content under the `config.yaml` section of the file should be modified.
 
 ```
-~/model_analyzer$ cat helm-chart/templates/config-map.yaml 
-# Copyright (c) 2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -200,7 +166,7 @@ kube-system   kube-scheduler-user.nvidia.com                   1/1     Running  
 kube-system   nvidia-device-plugin-1607379880-dblhc            1/1     Running   0          44m
 ```
 
-You can find the results upon completion of the job in the directory you passed as the `resultsPath` in `helm-chart/values.yaml`.
+You can find the results upon completion of the job in the directory passed as the `resultsPath` in `helm-chart/values.yaml`.
 
 ```
 ~/model_analyzer$ ls -l /home/results

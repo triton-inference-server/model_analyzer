@@ -33,7 +33,7 @@ data:
     batch_sizes: 1
 
     profile_models: 
-      resnet50_libtorch:
+      add_sub:
         model_config_parameters:
           instance_group:
             -
@@ -49,7 +49,7 @@ data:
     num_configs_per_model: 3
 
     analysis_models: 
-      resnet50_libtorch:
+      add_sub:
         objectives:
           perf_throughput: 10
         constraints:
@@ -61,4 +61,4 @@ data:
     ######################
 
     report_model_configs:
-      - resnet50_libtorch_i0
+      - add_sub_i0
