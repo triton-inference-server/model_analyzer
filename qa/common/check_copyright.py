@@ -1,4 +1,4 @@
-# Copyright (c) 2020,21 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2020-21 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ SKIP_PATHS = ('VERSION', 'LICENSE', 'model_analyzer.egg-info')
 COPYRIGHT_YEAR_RE0 = 'Copyright \\(c\\) (20[0-9][0-9]), NVIDIA CORPORATION. All rights reserved.'
 COPYRIGHT_YEAR_RE1 = 'Copyright \\(c\\) (20[0-9][0-9])-(20[0-9][0-9]), NVIDIA CORPORATION. All rights reserved.'
 # COPYRIGHT for new or significantly modified files
-COPYRIGHT_YEAR_RE2 = 'Copyright \\(c\\) (20[2-9][0-9])(,[2-9][0-9](-[2-9][0-9])?)* NVIDIA CORPORATION & AFFILIATES. All rights reserved.'
+COPYRIGHT_YEAR_RE2 = 'Copyright \\(c\\) (20[1-9][0-9](-[1-9][0-9])?)(,[2-9][0-9](-[2-9][0-9])?)* NVIDIA CORPORATION & AFFILIATES. All rights reserved.'
 
 COPYRIGHT = '''
 
@@ -43,7 +43,7 @@ limitations under the License.
 
 single_re = re.compile(COPYRIGHT_YEAR_RE0)
 range_re = re.compile(COPYRIGHT_YEAR_RE1)
-new_range_re = re.compile(COPYRIGHT_YEAR_RE2)
+affiliate_re = re.compile(COPYRIGHT_YEAR_RE2)
 
 
 def visit(path):
@@ -121,12 +121,15 @@ def visit(path):
                 years.append(int(m.group(2)))
             else:
                 copyright_row = line[len(prefix):]
-                if new_range_re.match(copyright_row):
+                if affiliate_re.match(copyright_row):
                     year_str = copyright_row.split("(c) ")[1].split(
                         " NVIDIA ")[0]
                     for year in year_str.split(","):
                         if len(year) == 4:  # 2021
                             years.append(int(year))
+                        elif len(year) == 7:  # 2021-22
+                            years.append(int(year[0:3]))
+                            years.append(int(year[5:6]) + 2000)
                         elif len(year) == 2:  # 21
                             years.append(int(year) + 2000)
                         else:  # 21-23
@@ -138,6 +141,10 @@ def visit(path):
                     return False
         if years[0] > FLAGS.year:
             print("copyright start year greater than current year for " + path +
+                  ": " + line)
+            return False
+        if years[-1] > FLAGS.year:
+            print("copyright end year greater than current year for " + path +
                   ": " + line)
             return False
         for i in range(1, len(years)):
