@@ -27,10 +27,10 @@ def construct_measurement(model_name, gpu_metric_values, non_gpu_metric_values,
     ----------
     model_name: str
         The name of the model that generated this result
-    avg_gpu_metric_values: dict
-        The dict where keys are gpu based metric tags
-        and values are the data
-    avg_non_gpu_metric_values: dict
+    gpu_metric_values: dict
+        Keys are gpu id, values are dict
+        The dict where keys are gpu based metric tags, values are the data
+    non_gpu_metric_values: dict
         Keys are non gpu perf metrics, values are their values
     comparator: ResultComparator
         The comparator used to compare measurements/results
