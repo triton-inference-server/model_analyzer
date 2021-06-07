@@ -1,4 +1,4 @@
-# Copyright (c) 2020-21 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright 2020-21 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,11 +20,7 @@ SKIP_EXTS = ('pt', 'log', 'png')
 
 SKIP_PATHS = ('VERSION', 'LICENSE', 'model_analyzer.egg-info')
 
-# COPYRIGHT for existing files not significantly modified
-COPYRIGHT_YEAR_RE0 = 'Copyright \\(c\\) (20[0-9][0-9]), NVIDIA CORPORATION. All rights reserved.'
-COPYRIGHT_YEAR_RE1 = 'Copyright \\(c\\) (20[0-9][0-9])-(20[0-9][0-9]), NVIDIA CORPORATION. All rights reserved.'
-# COPYRIGHT for new or significantly modified files
-COPYRIGHT_YEAR_RE2 = 'Copyright \\(c\\) (20[1-9][0-9](-[1-9][0-9])?)(,[2-9][0-9](-[2-9][0-9])?)* NVIDIA CORPORATION & AFFILIATES. All rights reserved.'
+COPYRIGHT_YEAR_RE = 'Copyright( \\(c\\))? 20[1-9][0-9](-(20)?[1-9][0-9])?(,(20)?[2-9][0-9](-(20)?[2-9][0-9])?)*,? NVIDIA CORPORATION( & AFFILIATES)?. All rights reserved.'
 
 COPYRIGHT = '''
 
@@ -41,9 +37,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 
-single_re = re.compile(COPYRIGHT_YEAR_RE0)
-range_re = re.compile(COPYRIGHT_YEAR_RE1)
-affiliate_re = re.compile(COPYRIGHT_YEAR_RE2)
+copyright_year_re = re.compile(COPYRIGHT_YEAR_RE)
 
 
 def visit(path):
@@ -103,42 +97,42 @@ def visit(path):
             prefix = '# '
         elif line.startswith('// '):
             prefix = '// '
-        elif not line.startswith(COPYRIGHT_YEAR_RE0[0]):
+        elif not line.startswith(COPYRIGHT_YEAR_RE[0]):
             print(
                 "incorrect prefix for copyright line, allowed prefixes '# ' or '// ', for "
                 + path + ": " + line)
             return False
 
+        # Check if the copyright year line matches the regex
+        # and see if the year(s) are reasonable
         years = []
 
-        m = single_re.match(line[len(prefix):])
-        if m and len(m.groups()) == 1:
-            years.append(int(m.group(1)))
-        else:
-            m = range_re.match(line[len(prefix):])
-            if m and len(m.groups()) == 2:
-                years.append(int(m.group(1)))
-                years.append(int(m.group(2)))
-            else:
-                copyright_row = line[len(prefix):]
-                if affiliate_re.match(copyright_row):
-                    year_str = copyright_row.split("(c) ")[1].split(
-                        " NVIDIA ")[0]
-                    for year in year_str.split(","):
-                        if len(year) == 4:  # 2021
-                            years.append(int(year))
-                        elif len(year) == 7:  # 2021-22
-                            years.append(int(year[0:4]))
-                            years.append(int(year[5:7]) + 2000)
-                        elif len(year) == 2:  # 21
-                            years.append(int(year) + 2000)
-                        else:  # 21-23
-                            years.append(int(year[0:2]) + 2000)
-                            years.append(int(year[3:5]) + 2000)
-                else:
-                    print("copyright year is not recognized for " + path +
-                          ": " + line)
+        copyright_row = line[len(prefix):]
+        if copyright_year_re.match(copyright_row):
+            for year in copyright_row.split("(c) " if "(c) " in
+                                            copyright_row else "Copyright "
+                                           )[1].split(" NVIDIA ")[0].split(","):
+                if len(year) == 4:  # 2021
+                    years.append(int(year))
+                elif len(year) == 2:  # 21
+                    years.append(int(year) + 2000)
+                elif len(year) == 9:  # 2021-2022
+                    years.append(int(year[0:4]))
+                    years.append(int(year[5:9]))
+                elif len(year) == 7 and year[4] == "-":  # 2021-22
+                    years.append(int(year[0:4]))
+                    years.append(int(year[5:7]) + 2000)
+                elif len(year) == 7 and year[2] == "-":  # 21-2022
+                    print("copyright year \"" + year + "\" is unclear for " +
+                          path + ": " + line)
                     return False
+                elif len(year) == 5:  # 21-23
+                    years.append(int(year[0:2]) + 2000)
+                    years.append(int(year[3:5]) + 2000)
+        else:
+            print("copyright year is not recognized for " + path + ": " + line)
+            return False
+
         if years[0] > FLAGS.year:
             print("copyright start year greater than current year for " + path +
                   ": " + line)
