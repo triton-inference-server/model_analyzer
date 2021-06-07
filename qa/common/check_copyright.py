@@ -14,11 +14,13 @@
 import argparse
 import os
 import re
+import pathlib
 
 FLAGS = None
-SKIP_EXTS = ('pt', 'log', 'png')
+SKIP_EXTS = ('pt', 'log', 'png', 'pdf')
 
-SKIP_PATHS = ('VERSION', 'LICENSE', 'model_analyzer.egg-info')
+REPO_PATH_FROM_THIS_FILE = '../..'
+SKIP_PATHS = ('.git', 'VERSION', 'LICENSE')
 
 COPYRIGHT_YEAR_RE = 'Copyright( \\(c\\))? 20[1-9][0-9](-(20)?[1-9][0-9])?(,(20)?[2-9][0-9](-(20)?[2-9][0-9])?)*,? NVIDIA CORPORATION( & AFFILIATES)?. All rights reserved.'
 
@@ -37,6 +39,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 
+repo_abs_path = pathlib.Path(__file__).parent.joinpath(
+    REPO_PATH_FROM_THIS_FILE).resolve()
+
 copyright_year_re = re.compile(COPYRIGHT_YEAR_RE)
 
 
@@ -51,7 +56,8 @@ def visit(path):
             return True
 
     for skip in SKIP_PATHS:
-        if path.startswith(skip):
+        if str(pathlib.Path(path).resolve()).startswith(
+                str(repo_abs_path.joinpath(skip).resolve())):
             if FLAGS.verbose:
                 print("skipping due to path prefix: " + path)
             return True
