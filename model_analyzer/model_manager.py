@@ -264,7 +264,8 @@ class ModelManager:
 
         model_name = run_config.model_name()
         model_config_name = run_config.model_config().get_field('name')
-        perf_config_str = run_config.perf_config().to_cli_string()
+        perf_config_str = run_config.perf_config().to_cli_string(
+            remove_url=True)
 
         results = self._state_manager.get_state_variable(
             'ResultManager.results')

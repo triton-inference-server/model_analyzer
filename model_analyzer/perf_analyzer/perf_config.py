@@ -96,10 +96,16 @@ class PerfAnalyzerConfig:
             for key in params:
                 self[key] = params[key]
 
-    def to_cli_string(self):
+    def to_cli_string(self, remove_url=False):
         """
         Utility function to convert a config into a
         string of arguments to the perf_analyzer with CLI.
+
+        Parameters
+        ----------
+        remove_url: bool
+            Does not include the url in the string representation
+            Useful for mapping measurements across systems.
 
         Returns
         -------
@@ -110,7 +116,12 @@ class PerfAnalyzerConfig:
         """
 
         # single dashed options, then verbose flags, then main args
-        args = [f'{k} {v}' for k, v in self._options.items() if v]
+        args = []
+        for k, v in self._options.items():
+            # If remove_url flag is True, do not append it
+            if v and (k != '-u' or not remove_url):
+                args.append(f'{k} {v}')
+
         args += [k for k, v in self._verbose.items() if v]
         args += [f'--{k}={v}' for k, v in self._args.items() if v]
 

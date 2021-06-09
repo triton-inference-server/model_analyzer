@@ -59,7 +59,7 @@ class TestOutputValidator:
             print("\n***\n*** Top models summary not found.\n***")
             return False
 
-        # Should be only 1 element in intersection
+        # Should be only 1 element in set difference
         for dir in (report_dirs - analysis_models):
             if not os.path.exists(
                     os.path.join(self._export_path, 'reports', 'summaries',

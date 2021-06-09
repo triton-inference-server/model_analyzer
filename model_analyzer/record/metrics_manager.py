@@ -24,7 +24,9 @@ from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
 from collections import defaultdict
+from prometheus_client.parser import text_string_to_metric_families
 import numba
+import requests
 
 
 class MetricsManager:
@@ -42,12 +44,15 @@ class MetricsManager:
         "gpu_power_usage"
     ]
 
-    def __init__(self, config, server, result_manager):
+    def __init__(self, config, client, server, result_manager):
         """
         Parameters
         ----------
         config :ConfigCommandProfile
-            The model analyzer's config 
+            The model analyzer's config
+        client : TritonClient
+            handle to the instance of Tritonclient to communicate with
+            the server
         server : TritonServer
             Handle to the instance of Triton being used
         result_manager : ResultManager
@@ -56,33 +61,40 @@ class MetricsManager:
         """
 
         self._config = config
+        self._client = client
         self._server = server
         self._result_manager = result_manager
 
-        self._dcgm_metrics = []
-        self._perf_metrics = []
-        self._cpu_metrics = []
+        self._dcgm_metrics, self._perf_metrics, self._cpu_metrics = \
+             MetricsManager.categorize_metrics()
+        self._gpus = GPUDeviceFactory.verify_requested_gpus(self._config.gpus)
 
+        self._dcgm_monitor = None
+        self._cpu_monitor = None
+
+    @classmethod
+    def categorize_metrics(cls):
+        """
+        Splits the metrics into groups based
+        on how they are collected
+
+        Returns
+        -------
+        (list,list,list)
+            tuple of three lists (DCGM, PerfAnalyzer, CPU) metrics
+        """
+
+        dcgm_metrics, perf_metrics, cpu_metrics = [], [], []
         # Separates metrics and objectives into related lists
-        for metric in MetricsManager.get_metric_types(tags=self.metric_tags):
+        for metric in MetricsManager.get_metric_types(cls.metric_tags):
             if metric in DCGMMonitor.model_analyzer_to_dcgm_field:
-                self._dcgm_metrics.append(metric)
+                dcgm_metrics.append(metric)
             elif metric in PerfAnalyzer.perf_metrics:
-                self._perf_metrics.append(metric)
+                perf_metrics.append(metric)
             elif metric in CPUMonitor.cpu_metrics:
-                self._cpu_metrics.append(metric)
+                cpu_metrics.append(metric)
 
-    def create_metric_tables(self):
-        """
-        Splits up monitoring metrics into various
-        categories, defined in ___init___ and
-        requests result manager to make
-        corresponding table
-        """
-
-        self._result_manager.create_tables(
-            gpu_specific_metrics=self._dcgm_metrics,
-            non_gpu_specific_metrics=self._perf_metrics + self._cpu_metrics)
+        return dcgm_metrics, perf_metrics, cpu_metrics
 
     def profile_server(self):
         """
@@ -160,10 +172,15 @@ class MetricsManager:
         """
 
         if not cpu_only:
-            self._dcgm_monitor = DCGMMonitor(
-                GPUDeviceFactory.get_analyzer_gpus(self._config.gpus),
-                self._config.monitoring_interval, self._dcgm_metrics)
-            self._dcgm_monitor.start_recording_metrics()
+            try:
+                self._dcgm_monitor = DCGMMonitor(
+                    self._gpus, self._config.monitoring_interval,
+                    self._dcgm_metrics)
+                self._check_triton_and_model_analyzer_gpus()
+                self._dcgm_monitor.start_recording_metrics()
+            except TritonModelAnalyzerException as e:
+                self._destroy_monitors()
+                raise TritonModelAnalyzerException(e)
 
         self._cpu_monitor = CPUMonitor(self._server,
                                        self._config.monitoring_interval,
@@ -187,8 +204,12 @@ class MetricsManager:
         """
 
         if not cpu_only:
-            self._dcgm_monitor.destroy()
-        self._cpu_monitor.destroy()
+            if self._dcgm_monitor:
+                self._dcgm_monitor.destroy()
+        if self._cpu_monitor:
+            self._cpu_monitor.destroy()
+        self._dcgm_monitor = None
+        self._cpu_monitor = None
 
     def _get_perf_analyzer_metrics(self, perf_config, perf_output_writer=None):
         """
@@ -273,6 +294,51 @@ class MetricsManager:
         cpu_record_aggregator.insert_all(cpu_records)
         return cpu_record_aggregator.aggregate()
 
+    def _check_triton_and_model_analyzer_gpus(self):
+        """
+        Check whether Triton Server and Model Analyzer are using the same GPUs
+
+        Raises
+        ------
+        TritonModelAnalyzerException
+            If they are using different GPUs this exception will be raised.
+        """
+
+        if self._config.triton_launch_mode != 'remote':
+            self._client.wait_for_server_ready(self._config.max_retries)
+
+            model_analyzer_gpus = self._gpus
+            triton_gpus = self._get_triton_metrics_gpus()
+            if set(model_analyzer_gpus) != set(triton_gpus):
+                raise TritonModelAnalyzerException(
+                    "'Triton Server is not using the same GPUs as Model Analyzer: '"
+                    f"Model Analyzer GPUs {model_analyzer_gpus}, Triton GPUs {triton_gpus}"
+                )
+
+    def _get_triton_metrics_gpus(self):
+        """
+        Uses prometheus to request a list of GPU UUIDs corresponding to the GPUs
+        visible to Triton Inference Server
+
+        Parameters
+        ----------
+        config : namespace
+            The arguments passed into the CLI
+        """
+
+        triton_prom_str = str(requests.get(
+            self._config.triton_metrics_url).content,
+                              encoding='ascii')
+        metrics = text_string_to_metric_families(triton_prom_str)
+
+        triton_gpus = []
+        for metric in metrics:
+            if metric.name == 'nv_gpu_utilization':
+                for sample in metric.samples:
+                    triton_gpus.append(sample.labels['gpu_uuid'])
+
+        return triton_gpus
+
     @staticmethod
     def get_metric_types(tags):
         """
@@ -299,7 +365,7 @@ class MetricsManager:
         True if the given tag is a supported gpu metric
         False otherwise
         """
-        metric = MetricsManager.get_metric_types([tag])
+        metric = MetricsManager.get_metric_types([tag])[0]
         return metric in DCGMMonitor.model_analyzer_to_dcgm_field
 
     @staticmethod
@@ -310,11 +376,11 @@ class MetricsManager:
         True if the given tag is a supported perf_analyzer metric
         False otherwise
         """
-        metric = MetricsManager.get_metric_types([tag])
+        metric = MetricsManager.get_metric_types([tag])[0]
         return metric in PerfAnalyzer.perf_metrics
 
     @staticmethod
-    def is_perf_analyzer_metric(tag):
+    def is_cpu_metric(tag):
         """
         Returns
         ------
@@ -322,5 +388,5 @@ class MetricsManager:
         False otherwise
         """
 
-        metric = MetricsManager.get_metric_types([tag])
+        metric = MetricsManager.get_metric_types([tag])[0]
         return metric in CPUMonitor.cpu_metrics

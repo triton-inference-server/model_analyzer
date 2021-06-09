@@ -29,81 +29,41 @@ PORTS=(`find_available_ports 3`)
 http_port="${PORTS[0]}"
 grpc_port="${PORTS[1]}"
 metrics_port="${PORTS[2]}"
+GPUS=(`get_all_gpus_uuids`)
 CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
 MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY --profile-models $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY --run-config-search-disable --perf-analyzer-cpu-util 600"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
 MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PORTS --triton-metrics-url http://localhost:$metrics_port/metrics"
-TRITON_LAUNCH_MODES="docker remote local"
+TRITON_LAUNCH_MODES="local docker remote"
 CLIENT_PROTOCOLS="http grpc"
-TRITON_DOCKER_IMAGE="nvcr.io/nvidia/tritonserver:21.03-py3"
+TRITON_DOCKER_IMAGE="nvcr.io/nvidia/tritonserver:21.05-py3"
 
 # Run the model-analyzer, both client protocols
 RET=0
 
-function check_all_gpus() {
-    analyzer_gpus=($@)
-    gpu_uuids=(`get_all_gpus_uuids`)
-    cuda_devices=(`echo $CUDA_VISIBLE_DEVICES | sed "s/,/ /g"`)
-
-    if [ ${#analyzer_gpus[@]} != ${#cuda_devices[@]} ]; then
-        return 1
-    fi
-
-    index=0
-    for cuda_index in $cuda_devices; do
-        gpu_uuid=${gpu_uuids[$cuda_index]}
-        if [ $gpu_uuid != ${analyzer_gpus[$index]} ]; then
-            echo -e "\n***\n*** Model Analyzer is not using the correct GPUs.\n***"
-            return 1
-        fi
-        index=$((index+1))
-    done
-    return 0
-}
-
-function check_gpus() {
-    analyzer_gpus=($1)
-    triton_gpus=($2)
-
-    if [ ${#analyzer_gpus[@]} != ${#triton_gpus[@]} ]; then
-        return 1
-    fi
-
-    index=0
-    for analyzer_gpu in $analyzer_gpus; do
-        gpu_uuid=${triton_gpus[$index]}
-        if [ $gpu_uuid != $analyzer_gpu ]; then
-            echo -e "\n***\n*** Model Analyzer is not using the correct GPUs.\n***"
-            return 1
-        fi
-        index=$((index+1))
-    done
-    return 0
-}
-
 function convert_gpu_array_to_flag() {
-    gpu_array=$1
-    if [ ${#gpu_array[@]} -ge 1 ]; then
+    gpu_array=($@)
+    if [ ! -z "${gpu_array[0]}" ]; then
         gpus_flag="--gpus "
         for gpu in ${gpu_array[@]}; do
-            gpus_flag="$gpu_flag $gpu,"
+            gpus_flag="${gpus_flag}${gpu},"
         done
 
         # Remove trailing comma
-        gpu_flag=${gpu_flag::-1}
-        echo $gpu_flag
+        gpus_flag=${gpus_flag::-1}
+        echo $gpus_flag
     else
         echo ""
     fi
 }
 
 function run_server_launch_modes() {
-    gpus=$1
+    gpus=($@)
     for PROTOCOL in $CLIENT_PROTOCOLS; do
-        MODEL_ANALYZER_ARGS_WITH_PROTOCOL="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$PROTOCOL `convert_gpu_array_to_flag $gpus`"
+        MODEL_ANALYZER_ARGS_WITH_PROTOCOL="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$PROTOCOL `convert_gpu_array_to_flag ${gpus[@]}`"
         for LAUNCH_MODE in $TRITON_LAUNCH_MODES; do
-            rm -rf $OUTPUT_MODEL_REPOSITORY && rm -rf $CHECKPOINT_DIRECTORY/*
+            rm -rf $OUTPUT_MODEL_REPOSITORY
             MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE="$MODEL_ANALYZER_ARGS_WITH_PROTOCOL --triton-launch-mode=$LAUNCH_MODE"
             ANALYZER_LOG=analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
             SERVER_LOG=${LAUNCH_MODE}.${PROTOCOL}.server.log
@@ -140,7 +100,6 @@ function run_server_launch_modes() {
                 cat $ANALYZER_LOG
                 RET=1
             fi
-            set -e
 
             if [ "$LAUNCH_MODE" == "remote" ]; then
                 kill $SERVER_PID
@@ -153,17 +112,18 @@ function run_server_launch_modes() {
                 fi
             fi
 
-            model_analyzer_gpu_uuids=`cat $ANALYZER_LOG | grep -E "Using GPU\(s\) with UUID\(s\)" | tail -n 1 | sed -n 's/.*{\(.*\)}.*/\1/p'`
-            model_analyzer_gpu_uuids=(`echo $model_analyzer_gpu_uuids | sed "s/,/ /g"`)
-            if [ -z $gpus ]; then
-                check_all_gpus "${model_analyzer_gpu_uuids[@]}"
+            if [ -z "$gpus" ]; then
+                python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${GPUS[@]} | sed "s/ /,/g"` --check-visible
             else
-                check_gpus "${model_analyzer_gpu_uuids[@]}" "${gpus[@]}"
+                python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${gpus[@]} | sed "s/ /,/g"`
             fi
             if [ $? -ne 0 ]; then
                 RET=1
                 break
             fi
+            set -e
+            mv $CHECKPOINT_DIRECTORY/0.ckpt . && rm -f $CHECKPOINT_DIRECTORY/*
+            mv 0.ckpt $CHECKPOINT_DIRECTORY
         done
     done
 }
@@ -183,16 +143,13 @@ run_server_launch_modes
 export CUDA_VISIBLE_DEVICES=0,1,2
 run_server_launch_modes
 
+unset CUDA_VISIBLE_DEVICES
+
 #################################################
 # Test controling the GPUs with the --gpus flag #
 #################################################
-CURRENT_GPUS=(${GPUS[2]})
-run_server_launch_modes "$CURRENT_GPUS"
 
 CURRENT_GPUS=(${GPUS[2]})
-run_server_launch_modes "$CURRENT_GPUS"
-
-CURRENT_GPUS=${GPUS[@]:1}
 run_server_launch_modes "$CURRENT_GPUS"
 
 CURRENT_GPUS=${GPUS[@]:1}
