@@ -22,6 +22,7 @@ rm -rf $OUTPUT_MODEL_REPOSITORY
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/$REPO_VERSION/libtorch_model_store"}
+CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_checkpoints"}
 MODEL_NAMES="vgg19_libtorch"
 BATCH_SIZES="4"
 CONCURRENCY="4"
@@ -38,6 +39,9 @@ MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PORTS --triton-metrics-url http://localhos
 TRITON_LAUNCH_MODES="local docker remote"
 CLIENT_PROTOCOLS="http grpc"
 TRITON_DOCKER_IMAGE="nvcr.io/nvidia/tritonserver:21.05-py3"
+
+mkdir $CHECKPOINT_DIRECTORY
+cp $CHECKPOINT_REPOSITORY/server_launch_modes.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
 # Run the model-analyzer, both client protocols
 RET=0
@@ -122,8 +126,6 @@ function run_server_launch_modes() {
                 break
             fi
             set -e
-            mv $CHECKPOINT_DIRECTORY/0.ckpt . && rm -f $CHECKPOINT_DIRECTORY/*
-            mv 0.ckpt $CHECKPOINT_DIRECTORY
         done
     done
 }
@@ -154,6 +156,8 @@ run_server_launch_modes "$CURRENT_GPUS"
 
 CURRENT_GPUS=${GPUS[@]:1}
 run_server_launch_modes "$CURRENT_GPUS"
+
+rm -rf $CHECKPOINT_DIRECTORY
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

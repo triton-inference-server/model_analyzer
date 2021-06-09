@@ -23,6 +23,7 @@ rm -rf results && mkdir -p results
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/$REPO_VERSION/libtorch_model_store"}
+CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_checkpoints"}
 QA_MODELS="vgg19_libtorch resnet50_libtorch"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
 EXPORT_PATH="`pwd`/results"
@@ -30,6 +31,9 @@ FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 CHECKPOINT_DIRECTORY="."
+
+# Get checkpoint
+cp $CHECKPOINT_REPOSITORY/analyze.ckpt $CHECKPOINT_DIRECTORY/0.ckpt 
 
 # Run the analyzer and check the results
 RET=0
@@ -69,6 +73,7 @@ fi
 set -e
 
 rm -rf $EXPORT_PATH/*
+rm -f *.ckpt
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"
