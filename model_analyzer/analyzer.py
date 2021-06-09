@@ -35,7 +35,6 @@ class Analyzer:
     model_analyzer. Configured with metrics to monitor, exposes profiling and
     result writing methods.
     """
-
     def __init__(self, config, server, state_manager):
         """
         Parameters
@@ -84,7 +83,8 @@ class Analyzer:
             config=self._config,
             client=client,
             server=self._server,
-            result_manager=self._result_manager)
+            result_manager=self._result_manager,
+            state_manager=self._state_manager)
 
         self._model_manager = ModelManager(
             config=self._config,
@@ -131,8 +131,14 @@ class Analyzer:
                 f"Expected config of type {ConfigCommandAnalyze}, got {type(self._config)}."
             )
 
+        gpu_info = self._state_manager.get_state_variable(
+            'MetricsManager.gpus')
+        if not gpu_info:
+            gpu_info = {}
         self._report_manager = ReportManager(
-            config=self._config, result_manager=self._result_manager)
+            config=self._config,
+            gpu_info=gpu_info,
+            result_manager=self._result_manager)
 
         # Create result tables, put top results and get stats
         dcgm_metrics, perf_metrics, cpu_metrics = \
@@ -162,8 +168,14 @@ class Analyzer:
                 f"Expected config of type {ConfigCommandReport}, got {type(self._config)}."
             )
 
+        gpu_info = self._state_manager.get_state_variable(
+            'MetricsManager.gpus')
+        if not gpu_info:
+            gpu_info = {}
         self._report_manager = ReportManager(
-            config=self._config, result_manager=self._result_manager)
+            config=self._config,
+            result_manager=self._result_manager,
+            gpu_info=gpu_info)
 
         self._report_manager.create_detailed_reports()
         self._report_manager.export_detailed_reports()

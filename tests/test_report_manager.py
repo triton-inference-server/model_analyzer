@@ -68,9 +68,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
         """
         config = self._evaluate_config(args, yaml_content)
         state_manager = AnalyzerStateManager(config=config)
+        gpu_info = {'gpu_uuid': {'name': 'gpu_name', 'total_memory': 10}}
         self.result_manager = ResultManager(config=config,
                                             state_manager=state_manager)
         self.report_manager = ReportManager(config=config,
+                                            gpu_info=gpu_info,
                                             result_manager=self.result_manager)
 
     def _add_result_measurement(self, model_config_name, model_name,

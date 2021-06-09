@@ -21,7 +21,6 @@ from .pdf_report import PDFReport
 
 import os
 import logging
-from numba import cuda
 from collections import defaultdict
 
 
@@ -30,20 +29,23 @@ class ReportManager:
     Manages the building and export of 
     various types of reports
     """
-
-    def __init__(self, config, result_manager):
+    def __init__(self, config, gpu_info, result_manager):
         """
         Parameters
         ----------
         config :ConfigCommandProfile
             The model analyzer's config containing information
             about the kind of reports to generate
+        gpu_info: dict
+            containing information about the GPUs used
+            during profiling
         result_manager : ResultManager
             instance that manages the result tables and 
             adding results
         """
 
         self._config = config
+        self._gpu_info = gpu_info
         self._result_manager = result_manager
 
         # Create the plot manager
@@ -115,10 +117,11 @@ class ReportManager:
                 )
 
         if self._config.num_top_model_configs and at_least_one_summary:
-            self._summaries[TOP_MODELS_REPORT_KEY] = self._build_summary_report(
-                report_key=TOP_MODELS_REPORT_KEY,
-                num_configs=self._config.num_top_model_configs,
-                statistics=statistics)
+            self._summaries[
+                TOP_MODELS_REPORT_KEY] = self._build_summary_report(
+                    report_key=TOP_MODELS_REPORT_KEY,
+                    num_configs=self._config.num_top_model_configs,
+                    statistics=statistics)
 
     def export_summaries(self):
         """
@@ -217,7 +220,8 @@ class ReportManager:
         report_key = report_model_config.model_config_name()
 
         detailed_report.add_title(title="Detailed Report")
-        detailed_report.add_subheading(subheading=f"Model Config: {report_key}")
+        detailed_report.add_subheading(
+            subheading=f"Model Config: {report_key}")
 
         # Add main latency breakdown image
         detailed_plot = os.path.join(self._config.export_path, 'plots',
@@ -239,18 +243,32 @@ class ReportManager:
             caption_stack.append(
                 f"{plot_config.title()} curves for config {report_key}")
             if len(plot_stack) == 2:
-                detailed_report.add_images(plot_stack, caption_stack)
+                detailed_report.add_images(plot_stack,
+                                           caption_stack,
+                                           float="left")
                 plot_stack = []
                 caption_stack = []
 
         # Odd number of plots
         if plot_stack:
-            detailed_report.add_images(plot_stack, caption_stack)
+            detailed_report.add_images(plot_stack, caption_stack, float="left")
 
         # Next add table of measurements
         detailed_table = self._build_detailed_table(report_key)
         detailed_report.add_table(table=detailed_table)
 
+        # Add some details about the config
+        detailed_info = self._build_detailed_info(report_key)
+        detailed_report.add_line_breaks(num_breaks=2)
+        detailed_report.add_paragraph(detailed_info, font_size=18)
+        detailed_report.add_paragraph(
+            "The first plot above shows the exact breakdown of the latencies in "
+            "the latency throughput curve for this model config. Following that "
+            "are the requested configurable plots showing the relationship between "
+            "various metrics measured by the Model Analyzer. The above table contains "
+            "detailed data for each of the measurements taken for this model config in "
+            "decreasing order.",
+            font_size=18)
         return detailed_report
 
     def _build_summary_report(self, report_key, num_configs, statistics):
@@ -265,9 +283,16 @@ class ReportManager:
         total_configurations = statistics.total_configurations(report_key)
         num_best_configs = min(num_configs, total_configurations)
 
-        cpu_only, gpu_names, max_memories = self._get_gpu_stats(
-            report_key=report_key)
+        # Get GPU names and memory
+        model_config = self._summary_data[report_key][0][0]
+        cpu_only = model_config.cpu_only()
+        gpu_dict = self._get_gpu_stats(
+            measurements=[v for _, v in self._summary_data[report_key]])
 
+        gpu_names = ','.join(list(gpu_dict.keys()))
+        max_memories = ','.join([str(x) + ' GB' for x in gpu_dict.values()])
+
+        # Get batch sizes and constraints
         static_batch_sizes = ','.join(
             sorted(
                 set([
@@ -283,6 +308,7 @@ class ReportManager:
             elif report_key == TOP_MODELS_REPORT_KEY:
                 constraint_str = constraint_strs['default']
 
+        # Build summary table and info sentence
         if not cpu_only:
             table, summary_sentence = self._build_summary_table(
                 report_key=report_key,
@@ -299,7 +325,8 @@ class ReportManager:
         summary.add_subheading(f"Model: {report_key}")
         if not cpu_only:
             summary.add_paragraph(f"GPU(s): {gpu_names}")
-            summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
+            summary.add_paragraph(
+                f"Total Available GPU Memory: {max_memories}")
         summary.add_paragraph(
             f"Client Request Batch Size: {static_batch_sizes}")
         summary.add_paragraph(f"Constraint targets: {constraint_str}")
@@ -422,7 +449,8 @@ class ReportManager:
                     measurement.get_metric('perf_throughput').value(),
                     measurement.get_metric('cpu_used_ram').value(),
                     measurement.get_metric('gpu_used_memory').value(),
-                    round(measurement.get_metric('gpu_utilization').value(), 1)
+                    round(
+                        measurement.get_metric('gpu_utilization').value(), 1)
                 ]
                 summary_table.insert_row_by_index(row)
         else:
@@ -449,7 +477,7 @@ class ReportManager:
 
         if not cpu_only:
             detailed_table = ResultTable(headers=[
-                'Preferred Batch Size', 'Instance Count', 'p99 Latency (ms)',
+                'Request Concurrency', 'p99 Latency (ms)',
                 'Client Response Wait (ms)', 'Server Queue (ms)',
                 'Server Compute Input (ms)', 'Server Compute Infer (ms)',
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)',
@@ -458,7 +486,7 @@ class ReportManager:
                                          title="Detailed Table")
         else:
             detailed_table = ResultTable(headers=[
-                'Preferred Batch Size', 'Instance Count', 'p99 Latency (ms)',
+                'Request Concurrency', 'p99 Latency (ms)',
                 'Client Response Wait (ms)', 'Server Queue (ms)',
                 'Server Compute Input (ms)', 'Server Compute Infer (ms)'
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
@@ -467,63 +495,96 @@ class ReportManager:
         # Construct table
         if not cpu_only:
             for measurement in measurements:
-                instance_group_str = model_config.instance_group_string()
                 row = [
-                    model_config.dynamic_batching_string(), instance_group_str,
+                    measurement.perf_config()['concurrency-range'],
                     measurement.get_metric('perf_latency').value(),
-                    measurement.get_metric('perf_client_response_wait').value(),
+                    measurement.get_metric(
+                        'perf_client_response_wait').value(),
                     measurement.get_metric('perf_server_queue').value(),
-                    measurement.get_metric('perf_server_compute_input').value(),
-                    measurement.get_metric('perf_server_compute_infer').value(),
+                    measurement.get_metric(
+                        'perf_server_compute_input').value(),
+                    measurement.get_metric(
+                        'perf_server_compute_infer').value(),
                     measurement.get_metric('perf_throughput').value(),
                     measurement.get_metric('cpu_used_ram').value(),
                     measurement.get_metric('gpu_used_memory').value(),
-                    round(measurement.get_metric('gpu_utilization').value(), 1)
+                    round(
+                        measurement.get_metric('gpu_utilization').value(), 1)
                 ]
                 detailed_table.insert_row_by_index(row)
         else:
             for measurement in measurements:
-                instance_group_str = model_config.instance_group_string()
                 row = [
-                    model_config.get_field('name'),
-                    model_config.dynamic_batching_string(), instance_group_str,
+                    measurement.perf_config()['concurrency-range'],
                     measurement.get_metric('perf_latency').value(),
-                    measurement.get_metric('perf_client_response_wait').value(),
+                    measurement.get_metric(
+                        'perf_client_response_wait').value(),
                     measurement.get_metric('perf_server_queue').value(),
-                    measurement.get_metric('perf_server_compute_input').value(),
-                    measurement.get_metric('perf_server_compute_infer').value(),
+                    measurement.get_metric(
+                        'perf_server_compute_input').value(),
+                    measurement.get_metric(
+                        'perf_server_compute_infer').value(),
                     measurement.get_metric('perf_throughput').value(),
                     measurement.get_metric('cpu_used_ram').value()
                 ]
                 detailed_table.insert_row_by_index(row)
         return detailed_table
 
-    def _get_gpu_stats(self, report_key):
+    def _build_detailed_info(self, model_config_name):
         """
-        Gets names and memory infos of GPUs used in best measurements
+        Constructs important info sentence about the model config
+        specified
         """
 
-        gpu_names = []
-        max_memories = []
-        seen_gpus = set()
-        cpu_only = True
+        model_config, measurements = self._detailed_report_data[
+            model_config_name]
+        instance_group_string = model_config.instance_group_string()
+        dynamic_batching_string = model_config.dynamic_batching_string()
+        platform = model_config.get_field('platform')
 
-        for model_config, measurement in self._summary_data[report_key]:
-            if model_config.cpu_only():
-                continue
-            for gpu in cuda.gpus:
-                cpu_only = False
-                if gpu.id in measurement.gpus_used(
-                ) and gpu.id not in seen_gpus:
-                    seen_gpus.add(gpu.id)
-                    gpu_names.append((gpu.name).decode('ascii'))
-                    with gpu:
-                        mems = cuda.current_context().get_memory_info()
-                        # convert bytes to GB
-                        max_memories.append(round(mems.total / (2**30), 1))
+        # Measurements and GPU info
+        if model_config.cpu_only():
+            sentence = (
+                f"The model config {model_config_name} requests {instance_group_string} "
+                f"instances. {len(measurements)} measurements were obtained for the model config "
+                f"on CPU with platfrom {platform}. ")
+        else:
+            gpu_dict = self._get_gpu_stats(measurements=measurements)
+            gpu_names = ','.join(list(gpu_dict.keys()))
+            max_memories = ','.join(
+                [str(x) + ' GB' for x in gpu_dict.values()])
+            sentence = (
+                f"The model config {model_config_name} requests {instance_group_string} "
+                f"instances. {len(measurements)} measurements were obtained for the model config "
+                f"on GPU(s) {gpu_names} with memory limit(s) {max_memories}. This model "
+                f"uses the platform {platform}. ")
 
-        return cpu_only, ','.join(gpu_names), ','.join(
-            [str(x) + ' GB' for x in max_memories])
+        # Dynamic batching
+        if dynamic_batching_string == 'N/A':
+            sentence += "This model does not support batching. "
+        elif dynamic_batching_string == 'Disabled':
+            sentence += "This model config has dynamic batching disabled. "
+        else:
+            sentence += (
+                "This model config has dynamic batching enabled "
+                f"with preferred batch size(s) {dynamic_batching_string}. ")
+
+        return sentence
+
+    def _get_gpu_stats(self, measurements):
+        """
+        Gets names and memory infos of GPUs used in measurements
+        """
+
+        gpu_dict = {}
+        for measurement in measurements:
+            for gpu_uuid, gpu_info in self._gpu_info.items():
+                if gpu_uuid in measurement.gpus_used():
+                    gpu_name = (gpu_info['name']).decode('ascii')
+                    max_memory = round(gpu_info['total_memory'] / (2**30), 1)
+                    if gpu_name not in gpu_dict:
+                        gpu_dict[gpu_name] = max_memory
+        return gpu_dict
 
     def _build_constraint_strings(self):
         """

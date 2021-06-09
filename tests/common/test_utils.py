@@ -44,12 +44,12 @@ def construct_measurement(model_name, gpu_metric_values, non_gpu_metric_values,
     # gpu_data will be a dict whose keys are gpu_ids and values
     # are lists of Records
     gpu_data = {}
-    for gpu_id, metrics_values in gpu_metric_values.items():
-        gpu_data[gpu_id] = []
+    for gpu_uuid, metrics_values in gpu_metric_values.items():
+        gpu_data[gpu_uuid] = []
         gpu_metric_tags = list(metrics_values.keys())
         for i, gpu_metric in enumerate(
                 MetricsManager.get_metric_types(gpu_metric_tags)):
-            gpu_data[gpu_id].append(
+            gpu_data[gpu_uuid].append(
                 gpu_metric(value=metrics_values[gpu_metric_tags[i]]))
 
     # Non gpu data will be a list of records
@@ -114,8 +114,8 @@ def construct_result(avg_gpu_metric_values,
 
     # Get dict of list of metric values
     gpu_metric_values = {}
-    for gpu_id, metric_values in avg_gpu_metric_values.items():
-        gpu_metric_values[gpu_id] = {
+    for gpu_uuid, metric_values in avg_gpu_metric_values.items():
+        gpu_metric_values[gpu_uuid] = {
             key: list(
                 range(val - value_step * num_vals, val + value_step * num_vals,
                       value_step))
@@ -132,8 +132,8 @@ def construct_result(avg_gpu_metric_values,
     # Construct measurements and add them to the result
     for i in range(2 * num_vals):
         gpu_metrics = {}
-        for gpu_id, metric_values in gpu_metric_values.items():
-            gpu_metrics[gpu_id] = {
+        for gpu_uuid, metric_values in gpu_metric_values.items():
+            gpu_metrics[gpu_uuid] = {
                 key: metric_values[key][i]
                 for key in metric_values
             }

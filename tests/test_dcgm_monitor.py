@@ -136,7 +136,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
         dcgm_monitor.stop_recording_metrics()
         dcgm_monitor.destroy()
 
-    def test_gpu_id(self):
+    def test_gpu_uuid(self):
         frequency = 0.01
         metrics = [GPUUsedMemory, GPUFreeMemory]
         gpus = ['UndefinedId']
