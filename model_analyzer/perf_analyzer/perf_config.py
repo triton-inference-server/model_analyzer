@@ -96,16 +96,46 @@ class PerfAnalyzerConfig:
             for key in params:
                 self[key] = params[key]
 
-    def to_cli_string(self, remove_url=False):
+    def representation(self):
         """
-        Utility function to convert a config into a
-        string of arguments to the perf_analyzer with CLI.
+        Returns
+        -------
+        str
+            a string representation that Does not include the url
+            Useful for mapping measurements across systems.
+        """
+
+        return PerfAnalyzerConfig.remove_url_from_cli_string(
+            self.to_cli_string())
+
+    @classmethod
+    def remove_url_from_cli_string(cls, cli_string):
+        """
+        utility function strips the url from a cli
+        string representation
 
         Parameters
         ----------
-        remove_url: bool
-            Does not include the url in the string representation
-            Useful for mapping measurements across systems.
+        cli_string : str
+            The cli string representation
+        """
+
+        perf_str_tokens = cli_string.split(' ')
+
+        try:
+            url_index = perf_str_tokens.index('-u')
+            # remove -u and the element that comes after it
+            perf_str_tokens.pop(url_index)
+            perf_str_tokens.pop(url_index)
+        except ValueError:
+            pass
+
+        return ' '.join(perf_str_tokens)
+
+    def to_cli_string(self):
+        """
+        Utility function to convert a config into a
+        string of arguments to the perf_analyzer with CLI.
 
         Returns
         -------
@@ -116,12 +146,7 @@ class PerfAnalyzerConfig:
         """
 
         # single dashed options, then verbose flags, then main args
-        args = []
-        for k, v in self._options.items():
-            # If remove_url flag is True, do not append it
-            if v and (k != '-u' or not remove_url):
-                args.append(f'{k} {v}')
-
+        args = [f'{k} {v}' for k, v in self._options.items() if v]
         args += [k for k, v in self._verbose.items() if v]
         args += [f'--{k}={v}' for k, v in self._args.items() if v]
 

@@ -72,7 +72,8 @@ def get_server_handle(config):
         triton_config['model-repository'] = 'remote-model-repository'
         logging.info('Using remote Triton Server...')
         server = TritonServerFactory.create_server_local(path=None,
-                                                         config=triton_config)
+                                                         config=triton_config,
+                                                         gpus=None)
         logging.warn(
             'GPU memory metrics reported in the remote mode are not'
             ' accuracte. Model Analyzer uses Triton explicit model control to'
@@ -94,12 +95,10 @@ def get_server_handle(config):
             config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
         logging.info('Starting a local Triton Server...')
-        if len(config.gpus) >= 1 and config.gpus[0] != 'all':
-            visible_gpus = GPUDeviceFactory.get_cuda_visible_gpus()
-            os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(
-                [visible_gpus[uuid] for uuid in config.gpus])
         server = TritonServerFactory.create_server_local(
-            path=config.triton_server_path, config=triton_config)
+            path=config.triton_server_path,
+            config=triton_config,
+            gpus=config.gpus)
     elif config.triton_launch_mode == 'docker':
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)

@@ -41,7 +41,7 @@ class TritonServerFactory:
         return TritonServerDocker(image=image, config=config, gpus=gpus)
 
     @staticmethod
-    def create_server_local(path, config):
+    def create_server_local(path, config, gpus):
         """
         Parameters
         ----------
@@ -49,10 +49,12 @@ class TritonServerFactory:
             The absolute path to the tritonserver executable
         config : TritonServerConfig
             the config object containing arguments for this server instance
+        gpus: list of str
+            List of strings of GPU UUIDs that should be made visible to Triton
 
         Returns
         -------
         TritonServerLocal
         """
 
-        return TritonServerLocal(path=path, config=config)
+        return TritonServerLocal(path=path, config=config, gpus=gpus)

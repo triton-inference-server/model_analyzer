@@ -217,8 +217,7 @@ class ResultManager:
         if model_config_name not in results[model_name]:
             results[model_name][model_config_name] = (model_config, {})
 
-        measurement_key = measurement.perf_config().to_cli_string(
-            remove_url=True)
+        measurement_key = measurement.perf_config().representation()
         results[model_name][model_config_name][1][
             measurement_key] = measurement
 

@@ -178,9 +178,9 @@ class MetricsManager:
                     self._dcgm_metrics)
                 self._check_triton_and_model_analyzer_gpus()
                 self._dcgm_monitor.start_recording_metrics()
-            except TritonModelAnalyzerException as e:
+            except TritonModelAnalyzerException:
                 self._destroy_monitors()
-                raise TritonModelAnalyzerException(e)
+                raise
 
         self._cpu_monitor = CPUMonitor(self._server,
                                        self._config.monitoring_interval,

@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .server import TritonServer
+from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
+from model_analyzer.constants import SERVER_OUTPUT_TIMEOUT_SECS
+
 from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
 import psutil
 import logging
-
-from .server import TritonServer
-from model_analyzer.constants import SERVER_OUTPUT_TIMEOUT_SECS
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,7 @@ class TritonServerLocal(TritonServer):
     tritonserver locally as as subprocess.
     """
 
-    def __init__(self, path, config):
+    def __init__(self, path, config, gpus):
         """
         Parameters
         ----------
@@ -36,11 +38,14 @@ class TritonServerLocal(TritonServer):
             The absolute path to the tritonserver executable
         config : TritonServerConfig
             the config object containing arguments for this server instance
+        gpus: list of str
+            List of strings of GPU UUIDs that should be made visible to Triton
         """
 
         self._tritonserver_process = None
         self._server_config = config
         self._server_path = path
+        self._gpus = gpus
         self._log = None
 
         assert self._server_config['model-repository'], \
@@ -54,12 +59,20 @@ class TritonServerLocal(TritonServer):
         if self._server_path:
             # Create command list and run subprocess
             cmd = [self._server_path]
-            cmd += self._server_config.to_cli_string().replace('=', ' ').split()
+            cmd += self._server_config.to_cli_string().replace('=',
+                                                               ' ').split()
+            triton_env = os.environ.copy()
+            if len(self._gpus) >= 1 and self._gpus[0] != 'all':
+                visible_gpus = GPUDeviceFactory.get_cuda_visible_gpus()
+                triton_env['CUDA_VISIBLE_DEVICES'] = ','.join(
+                    [visible_gpus[uuid] for uuid in self._gpus])
+
             self._tritonserver_process = Popen(cmd,
                                                start_new_session=True,
                                                stdout=PIPE,
                                                stderr=STDOUT,
-                                               universal_newlines=True)
+                                               universal_newlines=True,
+                                               env=triton_env)
 
             logger.info('Triton Server started.')
 

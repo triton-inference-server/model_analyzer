@@ -25,7 +25,6 @@ class GPUDeviceFactory:
     """
     Factory class for creating GPUDevices
     """
-
     @staticmethod
     def create_device_by_bus_id(bus_id, dcgmPath=None):
         """
@@ -181,13 +180,13 @@ class GPUDeviceFactory:
             values are device ids on this machine
         """
 
-        cuda_visible_gpus = []
+        cuda_visible_gpus = {}
         if numba.cuda.is_available():
             devices = numba.cuda.list_devices()
             for device in devices:
                 gpu_device = GPUDeviceFactory.create_device_by_cuda_index(
                     device.id)
-                cuda_visible_gpus.append(
-                    (str(gpu_device.device_uuid(),
-                         encoding='ascii'), str(gpu_device.device_id())))
-        return dict(cuda_visible_gpus)
+                cuda_visible_gpus[str(gpu_device.device_uuid(),
+                                      encoding='ascii')] = str(
+                                          gpu_device.device_id())
+        return cuda_visible_gpus
