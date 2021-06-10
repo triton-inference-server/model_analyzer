@@ -19,7 +19,6 @@ class ResultComparator:
     """
     Stores information needed to compare results and measurements.
     """
-
     def __init__(self, metric_objectives):
         """
         Parameters

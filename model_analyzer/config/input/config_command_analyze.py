@@ -13,12 +13,12 @@
 # limitations under the License.
 
 from .config_defaults import \
-    DEFAULT_ANALYSIS_PLOTS, DEFAULT_CHECKPOINT_DIRECTORY, DEFAULT_EXPORT_PATH, \
+    DEFAULT_CHECKPOINT_DIRECTORY, DEFAULT_EXPORT_PATH, \
     DEFAULT_FILENAME_MODEL_GPU, DEFAULT_FILENAME_MODEL_INFERENCE, \
     DEFAULT_FILENAME_SERVER_ONLY, DEFAULT_GPU_OUTPUT_FIELDS, \
     DEFAULT_INFERENCE_OUTPUT_FIELDS, DEFAULT_NUM_CONFIGS_PER_MODEL, \
-    DEFAULT_NUM_TOP_MODEL_CONFIGS, DEFAULT_OBJECTIVES, \
-    DEFAULT_SERVER_OUTPUT_FIELDS, DEFAULT_SUMMARIZE_FLAG
+    DEFAULT_NUM_TOP_MODEL_CONFIGS, DEFAULT_OBJECTIVES, DEFAULT_ONLINE_ANALYSIS_PLOTS, \
+    DEFAULT_OFFLINE_ANALYSIS_PLOTS,DEFAULT_SERVER_OUTPUT_FIELDS, DEFAULT_SUMMARIZE_FLAG
 from .config_field import ConfigField
 from .config_object import ConfigObject
 from .config_union import ConfigUnion
@@ -276,6 +276,14 @@ class ConfigCommandAnalyze(ConfigCommand):
                 description=
                 "Shorthand flag for specifying a maximum latency in ms."))
 
+        self._add_config(
+            ConfigField(
+                'min_throughput',
+                flags=['--min-throughput'],
+                field_type=ConfigPrimitive(int),
+                description=
+                "Shorthand flag for specifying a maximum latency in ms."))
+
     def _preprocess_and_verify_arguments(self):
         """
         Enforces some rules on the config.
@@ -322,7 +330,10 @@ class ConfigCommandAnalyze(ConfigCommand):
 
         # Add plot configs and after config parse. User should not be able to edit these plots
         self._add_plot_configs()
-        self._fields['plots'].set_value(DEFAULT_ANALYSIS_PLOTS)
+        if args.mode == 'online':
+            self._fields['plots'].set_value(DEFAULT_ONLINE_ANALYSIS_PLOTS)
+        elif args.mode == 'offline':
+            self._fields['plots'].set_value(DEFAULT_OFFLINE_ANALYSIS_PLOTS)
 
     def _add_plot_configs(self):
         """
@@ -369,6 +380,18 @@ class ConfigCommandAnalyze(ConfigCommand):
                         'max': self.latency_budget
                     }})
 
+        # Set global constraints if latency budget is specified
+        if self.min_throughput:
+            if self.constraints:
+                constraints = self.constraints
+                constraints['perf_throughput'] = {'min': self.min_throughput}
+                self._fields['constraints'].set_value(constraints)
+            else:
+                self._fields['constraints'].set_value(
+                    {'perf_throughput': {
+                        'min': self.min_throughput
+                    }})
+
         new_analysis_models = {}
         for model in self.analysis_models:
             new_model = {}
@@ -395,6 +418,18 @@ class ConfigCommandAnalyze(ConfigCommand):
                     new_model['constraints'] = {
                         'perf_latency': {
                             'max': self.latency_budget
+                        }
+                    }
+
+            if self.min_throughput:
+                if 'constraints' in new_model:
+                    new_model['constraints']['perf_throughput'] = {
+                        'min': self.min_throughput
+                    }
+                else:
+                    new_model['constraints'] = {
+                        'perf_throughput': {
+                            'min': self.min_throughput
                         }
                     }
             new_analysis_models[model.model_name()] = new_model

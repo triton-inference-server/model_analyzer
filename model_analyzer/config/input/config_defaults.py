@@ -51,7 +51,7 @@ DEFAULT_PERF_OUTPUT_FLAG = False
 # Analyze Config defaults
 #
 
-DEFAULT_ANALYSIS_PLOTS = {
+DEFAULT_ONLINE_ANALYSIS_PLOTS = {
     'throughput_v_latency': {
         'title': 'Throughput vs. Latency',
         'x_axis': 'perf_latency',
@@ -62,6 +62,15 @@ DEFAULT_ANALYSIS_PLOTS = {
         'title': 'GPU Memory vs. Latency',
         'x_axis': 'perf_latency',
         'y_axis': 'gpu_used_memory',
+        'monotonic': False
+    }
+}
+
+DEFAULT_OFFLINE_ANALYSIS_PLOTS = {
+    'through_v_batch_size': {
+        'title': 'Throughput vs. Batch Size',
+        'x_axis': 'batch_size',
+        'y_axis': 'perf_throughput',
         'monotonic': False
     }
 }
@@ -105,7 +114,7 @@ DEFAULT_NUM_TOP_MODEL_CONFIGS = 0
 
 DEFAULT_REPORT_FORMAT = 'pdf'
 
-DEFAULT_REPORT_PLOTS = {
+DEFAULT_ONLINE_REPORT_PLOTS = {
     'gpu_mem_v_latency': {
         'title': 'GPU Memory vs. Latency',
         'x_axis': 'perf_latency',
@@ -128,6 +137,21 @@ DEFAULT_REPORT_PLOTS = {
         'title': 'GPU Power vs. Latency',
         'x_axis': 'perf_latency',
         'y_axis': 'gpu_power_usage',
+        'monotonic': False
+    }
+}
+
+DEFAULT_OFFLINE_REPORT_PLOTS = {
+    'throughput_v_batch_size': {
+        'title': 'Throughput vs. Batch Size',
+        'x_axis': 'batch_size',
+        'y_axis': 'perf_throughput',
+        'monotonic': False
+    },
+    'latency_v_batch_size': {
+        'title': 'p99 Latency vs. Batch Size',
+        'x_axis': 'batch_size',
+        'y_axis': 'perf_latency',
         'monotonic': False
     }
 }

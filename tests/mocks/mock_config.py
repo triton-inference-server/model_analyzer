@@ -26,10 +26,6 @@ class MockConfig(MockBase):
         patchers = self._patchers
 
         patchers.append(
-            patch(
-                "builtins.open",
-                mock_open(
-                    read_data=self.yaml_file_content)))
-        patchers.append(
-            patch("model_analyzer.cli.cli.sys.argv", self.args)
-        )
+            patch("builtins.open",
+                  mock_open(read_data=self.yaml_file_content)))
+        patchers.append(patch("sys.argv", self.args))

@@ -53,7 +53,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
     def _init_managers(self,
                        analysis_models="test_model",
-                       num_configs_per_model=10):
+                       num_configs_per_model=10,
+                       mode='online'):
         args = [
             "model-analyzer", "analyze", "-f", "path-to-config-file",
             "--analysis-models", analysis_models
@@ -71,7 +72,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
         gpu_info = {'gpu_uuid': {'name': 'gpu_name', 'total_memory': 10}}
         self.result_manager = ResultManager(config=config,
                                             state_manager=state_manager)
-        self.report_manager = ReportManager(config=config,
+        self.report_manager = ReportManager(mode=mode,
+                                            config=config,
                                             gpu_info=gpu_info,
                                             result_manager=self.result_manager)
 
@@ -117,88 +119,103 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.pickle_mock.start()
 
     def test_add_results(self):
-        self._init_managers("test_model1,test_model2")
-        result_comparator = ResultComparator(
-            metric_objectives={"perf_throughput": 10})
+        for mode in ['online', 'offline']:
+            self._init_managers("test_model1,test_model2", mode=mode)
+            result_comparator = ResultComparator(
+                metric_objectives={"perf_throughput": 10})
 
-        avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
-
-        for i in range(10):
-            avg_non_gpu_metrics = {
-                "perf_throughput": 100 + 10 * i,
-                "perf_latency": 4000,
-                "cpu_used_ram": 1000
+            avg_gpu_metrics = {
+                0: {
+                    "gpu_used_memory": 6000,
+                    "gpu_utilization": 60
+                }
             }
-            self._add_result_measurement(f"test_model1_report_{i}",
-                                         "test_model1", avg_gpu_metrics,
-                                         avg_non_gpu_metrics,
-                                         result_comparator)
 
-        for i in range(5):
-            avg_non_gpu_metrics = {
-                "perf_throughput": 200 + 10 * i,
-                "perf_latency": 4000,
-                "cpu_used_ram": 1000
-            }
-            self._add_result_measurement(f"test_model2_report_{i}",
-                                         "test_model2", avg_gpu_metrics,
-                                         avg_non_gpu_metrics,
-                                         result_comparator)
+            for i in range(10):
+                avg_non_gpu_metrics = {
+                    "perf_throughput": 100 + 10 * i,
+                    "perf_latency": 4000,
+                    "cpu_used_ram": 1000
+                }
+                self._add_result_measurement(f"test_model1_report_{i}",
+                                             "test_model1", avg_gpu_metrics,
+                                             avg_non_gpu_metrics,
+                                             result_comparator)
 
-        self.result_manager.compile_and_sort_results()
-        self.report_manager.create_summaries()
-        self.assertEqual(self.report_manager.report_keys(),
-                         ["test_model1", "test_model2"])
+            for i in range(5):
+                avg_non_gpu_metrics = {
+                    "perf_throughput": 200 + 10 * i,
+                    "perf_latency": 4000,
+                    "cpu_used_ram": 1000
+                }
+                self._add_result_measurement(f"test_model2_report_{i}",
+                                             "test_model2", avg_gpu_metrics,
+                                             avg_non_gpu_metrics,
+                                             result_comparator)
 
-        report1_data = self.report_manager.data("test_model1")
-        report2_data = self.report_manager.data("test_model2")
+            self.result_manager.compile_and_sort_results()
+            self.report_manager.create_summaries()
+            self.assertEqual(self.report_manager.report_keys(),
+                             ["test_model1", "test_model2"])
 
-        self.assertEqual(len(report1_data), 10)
-        self.assertEqual(len(report2_data), 5)
+            report1_data = self.report_manager.data("test_model1")
+            report2_data = self.report_manager.data("test_model2")
+
+            self.assertEqual(len(report1_data), 10)
+            self.assertEqual(len(report2_data), 5)
 
     def test_build_summary_table(self):
-        self._init_managers()
-        result_comparator = ResultComparator(
-            metric_objectives={"perf_throughput": 10})
+        for mode in ['online', 'offline']:
+            self._init_managers(mode=mode)
+            result_comparator = ResultComparator(
+                metric_objectives={"perf_throughput": 10})
 
-        avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
-
-        for i in range(10, 0, -1):
-            avg_non_gpu_metrics = {
-                "perf_throughput": 100 + 10 * i,
-                "perf_latency": 4000,
-                "cpu_used_ram": 1000
+            avg_gpu_metrics = {
+                0: {
+                    "gpu_used_memory": 6000,
+                    "gpu_utilization": 60
+                }
             }
-            self._add_result_measurement(f"model_{i}", "test_model",
-                                         avg_gpu_metrics, avg_non_gpu_metrics,
-                                         result_comparator)
 
-        self.result_manager.compile_and_sort_results()
-        self.report_manager.create_summaries()
+            for i in range(10, 0, -1):
+                avg_non_gpu_metrics = {
+                    "perf_throughput": 100 + 10 * i,
+                    "perf_latency": 4000,
+                    "cpu_used_ram": 1000
+                }
+                self._add_result_measurement(f"model_{i}", "test_model",
+                                             avg_gpu_metrics,
+                                             avg_non_gpu_metrics,
+                                             result_comparator)
 
-        summary_table, summary_sentence = \
-            self.report_manager._build_summary_table(
-                report_key="test_model",
-                num_measurements=10,
-                gpu_name="TITAN RTX")
+            self.result_manager.compile_and_sort_results()
+            self.report_manager.create_summaries()
 
-        expected_summary_sentence = (
-            "In 10 measurement(s), 1/GPU model instance(s)"
-            " with preferred batch size of [4 8] on"
-            " platform tensorflow_graphdef delivers maximum"
-            " throughput under the given constraints on GPU(s) TITAN RTX.")
-        self.assertEqual(expected_summary_sentence, summary_sentence)
+            summary_table, summary_sentence = \
+                self.report_manager._build_summary_table(
+                    report_key="test_model",
+                    num_measurements=10,
+                    gpu_name="TITAN RTX")
 
-        # Get throughput index and make sure results are sorted
-        throughput_index = summary_table.headers().index(
-            "Throughput (infer/sec)")
-        model_name_index = summary_table.headers().index("Model Config Name")
-        for i in range(9):
-            current_row = summary_table.get_row_by_index(i)
-            next_row = summary_table.get_row_by_index(i + 1)
-            self.assertEqual(current_row[model_name_index], f"model_{10-i}")
-            self.assertGreaterEqual(current_row[throughput_index],
-                                    next_row[throughput_index])
+            expected_summary_sentence = (
+                "In 10 measurement(s), 1/GPU model instance(s)"
+                " with preferred batch size of [4 8] on"
+                " platform tensorflow_graphdef delivers maximum"
+                " throughput under the given constraints on GPU(s) TITAN RTX.")
+            self.assertEqual(expected_summary_sentence, summary_sentence)
+
+            # Get throughput index and make sure results are sorted
+            throughput_index = summary_table.headers().index(
+                "Throughput (infer/sec)")
+            model_name_index = summary_table.headers().index(
+                "Model Config Name")
+            for i in range(9):
+                current_row = summary_table.get_row_by_index(i)
+                next_row = summary_table.get_row_by_index(i + 1)
+                self.assertEqual(current_row[model_name_index],
+                                 f"model_{10-i}")
+                self.assertGreaterEqual(current_row[throughput_index],
+                                        next_row[throughput_index])
 
     def tearDown(self):
         self.matplotlib_mock.stop()

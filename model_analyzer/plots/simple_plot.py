@@ -15,7 +15,9 @@
 import os
 import matplotlib.pyplot as plt
 from collections import defaultdict
+
 from model_analyzer.record.metrics_manager import MetricsManager
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 
 class SimplePlot:
@@ -28,7 +30,6 @@ class SimplePlot:
     model configs, but only holds one
     type of plot
     """
-
     def __init__(self, name, title, x_axis, y_axis, monotonic=False):
         """
         Parameters
@@ -74,10 +75,19 @@ class SimplePlot:
         if model_config_label not in self._data:
             self._data[model_config_label] = defaultdict(list)
 
-        self._data[model_config_label]['x_data'].append(
-            measurement.get_metric(tag=self._x_axis).value())
-        self._data[model_config_label]['y_data'].append(
-            measurement.get_metric(tag=self._y_axis).value())
+        if self._x_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
+            self._data[model_config_label]['x_data'].append(
+                measurement.get_parameter(tag=self._x_axis.replace('_', '-')))
+        else:
+            self._data[model_config_label]['x_data'].append(
+                measurement.get_metric(tag=self._x_axis).value())
+
+        if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
+            self._data[model_config_label]['y_data'].append(
+                measurement.get_parameter(tag=self._y_axis.replace('_', '-')))
+        else:
+            self._data[model_config_label]['y_data'].append(
+                measurement.get_metric(tag=self._y_axis).value())
 
     def clear(self):
         """
@@ -101,10 +111,17 @@ class SimplePlot:
 
         self._ax.set_title(self._title)
 
-        self._x_header, self._y_header = [
-            metric.header(aggregation_tag='') for metric in
-            MetricsManager.get_metric_types([self._x_axis, self._y_axis])
-        ]
+        if self._x_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
+            self._x_header = self._x_axis.replace('_', ' ').title()
+        else:
+            self._x_header = MetricsManager.get_metric_types(
+                [self._x_axis])[0].header(aggregation_tag='')
+
+        if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
+            self._y_header = self._y_axis.replace('_', ' ').title()
+        else:
+            self._y_header = MetricsManager.get_metric_types(
+                [self._y_axis])[0].header(aggregation_tag='')
 
         self._ax.set_xlabel(self._x_header)
         self._ax.set_ylabel(self._y_header)
