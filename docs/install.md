@@ -24,7 +24,7 @@ There are three ways to use Triton Model Analyzer:
    can pull and run the SDK container with the following commands:
 
    ```
-   $ docker pull nvcr.io/nvidia/tritonserver:21.05-py3-sdk
+   $ docker pull nvcr.io/nvidia/tritonserver:21.06-py3-sdk
    ```
 
    If you are not planning to run Model Analyzer with
@@ -32,7 +32,7 @@ There are three ways to use Triton Model Analyzer:
    command:
 
    ```
-   $ docker run -it --gpus all --net=host nvcr.io/nvidia/tritonserver:21.05-py3-sdk
+   $ docker run -it --gpus all --net=host nvcr.io/nvidia/tritonserver:21.06-py3-sdk
    ```
 
    If you intend to use `--triton-launch-mode=docker`, you will need to mount
@@ -51,7 +51,7 @@ There are three ways to use Triton Model Analyzer:
    $ docker run -it --gpus all \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v <path-to-output-model-repo>:<path-to-output-model-repo> \
-        --net=host nvcr.io/nvidia/tritonserver:21.05-py3-sdk
+        --net=host nvcr.io/nvidia/tritonserver:21.06-py3-sdk
    ```
 
    Model Analyzer uses `pdfkit` for report generation. If you are running Model
