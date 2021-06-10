@@ -250,7 +250,7 @@ class ResultManager:
         ]
         for model_name in analysis_model_names:
             if model_name not in results:
-                logging.warn(
+                logging.warning(
                     f"Model {model_name} requested for analysis but no results were found. "
                     "Ensure that this model was actually profiled.")
             else:
@@ -648,7 +648,6 @@ class ResultManager:
         with results currently in the result
         manager's heap
         """
-
         def _update_stats(statistics, result_heap, stats_key):
             passing_measurements = 0
             failing_measurements = 0

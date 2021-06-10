@@ -101,7 +101,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Create server, client, PerfAnalyzer, and wait for server ready
         self.server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config)
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
                                      config=self.config,
                                      timeout=100,
@@ -159,7 +159,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Create server, client, PerfAnalyzer, and wait for server ready
         self.server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config)
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
         perf_analyzer_config = PerfAnalyzerConfig()
         perf_analyzer_config['model-name'] = TEST_MODEL_NAME
         perf_analyzer_config['concurrency-range'] = TEST_CONCURRENCY_RANGE
@@ -188,7 +188,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Create server, client, PerfAnalyzer, and wait for server ready
         self.server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config)
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
                                      config=self.config,
                                      timeout=100,

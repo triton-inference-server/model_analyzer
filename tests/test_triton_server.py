@@ -16,6 +16,7 @@ import unittest
 
 from .mocks.mock_server_docker import MockServerDockerMethods
 from .mocks.mock_server_local import MockServerLocalMethods
+from .mocks.mock_os import MockOSMethods
 from .common import test_result_collector as trc
 
 from model_analyzer.triton.server.server_factory import TritonServerFactory
@@ -42,8 +43,13 @@ class TestTritonServerMethods(trc.TestResultCollector):
         # Mock
         self.server_docker_mock = MockServerDockerMethods()
         self.server_local_mock = MockServerLocalMethods()
+        self.os_mock = MockOSMethods(mock_paths=[
+            'model_analyzer.triton.server.server_local',
+            'tests.mocks.mock_server_local'
+        ])
         self.server_docker_mock.start()
         self.server_local_mock.start()
+        self.os_mock.start()
 
         # server setup
         self.server = None
@@ -109,7 +115,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
             image=TRITON_IMAGE, config=server_config, gpus=gpus)
 
         self.server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config)
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
 
         # Try to create a server without specifying model repository and expect
         # error
@@ -125,7 +131,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
                 msg="Expected AssertionError for trying to create"
                 "server without specifying model repository."):
             self.server = TritonServerFactory.create_server_local(
-                path=TRITON_LOCAL_BIN_PATH, config=server_config)
+                path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
 
     def test_start_stop_gpus(self):
         # Create a TritonServerConfig
@@ -154,7 +160,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
 
         # Create local server which runs triton as a subprocess
         self.server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config)
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
 
         # Check that API functions are called
         self.server.start()
@@ -181,7 +187,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
 
         # Create local server logs
         self.server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config)
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
         self.server.start()
         self.server.stop()
         self.server_local_mock.assert_server_process_terminate_called()
@@ -194,7 +200,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
 
         # Test local server cpu_stats
         self.server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config)
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
         self.server.start()
         _, _ = self.server.cpu_stats()
         self.server_local_mock.assert_cpu_stats_called()
@@ -221,6 +227,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
         # Stop mocking
         self.server_docker_mock.stop()
         self.server_local_mock.stop()
+        self.os_mock.stop()
 
 
 if __name__ == '__main__':

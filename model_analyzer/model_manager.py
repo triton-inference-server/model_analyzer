@@ -276,7 +276,9 @@ class ModelManager:
             return False
         measurements = results[model_name][model_config_name][1]
 
-        # For backward compatibility
+        # For backward compatibility with keys that still have -u,
+        # we will remove -u from all keys, convert to set and check
+        # perf_config_str is present
         if perf_config_str in set(
                 map(PerfAnalyzerConfig.remove_url_from_cli_string,
                     measurements.keys())):

@@ -35,7 +35,10 @@ class MockOSMethods(MockBase):
             'mkdir': MagicMock(),
             'makedirs': MagicMock(),
             'getenv': MagicMock(),
-            'listdir': MagicMock(return_value=[])
+            'listdir': MagicMock(return_value=[]),
+            'environ': {
+                'VARIABLE': 'value'
+            }
         }
         self._mock_paths = mock_paths
         self._patchers_os = {}

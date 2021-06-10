@@ -101,7 +101,7 @@ class PerfAnalyzerConfig:
         Returns
         -------
         str
-            a string representation that Does not include the url
+            a string representation that does not include the url
             Useful for mapping measurements across systems.
         """
 
