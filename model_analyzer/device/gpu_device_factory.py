@@ -25,7 +25,6 @@ class GPUDeviceFactory:
     """
     Factory class for creating GPUDevices
     """
-
     @staticmethod
     def create_device_by_bus_id(bus_id, dcgmPath=None):
         """
@@ -150,30 +149,44 @@ class GPUDeviceFactory:
                 f'GPU UUID {uuid} was not found.')
 
     @staticmethod
-    def get_analyzer_gpus(requested_gpus):
+    def verify_requested_gpus(requested_gpus):
         """
         Creates a list of GPU UUIDs corresponding to the GPUs visible to
-        model_analyzer.
+        numba.cuda among the requested gpus
 
-        Parameters
-        ----------
-        requested_gpus : list
+        Returns
+        -------
+        List
+            list of uuids corresponding to visible GPUs among requested
         """
 
-        model_analyzer_gpus = []
-        if numba.cuda.is_available():
-            if len(requested_gpus) == 1 and requested_gpus[0] == 'all':
-                devices = numba.cuda.list_devices()
-                for device in devices:
-                    gpu_device = GPUDeviceFactory.create_device_by_cuda_index(
-                        device.id)
-                    model_analyzer_gpus.append(
-                        str(gpu_device.device_uuid(), encoding='ascii'))
-            else:
-                devices = requested_gpus
-                for device in devices:
-                    gpu_device = GPUDeviceFactory.create_device_by_uuid(device)
-                    model_analyzer_gpus.append(
-                        str(gpu_device.device_uuid(), encoding='ascii'))
+        cuda_visible_gpus = GPUDeviceFactory.get_cuda_visible_gpus().keys()
 
-        return model_analyzer_gpus
+        if len(requested_gpus) == 1 and requested_gpus[0] == 'all':
+            return list(cuda_visible_gpus)
+
+        available_gpus = list(set(cuda_visible_gpus) & set(requested_gpus))
+        return available_gpus
+
+    @staticmethod
+    def get_cuda_visible_gpus():
+        """
+        Gets the gpus visible to cuda
+
+        Returns
+        -------
+        dict
+            keys are gpu uuids
+            values are device ids on this machine
+        """
+
+        cuda_visible_gpus = {}
+        if numba.cuda.is_available():
+            devices = numba.cuda.list_devices()
+            for device in devices:
+                gpu_device = GPUDeviceFactory.create_device_by_cuda_index(
+                    device.id)
+                cuda_visible_gpus[str(gpu_device.device_uuid(),
+                                      encoding='ascii')] = str(
+                                          gpu_device.device_id())
+        return cuda_visible_gpus

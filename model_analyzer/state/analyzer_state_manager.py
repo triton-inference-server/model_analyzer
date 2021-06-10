@@ -29,7 +29,6 @@ class AnalyzerStateManager:
     """
     Maintains the state of the Model Analyzer
     """
-
     def __init__(self, config):
         self._config = config
         self._exiting = 0
@@ -42,6 +41,9 @@ class AnalyzerStateManager:
             os.makedirs(self._checkpoint_dir)
             self._checkpoint_index = 0
         signal.signal(signal.SIGINT, self.interrupt_handler)
+
+        self._current_state = AnalyzerState()
+        self._starting_fresh_run = True
 
     def starting_fresh_run(self):
         """
@@ -114,8 +116,6 @@ class AnalyzerStateManager:
             self._current_state = state
             self._starting_fresh_run = False
         else:
-            self._current_state = AnalyzerState()
-            self._starting_fresh_run = True
             logging.info("No checkpoint file found, starting a fresh run.")
 
     def save_checkpoint(self):
@@ -172,7 +172,8 @@ class AnalyzerStateManager:
             return -1
         try:
             return max([
-                int(os.path.split(f)[1].split('.')[0]) for f in checkpoint_files
+                int(os.path.split(f)[1].split('.')[0])
+                for f in checkpoint_files
             ])
         except Exception as e:
             raise TritonModelAnalyzerException(e)

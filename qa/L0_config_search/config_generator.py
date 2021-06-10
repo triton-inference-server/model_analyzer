@@ -20,6 +20,30 @@ def _get_sweep_configs(profile_models):
 
     sweep_configs = []
     model_config = {
+        'run_config_search_disable': True,
+        'profile_models': {
+            model: {
+                'parameters': {
+                    'concurrency': [1]
+                },
+                'model_config_parameters': {
+                    'instance_group': [{
+                        'count': [1, 2],
+                        'kind': 'KIND_GPU'
+                    }]
+                }
+            }
+            for model in profile_models
+        },
+    }
+
+    model_config['total_param'] = 2
+    model_config['total_param_remote'] = 1
+    model_config['total_models'] = 2
+    model_config['total_models_remote'] = 1
+    sweep_configs.append(model_config)
+
+    model_config = {
         'run_config_search_max_concurrency': 2,
         'run_config_search_max_instance_count': 2,
         'run_config_search_max_preferred_batch_size': 2,
@@ -39,17 +63,6 @@ def _get_sweep_configs(profile_models):
     model_config['total_param'] = 4
     model_config['total_param_remote'] = 2
     model_config['total_models'] = 2
-    model_config['total_models_remote'] = 1
-    sweep_configs.append(model_config)
-
-    model_config = {
-        'run_config_search_disable': True,
-        'profile_models': ['vgg19_libtorch']
-    }
-
-    model_config['total_param'] = 1
-    model_config['total_param_remote'] = 1
-    model_config['total_models'] = 1
     model_config['total_models_remote'] = 1
     sweep_configs.append(model_config)
 
@@ -113,75 +126,7 @@ def _get_sweep_configs(profile_models):
     model_config['total_models_remote'] = 1
     sweep_configs.append(model_config)
 
-    model_config = {
-        'run_config_search_disable': True,
-        'profile_models': {
-            model: {
-                'parameters': {
-                    'concurrency': [1]
-                }
-            }
-            for model in profile_models
-        },
-    }
-
-    model_config['total_param'] = 1
-    model_config['total_param_remote'] = 1
-    model_config['total_models'] = 1
-    model_config['total_models_remote'] = 1
-    sweep_configs.append(model_config)
-
-    model_config = {
-        'run_config_search_disable': True,
-        'concurrency': [1],
-        'profile_models': {
-            model: {
-                'model_config_parameters': {
-                    'instance_group': [{
-                        'count': [1, 2],
-                        'kind': 'KIND_GPU'
-                    }]
-                }
-            }
-            for model in profile_models
-        },
-    }
-
-    model_config['total_param'] = 2
-    model_config['total_param_remote'] = 1
-    model_config['total_models'] = 2
-    model_config['total_models_remote'] = 1
-    sweep_configs.append(model_config)
-
-    model_config = {
-        'run_config_search_disable': True,
-        'profile_models': {
-            model: {
-                'model_config_parameters': {
-                    'instance_group': [{
-                        'count': [1, 2],
-                        'kind': 'KIND_GPU'
-                    }]
-                }
-            }
-            for model in profile_models
-        },
-    }
-
-    model_config['total_param'] = 2
-    model_config['total_param_remote'] = 1
-    model_config['total_models'] = 2
-    model_config['total_models_remote'] = 1
-    sweep_configs.append(model_config)
-
     return sweep_configs
-
-
-def get_all_configurations(profile_models):
-
-    run_params = []
-    run_params += _get_sweep_configs(profile_models)
-    return run_params
 
 
 if __name__ == "__main__":
@@ -194,7 +139,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     for i, configuration in enumerate(
-            get_all_configurations(args.profile_models.split(','))):
+            _get_sweep_configs(args.profile_models.split(','))):
         total_param = configuration['total_param']
         total_param_remote = configuration['total_param_remote']
         total_models_remote = configuration['total_models_remote']

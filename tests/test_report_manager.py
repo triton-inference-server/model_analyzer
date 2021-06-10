@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from model_analyzer.cli.cli import CLI
-from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
+from model_analyzer.config.input.config_command_analyze \
+    import ConfigCommandAnalyze
 from model_analyzer.config.run.run_config import RunConfig
 
 from model_analyzer.reports.report_manager import ReportManager
@@ -23,17 +24,19 @@ from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
 
-from .common import test_result_collector as trc
-from .common.test_utils import construct_measurement
 from .mocks.mock_config import MockConfig
 from .mocks.mock_io import MockIOMethods
 from .mocks.mock_matplotlib import MockMatplotlibMethods
 from .mocks.mock_os import MockOSMethods
+from .mocks.mock_pickle import MockPickleMethods
+
+from .common.test_utils import construct_measurement
+from .common import test_result_collector as trc
+
 import unittest
 
 
 class TestReportManagerMethods(trc.TestResultCollector):
-
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
@@ -65,7 +68,6 @@ class TestReportManagerMethods(trc.TestResultCollector):
         """
         config = self._evaluate_config(args, yaml_content)
         state_manager = AnalyzerStateManager(config=config)
-        state_manager.load_checkpoint()
         self.result_manager = ResultManager(config=config,
                                             state_manager=state_manager)
         self.report_manager = ReportManager(config=config,
@@ -97,15 +99,20 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         self.os_mock = MockOSMethods(mock_paths=[
             "model_analyzer.reports.report_manager",
-            "model_analyzer.config.input.config_command_analyze"
+            "model_analyzer.config.input.config_command_analyze",
+            "model_analyzer.state.analyzer_state_manager"
         ])
         self.os_mock.start()
-        self.io_mock = MockIOMethods(
-            mock_paths=["model_analyzer.reports.pdf_report"],
-            read_data=[bytes(">:(".encode("ascii"))])
+        self.io_mock = MockIOMethods(mock_paths=[
+            "model_analyzer.reports.pdf_report",
+            "model_analyzer.state.analyzer_state_manager"
+        ],
+                                     read_data=[bytes(">:(".encode("ascii"))])
         self.io_mock.start()
         self.matplotlib_mock = MockMatplotlibMethods()
         self.matplotlib_mock.start()
+        self.pickle_mock = MockPickleMethods()
+        self.pickle_mock.start()
 
     def test_add_results(self):
         self._init_managers("test_model1,test_model2")
@@ -122,7 +129,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
             }
             self._add_result_measurement(f"test_model1_report_{i}",
                                          "test_model1", avg_gpu_metrics,
-                                         avg_non_gpu_metrics, result_comparator)
+                                         avg_non_gpu_metrics,
+                                         result_comparator)
 
         for i in range(5):
             avg_non_gpu_metrics = {
@@ -132,11 +140,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
             }
             self._add_result_measurement(f"test_model2_report_{i}",
                                          "test_model2", avg_gpu_metrics,
-                                         avg_non_gpu_metrics, result_comparator)
+                                         avg_non_gpu_metrics,
+                                         result_comparator)
 
         self.result_manager.compile_and_sort_results()
         self.report_manager.create_summaries()
-
         self.assertEqual(self.report_manager.report_keys(),
                          ["test_model1", "test_model2"])
 
@@ -194,6 +202,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.matplotlib_mock.stop()
         self.io_mock.stop()
         self.os_mock.stop()
+        self.pickle_mock.stop()
 
 
 if __name__ == '__main__':

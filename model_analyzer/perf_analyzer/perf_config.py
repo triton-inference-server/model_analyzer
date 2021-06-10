@@ -96,6 +96,42 @@ class PerfAnalyzerConfig:
             for key in params:
                 self[key] = params[key]
 
+    def representation(self):
+        """
+        Returns
+        -------
+        str
+            a string representation that does not include the url
+            Useful for mapping measurements across systems.
+        """
+
+        return PerfAnalyzerConfig.remove_url_from_cli_string(
+            self.to_cli_string())
+
+    @classmethod
+    def remove_url_from_cli_string(cls, cli_string):
+        """
+        utility function strips the url from a cli
+        string representation
+
+        Parameters
+        ----------
+        cli_string : str
+            The cli string representation
+        """
+
+        perf_str_tokens = cli_string.split(' ')
+
+        try:
+            url_index = perf_str_tokens.index('-u')
+            # remove -u and the element that comes after it
+            perf_str_tokens.pop(url_index)
+            perf_str_tokens.pop(url_index)
+        except ValueError:
+            pass
+
+        return ' '.join(perf_str_tokens)
+
     def to_cli_string(self):
         """
         Utility function to convert a config into a

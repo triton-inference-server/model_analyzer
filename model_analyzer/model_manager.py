@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.config.run.run_config_generator \
@@ -26,7 +27,6 @@ class ModelManager:
     This class handles the search for, creation of, and execution of run configs.
     It also records the best results for each model.
     """
-
     def __init__(self, config, client, server, metrics_manager, result_manager,
                  state_manager):
         """
@@ -264,7 +264,7 @@ class ModelManager:
 
         model_name = run_config.model_name()
         model_config_name = run_config.model_config().get_field('name')
-        perf_config_str = run_config.perf_config().to_cli_string()
+        perf_config_str = run_config.perf_config().representation()
 
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
@@ -275,7 +275,13 @@ class ModelManager:
         if model_config_name not in results[model_name]:
             return False
         measurements = results[model_name][model_config_name][1]
-        if perf_config_str in measurements:
+
+        # For backward compatibility with keys that still have -u,
+        # we will remove -u from all keys, convert to set and check
+        # perf_config_str is present
+        if perf_config_str in set(
+                map(PerfAnalyzerConfig.remove_url_from_cli_string,
+                    measurements.keys())):
             return measurements[perf_config_str]
         else:
             return None

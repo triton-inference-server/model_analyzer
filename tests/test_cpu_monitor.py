@@ -45,7 +45,7 @@ class TestCPUMonitor(trc.TestResultCollector):
         metrics = [CPUAvailableRAM, CPUUsedRAM]
 
         server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config)
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
 
         # Start triton and monitor
         server.start()

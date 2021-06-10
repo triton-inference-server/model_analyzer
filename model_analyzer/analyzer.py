@@ -55,8 +55,6 @@ class Analyzer:
 
         self._result_manager = ResultManager(config=config,
                                              state_manager=self._state_manager)
-        self._metrics_manager = MetricsManager(
-            config=config, server=server, result_manager=self._result_manager)
 
     def profile(self, client):
         """
@@ -82,6 +80,12 @@ class Analyzer:
 
         logging.info('Profiling server only metrics...')
 
+        self._metrics_manager = MetricsManager(
+            config=self._config,
+            client=client,
+            server=self._server,
+            result_manager=self._result_manager)
+
         self._model_manager = ModelManager(
             config=self._config,
             client=client,
@@ -95,6 +99,8 @@ class Analyzer:
         client.wait_for_server_ready(self._config.max_retries)
         self._metrics_manager.profile_server()
         self._server.stop()
+        if self._config.triton_output_path:
+            self._server.write_server_logs(self._config.triton_output_path)
 
         # Profile each model, save state after each
         for model in self._config.profile_models:
@@ -129,7 +135,11 @@ class Analyzer:
             config=self._config, result_manager=self._result_manager)
 
         # Create result tables, put top results and get stats
-        self._metrics_manager.create_metric_tables()
+        dcgm_metrics, perf_metrics, cpu_metrics = \
+            MetricsManager.categorize_metrics()
+        self._result_manager.create_tables(
+            gpu_specific_metrics=dcgm_metrics,
+            non_gpu_specific_metrics=perf_metrics + cpu_metrics)
         self._result_manager.compile_and_sort_results()
         if self._config.summarize:
             self._report_manager.create_summaries()
