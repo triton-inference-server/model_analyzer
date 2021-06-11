@@ -220,6 +220,9 @@ analysis_models: <comma-delimited-string-list>
 # Shorthand that allows a user to specify a max latency constraint in ms
 [ latency_budget: <int>]
 
+# Shorthand that allows a user to specify a min throughput constraint
+[ min_throughput: <int>]
+
 # Specify path to config yaml file
 [ config_file: <string> ]
 ```
@@ -562,6 +565,26 @@ This will lead to 6 different configurations (3 different preferred batch sizes
 and two instance group combinations). If both `model_config_parameters` and
 `parameters` keys are specified, the list of sweep configurations will be the
 cartesian product of both of the lists.
+
+### `<cpu_only>`
+
+This flag tells the model analyzer that, whether performing a search during profiling
+or generating reports, this model should use CPU instances only. In order to run a model on CPU only you must provide a value of `true` for this flag.
+
+#### Example
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    cpu_only: true
+  model_2:
+    perf_analyzer_flags:
+    percentile: 95
+    latency_report_file: /path/to/latency/report/file
+```
+The above config tells model analyzer to profile `model_1` on CPU only,
+but profile `model_2` using GPU.
 
 ### `<perf-analyzer-flags>`
 
