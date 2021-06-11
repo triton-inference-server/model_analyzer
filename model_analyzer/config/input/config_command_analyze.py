@@ -17,8 +17,8 @@ from .config_defaults import \
     DEFAULT_FILENAME_MODEL_GPU, DEFAULT_FILENAME_MODEL_INFERENCE, \
     DEFAULT_FILENAME_SERVER_ONLY, DEFAULT_GPU_OUTPUT_FIELDS, \
     DEFAULT_INFERENCE_OUTPUT_FIELDS, DEFAULT_NUM_CONFIGS_PER_MODEL, \
-    DEFAULT_NUM_TOP_MODEL_CONFIGS, DEFAULT_OBJECTIVES, DEFAULT_ONLINE_ANALYSIS_PLOTS, \
-    DEFAULT_OFFLINE_ANALYSIS_PLOTS,DEFAULT_SERVER_OUTPUT_FIELDS, DEFAULT_SUMMARIZE_FLAG
+    DEFAULT_NUM_TOP_MODEL_CONFIGS, DEFAULT_OFFLINE_OBJECTIVES, DEFAULT_ONLINE_ANALYSIS_PLOTS, \
+    DEFAULT_OFFLINE_ANALYSIS_PLOTS, DEFAULT_ONLINE_OBJECTIVES,DEFAULT_SERVER_OUTPUT_FIELDS, DEFAULT_SUMMARIZE_FLAG
 from .config_field import ConfigField
 from .config_object import ConfigObject
 from .config_union import ConfigUnion
@@ -97,7 +97,7 @@ class ConfigCommandAnalyze(ConfigCommand):
             ConfigField(
                 'objectives',
                 field_type=objectives_scheme,
-                default_value=DEFAULT_OBJECTIVES,
+                default_value=DEFAULT_OFFLINE_OBJECTIVES,
                 description=
                 'Model Analyzer uses the objectives described here to find the best configuration for each model.'
             ))
@@ -277,12 +277,11 @@ class ConfigCommandAnalyze(ConfigCommand):
                 "Shorthand flag for specifying a maximum latency in ms."))
 
         self._add_config(
-            ConfigField(
-                'min_throughput',
-                flags=['--min-throughput'],
-                field_type=ConfigPrimitive(int),
-                description=
-                "Shorthand flag for specifying a minimum throughput."))
+            ConfigField('min_throughput',
+                        flags=['--min-throughput'],
+                        field_type=ConfigPrimitive(int),
+                        description=
+                        "Shorthand flag for specifying a minimum throughput."))
 
     def _preprocess_and_verify_arguments(self):
         """
@@ -325,6 +324,10 @@ class ConfigCommandAnalyze(ConfigCommand):
             If the required fields are not specified, it will raise
             this exception
         """
+
+        if args.mode == 'online' and 'latency_budget' not in args:
+            self._fields['objectives'].set_default_value(
+                DEFAULT_ONLINE_OBJECTIVES)
 
         super().set_config_values(args)
 

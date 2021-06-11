@@ -24,7 +24,18 @@ $ model-analyzer -h
 ```
 
 Options like `-q`, `--quiet` and `-v`, `--verbose` are global and apply to all
-model analyzer subcommands. 
+model analyzer subcommands.
+
+## Model Analyze Modes
+
+The `-m` or `--mode` flag is global and is accessible to all subcommands. It tells the model analyzer the context
+in which it is being run. Currently model analyzer supports 2 modes.
+
+### Online Mode
+
+This is the default mode. When in this mode, Model Analyzer will operate to find the optimal model
+configuration for an online inference scenario. In this scenario, Triton server will receive requests
+on demand with an expectation that latency will be minimized.
 
 ## Model Analyzer Subcommands
 

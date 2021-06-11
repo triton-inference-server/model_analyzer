@@ -490,10 +490,10 @@ class ReportManager:
 
         model_config, measurements = self._detailed_report_data[
             model_config_name]
-        measurements = sorted(
-            measurements,
-            key=lambda x: x.get_metric('perf_throughput').value(),
-            reverse=True)
+        sort_by_tag = 'perf_latency' if self._mode == 'online' else 'perf_throughput'
+        measurements = sorted(measurements,
+                              key=lambda x: x.get_metric(sort_by_tag).value(),
+                              reverse=True)
         cpu_only = model_config.cpu_only()
 
         first_column_header = 'Request Concurrency' if self._mode == 'online' else 'Client Batch Size'

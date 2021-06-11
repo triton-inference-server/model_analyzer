@@ -17,7 +17,8 @@
 #
 
 DEFAULT_CHECKPOINT_DIRECTORY = './checkpoints'
-DEFAULT_OBJECTIVES = {'perf_throughput': 10}
+DEFAULT_ONLINE_OBJECTIVES = {'perf_latency': 10}
+DEFAULT_OFFLINE_OBJECTIVES = {'perf_throughput': 10}
 
 #
 # Profile Config defaults
