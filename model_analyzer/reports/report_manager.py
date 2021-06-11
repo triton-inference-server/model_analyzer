@@ -496,9 +496,11 @@ class ReportManager:
             reverse=True)
         cpu_only = model_config.cpu_only()
 
+        first_column_header = 'Request Concurrency' if self._mode == 'online' else 'Client Batch Size'
+        first_column_tag = 'concurrency-range' if self._mode == 'online' else 'batch-size'
         if not cpu_only:
             detailed_table = ResultTable(headers=[
-                'Request Concurrency', 'p99 Latency (ms)',
+                first_column_header, 'p99 Latency (ms)',
                 'Client Response Wait (ms)', 'Server Queue (ms)',
                 'Server Compute Input (ms)', 'Server Compute Infer (ms)',
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)',
@@ -507,17 +509,18 @@ class ReportManager:
                                          title="Detailed Table")
         else:
             detailed_table = ResultTable(headers=[
-                'Request Concurrency', 'p99 Latency (ms)',
+                first_column_header, 'p99 Latency (ms)',
                 'Client Response Wait (ms)', 'Server Queue (ms)',
                 'Server Compute Input (ms)', 'Server Compute Infer (ms)',
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
             ],
                                          title="Detailed Table")
+
         # Construct table
         if not cpu_only:
             for measurement in measurements:
                 row = [
-                    measurement.get_parameter('concurrency-range'),
+                    measurement.get_parameter(first_column_tag),
                     measurement.get_metric('perf_latency').value(),
                     measurement.get_metric(
                         'perf_client_response_wait').value(),
@@ -536,7 +539,7 @@ class ReportManager:
         else:
             for measurement in measurements:
                 row = [
-                    measurement.get_parameter('concurrency-range'),
+                    measurement.get_parameter(first_column_tag),
                     measurement.get_metric('perf_latency').value(),
                     measurement.get_metric(
                         'perf_client_response_wait').value(),

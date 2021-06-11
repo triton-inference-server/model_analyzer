@@ -282,7 +282,7 @@ class ConfigCommandAnalyze(ConfigCommand):
                 flags=['--min-throughput'],
                 field_type=ConfigPrimitive(int),
                 description=
-                "Shorthand flag for specifying a maximum latency in ms."))
+                "Shorthand flag for specifying a minimum throughput."))
 
     def _preprocess_and_verify_arguments(self):
         """
