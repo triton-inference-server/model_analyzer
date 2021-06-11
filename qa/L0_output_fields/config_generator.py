@@ -21,7 +21,7 @@ def _get_sweep_configs():
     model_config = {
         'analysis_models': ['vgg19_libtorch'],
         'server_output_fields':
-        ['model_name', 'gpu_id', 'gpu_used_memory', 'gpu_utilization'],
+        ['model_name', 'gpu_uuid', 'gpu_used_memory', 'gpu_utilization'],
         'gpu_output_fields': [
             'model_name', 'satisfies_constraints', 'gpu_used_memory',
             'gpu_utilization', 'gpu_power_usage'

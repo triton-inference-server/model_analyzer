@@ -24,14 +24,13 @@ class Measurement:
     Encapsulates the set of metrics obtained from a single
     perf_analyzer run
     """
-
     def __init__(self, gpu_data, non_gpu_data, perf_config):
         """
         gpu_data : dict of list of Records
-            These are the values from the monitors that have a GPU ID
+            These are the values from the monitors that have a GPU UUID
             associated with them
         non_gpu_data : list of Records
-            These do not have a GPU ID associated with them
+            These do not have a GPU UUID associated with them
         perf_config : PerfAnalyzerConfig
             The perf config that was used for the perf run that generated
             this data data
@@ -44,10 +43,12 @@ class Measurement:
         self._perf_config = perf_config
 
         self._gpu_data_from_tag = {
-            type(metric).tag: metric for metric in self._avg_gpu_data
+            type(metric).tag: metric
+            for metric in self._avg_gpu_data
         }
         self._non_gpu_data_from_tag = {
-            type(metric).tag: metric for metric in self._non_gpu_data
+            type(metric).tag: metric
+            for metric in self._non_gpu_data
         }
 
     def set_result_comparator(self, comparator):
@@ -74,14 +75,14 @@ class Measurement:
 
     def gpu_data(self):
         """
-        Returns the GPU ID specific measurement
+        Returns the GPU specific measurement
         """
 
         return self._gpu_data
 
     def non_gpu_data(self):
         """
-        Returns the non GPU ID specific measurement
+        Returns the non GPU specific measurement
         """
 
         return self._non_gpu_data

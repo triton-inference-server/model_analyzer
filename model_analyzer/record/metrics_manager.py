@@ -44,7 +44,7 @@ class MetricsManager:
         "gpu_power_usage"
     ]
 
-    def __init__(self, config, client, server, result_manager):
+    def __init__(self, config, client, server, result_manager, state_manager):
         """
         Parameters
         ----------
@@ -58,19 +58,45 @@ class MetricsManager:
         result_manager : ResultManager
             instance that manages the result tables and 
             adding results
+        state_manager: AnalyzerStateManager
+            manages the analyzer state
         """
 
         self._config = config
         self._client = client
         self._server = server
         self._result_manager = result_manager
+        self._state_manager = state_manager
 
         self._dcgm_metrics, self._perf_metrics, self._cpu_metrics = \
              MetricsManager.categorize_metrics()
         self._gpus = GPUDeviceFactory.verify_requested_gpus(self._config.gpus)
+        self._init_state()
 
-        self._dcgm_monitor = None
-        self._cpu_monitor = None
+    def _init_state(self):
+        """
+        Sets MetricsManager object managed
+        state variables in AnalyerState
+        """
+
+        gpu_info = self._state_manager.get_state_variable(
+            'MetricsManager.gpu_info')
+
+        if self._state_manager.starting_fresh_run() or gpu_info is None:
+            gpu_info = {}
+
+        for i in range(len(self._gpus)):
+            if self._gpus[i] not in gpu_info:
+                device_info = {}
+                device = numba.cuda.list_devices()[i]
+                device_info['name'] = device.name
+                with device:
+                    # convert bytes to GB
+                    device_info['total_memory'] = numba.cuda.current_context(
+                    ).get_memory_info().total
+                gpu_info[self._gpus[i]] = device_info
+
+        self._state_manager.set_state_variable('MetricsManager.gpus', gpu_info)
 
     @classmethod
     def categorize_metrics(cls):
@@ -86,7 +112,7 @@ class MetricsManager:
 
         dcgm_metrics, perf_metrics, cpu_metrics = [], [], []
         # Separates metrics and objectives into related lists
-        for metric in MetricsManager.get_metric_types(cls.metric_tags):
+        for metric in MetricsManager.get_metric_types(tags=cls.metric_tags):
             if metric in DCGMMonitor.model_analyzer_to_dcgm_field:
                 dcgm_metrics.append(metric)
             elif metric in PerfAnalyzer.perf_metrics:
@@ -147,7 +173,7 @@ class MetricsManager:
         else:
             perf_analyzer_metrics = perf_analyzer_metrics_or_status
 
-        # Get metrics for model inference and combine metrics that do not have GPU ID
+        # Get metrics for model inference and combine metrics that do not have GPU UUID
         model_gpu_metrics = {}
         if not cpu_only:
             model_gpu_metrics = self._get_gpu_inference_metrics()
@@ -273,12 +299,13 @@ class MetricsManager:
 
         records_groupby_gpu = {}
         records_groupby_gpu = dcgm_record_aggregator.groupby(
-            self._dcgm_metrics, lambda record: record.device().device_id())
+            self._dcgm_metrics, lambda record: str(
+                record.device().device_uuid(), encoding='ascii'))
 
         gpu_metrics = defaultdict(list)
         for _, metric in records_groupby_gpu.items():
-            for gpu_id, metric_value in metric.items():
-                gpu_metrics[gpu_id].append(metric_value)
+            for gpu_uuid, metric_value in metric.items():
+                gpu_metrics[gpu_uuid].append(metric_value)
 
         return gpu_metrics
 

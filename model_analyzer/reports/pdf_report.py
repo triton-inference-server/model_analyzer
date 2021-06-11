@@ -23,7 +23,6 @@ class PDFReport(Report):
     constructed in html and
     written to disk as a PDF
     """
-
     def __init__(self):
         self._head = ""
         self._body = ""
@@ -72,7 +71,11 @@ class PDFReport(Report):
 
         self._body += f'<h3>{subheading}</h3>'
 
-    def add_images(self, images, image_captions, image_width=100):
+    def add_images(self,
+                   images,
+                   image_captions,
+                   image_width=100,
+                   float="center"):
         """
         Parameters
         ----------
@@ -84,13 +87,15 @@ class PDFReport(Report):
         image_width: int 
             Percentage of the the row of images
             will occupy.
+        float: str
+            Alignment of the div containing each image in the row
         """
 
         image_row = ""
         for img, caption in zip(images, image_captions):
             with open(img, "rb") as image_file:
                 data_uri = base64.b64encode(image_file.read()).decode('ascii')
-                image_row += f"<div class=\"image\" style=\"float:center;width:{image_width//len(images)}%\">"
+                image_row += f"<div class=\"image\" style=\"float:{float};width:{image_width//len(images)}%\">"
                 image_row += f"<img src=\"data:image/png;base64,{data_uri}\" style=\"width:100%\">"
                 image_row += f"<center><div style=\"font-weight:bold;font-size:12;padding-bottom:20px\">{caption}</div></center>"
                 image_row += "</div>"
@@ -101,12 +106,24 @@ class PDFReport(Report):
         """
         Parameters
         ----------
-        title: paragraph
+        paragraph: str
             The text to add to
             the report as a paragraph
         """
 
         self._body += f'<div style=\"font-size:{font_size}\"><p>{paragraph}</p></div>'
+
+    def add_line_breaks(self, num_breaks=1):
+        """
+        Parameters
+        ----------
+        num_breaks: paragraph
+            The text to add to
+            the report as a paragraph
+        """
+
+        for _ in range(num_breaks):
+            self._body += '<br>'
 
     def add_table(self, table):
         """
@@ -115,7 +132,6 @@ class PDFReport(Report):
         table: ResultTable
             The table we want to add
         """
-
         def table_style(border="1px solid black",
                         padding="5px 10px",
                         font_size="11pt",
