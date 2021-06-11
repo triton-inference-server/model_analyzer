@@ -218,6 +218,7 @@ class ReportManager:
         detailed_report = PDFReport()
 
         report_key = report_model_config.model_config_name()
+        model_config, _ = self._detailed_report_data[report_key]
 
         detailed_report.add_title(title="Detailed Report")
         detailed_report.add_subheading(
@@ -238,6 +239,10 @@ class ReportManager:
         plot_path = os.path.join(self._config.export_path, 'plots', 'simple',
                                  report_key)
         for plot_config in report_model_config.plots():
+            if model_config.cpu_only() and (
+                    plot_config.y_axis().startswith('gpu_')
+                    or plot_config.x_axis().startswith('gpu_')):
+                continue
             plot_stack.append(
                 os.path.join(plot_path, f"{plot_config.name()}.png"))
             caption_stack.append(
@@ -262,12 +267,12 @@ class ReportManager:
         detailed_report.add_line_breaks(num_breaks=2)
         detailed_report.add_paragraph(detailed_info, font_size=18)
         detailed_report.add_paragraph(
-            "The first plot above shows the exact breakdown of the latencies in "
+            "The first plot above shows the breakdown of the latencies in "
             "the latency throughput curve for this model config. Following that "
             "are the requested configurable plots showing the relationship between "
             "various metrics measured by the Model Analyzer. The above table contains "
             "detailed data for each of the measurements taken for this model config in "
-            "decreasing order.",
+            "decreasing order of throughput.",
             font_size=18)
         return detailed_report
 
@@ -473,6 +478,10 @@ class ReportManager:
 
         model_config, measurements = self._detailed_report_data[
             model_config_name]
+        measurements = sorted(
+            measurements,
+            key=lambda x: x.get_metric('perf_throughput').value(),
+            reverse=True)
         cpu_only = model_config.cpu_only()
 
         if not cpu_only:
@@ -488,7 +497,7 @@ class ReportManager:
             detailed_table = ResultTable(headers=[
                 'Request Concurrency', 'p99 Latency (ms)',
                 'Client Response Wait (ms)', 'Server Queue (ms)',
-                'Server Compute Input (ms)', 'Server Compute Infer (ms)'
+                'Server Compute Input (ms)', 'Server Compute Infer (ms)',
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
             ],
                                          title="Detailed Table")
@@ -545,16 +554,16 @@ class ReportManager:
         # Measurements and GPU info
         if model_config.cpu_only():
             sentence = (
-                f"The model config {model_config_name} requests {instance_group_string} "
+                f"The model config {model_config_name} requests {instance_group_string.replace('/', ' ')} "
                 f"instances. {len(measurements)} measurements were obtained for the model config "
-                f"on CPU with platfrom {platform}. ")
+                f"on CPU. ")
         else:
             gpu_dict = self._get_gpu_stats(measurements=measurements)
             gpu_names = ','.join(list(gpu_dict.keys()))
             max_memories = ','.join(
                 [str(x) + ' GB' for x in gpu_dict.values()])
             sentence = (
-                f"The model config {model_config_name} requests {instance_group_string} "
+                f"The model config \"{model_config_name}\" requests {instance_group_string.replace('/', ' ')} "
                 f"instances. {len(measurements)} measurements were obtained for the model config "
                 f"on GPU(s) {gpu_names} with memory limit(s) {max_memories}. This model "
                 f"uses the platform {platform}. ")
