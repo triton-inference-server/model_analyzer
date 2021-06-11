@@ -26,7 +26,6 @@ class ModelResult:
     a single run. This ModelResult belongs
     to a particular ResultTable
     """
-
     def __init__(self, model_name, model_config, comparator, constraints=None):
         """
         Parameters
@@ -154,13 +153,13 @@ class ModelResult:
         """
 
         if len(self._passing_measurements) == 0:
-            logging.warn(
+            logging.warning(
                 f"Requested top {n} measurements, but none satisfied constraints. "
                 "Showing available constraint failing measurements for this config."
             )
 
             if n > len(self._failing_measurements):
-                logging.warn(
+                logging.warning(
                     f"Requested top {n} failing measurements, "
                     f"but found only {len(self._failing_measurements)}. "
                     "Showing all available constraint failing measurements for this config."
@@ -169,9 +168,10 @@ class ModelResult:
                                    self._failing_measurements)
 
         if n > len(self._passing_measurements):
-            logging.warn(f"Requested top {n} measurements, but "
-                         f"found only {len(self._passing_measurements)}. "
-                         "Showing all available measurements for this config.")
+            logging.warning(
+                f"Requested top {n} measurements, but "
+                f"found only {len(self._passing_measurements)}. "
+                "Showing all available measurements for this config.")
 
         return heapq.nsmallest(min(n, len(self._passing_measurements)),
                                self._passing_measurements)

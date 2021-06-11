@@ -79,8 +79,7 @@ class PerfAnalyzerConfig:
             passed into perf_analyzer
         """
 
-        return list(cls.perf_analyzer_args) + list(
-            cls.input_to_options) + list(cls.input_to_verbose)
+        return cls.perf_analyzer_args + cls.input_to_options + cls.input_to_verbose
 
     def update_config(self, params=None):
         """
@@ -211,3 +210,13 @@ class PerfAnalyzerConfig:
             raise TritonModelAnalyzerException(
                 f"The argument '{key}' to the perf_analyzer "
                 "is not supported by the model analyzer.")
+
+    def __contains__(self, key):
+        """
+        Returns
+        -------
+        True if key is in perf_config i.e. the key is a
+        perf config argument
+        """
+
+        return key in PerfAnalyzerConfig.allowed_keys()

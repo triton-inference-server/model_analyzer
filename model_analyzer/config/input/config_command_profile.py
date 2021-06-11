@@ -29,8 +29,8 @@ from .config_command import ConfigCommand
 from .config_defaults import \
     DEFAULT_BATCH_SIZES, DEFAULT_CHECKPOINT_DIRECTORY, \
     DEFAULT_CLIENT_PROTOCOL, DEFAULT_DURATION_SECONDS, \
-    DEFAULT_GPUS, DEFAULT_LOG_LEVEL, DEFAULT_MAX_RETRIES, \
-    DEFAULT_MONITORING_INTERVAL, DEFAULT_OBJECTIVES, \
+    DEFAULT_GPUS, DEFAULT_MAX_RETRIES, \
+    DEFAULT_MONITORING_INTERVAL, DEFAULT_OFFLINE_OBJECTIVES, \
     DEFAULT_OUTPUT_MODEL_REPOSITORY, DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG, \
     DEFAULT_PERF_ANALYZER_CPU_UTIL, DEFAULT_PERF_ANALYZER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT, \
     DEFAULT_PERF_OUTPUT_FLAG, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, \
@@ -287,7 +287,7 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 'objectives',
                 field_type=objectives_scheme,
-                default_value=DEFAULT_OBJECTIVES,
+                default_value=DEFAULT_OFFLINE_OBJECTIVES,
                 description=
                 'Model Analyzer uses the objectives described here to find the best configuration for each model.'
             ))

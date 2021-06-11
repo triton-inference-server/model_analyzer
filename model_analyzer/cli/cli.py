@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import logging
 import argparse
 from argparse import ArgumentParser
@@ -24,7 +23,6 @@ class CLI:
     """
     CLI class to parse the commandline arguments
     """
-
     def __init__(self):
         self._parser = ArgumentParser()
         self._add_global_options()
@@ -36,9 +34,8 @@ class CLI:
 
     def _add_global_options(self):
         """
-        Retrieves the arguments from the command line and loads them into an
-        ArgumentParser. It will also configure the Model Analyzer config
-        accordingly.
+        Adds the Model Analyzer's global options
+        to the parser
         """
 
         self._parser.add_argument(
@@ -54,6 +51,7 @@ class CLI:
         self._parser.add_argument('-m',
                                   '--mode',
                                   type=str,
+                                  default='online',
                                   choices=['online', 'offline'],
                                   help='Choose a preset configuration mode.')
 
@@ -100,8 +98,8 @@ class CLI:
             # 'store_true' and 'store_false' does not
             # allow 'type' or 'choices' parameters
             if 'action' in parser_args and (
-                    parser_args['action'] == 'store_true' or
-                    parser_args['action'] == 'store_false'):
+                    parser_args['action'] == 'store_true'
+                    or parser_args['action'] == 'store_false'):
                 subparser.add_argument(
                     *config.flags(),
                     default=argparse.SUPPRESS,

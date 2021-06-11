@@ -20,7 +20,8 @@ from .config_enum import ConfigEnum
 from .config_list_generic import ConfigListGeneric
 from .config_list_string import ConfigListString
 from .config_defaults import \
-    DEFAULT_CHECKPOINT_DIRECTORY, DEFAULT_EXPORT_PATH, DEFAULT_REPORT_FORMAT, DEFAULT_REPORT_PLOTS
+    DEFAULT_CHECKPOINT_DIRECTORY, DEFAULT_EXPORT_PATH, \
+    DEFAULT_OFFLINE_REPORT_PLOTS, DEFAULT_ONLINE_REPORT_PLOTS, DEFAULT_REPORT_FORMAT
 from .config_field import ConfigField
 from .config_primitive import ConfigPrimitive
 from .config_command import ConfigCommand
@@ -36,7 +37,6 @@ class ConfigCommandReport(ConfigCommand):
     """
     Model Analyzer config object.
     """
-
     def _fill_config(self):
         """
         Builder function makes calls to add config to 
@@ -59,21 +59,22 @@ class ConfigCommandReport(ConfigCommand):
                 "Full path to directory to which to read and write checkpoints and profile data."
             ))
         self._add_config(
-            ConfigField('export_path',
-                        flags=['--export-path', '-e'],
-                        default_value=DEFAULT_EXPORT_PATH,
-                        field_type=ConfigPrimitive(str),
-                        description=
-                        "Full path to directory in which to store the results"))
+            ConfigField(
+                'export_path',
+                flags=['--export-path', '-e'],
+                default_value=DEFAULT_EXPORT_PATH,
+                field_type=ConfigPrimitive(str),
+                description=
+                "Full path to directory in which to store the results"))
         plots_scheme = ConfigObject(schema={
             '*':
-                ConfigObject(
-                    schema={
-                        'title': ConfigPrimitive(type_=str),
-                        'x_axis': ConfigPrimitive(type_=str),
-                        'y_axis': ConfigPrimitive(type_=str),
-                        'monotonic': ConfigPrimitive(type_=bool)
-                    })
+            ConfigObject(
+                schema={
+                    'title': ConfigPrimitive(type_=str),
+                    'x_axis': ConfigPrimitive(type_=str),
+                    'y_axis': ConfigPrimitive(type_=str),
+                    'monotonic': ConfigPrimitive(type_=bool)
+                })
         },
                                     output_mapper=ConfigPlot.from_object)
         self._add_config(
@@ -84,7 +85,7 @@ class ConfigCommandReport(ConfigCommand):
                     ConfigListGeneric(type_=plots_scheme,
                                       output_mapper=ConfigPlot.from_list)
                 ]),
-                default_value=DEFAULT_REPORT_PLOTS,
+                default_value=DEFAULT_ONLINE_REPORT_PLOTS,
                 description=
                 'Model analyzer uses the information in this section to construct plots of the results.'
             ))
@@ -131,6 +132,33 @@ class ConfigCommandReport(ConfigCommand):
                         ]),
                         description='Output file format for detailed report.'))
 
+    def set_config_values(self, args):
+        """
+        Set the config values. This function sets all the values for the
+        config. CLI arguments have the highest priority, then YAML config
+        values and then default values.
+
+        Parameters
+        ----------
+        args : argparse.Namespace
+            Parsed arguments from the CLI
+
+        Raises
+        ------
+        TritonModelAnalyzerException
+            If the required fields are not specified, it will raise
+            this exception
+        """
+
+        if args.mode == 'online':
+            self._fields['plots'].set_default_value(
+                DEFAULT_ONLINE_REPORT_PLOTS)
+        elif args.mode == 'offline':
+            self._fields['plots'].set_default_value(
+                DEFAULT_OFFLINE_REPORT_PLOTS)
+
+        super().set_config_values(args)
+
     def _preprocess_and_verify_arguments(self):
         """
         Enforces some rules on the config.
@@ -167,7 +195,8 @@ class ConfigCommandReport(ConfigCommand):
                         'x_axis': plot.x_axis(),
                         'y_axis': plot.y_axis(),
                         'monotonic': plot.monotonic()
-                    } for plot in self.plots
+                    }
+                    for plot in self.plots
                 }
             else:
                 new_report_model_config['plots'] = {
@@ -176,10 +205,12 @@ class ConfigCommandReport(ConfigCommand):
                         'x_axis': plot.x_axis(),
                         'y_axis': plot.y_axis(),
                         'monotonic': plot.monotonic()
-                    } for plot in model.plots()
+                    }
+                    for plot in model.plots()
                 }
 
             new_report_model_configs[
                 model.model_config_name()] = new_report_model_config
 
-        self._fields['report_model_configs'].set_value(new_report_model_configs)
+        self._fields['report_model_configs'].set_value(
+            new_report_model_configs)
