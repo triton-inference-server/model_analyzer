@@ -32,7 +32,7 @@ $ model-analyzer analyze --analysis-models <list of model names> --checkpoint-di
 
 The export directory will, by default, contain 3 subdirectories. The summary
 report for a model will be located in `[export-path]/reports/summaries/<model
-name>`. The report will look like the one shown [*here*](../examples/summary.pdf).
+name>`. The report will look like the one shown [*here*](../examples/online_summary.pdf).
 
 To disable summary report generation use `--summarize=false` or set the
 `summarize` yaml option to `false`.
@@ -54,7 +54,7 @@ particular model config with which the measurements are obtained, as well as
 extra configurable plots. The user can define the plots they would like to see
 in the detailed report using the YAML config file (See [**Configuring Model
 Analyzer**](./config.md) section for more details) The detailed report will
-look like the one shown [*here*](../examples/detailed_report.pdf).
+look like the one shown [*here*](../examples/online_detailed_report.pdf).
 
 
 See the [**quick start**](./quick_start.md#plots) and [**configuring model
