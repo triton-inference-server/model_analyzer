@@ -554,7 +554,7 @@ class ReportManager:
         # Measurements and GPU info
         if model_config.cpu_only():
             sentence = (
-                f"The model config {model_config_name} requests {instance_group_string.replace('/', ' ')} "
+                f"The model config {model_config_name} uses {instance_group_string.replace('/', ' ')} "
                 f"instances. {len(measurements)} measurements were obtained for the model config "
                 f"on CPU. ")
         else:
@@ -563,7 +563,7 @@ class ReportManager:
             max_memories = ','.join(
                 [str(x) + ' GB' for x in gpu_dict.values()])
             sentence = (
-                f"The model config \"{model_config_name}\" requests {instance_group_string.replace('/', ' ')} "
+                f"The model config \"{model_config_name}\" uses {instance_group_string.replace('/', ' ')} "
                 f"instances. {len(measurements)} measurements were obtained for the model config "
                 f"on GPU(s) {gpu_names} with memory limit(s) {max_memories}. This model "
                 f"uses the platform {platform}. ")
