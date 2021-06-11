@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from functools import total_ordering
+import logging
 
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
@@ -107,7 +108,8 @@ class Measurement:
         -------
         Record
             metric Record corresponding to
-            the tag, in this measurement
+            the tag, in this measurement, None
+            if tag not found.
         """
 
         if tag in self._non_gpu_data_from_tag:
@@ -115,9 +117,34 @@ class Measurement:
         elif tag in self._gpu_data_from_tag:
             return self._gpu_data_from_tag[tag]
         else:
-            raise TritonModelAnalyzerException(
-                f"No metric corresponding to tag {tag}"
-                " found in measurement")
+            logging.warning(f"No metric corresponding to tag '{tag}' "
+                            "found in measurement. Possibly comparing "
+                            "measurements across devices.")
+            return None
+
+    def get_parameter(self, tag):
+        """
+        Parameters
+        ----------
+        tag : str
+            A human readable tag that corresponds
+            to a particular parameter
+
+        Returns
+        -------
+        value
+            metric Record value corresponding to
+            the tag, in this measurement, None
+            if tag not found
+        """
+
+        if tag.replace('_', '-') in self.perf_config():
+            return self.perf_config()[tag.replace('_', '-')]
+        else:
+            logging.warning(f"No parameter corresponding to tag '{tag}' "
+                            "found in measurement. Possibly comparing "
+                            "measurements across devices.")
+            return None
 
     def gpus_used(self):
         """

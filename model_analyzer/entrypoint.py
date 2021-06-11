@@ -74,14 +74,14 @@ def get_server_handle(config):
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config,
                                                          gpus=None)
-        logging.warn(
+        logging.warning(
             'GPU memory metrics reported in the remote mode are not'
             ' accuracte. Model Analyzer uses Triton explicit model control to'
             ' load/unload models. Some frameworks do not release the GPU'
             ' memory even when the memory is not being used. Consider'
             ' using the "local" or "docker" mode if you want to accurately'
             ' monitor the GPU memory usage for different models.')
-        logging.warn(
+        logging.warning(
             'Config sweep parameters are ignored in the "remote" mode because'
             ' Model Analyzer does not have access to the model repository of'
             ' the remote Triton Server.')
@@ -229,8 +229,8 @@ def create_output_model_repository(config):
                 ' the "--override-output-model-repository" flag.')
         else:
             shutil.rmtree(config.output_model_repository_path)
-            logging.warn('Overriding the output model repo path '
-                         f'"{config.output_model_repository_path}"...')
+            logging.warning('Overriding the output model repo path '
+                            f'"{config.output_model_repository_path}"...')
             os.mkdir(config.output_model_repository_path)
 
 
@@ -262,11 +262,11 @@ def main():
         elif args.subcommand == 'analyze':
 
             analyzer = Analyzer(config, server, state_manager)
-            analyzer.analyze()
+            analyzer.analyze(mode=args.mode)
         elif args.subcommand == 'report':
 
             analyzer = Analyzer(config, server, state_manager)
-            analyzer.report()
+            analyzer.report(mode=args.mode)
     finally:
         if server is not None:
             server.stop()

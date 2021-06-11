@@ -29,10 +29,12 @@ class ReportManager:
     Manages the building and export of 
     various types of reports
     """
-    def __init__(self, config, gpu_info, result_manager):
+    def __init__(self, mode, config, gpu_info, result_manager):
         """
         Parameters
         ----------
+        mode: str
+            The mode in which Model Analyzer is operating
         config :ConfigCommandProfile
             The model analyzer's config containing information
             about the kind of reports to generate
@@ -44,6 +46,7 @@ class ReportManager:
             adding results
         """
 
+        self._mode = mode
         self._config = config
         self._gpu_info = gpu_info
         self._result_manager = result_manager
@@ -224,14 +227,15 @@ class ReportManager:
         detailed_report.add_subheading(
             subheading=f"Model Config: {report_key}")
 
-        # Add main latency breakdown image
-        detailed_plot = os.path.join(self._config.export_path, 'plots',
-                                     'detailed', report_key,
-                                     'latency_breakdown.png')
-        detailed_caption = f"Latency Breakdown for Online Performance of {report_key}"
+        if self._mode == 'online':
+            # Add main latency breakdown image
+            detailed_plot = os.path.join(self._config.export_path, 'plots',
+                                         'detailed', report_key,
+                                         'latency_breakdown.png')
+            detailed_caption = f"Latency Breakdown for Online Performance of {report_key}"
 
-        # First add row of detailed
-        detailed_report.add_images([detailed_plot], [detailed_caption])
+            # First add row of detailed
+            detailed_report.add_images([detailed_plot], [detailed_caption])
 
         # Next add the SimplePlots created for this detailed report
         plot_stack = []
@@ -326,7 +330,7 @@ class ReportManager:
                 cpu_only=True)
 
         # Add summary sections
-        summary.add_title(title="Result Summary")
+        summary.add_title(title=f"{self._mode.title()} Result Summary")
         summary.add_subheading(f"Model: {report_key}")
         if not cpu_only:
             summary.add_paragraph(f"GPU(s): {gpu_names}")
@@ -340,38 +344,46 @@ class ReportManager:
             f"Curves corresponding to the {num_best_configs} best model "
             f"configuration(s) out of a total of {total_configurations} are "
             "shown in the plots.")
-        throughput_latency_plot = os.path.join(self._config.export_path,
-                                               'plots', 'simple', report_key,
-                                               'throughput_v_latency.png')
-        caption_throughput_latency = f"Throughput vs. Latency curves for {num_best_configs} best configurations."
+
+        throughput_plot_config = self._config.plots[0]
+        throughput_plot = os.path.join(self._config.export_path, 'plots',
+                                       'simple', report_key,
+                                       f'{throughput_plot_config.name()}.png')
+
+        caption_throughput = f"{throughput_plot_config.title()} curves for {num_best_configs} best configurations."
 
         if not cpu_only:
             summary.add_paragraph(
                 "The maximum GPU memory consumption for each of the above points is"
                 f" shown in the second plot. The GPUs {gpu_names} have"
                 f" a total available memory of {max_memories} respectively.")
-            memory_latency_plot = os.path.join(self._config.export_path,
-                                               'plots', 'simple', report_key,
-                                               'gpu_mem_v_latency.png')
-            caption_memory_latency = f"GPU Memory vs. Latency curves for {num_best_configs} best configurations."
-            summary.add_images([throughput_latency_plot],
-                               [caption_throughput_latency],
+
+            summary.add_images([throughput_plot], [caption_throughput],
                                image_width=66)
-            summary.add_images([memory_latency_plot], [caption_memory_latency],
-                               image_width=66)
+            if self._mode == 'online':
+                memory_latency_plot = os.path.join(self._config.export_path,
+                                                   'plots', 'simple',
+                                                   report_key,
+                                                   'gpu_mem_v_latency.png')
+                caption_memory_latency = f"GPU Memory vs. Latency curves for {num_best_configs} best configurations."
+                summary.add_images([memory_latency_plot],
+                                   [caption_memory_latency],
+                                   image_width=66)
         else:
             summary.add_paragraph(
                 "The maximum GPU memory consumption for each of the above points is"
                 f" shown in the second plot.")
-            memory_latency_plot = os.path.join(self._config.export_path,
-                                               'plots', 'simple', report_key,
-                                               'cpu_mem_v_latency.png')
-            caption_memory_latency = f"CPU Memory vs. Latency curves for {num_best_configs} best configurations."
-            summary.add_images([throughput_latency_plot],
-                               [caption_throughput_latency],
+            summary.add_images([throughput_plot], [caption_throughput],
                                image_width=66)
-            summary.add_images([memory_latency_plot], [caption_memory_latency],
-                               image_width=66)
+            if self._mode == 'online':
+                memory_latency_plot = os.path.join(self._config.export_path,
+                                                   'plots', 'simple',
+                                                   report_key,
+                                                   'cpu_mem_v_latency.png')
+                caption_memory_latency = f"CPU Memory vs. Latency curves for {num_best_configs} best configurations."
+                summary.add_images([memory_latency_plot],
+                                   [caption_memory_latency],
+                                   image_width=66)
 
         summary.add_paragraph(
             "The following table summarizes each configuration at the measurement"
@@ -478,15 +490,17 @@ class ReportManager:
 
         model_config, measurements = self._detailed_report_data[
             model_config_name]
-        measurements = sorted(
-            measurements,
-            key=lambda x: x.get_metric('perf_throughput').value(),
-            reverse=True)
+        sort_by_tag = 'perf_latency' if self._mode == 'online' else 'perf_throughput'
+        measurements = sorted(measurements,
+                              key=lambda x: x.get_metric(sort_by_tag).value(),
+                              reverse=True)
         cpu_only = model_config.cpu_only()
 
+        first_column_header = 'Request Concurrency' if self._mode == 'online' else 'Client Batch Size'
+        first_column_tag = 'concurrency-range' if self._mode == 'online' else 'batch-size'
         if not cpu_only:
             detailed_table = ResultTable(headers=[
-                'Request Concurrency', 'p99 Latency (ms)',
+                first_column_header, 'p99 Latency (ms)',
                 'Client Response Wait (ms)', 'Server Queue (ms)',
                 'Server Compute Input (ms)', 'Server Compute Infer (ms)',
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)',
@@ -495,17 +509,18 @@ class ReportManager:
                                          title="Detailed Table")
         else:
             detailed_table = ResultTable(headers=[
-                'Request Concurrency', 'p99 Latency (ms)',
+                first_column_header, 'p99 Latency (ms)',
                 'Client Response Wait (ms)', 'Server Queue (ms)',
                 'Server Compute Input (ms)', 'Server Compute Infer (ms)',
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
             ],
                                          title="Detailed Table")
+
         # Construct table
         if not cpu_only:
             for measurement in measurements:
                 row = [
-                    measurement.perf_config()['concurrency-range'],
+                    measurement.get_parameter(first_column_tag),
                     measurement.get_metric('perf_latency').value(),
                     measurement.get_metric(
                         'perf_client_response_wait').value(),
@@ -524,7 +539,7 @@ class ReportManager:
         else:
             for measurement in measurements:
                 row = [
-                    measurement.perf_config()['concurrency-range'],
+                    measurement.get_parameter(first_column_tag),
                     measurement.get_metric('perf_latency').value(),
                     measurement.get_metric(
                         'perf_client_response_wait').value(),

@@ -55,8 +55,9 @@ class DetailedPlot:
         self._ax_throughput = self._ax_latency.twinx()
 
         latency_axis_label, throughput_axis_label = [
-            metric.header(aggregation_tag='') for metric in
-            MetricsManager.get_metric_types(['perf_latency', 'perf_throughput'])
+            metric.header(aggregation_tag='')
+            for metric in MetricsManager.get_metric_types(
+                ['perf_latency', 'perf_throughput'])
         ]
 
         self._bar_colors = {
@@ -107,7 +108,7 @@ class DetailedPlot:
         """
 
         self._data['concurrency'].append(
-            measurement.perf_config()['concurrency-range'])
+            measurement.get_parameter('concurrency-range'))
         self._data['perf_throughput'].append(
             measurement.get_metric(tag='perf_throughput').value())
         for metric in self.detailed_metrics:
@@ -126,8 +127,8 @@ class DetailedPlot:
                         key=lambda x: x[1])))[0]
 
         sorted_data = {
-            key: [data_list[i] for i in concurrency_sort_indices
-                 ] for key, data_list in self._data.items()
+            key: [data_list[i] for i in concurrency_sort_indices]
+            for key, data_list in self._data.items()
         }
 
         # Plot latency breakdown bars
@@ -165,14 +166,14 @@ class DetailedPlot:
         # Create legend handles
         handles = [
             mpatches.Patch(color=self._bar_colors[m], label=labels[m])
-            for m in self._bar_colors
-            if m != 'perf_throughput'
+            for m in self._bar_colors if m != 'perf_throughput'
         ]
         handles.append(inference_line[0])
 
         self._ax_latency.legend(handles=handles,
                                 ncol=(len(self._bar_colors) // 2) + 1,
-                                bbox_to_anchor=(self._legend_x, self._legend_y),
+                                bbox_to_anchor=(self._legend_x,
+                                                self._legend_y),
                                 prop=dict(size=self._legend_font_size))
         # Annotate inferences
         for x, y in zip(sorted_data['concurrency'],

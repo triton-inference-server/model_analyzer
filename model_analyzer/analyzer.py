@@ -118,12 +118,17 @@ class Analyzer:
             f"Finished profiling. Obtained measurements for models: {profiled_model_list}."
         )
 
-    def analyze(self):
+    def analyze(self, mode):
         """
         subcommand: ANALYZE
 
         Constructs results from measurements,
         sorts them, and dumps them to tables.
+
+        Parameters
+        ----------
+        mode : str
+            Global mode that the analyzer is running on
         """
 
         if not isinstance(self._config, ConfigCommandAnalyze):
@@ -136,6 +141,7 @@ class Analyzer:
         if not gpu_info:
             gpu_info = {}
         self._report_manager = ReportManager(
+            mode=mode,
             config=self._config,
             gpu_info=gpu_info,
             result_manager=self._result_manager)
@@ -155,12 +161,17 @@ class Analyzer:
         self._result_manager.tabulate_results()
         self._result_manager.write_and_export_results()
 
-    def report(self):
+    def report(self, mode):
         """
         Subcommand: REPORT
 
         Generates detailed information on
         one or more model configs
+
+        Parameters
+        ----------
+        mode : str
+            Global mode that the analyzer is running on
         """
 
         if not isinstance(self._config, ConfigCommandReport):
@@ -173,6 +184,7 @@ class Analyzer:
         if not gpu_info:
             gpu_info = {}
         self._report_manager = ReportManager(
+            mode=mode,
             config=self._config,
             result_manager=self._result_manager,
             gpu_info=gpu_info)
