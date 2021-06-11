@@ -78,4 +78,4 @@ just metrics) that should be displayed in the output tables.
   dynamic batcher
 * `satisfies_constraints`: `Yes` if this measurement satisfies constraints, `No`
   otherwise.
-* `gpu_id`: The id of the GPU this measurement was taken on.
+* `gpu_uuid`: The UUID of the GPU this measurement was taken on.

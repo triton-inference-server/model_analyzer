@@ -44,7 +44,7 @@ class ResultManager:
         'instance_group': 'Instance Group',
         'dynamic_batch_sizes': 'Preferred Batch Sizes',
         'satisfies_constraints': 'Satisfies Constraints',
-        'gpu_id': 'GPU ID'
+        'gpu_uuid': 'GPU UUID'
     }
 
     server_only_table_key = 'server_gpu_metrics'
@@ -395,14 +395,15 @@ class ResultManager:
 
         # GPU specific data (only put measurement if not cpu only)
         if not cpu_only:
-            for gpu_id, metrics in measurement.gpu_data().items():
+            for gpu_uuid, metrics in measurement.gpu_data().items():
                 gpu_fields = self._gpu_output_fields
                 gpu_row = self._get_common_row_items(
                     gpu_fields, batch_size, concurrency, satisfies, model_name,
                     tmp_model_name, dynamic_batching, instance_group)
-                gpu_id_index = self._find_index_for_field(gpu_fields, 'gpu_id')
-                if gpu_id_index is not None:
-                    gpu_row[gpu_id_index] = gpu_id
+                gpu_uuid_index = self._find_index_for_field(
+                    gpu_fields, 'gpu_uuid')
+                if gpu_uuid_index is not None:
+                    gpu_row[gpu_uuid_index] = gpu_uuid
                 for metric in metrics:
                     metric_tag_index = self._find_index_for_field(
                         gpu_fields, metric.tag)
@@ -470,7 +471,7 @@ class ResultManager:
         server_only_data = self._state_manager.get_state_variable(
             'ResultManager.server_only_data')
 
-        for gpu_id, metrics in server_only_data.items():
+        for gpu_uuid, metrics in server_only_data.items():
             data_row = [None] * len(server_fields)
 
             model_name_index = self._find_index_for_field(
@@ -478,9 +479,10 @@ class ResultManager:
             if model_name_index is not None:
                 data_row[model_name_index] = 'triton-server'
 
-            gpu_id_index = self._find_index_for_field(server_fields, 'gpu_id')
-            if gpu_id_index is not None:
-                data_row[gpu_id_index] = gpu_id
+            gpu_uuid_index = self._find_index_for_field(
+                server_fields, 'gpu_uuid')
+            if gpu_uuid_index is not None:
+                data_row[gpu_uuid_index] = gpu_uuid
 
             for metric in metrics:
                 metric_tag_index = self._find_index_for_field(
