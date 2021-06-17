@@ -78,13 +78,12 @@ function run_server_launch_modes() {
             elif [ "$LAUNCH_MODE" == "docker" ]; then
                 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_DOCKER_IMAGE"
             elif [ "$LAUNCH_MODE" == "remote" ]; then
-                MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:8000 --triton-grpc-endpoint localhost:8001"
-                MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PORTS --triton-metrics-url http://localhost:8002/metrics"
                 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS"
 
                 # For remote launch, set server args and start server
                 SERVER=`which tritonserver`
-                SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit"
+                SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
+                SERVER_HTTP_PORT=${http_port}
                 
                 run_server
                 if [ "$SERVER_PID" == "0" ]; then

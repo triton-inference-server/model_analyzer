@@ -18,6 +18,7 @@ from model_analyzer.state.analyzer_state import AnalyzerState
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
+import traceback
 import signal
 import logging
 import json
@@ -158,6 +159,8 @@ class AnalyzerStateManager:
         """
 
         self._exiting += 1
+        if logging.root.level <= logging.DEBUG:
+            traceback.print_stack(limit=15)
         logging.info(
             f'Received SIGINT {self._exiting}/{MAX_NUMBER_OF_INTERRUPTS}. '
             'Will attempt to exit after current measurement.')

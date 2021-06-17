@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from io import StringIO
 from .server import TritonServer
 from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.constants import SERVER_OUTPUT_TIMEOUT_SECS
 
-from subprocess import Popen, PIPE, STDOUT, TimeoutExpired
+from subprocess import Popen, DEVNULL, STDOUT, TimeoutExpired
 import psutil
 import logging
 import os
@@ -30,7 +31,7 @@ class TritonServerLocal(TritonServer):
     tritonserver locally as as subprocess.
     """
 
-    def __init__(self, path, config, gpus):
+    def __init__(self, path, config, gpus, log_path):
         """
         Parameters
         ----------
@@ -40,13 +41,15 @@ class TritonServerLocal(TritonServer):
             the config object containing arguments for this server instance
         gpus: list of str
             List of strings of GPU UUIDs that should be made visible to Triton
+        log_path: str
+            Absolute path to the triton log file
         """
 
         self._tritonserver_process = None
         self._server_config = config
         self._server_path = path
         self._gpus = gpus
-        self._log = None
+        self._log_path = log_path
 
         assert self._server_config['model-repository'], \
             "Triton Server requires --model-repository argument to be set."
@@ -67,10 +70,14 @@ class TritonServerLocal(TritonServer):
                 triton_env['CUDA_VISIBLE_DEVICES'] = ','.join(
                     [visible_gpus[uuid] for uuid in self._gpus])
 
+            if self._log_path:
+                self._log_file = open(self._log_path, 'a+')
+            else:
+                self._log_file = DEVNULL
             self._tritonserver_process = Popen(cmd,
-                                               start_new_session=True,
-                                               stdout=PIPE,
+                                               stdout=self._log_file,
                                                stderr=STDOUT,
+                                               start_new_session=True,
                                                universal_newlines=True,
                                                env=triton_env)
 
@@ -85,21 +92,15 @@ class TritonServerLocal(TritonServer):
         if self._tritonserver_process is not None:
             self._tritonserver_process.terminate()
             try:
-                self._log, _ = self._tritonserver_process.communicate(
+                self._tritonserver_process.communicate(
                     timeout=SERVER_OUTPUT_TIMEOUT_SECS)
             except TimeoutExpired:
                 self._tritonserver_process.kill()
-                self._log, _ = self._tritonserver_process.communicate()
+                self._tritonserver_process.communicate()
             self._tritonserver_process = None
+            if self._log_path:
+                self._log_file.close()
             logger.info('Triton Server stopped.')
-
-    def logs(self):
-        """
-        Retrieves the Triton server's stdout
-        as a str
-        """
-
-        return self._log
 
     def cpu_stats(self):
         """
