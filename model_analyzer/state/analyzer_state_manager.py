@@ -20,7 +20,7 @@ from model_analyzer.model_analyzer_exceptions \
 
 import signal
 import logging
-import pickle
+import json
 import os
 import glob
 
@@ -105,18 +105,26 @@ class AnalyzerStateManager:
         if os.path.exists(latest_checkpoint_file):
             logging.info(
                 f"Loaded checkpoint from file {latest_checkpoint_file}")
-            with open(latest_checkpoint_file, 'rb') as f:
+            with open(latest_checkpoint_file, 'r') as f:
                 try:
-                    state = pickle.load(f)
+
+                    self._current_state.deserialize(json.load(f))
                 except EOFError:
                     raise TritonModelAnalyzerException(
                         f'Checkpoint file {latest_checkpoint_file} is'
                         ' empty or corrupted. Remove it from checkpoint'
                         ' directory.')
-            self._current_state = state
             self._starting_fresh_run = False
         else:
             logging.info("No checkpoint file found, starting a fresh run.")
+
+    def default_encode(self, obj):
+        if isinstance(obj, bytes):
+            return obj.decode('utf-8')
+        elif hasattr(obj, 'serialize'):
+            return obj.serialize()
+        else:
+            return obj.__dict__
 
     def save_checkpoint(self):
         """
@@ -132,8 +140,8 @@ class AnalyzerStateManager:
         ckpt_filename = os.path.join(self._checkpoint_dir,
                                      f"{self._checkpoint_index}.ckpt")
         if self._state_changed:
-            with open(ckpt_filename, 'wb') as f:
-                pickle.dump(self._current_state, f)
+            with open(ckpt_filename, 'w') as f:
+                json.dump(self._current_state, f, default=self.default_encode)
             logging.info(f"Saved checkpoint to {ckpt_filename}.")
 
             self._checkpoint_index += 1
