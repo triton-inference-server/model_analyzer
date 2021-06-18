@@ -16,15 +16,15 @@ from .mock_base import MockBase
 from unittest.mock import Mock, MagicMock, patch
 
 
-class MockPickleMethods(MockBase):
+class MockJSONMethods(MockBase):
     """
     Mocks the methods for the os module
     """
     def __init__(self):
-        pickle_attrs = {'load': MagicMock(), 'dump': MagicMock()}
-        self.patcher_pickle = patch(
-            'model_analyzer.state.analyzer_state_manager.pickle',
-            Mock(**pickle_attrs))
+        json_attrs = {'load': MagicMock(), 'dump': MagicMock()}
+        self.patcher_json = patch(
+            'model_analyzer.state.analyzer_state_manager.json',
+            Mock(**json_attrs))
         super().__init__()
 
     def start(self):
@@ -32,25 +32,25 @@ class MockPickleMethods(MockBase):
         start the patchers
         """
 
-        self.pickle_mock = self.patcher_pickle.start()
+        self.json_mock = self.patcher_json.start()
 
     def _fill_patchers(self):
         """
         Fills the patcher list for destruction
         """
 
-        self._patchers.append(self.patcher_pickle)
+        self._patchers.append(self.patcher_json)
 
-    def set_pickle_load_return_value(self, value):
+    def set_json_load_return_value(self, value):
         """
-        Sets the return value for pickle load
+        Sets the return value for json load
         """
 
-        self.pickle_mock.load.return_value = value
+        self.json_mock.load.return_value = value
 
-    def set_pickle_load_side_effect(self, effect):
+    def set_json_load_side_effect(self, effect):
         """
         Sets a side effet
         """
 
-        self.pickle_mock.load.side_effect = effect
+        self.json_mock.load.side_effect = effect

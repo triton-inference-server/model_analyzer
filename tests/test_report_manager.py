@@ -28,7 +28,7 @@ from .mocks.mock_config import MockConfig
 from .mocks.mock_io import MockIOMethods
 from .mocks.mock_matplotlib import MockMatplotlibMethods
 from .mocks.mock_os import MockOSMethods
-from .mocks.mock_pickle import MockPickleMethods
+from .mocks.mock_json import MockJSONMethods
 
 from .common.test_utils import construct_measurement
 from .common import test_result_collector as trc
@@ -115,8 +115,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.io_mock.start()
         self.matplotlib_mock = MockMatplotlibMethods()
         self.matplotlib_mock.start()
-        self.pickle_mock = MockPickleMethods()
-        self.pickle_mock.start()
+        self.json_mock = MockJSONMethods()
+        self.json_mock.start()
 
     def test_add_results(self):
         for mode in ['online', 'offline']:
@@ -221,7 +221,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.matplotlib_mock.stop()
         self.io_mock.stop()
         self.os_mock.stop()
-        self.pickle_mock.stop()
+        self.json_mock.stop()
 
 
 if __name__ == '__main__':
