@@ -22,7 +22,6 @@ class TestOutputValidator:
     Functions that validate the output
     of the test
     """
-
     def __init__(self, config, config_file, analyzer_log, test_name):
         self._config = config
         self._config_file = config_file
@@ -72,7 +71,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     with open(args.config_file, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
+        config = yaml.safe_load(f, Loader=yaml.FullLoader)
 
     TestOutputValidator(config, args.config_file, args.analyzer_log,
                         args.test_name)

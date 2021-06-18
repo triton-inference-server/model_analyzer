@@ -52,7 +52,8 @@ class TestOutputValidator:
         True if test passes else False
         """
 
-        if 'perf_analyzer_flags' in self._config and 'percentile' in self._config['perf_analyzer_flags']:
+        if 'perf_analyzer_flags' in self._config and 'percentile' in self._config[
+                'perf_analyzer_flags']:
             with open(self._analyzer_log, 'r') as f:
                 contents = f.read()
 
@@ -80,13 +81,15 @@ class TestOutputValidator:
         True if test passes else False
         """
 
-        if 'perf_analyzer_flags' in self._config and 'measurement-mode' in self._config['perf_analyzer_flags']:
+        if 'perf_analyzer_flags' in self._config and 'measurement-mode' in self._config[
+                'perf_analyzer_flags']:
             with open(self._analyzer_log, 'r') as f:
                 contents = f.read()
 
             # In contents, search for "stabilizing with px latency"
-            measurement_mode = self._config['perf_analyzer_flags']['measurement-mode']
-            assert(measurement_mode == 'time_windows')
+            measurement_mode = self._config['perf_analyzer_flags'][
+                'measurement-mode']
+            assert (measurement_mode == 'time_windows')
             token = "time_windows"
 
             # Ensure the token appears in the text
@@ -229,7 +232,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     with open(args.config_file, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
+        config = yaml.safe_load(f, Loader=yaml.FullLoader)
 
     TestOutputValidator(config, args.profile_models, args.analyzer_log_file,
                         args.triton_log_file)
