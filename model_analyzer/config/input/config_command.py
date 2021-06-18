@@ -69,7 +69,7 @@ class ConfigCommand:
         """
 
         with open(file_path, 'r') as config_file:
-            config = yaml.load(config_file, Loader=yaml.FullLoader)
+            config = yaml.safe_load(config_file)
             return config
 
     def set_config_values(self, args):

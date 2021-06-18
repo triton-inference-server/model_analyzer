@@ -72,7 +72,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     with open(args.config_file, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
+        config = yaml.safe_load(f)
 
     TestOutputValidator(config, args.config_file, args.analyzer_log,
                         args.test_name)

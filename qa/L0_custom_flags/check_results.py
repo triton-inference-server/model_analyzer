@@ -229,7 +229,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     with open(args.config_file, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
+        config = yaml.safe_load(f)
 
     TestOutputValidator(config, args.profile_models, args.analyzer_log_file,
                         args.triton_log_file)
