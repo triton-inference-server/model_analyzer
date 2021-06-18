@@ -14,7 +14,9 @@
 
 from functools import total_ordering
 import logging
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
+from model_analyzer.record.record import RecordType
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
@@ -39,10 +41,44 @@ class Measurement:
 
         # average values over all GPUs
         self._gpu_data = gpu_data
-        self._avg_gpu_data = self._average_list(list(self._gpu_data.values()))
         self._non_gpu_data = non_gpu_data
         self._perf_config = perf_config
 
+        self._avg_gpu_data = self._average_list(list(self._gpu_data.values()))
+        self._gpu_data_from_tag = {
+            type(metric).tag: metric
+            for metric in self._avg_gpu_data
+        }
+        self._non_gpu_data_from_tag = {
+            type(metric).tag: metric
+            for metric in self._non_gpu_data
+        }
+
+    def deserialize(self, measurement_dict):
+        # Deserialize gpu_data
+        for gpu_uuid, gpu_data_list in measurement_dict['_gpu_data'].items():
+            metric_list = []
+            for [tag, record_dict] in gpu_data_list:
+                record_type = RecordType.get(tag)
+                record = record_type(0)
+                record.deserialize(record_dict)
+                metric_list.append(record)
+            self._gpu_data[gpu_uuid] = metric_list
+
+        # non gpu data
+        self._non_gpu_data = []
+        for [tag, record_dict] in measurement_dict['_non_gpu_data']:
+            record_type = RecordType.get(tag)
+            record = record_type(0)
+            record.deserialize(record_dict)
+            self._non_gpu_data.append(record)
+
+        # perf config
+        self._perf_config = PerfAnalyzerConfig()
+        self._perf_config.deserialize(measurement_dict['_perf_config'])
+
+        # Compute contigent data structures
+        self._avg_gpu_data = self._average_list(list(self._gpu_data.values()))
         self._gpu_data_from_tag = {
             type(metric).tag: metric
             for metric in self._avg_gpu_data

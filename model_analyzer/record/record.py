@@ -90,7 +90,6 @@ class Record(metaclass=RecordType):
     This class is used for representing
     records
     """
-
     def __init__(self, value, timestamp):
         """
         Parameters
@@ -143,6 +142,13 @@ class Record(metaclass=RecordType):
         str
             the name tag of the record type.
         """
+
+    def serialize(self):
+        return (self.tag, self.__dict__)
+    
+    def deserialize(self, record_dict):
+        for key, val in record_dict.items():
+            setattr(self, key, val)
 
     def value(self):
         """

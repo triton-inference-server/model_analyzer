@@ -22,7 +22,7 @@ from model_analyzer.model_analyzer_exceptions \
 from .mocks.mock_config import MockConfig
 from .mocks.mock_glob import MockGlobMethods
 from .mocks.mock_os import MockOSMethods
-from .mocks.mock_pickle import MockPickleMethods
+from .mocks.mock_json import MockJSONMethods
 from .mocks.mock_io import MockIOMethods
 
 from .common import test_result_collector as trc
@@ -58,13 +58,13 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
         # start mocks
         self.mock_io = MockIOMethods(
             mock_paths=['model_analyzer.state.analyzer_state_manager'])
-        self.mock_pickle = MockPickleMethods()
+        self.mock_json = MockJSONMethods()
         self.mock_os = MockOSMethods(
             mock_paths=['model_analyzer.state.analyzer_state_manager'])
         self.mock_glob = MockGlobMethods()
 
         self.mock_io.start()
-        self.mock_pickle.start()
+        self.mock_json.start()
         self.mock_os.start()
         self.mock_glob.start()
 
@@ -104,7 +104,7 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
         self.assertFalse(self.state_manager.starting_fresh_run())
 
         # Load checkpoint throws error
-        self.mock_pickle.set_pickle_load_side_effect(EOFError)
+        self.mock_json.set_json_load_side_effect(EOFError)
         with self.assertRaises(TritonModelAnalyzerException,
                                msg='Checkpoint file 0.ckpt is'
                                ' empty or corrupted. Remove it from checkpoint'
