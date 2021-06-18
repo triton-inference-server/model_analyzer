@@ -180,7 +180,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     with open(args.config_file, 'r') as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
+        config = yaml.safe_load(f)
 
     TestOutputValidator(config, args.test_name, args.checkpoint_dir,
                         args.analyzer_log_file)

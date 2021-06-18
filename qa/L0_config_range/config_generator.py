@@ -115,7 +115,7 @@ if __name__ == "__main__":
         with open(f'./config-{i}.yml', 'w') as file:
             yaml.dump(configuration, file)
         with open(f'./config-{i}.yml', 'r') as file:
-            config = yaml.load(file, Loader=yaml.FullLoader)
+            config = yaml.safe_load(file)
         with open(f'./config-{i}.txt', 'w') as file:
             file.write(str(total_param))
 
