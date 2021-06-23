@@ -38,39 +38,18 @@ class ModelConfig:
         self._model_config = model_config
         self._cpu_only = False
 
-    def serialize(self):
+    def to_dict(self):
         model_config_dict = json_format.MessageToDict(self._model_config)
         model_config_dict['cpu_only'] = self._cpu_only
         return model_config_dict
 
-    def __getstate__(self):
-        """
-        Allows serialization of
-        ModelConfig object
-        """
-
-        model_config_dict = json_format.MessageToDict(self._model_config)
-        model_config_dict['cpu_only'] = self._cpu_only
-        return model_config_dict
-
-    def deserialize(self, model_config_dict):
-        self._cpu_only = model_config_dict['cpu_only']
+    @classmethod
+    def from_dict(cls, model_config_dict):
+        cpu_only = model_config_dict['cpu_only']
         del model_config_dict['cpu_only']
-        protobuf_message = json_format.ParseDict(
-            model_config_dict, model_config_pb2.ModelConfig())
-        self._model_config = protobuf_message
-
-    def __setstate__(self, model_config_dict):
-        """
-        Allows deserialization of
-        ModelConfig object
-        """
-
-        self._cpu_only = model_config_dict['cpu_only']
-        del model_config_dict['cpu_only']
-        protobuf_message = json_format.ParseDict(
-            model_config_dict, model_config_pb2.ModelConfig())
-        self._model_config = protobuf_message
+        model_config = ModelConfig.create_from_dictionary(model_config_dict)
+        model_config._cpu_only = cpu_only
+        return model_config
 
     @staticmethod
     def create_from_file(model_path):

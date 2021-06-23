@@ -17,8 +17,6 @@ import logging
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 from model_analyzer.record.record import RecordType
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
 
 
 @total_ordering
@@ -54,39 +52,43 @@ class Measurement:
             for metric in self._non_gpu_data
         }
 
-    def deserialize(self, measurement_dict):
+    @classmethod
+    def from_dict(cls, measurement_dict):
+        measurement = Measurement({}, [], None)
+
         # Deserialize gpu_data
         for gpu_uuid, gpu_data_list in measurement_dict['_gpu_data'].items():
             metric_list = []
             for [tag, record_dict] in gpu_data_list:
                 record_type = RecordType.get(tag)
-                record = record_type(0)
-                record.deserialize(record_dict)
+                record = record_type.from_dict(record_dict)
                 metric_list.append(record)
-            self._gpu_data[gpu_uuid] = metric_list
+            measurement._gpu_data[gpu_uuid] = metric_list
 
         # non gpu data
-        self._non_gpu_data = []
+        measurement._non_gpu_data = []
         for [tag, record_dict] in measurement_dict['_non_gpu_data']:
             record_type = RecordType.get(tag)
-            record = record_type(0)
-            record.deserialize(record_dict)
-            self._non_gpu_data.append(record)
+            record = record_type.from_dict(record_dict)
+            measurement._non_gpu_data.append(record)
 
         # perf config
-        self._perf_config = PerfAnalyzerConfig()
-        self._perf_config.deserialize(measurement_dict['_perf_config'])
+        measurement._perf_config = PerfAnalyzerConfig.from_dict(
+            measurement_dict['_perf_config'])
 
         # Compute contigent data structures
-        self._avg_gpu_data = self._average_list(list(self._gpu_data.values()))
-        self._gpu_data_from_tag = {
+        measurement._avg_gpu_data = measurement._average_list(
+            list(measurement._gpu_data.values()))
+        measurement._gpu_data_from_tag = {
             type(metric).tag: metric
-            for metric in self._avg_gpu_data
+            for metric in measurement._avg_gpu_data
         }
-        self._non_gpu_data_from_tag = {
+        measurement._non_gpu_data_from_tag = {
             type(metric).tag: metric
-            for metric in self._non_gpu_data
+            for metric in measurement._non_gpu_data
         }
+
+        return measurement
 
     def set_result_comparator(self, comparator):
         """

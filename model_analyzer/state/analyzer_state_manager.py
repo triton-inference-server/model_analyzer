@@ -108,7 +108,7 @@ class AnalyzerStateManager:
             with open(latest_checkpoint_file, 'r') as f:
                 try:
 
-                    self._current_state.deserialize(json.load(f))
+                    self._current_state = AnalyzerState.from_dict(json.load(f))
                 except EOFError:
                     raise TritonModelAnalyzerException(
                         f'Checkpoint file {latest_checkpoint_file} is'
@@ -121,8 +121,8 @@ class AnalyzerStateManager:
     def default_encode(self, obj):
         if isinstance(obj, bytes):
             return obj.decode('utf-8')
-        elif hasattr(obj, 'serialize'):
-            return obj.serialize()
+        elif hasattr(obj, 'to_dict'):
+            return obj.to_dict()
         else:
             return obj.__dict__
 

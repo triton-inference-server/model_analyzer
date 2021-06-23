@@ -143,12 +143,15 @@ class Record(metaclass=RecordType):
             the name tag of the record type.
         """
 
-    def serialize(self):
+    def to_dict(self):
         return (self.tag, self.__dict__)
-    
-    def deserialize(self, record_dict):
+
+    @classmethod
+    def from_dict(cls, record_dict):
+        record = cls(0)
         for key, val in record_dict.items():
-            setattr(self, key, val)
+            setattr(record, key, val)
+        return record
 
     def value(self):
         """

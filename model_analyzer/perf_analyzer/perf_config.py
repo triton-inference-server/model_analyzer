@@ -95,9 +95,12 @@ class PerfAnalyzerConfig:
             for key in params:
                 self[key] = params[key]
 
-    def deserialize(self, perf_config_dict):
+    @classmethod
+    def from_dict(cls, perf_config_dict):
+        perf_config = PerfAnalyzerConfig()
         for key, val in perf_config_dict.items():
-            setattr(self, key, val)
+            setattr(perf_config, key, val)
+        return perf_config
 
     def representation(self):
         """
