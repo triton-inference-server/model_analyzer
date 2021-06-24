@@ -41,7 +41,7 @@ CLIENT_PROTOCOLS="http grpc"
 TRITON_DOCKER_IMAGE="nvcr.io/nvidia/tritonserver:21.05-py3"
 
 mkdir $CHECKPOINT_DIRECTORY
-cp $CHECKPOINT_REPOSITORY/server_launch_modes.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
+# cp $CHECKPOINT_REPOSITORY/server_launch_modes.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
 # Run the model-analyzer, both client protocols
 RET=0

@@ -604,7 +604,7 @@ class ReportManager:
         for measurement in measurements:
             for gpu_uuid, gpu_info in self._gpu_info.items():
                 if gpu_uuid in measurement.gpus_used():
-                    gpu_name = (gpu_info['name']).decode('ascii')
+                    gpu_name = gpu_info['name']
                     max_memory = round(gpu_info['total_memory'] / (2**30), 1)
                     if gpu_name not in gpu_dict:
                         gpu_dict[gpu_name] = max_memory

@@ -20,7 +20,6 @@ class GPURecord(Record):
     This is a base class for any
     GPU based record
     """
-
     def __init__(self, value, device=None, timestamp=0):
         """
         Parameters
@@ -46,3 +45,11 @@ class GPURecord(Record):
         """
 
         return self._device
+
+    @classmethod
+    def from_dict(cls, record_dict):
+        record = cls(0)
+        for key in ['_value', '_timestamp', '_device']:
+            if key in record_dict:
+                setattr(record, key, record_dict[key])
+        return record
