@@ -149,8 +149,9 @@ class Record(metaclass=RecordType):
     @classmethod
     def from_dict(cls, record_dict):
         record = cls(0)
-        for key, val in record_dict.items():
-            setattr(record, key, val)
+        for key in ['_value', '_timestamp']:
+            if key in record_dict:
+                setattr(record, key, record_dict[key])
         return record
 
     def value(self):

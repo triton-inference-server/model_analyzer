@@ -98,8 +98,12 @@ class PerfAnalyzerConfig:
     @classmethod
     def from_dict(cls, perf_config_dict):
         perf_config = PerfAnalyzerConfig()
-        for key, val in perf_config_dict.items():
-            setattr(perf_config, key, val)
+        for key in [
+                '_args', '_options', '_verbose', '_input_to_verbose',
+                '_input_to_options'
+        ]:
+            if key in perf_config_dict:
+                setattr(perf_config, key, perf_config_dict[key])
         return perf_config
 
     def representation(self):
