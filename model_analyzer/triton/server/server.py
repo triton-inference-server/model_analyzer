@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.output.file_writer import FileWriter
-
 from abc import ABC, abstractmethod
 
 
@@ -22,7 +20,6 @@ class TritonServer(ABC):
     Defines the interface for the objects created by
     TritonServerFactory
     """
-
     @abstractmethod
     def start(self):
         """
@@ -33,12 +30,6 @@ class TritonServer(ABC):
     def stop(self):
         """
         Stops and cleans up after the server
-        """
-
-    @abstractmethod
-    def logs(self):
-        """
-        Gets the server's stdout logs as a string
         """
 
     @abstractmethod
@@ -58,18 +49,3 @@ class TritonServer(ABC):
         """
 
         self._server_config.update_config(params)
-
-    def write_server_logs(self, triton_output_path):
-        """
-        Checks if server logs have been
-        requested, and writes them
-        to the specified file
-
-        Parameters
-        ----------
-        triton_output_path : str
-            The full path to the triton output logs.
-        """
-
-        server_log_writer = FileWriter(filename=triton_output_path)
-        server_log_writer.write(self.logs(), append=True)

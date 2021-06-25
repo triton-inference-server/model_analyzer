@@ -99,8 +99,6 @@ class Analyzer:
         client.wait_for_server_ready(self._config.max_retries)
         self._metrics_manager.profile_server()
         self._server.stop()
-        if self._config.triton_output_path:
-            self._server.write_server_logs(self._config.triton_output_path)
 
         # Profile each model, save state after each
         for model in self._config.profile_models:

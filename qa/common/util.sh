@@ -14,6 +14,7 @@
 
 SERVER_LOG=${SERVER_LOG:="./server.log"}
 SERVER_TIMEOUT=${SERVER_TIMEOUT:=120}
+SERVER_HTTP_PORT==${SERVER_HTTP_PORT:=8000}
 SERVER_LD_PRELOAD=${SERVER_LD_PRELOAD:=""}
 ANALYZER_LOG=${ANALYZER_LOG:="./test.log"}
 
@@ -36,7 +37,7 @@ function wait_for_server_ready() {
         sleep 1;
 
         set +e
-        code=`curl -s -w %{http_code} localhost:8000/v2/health/ready`
+        code=`curl -s -w %{http_code} localhost:${1}/v2/health/ready`
         set -e
         if [ "$code" == "200" ]; then
             return
@@ -74,7 +75,7 @@ function run_server () {
     LD_PRELOAD=$SERVER_LD_PRELOAD $SERVER $SERVER_ARGS > $SERVER_LOG 2>&1 &
     SERVER_PID=$!
 
-    wait_for_server_ready $SERVER_PID $SERVER_TIMEOUT
+    wait_for_server_ready $SERVER_PID $SERVER_TIMEOUT $SERVER_HTTP_PORT
     if [ "$WAIT_RET" != "0" ]; then
         kill $SERVER_PID || true
         SERVER_PID=0

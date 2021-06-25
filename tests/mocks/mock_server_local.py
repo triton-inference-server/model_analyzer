@@ -43,7 +43,7 @@ class MockServerLocalMethods(MockServerMethods):
         self.patcher_stdout = patch(
             'model_analyzer.triton.server.server_local.STDOUT', MagicMock())
         self.patcher_pipe = patch(
-            'model_analyzer.triton.server.server_local.PIPE', MagicMock())
+            'model_analyzer.triton.server.server_local.DEVNULL', MagicMock())
         self.patcher_psutil = patch(
             'model_analyzer.triton.server.server_local.psutil',
             Mock(**psutil_attrs))

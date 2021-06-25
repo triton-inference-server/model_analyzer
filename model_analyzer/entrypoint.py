@@ -73,7 +73,8 @@ def get_server_handle(config):
         logging.info('Using remote Triton Server...')
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config,
-                                                         gpus=None)
+                                                         gpus=None,
+                                                         log_path=None)
         logging.warning(
             'GPU memory metrics reported in the remote mode are not'
             ' accuracte. Model Analyzer uses Triton explicit model control to'
@@ -98,7 +99,8 @@ def get_server_handle(config):
         server = TritonServerFactory.create_server_local(
             path=config.triton_server_path,
             config=triton_config,
-            gpus=config.gpus)
+            gpus=config.gpus,
+            log_path=config.triton_output_path)
     elif config.triton_launch_mode == 'docker':
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
@@ -113,7 +115,8 @@ def get_server_handle(config):
         server = TritonServerFactory.create_server_docker(
             image=config.triton_docker_image,
             config=triton_config,
-            gpus=GPUDeviceFactory.verify_requested_gpus(config.gpus))
+            gpus=GPUDeviceFactory.verify_requested_gpus(config.gpus),
+            log_path=config.triton_output_path)
     else:
         raise TritonModelAnalyzerException(
             f"Unrecognized triton-launch-mode : {config.triton_launch_mode}")

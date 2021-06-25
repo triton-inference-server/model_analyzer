@@ -21,7 +21,7 @@ class TritonServerFactory:
     A factory for creating TritonServer instances
     """
     @staticmethod
-    def create_server_docker(image, config, gpus):
+    def create_server_docker(image, config, gpus, log_path=None):
         """
         Parameters
         ----------
@@ -31,16 +31,21 @@ class TritonServerFactory:
             the config object containing arguments for this server instance
         gpus : list
             List of GPUs to be mounted in the container.
+        log_path: str
+            Absolute path to the triton log file
 
         Returns
         -------
         TritonServerDocker
         """
 
-        return TritonServerDocker(image=image, config=config, gpus=gpus)
+        return TritonServerDocker(image=image,
+                                  config=config,
+                                  gpus=gpus,
+                                  log_path=log_path)
 
     @staticmethod
-    def create_server_local(path, config, gpus):
+    def create_server_local(path, config, gpus, log_path=None):
         """
         Parameters
         ----------
@@ -50,10 +55,15 @@ class TritonServerFactory:
             the config object containing arguments for this server instance
         gpus: list of str
             List of strings of GPU UUIDs that should be made visible to Triton
+        log_path: str
+            Absolute path to the triton log file
 
         Returns
         -------
         TritonServerLocal
         """
 
-        return TritonServerLocal(path=path, config=config, gpus=gpus)
+        return TritonServerLocal(path=path,
+                                 config=config,
+                                 gpus=gpus,
+                                 log_path=log_path)

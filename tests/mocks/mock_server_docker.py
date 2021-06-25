@@ -30,8 +30,7 @@ class MockServerDockerMethods(MockServerMethods):
     def __init__(self):
         docker_container_attrs = {
             'exec_run':
-            MagicMock(return_value=(None, (bytes(x, 'utf-8')
-                                           for x in list(self.TEST_LOG)))),
+            MagicMock(return_value=(None, bytes(self.TEST_MEM, 'utf-8'))),
             'stats':
             Mock(return_value={
                 'memory_stats': {
@@ -107,20 +106,16 @@ class MockServerDockerMethods(MockServerMethods):
         }
         mock_ports = {http_port: 8000, grpc_port: 8001, metrics_port: 8002}
         self.mock.from_env.return_value.containers.run.assert_called_once_with(
+            command=cmd,
+            name='tritonserver',
             image=triton_image,
             device_requests=[0],
             volumes=mock_volumes,
             ports=mock_ports,
             publish_all_ports=True,
-            tty=True,
-            stdin_open=True,
+            tty=False,
+            stdin_open=False,
             detach=True)
-
-        self._assert_docker_exec_run_with_args(cmd=cmd, stream=True)
-
-        # The return value should now be set to TEST_MEM as further calls to exec_run are in cpu_stats
-        self.mock.from_env.return_value.containers.run.return_value.exec_run.return_value = (
-            None, bytes(self.TEST_MEM, 'utf-8'))
 
     def raise_exception_on_container_run(self):
         """

@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import docker
 import logging
+from multiprocessing.pool import ThreadPool
 
 from .server import TritonServer
 from model_analyzer.model_analyzer_exceptions \
@@ -33,7 +33,7 @@ class TritonServerDocker(TritonServer):
     triton in a docker container.
     """
 
-    def __init__(self, image, config, gpus):
+    def __init__(self, image, config, gpus, log_path):
         """
         Parameters
         ----------
@@ -43,13 +43,15 @@ class TritonServerDocker(TritonServer):
             the config object containing arguments for this server instance
         gpus : list
             list of GPUs to be used
+        log_path: str
+            Absolute path to the triton log file
         """
 
         self._server_config = config
         self._docker_client = docker.from_env()
         self._tritonserver_image = image
         self._tritonserver_container = None
-        self._tritonserver_log_gen = None
+        self._log_path = log_path
         self._gpus = gpus
 
         assert self._server_config['model-repository'], \
@@ -91,15 +93,17 @@ class TritonServerDocker(TritonServer):
         }
 
         try:
-            # Run the docker container
+            # Run the docker container and run the command in the container
             self._tritonserver_container = self._docker_client.containers.run(
+                command='tritonserver ' + self._server_config.to_cli_string(),
+                name='tritonserver',
                 image=self._tritonserver_image,
                 device_requests=devices,
                 volumes=volumes,
                 ports=ports,
                 publish_all_ports=True,
-                tty=True,
-                stdin_open=True,
+                tty=False,
+                stdin_open=False,
                 detach=True)
         except docker.errors.APIError as error:
             if error.explanation.find('port is already allocated') != -1:
@@ -113,11 +117,22 @@ class TritonServerDocker(TritonServer):
             else:
                 raise error
 
-        # Run the command in the container
-        cmd = 'tritonserver ' + self._server_config.to_cli_string()
+        if self._log_path:
+            try:
+                self._log_file = open(self._log_path, 'a+')
+                self._log_pool = ThreadPool(processes=1)
+                self._log_pool.apply_async(self._logging_worker)
+            except OSError as e:
+                raise TritonModelAnalyzerException(e)
 
-        _, self._tritonserver_log_gen = \
-            self._tritonserver_container.exec_run(cmd=cmd, stream=True)
+    def _logging_worker(self):
+        """
+        streams logs to
+        log file
+        """
+
+        for chunk in self._tritonserver_container.logs(stream=True):
+            self._log_file.write(chunk.decode('utf-8'))
 
     def stop(self):
         """
@@ -128,23 +143,16 @@ class TritonServerDocker(TritonServer):
         logger.info('Stopping triton server.')
 
         if self._tritonserver_container is not None:
+            if self._log_path:
+                if self._log_pool:
+                    self._log_pool.terminate()
+                    self._log_pool.close()
+                if self._log_file:
+                    self._log_file.close()
             self._tritonserver_container.stop()
             self._tritonserver_container.remove(force=True)
-
             self._tritonserver_container = None
             self._docker_client.close()
-
-    def logs(self):
-        """
-        Retrieves the Triton server's stdout
-        as a str
-        """
-
-        logs = list(self._tritonserver_log_gen)
-        if logs:
-            return b''.join(logs).decode("utf-8")
-        else:
-            return ''
 
     def cpu_stats(self):
         """
