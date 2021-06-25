@@ -38,7 +38,7 @@ MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:$http_port --triton-grpc-
 MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PORTS --triton-metrics-url http://localhost:$metrics_port/metrics"
 TRITON_LAUNCH_MODES="local docker remote"
 CLIENT_PROTOCOLS="http grpc"
-TRITON_DOCKER_IMAGE="nvcr.io/nvidia/tritonserver:21.05-py3"
+TRITON_DOCKER_IMAGE="nvcr.io/nvidia/tritonserver:21.06-py3"
 
 mkdir $CHECKPOINT_DIRECTORY
 # cp $CHECKPOINT_REPOSITORY/server_launch_modes.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
