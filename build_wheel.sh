@@ -15,7 +15,7 @@
 
 PYTHON=${PYTHON:=`which python3`}
 
-if [[ $# -lt 2 ]] ; then
+if [[ "$1" == "-h" || "$1" == "--help" ]] ; then
     echo "usage: $0 <perf-analyzer-binary> <linux-specific>"
     exit 1
 fi
@@ -30,23 +30,33 @@ if [[ ! -f "LICENSE" ]]; then
     exit 1
 fi
 
-if [[ ! -f "$1" ]]; then
+if [[ -z "$1" ]]; then
+    echo "Path to perf_analyzer binary not provided. Checking PATH..."
+    if [[ -z "$(which perf_analyzer)" ]]; then
+        echo "Could not find perf_analyzer binary"
+        exit 1
+    else
+        PERF_ANALYZER_PATH="$(which perf_analyzer)"
+    fi
+elif [[ ! -f "$1" ]]; then
     echo "Could not find perf_analyzer binary"
     exit 1
+else
+    PERF_ANALYZER_PATH="${1}"
 fi
 
 WHLDIR="`pwd`/wheels"
 mkdir -p ${WHLDIR}
 
 # Copy required files into WHEELDIR temporarily
-cp $1 "${WHLDIR}"
+cp $PERF_ANALYZER_PATH "${WHLDIR}"
 cp VERSION "${WHLDIR}"
 cp LICENSE "${WHLDIR}"
 cp requirements.txt "${WHLDIR}"
 
 # Set platform and build wheel
 echo $(date) : "=== Building wheel"
-if [ "$2" = true ] ; then
+if [[ -z "$2" || "$2" = true ]]; then
     PLATFORM=`uname -m`
     if [ "$PLATFORM" = "aarch64" ] ; then
         PLATFORM_NAME="linux_aarch64"
