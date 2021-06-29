@@ -259,6 +259,7 @@ class MetricsManager:
             perf_analyzer = PerfAnalyzer(
                 path=self._config.perf_analyzer_path,
                 config=perf_config,
+                max_retries=self._config.perf_analyzer_max_auto_adjusts,
                 timeout=self._config.perf_analyzer_timeout,
                 max_cpu_util=self._config.perf_analyzer_cpu_util)
             status = perf_analyzer.run(self._perf_metrics)
@@ -332,7 +333,7 @@ class MetricsManager:
         """
 
         if self._config.triton_launch_mode != 'remote':
-            self._client.wait_for_server_ready(self._config.max_retries)
+            self._client.wait_for_server_ready(self._config.client_max_retries)
 
             model_analyzer_gpus = self._gpus
             triton_gpus = self._get_triton_metrics_gpus()
