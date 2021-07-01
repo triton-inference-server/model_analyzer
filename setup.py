@@ -31,7 +31,6 @@ if "--plat-name" in sys.argv:
 else:
     PLATFORM_FLAG = 'any'
 
-DEPENDENCY_DIR = ""
 
 
 def version(filename='VERSION'):
