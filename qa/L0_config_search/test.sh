@@ -31,6 +31,9 @@ FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 TRITON_LAUNCH_MODES="remote local"
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
+http_port="${PORTS[0]}"
+grpc_port="${PORTS[1]}"
+metrics_port="${PORTS[2]}"
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
@@ -59,7 +62,10 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         rm -rf results && mkdir -p results && rm -rf $OUTPUT_MODEL_REPOSITORY && rm -rf $CHECKPOINT_DIRECTORY/*
         set +e
 
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config --triton-launch-mode $launch_mode" 
+        MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]} --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config --triton-launch-mode $launch_mode"
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $MODEL_ANALYZER_PORTS"
+
         ANALYZER_LOG=analyzer.${launch_mode}.${config}.log
 
         if [ $launch_mode == 'remote' ]; then
@@ -68,7 +74,8 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
 
             # For remote launch, set server args and start server
             SERVER=`which tritonserver`
-            SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit"
+            SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
+            SERVER_HTTP_PORT="${http_port}"
 
             run_server
             if [ "$SERVER_PID" == "0" ]; then
@@ -77,8 +84,6 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
                 RET=1
             fi
         else
-            MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]} --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $MODEL_ANALYZER_PORTS"
             NUM_MODELS_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-models.txt
             NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-param.txt
         fi
