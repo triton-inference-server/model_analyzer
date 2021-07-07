@@ -24,7 +24,6 @@ class RunConfigGenerator:
     A class that handles ModelAnalyzerConfig parsing, generation, and
     exection of a list of run configurations.
     """
-
     def __init__(self, config, client):
         """
         Parameters
@@ -84,7 +83,7 @@ class RunConfigGenerator:
 
         analyzer_config = self._analyzer_config
         model_repository = analyzer_config['model_repository']
-        num_retries = analyzer_config['max_retries']
+        num_retries = analyzer_config['client_max_retries']
 
         if analyzer_config['triton_launch_mode'] != 'remote':
             model_config = ModelConfig.create_from_file(
@@ -199,8 +198,10 @@ class RunConfigGenerator:
 
         perf_config_params = {
             'model-name': [model_name],
-            'batch-size': config_model.parameters()['batch_sizes'],
-            'concurrency-range': config_model.parameters()['concurrency'],
+            'batch-size':
+            config_model.parameters()['batch_sizes'],
+            'concurrency-range':
+            config_model.parameters()['concurrency'],
             'protocol': [self._analyzer_config['client_protocol']],
             'url': [
                 self._analyzer_config['triton_http_endpoint']
@@ -211,7 +212,8 @@ class RunConfigGenerator:
         }
 
         perf_configs = []
-        for params in self._generate_parameter_combinations(perf_config_params):
+        for params in self._generate_parameter_combinations(
+                perf_config_params):
             perf_config = PerfAnalyzerConfig()
             perf_config.update_config(params)
             # User provided flags can override the search parameters

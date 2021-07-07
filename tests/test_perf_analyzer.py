@@ -28,7 +28,6 @@ from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.record.types.perf_latency import PerfLatency
-from model_analyzer.constants import MAX_INTERVAL_CHANGES
 from .common import test_result_collector as trc
 
 # Test Parameters
@@ -59,6 +58,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config = PerfAnalyzerConfig()
         self.config['model-name'] = TEST_MODEL_NAME
         self.config['measurement-interval'] = 1000
+        self.config['measurement-request-count'] = 50
 
         # Triton Server
         self.server = None
@@ -104,6 +104,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
                                      config=self.config,
+                                     max_retries=10,
                                      timeout=100,
                                      max_cpu_util=50)
         self.client = TritonClientFactory.create_grpc_client(
@@ -166,6 +167,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         perf_analyzer_config['measurement-mode'] = 'time_windows'
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
                                      config=self.config,
+                                     max_retries=10,
                                      timeout=100,
                                      max_cpu_util=50)
         self.client = TritonClientFactory.create_grpc_client(
@@ -179,8 +181,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.perf_mock.set_perf_analyzer_return_code(1)
         perf_metrics = [PerfThroughput, PerfLatency]
         perf_analyzer.run(perf_metrics)
-        self.assertTrue(self.perf_mock.get_perf_analyzer_popen_read_call_count(
-        ) == MAX_INTERVAL_CHANGES)
+        self.assertEqual(
+            self.perf_mock.get_perf_analyzer_popen_read_call_count(), 10)
 
     def test_measurement_request_count_increase(self):
         server_config = TritonServerConfig()
@@ -191,6 +193,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
                                      config=self.config,
+                                     max_retries=10,
                                      timeout=100,
                                      max_cpu_util=50)
         self.client = TritonClientFactory.create_grpc_client(
@@ -204,8 +207,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.perf_mock.set_perf_analyzer_return_code(1)
         perf_metrics = [PerfThroughput, PerfLatency]
         perf_analyzer.run(perf_metrics)
-        self.assertTrue(self.perf_mock.get_perf_analyzer_popen_read_call_count(
-        ) == MAX_INTERVAL_CHANGES)
+        self.assertEqual(
+            self.perf_mock.get_perf_analyzer_popen_read_call_count(), 10)
 
     def tearDown(self):
         # In case test raises exception

@@ -18,8 +18,6 @@ import logging
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
-logger = logging.getLogger(__name__)
-
 
 class TritonClient:
     """
@@ -77,9 +75,9 @@ class TritonClient:
 
         try:
             self._client.load_model(model_name)
-            logger.info(f'Model {model_name} loaded.')
+            logging.info(f'Model {model_name} loaded.')
         except Exception as e:
-            logger.info(f'Model {model_name} load failed: {e}')
+            logging.info(f'Model {model_name} load failed: {e}')
             return -1
 
     def unload_model(self, model_name):
@@ -101,9 +99,9 @@ class TritonClient:
 
         try:
             self._client.unload_model(model_name)
-            logger.info(f'Model {model_name} unloaded.')
+            logging.info(f'Model {model_name} unloaded.')
         except Exception as e:
-            logger.info(f'Model {model_name} unload failed: {e}')
+            logging.info(f'Model {model_name} unload failed: {e}')
             return -1
 
     def wait_for_model_ready(self, model_name, num_retries):
@@ -140,7 +138,7 @@ class TritonClient:
                 time.sleep(0.05)
                 retries -= 1
 
-        logger.info(
+        logging.info(
             f'Model readiness failed for model {model_name}. Error {error}')
         return -1
 

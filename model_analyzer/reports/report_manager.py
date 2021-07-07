@@ -308,7 +308,6 @@ class ReportManager:
                     str(measurement[1].perf_config()['batch-size'])
                     for measurement in self._summary_data[report_key]
                 ])))
-
         constraint_strs = self._build_constraint_strings()
         constraint_str = "None"
         if constraint_strs:

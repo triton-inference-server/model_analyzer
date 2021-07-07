@@ -22,7 +22,6 @@ class TestOutputValidator:
     Functions that validate the output
     of the test
     """
-
     def __init__(self, config, config_file, analyzer_log, test_name):
         self._config = config
         self._config_file = config_file
@@ -35,23 +34,43 @@ class TestOutputValidator:
         else:
             sys.exit(1)
 
-    def check_time_window_5000(self):
+    def check_time_window(self):
         """
         Look for no measurement window adjustment
         """
         with open(self._analyzer_log, "r") as f:
             if "perf_analyzer's measurement window is too small" in f.read():
+                print(
+                    "\n***\n*** Unexpected time window adjustment found.\n***")
                 return False
         return True
 
-    def check_time_window_50(self):
+    def check_time_window_adjust(self):
         """
         Look for measurement window adjustment
         """
+
         with open(self._analyzer_log, "r") as f:
-            if "measurement window is too small, increased to" in f.read():
-                return True
+            log_contents = f.read()
+
+        if log_contents.find(
+                "measurement window is too small, increased to") != -1:
+            return True
+        print("\n***\n*** Time window adjustment expected but not found.\n***")
         return False
+
+    def check_count_window(self):
+        """
+        Look for no request count adjustment
+        """
+
+        with open(self._analyzer_log, "r") as f:
+            if "perf_analyzer's measurement window is too small" in f.read():
+                print(
+                    "\n***\n*** Unexpected count window adjustment found.\n***"
+                )
+                return False
+        return True
 
 
 if __name__ == '__main__':

@@ -240,14 +240,14 @@ class ModelManager:
             except FileExistsError:
                 pass
 
-        self._client.wait_for_server_ready(self._config.max_retries)
+        self._client.wait_for_server_ready(self._config.client_max_retries)
 
         if self._client.load_model(model_name=variant_name) == -1:
             return False
 
         if self._client.wait_for_model_ready(
                 model_name=variant_name,
-                num_retries=self._config.max_retries) == -1:
+                num_retries=self._config.client_max_retries) == -1:
             return False
         return True
 

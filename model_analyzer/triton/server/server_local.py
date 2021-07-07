@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from io import StringIO
 from .server import TritonServer
 from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.constants import SERVER_OUTPUT_TIMEOUT_SECS
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 from subprocess import Popen, DEVNULL, STDOUT, TimeoutExpired
 import psutil
@@ -30,7 +31,6 @@ class TritonServerLocal(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     tritonserver locally as as subprocess.
     """
-
     def __init__(self, path, config, gpus, log_path):
         """
         Parameters
@@ -71,7 +71,10 @@ class TritonServerLocal(TritonServer):
                     [visible_gpus[uuid] for uuid in self._gpus])
 
             if self._log_path:
-                self._log_file = open(self._log_path, 'a+')
+                try:
+                    self._log_file = open(self._log_path, 'a+')
+                except OSError as e:
+                    raise TritonModelAnalyzerException(e)
             else:
                 self._log_file = DEVNULL
             self._tritonserver_process = Popen(cmd,

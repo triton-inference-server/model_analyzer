@@ -54,11 +54,20 @@ fi
 RET=0
 
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
-    TEST_NAME="time_window_5000"
-    if [ $CONFIG_FILE = "config-time-window-50.yml" ]; then
+    if [[ "$CONFIG_FILE" == *"no-adjust"* ]]; then
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
+        if [[ "$CONFIG_FILE" = *"time"* ]]; then
+            TEST_NAME="time_window"
+        else
+            TEST_NAME="count_window"
+        fi
+    else
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE --perf-output=True"
-        TEST_NAME="time_window_50"
+        if [[ "$CONFIG_FILE" = *"time"* ]]; then
+            TEST_NAME="time_window_adjust"
+        else
+            TEST_NAME="count_window_adjust"
+        fi
     fi
 
     set +e
@@ -78,7 +87,8 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         fi
     fi
 
-    rm -f $ANALYZER_LOG && rm -f checkpoints/*
+    rm -f $ANALYZER_LOG
+    rm -f checkpoints/*
 
     set -e
 done

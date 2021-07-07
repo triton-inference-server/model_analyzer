@@ -25,22 +25,20 @@ class TestConfigGenerator:
     TO ADD A TEST: Simply add a member function whose name starts
                     with 'generate'.
     """
-
     def __init__(self):
         test_functions = [
-            self.__getattribute__(name)
-            for name in dir(self)
+            self.__getattribute__(name) for name in dir(self)
             if name.startswith('generate')
         ]
 
         for test_function in test_functions:
-            self.setup()
+            self.setUp()
             test_function()
 
-    def setup(self):
+    def setUp(self):
         pass
 
-    def generate_time_window_5000(self):
+    def generate_time_window_no_adjust(self):
         model_config = {
             'analysis_models': ['vgg19_libtorch'],
             'profile_models': ['vgg19_libtorch'],
@@ -49,10 +47,10 @@ class TestConfigGenerator:
                 'measurement-interval': 5000
             }
         }
-        with open('./config-time-window-5000.yml', 'w') as f:
+        with open('./config-time-no-adjust.yml', 'w') as f:
             yaml.dump(model_config, f)
 
-    def generate_time_window_50(self):
+    def generate_time_window_adjust(self):
         model_config = {
             'analysis_models': ['vgg19_libtorch'],
             'profile_models': ['vgg19_libtorch'],
@@ -61,7 +59,19 @@ class TestConfigGenerator:
                 'measurement-interval': 50
             }
         }
-        with open('./config-time-window-50.yml', 'w') as f:
+        with open('./config-time-adjust.yml', 'w') as f:
+            yaml.dump(model_config, f)
+
+    def generate_count_window_no_adjust(self):
+        model_config = {
+            'analysis_models': ['vgg19_libtorch'],
+            'profile_models': ['vgg19_libtorch'],
+            'perf_analyzer_flags': {
+                'measurement-mode': 'count_windows',
+                'measurement-interval': 50
+            }
+        }
+        with open('./config-count-no-adjust.yml', 'w') as f:
             yaml.dump(model_config, f)
 
 

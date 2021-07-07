@@ -32,12 +32,12 @@ from .config_defaults import \
     DEFAULT_GPUS, DEFAULT_MAX_RETRIES, \
     DEFAULT_MONITORING_INTERVAL, DEFAULT_OFFLINE_OBJECTIVES, \
     DEFAULT_OUTPUT_MODEL_REPOSITORY, DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG, \
-    DEFAULT_PERF_ANALYZER_CPU_UTIL, DEFAULT_PERF_ANALYZER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT, \
+    DEFAULT_PERF_ANALYZER_CPU_UTIL, DEFAULT_PERF_ANALYZER_PATH, DEFAULT_PERF_MAX_AUTO_ADJUSTS, \
     DEFAULT_PERF_OUTPUT_FLAG, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, \
     DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MAX_PREFERRED_BATCH_SIZE, \
     DEFAULT_RUN_CONFIG_SEARCH_DISABLE, DEFAULT_TRITON_DOCKER_IMAGE, DEFAULT_TRITON_GRPC_ENDPOINT, \
     DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_TRITON_METRICS_URL, \
-    DEFAULT_TRITON_SERVER_PATH
+    DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT
 
 from .objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.triton.server.server_config import \
@@ -375,12 +375,13 @@ class ConfigCommandProfile(ConfigCommand):
         """
         self._add_config(
             ConfigField(
-                'max_retries',
-                flags=['-r', '--max-retries'],
+                'client_max_retries',
+                flags=['-r', '--client-max-retries'],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_MAX_RETRIES,
                 description=
-                'Specifies the max number of retries for any retry attempt'))
+                'Specifies the max number of retries for any requests to Triton server.'
+            ))
         self._add_config(
             ConfigField(
                 'client_protocol',
@@ -537,6 +538,14 @@ class ConfigCommandProfile(ConfigCommand):
                         default_value=DEFAULT_PERF_OUTPUT_FLAG,
                         description=
                         'Enables the output from the perf_analyzer to stdout'))
+        self._add_config(
+            ConfigField(
+                'perf_analyzer_max_auto_adjusts',
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_PERF_MAX_AUTO_ADJUSTS,
+                description="Maximum number of times perf_analyzer is "
+                "launched with auto adjusted parameters in an attempt to profile a model. "
+            ))
 
     def _preprocess_and_verify_arguments(self):
         """

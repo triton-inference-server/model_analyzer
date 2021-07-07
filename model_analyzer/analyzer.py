@@ -96,7 +96,7 @@ class Analyzer:
 
         # Get metrics for server only
         self._server.start()
-        client.wait_for_server_ready(self._config.max_retries)
+        client.wait_for_server_ready(self._config.client_max_retries)
         self._metrics_manager.profile_server()
         self._server.stop()
 
