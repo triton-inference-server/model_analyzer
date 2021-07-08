@@ -43,7 +43,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
 
     def test_record_memory(self):
         # One measurement every 0.01 seconds
-        frequency = 0.01
+        frequency = 1
         monitoring_time = 10
         metrics = [GPUUsedMemory, GPUFreeMemory]
         gpus = ['all']
@@ -76,7 +76,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
 
     def test_record_power(self):
         # One measurement every 0.01 seconds
-        frequency = 0.01
+        frequency = 1
         monitoring_time = 10
         metrics = [GPUPowerUsage]
         gpus = ['all']
@@ -102,7 +102,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
 
     def test_record_utilization(self):
         # One measurement every 0.01 seconds
-        frequency = 0.01
+        frequency = 1
         monitoring_time = 10
         metrics = [GPUUtilization]
         gpus = ['all']
@@ -128,7 +128,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
         dcgm_monitor.destroy()
 
     def test_immediate_start_stop(self):
-        frequency = 0.01
+        frequency = 1
         metrics = [GPUUsedMemory, GPUFreeMemory]
         gpus = ['all']
         dcgm_monitor = DCGMMonitor(gpus, frequency, metrics)
@@ -137,7 +137,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
         dcgm_monitor.destroy()
 
     def test_gpu_uuid(self):
-        frequency = 0.01
+        frequency = 1
         metrics = [GPUUsedMemory, GPUFreeMemory]
         gpus = ['UndefinedId']
         with self.assertRaises(TritonModelAnalyzerException):

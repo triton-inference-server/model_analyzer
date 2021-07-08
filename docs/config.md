@@ -84,7 +84,7 @@ profile_models: <comma-delimited-string-list>
 [ duration_seconds: <int> | default: 5 ]
 
 # Duration of waiting time between each metric measurement in seconds
-[ monitoring_interval: <float> | default: 0.01 ]
+[ monitoring_interval: <float> | default: 1 ]
 
 # The protocol used to communicate with the Triton Inference Server. Only 'http' and 'grpc' are allowed for the values.
 [ client_protocol: <string> | default: grpc ]

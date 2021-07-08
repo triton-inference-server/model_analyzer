@@ -40,7 +40,7 @@ class TestCPUMonitor(trc.TestResultCollector):
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
         gpus = ['all']
 
-        frequency = 0.01
+        frequency = 1
         monitoring_time = 10
         metrics = [CPUAvailableRAM, CPUUsedRAM]
 
