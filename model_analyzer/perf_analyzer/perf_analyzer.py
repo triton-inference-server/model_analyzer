@@ -205,8 +205,7 @@ class PerfAnalyzer:
                     'measurement-mode'] == 'count_windows':
                 if self._config['measurement-request-count'] is None:
                     self._config[
-                        'measurement-request-count'] = PERF_ANALYZER_MINIMUM_REQUEST_COUNT + int(
-                            self._config['measurement-request-count'])
+                        'measurement-request-count'] = PERF_ANALYZER_MINIMUM_REQUEST_COUNT + MEASUREMENT_REQUEST_COUNT_STEP
                 else:
                     self._config['measurement-request-count'] = int(
                         self._config['measurement-request-count']
