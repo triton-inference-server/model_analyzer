@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020,21 NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -154,6 +154,9 @@ CURRENT_GPUS=(${GPUS[2]})
 run_server_launch_modes "$CURRENT_GPUS"
 
 CURRENT_GPUS=${GPUS[@]:1}
+run_server_launch_modes "$CURRENT_GPUS"
+
+CURRENT_GPUS=""
 run_server_launch_modes "$CURRENT_GPUS"
 
 rm -rf $CHECKPOINT_DIRECTORY
