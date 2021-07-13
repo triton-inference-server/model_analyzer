@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020,21 NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,8 +41,8 @@ class TritonServerDocker(TritonServer):
             The tritonserver docker image to pull and run
         config : TritonServerConfig
             the config object containing arguments for this server instance
-        gpus : list
-            list of GPUs to be used
+        gpus : list of str
+            List of GPU UUIDs to be mounted in the container
         log_path: str
             Absolute path to the triton log file
         """
@@ -62,11 +62,9 @@ class TritonServerDocker(TritonServer):
         Starts the tritonserver docker container using docker-py
         """
 
-        if len(self._gpus) == 1 and self._gpus[0] == 'all':
-            devices = [
-                docker.types.DeviceRequest(count=-1, capabilities=[['gpu']])
-            ]
-        else:
+        # List GPUs to be mounted inside docker container
+        devices = []
+        if len(self._gpus):
             devices = [
                 docker.types.DeviceRequest(device_ids=self._gpus,
                                            capabilities=[['gpu']])
