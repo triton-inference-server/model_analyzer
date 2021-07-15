@@ -18,18 +18,12 @@ from .mock_base import MockBase
 
 class MockGPUDeviceFactory(MockBase):
 
-    def __init__(self):
-        self._cuda_visible_gpus = ["GPU_1", "GPU_2"]
+    def __init__(self, gpus):
+        self._cuda_visible_gpus = gpus
         super().__init__()
 
     def _fill_patchers(self):
-        self._patchers.append(patch("model_analyzer.device.gpu_device_factory.GPUDeviceFactory.get_cuda_visible_gpus", 
-                                    MagicMock(return_value=dict.fromkeys(self._cuda_visible_gpus))))
-    
-    def get_cuda_visible_gpus(self):
-        return self._cuda_visible_gpus[:]
-    
-    def verify_requested_gpus(self, requested_gpus):
-        if len(requested_gpus) == 1 and requested_gpus[0] == 'all':
-            return self._cuda_visible_gpus[:]
-        return list(set(self._cuda_visible_gpus) & set(requested_gpus))
+        self._patchers.append(
+            patch(
+                "model_analyzer.device.gpu_device_factory.GPUDeviceFactory.get_cuda_visible_gpus",
+                MagicMock(return_value=dict.fromkeys(self._cuda_visible_gpus))))
