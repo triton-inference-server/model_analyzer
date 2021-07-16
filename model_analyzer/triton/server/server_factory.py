@@ -33,7 +33,7 @@ class TritonServerFactory:
         config : TritonServerConfig
             the config object containing arguments for this server instance
         gpus : list of str
-            List of GPU UUIDs to be mounted in the container
+            List of GPU UUIDs to be mounted and used in the container
             Use ["all"] to include all GPUs
         log_path: str
             Absolute path to the triton log file

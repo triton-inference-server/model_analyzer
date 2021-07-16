@@ -42,7 +42,7 @@ class TritonServerDocker(TritonServer):
         config : TritonServerConfig
             the config object containing arguments for this server instance
         gpus : list of str
-            List of GPU UUIDs to be mounted in the container
+            List of GPU UUIDs to be mounted and used in the container
         log_path: str
             Absolute path to the triton log file
         """
@@ -62,13 +62,16 @@ class TritonServerDocker(TritonServer):
         Starts the tritonserver docker container using docker-py
         """
 
-        # List GPUs to be mounted inside docker container
+        # List GPUs to be mounted and used inside docker container
         devices = []
         if len(self._gpus):
             devices = [
                 docker.types.DeviceRequest(device_ids=self._gpus,
                                            capabilities=[['gpu']])
             ]
+        environment = {
+            'CUDA_VISIBLE_DEVICES': ','.join([uuid for uuid in self._gpus])
+        }
 
         # Mount required directories
         volumes = {
@@ -97,6 +100,7 @@ class TritonServerDocker(TritonServer):
                 name='tritonserver',
                 image=self._tritonserver_image,
                 device_requests=devices,
+                environment=environment,
                 volumes=volumes,
                 ports=ports,
                 publish_all_ports=True,

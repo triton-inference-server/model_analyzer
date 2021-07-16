@@ -162,8 +162,8 @@ class TestTritonServerMethods(trc.TestResultCollector):
         self.server.start()
         self.server_docker_mock.assert_server_process_start_called_with(
             f"{TRITON_DOCKER_BIN_PATH} {server_config.to_cli_string()}",
-            MODEL_REPOSITORY_PATH, TRITON_IMAGE, device_requests, 8000, 8001,
-            8002)
+            MODEL_REPOSITORY_PATH, TRITON_IMAGE, device_requests, gpu_uuids,
+            8000, 8001, 8002)
 
         self.server_docker_mock.raise_exception_on_container_run()
         with self.assertRaises(TritonModelAnalyzerException):
@@ -249,8 +249,8 @@ class TestTritonServerMethods(trc.TestResultCollector):
         # The following needs to be called as it resets exec_run return value
         self.server_docker_mock.assert_server_process_start_called_with(
             f'{TRITON_DOCKER_BIN_PATH} {server_config.to_cli_string()}',
-            MODEL_REPOSITORY_PATH, TRITON_IMAGE, device_requests, 8000, 8001,
-            8002)
+            MODEL_REPOSITORY_PATH, TRITON_IMAGE, device_requests, gpu_uuids,
+            8000, 8001, 8002)
         _, _ = self.server.cpu_stats()
         self.server_docker_mock.assert_cpu_stats_called()
         self.server.stop()
