@@ -23,6 +23,7 @@ class MockServerLocalMethods(MockServerMethods):
     model_analyzer/triton/server/server_local.py.
     Provides functions to check operation.
     """
+
     def __init__(self):
         memory_full_attrs = {'uss': 0}
         virtual_memory_attrs = {'available': 0}
@@ -34,8 +35,7 @@ class MockServerLocalMethods(MockServerMethods):
             'virtual_memory': Mock(return_value=Mock(**virtual_memory_attrs))
         }
         Popen_attrs = {
-            'communicate.return_value':
-            ('Triton Server Test Log', 'Test Error')
+            'communicate.return_value': ('Triton Server Test Log', 'Test Error')
         }
         self.patcher_popen = patch(
             'model_analyzer.triton.server.server_local.Popen',
@@ -69,18 +69,21 @@ class MockServerLocalMethods(MockServerMethods):
         self._patchers.append(self.patcher_pipe)
         self._patchers.append(self.patcher_psutil)
 
-    def assert_server_process_start_called_with(self, cmd):
+    def assert_server_process_start_called_with(self, cmd, gpu_uuids):
         """
         Asserts that Popen was called
         with the cmd provided.
         """
+
+        env = os.environ.copy()
+        env["CUDA_VISIBLE_DEVICES"] = ','.join([uuid for uuid in gpu_uuids])
 
         self.popen_mock.assert_called_once_with(cmd,
                                                 stdout=self.pipe_mock,
                                                 stderr=self.stdout_mock,
                                                 start_new_session=True,
                                                 universal_newlines=True,
-                                                env=os.environ.copy())
+                                                env=env)
 
     def assert_server_process_terminate_called(self):
         """

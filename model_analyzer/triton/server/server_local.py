@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020,21 NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from .server import TritonServer
-from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.constants import SERVER_OUTPUT_TIMEOUT_SECS
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
@@ -31,6 +30,7 @@ class TritonServerLocal(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     tritonserver locally as as subprocess.
     """
+
     def __init__(self, path, config, gpus, log_path):
         """
         Parameters
@@ -40,7 +40,7 @@ class TritonServerLocal(TritonServer):
         config : TritonServerConfig
             the config object containing arguments for this server instance
         gpus: list of str
-            List of strings of GPU UUIDs that should be made visible to Triton
+            List of GPU UUIDs to be made visible to Triton
         log_path: str
             Absolute path to the triton log file
         """
@@ -62,13 +62,11 @@ class TritonServerLocal(TritonServer):
         if self._server_path:
             # Create command list and run subprocess
             cmd = [self._server_path]
-            cmd += self._server_config.to_cli_string().replace('=',
-                                                               ' ').split()
+            cmd += self._server_config.to_cli_string().replace('=', ' ').split()
+            # List GPUs to be used by tritonserver
             triton_env = os.environ.copy()
-            if len(self._gpus) >= 1 and self._gpus[0] != 'all':
-                visible_gpus = GPUDeviceFactory.get_cuda_visible_gpus()
-                triton_env['CUDA_VISIBLE_DEVICES'] = ','.join(
-                    [visible_gpus[uuid] for uuid in self._gpus])
+            triton_env['CUDA_VISIBLE_DEVICES'] = ','.join(
+                [uuid for uuid in self._gpus])
 
             if self._log_path:
                 try:

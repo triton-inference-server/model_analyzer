@@ -18,7 +18,6 @@ from .model_analyzer_exceptions import TritonModelAnalyzerException
 from .triton.server.server_factory import TritonServerFactory
 from .triton.server.server_config import TritonServerConfig
 from .triton.client.client_factory import TritonClientFactory
-from .device.gpu_device_factory import GPUDeviceFactory
 from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
 from .config.input.config_command_analyze import ConfigCommandAnalyze
@@ -73,8 +72,8 @@ def get_server_handle(config):
         logging.info('Using remote Triton Server...')
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config,
-                                                         gpus=None,
-                                                         log_path=None)
+                                                         gpus=[],
+                                                         log_path="")
         logging.warning(
             'GPU memory metrics reported in the remote mode are not'
             ' accuracte. Model Analyzer uses Triton explicit model control to'
@@ -92,8 +91,7 @@ def get_server_handle(config):
         triton_config['model-repository'] = config.output_model_repository_path
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
-        triton_config['metrics-port'] = urlparse(
-            config.triton_metrics_url).port
+        triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
         logging.info('Starting a local Triton Server...')
         server = TritonServerFactory.create_server_local(
@@ -108,14 +106,13 @@ def get_server_handle(config):
             config.output_model_repository_path)
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
-        triton_config['metrics-port'] = urlparse(
-            config.triton_metrics_url).port
+        triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
         logging.info('Starting a Triton Server using docker...')
         server = TritonServerFactory.create_server_docker(
             image=config.triton_docker_image,
             config=triton_config,
-            gpus=GPUDeviceFactory.verify_requested_gpus(config.gpus),
+            gpus=config.gpus,
             log_path=config.triton_output_path)
     else:
         raise TritonModelAnalyzerException(
@@ -178,10 +175,9 @@ def get_cli_and_config_options():
             help=
             'Collect and sort profiling results and generate data and summaries.',
             config=config_analyze)
-        cli.add_subcommand(
-            cmd='report',
-            help='Generate detailed reports for a single config',
-            config=config_report)
+        cli.add_subcommand(cmd='report',
+                           help='Generate detailed reports for a single config',
+                           config=config_report)
         return cli.parse()
 
     except TritonModelAnalyzerException as e:

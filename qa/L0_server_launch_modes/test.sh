@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020,21 NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -48,12 +48,13 @@ RET=0
 
 function convert_gpu_array_to_flag() {
     gpu_array=($@)
-    if [ ! -z "${gpu_array[0]}" ]; then
+    if [ "$gpu_array" == "empty_gpu_flag" ]; then
+        echo "--gpus []"
+    elif [ ! -z "${gpu_array[0]}" ]; then
         gpus_flag="--gpus "
         for gpu in ${gpu_array[@]}; do
             gpus_flag="${gpus_flag}${gpu},"
         done
-
         # Remove trailing comma
         gpus_flag=${gpus_flag::-1}
         echo $gpus_flag
@@ -115,7 +116,9 @@ function run_server_launch_modes() {
                 fi
             fi
 
-            if [ -z "$gpus" ]; then
+            if [ "$gpus" == "empty_gpu_flag" ]; then
+                python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus ""
+            elif [ -z "$gpus" ]; then
                 python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${GPUS[@]} | sed "s/ /,/g"` --check-visible
             else
                 python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${gpus[@]} | sed "s/ /,/g"`
@@ -154,6 +157,9 @@ CURRENT_GPUS=(${GPUS[2]})
 run_server_launch_modes "$CURRENT_GPUS"
 
 CURRENT_GPUS=${GPUS[@]:1}
+run_server_launch_modes "$CURRENT_GPUS"
+
+CURRENT_GPUS="empty_gpu_flag"
 run_server_launch_modes "$CURRENT_GPUS"
 
 rm -rf $CHECKPOINT_DIRECTORY

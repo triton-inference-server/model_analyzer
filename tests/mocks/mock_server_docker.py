@@ -30,15 +30,15 @@ class MockServerDockerMethods(MockServerMethods):
     def __init__(self):
         docker_container_attrs = {
             'exec_run':
-            MagicMock(return_value=(None, bytes(self.TEST_MEM, 'utf-8'))),
+                MagicMock(return_value=(None, bytes(self.TEST_MEM, 'utf-8'))),
             'stats':
-            Mock(return_value={
-                'memory_stats': {
-                    'usage': 0.0,
-                    'max_usage': 0.0,
-                    'limits': 0.0
-                }
-            })
+                Mock(return_value={
+                    'memory_stats': {
+                        'usage': 0.0,
+                        'max_usage': 0.0,
+                        'limits': 0.0
+                    }
+                })
         }
         docker_client_attrs = {
             'containers.run': Mock(return_value=Mock(**docker_container_attrs))
@@ -88,6 +88,8 @@ class MockServerDockerMethods(MockServerMethods):
                                                 cmd,
                                                 model_repository_path,
                                                 triton_image,
+                                                device_requests,
+                                                gpu_uuids,
                                                 http_port=8000,
                                                 grpc_port=8001,
                                                 metrics_port=8002):
@@ -98,6 +100,9 @@ class MockServerDockerMethods(MockServerMethods):
 
         self._assert_docker_initialized()
 
+        environment = {
+            'CUDA_VISIBLE_DEVICES': ','.join([uuid for uuid in gpu_uuids])
+        }
         mock_volumes = {
             model_repository_path: {
                 'bind': model_repository_path,
@@ -109,7 +114,8 @@ class MockServerDockerMethods(MockServerMethods):
             command=cmd,
             name='tritonserver',
             image=triton_image,
-            device_requests=[0],
+            device_requests=device_requests,
+            environment=environment,
             volumes=mock_volumes,
             ports=mock_ports,
             publish_all_ports=True,
