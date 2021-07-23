@@ -141,7 +141,7 @@ profile_models: <comma-delimited-string-list>
 # Maximum instance count used for the automatic config search.
 [ run_config_search_max_instance_count: <int> | default: 5 ]
 
-# Maximum instance count used for the automatic config search.
+# Maximum preferred batch size used for the automatic config search.
 [ run_config_search_max_preferred_batch_size: <int> | default: 16 ]
 
 # Disables automatic config search
