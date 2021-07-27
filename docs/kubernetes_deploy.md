@@ -79,7 +79,7 @@ images:
 
   triton:
     image: nvcr.io/nvidia/tritonserver
-    tag: 21.06-py3
+    tag: 21.07-py3
 ```
 
 The model analyzer executable uses the config file defined in `helm-chart/templates/config-map.yaml`. This config can be modified to supply arguments to model analyzer. Only the content under the `config.yaml` section of the file should be modified.
