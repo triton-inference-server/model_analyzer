@@ -72,7 +72,7 @@ class TestConfigGenerator:
             "inference_output_fields": [
                 "model_name", "batch_size", "concurrency", "model_config_path",
                 "instance_group", "dynamic_batch_sizes",
-                "satisfies_constraints", "perf_throughput", "perf_latency",
+                "satisfies_constraints", "perf_throughput", "perf_latency_p99",
                 "cpu_used_ram"
             ]
         }

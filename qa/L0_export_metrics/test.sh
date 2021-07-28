@@ -32,7 +32,7 @@ FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 GPUS=(`get_all_gpus_uuids`)
 CHECKPOINT_DIRECTORY="."
 
-cp $CHECKPOINT_REPOSITORY/export_metrics.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
+cp $CHECKPOINT_REPOSITORY/export_metrics_p9x.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
 MODEL_ANALYZER_ARGS="-e $EXPORT_PATH --analysis-models $MODEL_NAMES --checkpoint-directory $CHECKPOINT_DIRECTORY --summarize=False --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"

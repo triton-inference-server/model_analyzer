@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,16 +19,18 @@ from .common import test_result_collector as trc
 
 
 class TestRecordAggregatorMethods(trc.TestResultCollector):
+
     def setUp(self):
         record_types = RecordType.get_all_record_types()
         self.all_record_types = record_types.values()
         self.less_is_better_types = {
-            record_types[k]
-            for k in ['perf_latency', 'gpu_used_memory', 'cpu_used_ram']
+            record_types[k] for k in [
+                'perf_latency_avg', 'perf_latency_p90', 'perf_latency_p95',
+                'perf_latency_p99', 'gpu_used_memory', 'cpu_used_ram'
+            ]
         }
         self.more_is_better_types = {
-            record_types[k]
-            for k in [
+            record_types[k] for k in [
                 'perf_throughput', 'gpu_free_memory', 'gpu_utilization',
                 'cpu_available_ram'
             ]

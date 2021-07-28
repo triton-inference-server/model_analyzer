@@ -38,12 +38,13 @@ class MetricsManager:
     """
 
     metrics = [
-        "perf_throughput", "perf_latency", "perf_client_response_wait",
-        "perf_client_send_recv", "perf_server_queue",
-        "perf_server_compute_input", "perf_server_compute_infer",
-        "perf_server_compute_output", "gpu_used_memory", "gpu_free_memory",
-        "gpu_utilization", "gpu_power_usage", "cpu_available_ram",
-        "cpu_used_ram"
+        "perf_throughput", "perf_latency_avg", "perf_latency_p90",
+        "perf_latency_p95", "perf_latency_p99", "perf_latency",
+        "perf_client_response_wait", "perf_client_send_recv",
+        "perf_server_queue", "perf_server_compute_input",
+        "perf_server_compute_infer", "perf_server_compute_output",
+        "gpu_used_memory", "gpu_free_memory", "gpu_utilization",
+        "gpu_power_usage", "cpu_available_ram", "cpu_used_ram"
     ]
 
     def __init__(self, config, client, server, result_manager, state_manager):

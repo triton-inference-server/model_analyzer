@@ -31,7 +31,7 @@ CHECKPOINT_DIRECTORY="./checkpoints"
 
 # Create results/checkpoints directories
 mkdir $EXPORT_PATH
-mkdir $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/analyze.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
+mkdir $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/analyze_p9x.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
 # Run the analyzer and check the results
 RET=0

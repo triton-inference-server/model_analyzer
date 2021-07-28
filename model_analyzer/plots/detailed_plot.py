@@ -58,8 +58,9 @@ class DetailedPlot:
         self._ax_throughput = self._ax_latency.twinx()
 
         latency_axis_label, throughput_axis_label = [
-            metric.header(aggregation_tag='') for metric in
-            MetricsManager.get_metric_types(['perf_latency', 'perf_throughput'])
+            metric.header(aggregation_tag='')
+            for metric in MetricsManager.get_metric_types(
+                ['perf_latency_p99', 'perf_throughput'])
         ]
 
         self._bar_colors = {

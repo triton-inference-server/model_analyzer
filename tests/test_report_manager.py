@@ -37,6 +37,7 @@ import unittest
 
 
 class TestReportManagerMethods(trc.TestResultCollector):
+
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
@@ -64,7 +65,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             client_protocol: grpc
             export_path: /test/export/path
             constraints:
-              perf_latency:
+              perf_latency_p99:
                 max: 100
         """
         config = self._evaluate_config(args, yaml_content)
@@ -134,7 +135,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             for i in range(10):
                 avg_non_gpu_metrics = {
                     "perf_throughput": 100 + 10 * i,
-                    "perf_latency": 4000,
+                    "perf_latency_p99": 4000,
                     "cpu_used_ram": 1000
                 }
                 self._add_result_measurement(f"test_model1_report_{i}",
@@ -145,7 +146,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             for i in range(5):
                 avg_non_gpu_metrics = {
                     "perf_throughput": 200 + 10 * i,
-                    "perf_latency": 4000,
+                    "perf_latency_p99": 4000,
                     "cpu_used_ram": 1000
                 }
                 self._add_result_measurement(f"test_model2_report_{i}",
@@ -180,7 +181,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             for i in range(10, 0, -1):
                 avg_non_gpu_metrics = {
                     "perf_throughput": 100 + 10 * i,
-                    "perf_latency": 4000,
+                    "perf_latency_p99": 4000,
                     "cpu_used_ram": 1000
                 }
                 self._add_result_measurement(f"model_{i}", "test_model",
@@ -212,8 +213,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             for i in range(9):
                 current_row = summary_table.get_row_by_index(i)
                 next_row = summary_table.get_row_by_index(i + 1)
-                self.assertEqual(current_row[model_name_index],
-                                 f"model_{10-i}")
+                self.assertEqual(current_row[model_name_index], f"model_{10-i}")
                 self.assertGreaterEqual(current_row[throughput_index],
                                         next_row[throughput_index])
 

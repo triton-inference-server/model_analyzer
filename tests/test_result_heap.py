@@ -22,19 +22,19 @@ from random import sample
 
 
 class TestResultHeapMethods(trc.TestResultCollector):
+
     def setUp(self):
-        objective_spec = {'perf_throughput': 10, 'perf_latency': 5}
+        objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
         self.result_heap = ResultHeap()
         self.result_comparator = ResultComparator(
             metric_objectives=objective_spec)
 
     def test_empty(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
-        avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency': 4000}
-        result = construct_result(
-            avg_gpu_metric_values=avg_gpu_metrics,
-            avg_non_gpu_metric_values=avg_non_gpu_metrics,
-            comparator=self.result_comparator)
+        avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency_p99': 4000}
+        result = construct_result(avg_gpu_metric_values=avg_gpu_metrics,
+                                  avg_non_gpu_metric_values=avg_non_gpu_metrics,
+                                  comparator=self.result_comparator)
         self.assertTrue(self.result_heap.empty())
         self.result_heap.add_result(result=result)
         self.assertFalse(self.result_heap.empty())
@@ -43,7 +43,7 @@ class TestResultHeapMethods(trc.TestResultCollector):
 
     def test_add_results(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
-        avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency': 4000}
+        avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency_p99': 4000}
         for _ in range(10):
             self.result_heap.add_result(
                 construct_result(avg_gpu_metric_values=avg_gpu_metrics,
@@ -58,15 +58,14 @@ class TestResultHeapMethods(trc.TestResultCollector):
         for i in range(10, 0, -1):
             avg_non_gpu_metrics = {
                 'perf_throughput': 100 + 10 * i,
-                'perf_latency': 4000
+                'perf_latency_p99': 4000
             }
             self.result_heap.add_result(
                 construct_result(avg_gpu_metric_values=avg_gpu_metrics,
                                  avg_non_gpu_metric_values=avg_non_gpu_metrics,
                                  comparator=self.result_comparator,
                                  model_name=str(i)))
-        self.assertEqual(self.result_heap.next_best_result().model_name(),
-                         '10')
+        self.assertEqual(self.result_heap.next_best_result().model_name(), '10')
         self.assertEqual(self.result_heap.next_best_result().model_name(), '9')
         self.assertEqual(self.result_heap.next_best_result().model_name(), '8')
         self.assertEqual(self.result_heap.next_best_result().model_name(), '7')
@@ -76,7 +75,7 @@ class TestResultHeapMethods(trc.TestResultCollector):
         for i in sample(range(10), 10):
             avg_non_gpu_metrics = {
                 'perf_throughput': 100 + 10 * i,
-                'perf_latency': 4000
+                'perf_latency_p99': 4000
             }
             self.result_heap.add_result(
                 construct_result(avg_gpu_metric_values=avg_gpu_metrics,

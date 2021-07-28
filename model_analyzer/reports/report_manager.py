@@ -458,7 +458,7 @@ class ReportManager:
                 row = [
                     model_config.get_field('name'),
                     model_config.dynamic_batching_string(), instance_group_str,
-                    measurement.get_metric_value('perf_latency'),
+                    measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_throughput'),
                     measurement.get_metric_value('cpu_used_ram'),
                     measurement.get_metric_value('gpu_used_memory'),
@@ -471,7 +471,7 @@ class ReportManager:
                 row = [
                     model_config.get_field('name'),
                     model_config.dynamic_batching_string(), instance_group_str,
-                    measurement.get_metric_value('perf_latency'),
+                    measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_throughput'),
                     measurement.get_metric_value('cpu_used_ram')
                 ]
@@ -485,7 +485,7 @@ class ReportManager:
 
         model_config, measurements = self._detailed_report_data[
             model_config_name]
-        sort_by_tag = 'perf_latency' if self._mode == 'online' else 'perf_throughput'
+        sort_by_tag = 'perf_latency_p99' if self._mode == 'online' else 'perf_throughput'
         measurements = sorted(measurements,
                               key=lambda x: x.get_metric_value(sort_by_tag),
                               reverse=True)
@@ -516,7 +516,7 @@ class ReportManager:
             for measurement in measurements:
                 row = [
                     measurement.get_parameter(first_column_tag),
-                    measurement.get_metric_value('perf_latency'),
+                    measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_client_response_wait'),
                     measurement.get_metric_value('perf_server_queue'),
                     measurement.get_metric_value('perf_server_compute_input'),
@@ -531,7 +531,7 @@ class ReportManager:
             for measurement in measurements:
                 row = [
                     measurement.get_parameter(first_column_tag),
-                    measurement.get_metric_value('perf_latency'),
+                    measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_client_response_wait'),
                     measurement.get_metric_value('perf_server_queue'),
                     measurement.get_metric_value('perf_server_compute_input'),

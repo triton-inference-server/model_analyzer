@@ -13,19 +13,17 @@
 # limitations under the License.
 
 from functools import total_ordering
-import logging
 
 from model_analyzer.record.record import Record
 
 
 @total_ordering
-class PerfLatency(Record):
+class PerfLatencyP90(Record):
     """
     A record for perf_analyzer latency metric
     """
 
-    tag = "perf_latency"
-    _printed_deprecate_warning = False
+    tag = "perf_latency_p90"
 
     def __init__(self, value, timestamp=0):
         """
@@ -57,8 +55,7 @@ class PerfLatency(Record):
             metric.
         """
 
-        cls._print_deprecate_warning()
-        return "p99 Latency (ms)"
+        return "p90 Latency (ms)"
 
     def __eq__(self, other):
         """
@@ -66,7 +63,6 @@ class PerfLatency(Record):
         equality between two records
         """
 
-        self._print_deprecate_warning()
         return self.value() == other.value()
 
     def __lt__(self, other):
@@ -76,7 +72,6 @@ class PerfLatency(Record):
         the other
         """
 
-        self._print_deprecate_warning()
         return self.value() > other.value()
 
     def __add__(self, other):
@@ -85,7 +80,6 @@ class PerfLatency(Record):
         to produce a brand new record.
         """
 
-        self._print_deprecate_warning()
         return self.__class__(value=(self.value() + other.value()))
 
     def __sub__(self, other):
@@ -97,12 +91,4 @@ class PerfLatency(Record):
             of the inverted nature of latency (lower is better)
         """
 
-        self._print_deprecate_warning()
         return self.__class__(value=(other.value() - self.value()))
-
-    @classmethod
-    def _print_deprecate_warning(cls):
-        if not cls._printed_deprecate_warning:
-            logging.warning(
-                "`perf_latency` is deprecated, use `perf_latency_p99` instead.")
-            cls._printed_deprecate_warning = True

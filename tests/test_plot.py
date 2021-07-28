@@ -21,6 +21,7 @@ from model_analyzer.result.result_comparator import ResultComparator
 
 
 class TestPlotMethods(trc.TestResultCollector):
+
     def setUp(self):
         # mocks
         self.matplotlib_mock = MockMatplotlibMethods()
@@ -31,7 +32,7 @@ class TestPlotMethods(trc.TestResultCollector):
         SimplePlot(name='test_plot',
                    title='test_title',
                    x_axis='perf_throughput',
-                   y_axis='perf_latency')
+                   y_axis='perf_latency_p99')
 
         self.matplotlib_mock.assert_called_subplots()
 
@@ -39,11 +40,11 @@ class TestPlotMethods(trc.TestResultCollector):
         plot = SimplePlot(name='test_plot',
                           title='test_title',
                           x_axis='perf_throughput',
-                          y_axis='perf_latency')
+                          y_axis='perf_latency_p99')
 
         gpu_data = {0: {'gpu_used_memory': 5000, 'gpu_utilization': 50}}
-        non_gpu_data = {'perf_throughput': 200, 'perf_latency': 8000}
-        objective_spec = {'perf_throughput': 10, 'perf_latency': 5}
+        non_gpu_data = {'perf_throughput': 200, 'perf_latency_p99': 8000}
+        objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
         measurement = construct_measurement(
             'test_model', gpu_data, non_gpu_data,
             ResultComparator(metric_objectives=objective_spec))
@@ -75,11 +76,11 @@ class TestPlotMethods(trc.TestResultCollector):
         plot = SimplePlot(name='test_plot',
                           title='test_title',
                           x_axis='perf_throughput',
-                          y_axis='perf_latency')
+                          y_axis='perf_latency_p99')
 
         gpu_data = {0: {'gpu_used_memory': 5000, 'gpu_utilization': 50}}
-        non_gpu_data = {'perf_throughput': 200, 'perf_latency': 8000}
-        objective_spec = {'perf_throughput': 10, 'perf_latency': 5}
+        non_gpu_data = {'perf_throughput': 200, 'perf_latency_p99': 8000}
+        objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
         measurement = construct_measurement(
             'test_model', gpu_data, non_gpu_data,
             ResultComparator(metric_objectives=objective_spec))
@@ -94,11 +95,10 @@ class TestPlotMethods(trc.TestResultCollector):
         plot = SimplePlot(name='test_plot',
                           title='test_title',
                           x_axis='perf_throughput',
-                          y_axis='perf_latency')
+                          y_axis='perf_latency_p99')
 
         plot.save('test_path')
-        self.matplotlib_mock.assert_called_save_with_args(
-            'test_path/test_plot')
+        self.matplotlib_mock.assert_called_save_with_args('test_path/test_plot')
 
     def tearDown(self):
         self.matplotlib_mock.stop()
