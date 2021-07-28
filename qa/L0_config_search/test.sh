@@ -44,7 +44,7 @@ MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --output-mod
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="--analysis-models $MODEL_NAMES -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 
-python3 config_generator.py -m $MODEL_NAMES
+python3 test_config_generator.py -m $MODEL_NAMES
 
 LIST_OF_CONFIG_FILES=(`ls | grep .yml`)
 
