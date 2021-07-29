@@ -144,6 +144,9 @@ profile_models: <comma-delimited-string-list>
 # Maximum preferred batch size used for the automatic config search.
 [ run_config_search_max_preferred_batch_size: <int> | default: 16 ]
 
+# Disables automatic preferred batch size search.
+[ run_config_search_preferred_batch_size_disable: <bool> | default: false ]
+
 # Disables automatic config search
 [ run_config_search_disable: <bool> | default: false ]
 

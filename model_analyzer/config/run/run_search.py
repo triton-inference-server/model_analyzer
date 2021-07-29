@@ -29,6 +29,7 @@ class RunSearch:
         self._max_concurrency = config.run_config_search_max_concurrency
         self._max_instance_count = config.run_config_search_max_instance_count
         self._max_preferred_batch_size = config.run_config_search_max_preferred_batch_size
+        self._sweep_preferred_batch_size_disable = config.run_config_search_preferred_batch_size_disable
         self._model_config_parameters = {'instance_count': 1}
         self._measurements = []
         self._last_batch_length = None
@@ -251,6 +252,9 @@ class RunSearch:
             'instance_count'] > self._max_instance_count
 
         if instance_limit_reached:
+            if self._sweep_preferred_batch_size_disable:
+                return model, []
+
             # Reset instance_count
             self._model_config_parameters['instance_count'] = 1
 
