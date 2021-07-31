@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ DEFAULT_OFFLINE_OBJECTIVES = {'perf_throughput': 10}
 
 DEFAULT_MONITORING_INTERVAL = 1
 DEFAULT_DURATION_SECONDS = 5
+DEFAULT_CPU_MONITOR_DISABLE = "auto"
 DEFAULT_LOG_LEVEL = 'INFO'
 DEFAULT_GPUS = 'all'
 DEFAULT_OUTPUT_MODEL_REPOSITORY = './output_model_repository'

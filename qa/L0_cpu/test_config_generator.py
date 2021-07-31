@@ -20,7 +20,6 @@ class TestConfigGenerator:
     """
     This class contains functions that
     create configs for various test scenarios.
-
     TO ADD A TEST: Simply add a member function whose name starts
                     with 'generate'.
     """

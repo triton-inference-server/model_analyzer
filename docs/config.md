@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -85,6 +85,10 @@ profile_models: <comma-delimited-string-list>
 
 # Duration of waiting time between each metric measurement in seconds
 [ monitoring_interval: <float> | default: 1 ]
+
+# Specifies whether to disable cpu monitor or not.
+# "auto" will disable cpu monitor when GPU(s) are used for profiling.
+[ cpu_monitor_disable: ("auto"|True|False) | default: "auto" ]
 
 # The protocol used to communicate with the Triton Inference Server. Only 'http' and 'grpc' are allowed for the values.
 [ client_protocol: <string> | default: grpc ]
