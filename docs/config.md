@@ -86,9 +86,8 @@ profile_models: <comma-delimited-string-list>
 # Duration of waiting time between each metric measurement in seconds
 [ monitoring_interval: <float> | default: 1 ]
 
-# Specifies whether to disable cpu monitor or not.
-# "auto" will disable cpu monitor when GPU(s) are used for profiling.
-[ cpu_monitor_disable: ("auto"|True|False) | default: "auto" ]
+# Specifies which metric(s) are to be collected.
+[ metrics: comma-delimited-list-string | default: `all non CPU metrics` ]
 
 # The protocol used to communicate with the Triton Inference Server. Only 'http' and 'grpc' are allowed for the values.
 [ client_protocol: <string> | default: grpc ]

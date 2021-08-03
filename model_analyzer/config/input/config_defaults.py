@@ -26,7 +26,12 @@ DEFAULT_OFFLINE_OBJECTIVES = {'perf_throughput': 10}
 
 DEFAULT_MONITORING_INTERVAL = 1
 DEFAULT_DURATION_SECONDS = 5
-DEFAULT_CPU_MONITOR_DISABLE = "auto"
+DEFAULT_METRICS = [
+    "perf_throughput", "perf_latency", "perf_client_response_wait",
+    "perf_client_send_recv", "perf_server_queue", "perf_server_compute_input",
+    "perf_server_compute_infer", "perf_server_compute_output",
+    "gpu_used_memory", "gpu_free_memory", "gpu_utilization", "gpu_power_usage"
+]
 DEFAULT_LOG_LEVEL = 'INFO'
 DEFAULT_GPUS = 'all'
 DEFAULT_OUTPUT_MODEL_REPOSITORY = './output_model_repository'

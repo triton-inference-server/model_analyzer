@@ -30,7 +30,7 @@ from .config_defaults import \
     DEFAULT_BATCH_SIZES, DEFAULT_CHECKPOINT_DIRECTORY, \
     DEFAULT_CLIENT_PROTOCOL, DEFAULT_DURATION_SECONDS, \
     DEFAULT_GPUS, DEFAULT_MAX_RETRIES, \
-    DEFAULT_MONITORING_INTERVAL, DEFAULT_CPU_MONITOR_DISABLE, DEFAULT_OFFLINE_OBJECTIVES, \
+    DEFAULT_MONITORING_INTERVAL, DEFAULT_METRICS, DEFAULT_OFFLINE_OBJECTIVES, \
     DEFAULT_OUTPUT_MODEL_REPOSITORY, DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG, \
     DEFAULT_PERF_ANALYZER_CPU_UTIL, DEFAULT_PERF_ANALYZER_PATH, DEFAULT_PERF_MAX_AUTO_ADJUSTS, \
     DEFAULT_PERF_OUTPUT_FLAG, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, \
@@ -180,11 +180,12 @@ class ConfigCommandProfile(ConfigCommand):
                 'Specifies how long (seconds) to gather server-only metrics'))
         self._add_config(
             ConfigField(
-                'cpu_monitor_disable',
-                flags=['--cpu-monitor-disable'],
-                field_type=ConfigEnum(["auto", True, False]),
-                default_value=DEFAULT_CPU_MONITOR_DISABLE,
-                description='Specifies whether to disable cpu monitor or not'))
+                'metrics',
+                flags=['--metrics'],
+                field_type=ConfigListString(),
+                default_value=DEFAULT_METRICS,
+                description='List of metrics to be collected during profiling.')
+        )
         self._add_config(
             ConfigField(
                 'gpus',
@@ -593,6 +594,10 @@ class ConfigCommandProfile(ConfigCommand):
         Fill in the implied or default
         config values.
         """
+
+        min_metric_tags = DEFAULT_METRICS
+        extra_metric_tags = list(set(self.metrics) - set(min_metric_tags))
+        self._fields["metrics"].set_value(min_metric_tags + extra_metric_tags)
 
         cpu_only = False
         if not numba.cuda.is_available():
