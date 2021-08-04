@@ -87,7 +87,7 @@ profile_models: <comma-delimited-string-list>
 [ monitoring_interval: <float> | default: 1 ]
 
 # Specifies which metric(s) are to be collected.
-[ metrics: comma-delimited-list-string | default: `all non CPU metrics` ]
+[ metrics: <comma-delimited-string-list> | default: See Config Defaults section ]
 
 # The protocol used to communicate with the Triton Inference Server. Only 'http' and 'grpc' are allowed for the values.
 [ client_protocol: <string> | default: grpc ]

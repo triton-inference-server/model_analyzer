@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -108,7 +108,7 @@ class RunSearch:
                 self._model_config_parameters['dynamic_batching'] *= 2
 
     def _get_throughput(self, measurement):
-        return measurement.get_metric('perf_throughput').value()
+        return measurement.get_metric_value('perf_throughput')
 
     def _calculate_throughput_gain(self, index):
         throughput_before = self._get_throughput(

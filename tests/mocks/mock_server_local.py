@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -110,3 +110,12 @@ class MockServerLocalMethods(MockServerMethods):
 
         self.psutil_mock.Process.return_value.memory_full_info.assert_called()
         self.psutil_mock.virtual_memory.assert_called()
+
+    def assert_cpu_stats_not_called(self):
+        """
+        Checks no calls to psutil.Process.memory_full_info and psutil.virtual_memory
+        """
+
+        self.psutil_mock.Process.return_value.memory_full_info.assert_not_called(
+        )
+        self.psutil_mock.virtual_memory.assert_not_called()

@@ -600,7 +600,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._fields["metrics"].set_value(min_metric_tags + extra_metric_tags)
 
         cpu_only = False
-        if not numba.cuda.is_available():
+        if len(self.gpus) == 0 or not numba.cuda.is_available():
             cpu_only = True
 
         new_profile_models = {}

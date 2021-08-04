@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ class TestConfigGenerator:
 
     def generate_search_disable(self):
         model_config = {
+            "metrics": ["cpu_available_ram", "cpu_used_ram"],
             "run_config_search_disable": True,
             "profile_models": {
                 model: {
@@ -68,6 +69,7 @@ class TestConfigGenerator:
 
     def generate_max_limit_with_model_config(self):
         model_config = {
+            "metrics": ["cpu_available_ram", "cpu_used_ram"],
             "run_config_search_max_concurrency": 2,
             "run_config_search_max_instance_count": 2,
             "run_config_search_max_preferred_batch_size": 2,
@@ -86,6 +88,7 @@ class TestConfigGenerator:
 
     def generate_max_limit(self):
         model_config = {
+            "metrics": ["cpu_available_ram", "cpu_used_ram"],
             "run_config_search_max_concurrency": 2,
             "run_config_search_max_instance_count": 2,
             "run_config_search_max_preferred_batch_size": 2,
@@ -95,6 +98,7 @@ class TestConfigGenerator:
 
     def generate_max_limit_with_param(self):
         model_config = {
+            "metrics": ["cpu_available_ram", "cpu_used_ram"],
             "run_config_search_max_concurrency": 2,
             "run_config_search_max_instance_count": 2,
             "run_config_search_max_preferred_batch_size": 1,
@@ -110,6 +114,7 @@ class TestConfigGenerator:
 
     def generate_max_limit_with_param_and_model_config(self):
         model_config = {
+            "metrics": ["cpu_available_ram", "cpu_used_ram"],
             "run_config_search_max_concurrency": 2,
             "run_config_search_max_instance_count": 2,
             "run_config_search_max_preferred_batch_size": 2,
@@ -131,6 +136,7 @@ class TestConfigGenerator:
 
     def generate_max_limit_with_dynamic_batch_disable(self):
         model_config = {
+            "metrics": ["cpu_available_ram", "cpu_used_ram"],
             "run_config_search_max_concurrency": 2,
             "run_config_search_max_instance_count": 2,
             "run_config_search_preferred_batch_size_disable": True,

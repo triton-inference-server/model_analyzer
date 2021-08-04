@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ from .mocks.mock_config import MockConfig
 
 
 class TestRunSearch(trc.TestResultCollector):
+
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
@@ -41,15 +42,15 @@ class TestRunSearch(trc.TestResultCollector):
     def _create_measurement(self, value):
         metric_attrs = {'value': MagicMock(return_value=value)}
         measurement_attrs = {
-            'get_metric': MagicMock(return_value=MagicMock(**metric_attrs))
+            'get_metric': MagicMock(return_value=MagicMock(**metric_attrs)),
+            'get_metric_value': MagicMock(return_value=value)
         }
         return MagicMock(**measurement_attrs)
 
     def test_run_search(self):
         args = [
-            'model-analyzer', 'profile', '--model-repository',
-            'cli_repository', '-f', 'path-to-config-file', '--profile-models',
-            'vgg11'
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--profile-models', 'vgg11'
         ]
 
         yaml_content = """
@@ -94,9 +95,8 @@ class TestRunSearch(trc.TestResultCollector):
 
     def test_run_search_failing(self):
         args = [
-            'model-analyzer', 'profile', '--model-repository',
-            'cli_repository', '-f', 'path-to-config-file', '--profile-models',
-            'vgg11'
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--profile-models', 'vgg11'
         ]
 
         yaml_content = """
@@ -113,8 +113,7 @@ class TestRunSearch(trc.TestResultCollector):
 
         # Simulate running multiple sweeps
         for i in range(2):
-            concurrencies = config.profile_models[0].parameters(
-            )['concurrency']
+            concurrencies = config.profile_models[0].parameters()['concurrency']
             run_search.init_model_sweep(concurrencies, True)
             config_model, model_sweeps = run_search.get_model_sweep(
                 config.profile_models[0])

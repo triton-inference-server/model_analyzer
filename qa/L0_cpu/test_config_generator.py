@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,12 +20,15 @@ class TestConfigGenerator:
     """
     This class contains functions that
     create configs for various test scenarios.
+
     TO ADD A TEST: Simply add a member function whose name starts
                     with 'generate'.
     """
+
     def __init__(self):
         test_functions = [
-            self.__getattribute__(name) for name in dir(self)
+            self.__getattribute__(name)
+            for name in dir(self)
             if name.startswith('generate')
         ]
 
@@ -46,13 +49,13 @@ class TestConfigGenerator:
 
     def generate_profile_config(self):
         self.config = {}
+        self.config['metrics'] = ['cpu_available_ram', 'cpu_used_ram']
         self.config['run_config_search_max_concurrency'] = 4
         self.config['run_config_search_max_instance_count'] = 2
         self.config['profile_models'] = {
             model_name: {
                 'cpu_only': True
-            }
-            for model_name in self.model_names
+            } for model_name in self.model_names
         }
         with open('config-profile.yml', 'w+') as f:
             yaml.dump(self.config, f)
