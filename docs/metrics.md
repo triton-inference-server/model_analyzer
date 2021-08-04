@@ -63,7 +63,7 @@ recorded and aggregated over fixed intervals during a perf analyzer run.
 * `cpu_used_ram`: The total amount of memory used by all CPUs
 * `cpu_available_ram`: The total amount of availble CPU memory.
 
-Warning: Collecting CPU metrics might affect performance. By default, CPU metrics are collected only if CPU(s) are used for inferencing. The collection of CPU metrics can be disabled by setting `cpu_monitor_disable` to `True`, see [Configuring Model Analyzer](docs/config.md) for details.
+**Warning**: Collecting CPU metrics might affect performance. By default, CPU metrics are not collected. To collect CPU metrics, add `cpu_used_ram` and/or `cpu_available_ram` to `metrics` flag, see [Configuring Model Analyzer](docs/config.md) for details.
 
 ## Additional tags for output headers
 
