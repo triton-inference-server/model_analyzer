@@ -127,6 +127,10 @@ profile_models: <comma-delimited-string-list>
 # The full path to a file to write the Triton Server output log.
 [ triton_output_path: <string> ]
 
+# List of strings containing the paths to the volumes to be mounted into the tritonserver docker 
+# containers launched by model-analyzer. Will be ignored in other launch modes
+[ triton_docker_mounts: <list of strings> ]
+
 # How Model Analyzer will launch triton. It should
 # be either "docker", "local", or "remote".
 # See docs/launch_modes.md for more information.
@@ -173,7 +177,11 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 [ triton_server_flags: <dict> ]
 
 # Allows custom configuration of perf analyzer instances used by model analyzer
-[ perf_analyzer_flags: <dict>]
+[ perf_analyzer_flags: <dict> ]
+
+# Allows custom configuration of the environment variables for tritonserver instances
+# launched by model analyzer
+[ triton_server_environment: <dict> ]
 ```
 
 ## Config Options for `analyze`
@@ -680,6 +688,45 @@ profile_models:
   arguments in this section. An example of this is `http-port`, which is an
   argument to Model Analyzer itself.
 
+### `<triton-server-environment>`
+
+This section enables setting environment variables for the tritonserver
+instances launched by Model Analyzer. For example, when a custom operation is 
+required by a model, Triton requires the LD_PRELOAD and LD_LIBRARY_PATH 
+environment variables to be set. See [this link](https://github.com/triton-inference-server/server/blob/main/docs/custom_operations.md) 
+for details. The value for this section is a dictionary where the
+keys are the environment variable names and their values are the values to be
+set.
+
+#### Example
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  - model_1
+triton_server_environment:
+  LD_PRELOAD: /path/to/custom/op/.so
+  LD_LIBRARY_PATH: /path/to/shared/libararies
+
+```
+
+Since Model Analyzer relaunches Triton Server each time a model config is
+loaded, you can also specify `triton_server_environment` on a per model basis. For
+example:
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    triton_server_environment:
+        LD_PRELOAD: /path/to/custom/op
+```
+
+**Important Notes**: 
+* The Model Analyzer also provides certain environment variables to the `tritonserver`
+  instances it launches. These ***cannot*** be overriden by providing those
+  arguments in this section. An example of this is `CUDA_VISIBLE_DEVICES`.
+
 ### `<plots>`
 
 This section is used to specify the kind of plots that will be displayed in the
@@ -715,7 +762,7 @@ The `--profile-models` argument can be provided as a list of strings (names of
 models) from the CLI interface, or as a more complex `<profile-model>` object
 but only through the YAML configuration file. The model object can contain
 `<model-config-parameters>`, `<parameter>`,
-`<perf-analyzer-flags>`,`<triton-server-flags>` and a flag `cpu_only`.
+`<perf-analyzer-flags>`,`<triton-server-flags>`,`<triton-server-environment>` and a flag `cpu_only`.
 
 A profile model object puts together all the different parameters specified
 above. An example will look like:

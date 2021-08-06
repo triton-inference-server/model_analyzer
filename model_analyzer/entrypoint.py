@@ -115,7 +115,8 @@ def get_server_handle(config):
             image=config.triton_docker_image,
             config=triton_config,
             gpus=config.gpus,
-            log_path=config.triton_output_path)
+            log_path=config.triton_output_path,
+            mounts=config.triton_docker_mounts)
     else:
         raise TritonModelAnalyzerException(
             f"Unrecognized triton-launch-mode : {config.triton_launch_mode}")

@@ -118,7 +118,8 @@ class RunConfigGenerator:
                 model_tmp_name, model)
             for perf_config in perf_configs:
                 self._run_configs.append(
-                    RunConfig(model.model_name(), model_config, perf_config))
+                    RunConfig(model.model_name(), model_config, perf_config,
+                              model.triton_server_environment()))
         else:
             model_config = ModelConfig.create_from_triton_api(
                 self._client, model.model_name(), num_retries)
@@ -129,7 +130,8 @@ class RunConfigGenerator:
             for perf_config in perf_configs:
                 # Add the new run config.
                 self._run_configs.append(
-                    RunConfig(model.model_name(), model_config, perf_config))
+                    RunConfig(model.model_name(), model_config, perf_config,
+                              None))
 
     def generate_model_config_combinations(self, value):
         """
