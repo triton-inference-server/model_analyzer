@@ -79,8 +79,13 @@ class ModelManager:
 
         # Run model inferencing
         if self._config.run_config_search_disable:
+            logging.info(
+                f"Running manual config search for model: {model.model_name()}"
+            )
             self._run_model_no_search(model)
         else:
+            logging.info(
+                f"Running auto config search for model: {model.model_name()}")
             self._run_model_with_search(model)
 
     def _run_model_no_search(self, model):

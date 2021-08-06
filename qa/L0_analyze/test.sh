@@ -16,7 +16,6 @@ source ../common/util.sh
 source ../common/check_analyzer_results.sh
 
 rm -f *.log
-rm -rf results && mkdir -p results
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -28,10 +27,11 @@ EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
-CHECKPOINT_DIRECTORY="."
+CHECKPOINT_DIRECTORY="./checkpoints"
 
-# Get checkpoint
-cp $CHECKPOINT_REPOSITORY/analyze.ckpt $CHECKPOINT_DIRECTORY/0.ckpt 
+# Create results/checkpoints directories
+mkdir $EXPORT_PATH
+mkdir $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/analyze.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
 # Run the analyzer and check the results
 RET=0
@@ -90,7 +90,7 @@ else
 fi
 
 rm -rf $EXPORT_PATH/*
-rm -f *.ckpt
+rm -f $CHECKPOINT_DIRECTORY/*.ckpt
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

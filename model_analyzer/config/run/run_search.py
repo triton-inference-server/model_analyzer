@@ -24,7 +24,6 @@ class RunSearch:
     """
     A class responsible for searching the config space.
     """
-
     def __init__(self, config):
         self._max_concurrency = config.run_config_search_max_concurrency
         self._max_instance_count = config.run_config_search_max_instance_count
@@ -56,13 +55,17 @@ class RunSearch:
         if 'instance_count' in model_config:
             if not cpu_only:
                 new_config['instance_group'] = [{
-                    'count': model_config['instance_count'],
-                    'kind': 'KIND_GPU'
+                    'count':
+                    model_config['instance_count'],
+                    'kind':
+                    'KIND_GPU'
                 }]
             else:
                 new_config['instance_group'] = [{
-                    'count': model_config['instance_count'],
-                    'kind': 'KIND_CPU'
+                    'count':
+                    model_config['instance_count'],
+                    'kind':
+                    'KIND_CPU'
                 }]
         return new_config
 
@@ -285,15 +288,15 @@ class RunSearch:
                     f"{self._model_config_parameters['dynamic_batching']}.")
 
         if self._sweep_mode_function == self._sweep_concurrency_only:
-            logging.info(f"Concurrency set to {concurrency}. ")
+            logging.info(f"[Search Step] Concurrency set to {concurrency}. ")
         elif self._sweep_mode_function == self._sweep_concurrency_and_model_config:
             logging.info(
-                f"Concurrency set to {concurrency}. "
+                f"[Search Step] Concurrency set to {concurrency}. "
                 f"Instance count set to "
                 f"{self._model_config_parameters['instance_count']}, and {message}"
             )
         elif self._sweep_mode_function == self._sweep_model_config_only:
             logging.info(
-                f"Instance count set to "
+                f"[Search Step] Instance count set to "
                 f"{self._model_config_parameters['instance_count']}, and {message}"
             )
