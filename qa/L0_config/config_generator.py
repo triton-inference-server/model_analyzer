@@ -1,4 +1,4 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ def _get_sweep_configs(profile_models):
 
     sweep_configs = []
     model_config = {
-        'metrics': ['cpu_available_ram', 'cpu_used_ram'],
         'run_config_search_disable': True,
         'perf_analyzer_cpu_util': 600,
         'profile_models': {
@@ -39,7 +38,6 @@ def _get_sweep_configs(profile_models):
     sweep_configs.append(model_config)
 
     model_config = {
-        'metrics': ['cpu_available_ram', 'cpu_used_ram'],
         'run_config_search_disable': True,
         'perf_analyzer_cpu_util': 600,
         'profile_models': {
@@ -59,7 +57,6 @@ def _get_sweep_configs(profile_models):
     sweep_configs.append(model_config)
 
     model_config = {
-        'metrics': ['cpu_available_ram', 'cpu_used_ram'],
         'run_config_search_disable': True,
         'perf_analyzer_cpu_util': 600,
         'profile_models': {

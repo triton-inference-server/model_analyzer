@@ -170,11 +170,9 @@ class ResultManager:
             The metrics that do not have a GPU id associated with them
         """
 
-        # In the future, user should be able to specify which metric(s) are to
-        # be collected during profile phase.
-        # Finding which metric(s) are actually collected during profile phase
-        # is done below, since a profile phase can be run twice with different
-        # metric(s) being collected.
+        # Finds which metric(s) are actually collected during profile phase.
+        # Since a profile phase can be run twice with different metric(s)
+        # being collected.
         gpu_specific_metrics_from_measurements = {}
         non_gpu_specific_metrics_from_measurements = {}
         # Find metrics if one or more of them is not provided

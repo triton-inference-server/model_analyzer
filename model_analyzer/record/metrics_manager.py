@@ -28,7 +28,6 @@ from collections import defaultdict
 from prometheus_client.parser import text_string_to_metric_families
 import numba
 import requests
-
 import logging
 
 
@@ -37,6 +36,14 @@ class MetricsManager:
     This class handles the profiling
     categorization of metrics
     """
+
+    metrics = [
+        "perf_throughput", "perf_latency", "perf_client_response_wait",
+        "perf_client_send_recv", "perf_server_queue",
+        "perf_server_compute_input", "perf_server_compute_infer",
+        "perf_server_compute_output", "gpu_used_memory", "gpu_free_memory",
+        "gpu_utilization", "gpu_power_usage"
+    ]
 
     def __init__(self, config, client, server, result_manager, state_manager):
         """
@@ -62,8 +69,8 @@ class MetricsManager:
         self._result_manager = result_manager
         self._state_manager = state_manager
 
-        self._dcgm_metrics, self._perf_metrics, self._cpu_metrics = self.categorize_metrics(
-            self._config.metrics)
+        self._dcgm_metrics, self._perf_metrics, self._cpu_metrics = self._categorize_metrics(
+            self._build_metrics(self.metrics, self._config.metrics))
         self._gpus = GPUDeviceFactory.verify_requested_gpus(self._config.gpus)
         self._init_state()
 
@@ -93,7 +100,16 @@ class MetricsManager:
         self._state_manager.set_state_variable('MetricsManager.gpus', gpu_info)
 
     @staticmethod
-    def categorize_metrics(metric_tags):
+    def _build_metrics(min_metric_tags, config_metric_tags):
+        """
+        Returns the union of min_metric_tags and config_metric_tags
+        """
+
+        extra_metric_tags = list(set(config_metric_tags) - set(min_metric_tags))
+        return min_metric_tags + extra_metric_tags
+
+    @staticmethod
+    def _categorize_metrics(metric_tags):
         """
         Splits the metrics into groups based
         on how they are collected
@@ -164,10 +180,10 @@ class MetricsManager:
         if collect_cpu_metrics_actual:
             logging.warning("CPU metric(s) are being collected.")
             logging.warning(
-                "Collecting CPU metric(s) during profiling might affect performance!"
+                "Collecting CPU metric(s) can affect the latency or throughput numbers reported by perf analyzer."
             )
             logging.info(
-                "CPU metric(s) collection can be disabled by changing the `--metrics` flag."
+                "CPU metric(s) collection can be disabled by removing the CPU metrics (e.g. cpu_used_ram) from the --metrics flag."
             )
 
         # Start monitors and run perf_analyzer

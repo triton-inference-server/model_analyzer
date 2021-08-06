@@ -595,10 +595,6 @@ class ConfigCommandProfile(ConfigCommand):
         config values.
         """
 
-        min_metric_tags = DEFAULT_METRICS
-        extra_metric_tags = list(set(self.metrics) - set(min_metric_tags))
-        self._fields["metrics"].set_value(min_metric_tags + extra_metric_tags)
-
         cpu_only = False
         if len(self.gpus) == 0 or not numba.cuda.is_available():
             cpu_only = True

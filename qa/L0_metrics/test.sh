@@ -70,7 +70,7 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
         cat $ANALYZER_LOG
         RET=1
     else
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS"
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -f $config"
         MODEL_ANALYZER_SUBCOMMAND="analyze"
         run_analyzer
         if [ $? -ne 0 ]; then
@@ -93,8 +93,8 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
                 $ANALYZER_LOG $ANALYZER_LOG $ANALYZER_LOG \
                 $MODEL_METRICS_INFERENCE_FILE $MODEL_METRICS_GPU_FILE $SERVER_METRICS_FILE \
                 $INFERENCE_NUM_COLUMNS 1 \
-                $METRICS_NUM_COLUMNS 1 \
-                $SERVER_METRICS_NUM_COLUMNS 1
+                $METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) \
+                $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]}))
             if [ $? -ne 0 ]; then
                 echo -e "\n***\n*** Test Output Verification Failed.\n***"
                 cat $ANALYZER_LOG

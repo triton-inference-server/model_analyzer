@@ -157,14 +157,14 @@ class Measurement:
                             "measurements across devices.")
             return None
 
-    def get_metric_value(self, tag, not_found_value=0):
+    def get_metric_value(self, tag, default_value=0):
         """
         Parameters
         ----------
         tag : str
             A human readable tag that corresponds
             to a particular metric
-        not_found_value : any
+        default_value : any
             Value to return if tag is not found
 
         Returns
@@ -172,11 +172,11 @@ class Measurement:
         Record
             Value of the metric Record corresponding 
             to the tag, in this measurement, 
-            not_found_value if tag not found.
+            default_value if tag not found.
         """
         metric = self.get_metric(tag)
         if metric is None:
-            return not_found_value
+            return default_value
         return metric.value()
 
     def get_parameter(self, tag):

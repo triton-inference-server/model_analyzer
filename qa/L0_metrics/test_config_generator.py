@@ -49,8 +49,16 @@ class TestConfigGenerator:
 
     def generate_with_cpu_metrics(self):
         model_config = {
-            "metrics": ["cpu_available_ram", "cpu_used_ram"],
-            "run_config_search_disable": True,
+            "metrics": [
+                "perf_throughput", "perf_latency", "perf_client_response_wait",
+                "perf_client_send_recv", "perf_server_queue",
+                "perf_server_compute_input", "perf_server_compute_infer",
+                "perf_server_compute_output", "gpu_used_memory",
+                "gpu_free_memory", "gpu_utilization", "gpu_power_usage",
+                "cpu_available_ram", "cpu_used_ram"
+            ],
+            "run_config_search_disable":
+                True,
             "profile_models": {
                 model: {
                     "parameters": {
@@ -66,7 +74,13 @@ class TestConfigGenerator:
                         }]
                     }
                 } for model in self.profile_models
-            }
+            },
+            "inference_output_fields": [
+                "model_name", "batch_size", "concurrency", "model_config_path",
+                "instance_group", "dynamic_batch_sizes",
+                "satisfies_constraints", "perf_throughput", "perf_latency",
+                "cpu_used_ram"
+            ]
         }
         self._write_file(5, 11, 10, model_config)
 
@@ -105,5 +119,5 @@ class TestConfigGenerator:
             yaml.dump(model_config, file)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     TestConfigGenerator()
