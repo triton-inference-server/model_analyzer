@@ -288,15 +288,15 @@ class RunSearch:
                     f"{self._model_config_parameters['dynamic_batching']}.")
 
         if self._sweep_mode_function == self._sweep_concurrency_only:
-            logging.info(f"SEARCH STEP: Concurrency set to {concurrency}. ")
+            logging.info(f"[Search Step] Concurrency set to {concurrency}. ")
         elif self._sweep_mode_function == self._sweep_concurrency_and_model_config:
             logging.info(
-                f"SEARCH STEP: Concurrency set to {concurrency}. "
+                f"[Search Step] Concurrency set to {concurrency}. "
                 f"Instance count set to "
                 f"{self._model_config_parameters['instance_count']}, and {message}"
             )
         elif self._sweep_mode_function == self._sweep_model_config_only:
             logging.info(
-                f"SEARCH STEP: Instance count set to "
+                f"[Search Step] Instance count set to "
                 f"{self._model_config_parameters['instance_count']}, and {message}"
             )

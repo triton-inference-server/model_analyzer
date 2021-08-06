@@ -50,13 +50,13 @@ class TestOutputValidator:
             "config search for model:")[1:]
         expected_step_counts = []
         for model_log in logs_for_model:
-            expected_step_counts.append(model_log.count('SEARCH_STEP'))
+            expected_step_counts.append(model_log.count('[Search Step]'))
 
         for i in range(1, 4):
             logs_for_model = logs_for_iteration[i].split(
                 "config search for model:")[1:]
             for j, model_log in enumerate(logs_for_model):
-                actual_step_count = model_log.count('SEARCH_STEP')
+                actual_step_count = model_log.count('[Search Step]')
                 if abs(actual_step_count - expected_step_counts[j]) > 1:
                     print("\n***\n***  Expected number of search steps for "
                           f"{self._models[j]} : {expected_step_counts[j]}."
