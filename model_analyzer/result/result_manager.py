@@ -505,14 +505,19 @@ class ResultManager:
         self._result_tables[table_key] = ResultTable(headers=headers,
                                                      title=title)
 
-    def write_and_export_results(self):
+    def write_results(self):
+        """
+        Writes table to console
+        """
+
+        self._write_results(writer=FileWriter(), column_separator=' ')
+
+    def export_results(self):
         """
         Makes calls to _write_results out to streams or files. If
         exporting results is requested, uses a FileWriter for specified output
         files.
         """
-
-        self._write_results(writer=FileWriter(), column_separator=' ')
 
         # Results exported to export_path/results
         results_export_directory = os.path.join(self._config.export_path,

@@ -116,7 +116,7 @@ class Analyzer:
             f"Finished profiling. Obtained measurements for models: {profiled_model_list}."
         )
 
-    def analyze(self, mode):
+    def analyze(self, mode, quiet):
         """
         subcommand: ANALYZE
 
@@ -127,6 +127,8 @@ class Analyzer:
         ----------
         mode : str
             Global mode that the analyzer is running on
+        quiet: bool
+            Whether to mute writing table to console
         """
 
         if not isinstance(self._config, ConfigCommandAnalyze):
@@ -157,7 +159,9 @@ class Analyzer:
 
         # Dump to tables and write to disk
         self._result_manager.tabulate_results()
-        self._result_manager.write_and_export_results()
+        self._result_manager.export_results()
+        if not quiet:
+            self._result_manager.write_results()
 
     def report(self, mode):
         """
