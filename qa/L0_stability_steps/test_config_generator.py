@@ -44,13 +44,15 @@ class TestConfigGenerator:
                             required=True,
                             help='The config file for this test')
 
-        args = parser.parse_args()
-        self.config = {'batch_sizes': [1, 2], 'concurrency': [1, 2]}
-        self.config['profile_models'] = sorted(args.profile_models.split(','))
-        self.config['run_config_search_disable'] = True
+        self.args = parser.parse_args()
+        self.profile_models = sorted(self.args.profile_models.split(','))
 
-    def generate_config(self):
-        with open('config.yml', 'w+') as f:
+        self.config = {}
+        self.config['run_config_search_disable'] = False
+        self.config['profile_models'] = self.profile_models
+
+    def generate_configs(self):
+        with open('config.yaml', 'w+') as f:
             yaml.dump(self.config, f)
 
 
