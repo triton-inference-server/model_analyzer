@@ -174,4 +174,6 @@ class PDFReport(Report):
             The name of the report
         """
 
-        pdfkit.from_string(self.document(), f'{filename}')
+        pdfkit.from_string(self.document(),
+                           f'{filename}',
+                           options={'quiet': ''})

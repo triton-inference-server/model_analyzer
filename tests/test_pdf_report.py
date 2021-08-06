@@ -141,4 +141,5 @@ class TestPDFReportMethods(trc.TestResultCollector):
                 f"<div style=\"font-size:14\"><p>{test_paragraph}</p></div>"
                 "</body></html>")
             pdfkit_mock.from_string.assert_called_with(expected_report_body,
-                                                       'test_report_filename')
+                                                       'test_report_filename',
+                                                       options={'quiet': ''})

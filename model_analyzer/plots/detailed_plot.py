@@ -14,9 +14,12 @@
 
 import os
 import matplotlib.pyplot as plt
+import logging
 from matplotlib import patches as mpatches
 from collections import defaultdict
 from model_analyzer.record.metrics_manager import MetricsManager
+
+logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
 
 class DetailedPlot:
