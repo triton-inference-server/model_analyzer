@@ -24,6 +24,7 @@ class RunSearch:
     """
     A class responsible for searching the config space.
     """
+
     def __init__(self, config):
         self._max_concurrency = config.run_config_search_max_concurrency
         self._max_instance_count = config.run_config_search_max_instance_count
@@ -55,17 +56,13 @@ class RunSearch:
         if 'instance_count' in model_config:
             if not cpu_only:
                 new_config['instance_group'] = [{
-                    'count':
-                    model_config['instance_count'],
-                    'kind':
-                    'KIND_GPU'
+                    'count': model_config['instance_count'],
+                    'kind': 'KIND_GPU'
                 }]
             else:
                 new_config['instance_group'] = [{
-                    'count':
-                    model_config['instance_count'],
-                    'kind':
-                    'KIND_CPU'
+                    'count': model_config['instance_count'],
+                    'kind': 'KIND_CPU'
                 }]
         return new_config
 

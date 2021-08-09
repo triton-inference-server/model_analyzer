@@ -49,14 +49,8 @@ class TestConfigGenerator:
 
     def generate_with_cpu_metrics(self):
         model_config = {
-            "metrics": [
-                "perf_throughput", "perf_latency", "perf_client_response_wait",
-                "perf_client_send_recv", "perf_server_queue",
-                "perf_server_compute_input", "perf_server_compute_infer",
-                "perf_server_compute_output", "gpu_used_memory",
-                "gpu_free_memory", "gpu_utilization", "gpu_power_usage",
-                "cpu_available_ram", "cpu_used_ram"
-            ],
+            "collect_cpu_metrics":
+                True,
             "run_config_search_disable":
                 True,
             "profile_models": {
@@ -86,7 +80,7 @@ class TestConfigGenerator:
 
     def generate_without_cpu_metrics(self):
         model_config = {
-            "metrics": [],
+            "collect_cpu_metrics": False,
             "run_config_search_disable": True,
             "profile_models": {
                 model: {

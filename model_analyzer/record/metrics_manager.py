@@ -42,7 +42,8 @@ class MetricsManager:
         "perf_client_send_recv", "perf_server_queue",
         "perf_server_compute_input", "perf_server_compute_infer",
         "perf_server_compute_output", "gpu_used_memory", "gpu_free_memory",
-        "gpu_utilization", "gpu_power_usage"
+        "gpu_utilization", "gpu_power_usage", "cpu_available_ram",
+        "cpu_used_ram"
     ]
 
     def __init__(self, config, client, server, result_manager, state_manager):
@@ -70,7 +71,7 @@ class MetricsManager:
         self._state_manager = state_manager
 
         self._dcgm_metrics, self._perf_metrics, self._cpu_metrics = self._categorize_metrics(
-            self._build_metrics(self.metrics, self._config.metrics))
+            self.metrics, self._config.collect_cpu_metrics)
         self._gpus = GPUDeviceFactory.verify_requested_gpus(self._config.gpus)
         self._init_state()
 
@@ -100,16 +101,7 @@ class MetricsManager:
         self._state_manager.set_state_variable('MetricsManager.gpus', gpu_info)
 
     @staticmethod
-    def _build_metrics(min_metric_tags, config_metric_tags):
-        """
-        Returns the union of min_metric_tags and config_metric_tags
-        """
-
-        extra_metric_tags = list(set(config_metric_tags) - set(min_metric_tags))
-        return min_metric_tags + extra_metric_tags
-
-    @staticmethod
-    def _categorize_metrics(metric_tags):
+    def _categorize_metrics(metric_tags, collect_cpu_metrics=False):
         """
         Splits the metrics into groups based
         on how they are collected
@@ -127,7 +119,7 @@ class MetricsManager:
                 dcgm_metrics.append(metric)
             elif metric in PerfAnalyzer.perf_metrics:
                 perf_metrics.append(metric)
-            elif metric in CPUMonitor.cpu_metrics:
+            elif collect_cpu_metrics and (metric in CPUMonitor.cpu_metrics):
                 cpu_metrics.append(metric)
 
         return dcgm_metrics, perf_metrics, cpu_metrics
