@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ class ReportManager:
     Manages the building and export of 
     various types of reports
     """
+
     def __init__(self, mode, config, gpu_info, result_manager):
         """
         Parameters
@@ -82,7 +83,6 @@ class ReportManager:
         ----------
         report_key: str
             An identifier for a particular report
-
         Returns
         -------
         dict
@@ -120,11 +120,10 @@ class ReportManager:
                 )
 
         if self._config.num_top_model_configs and at_least_one_summary:
-            self._summaries[
-                TOP_MODELS_REPORT_KEY] = self._build_summary_report(
-                    report_key=TOP_MODELS_REPORT_KEY,
-                    num_configs=self._config.num_top_model_configs,
-                    statistics=statistics)
+            self._summaries[TOP_MODELS_REPORT_KEY] = self._build_summary_report(
+                report_key=TOP_MODELS_REPORT_KEY,
+                num_configs=self._config.num_top_model_configs,
+                statistics=statistics)
 
     def export_summaries(self):
         """
@@ -224,8 +223,7 @@ class ReportManager:
         model_config, _ = self._detailed_report_data[report_key]
 
         detailed_report.add_title(title="Detailed Report")
-        detailed_report.add_subheading(
-            subheading=f"Model Config: {report_key}")
+        detailed_report.add_subheading(subheading=f"Model Config: {report_key}")
 
         if self._mode == 'online':
             # Add main latency breakdown image
@@ -244,8 +242,8 @@ class ReportManager:
                                  report_key)
         for plot_config in report_model_config.plots():
             if model_config.cpu_only() and (
-                    plot_config.y_axis().startswith('gpu_')
-                    or plot_config.x_axis().startswith('gpu_')):
+                    plot_config.y_axis().startswith('gpu_') or
+                    plot_config.x_axis().startswith('gpu_')):
                 continue
             plot_stack.append(
                 os.path.join(plot_path, f"{plot_config.name()}.png"))
@@ -333,8 +331,7 @@ class ReportManager:
         summary.add_subheading(f"Model: {report_key}")
         if not cpu_only:
             summary.add_paragraph(f"GPU(s): {gpu_names}")
-            summary.add_paragraph(
-                f"Total Available GPU Memory: {max_memories}")
+            summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
         summary.add_paragraph(
             f"Client Request Batch Size: {static_batch_sizes}")
         summary.add_paragraph(f"Constraint targets: {constraint_str}")
@@ -461,12 +458,11 @@ class ReportManager:
                 row = [
                     model_config.get_field('name'),
                     model_config.dynamic_batching_string(), instance_group_str,
-                    measurement.get_metric('perf_latency').value(),
-                    measurement.get_metric('perf_throughput').value(),
-                    measurement.get_metric('cpu_used_ram').value(),
-                    measurement.get_metric('gpu_used_memory').value(),
-                    round(
-                        measurement.get_metric('gpu_utilization').value(), 1)
+                    measurement.get_metric_value('perf_latency'),
+                    measurement.get_metric_value('perf_throughput'),
+                    measurement.get_metric_value('cpu_used_ram'),
+                    measurement.get_metric_value('gpu_used_memory'),
+                    round(measurement.get_metric_value('gpu_utilization'), 1)
                 ]
                 summary_table.insert_row_by_index(row)
         else:
@@ -475,9 +471,9 @@ class ReportManager:
                 row = [
                     model_config.get_field('name'),
                     model_config.dynamic_batching_string(), instance_group_str,
-                    measurement.get_metric('perf_latency').value(),
-                    measurement.get_metric('perf_throughput').value(),
-                    measurement.get_metric('cpu_used_ram').value()
+                    measurement.get_metric_value('perf_latency'),
+                    measurement.get_metric_value('perf_throughput'),
+                    measurement.get_metric_value('cpu_used_ram')
                 ]
                 summary_table.insert_row_by_index(row)
         return summary_table, summary_sentence
@@ -491,7 +487,7 @@ class ReportManager:
             model_config_name]
         sort_by_tag = 'perf_latency' if self._mode == 'online' else 'perf_throughput'
         measurements = sorted(measurements,
-                              key=lambda x: x.get_metric(sort_by_tag).value(),
+                              key=lambda x: x.get_metric_value(sort_by_tag),
                               reverse=True)
         cpu_only = model_config.cpu_only()
 
@@ -520,35 +516,28 @@ class ReportManager:
             for measurement in measurements:
                 row = [
                     measurement.get_parameter(first_column_tag),
-                    measurement.get_metric('perf_latency').value(),
-                    measurement.get_metric(
-                        'perf_client_response_wait').value(),
-                    measurement.get_metric('perf_server_queue').value(),
-                    measurement.get_metric(
-                        'perf_server_compute_input').value(),
-                    measurement.get_metric(
-                        'perf_server_compute_infer').value(),
-                    measurement.get_metric('perf_throughput').value(),
-                    measurement.get_metric('cpu_used_ram').value(),
-                    measurement.get_metric('gpu_used_memory').value(),
-                    round(
-                        measurement.get_metric('gpu_utilization').value(), 1)
+                    measurement.get_metric_value('perf_latency'),
+                    measurement.get_metric_value('perf_client_response_wait'),
+                    measurement.get_metric_value('perf_server_queue'),
+                    measurement.get_metric_value('perf_server_compute_input'),
+                    measurement.get_metric_value('perf_server_compute_infer'),
+                    measurement.get_metric_value('perf_throughput'),
+                    measurement.get_metric_value('cpu_used_ram'),
+                    measurement.get_metric_value('gpu_used_memory'),
+                    round(measurement.get_metric_value('gpu_utilization'), 1)
                 ]
                 detailed_table.insert_row_by_index(row)
         else:
             for measurement in measurements:
                 row = [
                     measurement.get_parameter(first_column_tag),
-                    measurement.get_metric('perf_latency').value(),
-                    measurement.get_metric(
-                        'perf_client_response_wait').value(),
-                    measurement.get_metric('perf_server_queue').value(),
-                    measurement.get_metric(
-                        'perf_server_compute_input').value(),
-                    measurement.get_metric(
-                        'perf_server_compute_infer').value(),
-                    measurement.get_metric('perf_throughput').value(),
-                    measurement.get_metric('cpu_used_ram').value()
+                    measurement.get_metric_value('perf_latency'),
+                    measurement.get_metric_value('perf_client_response_wait'),
+                    measurement.get_metric_value('perf_server_queue'),
+                    measurement.get_metric_value('perf_server_compute_input'),
+                    measurement.get_metric_value('perf_server_compute_infer'),
+                    measurement.get_metric_value('perf_throughput'),
+                    measurement.get_metric_value('cpu_used_ram')
                 ]
                 detailed_table.insert_row_by_index(row)
         return detailed_table
@@ -574,8 +563,7 @@ class ReportManager:
         else:
             gpu_dict = self._get_gpu_stats(measurements=measurements)
             gpu_names = ','.join(list(gpu_dict.keys()))
-            max_memories = ','.join(
-                [str(x) + ' GB' for x in gpu_dict.values()])
+            max_memories = ','.join([str(x) + ' GB' for x in gpu_dict.values()])
             sentence = (
                 f"The model config \"{model_config_name}\" uses {instance_group_string.replace('/', ' ')} "
                 f"instances. {len(measurements)} measurements were obtained for the model config "

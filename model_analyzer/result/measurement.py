@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ class Measurement:
     Encapsulates the set of metrics obtained from a single
     perf_analyzer run
     """
+
     def __init__(self, gpu_data, non_gpu_data, perf_config):
         """
         gpu_data : dict of list of Records
@@ -44,12 +45,10 @@ class Measurement:
 
         self._avg_gpu_data = self._average_list(list(self._gpu_data.values()))
         self._gpu_data_from_tag = {
-            type(metric).tag: metric
-            for metric in self._avg_gpu_data
+            type(metric).tag: metric for metric in self._avg_gpu_data
         }
         self._non_gpu_data_from_tag = {
-            type(metric).tag: metric
-            for metric in self._non_gpu_data
+            type(metric).tag: metric for metric in self._non_gpu_data
         }
 
     @classmethod
@@ -80,12 +79,10 @@ class Measurement:
         measurement._avg_gpu_data = measurement._average_list(
             list(measurement._gpu_data.values()))
         measurement._gpu_data_from_tag = {
-            type(metric).tag: metric
-            for metric in measurement._avg_gpu_data
+            type(metric).tag: metric for metric in measurement._avg_gpu_data
         }
         measurement._non_gpu_data_from_tag = {
-            type(metric).tag: metric
-            for metric in measurement._non_gpu_data
+            type(metric).tag: metric for metric in measurement._non_gpu_data
         }
 
         return measurement
@@ -159,6 +156,28 @@ class Measurement:
                             "found in measurement. Possibly comparing "
                             "measurements across devices.")
             return None
+
+    def get_metric_value(self, tag, default_value=0):
+        """
+        Parameters
+        ----------
+        tag : str
+            A human readable tag that corresponds
+            to a particular metric
+        default_value : any
+            Value to return if tag is not found
+
+        Returns
+        -------
+        Record
+            Value of the metric Record corresponding 
+            to the tag, in this measurement, 
+            default_value if tag not found.
+        """
+        metric = self.get_metric(tag)
+        if metric is None:
+            return default_value
+        return metric.value()
 
     def get_parameter(self, tag):
         """

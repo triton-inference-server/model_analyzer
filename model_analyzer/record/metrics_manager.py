@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 from .record_aggregator import RecordAggregator
 from .record import RecordType
+from .types.cpu_used_ram import CPUUsedRAM
 from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
@@ -27,6 +28,7 @@ from collections import defaultdict
 from prometheus_client.parser import text_string_to_metric_families
 import numba
 import requests
+import logging
 
 
 class MetricsManager:
@@ -35,13 +37,13 @@ class MetricsManager:
     categorization of metrics
     """
 
-    metric_tags = [
+    metrics = [
         "perf_throughput", "perf_latency", "perf_client_response_wait",
         "perf_client_send_recv", "perf_server_queue",
         "perf_server_compute_input", "perf_server_compute_infer",
         "perf_server_compute_output", "gpu_used_memory", "gpu_free_memory",
-        "gpu_utilization", "cpu_used_ram", "cpu_available_ram",
-        "gpu_power_usage"
+        "gpu_utilization", "gpu_power_usage", "cpu_available_ram",
+        "cpu_used_ram"
     ]
 
     def __init__(self, config, client, server, result_manager, state_manager):
@@ -56,7 +58,7 @@ class MetricsManager:
         server : TritonServer
             Handle to the instance of Triton being used
         result_manager : ResultManager
-            instance that manages the result tables and 
+            instance that manages the result tables and
             adding results
         state_manager: AnalyzerStateManager
             manages the analyzer state
@@ -68,8 +70,8 @@ class MetricsManager:
         self._result_manager = result_manager
         self._state_manager = state_manager
 
-        self._dcgm_metrics, self._perf_metrics, self._cpu_metrics = \
-             MetricsManager.categorize_metrics()
+        self._dcgm_metrics, self._perf_metrics, self._cpu_metrics = self._categorize_metrics(
+            self.metrics, self._config.collect_cpu_metrics)
         self._gpus = GPUDeviceFactory.verify_requested_gpus(self._config.gpus)
         self._init_state()
 
@@ -98,8 +100,8 @@ class MetricsManager:
 
         self._state_manager.set_state_variable('MetricsManager.gpus', gpu_info)
 
-    @classmethod
-    def categorize_metrics(cls):
+    @staticmethod
+    def _categorize_metrics(metric_tags, collect_cpu_metrics=False):
         """
         Splits the metrics into groups based
         on how they are collected
@@ -112,12 +114,12 @@ class MetricsManager:
 
         dcgm_metrics, perf_metrics, cpu_metrics = [], [], []
         # Separates metrics and objectives into related lists
-        for metric in MetricsManager.get_metric_types(tags=cls.metric_tags):
+        for metric in MetricsManager.get_metric_types(metric_tags):
             if metric in DCGMMonitor.model_analyzer_to_dcgm_field:
                 dcgm_metrics.append(metric)
             elif metric in PerfAnalyzer.perf_metrics:
                 perf_metrics.append(metric)
-            elif metric in CPUMonitor.cpu_metrics:
+            elif collect_cpu_metrics and (metric in CPUMonitor.cpu_metrics):
                 cpu_metrics.append(metric)
 
         return dcgm_metrics, perf_metrics, cpu_metrics
@@ -125,7 +127,6 @@ class MetricsManager:
     def profile_server(self):
         """
         Runs the DCGM monitor on the triton server without the perf_analyzer
-
         Raises
         ------
         TritonModelAnalyzerException
@@ -159,6 +160,23 @@ class MetricsManager:
 
         cpu_only = run_config.model_config().cpu_only()
         perf_config = run_config.perf_config()
+
+        # Inform user CPU metric(s) are not being collected under CPU mode
+        collect_cpu_metrics_expect = cpu_only or len(self._gpus) == 0
+        collect_cpu_metrics_actual = len(self._cpu_metrics) > 0
+        if collect_cpu_metrics_expect and not collect_cpu_metrics_actual:
+            logging.info(
+                "CPU metric(s) are not being collected, while this profiling will run on CPU(s)."
+            )
+        # Warn user about CPU monitor performance issue
+        if collect_cpu_metrics_actual:
+            logging.warning("CPU metric(s) are being collected.")
+            logging.warning(
+                "Collecting CPU metric(s) can affect the latency or throughput numbers reported by perf analyzer."
+            )
+            logging.info(
+                "CPU metric(s) collection can be disabled by removing the CPU metrics (e.g. cpu_used_ram) from the --metrics flag."
+            )
 
         # Start monitors and run perf_analyzer
         self._start_monitors(cpu_only=cpu_only)
@@ -240,7 +258,6 @@ class MetricsManager:
     def _get_perf_analyzer_metrics(self, perf_config, perf_output_writer=None):
         """
         Gets the aggregated metrics from the perf_analyzer
-
         Parameters
         ----------
         perf_config : dict
@@ -249,7 +266,6 @@ class MetricsManager:
         perf_output_writer : OutputWriter
             Writer that writes the output from perf_analyzer to the output
             stream/file. If None, the output is not written
-
         Raises
         ------
         TritonModelAnalyzerException
@@ -283,7 +299,6 @@ class MetricsManager:
         """
         Stops GPU monitor and aggregates any records
         that are GPU specific
-
         Returns
         -------
         dict
@@ -300,8 +315,8 @@ class MetricsManager:
 
         records_groupby_gpu = {}
         records_groupby_gpu = dcgm_record_aggregator.groupby(
-            self._dcgm_metrics, lambda record: str(
-                record.device().device_uuid(), encoding='ascii'))
+            self._dcgm_metrics,
+            lambda record: str(record.device().device_uuid(), encoding='ascii'))
 
         gpu_metrics = defaultdict(list)
         for _, metric in records_groupby_gpu.items():
@@ -325,7 +340,6 @@ class MetricsManager:
     def _check_triton_and_model_analyzer_gpus(self):
         """
         Check whether Triton Server and Model Analyzer are using the same GPUs
-
         Raises
         ------
         TritonModelAnalyzerException
@@ -347,7 +361,6 @@ class MetricsManager:
         """
         Uses prometheus to request a list of GPU UUIDs corresponding to the GPUs
         visible to Triton Inference Server
-
         Parameters
         ----------
         config : namespace
@@ -376,7 +389,6 @@ class MetricsManager:
             Human readable names for the
             metrics to monitor. They correspond
             to actual record types.
-
         Returns
         -------
         List

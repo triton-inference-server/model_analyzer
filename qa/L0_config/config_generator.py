@@ -30,8 +30,7 @@ def _get_sweep_configs(profile_models):
                         'kind': 'KIND_GPU'
                     }]
                 }
-            }
-            for model in profile_models
+            } for model in profile_models
         },
         'triton_launch_mode': ['docker'],
     }
@@ -50,8 +49,7 @@ def _get_sweep_configs(profile_models):
                         'kind': ['KIND_GPU', None]
                     }]
                 }
-            }
-            for model in profile_models
+            } for model in profile_models
         },
         'triton_launch_mode': ['docker'],
     }
@@ -69,8 +67,7 @@ def _get_sweep_configs(profile_models):
                         'max_queue_delay_microseconds': [100, 200]
                     }
                 }
-            }
-            for model in profile_models
+            } for model in profile_models
         },
         'triton_launch_mode': ['docker'],
     }

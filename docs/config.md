@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -85,6 +85,9 @@ profile_models: <comma-delimited-string-list>
 
 # Duration of waiting time between each metric measurement in seconds
 [ monitoring_interval: <float> | default: 1 ]
+
+# Specifies which metric(s) are to be collected.
+[ collect_cpu_metrics: <bool> | default: false ]
 
 # The protocol used to communicate with the Triton Inference Server. Only 'http' and 'grpc' are allowed for the values.
 [ client_protocol: <string> | default: grpc ]
@@ -215,13 +218,13 @@ analysis_models: <comma-delimited-string-list>
 [ filename_server_only: <string> | default: metrics-server-only.csv ]
 
 # Specifies columns keys for model inference metrics table
-[ inference_output_fields: <comma-delimited-string-list> | default: See Config Defaults section]
+[ inference_output_fields: <comma-delimited-string-list> | default: See [Config Defaults](#config-defaults) section]
 
 # Specifies columns keys for model gpu metrics table
-[ gpu_output_fields: <comma-delimited-string-list> | default: See Config Defaults section]
+[ gpu_output_fields: <comma-delimited-string-list> | default: See [Config Defaults](#config-defaults) section]
 
 # Specifies columns keys for server only metrics table
-[ server_output_fields: <comma-delimited-string-list> | default: See Config Defaults section]
+[ server_output_fields: <comma-delimited-string-list> | default: See [Config Defaults](#config-defaults) section]
 
 # Shorthand that allows a user to specify a max latency constraint in ms
 [ latency_budget: <int>]
@@ -280,7 +283,7 @@ The following config options are support by the YAML config file only.
 report_model_configs: <comma-delimited-string-list|list|report_model_config>
 
 # yaml sections to configure the plots that should be shown in the detaild report
-[ plots: <dict-plot-configs> | default: See Config Defaults section ]
+[ plots: <dict-plot-configs> | default: See [Config Defaults](#config-defaults) section ]
 
 ```
 

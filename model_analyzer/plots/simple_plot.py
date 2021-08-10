@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ class SimplePlot:
     model configs, but only holds one
     type of plot
     """
+
     def __init__(self, name, title, x_axis, y_axis, monotonic=False):
         """
         Parameters
@@ -80,14 +81,14 @@ class SimplePlot:
                 measurement.get_parameter(tag=self._x_axis.replace('_', '-')))
         else:
             self._data[model_config_label]['x_data'].append(
-                measurement.get_metric(tag=self._x_axis).value())
+                measurement.get_metric_value(tag=self._x_axis))
 
         if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
             self._data[model_config_label]['y_data'].append(
                 measurement.get_parameter(tag=self._y_axis.replace('_', '-')))
         else:
             self._data[model_config_label]['y_data'].append(
-                measurement.get_metric(tag=self._y_axis).value())
+                measurement.get_metric_value(tag=self._y_axis))
 
     def clear(self):
         """
