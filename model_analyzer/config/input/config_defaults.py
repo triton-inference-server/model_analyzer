@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ DEFAULT_OFFLINE_OBJECTIVES = {'perf_throughput': 10}
 
 DEFAULT_MONITORING_INTERVAL = 1
 DEFAULT_DURATION_SECONDS = 5
+DEFAULT_COLLECT_CPU_METRICS = False
 DEFAULT_LOG_LEVEL = 'INFO'
 DEFAULT_GPUS = 'all'
 DEFAULT_OUTPUT_MODEL_REPOSITORY = './output_model_repository'
@@ -95,7 +96,7 @@ DEFAULT_FILENAME_SERVER_ONLY = 'metrics-server-only.csv'
 DEFAULT_INFERENCE_OUTPUT_FIELDS = [
     'model_name', 'batch_size', 'concurrency', 'model_config_path',
     'instance_group', 'dynamic_batch_sizes', 'satisfies_constraints',
-    'perf_throughput', 'perf_latency', 'cpu_used_ram'
+    'perf_throughput', 'perf_latency'
 ]
 DEFAULT_GPU_OUTPUT_FIELDS = [
     'model_name', 'gpu_uuid', 'batch_size', 'concurrency', 'model_config_path',

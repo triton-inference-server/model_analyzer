@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ from .config_defaults import \
     DEFAULT_BATCH_SIZES, DEFAULT_CHECKPOINT_DIRECTORY, \
     DEFAULT_CLIENT_PROTOCOL, DEFAULT_DURATION_SECONDS, \
     DEFAULT_GPUS, DEFAULT_MAX_RETRIES, \
-    DEFAULT_MONITORING_INTERVAL, DEFAULT_OFFLINE_OBJECTIVES, \
+    DEFAULT_MONITORING_INTERVAL, DEFAULT_COLLECT_CPU_METRICS, DEFAULT_OFFLINE_OBJECTIVES, \
     DEFAULT_OUTPUT_MODEL_REPOSITORY, DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG, \
     DEFAULT_PERF_ANALYZER_CPU_UTIL, DEFAULT_PERF_ANALYZER_PATH, DEFAULT_PERF_MAX_AUTO_ADJUSTS, \
     DEFAULT_PERF_OUTPUT_FLAG, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, \
@@ -178,6 +178,13 @@ class ConfigCommandProfile(ConfigCommand):
                 default_value=DEFAULT_DURATION_SECONDS,
                 description=
                 'Specifies how long (seconds) to gather server-only metrics'))
+        self._add_config(
+            ConfigField(
+                'collect_cpu_metrics',
+                field_type=ConfigPrimitive(bool),
+                flags=['--collect-cpu-metrics'],
+                default_value=DEFAULT_COLLECT_CPU_METRICS,
+                description='Specify whether CPU metrics are collected or not'))
         self._add_config(
             ConfigField(
                 'gpus',
@@ -588,7 +595,7 @@ class ConfigCommandProfile(ConfigCommand):
         """
 
         cpu_only = False
-        if not numba.cuda.is_available():
+        if len(self.gpus) == 0 or not numba.cuda.is_available():
             cpu_only = True
 
         new_profile_models = {}

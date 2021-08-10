@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ TRITON_LOCAL_BIN_PATH = 'test_bin_path/tritonserver'
 
 
 class TestCPUMonitor(trc.TestResultCollector):
+
     def setUp(self):
         self.server_local_mock = MockServerLocalMethods()
         self.server_local_mock.start()
@@ -45,7 +46,7 @@ class TestCPUMonitor(trc.TestResultCollector):
         metrics = [CPUAvailableRAM, CPUUsedRAM]
 
         server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=gpus)
 
         # Start triton and monitor
         server.start()
@@ -68,6 +69,31 @@ class TestCPUMonitor(trc.TestResultCollector):
 
         with self.assertRaises(TritonModelAnalyzerException):
             cpu_monitor.stop_recording_metrics()
+
+        cpu_monitor.destroy()
+        server.stop()
+
+    def test_monitor_disable(self):
+        server_config = TritonServerConfig()
+        server_config['model-repository'] = MODEL_REPOSITORY_PATH
+        gpus = ['all']
+
+        frequency = 1
+        monitoring_time = 3
+        metrics = []
+
+        server = TritonServerFactory.create_server_local(
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=gpus)
+
+        # Start triton and monitor
+        server.start()
+        cpu_monitor = CPUMonitor(server, frequency, metrics)
+        cpu_monitor.start_recording_metrics()
+        time.sleep(monitoring_time)
+        records = cpu_monitor.stop_recording_metrics()
+
+        # Assert no library calls
+        self.server_local_mock.assert_cpu_stats_not_called()
 
         cpu_monitor.destroy()
         server.stop()

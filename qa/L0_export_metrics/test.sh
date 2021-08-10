@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ else
     MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
     METRICS_NUM_COLUMNS=11
     METRICS_NUM_ROWS=1
-    INFERENCE_NUM_COLUMNS=10
+    INFERENCE_NUM_COLUMNS=9
     SERVER_METRICS_NUM_COLUMNS=5
 
     check_table_row_column \

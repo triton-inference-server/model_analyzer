@@ -24,9 +24,11 @@ class TestConfigGenerator:
     TO ADD A TEST: Simply add a member function whose name starts
                     with 'generate'.
     """
+
     def __init__(self):
         test_functions = [
-            self.__getattribute__(name) for name in dir(self)
+            self.__getattribute__(name)
+            for name in dir(self)
             if name.startswith('generate')
         ]
 
@@ -52,8 +54,7 @@ class TestConfigGenerator:
         self.config['profile_models'] = {
             model_name: {
                 'cpu_only': True
-            }
-            for model_name in self.model_names
+            } for model_name in self.model_names
         }
         with open('config-profile.yml', 'w+') as f:
             yaml.dump(self.config, f)

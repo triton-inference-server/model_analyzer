@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -48,12 +48,12 @@ class CPUMonitor(Monitor):
         Get memory info of process and 
         append
         """
-
-        used_mem, free_mem = self._server.cpu_stats()
-        if CPUUsedRAM in self._metrics:
-            self._cpu_memory_records.append(CPUUsedRAM(value=used_mem))
-        if CPUAvailableRAM in self._metrics:
-            self._cpu_memory_records.append(CPUAvailableRAM(value=free_mem))
+        if (CPUUsedRAM in self._metrics) or (CPUAvailableRAM in self._metrics):
+            used_mem, free_mem = self._server.cpu_stats()
+            if CPUUsedRAM in self._metrics:
+                self._cpu_memory_records.append(CPUUsedRAM(value=used_mem))
+            if CPUAvailableRAM in self._metrics:
+                self._cpu_memory_records.append(CPUAvailableRAM(value=free_mem))
 
     def _collect_records(self):
         """
