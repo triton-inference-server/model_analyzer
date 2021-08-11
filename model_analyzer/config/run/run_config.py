@@ -20,8 +20,7 @@ class RunConfig:
     Analyzer. One run corresponds to
     one ModelConfig and produces one ModelResult.
     """
-
-    def __init__(self, model_name, model_config, perf_config):
+    def __init__(self, model_name, model_config, perf_config, triton_env):
         """
         Parameters
         ----------
@@ -32,11 +31,15 @@ class RunConfig:
         perf_config : PerfAnalyzerConfig
             list of possible run parameters to pass
             to Perf Analyzer
+        triton_env : dict
+            A dictionary of environment variables to set
+            when launching tritonserver
         """
 
         self._model_name = model_name
         self._model_config = model_config
         self._perf_config = perf_config
+        self._triton_env = triton_env
 
     def model_name(self):
         """
@@ -70,3 +73,14 @@ class RunConfig:
         """
 
         return self._perf_config
+
+    def triton_environment(self):
+        """
+        Returns
+        -------
+        dict
+            The environment that tritonserver
+            was run with for this runconfig
+        """
+
+        return self._triton_env

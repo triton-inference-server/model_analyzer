@@ -21,9 +21,14 @@ class TritonServer(ABC):
     TritonServerFactory
     """
     @abstractmethod
-    def start(self):
+    def start(self, env):
         """
         Starts the tritonserver
+        
+        Parameters
+        ----------
+        env: dict
+            The environment to set for this tritonserver launch
         """
 
     @abstractmethod

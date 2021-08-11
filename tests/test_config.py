@@ -1392,11 +1392,11 @@ profile_models:
             'cli_repository', '-f', 'path-to-config-file'
         ]
         yaml_content = """
-profile_models: model1, model2
-triton_server_flags:
-    strict-model-config: false
-    backend-config: test_backend_config
-"""
+            profile_models: model1, model2
+            triton_server_flags:
+                strict-model-config: false
+                backend-config: test_backend_config
+            """
         config = self._evaluate_config(args, yaml_content)
         self.assertDictEqual(
             config.get_all_config()['triton_server_flags'], {
@@ -1405,27 +1405,60 @@ triton_server_flags:
             })
 
         yaml_content = """
-profile_models: model1, model2
-triton_server_flags:
-    disallowed-config-option: some_value
-    backend-config: test_backend_config
-"""
+            profile_models: model1, model2
+            triton_server_flags:
+                disallowed-config-option: some_value
+                backend-config: test_backend_config
+            """
         with self.assertRaises(TritonModelAnalyzerException):
             config = self._evaluate_config(args, yaml_content)
 
         yaml_content = """
-profile_models: 
-   model1:
-    triton_server_flags:
-        strict_model_config: false
-        backend_config: test_backend_config
-"""
+            profile_models: 
+                model1:
+                    triton_server_flags:
+                        strict_model_config: false
+                        backend_config: test_backend_config
+            """
         config = self._evaluate_config(args, yaml_content)
         self.assertDictEqual(
             config.get_all_config()['profile_models'][0].triton_server_flags(),
             {
                 'strict_model_config': 'False',
                 'backend_config': 'test_backend_config'
+            })
+
+    def test_triton_server_environment(self):
+        args = [
+            'model-analyzer', 'profile', '--model-repository',
+            'cli_repository', '-f', 'path-to-config-file'
+        ]
+        yaml_content = """
+            profile_models: model1, model2
+            triton_server_environment:
+                LD_PRELOAD: libtest.so
+                LD_LIBRARY_PATH: /path/to/test/lib
+            """
+        config = self._evaluate_config(args, yaml_content)
+        self.assertDictEqual(
+            config.get_all_config()['triton_server_environment'], {
+                'LD_PRELOAD': 'libtest.so',
+                'LD_LIBRARY_PATH': '/path/to/test/lib'
+            })
+
+        yaml_content = """
+            profile_models: 
+                model1:
+                    triton_server_environment:
+                        LD_PRELOAD: libtest.so
+                        LD_LIBRARY_PATH: /path/to/test/lib
+            """
+        config = self._evaluate_config(args, yaml_content)
+        self.assertDictEqual(
+            config.get_all_config()['profile_models']
+            [0].triton_server_environment(), {
+                'LD_PRELOAD': 'libtest.so',
+                'LD_LIBRARY_PATH': '/path/to/test/lib'
             })
 
     def test_report_configs(self):

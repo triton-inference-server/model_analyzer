@@ -22,9 +22,8 @@ class TritonServerFactory:
     """
     A factory for creating TritonServer instances
     """
-
     @staticmethod
-    def create_server_docker(image, config, gpus, log_path=None):
+    def create_server_docker(image, config, gpus, log_path=None, mounts=None):
         """
         Parameters
         ----------
@@ -37,6 +36,8 @@ class TritonServerFactory:
             Use ["all"] to include all GPUs
         log_path: str
             Absolute path to the triton log file
+        mounts: list of str
+            The volumes to be mounted to the tritonserver container
 
         Returns
         -------
@@ -47,7 +48,8 @@ class TritonServerFactory:
             image=image,
             config=config,
             gpus=GPUDeviceFactory.verify_requested_gpus(gpus),
-            log_path=log_path)
+            log_path=log_path,
+            mounts=mounts)
 
     @staticmethod
     def create_server_local(path, config, gpus, log_path=None):
