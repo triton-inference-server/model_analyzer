@@ -243,7 +243,6 @@ def main():
 
     args, config = get_cli_and_config_options()
     setup_logging(args)
-    state_manager = AnalyzerStateManager(config=config)
 
     server = None
     try:
@@ -253,6 +252,7 @@ def main():
             create_output_model_repository(config)
 
             client, server = get_triton_handles(config)
+            state_manager = AnalyzerStateManager(config=config, server=server)
 
             # Only check for exit after the events that take a long time.
             if state_manager.exiting():
@@ -263,11 +263,15 @@ def main():
 
         elif args.subcommand == 'analyze':
 
-            analyzer = Analyzer(config, server, state_manager)
+            analyzer = Analyzer(
+                config, server,
+                AnalyzerStateManager(config=config, server=server))
             analyzer.analyze(mode=args.mode, quiet=bool(args.quiet))
         elif args.subcommand == 'report':
 
-            analyzer = Analyzer(config, server, state_manager)
+            analyzer = Analyzer(
+                config, server,
+                AnalyzerStateManager(config=config, server=server))
             analyzer.report(mode=args.mode)
     finally:
         if server is not None:

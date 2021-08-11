@@ -48,7 +48,7 @@ RET=0
 
 rm -rf $EXPORT_PATH && mkdir -p $EXPORT_PATH
 
-# First run the config and count the number of checkpoints
+# TEST CASE: Run the config and count the number of checkpoints
 TEST_NAME="num_checkpoints"
 ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
 CONFIG_FILE="config-single.yml"
@@ -71,7 +71,7 @@ else
 fi
 set -e
 
-# Second run the config again and make sure that no perf analyzer runs took place
+# TEST CASE: Run the config again and make sure that no perf analyzer runs took place
 TEST_NAME="loading_checkpoints"
 ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
 
@@ -94,7 +94,7 @@ set -e
 # Clear checkpoints and results
 rm -rf $EXPORT_PATH/*
 
-# Fourth run config multple and send SIGINT after 2 models run
+# TEST CASE: run config multple and send SIGINT after 2 models run
 TEST_NAME="interrupt_handling"
 CONFIG_FILE="config-multi.yml"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
@@ -146,7 +146,44 @@ set -e
 # Clear checkpoints and results
 rm -rf $EXPORT_PATH/*
 
-# For the fifth test we will have results mixed across runs
+# TEST CASE: Run config-multiple and send 3 SIGINT after server is profiled
+TEST_NAME="early_exit"
+CONFIG_FILE="config-multi.yml"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
+ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
+
+set +e
+run_analyzer_nohup
+ANALYZER_PID=$!
+
+sleep 2
+until [[ ! -z `grep "Triton Server stopped." $ANALYZER_LOG` ]]; do
+    sleep 1
+done
+
+until [[ "`grep 'SIGINT' $ANALYZER_LOG | wc -l`" -gt "3" ]]; do
+    kill -2 $ANALYZER_PID
+    sleep 0.5
+done
+wait $ANALYZER_PID
+
+if [ $? -ne 1 ]; then
+    echo -e "\n***\n*** Test Failed. model-analyzer did not exit with expected exit code (1). \n***"
+    cat $ANALYZER_LOG
+    RET=1
+else
+    python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $CHECKPOINT_DIRECTORY -l $ANALYZER_LOG
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
+        cat $ANALYZER_LOG
+        RET=1
+    fi
+fi
+
+# Clear checkpoints and results
+rm -rf $EXPORT_PATH/*
+
+# TEST CASE: Have results mixed across runs
 CONFIG_FILE="config-mixed-first.yml"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
 ANALYZER_LOG="measurement_consistent_prep.${ANALYZER_LOG_BASE}"
