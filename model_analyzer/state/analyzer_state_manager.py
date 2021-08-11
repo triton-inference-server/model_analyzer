@@ -30,8 +30,18 @@ class AnalyzerStateManager:
     """
     Maintains the state of the Model Analyzer
     """
-    def __init__(self, config):
+    def __init__(self, config, server):
+        """
+        Parameters
+        ----------
+        config: ConfigCommand
+            The analyzer's config
+        server : TritonServer
+            Handle for tritonserver instance
+        """
+
         self._config = config
+        self._server = server
         self._exiting = 0
         self._checkpoint_dir = config.checkpoint_directory
         self._state_changed = False
@@ -167,8 +177,12 @@ class AnalyzerStateManager:
         if self._exiting >= MAX_NUMBER_OF_INTERRUPTS:
             logging.info(
                 f'Received SIGINT maximum number of times. Saving state and exiting immediately. '
-                'perf_analyzer and tritonserver may still be running...')
+                'perf_analyzer may still be running...')
             self.save_checkpoint()
+
+            # Exit server
+            if self._server:
+                self._server.stop()
             sys.exit(1)
 
     def _latest_checkpoint(self):

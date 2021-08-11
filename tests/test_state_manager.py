@@ -71,7 +71,7 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
         config = self._evaluate_config(args, yaml_content)
 
         # state manager
-        self.state_manager = AnalyzerStateManager(config=config)
+        self.state_manager = AnalyzerStateManager(config=config, server=None)
 
     def test_set_get_state_variables(self):
         self.mock_os.set_os_path_exists_return_value(False)
