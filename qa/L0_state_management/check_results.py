@@ -91,6 +91,25 @@ class TestOutputValidator:
 
         return found_count == 1
 
+    def check_early_exit(self):
+        """
+        Checks that no more than 1 model were profiled
+        and that Triton server was stopped twice
+        """
+
+        with open(self._analyzer_log, 'r') as f:
+            log_contents = f.read()
+
+        if log_contents.find("Received SIGINT maximum number of times") == -1:
+            print("\n***\n***  Early exit not triggered. \n***")
+            return False
+        elif log_contents.count("Profiling model") > 1:
+            print("\n***\n***  Early exit not triggered on time. \n***")
+            return False
+        elif log_contents.count("Triton Server stopped") < 2:
+            return False
+        return True
+
     def check_continue_after_checkpoint(self):
         """
         Check that the 2nd model onwards have been run
