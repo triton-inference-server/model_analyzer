@@ -197,7 +197,7 @@ class ModelManager:
                 continue
 
             # Start server, and load model variant
-            self._server.start()
+            self._server.start(env=run_config.triton_environment())
             if not self._create_and_load_model_variant(
                     original_name=run_config.model_name(),
                     variant_config=run_config.model_config()):

@@ -39,24 +39,51 @@ class TestConfigGenerator:
     def setup(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('-m',
-                            '--analysis-models',
+                            '--profile-models',
                             type=str,
                             required=True,
                             help='The config file for this test')
+        parser.add_argument('-p',
+                            '--preload-path',
+                            type=str,
+                            required=True,
+                            help='The path to the custom op shared object')
+        parser.add_argument(
+            '-l',
+            '--library-path',
+            type=str,
+            required=True,
+            help=
+            'The path to the backend shared libraries used by the custom op')
 
         self.args = parser.parse_args()
-        self.config = {}
-        self.config['summarize'] = False
-        self.config['analysis_models'] = {}
-        for model in sorted(self.args.analysis_models.split(',')):
-            self.config['analysis_models'][model] = {
-                'objectives': {
-                    'perf_throughput': 10
-                }
-            }
+        self.profile_models = sorted(self.args.profile_models.split(','))
 
-    def generate_configs(self):
-        with open('config.yaml', 'w+') as f:
+        self.config = {}
+        self.config['run_config_search_disable'] = True
+        self.config['profile_models'] = self.profile_models
+        self.config['batch_sizes'] = 1
+        self.config['concurrency'] = 1
+
+    def generate_local_mode_custom_op_config(self):
+        self.config['triton_launch_mode'] = 'local'
+        self.config['triton_server_environment'] = {
+            'LD_PRELOAD': self.args.preload_path,
+            'LD_LIBRARY_PATH': self.args.library_path
+        }
+        with open('config-local.yaml', 'w+') as f:
+            yaml.dump(self.config, f)
+
+    def generate_docker_mode_custom_op_config(self):
+        self.config['triton_launch_mode'] = 'docker'
+        self.config['triton_docker_mounts'] = [
+            f'{self.args.preload_path}:{self.args.preload_path}:ro',
+        ]
+        self.config['triton_server_environment'] = {
+            'LD_PRELOAD': self.args.preload_path,
+            'LD_LIBRARY_PATH': self.args.library_path
+        }
+        with open('config-docker.yaml', 'w+') as f:
             yaml.dump(self.config, f)
 
 

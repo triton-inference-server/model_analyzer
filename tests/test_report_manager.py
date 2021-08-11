@@ -86,7 +86,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                                             result_comparator)
         run_config = RunConfig(
             model_name, ModelConfig.create_from_dictionary(self.model_config),
-            measurement.perf_config())
+            measurement.perf_config(), None)
         self.result_manager.add_measurement(run_config, measurement)
 
     def setUp(self):

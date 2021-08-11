@@ -32,8 +32,7 @@ class TritonServerDocker(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     triton in a docker container.
     """
-
-    def __init__(self, image, config, gpus, log_path):
+    def __init__(self, image, config, gpus, log_path, mounts):
         """
         Parameters
         ----------
@@ -45,6 +44,8 @@ class TritonServerDocker(TritonServer):
             List of GPU UUIDs to be mounted and used in the container
         log_path: str
             Absolute path to the triton log file
+        mounts: list of str
+            The volumes to be mounted to the tritonserver container
         """
 
         self._server_config = config
@@ -52,12 +53,13 @@ class TritonServerDocker(TritonServer):
         self._tritonserver_image = image
         self._tritonserver_container = None
         self._log_path = log_path
+        self._mounts = mounts
         self._gpus = gpus
 
         assert self._server_config['model-repository'], \
             "Triton Server requires --model-repository argument to be set."
 
-    def start(self):
+    def start(self, env=None):
         """
         Starts the tritonserver docker container using docker-py
         """
@@ -69,16 +71,28 @@ class TritonServerDocker(TritonServer):
                 docker.types.DeviceRequest(device_ids=self._gpus,
                                            capabilities=[['gpu']])
             ]
-        environment = {
-            'CUDA_VISIBLE_DEVICES': ','.join([uuid for uuid in self._gpus])
-        }
+
+        # Set environment inside container.
+        # Supports only strings, and value lookups/concats
+        env_cmds = [
+            f"CUDA_VISIBLE_DEVICES={','.join([uuid for uuid in self._gpus])}"
+        ]
+        if env:
+            # Set all environment variables inside the container
+            for env_variable in list(env):
+                env_cmds.append(f"{env_variable}={env[env_variable]}")
+                del env[env_variable]
 
         # Mount required directories
-        volumes = {
-            self._server_config['model-repository']: {
-                'bind': self._server_config['model-repository'],
-                'mode': 'ro'
-            }
+        volumes = {}
+        if self._mounts:
+            for volume_str in self._mounts:
+                host_path, dest, mode = volume_str.split(':')
+                volumes[host_path] = {'bind': dest, 'mode': mode}
+
+        volumes[self._server_config['model-repository']] = {
+            'bind': self._server_config['model-repository'],
+            'mode': 'ro'
         }
 
         # Map ports, use config values but set to server defaults if not
@@ -93,14 +107,17 @@ class TritonServerDocker(TritonServer):
             server_metrics_port: server_metrics_port
         }
 
+        # Construct run command
+        command = ' '.join(
+            env_cmds + ['tritonserver',
+                        self._server_config.to_cli_string()])
         try:
             # Run the docker container and run the command in the container
             self._tritonserver_container = self._docker_client.containers.run(
-                command='tritonserver ' + self._server_config.to_cli_string(),
+                command=f'bash -c "{command}"',
                 name='tritonserver',
                 image=self._tritonserver_image,
                 device_requests=devices,
-                environment=environment,
                 volumes=volumes,
                 ports=ports,
                 publish_all_ports=True,

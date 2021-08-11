@@ -30,7 +30,6 @@ class TritonServerLocal(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     tritonserver locally as as subprocess.
     """
-
     def __init__(self, path, config, gpus, log_path):
         """
         Parameters
@@ -54,7 +53,7 @@ class TritonServerLocal(TritonServer):
         assert self._server_config['model-repository'], \
             "Triton Server requires --model-repository argument to be set."
 
-    def start(self):
+    def start(self, env=None):
         """
         Starts the tritonserver container locally
         """
@@ -62,9 +61,21 @@ class TritonServerLocal(TritonServer):
         if self._server_path:
             # Create command list and run subprocess
             cmd = [self._server_path]
-            cmd += self._server_config.to_cli_string().replace('=', ' ').split()
-            # List GPUs to be used by tritonserver
+            cmd += self._server_config.to_cli_string().replace('=',
+                                                               ' ').split()
+            # Set environment, update with user config env
             triton_env = os.environ.copy()
+
+            if env:
+                # Filter env variables that use env lookups
+                for variable, value in env.items():
+                    if value.find('$') == -1:
+                        triton_env[variable] = value
+                    else:
+                        # Collect the ones that need lookups to give to the shell
+                        triton_env[variable] = os.path.expandvars(value)
+
+            # List GPUs to be used by tritonserver
             triton_env['CUDA_VISIBLE_DEVICES'] = ','.join(
                 [uuid for uuid in self._gpus])
 
@@ -75,6 +86,8 @@ class TritonServerLocal(TritonServer):
                     raise TritonModelAnalyzerException(e)
             else:
                 self._log_file = DEVNULL
+
+            # Construct Popen command
             self._tritonserver_process = Popen(cmd,
                                                stdout=self._log_file,
                                                stderr=STDOUT,

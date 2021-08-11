@@ -18,7 +18,6 @@ class ConfigModelProfileSpec:
     A class representing the configuration used for
     a single model.
     """
-
     def __init__(self,
                  model_name,
                  cpu_only=False,
@@ -27,7 +26,8 @@ class ConfigModelProfileSpec:
                  parameters=None,
                  model_config_parameters=None,
                  perf_analyzer_flags=None,
-                 triton_server_flags=None):
+                 triton_server_flags=None,
+                 triton_server_environment=None):
         """
         Parameters
         ----------
@@ -50,6 +50,9 @@ class ConfigModelProfileSpec:
         triton_server_flags : dict
             The configuration for the triton server instance launched
             for this model
+        triton_server_environment: dict
+            The environment variables to be set for the tritonserver instances
+            launched by model analyzer
         """
 
         self._model_name = model_name
@@ -60,6 +63,7 @@ class ConfigModelProfileSpec:
         self._model_config_parameters = model_config_parameters
         self._perf_analyzer_flags = perf_analyzer_flags
         self._triton_server_flags = triton_server_flags
+        self._triton_server_environment = triton_server_environment
 
     def cpu_only(self):
         """
@@ -141,6 +145,16 @@ class ConfigModelProfileSpec:
 
         return self._triton_server_flags
 
+    def triton_server_environment(self):
+        """
+        Returns
+        -------
+        dict
+            The triton server environment
+        """
+
+        return self._triton_server_environment
+
     def set_cpu_only(self, cpu_only):
         """
         Parameters
@@ -220,6 +234,16 @@ class ConfigModelProfileSpec:
         """
 
         self._triton_server_flags = flags
+
+    def set_triton_server_environment(self, triton_env):
+        """
+        Parameters
+        -------
+        triton_env: dict
+            The triton server environment
+        """
+
+        self._triton_server_environment = triton_env
 
     @staticmethod
     def model_object_to_config_model_profile_spec(value):
