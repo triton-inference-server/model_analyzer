@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -188,8 +188,8 @@ class PerfAnalyzer:
         """
 
         if self._output.find("Failed to obtain stable measurement"
-                             ) != -1 or self._output.find(
-                                 "Please use a larger time window") != -1:
+                            ) != -1 or self._output.find(
+                                "Please use a larger time window") != -1:
             if self._config['measurement-mode'] == 'time_windows':
                 if self._config['measurement-interval'] is None:
                     self._config[
@@ -242,7 +242,7 @@ class PerfAnalyzer:
         last perf_analyzer run
         """
 
-        if self._perf_records:
+        if self._output:
             return self._perf_records
         raise TritonModelAnalyzerException(
             "Attempted to get perf_analyzer resultss"
@@ -276,16 +276,14 @@ class PerfAnalyzer:
             if metric not in self.perf_metrics:
                 raise TritonModelAnalyzerException(
                     f"Perf metric : {metric} not found or supported.")
+            parse_func = getattr(self, self.perf_metrics[metric])
+            output = None
             if metric in server_perf_metrics:
-                parse_func = getattr(self, self.perf_metrics[metric])
-                self._perf_records.append(parse_func(server_section))
+                output = parse_func(server_section)
             else:
-                parse_func = getattr(self, self.perf_metrics[metric])
-                self._perf_records.append(parse_func(client_section))
-
-        if not self._perf_records:
-            raise TritonModelAnalyzerException(
-                'perf_analyzer output was not as expected.')
+                output = parse_func(client_section)
+            if output is not None:
+                self._perf_records.append(output)
 
     def _parse_perf_client_send_recv(self, section):
         """
@@ -302,8 +300,9 @@ class PerfAnalyzer:
         if client_send_recv:
             client_send_recv = float(client_send_recv.group(1)) / 1e3
             return PerfClientSendRecv(value=client_send_recv)
-        raise TritonModelAnalyzerException(
-            'perf_analyzer output did not client send/recv time.')
+        logging.error(
+            'perf_analyzer output did not contain client send/recv time.')
+        return None
 
     def _parse_perf_client_response_wait(self, section):
         """
@@ -314,8 +313,9 @@ class PerfAnalyzer:
         if client_response_wait:
             client_response_wait = float(client_response_wait.group(1)) / 1e3
             return PerfClientResponseWait(value=client_response_wait)
-        raise TritonModelAnalyzerException(
+        logging.error(
             'perf_analyzer output did not contain client response wait time.')
+        return None
 
     def _parse_perf_throughput(self, section):
         """
@@ -326,8 +326,8 @@ class PerfAnalyzer:
         if throughput:
             throughput = float(throughput.group(1))
             return PerfThroughput(value=throughput)
-        raise TritonModelAnalyzerException(
-            'perf_analyzer output did not contain throughput.')
+        logging.error('perf_analyzer output did not contain throughput.')
+        return None
 
     def _parse_perf_latency(self, section):
         """
@@ -338,8 +338,8 @@ class PerfAnalyzer:
         if p99_latency:
             p99_latency = float(p99_latency.group(1)) / 1e3
             return PerfLatency(value=p99_latency)
-        raise TritonModelAnalyzerException(
-            'perf_analyzer output did not contain p99 latency.')
+        logging.error('perf_analyzer output did not contain p99 latency.')
+        return None
 
     def _parse_perf_server_queue(self, section):
         """
@@ -350,8 +350,8 @@ class PerfAnalyzer:
         if server_queue:
             server_queue = float(server_queue.group(1)) / 1e3
             return PerfServerQueue(value=server_queue)
-        raise TritonModelAnalyzerException(
-            'perf_analyzer output did not server queue time.')
+        logging.error('perf_analyzer output did not contain server queue time.')
+        return None
 
     def _parse_perf_server_compute_input(self, section):
         """
@@ -362,8 +362,9 @@ class PerfAnalyzer:
         if server_compute_input:
             server_compute_input = float(server_compute_input.group(1)) / 1e3
             return PerfServerComputeInput(value=server_compute_input)
-        raise TritonModelAnalyzerException(
-            'perf_analyzer output did not server compute input time.')
+        logging.error(
+            'perf_analyzer output did not contain server compute input time.')
+        return None
 
     def _parse_perf_server_compute_infer(self, section):
         """
@@ -374,8 +375,9 @@ class PerfAnalyzer:
         if server_compute_infer:
             server_compute_infer = float(server_compute_infer.group(1)) / 1e3
             return PerfServerComputeInfer(value=server_compute_infer)
-        raise TritonModelAnalyzerException(
-            'perf_analyzer output did not server compute infer time.')
+        logging.error(
+            'perf_analyzer output did not contain server compute infer time.')
+        return None
 
     def _parse_perf_server_compute_output(self, section):
         """
@@ -386,5 +388,6 @@ class PerfAnalyzer:
         if server_compute_output:
             server_compute_output = float(server_compute_output.group(1)) / 1e3
             return PerfServerComputeOutput(value=server_compute_output)
-        raise TritonModelAnalyzerException(
-            'perf_analyzer output did not server compute output time.')
+        logging.error(
+            'perf_analyzer output did not contain server compute output time.')
+        return None
