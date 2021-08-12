@@ -168,8 +168,6 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             PerfServerComputeInput, PerfServerComputeOutput
         ]
         perf_analyzer.run(perf_metrics)
-        records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 0)
 
         # Test exception handling
         self.perf_mock.set_perf_analyzer_return_code(1)

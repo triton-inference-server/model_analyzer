@@ -242,7 +242,7 @@ class PerfAnalyzer:
         last perf_analyzer run
         """
 
-        if self._output:
+        if self._perf_records:
             return self._perf_records
         raise TritonModelAnalyzerException(
             "Attempted to get perf_analyzer resultss"
