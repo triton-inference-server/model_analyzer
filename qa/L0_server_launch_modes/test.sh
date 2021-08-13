@@ -24,23 +24,30 @@ REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_checkpoints"}
 MODEL_NAMES="vgg19_libtorch"
-BATCH_SIZES="4"
-CONCURRENCY="4"
+TRITON_LAUNCH_MODES="local docker remote"
+CLIENT_PROTOCOLS="http grpc"
 PORTS=(`find_available_ports 3`)
 http_port="${PORTS[0]}"
 grpc_port="${PORTS[1]}"
 metrics_port="${PORTS[2]}"
 GPUS=(`get_all_gpus_uuids`)
 CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
-MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY --profile-models $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY --run-config-search-disable --perf-analyzer-cpu-util 600"
+MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY --profile-models $MODEL_NAMES"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
-MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
-MODEL_ANALYZER_PORTS="$MODEL_ANALYZER_PORTS --triton-metrics-url http://localhost:$metrics_port/metrics"
-TRITON_LAUNCH_MODES="local docker remote"
-CLIENT_PROTOCOLS="http grpc"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:$metrics_port/metrics"
 
-mkdir $CHECKPOINT_DIRECTORY
+# mkdir $CHECKPOINT_DIRECTORY
 # cp $CHECKPOINT_REPOSITORY/server_launch_modes.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
+
+python3 test_config_generator.py --protocols "`echo $CLIENT_PROTOCOLS | sed 's/ /,/g'`" --launch-modes "`echo $TRITON_LAUNCH_MODES | sed 's/ /,/g'`"
+
+LIST_OF_CONFIG_FILES=(`ls | grep .yaml`)
+
+if [ ${#LIST_OF_CONFIG_FILES[@]} -le 0 ]; then
+    echo -e "\n***\n*** Test Failed. No config file exists. \n***"
+    exit 1
+fi
 
 # Run the model-analyzer, both client protocols
 RET=0
@@ -64,70 +71,70 @@ function convert_gpu_array_to_flag() {
 
 function run_server_launch_modes() {
     gpus=($@)
-    for PROTOCOL in $CLIENT_PROTOCOLS; do
-        MODEL_ANALYZER_ARGS_WITH_PROTOCOL="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$PROTOCOL `convert_gpu_array_to_flag ${gpus[@]}`"
-        for LAUNCH_MODE in $TRITON_LAUNCH_MODES; do
-            rm -rf $OUTPUT_MODEL_REPOSITORY
-            MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE="$MODEL_ANALYZER_ARGS_WITH_PROTOCOL --triton-launch-mode=$LAUNCH_MODE"
-            ANALYZER_LOG=analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
-            SERVER_LOG=${LAUNCH_MODE}.${PROTOCOL}.server.log
+    for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
+        CONFIG_PARAMETERS=${CONFIG_FILE%".yaml"}    # e.g. config-docker-http.yaml -> config-docker-http
+        PARAMETERS=(${CONFIG_PARAMETERS//-/ }) # config-docker-http -> [config, docker, http]
+        LAUNCH_MODE=${PARAMETERS[1]}
+        PROTOCOL=${PARAMETERS[2]}
+        
+        ANALYZER_LOG=analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
+        SERVER_LOG=${LAUNCH_MODE}.${PROTOCOL}.server.log
 
-            # Set arguments for various launch modes
-            if [ "$LAUNCH_MODE" == "local" ]; then    
-                MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG}"
-            elif [ "$LAUNCH_MODE" == "docker" ]; then
-                MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_DOCKER_IMAGE"
-            elif [ "$LAUNCH_MODE" == "remote" ]; then
-                MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS_WITH_LAUNCH_MODE $MODEL_ANALYZER_PORTS"
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
 
-                # For remote launch, set server args and start server
-                SERVER=`which tritonserver`
-                SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
-                SERVER_HTTP_PORT=${http_port}
-                
-                run_server
-                if [ "$SERVER_PID" == "0" ]; then
-                    echo -e "\n***\n*** Failed to start $SERVER\n***"
-                    cat $SERVER_LOG
-                    exit 1
-                fi
+        # Set arguments for various launch modes
+        if [ "$LAUNCH_MODE" == "remote" ]; then    
+            # For remote launch, set server args and start server
+            SERVER=`which tritonserver`
+            SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
+            SERVER_HTTP_PORT=${http_port}
+            
+            run_server
+            if [ "$SERVER_PID" == "0" ]; then
+                echo -e "\n***\n*** Failed to start $SERVER\n***"
+                cat $SERVER_LOG
+                exit 1
             fi
+        else
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
+        fi
 
-            # Run the analyzer and check the results, enough to just profile the server
-            set +e
-            MODEL_ANALYZER_SUBCOMMAND="profile"
-            run_analyzer
-            if [ $? -ne 0 ]; then
-                echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
-                        "\n***     model-analyzer exited with non-zero exit code. \n***"
+        # Run the analyzer and check the results, enough to just profile the server
+        set +e
+        MODEL_ANALYZER_SUBCOMMAND="profile"
+        run_analyzer
+        if [ $? -ne 0 ]; then
+            echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
+                    "\n***     model-analyzer exited with non-zero exit code. \n***"
+            cat $ANALYZER_LOG
+            RET=1
+        fi
+
+        if [ "$LAUNCH_MODE" == "remote" ]; then
+            kill $SERVER_PID
+            wait $SERVER_PID
+        else
+            if [ ! -s "$SERVER_LOG" ]; then
+                echo -e "\n***\n*** Test Output Verification Failed : No logs found\n***"
                 cat $ANALYZER_LOG
                 RET=1
             fi
+        fi
 
-            if [ "$LAUNCH_MODE" == "remote" ]; then
-                kill $SERVER_PID
-                wait $SERVER_PID
-            else
-                if [ ! -s "$SERVER_LOG" ]; then
-                    echo -e "\n***\n*** Test Output Verification Failed : No logs found\n***"
-                    cat $ANALYZER_LOG
-                    RET=1
-                fi
-            fi
+        if [ "$gpus" == "empty_gpu_flag" ]; then
+            python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus ""
+        elif [ -z "$gpus" ]; then
+            python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${GPUS[@]} | sed "s/ /,/g"` --check-visible
+        else
+            python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${gpus[@]} | sed "s/ /,/g"`
+        fi
+        if [ $? -ne 0 ]; then
+            RET=1
+            break
+        fi
+        set -e
 
-            if [ "$gpus" == "empty_gpu_flag" ]; then
-                python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus ""
-            elif [ -z "$gpus" ]; then
-                python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${GPUS[@]} | sed "s/ /,/g"` --check-visible
-            else
-                python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${gpus[@]} | sed "s/ /,/g"`
-            fi
-            if [ $? -ne 0 ]; then
-                RET=1
-                break
-            fi
-            set -e
-        done
+        rm -rf $OUTPUT_MODEL_REPOSITORY
     done
 }
 

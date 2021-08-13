@@ -32,7 +32,7 @@ class TritonServerDocker(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     triton in a docker container.
     """
-    def __init__(self, image, config, gpus, log_path, mounts):
+    def __init__(self, image, config, gpus, log_path, mounts, labels):
         """
         Parameters
         ----------
@@ -46,6 +46,9 @@ class TritonServerDocker(TritonServer):
             Absolute path to the triton log file
         mounts: list of str
             The volumes to be mounted to the tritonserver container
+        labels: dict
+            name-value pairs for label to set metadata for triton docker
+            container. (Not the same as environment variables)
         """
 
         self._server_config = config
@@ -54,6 +57,7 @@ class TritonServerDocker(TritonServer):
         self._tritonserver_container = None
         self._log_path = log_path
         self._mounts = mounts
+        self._labels = labels if labels else {}
         self._gpus = gpus
 
         assert self._server_config['model-repository'], \
@@ -115,10 +119,12 @@ class TritonServerDocker(TritonServer):
             # Run the docker container and run the command in the container
             self._tritonserver_container = self._docker_client.containers.run(
                 command=f'bash -c "{command}"',
+                init=True,
                 name='tritonserver',
                 image=self._tritonserver_image,
                 device_requests=devices,
                 volumes=volumes,
+                labels=self._labels,
                 ports=ports,
                 publish_all_ports=True,
                 tty=False,

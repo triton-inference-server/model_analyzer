@@ -14,6 +14,7 @@
 
 import argparse
 import yaml
+import os
 
 
 class TestConfigGenerator:
@@ -76,6 +77,9 @@ class TestConfigGenerator:
 
     def generate_docker_mode_custom_op_config(self):
         self.config['triton_launch_mode'] = 'docker'
+        if 'TRITON_LAUNCH_DOCKER_IMAGE' in os.environ:
+            self.config['triton_docker_image'] = os.environ[
+                'TRITON_LAUNCH_DOCKER_IMAGE']
         self.config['triton_docker_mounts'] = [
             f'{self.args.preload_path}:{self.args.preload_path}:ro',
         ]

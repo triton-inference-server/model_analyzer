@@ -30,7 +30,7 @@ NUM_ITERATIONS=${NUM_ITERATIONS:=4}
 MODEL_NAMES="libtorch_modulo"
 CHECKPOINT_DIRECTORY="./checkpoints"
 TRITON_LOG_BASE="triton.log"
-WAIT_TIMEOUT=1200
+WAIT_TIMEOUT=12
 
 # Generate test configs
 python3 test_config_generator.py --profile-models $MODEL_NAMES --preload-path $MODEL_REPOSITORY/libtorch_modulo/custom_modulo.so --library-path /opt/tritonserver/backends/pytorch:'$LD_LIBRARY_PATH'
@@ -94,10 +94,10 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         RET=1
     fi
     if [[ ! -z `pgrep model-analyzer` ]]; then
-        # Send 3 SIGINTS to stop the analyzer
-        kill -2 $ANALYZER_PID
-        kill -2 $ANALYZER_PID
-        kill -2 $ANALYZER_PID
+        until [[ "`grep 'SIGINT' $ANALYZER_LOG | wc -l`" -gt "3" ]]; do
+            kill -2 $ANALYZER_PID
+            sleep 0.5
+        done
         wait $ANALYZER_PID
     fi
     rm -f $CHECKPOINT_DIRECTORY/*
