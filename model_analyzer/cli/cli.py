@@ -15,14 +15,16 @@
 import logging
 import argparse
 from argparse import ArgumentParser
+from model_analyzer.constants import LOGGER_NAME
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class CLI:
     """
     CLI class to parse the commandline arguments
     """
+
     def __init__(self):
         self._parser = ArgumentParser()
         self._add_global_options()

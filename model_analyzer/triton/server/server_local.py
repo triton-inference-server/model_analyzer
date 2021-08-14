@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from .server import TritonServer
-from model_analyzer.constants import SERVER_OUTPUT_TIMEOUT_SECS
+from model_analyzer.constants import LOGGER_NAME, SERVER_OUTPUT_TIMEOUT_SECS
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
@@ -22,7 +22,7 @@ import psutil
 import logging
 import os
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class TritonServerLocal(TritonServer):

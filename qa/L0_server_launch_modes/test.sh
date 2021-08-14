@@ -80,6 +80,7 @@ function run_server_launch_modes() {
         ANALYZER_LOG=analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
         SERVER_LOG=${LAUNCH_MODE}.${PROTOCOL}.server.log
 
+        MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
 
         # Set arguments for various launch modes

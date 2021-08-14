@@ -30,7 +30,7 @@ NUM_ITERATIONS=${NUM_ITERATIONS:=4}
 MODEL_NAMES="libtorch_modulo"
 CHECKPOINT_DIRECTORY="./checkpoints"
 TRITON_LOG_BASE="triton.log"
-WAIT_TIMEOUT=12
+WAIT_TIMEOUT=1200
 
 # Generate test configs
 python3 test_config_generator.py --profile-models $MODEL_NAMES --preload-path $MODEL_REPOSITORY/libtorch_modulo/custom_modulo.so --library-path /opt/tritonserver/backends/pytorch:'$LD_LIBRARY_PATH'
@@ -51,6 +51,7 @@ MODEL_ANALYZER_SUBCOMMAND="profile"
 
 RET=0
 
+set +e
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     # Loop 
     WAIT_TIME_SECS=$WAIT_TIMEOUT
@@ -93,15 +94,14 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         cat $ANALYZER_LOG
         RET=1
     fi
-    if [[ ! -z `pgrep model-analyzer` ]]; then
-        until [[ "`grep 'SIGINT' $ANALYZER_LOG | wc -l`" -gt "3" ]]; do
-            kill -2 $ANALYZER_PID
-            sleep 0.5
-        done
-        wait $ANALYZER_PID
-    fi
+    until [[ (-z `pgrep model-analyzer`) || ("`grep 'SIGINT' $ANALYZER_LOG | wc -l`" -gt "3") ]]; do
+        kill -2 $ANALYZER_PID
+        sleep 0.5
+    done
+    wait $ANALYZER_PID
     rm -f $CHECKPOINT_DIRECTORY/*
 done
+set -e
 
 rm -f *.yaml
 

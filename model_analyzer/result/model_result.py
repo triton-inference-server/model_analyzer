@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
 from .constraint_manager import ConstraintManager
 
 import heapq
-import logging
 from functools import total_ordering
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 @total_ordering
@@ -26,6 +29,7 @@ class ModelResult:
     a single run. This ModelResult belongs
     to a particular ResultTable
     """
+
     def __init__(self, model_name, model_config, comparator, constraints=None):
         """
         Parameters
@@ -153,13 +157,13 @@ class ModelResult:
         """
 
         if len(self._passing_measurements) == 0:
-            logging.warning(
+            logger.warning(
                 f"Requested top {n} measurements, but none satisfied constraints. "
                 "Showing available constraint failing measurements for this config."
             )
 
             if n > len(self._failing_measurements):
-                logging.warning(
+                logger.warning(
                     f"Requested top {n} failing measurements, "
                     f"but found only {len(self._failing_measurements)}. "
                     "Showing all available constraint failing measurements for this config."
@@ -168,7 +172,7 @@ class ModelResult:
                                    self._failing_measurements)
 
         if n > len(self._passing_measurements):
-            logging.warning(
+            logger.warning(
                 f"Requested top {n} measurements, but "
                 f"found only {len(self._passing_measurements)}. "
                 "Showing all available measurements for this config.")

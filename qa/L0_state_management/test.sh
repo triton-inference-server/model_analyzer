@@ -32,7 +32,6 @@ CLIENT_PROTOCOL="http"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-rm -rf $OUTPUT_MODEL_REPOSITORY
 CHECKPOINT_DIRECTORY=$EXPORT_PATH/checkpoints
 
 MODEL_ANALYZER_PROFILE_BASE_ARGS="-m $MODEL_REPOSITORY --run-config-search-disable --checkpoint-directory $CHECKPOINT_DIRECTORY"

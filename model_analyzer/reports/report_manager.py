@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.constants import TOP_MODELS_REPORT_KEY
+from model_analyzer.constants import LOGGER_NAME, TOP_MODELS_REPORT_KEY
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.plots.plot_manager import PlotManager
@@ -20,8 +20,10 @@ from model_analyzer.result.result_table import ResultTable
 from .pdf_report import PDFReport
 
 import os
-import logging
 from collections import defaultdict
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class ReportManager:
@@ -115,15 +117,16 @@ class ReportManager:
                     num_configs=self._config.num_configs_per_model,
                     statistics=statistics)
             else:
-                logging.warning(
+                logger.warning(
                     f'No data found for model {model_name}, skipping export summary.'
                 )
 
         if self._config.num_top_model_configs and at_least_one_summary:
-            self._summaries[TOP_MODELS_REPORT_KEY] = self._build_summary_report(
-                report_key=TOP_MODELS_REPORT_KEY,
-                num_configs=self._config.num_top_model_configs,
-                statistics=statistics)
+            self._summaries[
+                TOP_MODELS_REPORT_KEY] = self._build_summary_report(
+                    report_key=TOP_MODELS_REPORT_KEY,
+                    num_configs=self._config.num_top_model_configs,
+                    statistics=statistics)
 
     def export_summaries(self):
         """
@@ -136,7 +139,7 @@ class ReportManager:
             os.makedirs(model_report_dir, exist_ok=True)
             output_filename = os.path.join(model_report_dir,
                                            'result_summary.pdf')
-            logging.info(f"Exporting Summary Report to {output_filename}...")
+            logger.info(f"Exporting Summary Report to {output_filename}...")
             summary.write_report(filename=output_filename)
 
     def create_detailed_reports(self):
@@ -165,7 +168,7 @@ class ReportManager:
             os.makedirs(model_report_dir, exist_ok=True)
             output_filename = os.path.join(model_report_dir,
                                            'detailed_report.pdf')
-            logging.info(f"Exporting Detailed Report to {output_filename}...")
+            logger.info(f"Exporting Detailed Report to {output_filename}...")
             report.write_report(filename=output_filename)
 
     def _add_summary_data(self):
@@ -223,7 +226,8 @@ class ReportManager:
         model_config, _ = self._detailed_report_data[report_key]
 
         detailed_report.add_title(title="Detailed Report")
-        detailed_report.add_subheading(subheading=f"Model Config: {report_key}")
+        detailed_report.add_subheading(
+            subheading=f"Model Config: {report_key}")
 
         if self._mode == 'online':
             # Add main latency breakdown image
@@ -242,8 +246,8 @@ class ReportManager:
                                  report_key)
         for plot_config in report_model_config.plots():
             if model_config.cpu_only() and (
-                    plot_config.y_axis().startswith('gpu_') or
-                    plot_config.x_axis().startswith('gpu_')):
+                    plot_config.y_axis().startswith('gpu_')
+                    or plot_config.x_axis().startswith('gpu_')):
                 continue
             plot_stack.append(
                 os.path.join(plot_path, f"{plot_config.name()}.png"))
@@ -331,7 +335,8 @@ class ReportManager:
         summary.add_subheading(f"Model: {report_key}")
         if not cpu_only:
             summary.add_paragraph(f"GPU(s): {gpu_names}")
-            summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
+            summary.add_paragraph(
+                f"Total Available GPU Memory: {max_memories}")
         summary.add_paragraph(
             f"Client Request Batch Size: {static_batch_sizes}")
         summary.add_paragraph(f"Constraint targets: {constraint_str}")
@@ -563,7 +568,8 @@ class ReportManager:
         else:
             gpu_dict = self._get_gpu_stats(measurements=measurements)
             gpu_names = ','.join(list(gpu_dict.keys()))
-            max_memories = ','.join([str(x) + ' GB' for x in gpu_dict.values()])
+            max_memories = ','.join(
+                [str(x) + ' GB' for x in gpu_dict.values()])
             sentence = (
                 f"The model config \"{model_config_name}\" uses {instance_group_string.replace('/', ' ')} "
                 f"instances. {len(measurements)} measurements were obtained for the model config "

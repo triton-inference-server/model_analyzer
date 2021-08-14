@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-import numba
-import psutil
 from .config_field import ConfigField
 from .config_primitive import ConfigPrimitive
 from .config_list_string import ConfigListString
@@ -41,7 +38,7 @@ from .config_defaults import \
     DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_TRITON_METRICS_URL, \
     DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT
 
-from .objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.server.server_config import \
     TritonServerConfig
 from model_analyzer.perf_analyzer.perf_config import \
@@ -49,17 +46,25 @@ from model_analyzer.perf_analyzer.perf_config import \
 from model_analyzer.record.record import RecordType
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
+from .objects.config_model_profile_spec import ConfigModelProfileSpec
 from .objects.config_protobuf_utils import \
     is_protobuf_type_primitive, protobuf_to_config_type
 
 from tritonclient.grpc.model_config_pb2 import ModelConfig
 from google.protobuf.descriptor import FieldDescriptor
 
+import numba
+import psutil
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
+
 
 class ConfigCommandProfile(ConfigCommand):
     """
     Model Analyzer config object.
     """
+
     def _resolve_protobuf_field(self, field):
         """
         Recursively resolve protobuf fields.
@@ -639,7 +644,7 @@ class ConfigCommandProfile(ConfigCommand):
                                 " should be of the format <host path>:<container dest>:<access mode>"
                             )
             else:
-                logging.warning(
+                logger.warning(
                     f"Triton launch mode is set to {self.triton_launch_mode}. "
                     "Ignoring triton_docker_mounts and triton_docker_labels.")
 

@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
 from .record_aggregator import RecordAggregator
 from .record import RecordType
-from .types.cpu_used_ram import CPUUsedRAM
 from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
@@ -29,6 +29,8 @@ from prometheus_client.parser import text_string_to_metric_families
 import numba
 import requests
 import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class MetricsManager:
@@ -166,16 +168,16 @@ class MetricsManager:
         collect_cpu_metrics_expect = cpu_only or len(self._gpus) == 0
         collect_cpu_metrics_actual = len(self._cpu_metrics) > 0
         if collect_cpu_metrics_expect and not collect_cpu_metrics_actual:
-            logging.info(
+            logger.info(
                 "CPU metric(s) are not being collected, while this profiling will run on CPU(s)."
             )
         # Warn user about CPU monitor performance issue
         if collect_cpu_metrics_actual:
-            logging.warning("CPU metric(s) are being collected.")
-            logging.warning(
+            logger.warning("CPU metric(s) are being collected.")
+            logger.warning(
                 "Collecting CPU metric(s) can affect the latency or throughput numbers reported by perf analyzer."
             )
-            logging.info(
+            logger.info(
                 "CPU metric(s) collection can be disabled by removing the CPU metrics (e.g. cpu_used_ram) from the --metrics flag."
             )
 
@@ -316,8 +318,8 @@ class MetricsManager:
 
         records_groupby_gpu = {}
         records_groupby_gpu = dcgm_record_aggregator.groupby(
-            self._dcgm_metrics,
-            lambda record: str(record.device().device_uuid(), encoding='ascii'))
+            self._dcgm_metrics, lambda record: str(
+                record.device().device_uuid(), encoding='ascii'))
 
         gpu_metrics = defaultdict(list)
         for _, metric in records_groupby_gpu.items():

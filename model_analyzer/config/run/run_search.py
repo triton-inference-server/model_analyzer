@@ -14,10 +14,12 @@
 
 from model_analyzer.config.input.objects.config_model_profile_spec \
     import ConfigModelProfileSpec
-from model_analyzer.constants import THROUGHPUT_GAIN
+from model_analyzer.constants import LOGGER_NAME, THROUGHPUT_GAIN
 
-import logging
 import copy
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class RunSearch:
@@ -56,13 +58,17 @@ class RunSearch:
         if 'instance_count' in model_config:
             if not cpu_only:
                 new_config['instance_group'] = [{
-                    'count': model_config['instance_count'],
-                    'kind': 'KIND_GPU'
+                    'count':
+                    model_config['instance_count'],
+                    'kind':
+                    'KIND_GPU'
                 }]
             else:
                 new_config['instance_group'] = [{
-                    'count': model_config['instance_count'],
-                    'kind': 'KIND_CPU'
+                    'count':
+                    model_config['instance_count'],
+                    'kind':
+                    'KIND_CPU'
                 }]
         return new_config
 
@@ -141,12 +147,12 @@ class RunSearch:
             self._sweep_mode_function = self._sweep_model_config_only
         elif len(concurrency) == 0 and search_model_config_parameters:
             self._model_config_parameters = {'instance_count': 1}
-            logging.info(
+            logger.info(
                 'Will sweep both the concurrency and model config parameters...'
             )
             self._sweep_mode_function = self._sweep_concurrency_and_model_config
         else:
-            logging.info('Will sweep only through the concurrency values...')
+            logger.info('Will sweep only through the concurrency values...')
             self._sweep_mode_function = self._sweep_concurrency_only
 
     def get_model_sweep(self, config_model):
@@ -285,15 +291,15 @@ class RunSearch:
                     f"{self._model_config_parameters['dynamic_batching']}.")
 
         if self._sweep_mode_function == self._sweep_concurrency_only:
-            logging.info(f"[Search Step] Concurrency set to {concurrency}. ")
+            logger.info(f"[Search Step] Concurrency set to {concurrency}. ")
         elif self._sweep_mode_function == self._sweep_concurrency_and_model_config:
-            logging.info(
+            logger.info(
                 f"[Search Step] Concurrency set to {concurrency}. "
                 f"Instance count set to "
                 f"{self._model_config_parameters['instance_count']}, and {message}"
             )
         elif self._sweep_mode_function == self._sweep_model_config_only:
-            logging.info(
+            logger.info(
                 f"[Search Step] Instance count set to "
                 f"{self._model_config_parameters['instance_count']}, and {message}"
             )

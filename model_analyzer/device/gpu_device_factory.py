@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
 import numba.cuda
 from model_analyzer.device.gpu_device import GPUDevice
 import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
@@ -20,11 +21,14 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 
 import logging
 
+logger = logging.getLogger(LOGGER_NAME)
+
 
 class GPUDeviceFactory:
     """
     Factory class for creating GPUDevices
     """
+
     @staticmethod
     def create_device_by_bus_id(bus_id, dcgmPath=None):
         """

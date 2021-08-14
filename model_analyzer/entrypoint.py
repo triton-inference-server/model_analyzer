@@ -15,6 +15,7 @@
 from .analyzer import Analyzer
 from .cli.cli import CLI
 from .model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.constants import LOGGER_NAME
 from .triton.server.server_factory import TritonServerFactory
 from .triton.server.server_config import TritonServerConfig
 from .triton.client.client_factory import TritonClientFactory
@@ -28,6 +29,8 @@ import os
 import logging
 import shutil
 from urllib.parse import urlparse
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 def get_client_handle(config):
@@ -69,19 +72,19 @@ def get_server_handle(config):
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
         triton_config['model-repository'] = 'remote-model-repository'
-        logging.info('Using remote Triton Server...')
+        logger.info('Using remote Triton Server...')
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config,
                                                          gpus=[],
                                                          log_path="")
-        logging.warning(
+        logger.warning(
             'GPU memory metrics reported in the remote mode are not'
             ' accuracte. Model Analyzer uses Triton explicit model control to'
             ' load/unload models. Some frameworks do not release the GPU'
             ' memory even when the memory is not being used. Consider'
             ' using the "local" or "docker" mode if you want to accurately'
             ' monitor the GPU memory usage for different models.')
-        logging.warning(
+        logger.warning(
             'Config sweep parameters are ignored in the "remote" mode because'
             ' Model Analyzer does not have access to the model repository of'
             ' the remote Triton Server.')
@@ -94,7 +97,7 @@ def get_server_handle(config):
         triton_config['metrics-port'] = urlparse(
             config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
-        logging.info('Starting a local Triton Server...')
+        logger.info('Starting a local Triton Server...')
         server = TritonServerFactory.create_server_local(
             path=config.triton_server_path,
             config=triton_config,
@@ -110,7 +113,7 @@ def get_server_handle(config):
         triton_config['metrics-port'] = urlparse(
             config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
-        logging.info('Starting a Triton Server using docker...')
+        logger.info('Starting a Triton Server using docker...')
         server = TritonServerFactory.create_server_docker(
             image=config.triton_docker_image,
             config=triton_config,
@@ -186,7 +189,7 @@ def get_cli_and_config_options():
         return cli.parse()
 
     except TritonModelAnalyzerException as e:
-        logging.error(f'Model Analyzer encountered an error: {e}')
+        logger.error(f'Model Analyzer encountered an error: {e}')
         sys.exit(1)
 
 
@@ -206,10 +209,8 @@ def setup_logging(args):
         log_level = logging.DEBUG
     else:
         log_level = logging.INFO
-    logging.basicConfig(level=log_level,
-                        format="%(asctime)s.%(msecs)d %(levelname)-4s"
-                        "[%(filename)s:%(lineno)d] %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.setLevel(level=log_level)
 
 
 def create_output_model_repository(config):
@@ -233,8 +234,8 @@ def create_output_model_repository(config):
                 ' the "--override-output-model-repository" flag.')
         else:
             shutil.rmtree(config.output_model_repository_path)
-            logging.warning('Overriding the output model repo path '
-                            f'"{config.output_model_repository_path}"...')
+            logger.warning('Overriding the output model repo path '
+                           f'"{config.output_model_repository_path}"...')
             os.mkdir(config.output_model_repository_path)
 
 
@@ -242,6 +243,10 @@ def main():
     """
     Main entrypoint of model_analyzer
     """
+
+    logging.basicConfig(format="%(asctime)s.%(msecs)d %(levelname)-4s"
+                        "[%(filename)s:%(lineno)d] %(message)s",
+                        datefmt="%Y-%m-%d %H:%M:%S")
 
     args, config = get_cli_and_config_options()
     setup_logging(args)

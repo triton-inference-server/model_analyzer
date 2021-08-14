@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
 import docker
 import logging
 from multiprocessing.pool import ThreadPool
@@ -24,7 +25,7 @@ LOCAL_HTTP_PORT = 8000
 LOCAL_GRPC_PORT = 8001
 LOCAL_METRICS_PORT = 8002
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class TritonServerDocker(TritonServer):
@@ -149,6 +150,8 @@ class TritonServerDocker(TritonServer):
                 self._log_pool.apply_async(self._logging_worker)
             except OSError as e:
                 raise TritonModelAnalyzerException(e)
+
+        logger.info('Triton Server started.')
 
     def _logging_worker(self):
         """

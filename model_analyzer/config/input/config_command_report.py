@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from .config_union import ConfigUnion
@@ -29,14 +30,17 @@ from .config_command import ConfigCommand
 from .objects.config_plot import ConfigPlot
 from .objects.config_model_report_spec import ConfigModelReportSpec
 
-import logging
 import os
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class ConfigCommandReport(ConfigCommand):
     """
     Model Analyzer config object.
     """
+
     def _fill_config(self):
         """
         Builder function makes calls to add config to 
@@ -170,7 +174,7 @@ class ConfigCommandReport(ConfigCommand):
         """
 
         if not self.export_path:
-            logging.warning(
+            logger.warning(
                 f"--export-path not specified. Using {self._fields['export_path'].default_value()}"
             )
         elif self.export_path and not os.path.isdir(self.export_path):
