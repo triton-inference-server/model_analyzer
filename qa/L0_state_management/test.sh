@@ -156,7 +156,7 @@ run_analyzer_nohup
 ANALYZER_PID=$!
 
 sleep 2
-until [[ ! -z `grep "Triton Server stopped." $ANALYZER_LOG` ]]; do
+until [[ ! -z `grep "Stopped Triton Server." $ANALYZER_LOG` ]]; do
     sleep 1
 done
 

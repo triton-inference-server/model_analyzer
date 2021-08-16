@@ -106,7 +106,7 @@ class TestOutputValidator:
         elif log_contents.count("Profiling model") > 1:
             print("\n***\n***  Early exit not triggered on time. \n***")
             return False
-        elif log_contents.count("Triton Server stopped") < 2:
+        elif log_contents.count("Stopped Triton Server.") < 2:
             return False
         return True
 

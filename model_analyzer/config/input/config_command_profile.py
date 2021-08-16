@@ -64,7 +64,6 @@ class ConfigCommandProfile(ConfigCommand):
     """
     Model Analyzer config object.
     """
-
     def _resolve_protobuf_field(self, field):
         """
         Recursively resolve protobuf fields.
@@ -647,6 +646,12 @@ class ConfigCommandProfile(ConfigCommand):
                 logger.warning(
                     f"Triton launch mode is set to {self.triton_launch_mode}. "
                     "Ignoring triton_docker_mounts and triton_docker_labels.")
+
+        if self.triton_launch_mode == 'docker':
+            if not self.triton_docker_image or self.triton_docker_image.isspace(
+            ):
+                raise TritonModelAnalyzerException(
+                    "triton_docker_image provided but is empty.")
 
         # If run config search is disabled and no concurrency value is provided,
         # set the default value.

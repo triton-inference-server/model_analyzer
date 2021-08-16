@@ -72,8 +72,11 @@ function convert_gpu_array_to_flag() {
 function run_server_launch_modes() {
     gpus=($@)
     for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
-        CONFIG_PARAMETERS=${CONFIG_FILE%".yaml"}    # e.g. config-docker-http.yaml -> config-docker-http
-        PARAMETERS=(${CONFIG_PARAMETERS//-/ }) # config-docker-http -> [config, docker, http]
+        # e.g. config-docker-http.yaml -> config-docker-http
+        CONFIG_PARAMETERS=${CONFIG_FILE%".yaml"}
+
+        # config-docker-http -> [config, docker, http]
+        PARAMETERS=(${CONFIG_PARAMETERS//-/ })
         LAUNCH_MODE=${PARAMETERS[1]}
         PROTOCOL=${PARAMETERS[2]}
         

@@ -121,7 +121,6 @@ class TritonServerDocker(TritonServer):
             self._tritonserver_container = self._docker_client.containers.run(
                 command=f'bash -c "{command}"',
                 init=True,
-                name='tritonserver',
                 image=self._tritonserver_image,
                 device_requests=devices,
                 volumes=volumes,
@@ -131,8 +130,9 @@ class TritonServerDocker(TritonServer):
                 tty=False,
                 stdin_open=False,
                 detach=True)
-        except docker.errors.APIError as error:
-            if error.explanation.find('port is already allocated') != -1:
+            logger.info('Triton Server started.')
+        except docker.errors.APIError as e:
+            if e.explanation.find('port is already allocated') != -1:
                 raise TritonModelAnalyzerException(
                     "One of the following port(s) are already allocated: "
                     f"{server_http_port}, {server_grpc_port}, "
@@ -141,7 +141,7 @@ class TritonServerDocker(TritonServer):
                     " --triton-http-endpoint, --triton-grpc-endpoint,"
                     " and --triton-metrics-endpoint flags.")
             else:
-                raise error
+                raise TritonModelAnalyzerException(e)
 
         if self._log_path:
             try:
@@ -150,8 +150,6 @@ class TritonServerDocker(TritonServer):
                 self._log_pool.apply_async(self._logging_worker)
             except OSError as e:
                 raise TritonModelAnalyzerException(e)
-
-        logger.info('Triton Server started.')
 
     def _logging_worker(self):
         """
@@ -168,8 +166,6 @@ class TritonServerDocker(TritonServer):
         and cleans up docker client
         """
 
-        logger.info('Stopping triton server.')
-
         if self._tritonserver_container is not None:
             if self._log_path:
                 if self._log_pool:
@@ -180,7 +176,8 @@ class TritonServerDocker(TritonServer):
             self._tritonserver_container.stop()
             self._tritonserver_container.remove(force=True)
             self._tritonserver_container = None
-            self._docker_client.close()
+            logger.info('Stopped Triton Server.')
+        self._docker_client.close()
 
     def cpu_stats(self):
         """

@@ -88,14 +88,17 @@ class TritonServerLocal(TritonServer):
                 self._log_file = DEVNULL
 
             # Construct Popen command
-            self._tritonserver_process = Popen(cmd,
-                                               stdout=self._log_file,
-                                               stderr=STDOUT,
-                                               start_new_session=True,
-                                               universal_newlines=True,
-                                               env=triton_env)
+            try:
+                self._tritonserver_process = Popen(cmd,
+                                                   stdout=self._log_file,
+                                                   stderr=STDOUT,
+                                                   start_new_session=True,
+                                                   universal_newlines=True,
+                                                   env=triton_env)
 
-            logger.info('Triton Server started.')
+                logger.info('Triton Server started.')
+            except Exception as e:
+                raise TritonModelAnalyzerException(e)
 
     def stop(self):
         """
@@ -114,7 +117,7 @@ class TritonServerLocal(TritonServer):
             self._tritonserver_process = None
             if self._log_path:
                 self._log_file.close()
-            logger.info('Triton Server stopped.')
+            logger.info('Stopped Triton Server.')
 
     def cpu_stats(self):
         """

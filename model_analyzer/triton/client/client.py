@@ -27,7 +27,6 @@ class TritonClient:
     Defines the interface for the objects created by
     TritonClientFactory
     """
-
     def wait_for_server_ready(self, num_retries):
         """
         Parameters
@@ -49,10 +48,10 @@ class TritonClient:
                 if self._client.is_server_ready():
                     return
                 else:
-                    time.sleep(0.05)
+                    time.sleep(1)
                     retries -= 1
             except Exception as e:
-                time.sleep(0.05)
+                time.sleep(1)
                 retries -= 1
                 if retries == 0:
                     raise TritonModelAnalyzerException(e)
@@ -135,11 +134,11 @@ class TritonClient:
                 if self._client.is_model_ready(model_name):
                     return
                 else:
-                    time.sleep(0.05)
+                    time.sleep(1)
                     retries -= 1
             except Exception as e:
                 error = e
-                time.sleep(0.05)
+                time.sleep(1)
                 retries -= 1
 
         logger.info(
