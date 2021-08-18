@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,6 +28,18 @@ from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.record.types.perf_latency import PerfLatency
+from model_analyzer.record.types.perf_client_response_wait \
+    import PerfClientResponseWait
+from model_analyzer.record.types.perf_client_send_recv \
+    import PerfClientSendRecv
+from model_analyzer.record.types.perf_server_queue \
+    import PerfServerQueue
+from model_analyzer.record.types.perf_server_compute_input \
+    import PerfServerComputeInput
+from model_analyzer.record.types.perf_server_compute_infer \
+    import PerfServerComputeInfer
+from model_analyzer.record.types.perf_server_compute_output \
+    import PerfServerComputeOutput
 from .common import test_result_collector as trc
 
 # Test Parameters
@@ -42,6 +54,7 @@ TEST_GRPC_URL = 'test_hostname:test_port'
 
 
 class TestPerfAnalyzerMethods(trc.TestResultCollector):
+
     def setUp(self):
         # Mocks
         self.server_local_mock = MockServerLocalMethods()
@@ -145,6 +158,16 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(len(records), 2)
         self.assertEqual(records[0].value(), 0.001)
         self.assertEqual(records[1].value(), 3.6)
+
+        # Test no exceptions are raised when nothing can be parsed
+        test_graceful_return = "?"
+        self.perf_mock.set_perf_analyzer_result_string(test_graceful_return)
+        perf_metrics = [
+            PerfThroughput, PerfLatency, PerfClientSendRecv,
+            PerfClientResponseWait, PerfServerQueue, PerfServerComputeInfer,
+            PerfServerComputeInput, PerfServerComputeOutput
+        ]
+        perf_analyzer.run(perf_metrics)
 
         # Test exception handling
         self.perf_mock.set_perf_analyzer_return_code(1)
