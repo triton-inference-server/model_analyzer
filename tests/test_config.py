@@ -777,7 +777,7 @@ profile_models:
                     perf_analyzer_flags:
                         measurement-interval: 10000
                         model-version: 2
-                        streaming: true
+                        streaming: "header:value"
 
             """
         config = self._evaluate_config(args, yaml_content)
@@ -792,11 +792,51 @@ profile_models:
                                    perf_analyzer_flags={
                                        'measurement-interval': 10000,
                                        'model-version': 2,
-                                       'streaming': True
+                                       'streaming': 'header:value'
                                    })
         ]
         self._assert_equality_of_model_configs(model_configs,
                                                expected_model_configs)
+
+        yaml_content = """
+            profile_models:
+            -
+                vgg_16_graphdef:
+                    perf_analyzer_flags:
+                        measurement-interval: 10000
+                        model-version: 2
+                        shape: ["name1:1,2,3", "name2:4,5,6"]
+
+            """
+        config = self._evaluate_config(args, yaml_content)
+        model_configs = config.get_all_config()['profile_models']
+        expected_model_configs = [
+            ConfigModelProfileSpec('vgg_16_graphdef',
+                                   parameters={
+                                       'batch_sizes': [1],
+                                       'concurrency': []
+                                   },
+                                   objectives={'perf_throughput': 10},
+                                   perf_analyzer_flags={
+                                       'measurement-interval': 10000,
+                                       'model-version': 2,
+                                       'shape': ["name1:1,2,3", "name2:4,5,6"]
+                                   })
+        ]
+        self._assert_equality_of_model_configs(model_configs,
+                                               expected_model_configs)
+
+        yaml_content = """
+            profile_models:
+            -
+                vgg_16_graphdef:
+                    perf_analyzer_flags:
+                        latency_report_file: ["file1", "file2"]
+
+            """
+        with self.assertRaises(TritonModelAnalyzerException):
+            # latency_report_file is not additive
+            config = self._evaluate_config(args, yaml_content)
 
         yaml_content = """
             profile_models:
