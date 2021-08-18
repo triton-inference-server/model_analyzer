@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,6 +39,8 @@ class PerfAnalyzerConfig:
 
     input_to_verbose = ['verbose', 'extra-verbose']
 
+    additive_args = ['input-data', 'shape', 'streaming']
+
     def __init__(self):
         """
         Construct a PerfAnalyzerConfig
@@ -69,6 +71,11 @@ class PerfAnalyzerConfig:
 
         self._input_to_verbose = {'verbose': '-v', 'extra-verbose': '-v -v'}
 
+        self._additive_args = {
+            (self._input_to_options[k] if k in self._input_to_options else k):
+            None for k in self.additive_args
+        }
+
     @classmethod
     def allowed_keys(cls):
         """
@@ -80,6 +87,17 @@ class PerfAnalyzerConfig:
         """
 
         return cls.perf_analyzer_args + cls.input_to_options + cls.input_to_verbose
+
+    @classmethod
+    def additive_keys(cls):
+        """
+        Returns
+        -------
+        list of str
+            The keys, within allowed_keys, that are additive
+        """
+
+        return cls.additive_args[:]
 
     def update_config(self, params=None):
         """
@@ -156,9 +174,22 @@ class PerfAnalyzerConfig:
         """
 
         # single dashed options, then verbose flags, then main args
-        args = [f'{k} {v}' for k, v in self._options.items() if v]
+        args = []
+        for key, value in self._options.items():
+            if value:
+                if key in self._additive_args:
+                    for additive_value in value:
+                        args.append(f'{key} {additive_value}')
+                else:
+                    args.append(f'{key} {value}')
         args += [k for k, v in self._verbose.items() if v]
-        args += [f'--{k}={v}' for k, v in self._args.items() if v]
+        for key, value in self._args.items():
+            if value:
+                if key in self._additive_args:
+                    for additive_value in value:
+                        args.append(f'--{key}={additive_value}')
+                else:
+                    args.append(f'--{key}={value}')
 
         return ' '.join(args)
 
