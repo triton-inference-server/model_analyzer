@@ -142,7 +142,7 @@ class ConfigPlot:
         """
         Parameters
         -------
-        monotonic: str
+        monotonic: bool
             Whether or not to prune
             decreasing points 
         """

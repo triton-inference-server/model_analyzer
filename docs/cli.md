@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -204,13 +204,13 @@ The contents of `config.yaml` are shown below.
       objectives:
         - perf_throughput
       constraints:
-        perf_latency:
+        perf_latency_p99:
           max: 15
     vgg16_graphdef:
       objectives:
         - gpu_used_memory
       constraints:
-        perf_latency:
+        perf_latency_p99:
           max: 15
   ```
 

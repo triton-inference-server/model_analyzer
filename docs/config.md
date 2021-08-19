@@ -302,11 +302,11 @@ Before proceeding, it will be helpful to see the documentation on [Model Analyze
 A constraint, specifies the bounds that determine a successful run. There are
 three constraints allowed:
 
-| Option Name       |   Units   | Constraint | Description                                          |
-| :---------------- | :-------: | :--------: | :--------------------------------------------------- |
-| `perf_throughput` | inf / sec |    min     | Specify minimum desired throughput.                  |
-| `perf_latency`    |    ms     |    max     | Specify maximum tolerable latency or latency budget. |
-| `gpu_used_memory` |    MB     |    max     | Specify maximum GPU memory used by model.            |
+| Option Name        |   Units   | Constraint | Description                                          |
+| :----------------- | :-------: | :--------: | :--------------------------------------------------- |
+| `perf_throughput`  | inf / sec |    min     | Specify minimum desired throughput.                  |
+| `perf_latency_p99` |    ms     |    max     | Specify maximum tolerable latency or latency budget. |
+| `gpu_used_memory`  |    MB     |    max     | Specify maximum GPU memory used by model.            |
 
 
 #### Examples
@@ -318,10 +318,10 @@ perf_throughput:
     min: 5
 ```
 
-To filter out the results when `perf_latency` is larger than 100 milliseconds:
+To filter out the results when `perf_latency_p99` is larger than 100 milliseconds:
 
 ```yaml
-perf_latency:
+perf_latency_p99:
     max: 100
 ```
 
@@ -335,7 +335,7 @@ Keys can be combined for more complex constraints:
 ```yaml
 gpu_used_memory:
     max: 200
-perf_latency:
+perf_latency_p99:
     max: 100
 ```
 
@@ -370,7 +370,7 @@ analysis_models:
             max: 200
   model_2:
     constraints:
-        perf_latency:
+        perf_latency_p99:
             max: 50
 ```
 
@@ -379,15 +379,15 @@ analysis_models:
 Objectives specify the sorting criteria for the final results. The fields below
 are supported under this object type:
 
-| Option Name       | Description                                            |
-| :---------------- | :----------------------------------------------------- |
-| `perf_throughput` | Use throughput as the objective.                       |
-| `perf_latency`    | Use latency as the objective.                          |
-| `gpu_used_memory` | Use GPU memory used by the model as the objective.     |
-| `gpu_free_memory` | Use GPU memory not used by the model as the objective. |
-| `gpu_utilization` | Use the GPU utilization as the objective.              |
-| `cpu_used_ram`    | Use RAM used by the model as the objective.            |
-| `cpu_free_ram`    | Use RAM not used by the model as the objective.        |
+| Option Name        | Description                                            |
+| :----------------- | :----------------------------------------------------- |
+| `perf_throughput`  | Use throughput as the objective.                       |
+| `perf_latency_p99` | Use latency as the objective.                          |
+| `gpu_used_memory`  | Use GPU memory used by the model as the objective.     |
+| `gpu_free_memory`  | Use GPU memory not used by the model as the objective. |
+| `gpu_utilization`  | Use the GPU utilization as the objective.              |
+| `cpu_used_ram`     | Use RAM used by the model as the objective.            |
+| `cpu_free_ram`     | Use RAM not used by the model as the objective.        |
 
 An example `objectives` that will sort the results by throughput looks like
 below:
@@ -401,7 +401,7 @@ To sort the results by latency, `objectives` should look like:
 
 ```yaml
 objectives:
-- perf_latency
+- perf_latency_p99
 ```
 #### Weighted Objectives
 
@@ -411,7 +411,7 @@ analyzer sorts results. For example:
 
 ```yaml
 objectives:
-- perf_latency
+- perf_latency_p99
 - perf_throughput
 ```
 
@@ -439,7 +439,7 @@ An extension of the above `objectives` is explicitly specifying the weights. For
 example:
 ```yaml
 objectives:
-    perf_latency: 2
+    perf_latency_p99: 2
     perf_throughput: 3
 ```
 
@@ -740,7 +740,7 @@ follows:
 plots:
   plot_name_1:
     title: Title
-    x_axis: perf_latency
+    x_axis: perf_latency_p99
     y_axis: perf_throughput
     monotonic: True
   plot_name_2:
@@ -754,7 +754,7 @@ file to which the plot will be saved as a `.png`. Each plot object also requires
 specifying each of the following:
 * `title` : The title of the plot
 * `x_axis` : The metric tag for the metric that should appear in the x-axis,
-  e.g. `perf_latency`. The plotted points are also sorted by the values of this
+  e.g. `perf_latency_p99`. The plotted points are also sorted by the values of this
   metric.
 * `y_axis` : The metric tag for the metric that should appear in the y-axis. 
 * `monotonic` : Some plots may require consecutive points to be strictly
@@ -891,7 +891,7 @@ analysis_models:
             max: 200
   model_1:  
     constraints:
-        perf_latency:
+        perf_latency_p99:
             max: 80
 objectives:
 - perf_throughput
@@ -908,7 +908,7 @@ report_model_configs:
   model_1_i0:
     throughput_v_latency:
       title: Title
-      x_axis: perf_latency
+      x_axis: perf_latency_p99
       y_axis: perf_throughput
       monotonic: True
 ```
@@ -920,13 +920,13 @@ report_model_configs:
   model_1_i0:
     throughput_v_latency:
         title: Title
-        x_axis: perf_latency
+        x_axis: perf_latency_p99
         y_axis: perf_throughput
         monotonic: True
   model_2_i0:
     gpu_mem_v_latency:
         title: Title
-        x_axis: perf_latency
+        x_axis: perf_latency_p99
         y_axis: gpu_used_memory
         monotonic: False
 ```

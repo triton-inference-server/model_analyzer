@@ -34,7 +34,7 @@ MODEL_NAMES="$(echo $BENCHMARK_MODELS | sed 's/ /,/g')"
 CHECKPOINT_DIRECTORY="./checkpoints"
 
 # Set up checkpoints
-mkdir $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/stability_steps.ckpt $CHECKPOINT_DIRECTORY/0.ckpt 
+mkdir $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/stability_steps_p9x.ckpt $CHECKPOINT_DIRECTORY/0.ckpt 
 
 # Generate test configs
 python3 test_config_generator.py --profile-models $MODEL_NAMES

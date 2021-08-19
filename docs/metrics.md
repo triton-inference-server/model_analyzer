@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,7 +29,10 @@ for more info on these
 
 * `perf_throughput`: The number of inferences per second measured by the perf
   analyzer.
-* `perf_latency`: The p99 latency as measured by perf analyzer.
+* `perf_latency_avg`: The average latency as measured by perf analyzer.
+* `perf_latency_p90`: The p90 latency as measured by perf analyzer.
+* `perf_latency_p95`: The p95 latency as measured by perf analyzer.
+* `perf_latency_p99`: The p99 latency as measured by perf analyzer.
 * `perf_client_response_wait`: The time spent waiting for a response from the
   server, after an inference request has been sent.
 * `perf_client_send_recv`: The total amount of time it takes the client to send

@@ -27,6 +27,10 @@ from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.record.types.perf_throughput import PerfThroughput
+from model_analyzer.record.types.perf_latency_avg import PerfLatencyAvg
+from model_analyzer.record.types.perf_latency_p90 import PerfLatencyP90
+from model_analyzer.record.types.perf_latency_p95 import PerfLatencyP95
+from model_analyzer.record.types.perf_latency_p99 import PerfLatencyP99
 from model_analyzer.record.types.perf_latency import PerfLatency
 from model_analyzer.record.types.perf_client_response_wait \
     import PerfClientResponseWait
@@ -131,6 +135,42 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with self.assertRaises(TritonModelAnalyzerException):
             perf_analyzer.run(perf_metrics)
 
+        # Test avg latency parsing
+        test_latency_output = "Client:\n  Avg latency: 5000 us\n\n\n\n"
+        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
+        perf_metrics = [PerfLatencyAvg]
+        perf_analyzer.run(perf_metrics)
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].value(), 5)
+
+        # Test p90 latency parsing
+        test_latency_output = "Client:\n  p90 latency: 5000 us\n\n\n\n"
+        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
+        perf_metrics = [PerfLatencyP90]
+        perf_analyzer.run(perf_metrics)
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].value(), 5)
+
+        # Test p95 latency parsing
+        test_latency_output = "Client:\n  p95 latency: 5000 us\n\n\n\n"
+        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
+        perf_metrics = [PerfLatencyP95]
+        perf_analyzer.run(perf_metrics)
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].value(), 5)
+
+        # Test p99 latency parsing
+        test_latency_output = "Client:\n  p99 latency: 5000 us\n\n\n\n"
+        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
+        perf_metrics = [PerfLatencyP99]
+        perf_analyzer.run(perf_metrics)
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].value(), 5)
+
         # Test latency parsing
         test_latency_output = "Client:\n  p99 latency: 5000 us\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
@@ -150,14 +190,21 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(records[0].value(), 46.8)
 
         # Test parsing for both
-        test_both_output = "Client:\n  Throughput: 0.001 infer/sec\np99 latency: 3600 us\n\n\n\n"
+        test_both_output = "Client:\n  Throughput: 0.001 infer/sec\nAvg latency: 3600 us\np90 latency: 3700 us\np95 latency: 3800 us\np99 latency: 3900 us\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_both_output)
-        perf_metrics = [PerfThroughput, PerfLatency]
+        perf_metrics = [
+            PerfThroughput, PerfLatencyAvg, PerfLatencyP90, PerfLatencyP95,
+            PerfLatencyP99, PerfLatency
+        ]
         perf_analyzer.run(perf_metrics)
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 2)
+        self.assertEqual(len(records), 6)
         self.assertEqual(records[0].value(), 0.001)
         self.assertEqual(records[1].value(), 3.6)
+        self.assertEqual(records[2].value(), 3.7)
+        self.assertEqual(records[3].value(), 3.8)
+        self.assertEqual(records[4].value(), 3.9)
+        self.assertEqual(records[5].value(), 3.9)
 
         # Test no exceptions are raised when nothing can be parsed
         test_graceful_return = "?"
@@ -201,7 +248,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         test_stabilize_output = "Please use a larger time window"
         self.perf_mock.set_perf_analyzer_result_string(test_stabilize_output)
         self.perf_mock.set_perf_analyzer_return_code(1)
-        perf_metrics = [PerfThroughput, PerfLatency]
+        perf_metrics = [PerfThroughput, PerfLatencyP99]
         perf_analyzer.run(perf_metrics)
         self.assertEqual(
             self.perf_mock.get_perf_analyzer_popen_read_call_count(), 10)
@@ -227,7 +274,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         test_both_output = "Please use a larger time window"
         self.perf_mock.set_perf_analyzer_result_string(test_both_output)
         self.perf_mock.set_perf_analyzer_return_code(1)
-        perf_metrics = [PerfThroughput, PerfLatency]
+        perf_metrics = [PerfThroughput, PerfLatencyP99]
         perf_analyzer.run(perf_metrics)
         self.assertEqual(
             self.perf_mock.get_perf_analyzer_popen_read_call_count(), 10)

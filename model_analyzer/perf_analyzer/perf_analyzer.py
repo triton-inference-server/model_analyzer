@@ -1,4 +1,4 @@
-# Copyright 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,10 @@
 
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
+from model_analyzer.record.types.perf_latency_avg import PerfLatencyAvg
+from model_analyzer.record.types.perf_latency_p90 import PerfLatencyP90
+from model_analyzer.record.types.perf_latency_p95 import PerfLatencyP95
+from model_analyzer.record.types.perf_latency_p99 import PerfLatencyP99
 from model_analyzer.record.types.perf_latency import PerfLatency
 from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.record.types.perf_client_response_wait \
@@ -48,6 +52,10 @@ class PerfAnalyzer:
 
     # The metrics that PerfAnalyzer can collect
     perf_metrics = {
+        PerfLatencyAvg: "_parse_perf_latency_avg",
+        PerfLatencyP90: "_parse_perf_latency_p90",
+        PerfLatencyP95: "_parse_perf_latency_p95",
+        PerfLatencyP99: "_parse_perf_latency_p99",
         PerfLatency: "_parse_perf_latency",
         PerfThroughput: "_parse_perf_throughput",
         PerfClientSendRecv: "_parse_perf_client_send_recv",
@@ -325,16 +333,46 @@ class PerfAnalyzer:
             return PerfThroughput(value=throughput)
         logging.warning('perf_analyzer output did not contain throughput.')
 
-    def _parse_perf_latency(self, section):
+    def _parse_perf_latency_avg(self, section):
+        """
+        Parses avg latency from the perf output
+        """
+        return self._parse_perf_latency(section, "Avg latency", PerfLatencyAvg)
+
+    def _parse_perf_latency_p90(self, section):
+        """
+        Parses p90 latency from the perf output
+        """
+        return self._parse_perf_latency(section, "p90 latency", PerfLatencyP90)
+
+    def _parse_perf_latency_p95(self, section):
+        """
+        Parses p95 latency from the perf output
+        """
+        return self._parse_perf_latency(section, "p95 latency", PerfLatencyP95)
+
+    def _parse_perf_latency_p99(self, section):
         """
         Parses p99 latency from the perf output
         """
+        return self._parse_perf_latency(section, "p99 latency", PerfLatencyP99)
 
-        p99_latency = re.search('p99 latency: (\d+\.\d+|\d+)', section)
-        if p99_latency:
-            p99_latency = float(p99_latency.group(1)) / 1e3
-            return PerfLatency(value=p99_latency)
-        logging.warning('perf_analyzer output did not contain p99 latency.')
+    def _parse_perf_latency(self, section, latency_name=None, parser_cls=None):
+        """
+        Parses latency from the perf output
+        """
+        if latency_name == None and parser_cls == None:
+            # Defaults to p99 latency
+            latency_name = "p99 latency"
+            # Different from PerfLatencyP99
+            parser_cls = PerfLatency
+
+        latency = re.search(latency_name + ": (\d+\.\d+|\d+)", section)
+        if latency:
+            latency = float(latency.group(1)) / 1e3
+            return parser_cls(value=latency)
+        logging.warning("perf_analyzer output did not contain " + latency_name +
+                        ".")
 
     def _parse_perf_server_queue(self, section):
         """

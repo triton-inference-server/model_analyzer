@@ -24,9 +24,11 @@ class TestConfigGenerator:
     TO ADD A TEST: Simply add a member function whose name starts
                     with 'generate'.
     """
+
     def __init__(self):
         test_functions = [
-            self.__getattribute__(name) for name in dir(self)
+            self.__getattribute__(name)
+            for name in dir(self)
             if name.startswith('generate')
         ]
 
@@ -48,7 +50,7 @@ class TestConfigGenerator:
         args = parser.parse_args()
         analysis_models = args.analysis_models.split(',')
 
-        self.config = {'constraints': {'perf_latency': {'max': 50}}}
+        self.config = {'constraints': {'perf_latency_p99': {'max': 50}}}
         self.config['analysis_models'] = analysis_models
 
         self.config['summarize'] = True

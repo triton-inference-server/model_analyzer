@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,12 +16,13 @@ import unittest
 
 from model_analyzer.record.record_aggregator import RecordAggregator
 from model_analyzer.record.types.perf_throughput import PerfThroughput
-from model_analyzer.record.types.perf_latency import PerfLatency
+from model_analyzer.record.types.perf_latency_p99 import PerfLatencyP99
 from model_analyzer.record.types.gpu_utilization import GPUUtilization
 from .common import test_result_collector as trc
 
 
 class TestRecordAggregatorMethods(trc.TestResultCollector):
+
     def test_insert(self):
         record_aggregator = RecordAggregator()
 
@@ -90,23 +91,23 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         self.assertIn(10, retrieved_values)
 
         # Insert 2 Latency records
-        record_aggregator.insert(PerfLatency(3))
-        record_aggregator.insert(PerfLatency(6))
+        record_aggregator.insert(PerfLatencyP99(3))
+        record_aggregator.insert(PerfLatencyP99(6))
 
         # Test get with multiple headers
         retrieved_records = record_aggregator.filter_records(
-            record_types=[PerfLatency, PerfThroughput],
+            record_types=[PerfLatencyP99, PerfThroughput],
             filters=[(lambda v: v.value() == 3),
                      (lambda v: v.value() < 5)]).get_records()
 
         retrieved_values = {
             record_type:
             [record.value() for record in retrieved_records[record_type]]
-            for record_type in [PerfLatency, PerfThroughput]
+            for record_type in [PerfLatencyP99, PerfThroughput]
         }
 
-        self.assertEqual(len(retrieved_records[PerfLatency]), 1)
-        self.assertIn(3, retrieved_values[PerfLatency])
+        self.assertEqual(len(retrieved_records[PerfLatencyP99]), 1)
+        self.assertIn(3, retrieved_values[PerfLatencyP99])
 
         self.assertEqual(len(retrieved_records[PerfThroughput]), 1)
         self.assertIn(1, retrieved_values[PerfThroughput])

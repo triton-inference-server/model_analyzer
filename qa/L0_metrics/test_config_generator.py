@@ -72,7 +72,7 @@ class TestConfigGenerator:
             "inference_output_fields": [
                 "model_name", "batch_size", "concurrency", "model_config_path",
                 "instance_group", "dynamic_batch_sizes",
-                "satisfies_constraints", "perf_throughput", "perf_latency",
+                "satisfies_constraints", "perf_throughput", "perf_latency_p99",
                 "cpu_used_ram"
             ]
         }
@@ -100,6 +100,37 @@ class TestConfigGenerator:
             }
         }
         self._write_file(5, 11, 9, model_config)
+
+    def generate_perf_latency_test(self):
+        model_config = {
+            "collect_cpu_metrics":
+                False,
+            "run_config_search_disable":
+                True,
+            "profile_models": {
+                model: {
+                    "parameters": {
+                        "concurrency": [1]
+                    },
+                    "model_config_parameters": {
+                        "instance_group": [{
+                            "count": [1],
+                            "kind": "KIND_GPU"
+                        }],
+                        "dynamic_batching": [{
+                            "preferred_batch_size": [[1]]
+                        }]
+                    }
+                } for model in self.profile_models
+            },
+            "inference_output_fields": [
+                "model_name", "batch_size", "concurrency", "model_config_path",
+                "instance_group", "dynamic_batch_sizes",
+                "satisfies_constraints", "perf_throughput", "perf_latency_avg",
+                "perf_latency_p90", "perf_latency_p95", "perf_latency"
+            ]
+        }
+        self._write_file(5, 11, 12, model_config)
 
     def _write_file(self, total_param_server, total_param_gpu,
                     total_param_inference, model_config):

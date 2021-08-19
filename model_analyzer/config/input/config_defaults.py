@@ -17,7 +17,7 @@
 #
 
 DEFAULT_CHECKPOINT_DIRECTORY = './checkpoints'
-DEFAULT_ONLINE_OBJECTIVES = {'perf_latency': 10}
+DEFAULT_ONLINE_OBJECTIVES = {'perf_latency_p99': 10}
 DEFAULT_OFFLINE_OBJECTIVES = {'perf_throughput': 10}
 
 #
@@ -58,13 +58,13 @@ DEFAULT_PERF_MAX_AUTO_ADJUSTS = 10
 DEFAULT_ONLINE_ANALYSIS_PLOTS = {
     'throughput_v_latency': {
         'title': 'Throughput vs. Latency',
-        'x_axis': 'perf_latency',
+        'x_axis': 'perf_latency_p99',
         'y_axis': 'perf_throughput',
         'monotonic': True
     },
     'gpu_mem_v_latency': {
         'title': 'GPU Memory vs. Latency',
-        'x_axis': 'perf_latency',
+        'x_axis': 'perf_latency_p99',
         'y_axis': 'gpu_used_memory',
         'monotonic': False
     }
@@ -82,7 +82,7 @@ DEFAULT_OFFLINE_ANALYSIS_PLOTS = {
 DEFAULT_CPU_MEM_PLOT = {
     'cpu_mem_v_latency': {
         'title': 'CPU Memory vs. Latency',
-        'x_axis': 'perf_latency',
+        'x_axis': 'perf_latency_p99',
         'y_axis': 'cpu_used_ram',
         'monotonic': False
     }
@@ -96,7 +96,7 @@ DEFAULT_FILENAME_SERVER_ONLY = 'metrics-server-only.csv'
 DEFAULT_INFERENCE_OUTPUT_FIELDS = [
     'model_name', 'batch_size', 'concurrency', 'model_config_path',
     'instance_group', 'dynamic_batch_sizes', 'satisfies_constraints',
-    'perf_throughput', 'perf_latency'
+    'perf_throughput', 'perf_latency_p99'
 ]
 DEFAULT_GPU_OUTPUT_FIELDS = [
     'model_name', 'gpu_uuid', 'batch_size', 'concurrency', 'model_config_path',
@@ -121,25 +121,25 @@ DEFAULT_REPORT_FORMAT = 'pdf'
 DEFAULT_ONLINE_REPORT_PLOTS = {
     'gpu_mem_v_latency': {
         'title': 'GPU Memory vs. Latency',
-        'x_axis': 'perf_latency',
+        'x_axis': 'perf_latency_p99',
         'y_axis': 'gpu_used_memory',
         'monotonic': False
     },
     'gpu_util_v_latency': {
         'title': 'GPU Utilization vs. Latency',
-        'x_axis': 'perf_latency',
+        'x_axis': 'perf_latency_p99',
         'y_axis': 'gpu_utilization',
         'monotonic': False
     },
     'cpu_mem_v_latency': {
         'title': 'RAM Usage vs. Latency',
-        'x_axis': 'perf_latency',
+        'x_axis': 'perf_latency_p99',
         'y_axis': 'cpu_used_ram',
         'monotonic': False
     },
     'gpu_power_v_latency': {
         'title': 'GPU Power vs. Latency',
-        'x_axis': 'perf_latency',
+        'x_axis': 'perf_latency_p99',
         'y_axis': 'gpu_power_usage',
         'monotonic': False
     }
@@ -155,7 +155,7 @@ DEFAULT_OFFLINE_REPORT_PLOTS = {
     'latency_v_batch_size': {
         'title': 'p99 Latency vs. Batch Size',
         'x_axis': 'batch_size',
-        'y_axis': 'perf_latency',
+        'y_axis': 'perf_latency_p99',
         'monotonic': False
     }
 }

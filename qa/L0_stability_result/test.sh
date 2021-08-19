@@ -33,7 +33,7 @@ CHECKPOINT_DIRECTORY="./checkpoints"
 CSV_PATH='.'
 # Clear and create directories
 mkdir $EXPORT_PATH
-mkdir $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/stability_result.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
+mkdir $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/stability_result_p9x.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
 # Generate test configs
 python3 test_config_generator.py --analysis-models $MODEL_NAMES
