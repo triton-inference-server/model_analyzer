@@ -12,8 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
+
 import heapq
 import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class ResultHeap:
@@ -21,6 +25,7 @@ class ResultHeap:
     A data structure used by the result manager 
     to store and sort results
     """
+
     def __init__(self):
         self._sorted_results = []
         self._failing_results = []
@@ -92,7 +97,7 @@ class ResultHeap:
         """
 
         if len(self._passing_results) == 0:
-            logging.warning(
+            logger.warning(
                 f"Requested top {n} configs, but none satisfied constraints. "
                 "Showing available constraint failing configs for this model.")
 
@@ -100,7 +105,7 @@ class ResultHeap:
                 return heapq.nsmallest(len(self._failing_results),
                                        self._failing_results)
             if n > len(self._failing_results):
-                logging.warning(
+                logger.warning(
                     f"Requested top {n} failing configs, "
                     f"but found only {len(self._failing_results)}. "
                     "Showing all available constraint failing configs for this model."
@@ -112,7 +117,7 @@ class ResultHeap:
             return heapq.nsmallest(len(self._passing_results),
                                    self._passing_results)
         if n > len(self._passing_results):
-            logging.warning(
+            logger.warning(
                 f"Requested top {n} configs, "
                 f"but found only {len(self._passing_results)} passing configs. "
                 "Showing all available constraint satisfying configs for this model."

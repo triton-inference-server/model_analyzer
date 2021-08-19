@@ -1411,7 +1411,7 @@ profile_models:
             config = self._evaluate_config(args, yaml_content)
 
         yaml_content = """
-            profile_models: 
+            profile_models:
                 model1:
                     triton_server_flags:
                         strict_model_config: false

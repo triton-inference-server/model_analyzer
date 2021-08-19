@@ -40,3 +40,6 @@ PERF_ANALYZER_MINIMUM_REQUEST_COUNT = 50
 
 # Triton Server
 SERVER_OUTPUT_TIMEOUT_SECS = 5
+
+# Logging
+LOGGER_NAME = "model_analyzer_logger"

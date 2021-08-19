@@ -51,6 +51,7 @@ MODEL_ANALYZER_SUBCOMMAND="profile"
 
 RET=0
 
+set +e
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     # Loop 
     WAIT_TIME_SECS=$WAIT_TIMEOUT
@@ -93,15 +94,14 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         cat $ANALYZER_LOG
         RET=1
     fi
-    if [[ ! -z `pgrep model-analyzer` ]]; then
-        # Send 3 SIGINTS to stop the analyzer
+    until [[ (-z `pgrep model-analyzer`) || ("`grep 'SIGINT' $ANALYZER_LOG | wc -l`" -gt "3") ]]; do
         kill -2 $ANALYZER_PID
-        kill -2 $ANALYZER_PID
-        kill -2 $ANALYZER_PID
-        wait $ANALYZER_PID
-    fi
+        sleep 0.5
+    done
+    wait $ANALYZER_PID
     rm -f $CHECKPOINT_DIRECTORY/*
 done
+set -e
 
 rm -f *.yaml
 

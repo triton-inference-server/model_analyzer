@@ -13,23 +13,26 @@
 # limitations under the License.
 
 import sys
-from model_analyzer.constants import MAX_NUMBER_OF_INTERRUPTS
+from model_analyzer.constants import LOGGER_NAME, MAX_NUMBER_OF_INTERRUPTS
 from model_analyzer.state.analyzer_state import AnalyzerState
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
 import traceback
 import signal
-import logging
 import json
 import os
 import glob
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class AnalyzerStateManager:
     """
     Maintains the state of the Model Analyzer
     """
+
     def __init__(self, config, server):
         """
         Parameters
@@ -114,7 +117,7 @@ class AnalyzerStateManager:
         latest_checkpoint_file = os.path.join(
             self._checkpoint_dir, f"{self._latest_checkpoint()}.ckpt")
         if os.path.exists(latest_checkpoint_file):
-            logging.info(
+            logger.info(
                 f"Loaded checkpoint from file {latest_checkpoint_file}")
             with open(latest_checkpoint_file, 'r') as f:
                 try:
@@ -127,7 +130,7 @@ class AnalyzerStateManager:
                         ' directory.')
             self._starting_fresh_run = False
         else:
-            logging.info("No checkpoint file found, starting a fresh run.")
+            logger.info("No checkpoint file found, starting a fresh run.")
 
     def default_encode(self, obj):
         if isinstance(obj, bytes):
@@ -153,12 +156,12 @@ class AnalyzerStateManager:
         if self._state_changed:
             with open(ckpt_filename, 'w') as f:
                 json.dump(self._current_state, f, default=self.default_encode)
-            logging.info(f"Saved checkpoint to {ckpt_filename}.")
+            logger.info(f"Saved checkpoint to {ckpt_filename}.")
 
             self._checkpoint_index += 1
             self._state_changed = False
         else:
-            logging.info(
+            logger.info(
                 f"No changes made to analyzer data, no checkpoint saved.")
 
     def interrupt_handler(self, signal, frame):
@@ -169,13 +172,13 @@ class AnalyzerStateManager:
         """
 
         self._exiting += 1
-        if logging.root.level <= logging.DEBUG:
+        if logger.getEffectiveLevel() <= logging.DEBUG:
             traceback.print_stack(limit=15)
-        logging.info(
+        logger.info(
             f'Received SIGINT {self._exiting}/{MAX_NUMBER_OF_INTERRUPTS}. '
             'Will attempt to exit after current measurement.')
         if self._exiting >= MAX_NUMBER_OF_INTERRUPTS:
-            logging.info(
+            logger.info(
                 f'Received SIGINT maximum number of times. Saving state and exiting immediately. '
                 'perf_analyzer may still be running...')
             self.save_checkpoint()

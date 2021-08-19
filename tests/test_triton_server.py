@@ -41,7 +41,6 @@ CLI_TO_STRING_TEST_ARGS = {
 
 
 class TestTritonServerMethods(trc.TestResultCollector):
-
     def setUp(self):
         # GPUs for this test
         self._sys_gpus = ["GPU_1", "GPU_2"]
@@ -106,9 +105,10 @@ class TestTritonServerMethods(trc.TestResultCollector):
 
             # Make sure parsed value is the one from dict, check type too
             test_value = CLI_TO_STRING_TEST_ARGS[arg]
-            self.assertEqual(test_value,
-                             type(test_value)(value),
-                             msg=f"CLI string contained unknown value: {value}")
+            self.assertEqual(
+                test_value,
+                type(test_value)(value),
+                msg=f"CLI string contained unknown value: {value}")
 
     def _test_create_server(self, gpus):
         # Create a TritonServerConfig
@@ -199,6 +199,40 @@ class TestTritonServerMethods(trc.TestResultCollector):
 
     def test_start_stop_gpus_select_gpu(self):
         self._test_start_stop_gpus(gpus=self._sys_gpus[:1])
+
+    def start_stop_docker_args(self):
+        gpus = ['all']
+        device_requests, gpu_uuids = self._find_correct_gpu_settings(gpus)
+
+        # Create a TritonServerConfig
+        server_config = TritonServerConfig()
+        server_config['model-repository'] = MODEL_REPOSITORY_PATH
+
+        # Create mounts and labels
+        mounts = [
+            '/host/path:/dest/path:ro', '/another/host/path:/some/dest/path:rw'
+        ]
+        labels = {'RUNNER_ID': 'TEST_RUNNER_ID'}
+
+        environment = {'VARIABLE': 'VALUE'}
+        # Create server in docker, start , wait, and stop
+        self.server = TritonServerFactory.create_server_docker(
+            image=TRITON_IMAGE,
+            config=server_config,
+            gpus=gpus,
+            mounts=mounts,
+            labels=labels)
+
+        # Start server check that mocked api is called
+        self.server.start(env=environment)
+        self.server_docker_mock.assert_server_process_start_called_with(
+            f"{TRITON_DOCKER_BIN_PATH} {server_config.to_cli_string()}",
+            MODEL_REPOSITORY_PATH, TRITON_IMAGE, device_requests, gpu_uuids,
+            8000, 8001, 8002, mounts, labels)
+
+        # Stop container and check api calls
+        self.server.stop()
+        self.server_docker_mock.assert_server_process_terminate_called()
 
     def _test_get_logs(self, gpus):
         # Create a TritonServerConfig

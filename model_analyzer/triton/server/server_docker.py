@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
 import docker
 import logging
 from multiprocessing.pool import ThreadPool
@@ -24,7 +25,7 @@ LOCAL_HTTP_PORT = 8000
 LOCAL_GRPC_PORT = 8001
 LOCAL_METRICS_PORT = 8002
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class TritonServerDocker(TritonServer):
@@ -32,7 +33,7 @@ class TritonServerDocker(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     triton in a docker container.
     """
-    def __init__(self, image, config, gpus, log_path, mounts):
+    def __init__(self, image, config, gpus, log_path, mounts, labels):
         """
         Parameters
         ----------
@@ -46,6 +47,9 @@ class TritonServerDocker(TritonServer):
             Absolute path to the triton log file
         mounts: list of str
             The volumes to be mounted to the tritonserver container
+        labels: dict
+            name-value pairs for label to set metadata for triton docker
+            container. (Not the same as environment variables)
         """
 
         self._server_config = config
@@ -54,6 +58,7 @@ class TritonServerDocker(TritonServer):
         self._tritonserver_container = None
         self._log_path = log_path
         self._mounts = mounts
+        self._labels = labels if labels else {}
         self._gpus = gpus
 
         assert self._server_config['model-repository'], \
@@ -115,17 +120,19 @@ class TritonServerDocker(TritonServer):
             # Run the docker container and run the command in the container
             self._tritonserver_container = self._docker_client.containers.run(
                 command=f'bash -c "{command}"',
-                name='tritonserver',
+                init=True,
                 image=self._tritonserver_image,
                 device_requests=devices,
                 volumes=volumes,
+                labels=self._labels,
                 ports=ports,
                 publish_all_ports=True,
                 tty=False,
                 stdin_open=False,
                 detach=True)
-        except docker.errors.APIError as error:
-            if error.explanation.find('port is already allocated') != -1:
+            logger.info('Triton Server started.')
+        except docker.errors.APIError as e:
+            if e.explanation.find('port is already allocated') != -1:
                 raise TritonModelAnalyzerException(
                     "One of the following port(s) are already allocated: "
                     f"{server_http_port}, {server_grpc_port}, "
@@ -134,7 +141,7 @@ class TritonServerDocker(TritonServer):
                     " --triton-http-endpoint, --triton-grpc-endpoint,"
                     " and --triton-metrics-endpoint flags.")
             else:
-                raise error
+                raise TritonModelAnalyzerException(e)
 
         if self._log_path:
             try:
@@ -159,8 +166,6 @@ class TritonServerDocker(TritonServer):
         and cleans up docker client
         """
 
-        logger.info('Stopping triton server.')
-
         if self._tritonserver_container is not None:
             if self._log_path:
                 if self._log_pool:
@@ -171,7 +176,8 @@ class TritonServerDocker(TritonServer):
             self._tritonserver_container.stop()
             self._tritonserver_container.remove(force=True)
             self._tritonserver_container = None
-            self._docker_client.close()
+            logger.info('Stopped Triton Server.')
+        self._docker_client.close()
 
     def cpu_stats(self):
         """

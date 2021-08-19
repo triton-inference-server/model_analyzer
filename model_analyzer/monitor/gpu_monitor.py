@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-
 from .monitor import Monitor
-import numba.cuda
 
+from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-logger = logging.getLogger(__name__)
+import numba.cuda
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class GPUMonitor(Monitor):
@@ -71,4 +72,5 @@ class GPUMonitor(Monitor):
             gpu_uuids.append(str(gpu.device_uuid(), encoding='ascii'))
         gpu_uuids_str = ','.join(gpu_uuids)
         logger.info(
-            f'Using GPU(s) with UUID(s) = {{ {gpu_uuids_str} }} for profiling.')
+            f'Using GPU(s) with UUID(s) = {{ {gpu_uuids_str} }} for profiling.'
+        )

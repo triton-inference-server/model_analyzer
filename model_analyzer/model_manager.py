@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.config.run.run_config_generator \
     import RunConfigGenerator
 
-import logging
 import os
+import logging
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class ModelManager:
@@ -27,6 +29,7 @@ class ModelManager:
     This class handles the search for, creation of, and execution of run configs.
     It also records the best results for each model.
     """
+
     def __init__(self, config, client, server, metrics_manager, result_manager,
                  state_manager):
         """
@@ -79,12 +82,12 @@ class ModelManager:
 
         # Run model inferencing
         if self._config.run_config_search_disable:
-            logging.info(
+            logger.info(
                 f"Running manual config search for model: {model.model_name()}"
             )
             self._run_model_no_search(model)
         else:
-            logging.info(
+            logger.info(
                 f"Running auto config search for model: {model.model_name()}")
             self._run_model_with_search(model)
 
@@ -211,7 +214,7 @@ class ModelManager:
                 not self._config.perf_output else FileWriter()
             perf_config = run_config.perf_config()
 
-            logging.info(f"Profiling model {perf_config['model-name']}...")
+            logger.info(f"Profiling model {perf_config['model-name']}...")
             measurement = self._metrics_manager.profile_model(
                 run_config=run_config, perf_output_writer=perf_output_writer)
             if measurement is not None:

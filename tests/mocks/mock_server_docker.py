@@ -92,11 +92,18 @@ class MockServerDockerMethods(MockServerMethods):
                                                 gpu_uuids,
                                                 http_port=8000,
                                                 grpc_port=8001,
-                                                metrics_port=8002):
+                                                metrics_port=8002,
+                                                mounts=None,
+                                                labels=None):
         """
         Asserts that a triton container was created using the
         supplied arguments
         """
+
+        if mounts is None:
+            mounts = []
+        if labels is None:
+            labels = {}
 
         self._assert_docker_initialized()
 
@@ -109,15 +116,19 @@ class MockServerDockerMethods(MockServerMethods):
                 'mode': 'ro'
             }
         }
+        for mount_str in mounts:
+            host_path, dest, mode = mount_str.split(':')
+            mock_volumes[host_path] = {'bind': dest, 'mode': mode}
 
         cmd = ' '.join(env_cmds + [cmd])
         mock_ports = {http_port: 8000, grpc_port: 8001, metrics_port: 8002}
         self.mock.from_env.return_value.containers.run.assert_called_once_with(
             command=f'bash -c "{cmd}"',
-            name='tritonserver',
+            init=True,
             image=triton_image,
             device_requests=device_requests,
             volumes=mock_volumes,
+            labels=labels,
             ports=mock_ports,
             publish_all_ports=True,
             tty=False,

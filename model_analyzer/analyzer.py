@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
 from .model_manager import ModelManager
 from .result.result_manager import ResultManager
 from .record.metrics_manager import MetricsManager
@@ -27,6 +28,7 @@ from .model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
 import logging
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class Analyzer:
@@ -78,7 +80,7 @@ class Analyzer:
                 f"Expected config of type {ConfigCommandProfile},"
                 " got {type(self._config)}.")
 
-        logging.info('Profiling server only metrics...')
+        logger.info('Profiling server only metrics...')
 
         self._metrics_manager = MetricsManager(
             config=self._config,
@@ -113,7 +115,7 @@ class Analyzer:
         profiled_model_list = list(
             self._state_manager.get_state_variable(
                 'ResultManager.results').keys())
-        logging.info(
+        logger.info(
             f"Finished profiling. Obtained measurements for models: {profiled_model_list}."
         )
 
@@ -137,7 +139,8 @@ class Analyzer:
                 f"Expected config of type {ConfigCommandAnalyze}, got {type(self._config)}."
             )
 
-        gpu_info = self._state_manager.get_state_variable('MetricsManager.gpus')
+        gpu_info = self._state_manager.get_state_variable(
+            'MetricsManager.gpus')
         if not gpu_info:
             gpu_info = {}
         self._report_manager = ReportManager(
@@ -177,7 +180,8 @@ class Analyzer:
                 f"Expected config of type {ConfigCommandReport}, got {type(self._config)}."
             )
 
-        gpu_info = self._state_manager.get_state_variable('MetricsManager.gpus')
+        gpu_info = self._state_manager.get_state_variable(
+            'MetricsManager.gpus')
         if not gpu_info:
             gpu_info = {}
         self._report_manager = ReportManager(

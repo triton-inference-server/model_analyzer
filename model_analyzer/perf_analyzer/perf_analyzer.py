@@ -34,14 +34,16 @@ from model_analyzer.record.types.perf_server_compute_output \
     import PerfServerComputeOutput
 
 from model_analyzer.constants import \
-    INTERVAL_SLEEP_TIME, MEASUREMENT_REQUEST_COUNT_STEP, \
+    INTERVAL_SLEEP_TIME, LOGGER_NAME, MEASUREMENT_REQUEST_COUNT_STEP, \
     MEASUREMENT_WINDOW_STEP, PERF_ANALYZER_MEASUREMENT_WINDOW, \
     PERF_ANALYZER_MINIMUM_REQUEST_COUNT
 
 from subprocess import Popen, STDOUT, PIPE
-import logging
 import psutil
 import re
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class PerfAnalyzer:
@@ -139,12 +141,12 @@ class PerfAnalyzer:
                     break
             else:
                 if self._config['measurement-mode'] == 'time_windows':
-                    logging.info(
+                    logger.info(
                         f"Ran perf_analyzer {self._max_retries} times, "
                         "but no valid requests recorded in max time interval"
                         f" of {self._config['measurement-interval']} ")
                 elif self._config['measurement-mode'] == 'count_windows':
-                    logging.info(
+                    logger.info(
                         f"Ran perf_analyzer {self._max_retries} times, "
                         "but no valid requests recorded over max request count"
                         f" of {self._config['measurement-request-count']} ")
@@ -169,7 +171,7 @@ class PerfAnalyzer:
             # perf_analyzer using too much CPU?
             cpu_util = process_util.cpu_percent(INTERVAL_SLEEP_TIME)
             if cpu_util > self._max_cpu_util:
-                logging.info(
+                logger.info(
                     f'perf_analyzer used significant amount of CPU resources ({cpu_util}%), killing perf_analyzer...'
                 )
                 self._output = process.stdout.read()
@@ -180,7 +182,7 @@ class PerfAnalyzer:
 
             current_timeout -= INTERVAL_SLEEP_TIME
         else:
-            logging.info(
+            logger.info(
                 'perf_analyzer took very long to exit, killing perf_analyzer...'
             )
             process.kill()
@@ -206,7 +208,7 @@ class PerfAnalyzer:
                     self._config['measurement-interval'] = int(
                         self._config['measurement-interval']
                     ) + MEASUREMENT_WINDOW_STEP
-                logging.info(
+                logger.info(
                     "perf_analyzer's measurement window is too small, "
                     f"increased to {self._config['measurement-interval']} ms.")
             elif self._config['measurement-mode'] is None or self._config[
@@ -218,14 +220,14 @@ class PerfAnalyzer:
                     self._config['measurement-request-count'] = int(
                         self._config['measurement-request-count']
                     ) + MEASUREMENT_REQUEST_COUNT_STEP
-                logging.info(
+                logger.info(
                     "perf_analyzer's request count is too small, "
                     f"increased to {self._config['measurement-request-count']}."
                 )
             return 0
         else:
-            logging.info(f"Running perf_analyzer {cmd} failed with"
-                         f" exit status {process.returncode} : {self._output}")
+            logger.info(f"Running perf_analyzer {cmd} failed with"
+                        f" exit status {process.returncode} : {self._output}")
             return 1
 
     def output(self):
@@ -269,10 +271,10 @@ class PerfAnalyzer:
         server_section_end = self._output.find('Inferences/Second vs. Client',
                                                server_section_start)
 
-        client_section = self._output[
-            client_section_start:server_section_start].strip()
-        server_section = self._output[
-            server_section_start:server_section_end].strip()
+        client_section = self._output[client_section_start:
+                                      server_section_start].strip()
+        server_section = self._output[server_section_start:
+                                      server_section_end].strip()
 
         server_perf_metrics = {
             PerfServerQueue, PerfServerComputeInput, PerfServerComputeInfer,

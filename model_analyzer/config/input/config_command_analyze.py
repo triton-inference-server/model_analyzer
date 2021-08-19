@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
 from .config_defaults import \
     DEFAULT_CHECKPOINT_DIRECTORY, DEFAULT_EXPORT_PATH, \
     DEFAULT_FILENAME_MODEL_GPU, DEFAULT_FILENAME_MODEL_INFERENCE, \
@@ -34,8 +35,9 @@ from model_analyzer.record.record import RecordType
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
-import logging
 import os
+import logging
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class ConfigCommandAnalyze(ConfigCommand):
@@ -312,7 +314,7 @@ class ConfigCommandAnalyze(ConfigCommand):
         """
 
         if not self.export_path:
-            logging.warning(
+            logger.warning(
                 f"--export-path not specified. Using {self._fields['export_path'].default_value()}"
             )
         elif self.export_path and not os.path.isdir(self.export_path):

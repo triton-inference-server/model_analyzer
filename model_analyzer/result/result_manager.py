@@ -14,7 +14,7 @@
 
 from model_analyzer.result.result_statistics import ResultStatistics
 from model_analyzer.output.file_writer import FileWriter
-from model_analyzer.constants import TOP_MODELS_REPORT_KEY
+from model_analyzer.constants import LOGGER_NAME, TOP_MODELS_REPORT_KEY
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
@@ -25,10 +25,10 @@ from .model_result import ModelResult
 
 import os
 import heapq
-import logging
 from collections import defaultdict
-
 import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class ResultManager:
@@ -85,8 +85,8 @@ class ResultManager:
         """
 
         self._state_manager.set_state_variable('ResultManager.results', {})
-        self._state_manager.set_state_variable('ResultManager.server_only_data',
-                                               {})
+        self._state_manager.set_state_variable(
+            'ResultManager.server_only_data', {})
 
     def _create_server_table(self):
         # Server only
@@ -99,8 +99,9 @@ class ResultManager:
                 server_output_headers.append(
                     self._gpu_metrics_to_headers[server_output_field])
             else:
-                logging.warning(
-                    f'Server output field "{server_output_field}", has no data')
+                logger.warning(
+                    f'Server output field "{server_output_field}", has no data'
+                )
                 continue
             server_output_fields.append(server_output_field)
 
@@ -121,7 +122,7 @@ class ResultManager:
                 inference_output_headers.append(
                     self._non_gpu_metrics_to_headers[inference_output_field])
             else:
-                logging.warning(
+                logger.warning(
                     f'Inference output field "{inference_output_field}", has no data'
                 )
                 continue
@@ -144,7 +145,7 @@ class ResultManager:
                 gpu_output_headers.append(
                     self._gpu_metrics_to_headers[gpu_output_field])
             else:
-                logging.warning(
+                logger.warning(
                     f'GPU output field "{gpu_output_field}", has no data')
                 continue
             gpu_output_fields.append(gpu_output_field)
@@ -241,8 +242,8 @@ class ResultManager:
             keys are gpu ids and values are lists of metric values
         """
 
-        self._state_manager.set_state_variable('ResultManager.server_only_data',
-                                               data)
+        self._state_manager.set_state_variable(
+            'ResultManager.server_only_data', data)
 
     def add_measurement(self, run_config, measurement):
         """
@@ -272,7 +273,8 @@ class ResultManager:
             results[model_name][model_config_name] = (model_config, {})
 
         measurement_key = measurement.perf_config().representation()
-        results[model_name][model_config_name][1][measurement_key] = measurement
+        results[model_name][model_config_name][1][
+            measurement_key] = measurement
 
         # Use set_state_variable to record that state may have been changed
         self._state_manager.set_state_variable(name='ResultManager.results',
@@ -303,7 +305,7 @@ class ResultManager:
         ]
         for model_name in analysis_model_names:
             if model_name not in results:
-                logging.warning(
+                logger.warning(
                     f"Model {model_name} requested for analysis but no results were found. "
                     "Ensure that this model was actually profiled.")
             else:
@@ -344,7 +346,7 @@ class ResultManager:
 
         if model_name not in results or model_config_name not in results[
                 model_name]:
-            logging.error(
+            logger.error(
                 f'No results found for model config: {model_config_name}')
             return (None, [])
         else:
@@ -432,11 +434,9 @@ class ResultManager:
 
         # Non GPU specific data
         inference_fields = self._inference_output_fields
-        inference_row = self._get_common_row_items(inference_fields, batch_size,
-                                                   concurrency, satisfies,
-                                                   model_name, tmp_model_name,
-                                                   dynamic_batching,
-                                                   instance_group)
+        inference_row = self._get_common_row_items(
+            inference_fields, batch_size, concurrency, satisfies, model_name,
+            tmp_model_name, dynamic_batching, instance_group)
 
         for metric in measurement.non_gpu_data():
             metric_tag_index = self._find_index_for_field(
@@ -445,18 +445,16 @@ class ResultManager:
             if metric_tag_index is not None:
                 inference_row[metric_tag_index] = round(metric.value(), 1)
 
-        self._result_tables[self.model_inference_table_key].insert_row_by_index(
-            inference_row)
+        self._result_tables[
+            self.model_inference_table_key].insert_row_by_index(inference_row)
 
         # GPU specific data (only put measurement if not cpu only)
         if not cpu_only:
             for gpu_uuid, metrics in measurement.gpu_data().items():
                 gpu_fields = self._gpu_output_fields
-                gpu_row = self._get_common_row_items(gpu_fields, batch_size,
-                                                     concurrency, satisfies,
-                                                     model_name, tmp_model_name,
-                                                     dynamic_batching,
-                                                     instance_group)
+                gpu_row = self._get_common_row_items(
+                    gpu_fields, batch_size, concurrency, satisfies, model_name,
+                    tmp_model_name, dynamic_batching, instance_group)
                 gpu_uuid_index = self._find_index_for_field(
                     gpu_fields, 'gpu_uuid')
                 if gpu_uuid_index is not None:
@@ -508,8 +506,8 @@ class ResultManager:
             row[dynamic_batching_idx] = dynamic_batching
 
         # Instance Group
-        instance_group_idx = self._find_index_for_field(fields,
-                                                        'instance_group')
+        instance_group_idx = self._find_index_for_field(
+            fields, 'instance_group')
         if instance_group_idx is not None:
             row[instance_group_idx] = instance_group
         return row
@@ -536,8 +534,8 @@ class ResultManager:
             if model_name_index is not None:
                 data_row[model_name_index] = 'triton-server'
 
-            gpu_uuid_index = self._find_index_for_field(server_fields,
-                                                        'gpu_uuid')
+            gpu_uuid_index = self._find_index_for_field(
+                server_fields, 'gpu_uuid')
             if gpu_uuid_index is not None:
                 data_row[gpu_uuid_index] = gpu_uuid
 
@@ -547,8 +545,8 @@ class ResultManager:
 
                 if metric_tag_index is not None:
                     data_row[metric_tag_index] = round(metric.value(), 1)
-            self._result_tables[self.server_only_table_key].insert_row_by_index(
-                data_row)
+            self._result_tables[
+                self.server_only_table_key].insert_row_by_index(data_row)
 
     def _add_result_table(self, table_key, title, headers):
         """
@@ -584,7 +582,7 @@ class ResultManager:
         # Configure server only results path and export results
         server_metrics_path = os.path.join(results_export_directory,
                                            self._config.filename_server_only)
-        logging.info(
+        logger.info(
             f"Exporting server only metrics to {server_metrics_path}...")
         self._export_server_only_csv(
             writer=FileWriter(filename=server_metrics_path),
@@ -595,9 +593,9 @@ class ResultManager:
             results_export_directory, self._config.filename_model_inference)
         metrics_gpu_path = os.path.join(results_export_directory,
                                         self._config.filename_model_gpu)
-        logging.info(
+        logger.info(
             f"Exporting inference metrics to {metrics_inference_path}...")
-        logging.info(f"Exporting GPU metrics to {metrics_gpu_path}...")
+        logger.info(f"Exporting GPU metrics to {metrics_gpu_path}...")
         self._export_model_csv(
             inference_writer=FileWriter(filename=metrics_inference_path),
             gpu_metrics_writer=FileWriter(filename=metrics_gpu_path),
@@ -703,7 +701,8 @@ class ResultManager:
         else:
             writer.write(
                 table.to_formatted_string(separator=column_separator,
-                                          ignore_widths=ignore_widths) + "\n\n")
+                                          ignore_widths=ignore_widths) +
+                "\n\n")
 
     def get_result_statistics(self):
         """
@@ -722,8 +721,10 @@ class ResultManager:
                 failing_measurements += len(result.failing_measurements())
 
             statistics.set_total_configurations(stats_key, total_configs)
-            statistics.set_passing_measurements(stats_key, passing_measurements)
-            statistics.set_failing_measurements(stats_key, failing_measurements)
+            statistics.set_passing_measurements(stats_key,
+                                                passing_measurements)
+            statistics.set_failing_measurements(stats_key,
+                                                failing_measurements)
 
         result_stats = ResultStatistics()
         for model_name, result_heap in self._per_model_sorted_results.items():
