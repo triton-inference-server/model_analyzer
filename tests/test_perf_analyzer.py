@@ -111,6 +111,15 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config['extra-verbose'] = True
         self.assertTrue(self.config['extra-verbose'])
 
+    def test_perf_analyzer_additive_args(self):
+        shape = ['name1:1,2,3', 'name2:4,5,6']
+        expected_cli_str = '-m test_model --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50'
+
+        self.config['shape'] = shape[:]
+
+        self.assertEqual(self.config['shape'], shape)
+        self.assertEqual(self.config.to_cli_string(), expected_cli_str)
+
     def test_run(self):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH

@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,9 +25,11 @@ class TestConfigGenerator:
     TO ADD A TEST: Simply add a member function whose name starts
                     with 'generate'.
     """
+
     def __init__(self):
         test_functions = [
-            self.__getattribute__(name) for name in dir(self)
+            self.__getattribute__(name)
+            for name in dir(self)
             if name.startswith('generate')
         ]
 
@@ -72,6 +74,19 @@ class TestConfigGenerator:
             }
         }
         with open('./config-count-no-adjust.yml', 'w') as f:
+            yaml.dump(model_config, f)
+
+    def generate_additive_args(self):
+        model_config = {
+            'analysis_models': ['vgg19_libtorch'],
+            'profile_models': ['vgg19_libtorch'],
+            'perf_analyzer_flags': {
+                'measurement-mode': 'count_windows',
+                'measurement-interval': 50,
+                'streaming': ['header1:value1', 'header2:value2']
+            }
+        }
+        with open('./config-additive-args-count-no-adjust.yml', 'w') as f:
             yaml.dump(model_config, f)
 
 
