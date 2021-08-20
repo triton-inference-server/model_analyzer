@@ -318,8 +318,8 @@ class MetricsManager:
 
         records_groupby_gpu = {}
         records_groupby_gpu = dcgm_record_aggregator.groupby(
-            self._dcgm_metrics, lambda record: str(
-                record.device().device_uuid(), encoding='ascii'))
+            self._dcgm_metrics,
+            lambda record: str(record.device().device_uuid(), encoding='ascii'))
 
         gpu_metrics = defaultdict(list)
         for _, metric in records_groupby_gpu.items():

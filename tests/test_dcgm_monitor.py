@@ -32,6 +32,7 @@ from .mocks.mock_dcgm_field_group_watcher import TEST_RECORD_VALUE
 
 
 class TestDCGMMonitor(trc.TestResultCollector):
+
     def setUp(self):
         self.mock_dcgm = MockDCGM()
         self.mock_numba = MockNumba(mock_paths=[
@@ -62,8 +63,8 @@ class TestDCGMMonitor(trc.TestResultCollector):
         # The number of records should be dividable by number of metrics
         self.assertTrue(len(records) % len(metrics) == 0)
         self.assertTrue(len(records) > 0)
-        self.assertTrue(records[-1].timestamp() -
-                        records[0].timestamp() >= monitoring_time)
+        self.assertTrue(
+            records[-1].timestamp() - records[0].timestamp() >= monitoring_time)
 
         with self.assertRaises(TritonModelAnalyzerException):
             dcgm_monitor.stop_recording_metrics()
@@ -95,8 +96,8 @@ class TestDCGMMonitor(trc.TestResultCollector):
         # The number of records should be dividable by number of metrics
         self.assertTrue(len(records) % len(metrics) == 0)
         self.assertTrue(len(records) > 0)
-        self.assertTrue(records[-1].timestamp() -
-                        records[0].timestamp() >= monitoring_time)
+        self.assertTrue(
+            records[-1].timestamp() - records[0].timestamp() >= monitoring_time)
 
         dcgm_monitor.destroy()
 
@@ -122,8 +123,8 @@ class TestDCGMMonitor(trc.TestResultCollector):
         # The number of records should be dividable by number of metrics
         self.assertTrue(len(records) % len(metrics) == 0)
         self.assertTrue(len(records) > 0)
-        self.assertTrue(records[-1].timestamp() -
-                        records[0].timestamp() >= monitoring_time)
+        self.assertTrue(
+            records[-1].timestamp() - records[0].timestamp() >= monitoring_time)
 
         dcgm_monitor.destroy()
 

@@ -33,6 +33,7 @@ class TritonServerDocker(TritonServer):
     Concrete Implementation of TritonServer interface that runs
     triton in a docker container.
     """
+
     def __init__(self, image, config, gpus, log_path, mounts, labels):
         """
         Parameters

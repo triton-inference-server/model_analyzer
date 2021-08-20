@@ -25,6 +25,7 @@ from model_analyzer.config.run.run_config_generator \
 
 
 class TestRunConfigGenerator(trc.TestResultCollector):
+
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
@@ -48,9 +49,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
     def test_generate_model_config_combinations(self):
         args = [
-            'model-analyzer', 'profile', '--model-repository',
-            'cli_repository', '-f', 'path-to-config-file', '--profile-models',
-            'vgg11'
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--profile-models', 'vgg11'
         ]
 
         # Empty yaml
@@ -64,8 +64,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         # Use yaml model names
         args = [
-            'model-analyzer', 'profile', '--model-repository',
-            'cli_repository', '-f', 'path-to-config-file'
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file'
         ]
 
         # List of instance groups
@@ -433,9 +433,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
     def test_generate_run_config_for_model_sweep(self):
         # remote launch mode, no model sweeps
         args = [
-            'model-analyzer', 'profile', '--model-repository',
-            'cli_repository', '-f', 'path-to-config-file',
-            '--triton-launch-mode', 'remote'
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--triton-launch-mode', 'remote'
         ]
         yaml_content = """
             concurrency: [1, 2, 3]
@@ -494,8 +493,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         # Not remote, no model sweep
         args = [
-            'model-analyzer', 'profile', '--model-repository',
-            'cli_repository', '-f', 'path-to-config-file'
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file'
         ]
         yaml_content = """
             concurrency: [1, 2, 3]
@@ -519,8 +518,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         # Not remote, with model sweep
         args = [
-            'model-analyzer', 'profile', '--model-repository',
-            'cli_repository', '-f', 'path-to-config-file'
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file'
         ]
         yaml_content = """
             concurrency: [1, 2, 3]

@@ -24,9 +24,11 @@ class TestConfigGenerator:
     TO ADD A TEST: Simply add a member function whose name starts
                     with 'generate'.
     """
+
     def __init__(self):
         test_functions = [
-            self.__getattribute__(name) for name in dir(self)
+            self.__getattribute__(name)
+            for name in dir(self)
             if name.startswith('generate')
         ]
 
@@ -57,16 +59,14 @@ class TestConfigGenerator:
                         'count': 1
                     }]
                 }
-            }
-            for model_name in profile_models
+            } for model_name in profile_models
         }
 
     def generate_perf_flags_per_model(self):
         for i, model_name in enumerate(self.config['profile_models']):
-            self.config['profile_models'][model_name][
-                'perf_analyzer_flags'] = {
-                    'percentile': 95 + i
-                }
+            self.config['profile_models'][model_name]['perf_analyzer_flags'] = {
+                'percentile': 95 + i
+            }
         with open('config-perf-per-model.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
@@ -84,10 +84,9 @@ class TestConfigGenerator:
 
     def generate_triton_flags_per_model(self):
         for i, model_name in enumerate(self.config['profile_models']):
-            self.config['profile_models'][model_name][
-                'triton_server_flags'] = {
-                    'exit_timeout_secs': 100 + i
-                }
+            self.config['profile_models'][model_name]['triton_server_flags'] = {
+                'exit_timeout_secs': 100 + i
+            }
         with open('config-triton-per-model.yml', 'w+') as f:
             yaml.dump(self.config, f)
 

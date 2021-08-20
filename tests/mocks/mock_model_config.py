@@ -17,6 +17,7 @@ from unittest.mock import patch, mock_open, MagicMock
 
 
 class MockModelConfig(MockBase):
+
     def __init__(self, model_file_content=None):
         self._model_file_content = model_file_content
         super().__init__()

@@ -21,6 +21,7 @@ from model_analyzer.config.run.run_config_generator \
 
 import os
 import logging
+
 logger = logging.getLogger(LOGGER_NAME)
 
 
@@ -83,8 +84,7 @@ class ModelManager:
         # Run model inferencing
         if self._config.run_config_search_disable:
             logger.info(
-                f"Running manual config search for model: {model.model_name()}"
-            )
+                f"Running manual config search for model: {model.model_name()}")
             self._run_model_no_search(model)
         else:
             logger.info(

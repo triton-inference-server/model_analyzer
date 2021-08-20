@@ -21,6 +21,7 @@ class MockOSMethods(MockBase):
     """
     Mocks the methods for the os module
     """
+
     def __init__(self, mock_paths):
         path_attrs = {
             'join': MagicMock(return_value=""),

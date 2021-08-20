@@ -21,6 +21,7 @@ class MockMatplotlibMethods(MockBase):
     Mock class that mocks 
     matplotlib
     """
+
     def __init__(self):
         plt_attrs = {'subplots': Mock(return_value=(MagicMock(), MagicMock()))}
         self.patcher_pyplot = patch('model_analyzer.plots.simple_plot.plt',

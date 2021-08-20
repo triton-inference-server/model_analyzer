@@ -20,6 +20,7 @@ class GPURecord(Record):
     This is a base class for any
     GPU based record
     """
+
     def __init__(self, value, device=None, timestamp=0):
         """
         Parameters

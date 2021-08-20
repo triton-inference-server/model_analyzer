@@ -28,6 +28,7 @@ from .model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
 import logging
+
 logger = logging.getLogger(LOGGER_NAME)
 
 
@@ -139,8 +140,7 @@ class Analyzer:
                 f"Expected config of type {ConfigCommandAnalyze}, got {type(self._config)}."
             )
 
-        gpu_info = self._state_manager.get_state_variable(
-            'MetricsManager.gpus')
+        gpu_info = self._state_manager.get_state_variable('MetricsManager.gpus')
         if not gpu_info:
             gpu_info = {}
         self._report_manager = ReportManager(
@@ -180,8 +180,7 @@ class Analyzer:
                 f"Expected config of type {ConfigCommandReport}, got {type(self._config)}."
             )
 
-        gpu_info = self._state_manager.get_state_variable(
-            'MetricsManager.gpus')
+        gpu_info = self._state_manager.get_state_variable('MetricsManager.gpus')
         if not gpu_info:
             gpu_info = {}
         self._report_manager = ReportManager(

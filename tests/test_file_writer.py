@@ -23,6 +23,7 @@ TEST_FILENAME = 'test_filename'
 
 
 class TestFileWriterMethods(trc.TestResultCollector):
+
     def setUp(self):
         self._mock_path = 'model_analyzer.output.file_writer'
         self.io_mock = MockIOMethods(

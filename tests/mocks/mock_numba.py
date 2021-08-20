@@ -22,6 +22,7 @@ class MockNumba(MockBase):
     """
     Mocks numba class
     """
+
     def __init__(self, mock_paths):
         device = MagicMock()
 

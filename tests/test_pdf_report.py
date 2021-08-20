@@ -26,6 +26,7 @@ class TestPDFReportMethods(trc.TestResultCollector):
     """
     Tests the methods of the PDFReport class
     """
+
     def setUp(self):
         self.maxDiff = None
         self.report = PDFReport()
@@ -130,9 +131,8 @@ class TestPDFReportMethods(trc.TestResultCollector):
                    MagicMock()) as pdfkit_mock:
             self.report.add_title('Test PDF Report')
             self.report.add_subheading('Throughput vs. Latency')
-            test_paragraph = (
-                "This is a test paragraph with a lot to say."
-                " There is more than one line in this paragraph.")
+            test_paragraph = ("This is a test paragraph with a lot to say."
+                              " There is more than one line in this paragraph.")
             self.report.add_paragraph(test_paragraph, font_size=14)
             self.report.write_report('test_report_filename')
 

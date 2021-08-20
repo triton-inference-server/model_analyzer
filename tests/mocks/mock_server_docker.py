@@ -30,15 +30,15 @@ class MockServerDockerMethods(MockServerMethods):
     def __init__(self):
         docker_container_attrs = {
             'exec_run':
-            MagicMock(return_value=(None, bytes(self.TEST_MEM, 'utf-8'))),
+                MagicMock(return_value=(None, bytes(self.TEST_MEM, 'utf-8'))),
             'stats':
-            Mock(return_value={
-                'memory_stats': {
-                    'usage': 0.0,
-                    'max_usage': 0.0,
-                    'limits': 0.0
-                }
-            })
+                Mock(return_value={
+                    'memory_stats': {
+                        'usage': 0.0,
+                        'max_usage': 0.0,
+                        'limits': 0.0
+                    }
+                })
         }
         docker_client_attrs = {
             'containers.run': Mock(return_value=Mock(**docker_container_attrs))

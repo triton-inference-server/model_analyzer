@@ -25,6 +25,7 @@ class TestOutputValidator:
     Functions that validate the output
     of the test
     """
+
     def __init__(self, test_name, threshold):
         self._tolerance_percent = threshold
 

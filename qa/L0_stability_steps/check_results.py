@@ -22,6 +22,7 @@ class TestOutputValidator:
     Functions that validate the output
     of the test
     """
+
     def __init__(self, config, test_name, analyzer_log):
         self._config = config
         self._models = config['profile_models']

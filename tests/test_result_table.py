@@ -52,6 +52,7 @@ TEST_CSV_STR = (
 
 
 class TestResultTableMethods(trc.TestResultCollector):
+
     def test_create_headers(self):
         table = ResultTable(headers=["Column 0"])
         self.assertEqual(table.headers(), ["Column 0"])
