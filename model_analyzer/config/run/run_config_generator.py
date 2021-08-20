@@ -86,7 +86,19 @@ class RunConfigGenerator:
         model_repository = analyzer_config['model_repository']
         num_retries = analyzer_config['client_max_retries']
 
-        if analyzer_config['triton_launch_mode'] != 'remote':
+        if analyzer_config['triton_launch_mode'] == 'remote':
+            model_config = ModelConfig.create_from_triton_api(
+                self._client, model.model_name(), num_retries)
+            model_config.set_cpu_only(model.cpu_only())
+            perf_configs = self._generate_perf_config_for_model(
+                model.model_name(), model)
+
+            for perf_config in perf_configs:
+                # Add the new run config.
+                self._run_configs.append(
+                    RunConfig(model.model_name(), model_config, perf_config,
+                              None))
+        else:
             model_config = ModelConfig.create_from_file(
                 f'{model_repository}/{model.model_name()}')
 
@@ -116,23 +128,11 @@ class RunConfigGenerator:
             model_config.set_field('name', model_tmp_name)
             model_config.set_cpu_only(model.cpu_only())
             perf_configs = self._generate_perf_config_for_model(
-                model_tmp_name, model)
+                model_tmp_name, model, analyzer_config['triton_launch_mode'])
             for perf_config in perf_configs:
                 self._run_configs.append(
                     RunConfig(model.model_name(), model_config, perf_config,
                               model.triton_server_environment()))
-        else:
-            model_config = ModelConfig.create_from_triton_api(
-                self._client, model.model_name(), num_retries)
-            model_config.set_cpu_only(model.cpu_only())
-            perf_configs = self._generate_perf_config_for_model(
-                model.model_name(), model)
-
-            for perf_config in perf_configs:
-                # Add the new run config.
-                self._run_configs.append(
-                    RunConfig(model.model_name(), model_config, perf_config,
-                              None))
 
     def generate_model_config_combinations(self, value):
         """
@@ -194,23 +194,39 @@ class RunConfigGenerator:
         # always return a list.
         return [value]
 
-    def _generate_perf_config_for_model(self, model_name, config_model):
+    def _generate_perf_config_for_model(self, model_name, config_model,
+                                        launch_mode):
         """
-        Generates a list of PerfAnalyzerConfigs
+        Generates a list of PerfAnalyzerConfigs based on
+        the config_mode and launch_mode
         """
 
         perf_config_params = {
             'model-name': [model_name],
             'batch-size': config_model.parameters()['batch_sizes'],
             'concurrency-range': config_model.parameters()['concurrency'],
-            'protocol': [self._analyzer_config['client_protocol']],
-            'url': [
-                self._analyzer_config['triton_http_endpoint']
-                if self._analyzer_config['client_protocol'] == 'http' else
-                self._analyzer_config['triton_grpc_endpoint']
-            ],
             'measurement-mode': ['count_windows']
         }
+
+        if launch_mode == 'C_API':
+            perf_config_params.update({
+                'service-kind': ['triton_c_api'],
+                'triton-server-directory': [
+                    self._analyzer_config['triton_install_path']
+                ],
+                'model-repository': [
+                    self._analyzer_config['output_model_repository_path']
+                ]
+            })
+        else:
+            perf_config_params.update({
+                'protocol': [self._analyzer_config['client_protocol']],
+                'url': [
+                    self._analyzer_config['triton_http_endpoint']
+                    if self._analyzer_config['client_protocol'] == 'http' else
+                    self._analyzer_config['triton_grpc_endpoint']
+                ]
+            })
 
         perf_configs = []
         for params in self._generate_parameter_combinations(perf_config_params):

@@ -211,7 +211,7 @@ class ModelManager:
             # TODO: Need to sort the values for batch size and concurrency
             # for correct measurment of the GPU memory metrics.
             perf_output_writer = None if \
-                not self._config.perf_output else FileWriter()
+                not self._config.perf_output else FileWriter(self._config.perf_output_path)
             perf_config = run_config.perf_config()
 
             logger.info(f"Profiling model {perf_config['model-name']}...")
@@ -248,15 +248,16 @@ class ModelManager:
             except FileExistsError:
                 pass
 
-        self._client.wait_for_server_ready(self._config.client_max_retries)
+        if self._config.triton_launch_mode != 'C_API':
+            self._client.wait_for_server_ready(self._config.client_max_retries)
 
-        if self._client.load_model(model_name=variant_name) == -1:
-            return False
+            if self._client.load_model(model_name=variant_name) == -1:
+                return False
 
-        if self._client.wait_for_model_ready(
-                model_name=variant_name,
-                num_retries=self._config.client_max_retries) == -1:
-            return False
+            if self._client.wait_for_model_ready(
+                    model_name=variant_name,
+                    num_retries=self._config.client_max_retries) == -1:
+                return False
         return True
 
     def _get_measurement_if_config_duplicate(self, run_config):

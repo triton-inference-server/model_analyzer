@@ -23,18 +23,20 @@ class PerfAnalyzerConfig:
     """
 
     perf_analyzer_args = [
-        'async', 'sync', 'measurement-interval', 'concurrency-range',
-        'request-rate-range', 'request-distribution', 'request-intervals',
-        'binary-search', 'num-of-sequence', 'latency-threshold', 'max-threads',
+        'service-kind', 'model-signature-name', 'async', 'sync',
+        'measurement-interval', 'concurrency-range', 'request-rate-range',
+        'request-distribution', 'request-intervals', 'binary-search',
+        'num-of-sequence', 'latency-threshold', 'max-threads',
         'stability-percentage', 'max-trials', 'percentile', 'input-data',
         'shared-memory', 'output-shared-memory-size', 'shape',
         'sequence-length', 'string-length', 'string-data', 'measurement-mode',
-        'measurement-request-count'
+        'measurement-request-count', 'streaming', 'grpc-compression-algorithm',
+        'triton-server-directory', 'model-repository'
     ]
 
     input_to_options = [
         'model-name', 'model-version', 'batch-size', 'url', 'protocol',
-        'latency-report-file', 'streaming'
+        'latency-report-file', 'http-header'
     ]
 
     input_to_verbose = ['verbose', 'extra-verbose']
@@ -66,7 +68,7 @@ class PerfAnalyzerConfig:
             'url': '-u',
             'protocol': '-i',
             'latency-report-file': '-f',
-            'streaming': '-H'
+            'http-header': '-H'
         }
 
         self._input_to_verbose = {'verbose': '-v', 'extra-verbose': '-v -v'}

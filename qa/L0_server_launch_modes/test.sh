@@ -24,7 +24,7 @@ REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_checkpoints"}
 MODEL_NAMES="vgg19_libtorch"
-TRITON_LAUNCH_MODES="local docker remote"
+TRITON_LAUNCH_MODES="local docker remote C_API"
 CLIENT_PROTOCOLS="http grpc"
 PORTS=(`find_available_ports 3`)
 http_port="${PORTS[0]}"

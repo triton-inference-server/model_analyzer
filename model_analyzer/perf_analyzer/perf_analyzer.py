@@ -42,6 +42,7 @@ from subprocess import Popen, STDOUT, PIPE
 import psutil
 import re
 import logging
+import signal
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -133,9 +134,14 @@ class PerfAnalyzer:
                     # failure
                     return 1
 
-                if process.returncode != 0:
+                if process.returncode > 0:
                     if self._auto_adjust_parameters(cmd, process) == 1:
                         return 1
+                elif process.returncode < 0:
+                    logger.error(
+                        'perf_analyzer was terminated by signal: '
+                        f'{signal.Signals(abs(process.returncode)).name}')
+                    return 1
                 else:
                     self._parse_output(metrics)
                     break

@@ -290,7 +290,11 @@ class MetricsManager:
                 f"perf_analyzer binary not found : {e}")
 
         if perf_output_writer:
-            perf_output_writer.write(perf_analyzer.output() + '\n')
+            perf_output_writer.write(
+                '============== Perf Analyzer Launched ==============\n '
+                f'Command: perf_analyzer {perf_config.to_cli_string()} \n\n',
+                append=True)
+            perf_output_writer.write(perf_analyzer.output() + '\n', append=True)
 
         perf_records = perf_analyzer.get_records()
         perf_record_aggregator = RecordAggregator()
@@ -349,7 +353,7 @@ class MetricsManager:
             If they are using different GPUs this exception will be raised.
         """
 
-        if self._config.triton_launch_mode != 'remote':
+        if self._config.triton_launch_mode != 'remote' and self._config.triton_launch_mode != 'C_API':
             self._client.wait_for_server_ready(self._config.client_max_retries)
 
             model_analyzer_gpus = self._gpus
