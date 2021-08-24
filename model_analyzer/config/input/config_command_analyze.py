@@ -37,6 +37,7 @@ from model_analyzer.model_analyzer_exceptions \
 
 import os
 import logging
+
 logger = logging.getLogger(LOGGER_NAME)
 
 

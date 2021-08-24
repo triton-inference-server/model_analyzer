@@ -17,6 +17,7 @@ from unittest.mock import patch, mock_open
 
 
 class MockConfig(MockBase):
+
     def __init__(self, args, yaml_file_content):
         self.args = args
         self.yaml_file_content = yaml_file_content
@@ -26,6 +27,5 @@ class MockConfig(MockBase):
         patchers = self._patchers
 
         patchers.append(
-            patch("builtins.open",
-                  mock_open(read_data=self.yaml_file_content)))
+            patch("builtins.open", mock_open(read_data=self.yaml_file_content)))
         patchers.append(patch("sys.argv", self.args))

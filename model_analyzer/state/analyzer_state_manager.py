@@ -117,8 +117,7 @@ class AnalyzerStateManager:
         latest_checkpoint_file = os.path.join(
             self._checkpoint_dir, f"{self._latest_checkpoint()}.ckpt")
         if os.path.exists(latest_checkpoint_file):
-            logger.info(
-                f"Loaded checkpoint from file {latest_checkpoint_file}")
+            logger.info(f"Loaded checkpoint from file {latest_checkpoint_file}")
             with open(latest_checkpoint_file, 'r') as f:
                 try:
 
@@ -200,8 +199,7 @@ class AnalyzerStateManager:
             return -1
         try:
             return max([
-                int(os.path.split(f)[1].split('.')[0])
-                for f in checkpoint_files
+                int(os.path.split(f)[1].split('.')[0]) for f in checkpoint_files
             ])
         except Exception as e:
             raise TritonModelAnalyzerException(e)

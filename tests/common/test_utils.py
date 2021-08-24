@@ -118,8 +118,7 @@ def construct_result(avg_gpu_metric_values,
         gpu_metric_values[gpu_uuid] = {
             key: list(
                 range(val - value_step * num_vals, val + value_step * num_vals,
-                      value_step))
-            for key, val in metric_values.items()
+                      value_step)) for key, val in metric_values.items()
         }
 
     non_gpu_metric_values = {
@@ -134,12 +133,10 @@ def construct_result(avg_gpu_metric_values,
         gpu_metrics = {}
         for gpu_uuid, metric_values in gpu_metric_values.items():
             gpu_metrics[gpu_uuid] = {
-                key: metric_values[key][i]
-                for key in metric_values
+                key: metric_values[key][i] for key in metric_values
             }
         non_gpu_metrics = {
-            key: non_gpu_metric_values[key][i]
-            for key in non_gpu_metric_values
+            key: non_gpu_metric_values[key][i] for key in non_gpu_metric_values
         }
         model_result.add_measurement(
             construct_measurement(model_name=model_name,

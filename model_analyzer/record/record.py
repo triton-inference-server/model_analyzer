@@ -90,6 +90,7 @@ class Record(metaclass=RecordType):
     This class is used for representing
     records
     """
+
     def __init__(self, value, timestamp):
         """
         Parameters

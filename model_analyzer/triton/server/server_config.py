@@ -120,9 +120,8 @@ class TritonServerConfig:
             e.g. '--model-repository=/models --log-verbose=True'
         """
 
-        return ' '.join([
-            f'--{key}={val}' for key, val in self._server_args.items() if val
-        ])
+        return ' '.join(
+            [f'--{key}={val}' for key, val in self._server_args.items() if val])
 
     def __getitem__(self, key):
         """

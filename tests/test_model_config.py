@@ -23,14 +23,12 @@ from model_analyzer.model_analyzer_exceptions \
 
 
 class TestModelConfig(trc.TestResultCollector):
+
     def setUp(self):
         self._model_config = {
-            'name':
-            'classification_chestxray_v1',
-            'platform':
-            'tensorflow_graphdef',
-            'max_batch_size':
-            32,
+            'name': 'classification_chestxray_v1',
+            'platform': 'tensorflow_graphdef',
+            'max_batch_size': 32,
             'input': [{
                 'name': 'NV_MODEL_INPUT',
                 'data_type': 'TYPE_FP32',

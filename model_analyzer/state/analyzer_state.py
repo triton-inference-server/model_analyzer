@@ -22,6 +22,7 @@ class AnalyzerState:
     All the state information needed by 
     Model Analyzer in one place
     """
+
     def __init__(self):
         self._state_dict = {}
 

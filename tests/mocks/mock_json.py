@@ -20,6 +20,7 @@ class MockJSONMethods(MockBase):
     """
     Mocks the methods for the os module
     """
+
     def __init__(self):
         json_attrs = {'load': MagicMock(), 'dump': MagicMock()}
         self.patcher_json = patch(

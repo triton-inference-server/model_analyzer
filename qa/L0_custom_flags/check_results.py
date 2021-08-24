@@ -22,6 +22,7 @@ class TestOutputValidator:
     Functions that validate the output
     of the test
     """
+
     def __init__(self, config, profile_models, analyzer_log, triton_log):
         self._config = config
         self._profile_models = profile_models.split(',')
@@ -29,7 +30,8 @@ class TestOutputValidator:
         self._triton_log = triton_log
 
         check_functions = [
-            self.__getattribute__(name) for name in dir(self)
+            self.__getattribute__(name)
+            for name in dir(self)
             if name.startswith('check')
         ]
 
@@ -52,7 +54,8 @@ class TestOutputValidator:
         True if test passes else False
         """
 
-        if 'perf_analyzer_flags' in self._config and 'percentile' in self._config['perf_analyzer_flags']:
+        if 'perf_analyzer_flags' in self._config and 'percentile' in self._config[
+                'perf_analyzer_flags']:
             with open(self._analyzer_log, 'r') as f:
                 contents = f.read()
 
@@ -80,13 +83,15 @@ class TestOutputValidator:
         True if test passes else False
         """
 
-        if 'perf_analyzer_flags' in self._config and 'measurement-mode' in self._config['perf_analyzer_flags']:
+        if 'perf_analyzer_flags' in self._config and 'measurement-mode' in self._config[
+                'perf_analyzer_flags']:
             with open(self._analyzer_log, 'r') as f:
                 contents = f.read()
 
             # In contents, search for "stabilizing with px latency"
-            measurement_mode = self._config['perf_analyzer_flags']['measurement-mode']
-            assert(measurement_mode == 'time_windows')
+            measurement_mode = self._config['perf_analyzer_flags'][
+                'measurement-mode']
+            assert (measurement_mode == 'time_windows')
             token = "time_windows"
 
             # Ensure the token appears in the text
@@ -105,8 +110,8 @@ class TestOutputValidator:
         True if test passes else False
         """
 
-        for profile_model, config_model in self._config[
-                'profile_models'].items():
+        for profile_model, config_model in self._config['profile_models'].items(
+        ):
             if 'perf_analyzer_flags' in config_model:
                 with open(self._analyzer_log, 'r') as f:
                     contents = f.read()

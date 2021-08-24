@@ -28,6 +28,7 @@ class ModelConfig:
     """
     A class that encapsulates all the metadata about a Triton model.
     """
+
     def __init__(self, model_config):
         """
         Parameters
@@ -104,8 +105,8 @@ class ModelConfig:
         ModelConfig
         """
 
-        protobuf_message = json_format.ParseDict(
-            model_dict, model_config_pb2.ModelConfig())
+        protobuf_message = json_format.ParseDict(model_dict,
+                                                 model_config_pb2.ModelConfig())
 
         return ModelConfig(protobuf_message)
 
@@ -149,8 +150,7 @@ class ModelConfig:
 
         return self._cpu_only
 
-    def write_config_to_file(self, model_path, src_model_path,
-                             last_model_path):
+    def write_config_to_file(self, model_path, src_model_path, last_model_path):
         """
         Writes a protobuf config file.
 

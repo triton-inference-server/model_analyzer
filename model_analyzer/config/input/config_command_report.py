@@ -63,22 +63,21 @@ class ConfigCommandReport(ConfigCommand):
                 "Full path to directory to which to read and write checkpoints and profile data."
             ))
         self._add_config(
-            ConfigField(
-                'export_path',
-                flags=['--export-path', '-e'],
-                default_value=DEFAULT_EXPORT_PATH,
-                field_type=ConfigPrimitive(str),
-                description=
-                "Full path to directory in which to store the results"))
+            ConfigField('export_path',
+                        flags=['--export-path', '-e'],
+                        default_value=DEFAULT_EXPORT_PATH,
+                        field_type=ConfigPrimitive(str),
+                        description=
+                        "Full path to directory in which to store the results"))
         plots_scheme = ConfigObject(schema={
             '*':
-            ConfigObject(
-                schema={
-                    'title': ConfigPrimitive(type_=str),
-                    'x_axis': ConfigPrimitive(type_=str),
-                    'y_axis': ConfigPrimitive(type_=str),
-                    'monotonic': ConfigPrimitive(type_=bool)
-                })
+                ConfigObject(
+                    schema={
+                        'title': ConfigPrimitive(type_=str),
+                        'x_axis': ConfigPrimitive(type_=str),
+                        'y_axis': ConfigPrimitive(type_=str),
+                        'monotonic': ConfigPrimitive(type_=bool)
+                    })
         },
                                     output_mapper=ConfigPlot.from_object)
         self._add_config(
@@ -155,8 +154,7 @@ class ConfigCommandReport(ConfigCommand):
         """
 
         if args.mode == 'online':
-            self._fields['plots'].set_default_value(
-                DEFAULT_ONLINE_REPORT_PLOTS)
+            self._fields['plots'].set_default_value(DEFAULT_ONLINE_REPORT_PLOTS)
         elif args.mode == 'offline':
             self._fields['plots'].set_default_value(
                 DEFAULT_OFFLINE_REPORT_PLOTS)
@@ -199,8 +197,7 @@ class ConfigCommandReport(ConfigCommand):
                         'x_axis': plot.x_axis(),
                         'y_axis': plot.y_axis(),
                         'monotonic': plot.monotonic()
-                    }
-                    for plot in self.plots
+                    } for plot in self.plots
                 }
             else:
                 new_report_model_config['plots'] = {
@@ -209,12 +206,10 @@ class ConfigCommandReport(ConfigCommand):
                         'x_axis': plot.x_axis(),
                         'y_axis': plot.y_axis(),
                         'monotonic': plot.monotonic()
-                    }
-                    for plot in model.plots()
+                    } for plot in model.plots()
                 }
 
             new_report_model_configs[
                 model.model_config_name()] = new_report_model_config
 
-        self._fields['report_model_configs'].set_value(
-            new_report_model_configs)
+        self._fields['report_model_configs'].set_value(new_report_model_configs)

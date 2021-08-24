@@ -72,5 +72,4 @@ class GPUMonitor(Monitor):
             gpu_uuids.append(str(gpu.device_uuid(), encoding='ascii'))
         gpu_uuids_str = ','.join(gpu_uuids)
         logger.info(
-            f'Using GPU(s) with UUID(s) = {{ {gpu_uuids_str} }} for profiling.'
-        )
+            f'Using GPU(s) with UUID(s) = {{ {gpu_uuids_str} }} for profiling.')

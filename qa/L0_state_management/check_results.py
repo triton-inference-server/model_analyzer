@@ -24,6 +24,7 @@ class TestOutputValidator:
     Functions that validate the output
     of the test
     """
+
     def __init__(self, config, test_name, checkpoint_dir, analyzer_log):
         self._config = config
         self._profile_models = list(config['profile_models'])
@@ -127,8 +128,8 @@ class TestOutputValidator:
             if token_idx == -1:
                 break
             end_of_model_name = log_contents.find('...', token_idx)
-            model_name = log_contents[token_idx + len('Profiling model '
-                                                      ):end_of_model_name]
+            model_name = log_contents[token_idx +
+                                      len('Profiling model '):end_of_model_name]
             found_models_count[model_name.rsplit('_', 1)[0]] += 1
 
         for i in range(2):
@@ -180,12 +181,11 @@ if __name__ == '__main__':
                         type=str,
                         required=True,
                         help='The path to the config yaml file.')
-    parser.add_argument(
-        '-d',
-        '--checkpoint-dir',
-        type=str,
-        required=True,
-        help='The checkpoint directory for the model analyzer.')
+    parser.add_argument('-d',
+                        '--checkpoint-dir',
+                        type=str,
+                        required=True,
+                        help='The checkpoint directory for the model analyzer.')
     parser.add_argument('-l',
                         '--analyzer-log-file',
                         type=str,

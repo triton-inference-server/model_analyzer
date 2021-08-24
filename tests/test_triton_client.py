@@ -34,6 +34,7 @@ TEST_MODEL_NAME = 'test_model'
 
 
 class TestTritonClientMethods(trc.TestResultCollector):
+
     def setUp(self):
 
         # GPUs

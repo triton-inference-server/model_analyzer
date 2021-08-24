@@ -31,6 +31,7 @@ import unittest
 
 
 class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
+
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
@@ -47,9 +48,8 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
 
     def setUp(self):
         args = [
-            'model-analyzer', 'profile', '--model-repository',
-            'cli_repository', '-f', 'path-to-config-file', '--profile-models',
-            'test_model'
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--profile-models', 'test_model'
         ]
         yaml_content = """
             export_path: /test_export_path/
@@ -88,8 +88,7 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
             self.state_manager.set_state_variable(name, 9 - i)
 
         for i, name in enumerate(vars):
-            self.assertEqual(self.state_manager.get_state_variable(name),
-                             9 - i)
+            self.assertEqual(self.state_manager.get_state_variable(name), 9 - i)
 
     def test_load_checkpoint(self):
         # Load checkpoint without ckpt files

@@ -41,6 +41,7 @@ CLI_TO_STRING_TEST_ARGS = {
 
 
 class TestTritonServerMethods(trc.TestResultCollector):
+
     def setUp(self):
         # GPUs for this test
         self._sys_gpus = ["GPU_1", "GPU_2"]
@@ -105,10 +106,9 @@ class TestTritonServerMethods(trc.TestResultCollector):
 
             # Make sure parsed value is the one from dict, check type too
             test_value = CLI_TO_STRING_TEST_ARGS[arg]
-            self.assertEqual(
-                test_value,
-                type(test_value)(value),
-                msg=f"CLI string contained unknown value: {value}")
+            self.assertEqual(test_value,
+                             type(test_value)(value),
+                             msg=f"CLI string contained unknown value: {value}")
 
     def _test_create_server(self, gpus):
         # Create a TritonServerConfig

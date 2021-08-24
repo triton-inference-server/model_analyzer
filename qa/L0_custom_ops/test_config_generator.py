@@ -27,9 +27,11 @@ class TestConfigGenerator:
     TO ADD A TEST: Simply add a member function whose name starts
                     with 'generate'.
     """
+
     def __init__(self):
         test_functions = [
-            self.__getattribute__(name) for name in dir(self)
+            self.__getattribute__(name)
+            for name in dir(self)
             if name.startswith('generate')
         ]
 
@@ -54,8 +56,8 @@ class TestConfigGenerator:
             '--library-path',
             type=str,
             required=True,
-            help=
-            'The path to the backend shared libraries used by the custom op')
+            help='The path to the backend shared libraries used by the custom op'
+        )
 
         self.args = parser.parse_args()
         self.profile_models = sorted(self.args.profile_models.split(','))

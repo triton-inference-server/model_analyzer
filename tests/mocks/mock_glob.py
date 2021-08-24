@@ -20,6 +20,7 @@ class MockGlobMethods(MockBase):
     """
     Mocks the methods for the os module
     """
+
     def __init__(self):
         glob_attrs = {'glob': MagicMock(return_value=[])}
         self.patcher_glob = patch(

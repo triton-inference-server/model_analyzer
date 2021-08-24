@@ -17,9 +17,10 @@ from unittest.mock import MagicMock, patch
 
 
 class MockPSUtil(MockBase):
+
     def _fill_patchers(self):
         mock_process = MagicMock()
         mock_process().cpu_percent.return_value = 5
         self._patchers.append(
-            patch('model_analyzer.perf_analyzer.perf_analyzer.psutil.Process', mock_process))
-        
+            patch('model_analyzer.perf_analyzer.perf_analyzer.psutil.Process',
+                  mock_process))

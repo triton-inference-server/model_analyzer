@@ -22,6 +22,7 @@ class TestOutputValidator:
     Functions that validate the output
     of the test
     """
+
     def __init__(self, config, config_file, analyzer_log, test_name):
         self._config = config
         self._config_file = config_file
@@ -67,8 +68,7 @@ class TestOutputValidator:
         with open(self._analyzer_log, "r") as f:
             if "perf_analyzer's measurement window is too small" in f.read():
                 print(
-                    "\n***\n*** Unexpected count window adjustment found.\n***"
-                )
+                    "\n***\n*** Unexpected count window adjustment found.\n***")
                 return False
         return True
 

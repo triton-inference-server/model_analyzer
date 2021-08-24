@@ -271,10 +271,10 @@ class PerfAnalyzer:
         server_section_end = self._output.find('Inferences/Second vs. Client',
                                                server_section_start)
 
-        client_section = self._output[client_section_start:
-                                      server_section_start].strip()
-        server_section = self._output[server_section_start:
-                                      server_section_end].strip()
+        client_section = self._output[
+            client_section_start:server_section_start].strip()
+        server_section = self._output[
+            server_section_start:server_section_end].strip()
 
         server_perf_metrics = {
             PerfServerQueue, PerfServerComputeInput, PerfServerComputeInfer,

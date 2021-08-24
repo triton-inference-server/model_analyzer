@@ -23,6 +23,7 @@ class PDFReport(Report):
     constructed in html and
     written to disk as a PDF
     """
+
     def __init__(self):
         self._head = ""
         self._body = ""
@@ -132,6 +133,7 @@ class PDFReport(Report):
         table: ResultTable
             The table we want to add
         """
+
         def table_style(border="1px solid black",
                         padding="5px 10px",
                         font_size="11pt",
