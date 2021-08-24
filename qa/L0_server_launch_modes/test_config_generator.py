@@ -68,8 +68,9 @@ class TestConfigGenerator:
         for launch_mode in self.launch_modes:
             self.config['triton_launch_mode'] = launch_mode
 
-            if launch_mode == 'C_API':
-                with open(f'config-{launch_mode}.c_api.yaml', 'w') as f:
+            if launch_mode == 'c_api':
+                self.config['perf_output'] = True
+                with open(f'config-{launch_mode}-c_api.yaml', 'w') as f:
                     yaml.dump(self.config, f)
             else:
                 for protocol in self.protocols:

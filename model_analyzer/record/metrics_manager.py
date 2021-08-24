@@ -184,7 +184,9 @@ class MetricsManager:
         # Start monitors and run perf_analyzer
         self._start_monitors(cpu_only=cpu_only)
         perf_analyzer_metrics_or_status = self._get_perf_analyzer_metrics(
-            perf_config, perf_output_writer)
+            perf_config,
+            perf_output_writer,
+            perf_analyzer_env=run_config.triton_environment())
 
         # Failed Status
         if perf_analyzer_metrics_or_status == 1:
@@ -258,7 +260,10 @@ class MetricsManager:
         self._dcgm_monitor = None
         self._cpu_monitor = None
 
-    def _get_perf_analyzer_metrics(self, perf_config, perf_output_writer=None):
+    def _get_perf_analyzer_metrics(self,
+                                   perf_config,
+                                   perf_output_writer=None,
+                                   perf_analyzer_env=None):
         """
         Gets the aggregated metrics from the perf_analyzer
         Parameters
@@ -269,25 +274,28 @@ class MetricsManager:
         perf_output_writer : OutputWriter
             Writer that writes the output from perf_analyzer to the output
             stream/file. If None, the output is not written
+        perf_analyzer_env : dict
+            a dict of name:value pairs for the environment variables with which
+            perf_analyzer should be run.
+
         Raises
         ------
         TritonModelAnalyzerException
         """
 
-        try:
-            perf_analyzer = PerfAnalyzer(
-                path=self._config.perf_analyzer_path,
-                config=perf_config,
-                max_retries=self._config.perf_analyzer_max_auto_adjusts,
-                timeout=self._config.perf_analyzer_timeout,
-                max_cpu_util=self._config.perf_analyzer_cpu_util)
-            status = perf_analyzer.run(self._perf_metrics)
-            # PerfAnalzyer run was not succesful
-            if status == 1:
-                return 1
-        except FileNotFoundError as e:
-            raise TritonModelAnalyzerException(
-                f"perf_analyzer binary not found : {e}")
+        perf_analyzer = PerfAnalyzer(
+            path=self._config.perf_analyzer_path,
+            config=perf_config,
+            max_retries=self._config.perf_analyzer_max_auto_adjusts,
+            timeout=self._config.perf_analyzer_timeout,
+            max_cpu_util=self._config.perf_analyzer_cpu_util)
+
+        # IF running with C_API, need to set CUDA_VISIBLE_DEVICES here
+        if self._config.triton_launch_mode == 'c_api':
+            perf_analyzer_env['CUDA_VISIBLE_DEVICES'] = ','.join(
+                [uuid for uuid in self._gpus])
+
+        status = perf_analyzer.run(self._perf_metrics, env=perf_analyzer_env)
 
         if perf_output_writer:
             perf_output_writer.write(
@@ -295,6 +303,10 @@ class MetricsManager:
                 f'Command: perf_analyzer {perf_config.to_cli_string()} \n\n',
                 append=True)
             perf_output_writer.write(perf_analyzer.output() + '\n', append=True)
+
+        # PerfAnalzyer run was not succesful
+        if status == 1:
+            return 1
 
         perf_records = perf_analyzer.get_records()
         perf_record_aggregator = RecordAggregator()
@@ -353,7 +365,7 @@ class MetricsManager:
             If they are using different GPUs this exception will be raised.
         """
 
-        if self._config.triton_launch_mode != 'remote' and self._config.triton_launch_mode != 'C_API':
+        if self._config.triton_launch_mode != 'remote' and self._config.triton_launch_mode != 'c_api':
             self._client.wait_for_server_ready(self._config.client_max_retries)
 
             model_analyzer_gpus = self._gpus

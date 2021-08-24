@@ -498,13 +498,13 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(str),
                 flags=['--triton-launch-mode'],
                 default_value=DEFAULT_TRITON_LAUNCH_MODE,
-                choices=['local', 'docker', 'remote', 'C_API'],
+                choices=['local', 'docker', 'remote', 'c_api'],
                 description="The method by which to launch Triton Server. "
                 "'local' assumes tritonserver binary is available locally. "
                 "'docker' pulls and launches a triton docker container with "
                 "the specified version. 'remote' connects to a running "
                 "server using given http, grpc and metrics endpoints. "
-                "'C_API' allows direct benchmarking of Triton locally"
+                "'c_api' allows direct benchmarking of Triton locally"
                 "without the use of endpoints."))
         self._add_config(
             ConfigField('triton_docker_image',
@@ -579,7 +579,7 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=['--triton-install-path'],
                 description=
                 ("Path to Triton install directory i.e. the parent directory of 'lib/libtritonserver.so'."
-                 "Required only when using triton_launch_mode=C_API.")))
+                 "Required only when using triton_launch_mode=c_api.")))
 
     def _add_perf_analyzer_configs(self):
         """
@@ -678,14 +678,15 @@ class ConfigCommandProfile(ConfigCommand):
                 raise TritonModelAnalyzerException(
                     "triton_docker_image provided but is empty.")
 
-        if self.triton_launch_mode == 'C_API':
-            if self.triton_server_flags or self.triton_server_environment:
+        if self.triton_launch_mode == 'c_api':
+            if self.triton_server_flags:
                 logger.warning(
                     "Triton launch mode is set to C_API. Model Analyzer cannot set "
-                    "triton_server_flags or triton_server_environment")
+                    "triton_server_flags.")
             if self.triton_output_path:
                 logger.warning(
-                    "Triton launch mode is set to C_API, triton server output can be obtained by setting perf_output_path."
+                    "Triton launch mode is set to C_API, triton logs are not supported. "
+                    "Triton server error output can be obtained by setting perf_output_path."
                 )
         # If run config search is disabled and no concurrency value is provided,
         # set the default value.

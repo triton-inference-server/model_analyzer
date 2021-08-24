@@ -142,7 +142,7 @@ profile_models: <comma-delimited-string-list>
 [ triton_docker_labels: <dict> ]
 
 # How Model Analyzer will launch triton. It should
-# be either "docker", "local", "remote" or "C_API".
+# be either "docker", "local", "remote" or "c_api".
 # See docs/launch_modes.md for more information.
 [ triton_launch_mode: <string> | default: 'local' ]
 
@@ -646,9 +646,17 @@ perf_analyzer_flags:
 
 **Important Notes**: 
 * The Model Analyzer also provides certain arguments to the `perf_analyzer`
-  instances it launches. An example of this is `perf_measurement_window`,
-  which is an argument to Model Analyzer itself. In some cases, those ***cannot*** be overriden by providing those arguments in this section, but in most cases, they
-  will be.
+  instances it launches. They are the following:
+  * `concurrency-range`
+  * `batch-size`
+  * `model-name`
+  * `measurement-mode`
+  * `service-kind`
+  * `triton-server-directory`
+  * `model-repository`
+  * `protocol`
+  * `url`
+  If provided under the `perf_analyzer_flags` section, their values will be overriden. Caution should therefore be exercised when overriding these.
 
 ### `<triton-server-flags>`
 

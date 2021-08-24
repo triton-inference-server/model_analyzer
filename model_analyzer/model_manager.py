@@ -78,7 +78,8 @@ class ModelManager:
         # Clear any configs from previous model run
         self._run_config_generator.clear_configs()
 
-        # Update the server's config for this model run
+        # Save the global server config and update the server's config for this model run
+        server_config_copy = self._server.config().copy()
         self._server.update_config(params=model.triton_server_flags())
 
         # Run model inferencing
@@ -90,6 +91,9 @@ class ModelManager:
             logger.info(
                 f"Running auto config search for model: {model.model_name()}")
             self._run_model_with_search(model)
+
+        # Reset the server args to global config
+        self._server.update_config(params=server_config_copy.server_args())
 
     def _run_model_no_search(self, model):
         """
@@ -248,7 +252,7 @@ class ModelManager:
             except FileExistsError:
                 pass
 
-        if self._config.triton_launch_mode != 'C_API':
+        if self._config.triton_launch_mode != 'c_api':
             self._client.wait_for_server_ready(self._config.client_max_retries)
 
             if self._client.load_model(model_name=variant_name) == -1:

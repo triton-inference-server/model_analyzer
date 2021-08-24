@@ -92,6 +92,16 @@ class TestConfigGenerator:
         with open('config-docker.yaml', 'w+') as f:
             yaml.dump(self.config, f)
 
+    def generate_c_api_custom_op_config(self):
+        self.config['triton_launch_mode'] = 'c_api'
+        self.config['perf_output'] = True
+        self.config['triton_server_environment'] = {
+            'LD_PRELOAD': self.args.preload_path,
+            'LD_LIBRARY_PATH': self.args.library_path
+        }
+        with open('config-c_api.yaml', 'w+') as f:
+            yaml.dump(self.config, f)
+
 
 if __name__ == '__main__':
     TestConfigGenerator()

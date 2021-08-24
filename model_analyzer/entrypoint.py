@@ -119,7 +119,7 @@ def get_server_handle(config):
             log_path=config.triton_output_path,
             mounts=config.triton_docker_mounts,
             labels=config.triton_docker_labels)
-    elif config.triton_launch_mode == 'C_API':
+    elif config.triton_launch_mode == 'c_api':
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = os.path.abspath(
             config.output_model_repository_path)
@@ -129,10 +129,9 @@ def get_server_handle(config):
                                                          gpus=[],
                                                          log_path="")
         logger.warning(
-            "Model Analyzer currently does not support setting custom Triton server "
-            "flags when profiling with perf_analyzer's C_API. Additionally, some "
-            "metrics maybe affected as Triton is not launched with explicit model "
-            "control mode, and as a result, loads all model config variants as they "
+            "When profiling with perf_analyzer's C_API, some metrics may be "
+            "affected. Triton is not launched with explicit model control "
+            "mode, and as a result, loads all model config variants as they "
             "are created in the output_model_repository.")
     else:
         raise TritonModelAnalyzerException(

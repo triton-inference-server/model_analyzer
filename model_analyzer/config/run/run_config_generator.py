@@ -91,7 +91,8 @@ class RunConfigGenerator:
                 self._client, model.model_name(), num_retries)
             model_config.set_cpu_only(model.cpu_only())
             perf_configs = self._generate_perf_config_for_model(
-                model.model_name(), model)
+                model.model_name(), model,
+                analyzer_config['triton_launch_mode'])
 
             for perf_config in perf_configs:
                 # Add the new run config.
@@ -208,7 +209,7 @@ class RunConfigGenerator:
             'measurement-mode': ['count_windows']
         }
 
-        if launch_mode == 'C_API':
+        if launch_mode == 'c_api':
             perf_config_params.update({
                 'service-kind': ['triton_c_api'],
                 'triton-server-directory': [

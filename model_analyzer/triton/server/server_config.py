@@ -123,6 +123,29 @@ class TritonServerConfig:
         return ' '.join(
             [f'--{key}={val}' for key, val in self._server_args.items() if val])
 
+    def copy(self):
+        """
+        Returns
+        -------
+        TritonServerConfig
+            object that has the same args as this one
+        """
+
+        config_copy = TritonServerConfig()
+        config_copy.update_config(params=self._server_args)
+        return config_copy
+
+    def server_args(self):
+        """
+        Returns
+        -------
+        dict
+            keys are server arguments
+            values are their values
+        """
+
+        return self._server_args
+
     def __getitem__(self, key):
         """
         Gets an arguments value in config

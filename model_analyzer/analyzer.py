@@ -97,7 +97,7 @@ class Analyzer:
             state_manager=self._state_manager)
 
         # Get metrics for server only
-        if self._config.triton_launch_mode != 'C_API':
+        if self._config.triton_launch_mode != 'c_api':
             logger.info('Profiling server only metrics...')
             self._server.start()
             client.wait_for_server_ready(self._config.client_max_retries)

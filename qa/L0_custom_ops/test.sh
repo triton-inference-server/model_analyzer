@@ -60,11 +60,16 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     LOG_PREFIX=${CONFIG_FILE#"config-"}
     LOG_PREFIX=${LOG_PREFIX%".yaml"}
     TRITON_LOG=${LOG_PREFIX}.${TRITON_LOG_BASE}
+
     ANALYZER_LOG=${LOG_PREFIX}.${ANALYZER_LOG_BASE}
     touch $TRITON_LOG
-
+    MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
     # Run analyzer
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --triton-output-path=$TRITON_LOG"
+    if [[ "$LOG_PREFIX" == "c_api" ]]; then    
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --perf-output-path=$TRITON_LOG"
+    else
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --triton-output-path=$TRITON_LOG"
+    fi           
     run_analyzer_nohup
     ANALYZER_PID=$!
     until test $WAIT_TIME_SECS -eq 0; do
@@ -81,7 +86,14 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
             break
         elif [[ ! -z `grep "Finished profiling" $ANALYZER_LOG` ]]; then
             break
+        # In the docker/local launch modes, triton log errors will be returned by triton client and printed in ANALYZER_LOG
         elif [[ ! -z `grep "This op may not exist or may not be currently supported" $ANALYZER_LOG` ]]; then
+            echo -e "\n***\n*** Test Failed. custom op not found. \n***"
+            cat $TRITON_LOG
+            RET=1
+            break
+        # In the C_API, Triton errors are displayed in the perf_analyzer log
+        elif [[ ! -z `grep "This op may not exist or may not be currently supported" $TRITON_LOG` ]]; then
             echo -e "\n***\n*** Test Failed. custom op not found. \n***"
             cat $TRITON_LOG
             RET=1
