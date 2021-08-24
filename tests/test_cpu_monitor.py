@@ -18,6 +18,7 @@ import time
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
 from model_analyzer.record.types.cpu_available_ram import CPUAvailableRAM
 from model_analyzer.record.types.cpu_used_ram import CPUUsedRAM
+from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.model_analyzer_exceptions \
@@ -39,7 +40,9 @@ class TestCPUMonitor(trc.TestResultCollector):
     def test_record_cpu_memory(self):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
-        gpus = ['all']
+        gpus = [
+            GPUDevice('TEST_DEVICE_NAME', 0, "TEST_PCI_BUS_ID", "TEST_UUID")
+        ]
 
         frequency = 1
         monitoring_time = 10
@@ -76,7 +79,9 @@ class TestCPUMonitor(trc.TestResultCollector):
     def test_monitor_disable(self):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
-        gpus = ['all']
+        gpus = [
+            GPUDevice('TEST_DEVICE_NAME', 0, "TEST_PCI_BUS_ID", "TEST_UUID")
+        ]
 
         frequency = 1
         monitoring_time = 3

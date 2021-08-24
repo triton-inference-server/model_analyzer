@@ -59,7 +59,7 @@ class Analyzer:
         self._result_manager = ResultManager(config=config,
                                              state_manager=self._state_manager)
 
-    def profile(self, client):
+    def profile(self, client, gpus):
         """
         Subcommand: PROFILE
 
@@ -70,7 +70,9 @@ class Analyzer:
         ----------
         client : TritonClient
             Instance used to load/unload models
-        
+        gpus: List of GPUDevices
+            The gpus being used to profile
+
         Raises
         ------
         TritonModelAnalyzerException
@@ -85,6 +87,7 @@ class Analyzer:
             config=self._config,
             client=client,
             server=self._server,
+            gpus=gpus,
             result_manager=self._result_manager,
             state_manager=self._state_manager)
 

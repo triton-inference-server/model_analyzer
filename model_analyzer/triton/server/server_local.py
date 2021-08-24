@@ -77,7 +77,7 @@ class TritonServerLocal(TritonServer):
 
             # List GPUs to be used by tritonserver
             triton_env['CUDA_VISIBLE_DEVICES'] = ','.join(
-                [uuid for uuid in self._gpus])
+                [gpu.device_uuid() for gpu in self._gpus])
 
             if self._log_path:
                 try:

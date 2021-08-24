@@ -49,7 +49,8 @@ class MetricsManager:
         "gpu_power_usage", "cpu_available_ram", "cpu_used_ram"
     ]
 
-    def __init__(self, config, client, server, result_manager, state_manager):
+    def __init__(self, config, client, server, gpus, result_manager,
+                 state_manager):
         """
         Parameters
         ----------
@@ -60,6 +61,8 @@ class MetricsManager:
             the server
         server : TritonServer
             Handle to the instance of Triton being used
+        gpus: List of GPUDevices
+            The gpus being used to profile
         result_manager : ResultManager
             instance that manages the result tables and
             adding results
@@ -75,7 +78,7 @@ class MetricsManager:
 
         self._dcgm_metrics, self._perf_metrics, self._cpu_metrics = self._categorize_metrics(
             self.metrics, self._config.collect_cpu_metrics)
-        self._gpus = GPUDeviceFactory.verify_requested_gpus(self._config.gpus)
+        self._gpus = gpus
         self._init_state()
 
     def _init_state(self):
@@ -91,7 +94,7 @@ class MetricsManager:
             gpu_info = {}
 
         for i in range(len(self._gpus)):
-            if self._gpus[i] not in gpu_info:
+            if self._gpus[i].device_uuid() not in gpu_info:
                 device_info = {}
                 device = numba.cuda.list_devices()[i]
                 device_info['name'] = device.name
@@ -99,7 +102,7 @@ class MetricsManager:
                     # convert bytes to GB
                     device_info['total_memory'] = numba.cuda.current_context(
                     ).get_memory_info().total
-                gpu_info[self._gpus[i]] = device_info
+                gpu_info[self._gpus[i].device_uuid()] = device_info
 
         self._state_manager.set_state_variable('MetricsManager.gpus', gpu_info)
 
@@ -293,7 +296,7 @@ class MetricsManager:
         # IF running with C_API, need to set CUDA_VISIBLE_DEVICES here
         if self._config.triton_launch_mode == 'c_api':
             perf_analyzer_env['CUDA_VISIBLE_DEVICES'] = ','.join(
-                [uuid for uuid in self._gpus])
+                [gpu.device_uuid() for gpu in self._gpus])
 
         status = perf_analyzer.run(self._perf_metrics, env=perf_analyzer_env)
 
@@ -334,8 +337,7 @@ class MetricsManager:
 
         records_groupby_gpu = {}
         records_groupby_gpu = dcgm_record_aggregator.groupby(
-            self._dcgm_metrics,
-            lambda record: str(record.device().device_uuid(), encoding='ascii'))
+            self._dcgm_metrics, lambda record: record.device().device_uuid())
 
         gpu_metrics = defaultdict(list)
         for _, metric in records_groupby_gpu.items():
@@ -368,7 +370,7 @@ class MetricsManager:
         if self._config.triton_launch_mode != 'remote' and self._config.triton_launch_mode != 'c_api':
             self._client.wait_for_server_ready(self._config.client_max_retries)
 
-            model_analyzer_gpus = self._gpus
+            model_analyzer_gpus = [gpu.device_uuid() for gpu in self._gpus]
             triton_gpus = self._get_triton_metrics_gpus()
             if set(model_analyzer_gpus) != set(triton_gpus):
                 raise TritonModelAnalyzerException(
