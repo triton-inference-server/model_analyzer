@@ -24,7 +24,7 @@ REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/dldata/inferenceserver/model_analyzer_checkpoints"}
 MODEL_NAMES="vgg19_libtorch"
-TRITON_LAUNCH_MODES="local docker remote"
+TRITON_LAUNCH_MODES="local docker remote c_api"
 CLIENT_PROTOCOLS="http grpc"
 PORTS=(`find_available_ports 3`)
 http_port="${PORTS[0]}"
@@ -99,6 +99,10 @@ function run_server_launch_modes() {
                 cat $SERVER_LOG
                 exit 1
             fi
+        elif [ "$LAUNCH_MODE" == "c_api" ]; then
+            # c_api does not get server only metrics, so for GPUs to appear in log, we must profile (delete checkpoint)
+            rm -f $CHECKPOINT_DIRECTORY/*
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
         else
             MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
         fi

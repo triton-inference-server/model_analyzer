@@ -81,8 +81,6 @@ class Analyzer:
                 f"Expected config of type {ConfigCommandProfile},"
                 " got {type(self._config)}.")
 
-        logger.info('Profiling server only metrics...')
-
         self._metrics_manager = MetricsManager(
             config=self._config,
             client=client,
@@ -99,10 +97,12 @@ class Analyzer:
             state_manager=self._state_manager)
 
         # Get metrics for server only
-        self._server.start()
-        client.wait_for_server_ready(self._config.client_max_retries)
-        self._metrics_manager.profile_server()
-        self._server.stop()
+        if self._config.triton_launch_mode != 'c_api':
+            logger.info('Profiling server only metrics...')
+            self._server.start()
+            client.wait_for_server_ready(self._config.client_max_retries)
+            self._metrics_manager.profile_server()
+            self._server.stop()
 
         # Profile each model, save state after each
         for model in self._config.profile_models:

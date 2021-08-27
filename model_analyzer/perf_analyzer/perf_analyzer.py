@@ -42,6 +42,8 @@ from subprocess import Popen, STDOUT, PIPE
 import psutil
 import re
 import logging
+import signal
+import os
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -95,7 +97,7 @@ class PerfAnalyzer:
         self._perf_records = None
         self._max_cpu_util = max_cpu_util
 
-    def run(self, metrics):
+    def run(self, metrics, env=None):
         """
         Runs the perf analyzer with the
         intialized configuration
@@ -104,6 +106,9 @@ class PerfAnalyzer:
         metrics : List of Record types
             The list of record types to parse from
             Perf Analyzer
+
+        env: dict
+            Environment variables to set for perf_analyzer run
 
         Returns
         -------
@@ -120,22 +125,46 @@ class PerfAnalyzer:
         if metrics:
             # Synchronously start and finish run
             for _ in range(self._max_retries):
+                logger.debug(
+                    f"Running perf_analyzer with args: {self._config.to_cli_string()}"
+                )
                 cmd = [self.bin_path]
                 cmd += self._config.to_cli_string().replace('=', ' ').split()
 
-                process = Popen(cmd,
-                                start_new_session=True,
-                                stdout=PIPE,
-                                stderr=STDOUT,
-                                encoding='utf-8')
+                perf_analyzer_env = os.environ.copy()
+
+                if env:
+                    # Filter env variables that use env lookups
+                    for variable, value in env.items():
+                        if value.find('$') == -1:
+                            perf_analyzer_env[variable] = value
+                        else:
+                            # Collect the ones that need lookups to give to the shell
+                            perf_analyzer_env[variable] = os.path.expandvars(
+                                value)
+                try:
+                    process = Popen(cmd,
+                                    start_new_session=True,
+                                    stdout=PIPE,
+                                    stderr=STDOUT,
+                                    encoding='utf-8',
+                                    env=perf_analyzer_env)
+                except FileNotFoundError as e:
+                    raise TritonModelAnalyzerException(
+                        f"perf_analyzer binary not found : {e}")
 
                 if self._poll_perf_analyzer(process) == 1:
                     # failure
                     return 1
 
-                if process.returncode != 0:
+                if process.returncode > 0:
                     if self._auto_adjust_parameters(cmd, process) == 1:
                         return 1
+                elif process.returncode < 0:
+                    logger.error(
+                        'perf_analyzer was terminated by signal: '
+                        f'{signal.Signals(abs(process.returncode)).name}')
+                    return 1
                 else:
                     self._parse_output(metrics)
                     break

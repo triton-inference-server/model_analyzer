@@ -66,20 +66,27 @@ class TestConfigGenerator:
 
     def generate_configs(self):
         for launch_mode in self.launch_modes:
-            for protocol in self.protocols:
-                self.config['client_protocol'] = protocol
-                self.config['triton_launch_mode'] = launch_mode
-                if launch_mode == 'docker':
-                    # Set docker image and put in the CI runner's labels
-                    if 'TRITON_LAUNCH_DOCKER_IMAGE' in os.environ:
-                        self.config['triton_docker_image'] = os.environ[
-                            'TRITON_LAUNCH_DOCKER_IMAGE']
-                    if 'RUNNER_ID' in os.environ:
-                        self.config['triton_docker_labels'] = {
-                            'RUNNER_ID': os.environ['RUNNER_ID']
-                        }
-                with open(f'config-{launch_mode}-{protocol}.yaml', 'w') as f:
+            self.config['triton_launch_mode'] = launch_mode
+
+            if launch_mode == 'c_api':
+                self.config['perf_output'] = True
+                with open(f'config-{launch_mode}-c_api.yaml', 'w') as f:
                     yaml.dump(self.config, f)
+            else:
+                for protocol in self.protocols:
+                    self.config['client_protocol'] = protocol
+                    if launch_mode == 'docker':
+                        # Set docker image and put in the CI runner's labels
+                        if 'TRITON_LAUNCH_DOCKER_IMAGE' in os.environ:
+                            self.config['triton_docker_image'] = os.environ[
+                                'TRITON_LAUNCH_DOCKER_IMAGE']
+                        if 'RUNNER_ID' in os.environ:
+                            self.config['triton_docker_labels'] = {
+                                'RUNNER_ID': os.environ['RUNNER_ID']
+                            }
+                    with open(f'config-{launch_mode}-{protocol}.yaml',
+                              'w') as f:
+                        yaml.dump(self.config, f)
 
 
 if __name__ == '__main__':

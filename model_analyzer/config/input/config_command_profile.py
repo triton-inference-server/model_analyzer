@@ -35,7 +35,7 @@ from .config_defaults import \
     DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MAX_PREFERRED_BATCH_SIZE, \
     DEFAULT_RUN_CONFIG_PREFERRED_BATCH_SIZE_DISABLE, \
     DEFAULT_RUN_CONFIG_SEARCH_DISABLE, DEFAULT_TRITON_DOCKER_IMAGE, DEFAULT_TRITON_GRPC_ENDPOINT, \
-    DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_TRITON_METRICS_URL, \
+    DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_TRITON_METRICS_URL, \
     DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT
 
 from model_analyzer.constants import LOGGER_NAME
@@ -498,12 +498,14 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(str),
                 flags=['--triton-launch-mode'],
                 default_value=DEFAULT_TRITON_LAUNCH_MODE,
-                choices=['local', 'docker', 'remote'],
+                choices=['local', 'docker', 'remote', 'c_api'],
                 description="The method by which to launch Triton Server. "
                 "'local' assumes tritonserver binary is available locally. "
                 "'docker' pulls and launches a triton docker container with "
                 "the specified version. 'remote' connects to a running "
-                "server using given http, grpc and metrics endpoints. "))
+                "server using given http, grpc and metrics endpoints. "
+                "'c_api' allows direct benchmarking of Triton locally"
+                "without the use of endpoints."))
         self._add_config(
             ConfigField('triton_docker_image',
                         flags=['--triton-docker-image'],
@@ -569,6 +571,15 @@ class ConfigCommandProfile(ConfigCommand):
                 description=
                 'A dictionary of name-value labels to set metadata for the Triton '
                 'server docker container in docker launch mode'))
+        self._add_config(
+            ConfigField(
+                'triton_install_path',
+                field_type=ConfigPrimitive(str),
+                default_value=DEFAULT_TRITON_INSTALL_PATH,
+                flags=['--triton-install-path'],
+                description=
+                ("Path to Triton install directory i.e. the parent directory of 'lib/libtritonserver.so'."
+                 "Required only when using triton_launch_mode=c_api.")))
 
     def _add_perf_analyzer_configs(self):
         """
@@ -604,7 +615,17 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=['--perf-output'],
                 field_type=ConfigPrimitive(bool),
                 default_value=DEFAULT_PERF_OUTPUT_FLAG,
-                description='Enables the output from the perf_analyzer to stdout'
+                description=
+                'Enables the output from the perf_analyzer to a file specified by'
+                ' perf_output_path. If perf_output_path is None, output will be'
+                ' written to stdout.'))
+        self._add_config(
+            ConfigField(
+                'perf_output_path',
+                flags=['--perf-output-path'],
+                field_type=ConfigPrimitive(str),
+                description=
+                'Path to the file to which write perf_analyzer output, if enabled.'
             ))
         self._add_config(
             ConfigField(
@@ -657,6 +678,16 @@ class ConfigCommandProfile(ConfigCommand):
                 raise TritonModelAnalyzerException(
                     "triton_docker_image provided but is empty.")
 
+        if self.triton_launch_mode == 'c_api':
+            if self.triton_server_flags:
+                logger.warning(
+                    "Triton launch mode is set to C_API. Model Analyzer cannot set "
+                    "triton_server_flags.")
+            if self.triton_output_path:
+                logger.warning(
+                    "Triton launch mode is set to C_API, triton logs are not supported. "
+                    "Triton server error output can be obtained by setting perf_output_path."
+                )
         # If run config search is disabled and no concurrency value is provided,
         # set the default value.
         if self.run_config_search_disable:

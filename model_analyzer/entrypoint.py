@@ -119,6 +119,20 @@ def get_server_handle(config):
             log_path=config.triton_output_path,
             mounts=config.triton_docker_mounts,
             labels=config.triton_docker_labels)
+    elif config.triton_launch_mode == 'c_api':
+        triton_config = TritonServerConfig()
+        triton_config['model-repository'] = os.path.abspath(
+            config.output_model_repository_path)
+        logger.info("Starting a Triton Server using perf_analyzer's C_API...")
+        server = TritonServerFactory.create_server_local(path=None,
+                                                         config=triton_config,
+                                                         gpus=[],
+                                                         log_path="")
+        logger.warning(
+            "When profiling with perf_analyzer's C_API, some metrics may be "
+            "affected. Triton is not launched with explicit model control "
+            "mode, and as a result, loads all model config variants as they "
+            "are created in the output_model_repository.")
     else:
         raise TritonModelAnalyzerException(
             f"Unrecognized triton-launch-mode : {config.triton_launch_mode}")
@@ -247,6 +261,8 @@ def main():
 
     args, config = get_cli_and_config_options()
     setup_logging(args)
+
+    logger.debug(config.get_all_config())
 
     server = None
     try:

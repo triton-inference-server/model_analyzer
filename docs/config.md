@@ -106,8 +106,11 @@ profile_models: <comma-delimited-string-list>
 # Maximum CPU utilization value allowed for the perf_analyzer.
 [ perf_analyzer_cpu_util: <float> | default: 80.0 ]
 
-# Enables writing the output from the perf_analyzer to stdout.
+# Enables writing the output from the perf_analyzer to a file or stdout.
 [ perf_output: <bool> | default: false ]
+
+# If specified, setting --perf-output will write the perf_analyzer output to the file at # this location
+[ perf_output_path: <str> ]
 
 # Maximum number of times perf_analyzer is launched with auto adjusted parameters in an attempt to profile a model
 [ perf_analyzer_max_auto_adjusts: <int> | default: 10 ]
@@ -139,7 +142,7 @@ profile_models: <comma-delimited-string-list>
 [ triton_docker_labels: <dict> ]
 
 # How Model Analyzer will launch triton. It should
-# be either "docker", "local", or "remote".
+# be either "docker", "local", "remote" or "c_api".
 # See docs/launch_modes.md for more information.
 [ triton_launch_mode: <string> | default: 'local' ]
 
@@ -643,9 +646,17 @@ perf_analyzer_flags:
 
 **Important Notes**: 
 * The Model Analyzer also provides certain arguments to the `perf_analyzer`
-  instances it launches. These ***cannot*** be overriden by providing those
-  arguments in this section. An example of this is `perf_measurement_window`,
-  which is an argument to Model Analyzer itself.
+  instances it launches. They are the following:
+  * `concurrency-range`
+  * `batch-size`
+  * `model-name`
+  * `measurement-mode`
+  * `service-kind`
+  * `triton-server-directory`
+  * `model-repository`
+  * `protocol`
+  * `url`
+  If provided under the `perf_analyzer_flags` section, their values will be overriden. Caution should therefore be exercised when overriding these.
 
 ### `<triton-server-flags>`
 

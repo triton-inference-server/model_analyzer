@@ -194,8 +194,8 @@ class ModelConfig:
                     if file == 'config.pbtxt':
                         continue
                     else:
-                        os.rename(os.path.join(last_model_path, file),
-                                  os.path.join(model_path, file))
+                        os.symlink(os.path.join(last_model_path, file),
+                                   os.path.join(model_path, file))
 
         if not reusued_previous_model_dir:
             copy_tree(src_model_path, model_path)

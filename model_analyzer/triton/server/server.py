@@ -55,3 +55,13 @@ class TritonServer(ABC):
         """
 
         self._server_config.update_config(params)
+
+    def config(self):
+        """
+        Returns
+        -------
+        TritonServerConfig
+            This server's config
+        """
+
+        return self._server_config
