@@ -36,7 +36,7 @@ from .config_defaults import \
     DEFAULT_RUN_CONFIG_PREFERRED_BATCH_SIZE_DISABLE, \
     DEFAULT_RUN_CONFIG_SEARCH_DISABLE, DEFAULT_TRITON_DOCKER_IMAGE, DEFAULT_TRITON_GRPC_ENDPOINT, \
     DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_TRITON_METRICS_URL, \
-    DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT
+    DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT, DEFAULT_USE_LOCAL_GPU_MONITOR
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.server.server_config import \
@@ -183,6 +183,16 @@ class ConfigCommandProfile(ConfigCommand):
                 default_value=DEFAULT_DURATION_SECONDS,
                 description=
                 'Specifies how long (seconds) to gather server-only metrics'))
+        self._add_config(
+            ConfigField(
+                'use_local_gpu_monitor',
+                field_type=ConfigPrimitive(bool),
+                flags=['--use-local-gpu-monitor'],
+                default_value=DEFAULT_USE_LOCAL_GPU_MONITOR,
+                description=
+                'Specify whether GPU metrics should be monitored by local DCGM monitor. '
+                'If this flag is set, model analyzer will query metrics directly via DCGM.'
+            ))
         self._add_config(
             ConfigField(
                 'collect_cpu_metrics',

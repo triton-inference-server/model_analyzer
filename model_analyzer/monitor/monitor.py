@@ -78,6 +78,11 @@ class Monitor(ABC):
         This method is called to collect all the monitoring records.
         It is called in the stop_recording_metrics function after
         the background thread has stopped.
+
+        Returns
+        -------
+        List of Records
+            The list of records collected by the monitor
         """
 
         pass

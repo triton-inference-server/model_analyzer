@@ -112,9 +112,14 @@ class Record(metaclass=RecordType):
         """
         The function that is used to aggregate
         this type of record
+
+        Returns
+        -------
+        callable() 
+            [Records] -> Record
         """
 
-        return max
+        return (lambda records: max(records, key=lambda r: r.value()))
 
     @staticmethod
     @abstractmethod

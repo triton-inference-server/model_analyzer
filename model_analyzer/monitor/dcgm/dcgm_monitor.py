@@ -109,7 +109,7 @@ class DCGMMonitor(Monitor):
                             # DCGM timestamp is in nanoseconds
                             records.append(
                                 metric_type(value=float(measurement.value),
-                                            device=gpu,
+                                            device_uuid=gpu.device_uuid(),
                                             timestamp=measurement.ts))
 
         return records

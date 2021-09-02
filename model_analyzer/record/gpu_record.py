@@ -21,31 +21,31 @@ class GPURecord(Record):
     GPU based record
     """
 
-    def __init__(self, value, device=None, timestamp=0):
+    def __init__(self, value, device_uuid=None, timestamp=0):
         """
         Parameters
         ----------
         value : float
             The value of the GPU metrtic
-        device : GPUDevice
-            The  GPU device this metric is associated
+        device_uuid : str
+            The  GPU device uuid this metric is associated
             with.
         timestamp : int
             The timestamp for the record in nanoseconds
         """
 
         super().__init__(value, timestamp)
-        self._device = device
+        self._device_uuid = device_uuid
 
-    def device(self):
+    def device_uuid(self):
         """
         Returns
         -------
-        GPUDevice
-            handle for this metric
+        str
+            uuid for the GPU that this metric was sampled on
         """
 
-        return self._device
+        return self._device_uuid
 
     @classmethod
     def from_dict(cls, record_dict):
