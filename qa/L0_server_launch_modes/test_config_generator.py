@@ -62,7 +62,7 @@ class TestConfigGenerator:
         self.config['run_config_search_disable'] = True
         self.config['batch_sizes'] = 4
         self.config['concurrency'] = 4
-        self.config['perf_analyzer_cpu_util'] = 600
+        self.config['perf_analyzer_cpu_util'] = 6000
 
     def generate_configs(self):
         for launch_mode in self.launch_modes:
@@ -73,6 +73,7 @@ class TestConfigGenerator:
                 with open(f'config-{launch_mode}-c_api.yaml', 'w') as f:
                     yaml.dump(self.config, f)
             else:
+                self.config['perf_output'] = False
                 for protocol in self.protocols:
                     self.config['client_protocol'] = protocol
                     if launch_mode == 'docker':

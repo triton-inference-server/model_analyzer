@@ -20,25 +20,39 @@ class GPUDevice(Device):
     Representing a GPU device
     """
 
-    def __init__(self, device_id, pci_bus_id, device_uuid):
+    def __init__(self, device_name, device_id, pci_bus_id, device_uuid):
         """
         Parameters
         ----------
+            device_name: str
+                Human readable name of the device
             device_id : int
                 Device id according to the `nvidia-smi` output
-            pci_bus_id : bytes
+            pci_bus_id : str
                 PCI bus id
-            device_uuid : bytes
+            device_uuid : str
                 Device UUID
         """
 
+        assert type(device_name) is str
         assert type(device_id) is int
-        assert type(pci_bus_id) is bytes
-        assert type(device_uuid) is bytes
+        assert type(pci_bus_id) is str
+        assert type(device_uuid) is str
 
+        self._device_name = device_name
         self._device_id = device_id
         self._pci_bus_id = pci_bus_id
         self._device_uuid = device_uuid
+
+    def device_name(self):
+        """
+        Returns
+        -------
+        str
+            device name
+        """
+
+        return self._device_name
 
     def device_id(self):
         """
@@ -64,7 +78,7 @@ class GPUDevice(Device):
         """
         Returns
         -------
-        bytes
+        str
             UUID of this GPU
         """
 

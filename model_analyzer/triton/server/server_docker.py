@@ -74,14 +74,15 @@ class TritonServerDocker(TritonServer):
         devices = []
         if len(self._gpus):
             devices = [
-                docker.types.DeviceRequest(device_ids=self._gpus,
-                                           capabilities=[['gpu']])
+                docker.types.DeviceRequest(
+                    device_ids=[gpu.device_uuid() for gpu in self._gpus],
+                    capabilities=[['gpu']])
             ]
 
         # Set environment inside container.
         # Supports only strings, and value lookups/concats
         env_cmds = [
-            f"CUDA_VISIBLE_DEVICES={','.join([uuid for uuid in self._gpus])}"
+            f"CUDA_VISIBLE_DEVICES={','.join([gpu.device_uuid() for gpu in self._gpus])}"
         ]
         if env:
             # Set all environment variables inside the container

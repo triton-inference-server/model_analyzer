@@ -27,7 +27,7 @@ class MockNumba(MockBase):
         device = MagicMock()
 
         # Ignore everything after 0
-        test_pci_id = str(TEST_PCI_BUS_ID, encoding='ascii').split('.')[0]
+        test_pci_id = TEST_PCI_BUS_ID.split('.')[0]
 
         pci_domain_id, pci_bus_id, pci_device_id = test_pci_id.split(':')
         device.get_device_identity = MagicMock(

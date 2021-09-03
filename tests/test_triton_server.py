@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import unittest
-from unittest.case import skip
 
 from .mocks.mock_gpu_device_factory import MockGPUDeviceFactory
 from .mocks.mock_server_docker import MockServerDockerMethods
@@ -23,6 +22,7 @@ from .common import test_result_collector as trc
 
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.server.server_config import TritonServerConfig
+from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
@@ -44,7 +44,10 @@ class TestTritonServerMethods(trc.TestResultCollector):
 
     def setUp(self):
         # GPUs for this test
-        self._sys_gpus = ["GPU_1", "GPU_2"]
+        self._sys_gpus = [
+            GPUDevice('TEST_DEVICE_NAME', 0, "TEST_BUS_ID0", "TEST_UUID0"),
+            GPUDevice('TEST_DEVICE_NAME', 1, "TEST_BUS_ID1", "TEST_UUID1")
+        ]
 
         # Mock
         self.gpu_device_factory_mock = MockGPUDeviceFactory(self._sys_gpus)
@@ -138,9 +141,6 @@ class TestTritonServerMethods(trc.TestResultCollector):
             self.server = TritonServerFactory.create_server_local(
                 path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=gpus)
 
-    def test_create_server_all_gpu(self):
-        self._test_create_server(gpus=["all"])
-
     def test_create_server_no_gpu(self):
         self._test_create_server(gpus=[])
 
@@ -148,7 +148,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
         self._test_create_server(gpus=self._sys_gpus[:1])
 
     def _test_start_stop_gpus(self, gpus):
-        device_requests, gpu_uuids = self._find_correct_gpu_settings(gpus)
+        device_requests = [device.device_id() for device in gpus]
 
         # Create a TritonServerConfig
         server_config = TritonServerConfig()
@@ -162,8 +162,8 @@ class TestTritonServerMethods(trc.TestResultCollector):
         self.server.start()
         self.server_docker_mock.assert_server_process_start_called_with(
             f"{TRITON_DOCKER_BIN_PATH} {server_config.to_cli_string()}",
-            MODEL_REPOSITORY_PATH, TRITON_IMAGE, device_requests, gpu_uuids,
-            8000, 8001, 8002)
+            MODEL_REPOSITORY_PATH, TRITON_IMAGE, device_requests, gpus, 8000,
+            8001, 8002)
 
         self.server_docker_mock.raise_exception_on_container_run()
         with self.assertRaises(TritonModelAnalyzerException):
@@ -186,13 +186,10 @@ class TestTritonServerMethods(trc.TestResultCollector):
                 TRITON_LOCAL_BIN_PATH, '--model-repository',
                 MODEL_REPOSITORY_PATH
             ],
-            gpu_uuids=gpu_uuids)
+            gpus=gpus)
 
         self.server.stop()
         self.server_local_mock.assert_server_process_terminate_called()
-
-    def test_start_stop_gpus_all_gpu(self):
-        self._test_start_stop_gpus(gpus=["all"])
 
     def test_start_stop_gpus_no_gpu(self):
         self._test_start_stop_gpus(gpus=[])
@@ -201,8 +198,8 @@ class TestTritonServerMethods(trc.TestResultCollector):
         self._test_start_stop_gpus(gpus=self._sys_gpus[:1])
 
     def start_stop_docker_args(self):
-        gpus = ['all']
-        device_requests, gpu_uuids = self._find_correct_gpu_settings(gpus)
+        device_requests, gpu_uuids = self._find_correct_gpu_settings(
+            self._sys_gpus)
 
         # Create a TritonServerConfig
         server_config = TritonServerConfig()
@@ -219,7 +216,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
         self.server = TritonServerFactory.create_server_docker(
             image=TRITON_IMAGE,
             config=server_config,
-            gpus=gpus,
+            gpus=self._sys_gpus,
             mounts=mounts,
             labels=labels)
 
@@ -255,13 +252,8 @@ class TestTritonServerMethods(trc.TestResultCollector):
         self.server_local_mock.assert_server_process_terminate_called()
         self.assertEqual(self.server.logs(), "Triton Server Test Log")
 
-    # TODO: Add no and select gpu cases if enabled
-    @skip('May not be valid')
-    def test_get_logs_all_gpu(self):
-        self._test_get_logs(gpus=["all"])
-
     def _test_cpu_stats(self, gpus):
-        device_requests, gpu_uuids = self._find_correct_gpu_settings(gpus)
+        device_requests = [device.device_id() for device in gpus]
 
         # Create a TritonServerConfig
         server_config = TritonServerConfig()
@@ -283,33 +275,17 @@ class TestTritonServerMethods(trc.TestResultCollector):
         # The following needs to be called as it resets exec_run return value
         self.server_docker_mock.assert_server_process_start_called_with(
             f'{TRITON_DOCKER_BIN_PATH} {server_config.to_cli_string()}',
-            MODEL_REPOSITORY_PATH, TRITON_IMAGE, device_requests, gpu_uuids,
-            8000, 8001, 8002)
+            MODEL_REPOSITORY_PATH, TRITON_IMAGE, device_requests, gpus, 8000,
+            8001, 8002)
         _, _ = self.server.cpu_stats()
         self.server_docker_mock.assert_cpu_stats_called()
         self.server.stop()
-
-    def test_cpu_stats_all_gpu(self):
-        self._test_cpu_stats(gpus=["all"])
 
     def test_cpu_stats_no_gpu(self):
         self._test_cpu_stats(gpus=[])
 
     def test_cpu_stats_select_gpu(self):
         self._test_cpu_stats(gpus=self._sys_gpus[:1])
-
-    def _find_correct_gpu_settings(self, gpus):
-        # Expected device request settings for docker mode
-        device_requests = [0]
-        if len(gpus) == 0 or len(self._sys_gpus) == 0:
-            device_requests = []
-
-        # Expected GPUs settings for local mode
-        gpu_uuids = self._sys_gpus
-        if len(gpus) != 1 or gpus[0] != 'all':
-            gpu_uuids = list(set(self._sys_gpus) & set(gpus))
-
-        return device_requests, gpu_uuids
 
     def tearDown(self):
         # In case test raises exception

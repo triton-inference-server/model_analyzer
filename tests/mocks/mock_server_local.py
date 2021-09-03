@@ -69,14 +69,15 @@ class MockServerLocalMethods(MockServerMethods):
         self._patchers.append(self.patcher_pipe)
         self._patchers.append(self.patcher_psutil)
 
-    def assert_server_process_start_called_with(self, cmd, gpu_uuids):
+    def assert_server_process_start_called_with(self, cmd, gpus):
         """
         Asserts that Popen was called
         with the cmd provided.
         """
 
         env = os.environ.copy()
-        env["CUDA_VISIBLE_DEVICES"] = ','.join([uuid for uuid in gpu_uuids])
+        env["CUDA_VISIBLE_DEVICES"] = ','.join(
+            [gpu.device_uuid() for gpu in gpus])
 
         self.popen_mock.assert_called_once_with(cmd,
                                                 stdout=self.pipe_mock,

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.triton.server.server_config import TritonServerConfig
@@ -38,7 +39,9 @@ class TestTritonClientMethods(trc.TestResultCollector):
     def setUp(self):
 
         # GPUs
-        gpus = ['all']
+        gpus = [
+            GPUDevice('TEST_DEVICE_NAME', 0, "TEST_PCI_BUS_ID", "TEST_UUID")
+        ]
 
         # Mocks
         self.server_docker_mock = MockServerDockerMethods()

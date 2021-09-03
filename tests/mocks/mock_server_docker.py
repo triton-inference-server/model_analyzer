@@ -89,7 +89,7 @@ class MockServerDockerMethods(MockServerMethods):
                                                 model_repository_path,
                                                 triton_image,
                                                 device_requests,
-                                                gpu_uuids,
+                                                gpus,
                                                 http_port=8000,
                                                 grpc_port=8001,
                                                 metrics_port=8002,
@@ -108,8 +108,9 @@ class MockServerDockerMethods(MockServerMethods):
         self._assert_docker_initialized()
 
         env_cmds = [
-            f"CUDA_VISIBLE_DEVICES={','.join([uuid for uuid in gpu_uuids])}"
+            f"CUDA_VISIBLE_DEVICES={','.join([gpu.device_uuid() for gpu in gpus])}"
         ]
+
         mock_volumes = {
             model_repository_path: {
                 'bind': model_repository_path,

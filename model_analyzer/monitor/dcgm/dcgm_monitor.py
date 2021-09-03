@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.monitor.monitor import Monitor
 from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
 from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
 from model_analyzer.record.types.gpu_utilization import GPUUtilization
 from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
-from model_analyzer.monitor.gpu_monitor import GPUMonitor
 from model_analyzer.model_analyzer_exceptions import \
     TritonModelAnalyzerException
 
@@ -26,7 +26,7 @@ import model_analyzer.monitor.dcgm.dcgm_field_helpers as dcgm_field_helpers
 import model_analyzer.monitor.dcgm.dcgm_structs as structs
 
 
-class DCGMMonitor(GPUMonitor):
+class DCGMMonitor(Monitor):
     """
     Use DCGM to monitor GPU metrics
     """
@@ -43,6 +43,8 @@ class DCGMMonitor(GPUMonitor):
         """
         Parameters
         ----------
+        gpus : list of GPUDevice
+            The gpus to be monitored
         frequency : int
             Sampling frequency for the metric
         metrics : list
@@ -51,9 +53,11 @@ class DCGMMonitor(GPUMonitor):
             DCGM installation path
         """
 
-        super().__init__(gpus, frequency, metrics)
+        super().__init__(frequency, metrics)
         structs._dcgmInit(dcgmPath)
         dcgm_agent.dcgmInit()
+
+        self._gpus = gpus
 
         # Start DCGM in the embedded mode to use the shared library
         self.dcgm_handle = dcgm_handle = dcgm_agent.dcgmStartEmbedded(

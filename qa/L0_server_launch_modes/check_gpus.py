@@ -15,6 +15,7 @@
 import argparse
 import sys
 import os
+import re
 
 
 def check_gpus(analyzer_log, gpus, check_visible):
@@ -26,7 +27,16 @@ def check_gpus(analyzer_log, gpus, check_visible):
     with open(analyzer_log, 'r') as f:
         log_contents = f.read()
 
-    token = "Using GPU(s) with UUID(s) = {"
+    if not gpus:
+        if log_contents.rfind('No GPUs requested') == -1:
+            print(
+                f"\n***\n*** Found GPUs used in the analyzer log {analyzer_log}, expected None.\n***"
+            )
+            sys.exit(1)
+        else:
+            sys.exit(0)
+
+    token = "Initiliazing GPUDevice handles..."
     gpus_start = log_contents.rfind(token)
     if gpus_start == -1:
         print(
@@ -35,17 +45,28 @@ def check_gpus(analyzer_log, gpus, check_visible):
         sys.exit(1)
 
     gpus_start += len(token)
-    gpus_end = log_contents.find('}', gpus_start + 1)
-    analyzer_gpus = log_contents[gpus_start:gpus_end].strip().split(',')
-    gpu_list = gpus.split(',')
+    log_section = log_contents[gpus_start:]
+
+    gpu_matches = re.findall('Using GPU (\d+) (.*) with UUID (.*)', log_section)
+
+    try:
+
+        gpus = list(map(int, gpus.split(',')))
+        # If the above succeeds, we need only the device id from matches
+        analyzer_gpus = [int(device_id) for (device_id, _, _) in gpu_matches]
+    except ValueError:
+        # If the above does not succeed we have uuids
+        gpus = gpus.split(',')
+        analyzer_gpus = [device_uuid for (_, _, device_uuid) in gpu_matches]
+
     if check_visible:
         visible_indices = list(
             map(int, os.environ['CUDA_VISIBLE_DEVICES'].split(',')))
         expected_gpus = []
         for i in visible_indices:
-            expected_gpus.append(gpu_list[i])
+            expected_gpus.append(gpus[i])
     else:
-        expected_gpus = gpu_list
+        expected_gpus = gpus
 
     if set(analyzer_gpus) == set(expected_gpus):
         sys.exit(0)
@@ -64,7 +85,7 @@ if __name__ == '__main__':
                         help="path to model analyzer log")
     parser.add_argument('--gpus',
                         type=str,
-                        required=True,
+                        default=None,
                         help="Comma separated string with the expected GPUs")
     parser.add_argument('--check-visible',
                         action='store_true',

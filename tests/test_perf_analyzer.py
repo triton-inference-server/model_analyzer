@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.device.gpu_device import GPUDevice
 import unittest
 
 from .mocks.mock_server_local import MockServerLocalMethods
@@ -76,6 +77,10 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config['measurement-interval'] = 1000
         self.config['measurement-request-count'] = 50
 
+        self.gpus = [
+            GPUDevice('TEST_DEVICE_NAME', 0, "TEST_PCI_BUS_ID", "TEST_UUID")
+        ]
+
         # Triton Server
         self.server = None
         self.client = None
@@ -126,7 +131,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Create server, client, PerfAnalyzer, and wait for server ready
         self.server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=self.gpus)
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
                                      config=self.config,
                                      max_retries=10,
@@ -238,7 +243,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Create server, client, PerfAnalyzer, and wait for server ready
         self.server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=self.gpus)
         perf_analyzer_config = PerfAnalyzerConfig()
         perf_analyzer_config['model-name'] = TEST_MODEL_NAME
         perf_analyzer_config['concurrency-range'] = TEST_CONCURRENCY_RANGE
@@ -268,7 +273,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Create server, client, PerfAnalyzer, and wait for server ready
         self.server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=['all'])
+            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=self.gpus)
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
                                      config=self.config,
                                      max_retries=10,

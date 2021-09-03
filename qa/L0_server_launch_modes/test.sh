@@ -130,7 +130,7 @@ function run_server_launch_modes() {
         fi
 
         if [ "$gpus" == "empty_gpu_flag" ]; then
-            python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus ""
+            python3 check_gpus.py --analyzer-log $ANALYZER_LOG
         elif [ -z "$gpus" ]; then
             python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${GPUS[@]} | sed "s/ /,/g"` --check-visible
         else
@@ -174,6 +174,13 @@ CURRENT_GPUS=${GPUS[@]:1}
 run_server_launch_modes "$CURRENT_GPUS"
 
 CURRENT_GPUS="empty_gpu_flag"
+run_server_launch_modes "$CURRENT_GPUS"
+
+# Test with GPU ID
+CURRENT_GPUS="0"
+run_server_launch_modes "$CURRENT_GPUS"
+
+CURRENT_GPUS="1 2"
 run_server_launch_modes "$CURRENT_GPUS"
 
 rm -rf $CHECKPOINT_DIRECTORY

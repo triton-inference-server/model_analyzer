@@ -13,14 +13,12 @@
 # limitations under the License.
 
 from unittest.mock import MagicMock
-from collections import defaultdict
 
 import model_analyzer.monitor.dcgm.dcgm_structs as structs
-import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-TEST_PCI_BUS_ID = b'00000000:6A:00.0'
-TEST_UUID = b'dddddddd-bbbb-aaaa-cccc-ffffffffffff'
+TEST_PCI_BUS_ID = '00000000:6A:00.0'
+TEST_UUID = 'dddddddd-bbbb-aaaa-cccc-ffffffffffff'
 
 
 class MockDCGMAgent:

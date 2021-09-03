@@ -47,6 +47,7 @@ class TritonClient:
         while retries > 0:
             try:
                 if self._client.is_server_ready():
+                    time.sleep(1)
                     return
                 else:
                     time.sleep(1)

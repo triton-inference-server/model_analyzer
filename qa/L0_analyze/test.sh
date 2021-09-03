@@ -89,8 +89,8 @@ else
     fi
 fi
 
-rm -rf $EXPORT_PATH/*
-rm -f $CHECKPOINT_DIRECTORY/*.ckpt
+rm -rf $EXPORT_PATH/
+rm -rf $CHECKPOINT_DIRECTORY
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

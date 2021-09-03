@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from .analyzer import Analyzer
 from .cli.cli import CLI
 from .model_analyzer_exceptions import TritonModelAnalyzerException
@@ -57,7 +58,7 @@ def get_client_handle(config):
     return client
 
 
-def get_server_handle(config):
+def get_server_handle(config, gpus):
     """
     Creates and returns a TritonServer
     with specified arguments
@@ -66,6 +67,8 @@ def get_server_handle(config):
     ----------
     config : namespace
         Arguments parsed from the CLI
+    gpus : list of str
+        Available, supported, visible requested GPU UUIDs
     """
 
     if config.triton_launch_mode == 'remote':
@@ -100,7 +103,7 @@ def get_server_handle(config):
         server = TritonServerFactory.create_server_local(
             path=config.triton_server_path,
             config=triton_config,
-            gpus=config.gpus,
+            gpus=gpus,
             log_path=config.triton_output_path)
     elif config.triton_launch_mode == 'docker':
         triton_config = TritonServerConfig()
@@ -115,7 +118,7 @@ def get_server_handle(config):
         server = TritonServerFactory.create_server_docker(
             image=config.triton_docker_image,
             config=triton_config,
-            gpus=config.gpus,
+            gpus=gpus,
             log_path=config.triton_output_path,
             mounts=config.triton_docker_mounts,
             labels=config.triton_docker_labels)
@@ -140,7 +143,7 @@ def get_server_handle(config):
     return server
 
 
-def get_triton_handles(config):
+def get_triton_handles(config, gpus):
     """
     Creates a TritonServer and starts it. Creates a TritonClient
 
@@ -148,6 +151,8 @@ def get_triton_handles(config):
     ----------
     config : namespace
         The arguments passed into the CLI
+    gpus : list of str
+        Available, supported, visible requested GPU UUIDs
 
     Returns
     -------
@@ -156,7 +161,7 @@ def get_triton_handles(config):
     """
 
     client = get_client_handle(config)
-    server = get_server_handle(config)
+    server = get_server_handle(config, gpus)
 
     return client, server
 
@@ -255,6 +260,7 @@ def main():
     Main entrypoint of model_analyzer
     """
 
+    # Configs and logging
     logging.basicConfig(format="%(asctime)s.%(msecs)d %(levelname)-4s"
                         "[%(filename)s:%(lineno)d] %(message)s",
                         datefmt="%Y-%m-%d %H:%M:%S")
@@ -264,14 +270,19 @@ def main():
 
     logger.debug(config.get_all_config())
 
+    # Launch subcommand handlers
     server = None
     try:
         # Make calls to correct analyzer subcommand functions
         if args.subcommand == 'profile':
+
+            # Set up devices
+            gpus = GPUDeviceFactory().verify_requested_gpus(config.gpus)
+
             # Check/create output model repository
             create_output_model_repository(config)
 
-            client, server = get_triton_handles(config)
+            client, server = get_triton_handles(config, gpus)
             state_manager = AnalyzerStateManager(config=config, server=server)
 
             # Only check for exit after the events that take a long time.
@@ -279,7 +290,7 @@ def main():
                 return
 
             analyzer = Analyzer(config, server, state_manager)
-            analyzer.profile(client=client)
+            analyzer.profile(client=client, gpus=gpus)
 
         elif args.subcommand == 'analyze':
 
