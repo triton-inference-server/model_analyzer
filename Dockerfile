@@ -25,7 +25,7 @@ ARG MODEL_ANALYZER_VERSION
 ARG MODEL_ANALYZER_CONTAINER_VERSION
 
 # DCGM version to install for Model Analyzer
-ENV DCGM_VERSION=2.0.13
+ENV DCGM_VERSION=2.2.9
 
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
@@ -36,8 +36,12 @@ RUN apt-get update && \
 RUN mkdir -p /opt/triton-model-analyzer
 
 # Install DCGM
-RUN wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb && \
-    dpkg -i datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb
+RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common && \
+      wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin && \
+      mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 && \
+      apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub && \
+      add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /" && \
+      apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION}
 
 # Install tritonclient
 COPY --from=sdk /workspace/install/python /tmp/tritonclient
