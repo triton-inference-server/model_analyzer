@@ -130,7 +130,7 @@ In order to generate tables and summary reports, use the `analyze` subcommand as
 follows.
 
 ```
-$ mkdir analysis results
+$ mkdir analysis_results
 $ model-analyzer analyze --analysis-models add_sub -e analysis_results
 ```
 
