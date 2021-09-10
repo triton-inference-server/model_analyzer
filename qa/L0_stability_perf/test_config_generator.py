@@ -44,7 +44,7 @@ class TestConfigGenerator:
                             '--profile-models',
                             type=str,
                             required=True,
-                            help='The config file for this test')
+                            help='The models used for this test')
         parser.add_argument(
             '-r',
             '--request-count',

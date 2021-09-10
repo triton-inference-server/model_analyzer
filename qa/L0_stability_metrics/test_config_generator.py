@@ -41,16 +41,31 @@ class TestConfigGenerator:
     def setup(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('-m',
-                            '--analysis-models',
+                            '--models',
                             type=str,
                             required=True,
                             help='The models used for this test')
 
         self.args = parser.parse_args()
+        self.models = sorted(self.args.models.split(','))
+
         self.config = {}
+
+        # Profile config
+        self.config['run_config_search_disable'] = True
+        self.config['concurrency'] = 16
+        self.config['batch-size'] = 8
+        self.config['profile_models'] = self.models
+
+        # Analyze config
         self.config['summarize'] = False
+        self.config['collect_cpu_metrics'] = True
+        self.config['gpu_output_fields'] = [
+            'model_name', 'batch_size', 'concurrency', 'gpu_used_memory',
+            'gpu_utilization'
+        ]
         self.config['analysis_models'] = {}
-        for model in sorted(self.args.analysis_models.split(',')):
+        for model in self.models:
             self.config['analysis_models'][model] = {
                 'objectives': {
                     'perf_throughput': 10

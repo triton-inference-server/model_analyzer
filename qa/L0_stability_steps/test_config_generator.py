@@ -44,7 +44,7 @@ class TestConfigGenerator:
                             '--profile-models',
                             type=str,
                             required=True,
-                            help='The config file for this test')
+                            help='The models used for this test')
 
         self.args = parser.parse_args()
         self.profile_models = sorted(self.args.profile_models.split(','))
