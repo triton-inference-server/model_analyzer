@@ -81,7 +81,10 @@ profile_models: <comma-delimited-string-list>
 [ max_retries: <int> | default: 100 ]
 
 # Specifies how long (seconds) to gather server-only metrics
-[ duration_seconds: <int> | default: 5 ]
+[ duration_seconds: <int> | default: 2 ]
+
+# Specify whether DCGM should be used by Model Analyzer to collect GPU metricss
+[ use_local_gpu_monitor: <bool> | default: False ]
 
 # Duration of waiting time between each metric measurement in seconds
 [ monitoring_interval: <float> | default: 1 ]

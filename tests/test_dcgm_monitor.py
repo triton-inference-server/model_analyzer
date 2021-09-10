@@ -61,7 +61,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
 
         # Assert instance types
         for record in records:
-            self.assertIsInstance(record.device(), GPUDevice)
+            self.assertIsInstance(record.device_uuid(), str)
             self.assertIsInstance(record.value(), float)
             self.assertTrue(record.value() == TEST_RECORD_VALUE)
             self.assertIsInstance(record.timestamp(), int)
@@ -93,7 +93,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
 
         # Assert instance types
         for record in records:
-            self.assertIsInstance(record.device(), GPUDevice)
+            self.assertIsInstance(record.device_uuid(), str)
             self.assertIsInstance(record.value(), float)
             self.assertTrue(record.value() == TEST_RECORD_VALUE)
             self.assertIsInstance(record.timestamp(), int)
@@ -118,7 +118,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
 
         # Assert instance types
         for record in records:
-            self.assertIsInstance(record.device(), GPUDevice)
+            self.assertIsInstance(record.device_uuid(), str)
             self.assertIsInstance(record.value(), float)
             self.assertTrue(record.value() <= 100)
             self.assertTrue(record.value() == TEST_RECORD_VALUE)
@@ -138,13 +138,6 @@ class TestDCGMMonitor(trc.TestResultCollector):
         dcgm_monitor = DCGMMonitor(self._gpus, frequency, metrics)
         dcgm_monitor.start_recording_metrics()
         dcgm_monitor.stop_recording_metrics()
-        dcgm_monitor.destroy()
-
-    def test_gpu_uuid(self):
-        frequency = 1
-        metrics = [GPUUsedMemory, GPUFreeMemory]
-
-        dcgm_monitor = DCGMMonitor(self._gpus, frequency, metrics)
         dcgm_monitor.destroy()
 
     def tearDown(self):
