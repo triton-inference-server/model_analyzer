@@ -97,7 +97,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Environment :: Console',
         'Natural Language :: English',
-        'Operating System :: Linux',
+        'Operating System :: POSIX :: Linux',
     ],
     entry_points={
         'console_scripts': ['model-analyzer = model_analyzer.entrypoint:main']
