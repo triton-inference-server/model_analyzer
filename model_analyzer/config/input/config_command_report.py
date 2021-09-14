@@ -15,6 +15,7 @@
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
+from model_analyzer.config.input.config_utils import file_path_validator, parent_path_validator
 from .config_union import ConfigUnion
 from .config_object import ConfigObject
 from .config_enum import ConfigEnum
@@ -58,7 +59,8 @@ class ConfigCommandReport(ConfigCommand):
                 'checkpoint_directory',
                 flags=['--checkpoint-directory', '-s'],
                 default_value=DEFAULT_CHECKPOINT_DIRECTORY,
-                field_type=ConfigPrimitive(str),
+                field_type=ConfigPrimitive(str,
+                                           validator=parent_path_validator),
                 description=
                 "Full path to directory to which to read and write checkpoints and profile data."
             ))
@@ -66,7 +68,8 @@ class ConfigCommandReport(ConfigCommand):
             ConfigField('export_path',
                         flags=['--export-path', '-e'],
                         default_value=DEFAULT_EXPORT_PATH,
-                        field_type=ConfigPrimitive(str),
+                        field_type=ConfigPrimitive(
+                            str, validator=file_path_validator),
                         description=
                         "Full path to directory in which to store the results"))
         plots_scheme = ConfigObject(schema={

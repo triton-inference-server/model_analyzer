@@ -105,7 +105,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.os_mock = MockOSMethods(mock_paths=[
             "model_analyzer.reports.report_manager",
             "model_analyzer.config.input.config_command_analyze",
-            "model_analyzer.state.analyzer_state_manager"
+            "model_analyzer.state.analyzer_state_manager",
+            "model_analyzer.config.input.config_utils"
         ])
         self.os_mock.start()
         self.io_mock = MockIOMethods(mock_paths=[

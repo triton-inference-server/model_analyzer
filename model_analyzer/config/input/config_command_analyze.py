@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.input.config_utils \
+    import objective_list_output_mapper, parent_path_validator, file_path_validator
 from model_analyzer.constants import LOGGER_NAME
 from .config_defaults import \
     DEFAULT_CHECKPOINT_DIRECTORY, DEFAULT_EXPORT_PATH, \
@@ -62,7 +64,8 @@ class ConfigCommandAnalyze(ConfigCommand):
                 'checkpoint_directory',
                 flags=['--checkpoint-directory', '-s'],
                 default_value=DEFAULT_CHECKPOINT_DIRECTORY,
-                field_type=ConfigPrimitive(str),
+                field_type=ConfigPrimitive(str,
+                                           validator=parent_path_validator),
                 description=
                 "Full path to directory to which to read and write checkpoints and profile data."
             ))
@@ -79,16 +82,6 @@ class ConfigCommandAnalyze(ConfigCommand):
         model objectives and constraints, 
         as well as plots
         """
-
-        def objective_list_output_mapper(objectives):
-            # Takes a list of objectives and maps them
-            # into a dict
-            output_dict = {}
-            for objective in objectives:
-                value = ConfigPrimitive(type_=int)
-                value.set_value(10)
-                output_dict[objective] = value
-            return output_dict
 
         objectives_scheme = ConfigUnion([
             ConfigObject(
@@ -193,7 +186,8 @@ class ConfigCommandAnalyze(ConfigCommand):
             ConfigField('export_path',
                         flags=['--export-path', '-e'],
                         default_value=DEFAULT_EXPORT_PATH,
-                        field_type=ConfigPrimitive(str),
+                        field_type=ConfigPrimitive(
+                            str, validator=file_path_validator),
                         description=
                         "Full path to directory in which to store the results"))
         self._add_config(

@@ -185,9 +185,6 @@ class MetricsManager:
             logger.warning(
                 "Collecting CPU metric(s) can affect the latency or throughput numbers reported by perf analyzer."
             )
-            logger.info(
-                "CPU metric(s) collection can be disabled by removing the CPU metrics (e.g. cpu_used_ram) from the --metrics flag."
-            )
 
         # Start monitors and run perf_analyzer
         self._start_monitors(cpu_only=cpu_only)
