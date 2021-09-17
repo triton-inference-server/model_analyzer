@@ -79,6 +79,7 @@ setup(
     """See the Model Analyzer's [installation documentation](https://github.com/triton-inference-server/model_analyzer/blob/main/docs/install.md#using-pip3) """
     """for package details. The [quick start](https://github.com/triton-inference-server/model_analyzer/blob/main/docs/quick_start.md) documentation """
     """describes how to get started with profiling and analysis using Triton Model Analyzer.""",
+    long_description_content_type='text/markdown',
     license='BSD',
     url='https://developer.nvidia.com/nvidia-triton-inference-server',
     keywords=[
