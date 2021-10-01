@@ -97,8 +97,7 @@ def get_server_handle(config, gpus):
         triton_config['model-repository'] = config.output_model_repository_path
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
-        triton_config['metrics-port'] = urlparse(
-            config.triton_metrics_url).port
+        triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
         if config.use_local_gpu_monitor:
             triton_config['metrics-interval-ms'] = int(
@@ -116,8 +115,7 @@ def get_server_handle(config, gpus):
             config.output_model_repository_path)
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
-        triton_config['metrics-port'] = urlparse(
-            config.triton_metrics_url).port
+        triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
         if config.use_local_gpu_monitor:
             triton_config['metrics-interval-ms'] = int(
@@ -207,10 +205,9 @@ def get_cli_and_config_options():
             help=
             'Collect and sort profiling results and generate data and summaries.',
             config=config_analyze)
-        cli.add_subcommand(
-            cmd='report',
-            help='Generate detailed reports for a single config',
-            config=config_report)
+        cli.add_subcommand(cmd='report',
+                           help='Generate detailed reports for a single config',
+                           config=config_report)
         return cli.parse()
 
     except TritonModelAnalyzerException as e:

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.input.config_utils \
+    import binary_path_validator, objective_list_output_mapper, file_path_validator, parent_path_validator
 from .config_field import ConfigField
 from .config_primitive import ConfigPrimitive
 from .config_list_string import ConfigListString
@@ -54,6 +56,7 @@ from tritonclient.grpc.model_config_pb2 import ModelConfig
 from google.protobuf.descriptor import FieldDescriptor
 
 import numba
+from numba import cuda
 import psutil
 import logging
 
@@ -64,6 +67,7 @@ class ConfigCommandProfile(ConfigCommand):
     """
     Model Analyzer config object.
     """
+
     def _resolve_protobuf_field(self, field):
         """
         Recursively resolve protobuf fields.
@@ -162,7 +166,8 @@ class ConfigCommandProfile(ConfigCommand):
                 'checkpoint_directory',
                 flags=['--checkpoint-directory', '-s'],
                 default_value=DEFAULT_CHECKPOINT_DIRECTORY,
-                field_type=ConfigPrimitive(str),
+                field_type=ConfigPrimitive(str,
+                                           validator=parent_path_validator),
                 description=
                 "Full path to directory to which to read and write checkpoints and profile data."
             ))
@@ -198,8 +203,7 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(bool),
                 flags=['--collect-cpu-metrics'],
                 default_value=DEFAULT_COLLECT_CPU_METRICS,
-                description='Specify whether CPU metrics are collected or not')
-        )
+                description='Specify whether CPU metrics are collected or not'))
         self._add_config(
             ConfigField(
                 'gpus',
@@ -223,7 +227,8 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField('model_repository',
                         flags=['--model-repository', '-m'],
-                        field_type=ConfigPrimitive(str, required=True),
+                        field_type=ConfigPrimitive(
+                            str, required=True, validator=file_path_validator),
                         description='Model repository location'))
         self._add_config(
             ConfigField(
@@ -231,8 +236,7 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(str),
                 default_value=DEFAULT_OUTPUT_MODEL_REPOSITORY,
                 flags=['--output-model-repository-path'],
-                description=
-                'Output model repository path used by Model Analyzer.'
+                description='Output model repository path used by Model Analyzer.'
                 ' This is the directory that will contain all the generated model configurations'
             ))
         self._add_config(
@@ -251,12 +255,10 @@ class ConfigCommandProfile(ConfigCommand):
         Adds configs specific to model specifications
         """
         triton_server_flags_scheme = ConfigObject(schema={
-            k: ConfigPrimitive(str)
-            for k in TritonServerConfig.allowed_keys()
+            k: ConfigPrimitive(str) for k in TritonServerConfig.allowed_keys()
         })
         perf_analyzer_additive_keys = {
-            k: None
-            for k in PerfAnalyzerConfig.additive_keys()
+            k: None for k in PerfAnalyzerConfig.additive_keys()
         }
         perf_analyzer_flags_scheme = ConfigObject(
             schema={
@@ -291,16 +293,6 @@ class ConfigCommandProfile(ConfigCommand):
                 'Allows setting environment variables for tritonserver server instances launched by Model Analyzer'
             ))
 
-        def objective_list_output_mapper(objectives):
-            # Takes a list of objectives and maps them
-            # into a dict
-            output_dict = {}
-            for objective in objectives:
-                value = ConfigPrimitive(type_=int)
-                value.set_value(10)
-                output_dict[objective] = value
-            return output_dict
-
         objectives_scheme = ConfigUnion([
             ConfigObject(
                 schema={
@@ -312,33 +304,33 @@ class ConfigCommandProfile(ConfigCommand):
         constraints_scheme = ConfigObject(
             schema={
                 'perf_throughput':
-                ConfigObject(schema={
-                    'min': ConfigPrimitive(int),
-                }),
+                    ConfigObject(schema={
+                        'min': ConfigPrimitive(int),
+                    }),
                 'perf_latency_avg':
-                ConfigObject(schema={
-                    'max': ConfigPrimitive(int),
-                }),
+                    ConfigObject(schema={
+                        'max': ConfigPrimitive(int),
+                    }),
                 'perf_latency_p90':
-                ConfigObject(schema={
-                    'max': ConfigPrimitive(int),
-                }),
+                    ConfigObject(schema={
+                        'max': ConfigPrimitive(int),
+                    }),
                 'perf_latency_p95':
-                ConfigObject(schema={
-                    'max': ConfigPrimitive(int),
-                }),
+                    ConfigObject(schema={
+                        'max': ConfigPrimitive(int),
+                    }),
                 'perf_latency_p99':
-                ConfigObject(schema={
-                    'max': ConfigPrimitive(int),
-                }),
+                    ConfigObject(schema={
+                        'max': ConfigPrimitive(int),
+                    }),
                 'perf_latency':
-                ConfigObject(schema={
-                    'max': ConfigPrimitive(int),
-                }),
+                    ConfigObject(schema={
+                        'max': ConfigPrimitive(int),
+                    }),
                 'gpu_used_memory':
-                ConfigObject(schema={
-                    'max': ConfigPrimitive(int),
-                }),
+                    ConfigObject(schema={
+                        'max': ConfigPrimitive(int),
+                    }),
             })
         self._add_config(
             ConfigField(
@@ -362,29 +354,31 @@ class ConfigCommandProfile(ConfigCommand):
                 # Any key is allowed, but the keys must follow the pattern
                 # below
                 '*':
-                ConfigObject(
-                    schema={
-                        'cpu_only':
-                        ConfigPrimitive(bool),
-                        'parameters':
-                        ConfigObject(
-                            schema={
-                                'batch_sizes': ConfigListNumeric(type_=int),
-                                'concurrency': ConfigListNumeric(type_=int)
-                            }),
-                        'objectives':
-                        objectives_scheme,
-                        'constraints':
-                        constraints_scheme,
-                        'model_config_parameters':
-                        model_config_fields,
-                        'perf_analyzer_flags':
-                        perf_analyzer_flags_scheme,
-                        'triton_server_flags':
-                        triton_server_flags_scheme,
-                        'triton_server_environment':
-                        triton_server_environment_scheme
-                    })
+                    ConfigObject(
+                        schema={
+                            'cpu_only':
+                                ConfigPrimitive(bool),
+                            'parameters':
+                                ConfigObject(
+                                    schema={
+                                        'batch_sizes':
+                                            ConfigListNumeric(type_=int),
+                                        'concurrency':
+                                            ConfigListNumeric(type_=int)
+                                    }),
+                            'objectives':
+                                objectives_scheme,
+                            'constraints':
+                                constraints_scheme,
+                            'model_config_parameters':
+                                model_config_fields,
+                            'perf_analyzer_flags':
+                                perf_analyzer_flags_scheme,
+                            'triton_server_flags':
+                                triton_server_flags_scheme,
+                            'triton_server_environment':
+                                triton_server_environment_scheme
+                        })
             },
             output_mapper=ConfigModelProfileSpec.
             model_object_to_config_model_profile_spec)
@@ -394,17 +388,15 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=['--profile-models'],
                 field_type=ConfigUnion([
                     profile_model_scheme,
-                    ConfigListGeneric(
-                        ConfigUnion([
-                            profile_model_scheme,
-                            ConfigPrimitive(
-                                str,
-                                output_mapper=ConfigModelProfileSpec.
-                                model_str_to_config_model_profile_spec)
-                        ]),
-                        required=True,
-                        output_mapper=ConfigModelProfileSpec.
-                        model_mixed_to_config_model_profile_spec),
+                    ConfigListGeneric(ConfigUnion([
+                        profile_model_scheme,
+                        ConfigPrimitive(str,
+                                        output_mapper=ConfigModelProfileSpec.
+                                        model_str_to_config_model_profile_spec)
+                    ]),
+                                      required=True,
+                                      output_mapper=ConfigModelProfileSpec.
+                                      model_mixed_to_config_model_profile_spec),
                     ConfigListString(output_mapper=ConfigModelProfileSpec.
                                      model_list_to_config_model_profile_spec),
                 ],
@@ -417,8 +409,7 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigListNumeric(int),
                 default_value=DEFAULT_BATCH_SIZES,
                 description=
-                'Comma-delimited list of batch sizes to use for the profiling')
-        )
+                'Comma-delimited list of batch sizes to use for the profiling'))
         self._add_config(
             ConfigField(
                 'concurrency',
@@ -553,12 +544,14 @@ class ConfigCommandProfile(ConfigCommand):
                 description="Triton Server Metrics endpoint url. "
                 "Will be ignored if server-launch-mode is not 'remote'"))
         self._add_config(
-            ConfigField('triton_server_path',
-                        field_type=ConfigPrimitive(str),
-                        flags=['--triton-server-path'],
-                        default_value=DEFAULT_TRITON_SERVER_PATH,
-                        description=
-                        'The full path to the tritonserver binary executable'))
+            ConfigField(
+                'triton_server_path',
+                field_type=ConfigPrimitive(str,
+                                           validator=binary_path_validator),
+                flags=['--triton-server-path'],
+                default_value=DEFAULT_TRITON_SERVER_PATH,
+                description='The full path to the tritonserver binary executable'
+            ))
         self._add_config(
             ConfigField(
                 'triton_output_path',
@@ -567,7 +560,7 @@ class ConfigCommandProfile(ConfigCommand):
                 description=
                 ('The full path to the file to which Triton server instance will '
                  'append their log output. If not specified, they are not written.'
-                 )))
+                )))
         self._add_config(
             ConfigField(
                 'triton_docker_mounts',
@@ -576,7 +569,7 @@ class ConfigCommandProfile(ConfigCommand):
                 description=
                 ("A list of strings representing volumes to be mounted. "
                  "The strings should have the format '<host path>:<container path>:<access mode>'."
-                 )))
+                )))
         self._add_config(
             ConfigField(
                 'triton_docker_labels',
@@ -587,7 +580,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 'triton_install_path',
-                field_type=ConfigPrimitive(str),
+                field_type=ConfigPrimitive(str, validator=file_path_validator),
                 default_value=DEFAULT_TRITON_INSTALL_PATH,
                 flags=['--triton-install-path'],
                 description=
@@ -614,16 +607,15 @@ class ConfigCommandProfile(ConfigCommand):
                 default_value=psutil.cpu_count() *
                 DEFAULT_PERF_ANALYZER_CPU_UTIL,
                 description=
-                "Maximum CPU utilization value allowed for the perf_analyzer.")
-        )
+                "Maximum CPU utilization value allowed for the perf_analyzer."))
         self._add_config(
-            ConfigField(
-                'perf_analyzer_path',
-                flags=['--perf-analyzer-path'],
-                field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_PERF_ANALYZER_PATH,
-                description=
-                'The full path to the perf_analyzer binary executable'))
+            ConfigField('perf_analyzer_path',
+                        flags=['--perf-analyzer-path'],
+                        field_type=ConfigPrimitive(
+                            str, validator=binary_path_validator),
+                        default_value=DEFAULT_PERF_ANALYZER_PATH,
+                        description=
+                        'The full path to the perf_analyzer binary executable'))
         self._add_config(
             ConfigField(
                 'perf_output',
@@ -716,7 +708,7 @@ class ConfigCommandProfile(ConfigCommand):
         """
 
         cpu_only = False
-        if len(self.gpus) == 0 or not numba.cuda.is_available():
+        if len(self.gpus) == 0 or not cuda.is_available():
             cpu_only = True
 
         new_profile_models = {}

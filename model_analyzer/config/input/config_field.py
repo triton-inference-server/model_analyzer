@@ -159,7 +159,8 @@ class ConfigField:
 
         if config_status.status() == CONFIG_PARSER_FAILURE:
             raise TritonModelAnalyzerException(
-                f'Failed to set the value for field "{self._name}". ')
+                f'Failed to set the value for field "{self._name}". Error: {config_status.message()}'
+            )
 
     def set_default_value(self, default_value):
         """

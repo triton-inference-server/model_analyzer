@@ -16,6 +16,7 @@ import unittest
 import re
 from .mocks.mock_config import MockConfig
 from .mocks.mock_numba import MockNumba
+from .mocks.mock_os import MockOSMethods
 
 from .common import test_result_collector as trc
 
@@ -49,6 +50,7 @@ class TestConfig(trc.TestResultCollector):
     def _evaluate_config(self, args, yaml_content, subcommand='profile'):
         mock_numba = MockNumba(
             mock_paths=['model_analyzer.config.input.config_command_profile'])
+
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
         mock_numba.start()
@@ -212,6 +214,15 @@ class TestConfig(trc.TestResultCollector):
     def _assert_model_str_type(self, model_config):
         self.assertIsInstance(model_config, ConfigUnion)
         self.assertIsInstance(model_config.raw_value(), ConfigPrimitive)
+
+    def setUp(self):
+        # Mock path validation
+        self.mock_os = MockOSMethods(
+            mock_paths=['model_analyzer.config.input.config_utils'])
+        self.mock_os.start()
+
+    def tearDown(self):
+        self.mock_os.stop()
 
     def test_config(self):
         args = [
@@ -1626,6 +1637,76 @@ profile_models:
         self.assertEqual(model_specific_plot.name(),
                          'model_specific_throughput_v_latency')
         self.assertEqual(model_specific_plot.title(), 'model specific title')
+
+    def test_path_validation(self):
+
+        # Test parent path validator
+        args = [
+            'model-analyzer', 'profile', '--model-repository', '/', '-f',
+            'path-to-config-file'
+        ]
+        yaml_content = """
+        checkpoint_directory: /test
+        profile_models:
+            - model1
+            - model2
+        """
+
+        self._evaluate_config(args, yaml_content, subcommand='profile')
+
+        self.mock_os.set_os_path_exists_return_value(False)
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+        self.mock_os.set_os_path_exists_return_value(True)
+
+        # Test file path validator
+        yaml_content = """
+        triton_install_path: /opt/triton-model-analyzer/tests/test_config.py
+        profile_models:
+            - model1
+            - model2
+        """
+
+        self._evaluate_config(args, yaml_content, subcommand='profile')
+
+        self.mock_os.set_os_path_exists_return_value(False)
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+        self.mock_os.set_os_path_exists_return_value(True)
+
+        args = ['model-analyzer', 'analyze', '-f', 'path-to-config-file']
+        yaml_content = """
+        export_path: /opt/triton-model-analyzer/tests
+        analysis_models:
+            - model1
+            - model2
+        """
+
+        self._evaluate_config(args, yaml_content, subcommand='analyze')
+
+        self.mock_os.set_os_path_exists_return_value(False)
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='analyze')
+        self.mock_os.set_os_path_exists_return_value(True)
+
+        # Test the binary path validator
+        args = [
+            'model-analyzer', 'profile', '--model-repository', '/', '-f',
+            'path-to-config-file'
+        ]
+        yaml_content = """
+        triton_server_path: tritonserver
+        profile_models:
+            - model1
+            - model2
+        """
+
+        self._evaluate_config(args, yaml_content, subcommand='profile')
+
+        self.mock_os.set_os_path_exists_return_value(False)
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+        self.mock_os.set_os_path_exists_return_value(True)
 
 
 if __name__ == '__main__':

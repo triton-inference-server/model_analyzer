@@ -21,6 +21,7 @@ from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.cli.cli import CLI
 
 from .mocks.mock_config import MockConfig
+from .mocks.mock_os import MockOSMethods
 
 
 class TestRunSearch(trc.TestResultCollector):
@@ -46,6 +47,15 @@ class TestRunSearch(trc.TestResultCollector):
             'get_metric_value': MagicMock(return_value=value)
         }
         return MagicMock(**measurement_attrs)
+
+    def setUp(self):
+        # Mock path validation
+        self.mock_os = MockOSMethods(
+            mock_paths=['model_analyzer.config.input.config_utils'])
+        self.mock_os.start()
+
+    def tearDown(self):
+        self.mock_os.stop()
 
     def test_run_search(self):
         args = [

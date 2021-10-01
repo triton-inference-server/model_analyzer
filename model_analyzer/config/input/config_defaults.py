@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 #
 # Common defaults
 #
 
-DEFAULT_CHECKPOINT_DIRECTORY = './checkpoints'
+DEFAULT_CHECKPOINT_DIRECTORY = os.path.join(os.getcwd(), 'checkpoints')
 DEFAULT_ONLINE_OBJECTIVES = {'perf_latency_p99': 10}
 DEFAULT_OFFLINE_OBJECTIVES = {'perf_throughput': 10}
 
@@ -30,7 +32,8 @@ DEFAULT_USE_LOCAL_GPU_MONITOR = False
 DEFAULT_COLLECT_CPU_METRICS = False
 DEFAULT_LOG_LEVEL = 'INFO'
 DEFAULT_GPUS = 'all'
-DEFAULT_OUTPUT_MODEL_REPOSITORY = './output_model_repository'
+DEFAULT_OUTPUT_MODEL_REPOSITORY = os.path.join(os.getcwd(),
+                                               'output_model_repository')
 DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG = False
 DEFAULT_BATCH_SIZES = 1
 DEFAULT_MAX_RETRIES = 50
@@ -90,7 +93,7 @@ DEFAULT_CPU_MEM_PLOT = {
     }
 }
 
-DEFAULT_EXPORT_PATH = '.'
+DEFAULT_EXPORT_PATH = os.getcwd()
 DEFAULT_FILENAME_MODEL_INFERENCE = 'metrics-model-inference.csv'
 DEFAULT_FILENAME_MODEL_GPU = 'metrics-model-gpu.csv'
 DEFAULT_FILENAME_SERVER_ONLY = 'metrics-server-only.csv'

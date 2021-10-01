@@ -59,8 +59,10 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
         self.mock_io = MockIOMethods(
             mock_paths=['model_analyzer.state.analyzer_state_manager'])
         self.mock_json = MockJSONMethods()
-        self.mock_os = MockOSMethods(
-            mock_paths=['model_analyzer.state.analyzer_state_manager'])
+        self.mock_os = MockOSMethods(mock_paths=[
+            'model_analyzer.state.analyzer_state_manager',
+            'model_analyzer.config.input.config_utils'
+        ])
         self.mock_glob = MockGlobMethods()
 
         self.mock_io.start()
