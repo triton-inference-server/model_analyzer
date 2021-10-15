@@ -72,6 +72,8 @@ profile_models:
 
 If either `concurrency` or `model_config_parameters` is specified for one of the
 models, it will disable the automatic config search for the parameter provided.
+Additionally, the `run_config_search_preferred_batch_size_disable` flag can be
+set in order to disable automatic config search over the `preferred_batch_size`.
 
 For example, the config specified below will only automatically sweep through
 the `model_config_parameters` that was described above:
