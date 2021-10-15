@@ -630,7 +630,7 @@ profile_models:
   model_1:
     perf_analyzer_flags:
         percentile: 95
-        latency_report_file: /path/to/latency/report/file
+        latency-report-file: /path/to/latency/report/file
 ```
 
 The `perf_analyzer_flags` section can also be specified globally to affect
@@ -644,10 +644,13 @@ profile_models:
         batch_sizes: 4
 perf_analyzer_flags:
     percentile: 95
-    latency_report_file: /path/to/latency/report/file
+    latency-report-file: /path/to/latency/report/file
 ```
 
-**Important Notes**: 
+**Important Notes**:
+* When providing arguments under `perf_analyzer_flags`, you must use `-` instead
+  of `_`. This casing is important and Model Analyzer will not recognize
+  `snake_cased` arguments.
 * The Model Analyzer also provides certain arguments to the `perf_analyzer`
   instances it launches. They are the following:
   * `concurrency-range`
@@ -703,7 +706,7 @@ profile_models:
         exit_timeout_secs: 120
 ```
 
-**Important Notes**: 
+**Important Notes**:
 * The Model Analyzer also provides certain arguments to the `tritonserver`
   instances it launches. These ***cannot*** be overriden by providing those
   arguments in this section. An example of this is `http-port`, which is an
