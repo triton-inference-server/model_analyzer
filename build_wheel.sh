@@ -59,7 +59,7 @@ echo $(date) : "=== Building wheel"
 if [[ -z "$2" || "$2" = true ]]; then
     PLATFORM=`uname -m`
     if [ "$PLATFORM" = "aarch64" ] ; then
-        PLATFORM_NAME="linux_aarch64"
+        PLATFORM_NAME="manylinux2014_aarch64"
     else
         PLATFORM_NAME="manylinux1_x86_64"
     fi
