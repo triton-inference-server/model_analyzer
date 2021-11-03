@@ -40,11 +40,15 @@ ARG TARGETARCH
 RUN if [ "${TARGETARCH}" = "amd64" ] ; then ARCH_DIR="x86_64" ; fi ; \
     if [ "${TARGETARCH}" = "arm64" ] ; then ARCH_DIR="sbsa" ; fi ; \
     apt-get update && apt-get install -y --no-install-recommends software-properties-common && \
-      wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/cuda-ubuntu2004.pin && \
-      mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 && \
-      apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/7fa2af80.pub && \
-      add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/ /" && \
-      apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION}
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/cuda-ubuntu2004.pin && \
+    mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 && \
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/7fa2af80.pub && \
+    add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/ /" && \
+    apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION}
+
+RUN if [ "${TARGETARCH}" = "arm64" ] ; then \
+    apt-get install libgfortran5 ; \
+    fi ;
 
 # Install tritonclient
 COPY --from=sdk /workspace/install/python /tmp/tritonclient
