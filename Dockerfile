@@ -35,20 +35,38 @@ RUN apt-get update && \
 
 RUN mkdir -p /opt/triton-model-analyzer
 
-# Install DCGM
+# Install architecture-specific components
 ARG TARGETARCH
-RUN if [ "${TARGETARCH}" = "amd64" ] ; then ARCH_DIR="x86_64" ; fi ; \
-    if [ "${TARGETARCH}" = "arm64" ] ; then ARCH_DIR="sbsa" ; fi ; \
+RUN \
+    # Set TARGETARCH variable if in a non-docker buildx build
+    if [ "${TARGETARCH}" = "" ] ; then \
+      if [ `uname -m` = "x86_64" ] ; then TARGETARCH="amd64" ; \
+      elif [ `uname -m` = "aarch64" ] ; then TARGETARCH="arm64" ; \
+      fi ; \
+    fi ; \
+
+    # Exit if TARGETARCH variable is an invalid value
+    if [ "${TARGETARCH}" != "amd64" ] && [ "${TARGETARCH}" != "arm64" ] ; then \
+      echo "invalid architecture: $(uname -m)" ; exit 1 ; \
+    fi ; \
+
+    # Install libgfortran5 for arm64 version of docker image
+    if [ "${TARGETARCH}" = "arm64" ] ; then \
+      apt update ; apt install -y libgfortran5 ; \
+    fi ; \
+
+    # Set ARCH_DIR variable for correct architecture-specific DCGM installation
+    if [ "${TARGETARCH}" = "amd64" ] ; then ARCH_DIR="x86_64" ; \
+    elif [ "${TARGETARCH}" = "arm64" ] ; then ARCH_DIR="sbsa" ; \
+    fi ; \
+
+    # Install DCGM
     apt-get update && apt-get install -y --no-install-recommends software-properties-common && \
     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/cuda-ubuntu2004.pin && \
     mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 && \
     apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/7fa2af80.pub && \
     add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/ /" && \
     apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION}
-
-RUN if [ "${TARGETARCH}" = "arm64" ] ; then \
-    apt-get install libgfortran5 ; \
-    fi ;
 
 # Install tritonclient
 COPY --from=sdk /workspace/install/python /tmp/tritonclient
