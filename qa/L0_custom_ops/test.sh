@@ -20,7 +20,7 @@ rm -f *.log
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/${REPO_VERSION}/qa_custom_ops/libtorch_custom_ops"}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/${REPO_VERSION}/qa_custom_ops/libtorch_custom_ops"}
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)

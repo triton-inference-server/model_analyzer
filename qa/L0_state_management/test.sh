@@ -20,7 +20,7 @@ rm -f *.log && rm -rf *.yml
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/dldata/inferenceserver/$REPO_VERSION/libtorch_model_store"}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 QA_MODELS="vgg19_libtorch resnet50_libtorch libtorch_amp_resnet50"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
 EXPORT_PATH="`pwd`/results"
