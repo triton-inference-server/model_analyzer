@@ -57,7 +57,7 @@ class ConfigCommandReport(ConfigCommand):
         self._add_config(
             ConfigField(
                 'checkpoint_directory',
-                flags=['--checkpoint-directory', '-s'],
+                flags=['-s', '--checkpoint-directory'],
                 default_value=DEFAULT_CHECKPOINT_DIRECTORY,
                 field_type=ConfigPrimitive(str,
                                            validator=parent_path_validator),
@@ -66,7 +66,7 @@ class ConfigCommandReport(ConfigCommand):
             ))
         self._add_config(
             ConfigField('export_path',
-                        flags=['--export-path', '-e'],
+                        flags=['-e', '--export-path'],
                         default_value=DEFAULT_EXPORT_PATH,
                         field_type=ConfigPrimitive(
                             str, validator=file_path_validator),
@@ -108,7 +108,7 @@ class ConfigCommandReport(ConfigCommand):
         self._add_config(
             ConfigField(
                 'report_model_configs',
-                flags=['--report-model-configs', '-n'],
+                flags=['-n', '--report-model-configs'],
                 field_type=ConfigUnion([
                     report_model_scheme,
                     ConfigListGeneric(ConfigUnion([
@@ -129,7 +129,7 @@ class ConfigCommandReport(ConfigCommand):
                     ' for which to generate detailed reports.')))
         self._add_config(
             ConfigField('output_formats',
-                        flags=['--output-formats', '-o'],
+                        flags=['-o', '--output-formats', '-o'],
                         default_value=DEFAULT_REPORT_FORMAT,
                         field_type=ConfigUnion([
                             ConfigListGeneric(type_=ConfigEnum(

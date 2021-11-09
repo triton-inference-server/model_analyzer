@@ -164,7 +164,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 'checkpoint_directory',
-                flags=['--checkpoint-directory', '-s'],
+                flags=['-s', '--checkpoint-directory'],
                 default_value=DEFAULT_CHECKPOINT_DIRECTORY,
                 field_type=ConfigPrimitive(str,
                                            validator=parent_path_validator),
@@ -226,7 +226,7 @@ class ConfigCommandProfile(ConfigCommand):
         """
         self._add_config(
             ConfigField('model_repository',
-                        flags=['--model-repository', '-m'],
+                        flags=['-m', '--model-repository'],
                         field_type=ConfigPrimitive(
                             str, required=True, validator=file_path_validator),
                         description='Model repository location'))
@@ -405,7 +405,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 'batch_sizes',
-                flags=['--batch-sizes', '-b'],
+                flags=['-b', '--batch-sizes'],
                 field_type=ConfigListNumeric(int),
                 default_value=DEFAULT_BATCH_SIZES,
                 description=
