@@ -38,6 +38,12 @@ batch_sizes:
     stop: 6
     step: 2
 ```
+* `<dict>`: a set of key-value pairs. Here is an example:
+```yaml
+triton_server_flags:
+    log_verbose: True
+    exit_timeout_secs: 120
+```
 
 The above YAML declares the value of batch_sizes to be an array `[2, 4, 6]`.
 

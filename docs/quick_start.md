@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,38 +16,26 @@ limitations under the License.
 
 # Quick Start
 
-The steps below will guide you through using model analyzer to analyze a simple
-PyTorch model. If you are not using the docker installation, you may skip the
-first step. The instructions below assume a directory structure like the
-following:
+The steps below will guide you through using model analyzer to analyze a simple PyTorch model.
 
+## Step 1: Build and Run Model Analyzer Container
+
+1. Clone the repository and build the docker:
 ```
-$HOME
-  |--- model_analyzer
-              |--- docs
-              |--- examples
-              |--- helm-chart
-              |--- images
-              |--- model_analyzer
-              |--- qa
-              |--- tests
-              .
-              .
-              .
+$ git clone https://github.com/triton-inference-server/model_analyzer.git
+
+$ cd ./model_analyzer
+
+$ docker build --pull -t model-analyzer .
 ```
 
-## Step 1: Install Model Analyzer and Run Container
-
-Install Model Analyzer by following the instructions in the
-[Installation](./install.md#building-the-dockerfile) section, and run the Triton Model Analyzer
-container as shown below. 
-
+2. Run the docker:
 ```
 $ docker run -it --rm --gpus all \
-        -v /var/run/docker.sock:/var/run/docker.sock \
-        -v $HOME/model_analyzer/examples/quick-start:/quick_start_repository \
-        --net=host --name model-analyzer \
-        model-analyzer /bin/bash
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $HOME/model_analyzer/examples/quick-start:/quick_start_repository \
+    --net=host --name model-analyzer \
+    model-analyzer /bin/bash
 ```
 
 ## Step 2: Profile the `add_sub` model
@@ -57,73 +45,36 @@ libtorch model which calculates the sum and difference of two inputs. Run the
 Model Analyzer `profile` subcommand inside the container with:
 
 ```
-$ model-analyzer profile -m /quick_start_repository/ --profile-models add_sub
+$ model-analyzer profile -m /quick_start_repository/ \
+    --profile-models add_sub \
+    --run-config-search-max-concurrency 2 \
+    --run-config-search-max-instance-count 2 \
+    --run-config-search-preferred-batch-size-disable true
 ```
 
-If a directory called `./output_model_repository` already exists, you will
-receive the following error:
-
-```
-Traceback (most recent call last):
-  File "/usr/local/lib/python3.8/dist-packages/model_analyzer/entrypoint.py", line 278, in create_output_model_repository
-    os.mkdir(config.output_model_repository_path)
-FileExistsError: [Errno 17] File exists: './output_model_repository'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/usr/local/bin/model-analyzer", line 8, in <module>
-    sys.exit(main())
-  File "/usr/local/lib/python3.8/dist-packages/model_analyzer/entrypoint.py", line 307, in main
-    create_output_model_repository(config)
-  File "/usr/local/lib/python3.8/dist-packages/model_analyzer/entrypoint.py", line 281, in create_output_model_repository
-    raise TritonModelAnalyzerException(
-model_analyzer.model_analyzer_exceptions.TritonModelAnalyzerException: Path "./output_model_repository" already exists. Please set or modify "--output-model-repository-path" flag or remove this directory. You can also allow overriding of the output directory using the "--override-output-model-repository" flag.
-```
-This is to give you a chance to save/move any model configs you may have from a
-previous run in the output repository. Simply add the
-`--override-output-model-repository` flag to tell model analyzer it can safely
-delete the contents of the directory.
-
-```
-$ model-analyzer profile -m /quick_start_repository/ --profile-models add_sub --override-output-model-repository
-```
-You should see an output similar to the output below:
-
-```
-
-2021-05-11 02:02:58.194 INFO[entrypoint.py:98] Starting a local Triton Server...
-2021-05-11 02:02:58.203 INFO[server_local.py:64] Triton Server started.
-2021-05-11 02:03:02.609 INFO[server_local.py:81] Triton Server stopped.
-2021-05-11 02:03:02.610 INFO[analyzer_state_manager.py:118] No checkpoint file found, starting a fresh run.
-2021-05-11 02:03:02.610 INFO[analyzer.py:82] Profiling server only metrics...
-2021-05-11 02:03:02.618 INFO[server_local.py:64] Triton Server started.
-2021-05-11 02:03:05.766 INFO[gpu_monitor.py:72] Using GPU(s) with UUID(s) = { GPU-e35ba3d2-6eef-2bb9-e35c-6ef6eada4f11 } for profiling.
-2021-05-11 02:03:08.720 INFO[server_local.py:81] Triton Server stopped.
-2021-05-11 02:03:08.721 INFO[run_search.py:146] Will sweep both the concurrency and model config parameters...
-2021-05-11 02:03:08.721 INFO[run_search.py:289] Concurrency set to 1. Instance count set to 1, and dynamic batching is disabled.
-2021-05-11 02:03:08.736 INFO[server_local.py:64] Triton Server started.
-2021-05-11 02:03:14.512 INFO[client.py:80] Model add_sub_i0 loaded.
-2021-05-11 02:03:14.514 INFO[model_manager.py:211] Profiling model add_sub_i0...
-2021-05-11 02:03:16.578 INFO[gpu_monitor.py:72] Using GPU(s) with UUID(s) = { GPU-e35ba3d2-6eef-2bb9-e35c-6ef6eada4f11 } for profiling.
-.
-.
-.
-```
+If you already ran this earlier in the container, you can use the `--override-output-model-repository` option to overwrite the earlier results.
 
 This will perform a search across various config parameters on the `add_sub`
-model. This takes over 40 minutes even on a TITAN RTX as Model Analyzer will try
-to find the search bounds automatically. When finished, Model analyzer stores
-all of the profiling measurements it has taken in a binary file in the checkpoint directory (See [config_defaults.py](../model_analyzer/config/input/config_defaults.py) for default location).
+model. This should take no more than a few minutes to finish. Here is some sample output:
 
 ```
-$ ls -l checkpoints
-total 12
--rw-r--r-- 1 root root 11356 May 11 13:00 0.ckpt
+...
+2021-11-09 22:45:44.479 INFO[run_search.py:292] [Search Step] Concurrency set to 1. Instance count set to 1, and dynamic batching is disabled.
+2021-11-09 22:45:44.502 INFO[server_local.py:99] Triton Server started.
+2021-11-09 22:45:46.646 INFO[client.py:83] Model add_sub_i0 loaded.
+2021-11-09 22:45:46.647 INFO[model_manager.py:221] Profiling model add_sub_i0...
+2021-11-09 22:45:57.731 INFO[server_local.py:120] Stopped Triton Server.
+2021-11-09 22:45:57.731 INFO[run_search.py:292] [Search Step] Concurrency set to 2. Instance count set to 1, and dynamic batching is disabled.
+2021-11-09 22:45:57.752 INFO[server_local.py:99] Triton Server started.
+2021-11-09 22:45:59.894 INFO[client.py:83] Model add_sub_i0 loaded.
+2021-11-09 22:45:59.895 INFO[model_manager.py:221] Profiling model add_sub_i0...
+2021-11-09 22:46:11.925 INFO[server_local.py:120] Stopped Triton Server.
+2021-11-09 22:46:11.925 INFO[run_search.py:292] [Search Step] Concurrency set to 1. Instance count set to 2, and dynamic batching is disabled.
+2021-11-09 22:46:11.945 INFO[server_local.py:99] Triton Server started.
+2021-11-09 22:46:14.88 INFO[client.py:83] Model add_sub_i1 loaded.
+2021-11-09 22:46:14.89 INFO[model_manager.py:221] Profiling model add_sub_i1...
+2021-11-09 22:46:25.118 INFO[server_local.py:120] Stopped Triton Server....
 ```
-
-Refer to the [checkpoints](./checkpoints.md) documentation for more details on
-how checkpoint files work. 
 
 ## Generate tables and summary reports
 In order to generate tables and summary reports, use the `analyze` subcommand as

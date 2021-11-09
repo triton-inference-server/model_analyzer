@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@ limitations under the License.
 -->
 # Launch Modes
 
-Triton Model Analyzer's `profile` subcommand supports three different launch
+Triton Model Analyzer's `profile` subcommand supports four different launch
 modes along with Triton Server. In the `local` and `docker` modes, Triton
 Inference Server will be launched by the Model Analyzer. In the `remote` mode,
 it is assumed there is an already running instance of Triton Inference Server.
@@ -55,9 +55,9 @@ it is assumed there is an already running instance of Triton Inference Server.
    ```
 
 3. **`--triton-launch-mode=c_api`** In this mode, Triton server is launched
-   locally via the C_API by the
-   [perf_analyzer](https://github.com/triton-inference-server/model_analyzer/pull/203)
-   instances launched by Model Analyzer.
+   locally via the
+   [C_API](https://github.com/triton-inference-server/server/blob/main/docs/inference_protocols.md#c-api)
+   by the perf_analyzer instances launched by Model Analyzer.
 
 4. **`--triton-launch-mode=remote`**. This mode is beneficial when you want to
    use an already running Triton Inference Server. You may provide the URLs for
