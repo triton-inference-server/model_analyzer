@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -134,6 +134,9 @@ class CLI:
         """
 
         args = self._parser.parse_args()
+        if args.subcommand is None:
+            self._parser.print_help()
+            self._parser.exit()
         config = self._subcommand_configs[args.subcommand]
         config.set_config_values(args)
         return args, config
