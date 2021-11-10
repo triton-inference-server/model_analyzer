@@ -19,6 +19,21 @@ from .common import test_result_collector as trc
 
 
 class TestRecordAggregatorMethods(trc.TestResultCollector):
+    """
+    The record types in the model-analyzer.record.types package are contextual 
+        when it uses 'less than' (<) and 'greater than' (>) operators. 
+    
+    The 'less than' and 'greater than' operators are overloaded to 
+        mean 'worse than' and 'better than' respectively.
+
+    Some record types treat MORE as better 
+        (eg, gpu_free_memory, cpu_available_ram)
+    Other record types treat LESS as better 
+        (eg, gpu_used_memory, cpu_used_ram)
+        
+    So, when comparing two objects of type 'cpu_used_ram' 
+        12 > 13 is actually true, since 12 'is better than' 13.
+    """
 
     def setUp(self):
         record_types = RecordType.get_all_record_types()
