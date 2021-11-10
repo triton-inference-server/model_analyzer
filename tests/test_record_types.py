@@ -19,6 +19,21 @@ from .common import test_result_collector as trc
 
 
 class TestRecordAggregatorMethods(trc.TestResultCollector):
+    """
+    The record types in the model-analyzer.record.types package are contextual 
+        when it uses 'less than' (<) and 'greater than' (>) operators. 
+    
+    The 'less than' and 'greater than' operators are overloaded to 
+        mean 'worse than' and 'better than' respectively.
+
+    Some record types treat MORE as better 
+        (eg, gpu_free_memory, cpu_available_ram)
+    Other record types treat LESS as better 
+        (eg, gpu_used_memory, cpu_used_ram)
+        
+    So, when comparing two objects of type 'cpu_used_ram' 
+        12 > 13 is actually true, since 12 'is better than' 13.
+    """
 
     def setUp(self):
         record_types = RecordType.get_all_record_types()
@@ -26,15 +41,28 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         self.less_is_better_types = {
             record_types[k] for k in [
                 'perf_latency_avg', 'perf_latency_p90', 'perf_latency_p95',
-                'perf_latency_p99', 'gpu_used_memory', 'cpu_used_ram'
+                'perf_latency_p99', 'gpu_used_memory', 'cpu_used_ram', 
+                'perf_server_compute_infer', 'perf_latency', 
+                'perf_server_queue', 'perf_client_response_wait', 
+                'perf_server_compute_output', 'perf_client_send_recv', 
+                'perf_server_compute_input'
             ]
         }
         self.more_is_better_types = {
             record_types[k] for k in [
                 'perf_throughput', 'gpu_free_memory', 'gpu_utilization',
-                'cpu_available_ram'
+                'cpu_available_ram', 'gpu_power_usage'
             ]
         }
+
+    def test_counts(self):
+        """
+        Make sure that all 'worse than' and 'better than' tests are tested
+        """
+        total_count = len(self.all_record_types)
+        less_is_better_count = len(self.less_is_better_types)
+        more_is_better_count = len(self.more_is_better_types)
+        self.assertEqual(total_count, less_is_better_count + more_is_better_count)
 
     def test_add(self):
         """
@@ -64,6 +92,8 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
                 self.assertEqual(metric3.value(), -7)
             elif record_type in self.more_is_better_types:
                 self.assertEqual(metric3.value(), 7)
+            else:
+                fail
 
     def test_mult(self):
         """
@@ -104,12 +134,16 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
                 self.assertTrue(metric1 < metric2)
             elif record_type in self.more_is_better_types:
                 self.assertTrue(metric2 < metric1)
+            else:
+                fail
 
             # Test __gt__ (True if 1 better than 2)
             if record_type in self.less_is_better_types:
                 self.assertTrue(metric2 > metric1)
             elif record_type in self.more_is_better_types:
                 self.assertTrue(metric1 > metric2)
+            else:
+                fail
 
             # Test __eq__
             metric1 = record_type(value=12)
