@@ -20,10 +20,10 @@ There are 4 ways to use Triton Model Analyzer:
 
 ## Building the Dockerfile
 
-The recommended way to use Model Analyzer is by building the Model Analyzer's docker yourself. First, clone the
-Model Analyzer's git repository, then build the docker image. This is the
-recommended installation method if you mainly intend to use
-`--triton-launch-mode=local`, as all the dependencies will be available.
+The recommended way to use Model Analyzer is by building the Model Analyzer's
+docker yourself. This installation method uses `--triton-launch-mode=local` by
+default, as all the dependencies will be available. First, clone the Model
+Analyzer's git repository, then build the docker image.
 
 ```
 $ git clone https://github.com/triton-inference-server/model_analyzer.git

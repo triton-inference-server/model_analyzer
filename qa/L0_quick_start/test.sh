@@ -12,33 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-RET=0
+exit_early_if_nonzero () {
+  if [[ $1 -ne 0 ]] ; then \
+    echo -e "\n***\n*** Test FAILED\n***" ; \
+    exit 1 ; \
+  fi
+}
 
 model-analyzer profile \
-  -m /quick_start_repository/ \
+  -m /opt/triton-model-analyzer/examples/quick-start \
   --profile-models add_sub \
   --run-config-search-max-concurrency 2 \
   --run-config-search-max-instance-count 2 \
   --run-config-search-preferred-batch-size-disable true ; \
-  if [ $? -ne 0 ] ; then RET=1 ; fi
+  exit_early_if_nonzero $?
 
 mkdir analysis_results ; \
-  if [ $? -ne 0 ] ; then RET=1 ; fi
+  exit_early_if_nonzero $?
 
 model-analyzer analyze \
   --analysis-models add_sub \
   -e analysis_results ; \
-  if [ $? -ne 0 ] ; then RET=1 ; fi
+  exit_early_if_nonzero $?
 
 model-analyzer report \
   --report-model-configs add_sub_i0,add_sub_i1 \
   -e analysis_results ; \
-  if [ $? -ne 0 ] ; then RET=1 ; fi
+  exit_early_if_nonzero $?
 
-if [ $RET -eq 0 ]; then
-  echo -e "\n***\n*** Test PASSED\n***"
-  exit 0
-else
-  echo -e "\n***\n*** Test FAILED\n***"
-  exit 1
-fi
+echo -e "\n***\n*** Test PASSED\n***"
+exit 0

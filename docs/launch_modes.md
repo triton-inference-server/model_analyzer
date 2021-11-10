@@ -16,9 +16,11 @@ limitations under the License.
 # Launch Modes
 
 Triton Model Analyzer's `profile` subcommand supports four different launch
-modes along with Triton Server. In the `local` and `docker` modes, Triton
-Inference Server will be launched by the Model Analyzer. In the `remote` mode,
-it is assumed there is an already running instance of Triton Inference Server.
+modes along with Triton Inference Server. In the `local` and `docker` modes,
+Triton Inference Server will be launched by the Model Analyzer. In the `c_api`
+mode, the Triton Inference Server is launched locally via a C API. In the
+`remote` mode, it is assumed there is an already running instance of
+Triton Inference Server.
 
 1. **`--triton-launch-mode=local`** In this mode, Model Analyzer will launch
    Triton Server using the local binary supplied using `--triton-server-path`,
