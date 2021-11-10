@@ -129,7 +129,7 @@ class ConfigCommandReport(ConfigCommand):
                     ' for which to generate detailed reports.')))
         self._add_config(
             ConfigField('output_formats',
-                        flags=['-o', '--output-formats', '-o'],
+                        flags=['-o', '--output-formats'],
                         default_value=DEFAULT_REPORT_FORMAT,
                         field_type=ConfigUnion([
                             ConfigListGeneric(type_=ConfigEnum(
