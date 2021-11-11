@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ Triton Inference Server.
 * [Quick Start](docs/quick_start.md)
 * [Model Analyzer CLI](docs/cli.md)
 * [Launch Modes](docs/launch_modes.md)
-* [Model Analyzer Metrics](docs/metrics.md)
 * [Configuring Model Analyzer](docs/config.md)
+* [Model Analyzer Metrics](docs/metrics.md)
 * [Model Config Search](docs/config_search.md)
 * [Checkpointing](docs/checkpoints.md)
 * [Model Analyzer Reports](docs/report.md)

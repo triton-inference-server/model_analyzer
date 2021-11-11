@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,9 +18,38 @@ limitations under the License.
 
 There are 4 ways to use Triton Model Analyzer:
 
+## Building the Dockerfile
+
+The recommended way to use Model Analyzer is by building the Model Analyzer's
+docker yourself. This installation method uses `--triton-launch-mode=local` by
+default, as all the dependencies will be available. First, clone the Model
+Analyzer's git repository, then build the docker image.
+
+```
+$ git clone https://github.com/triton-inference-server/model_analyzer.git
+
+$ cd ./model_analyzer
+
+$ docker build --pull -t model-analyzer .
+```
+
+The above command will pull all the containers that Model Analyzer needs to run.
+The Model Analyzer's Dockerfile bases the container on the latest `tritonserver`
+containers from NGC. Now you can run the container with:
+
+```
+$ docker run -it --rm --gpus all \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v <path-to-triton-model-repository>:<path-to-triton-model-repository> \
+      -v <path-to-output-model-repo>:<path-to-output-model-repo> \
+      --net=host model-analyzer
+
+root@hostname:/opt/triton-model-analyzer# 
+```
+
 ## Triton SDK Container
 
-The recommended way to use Model Analyzer is with the Triton SDK docker
+You can also use the Triton SDK docker
 container available on the [NVIDIA GPU Cloud
 Catalog](https://ngc.nvidia.com/catalog/containers/nvidia:tritonserver). You can
 pull and run the SDK container with the following commands:
@@ -71,32 +100,6 @@ $ sudo apt-get update && sudo apt-get install wkhtmltopdf
 ```
 
 Once you do this, Model Analyzer will able to use `pdfkit` to generate reports.
-
-## Building the Dockerfile
-
-You can also build the Model Analyzer's dockerfile yourself. First, clone the
-Model Analyzer's git repository, then build the docker image. This is the
-recommended installation method if you mainly intend to use
-`--triton-launch-mode=local`, as all the dependencies will be available.
-
-```
-$ git clone https://github.com/triton-inference-server/model_analyzer
-$ docker build --pull -t model-analyzer .
-```
-
-The above command will pull all the containers that Model Analyzer needs to run.
-The Model Analyzer's Dockerfile bases the container on the latest `tritonserver`
-containers from NGC. Now you can run the container with:
-
-```
-$ docker run -it --rm --gpus all \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      -v <path-to-triton-model-repository>:<path-to-triton-model-repository> \
-      -v <path-to-output-model-repo>:<path-to-output-model-repo> \
-      --net=host model-analyzer
-
-root@hostname:/opt/triton-model-analyzer# 
-```
 
 ## Using `pip3`
 
