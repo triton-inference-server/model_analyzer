@@ -25,6 +25,10 @@ from model_analyzer.cli.cli import CLI
 
 
 class ArgumentParserSubclass(ArgumentParser):
+    """
+    Custom subclass of the ArgumentParser class to change functionality to enable
+    testing
+    """
 
     def print_help(self, file=None):
         super().print_help(file)
@@ -34,6 +38,9 @@ class ArgumentParserSubclass(ArgumentParser):
 
 
 class CLISubclass(CLI):
+    """
+    Custom subclass of the CLI class to change functionality to enable testing
+    """
 
     def __init__(self):
         self._parser = ArgumentParserSubclass()
@@ -46,8 +53,16 @@ class CLISubclass(CLI):
 
 
 class TestCLI(trc.TestResultCollector):
+    """
+    Tests the methods of the CLI class
+    """
 
     def test_help_message_no_args(self):
+        """
+        Tests that model-analyzer prints the help message when no arguments are
+        given
+        """
+
         sys.argv = ['/usr/local/bin/model-analyzer']
 
         config_profile = ConfigCommandProfile()

@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ RET=0
 
 set +e
 run_analyzer
-if [ $? != 1 ]; then
+if [ $? != 0 ]; then
     echo -e "\n***\n*** Failed to run model-analyzer. \n***"
     cat $ANALYZER_LOG
     RET=1
