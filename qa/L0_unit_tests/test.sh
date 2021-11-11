@@ -19,7 +19,7 @@ source ../common/check_analyzer_results.sh
 RET=0
 
 set +e
-python3 -m unittest discover -v -s ../../tests  -t ../../ > $TEST_LOG 2>&1
+coverage run --branch --source=../../model_analyzer -m unittest discover -v -s ../../tests  -t ../../ > $TEST_LOG 2>&1
 if [ $? -ne 0 ]; then
     RET=1
 else
