@@ -34,7 +34,6 @@ $ docker build --pull -t model-analyzer .
 $ docker run -it --rm --gpus all \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v $HOME/model_analyzer/examples/quick-start:/quick_start_repository \
-    -w /quick_start_repository \
     --net=host --name model-analyzer \
     model-analyzer /bin/bash
 ```
@@ -46,19 +45,28 @@ libtorch model which calculates the sum and difference of two inputs. Run the
 Model Analyzer `profile` subcommand inside the container with:
 
 ```
-$ model-analyzer profile -m . --profile-models add_sub
+$ model-analyzer profile --model-repository /quick_start_repository --profile-models add_sub
 ```
 
 If you already ran this earlier in the container, you can use the `--override-output-model-repository` option to overwrite the earlier results.
 
-This will perform a search across various config parameters on the `add_sub`
-model. This will take around 60 minutes to finish. If you want a shorter run (1-2 minutes) for example purposes, you can run with the below additional options. Note that these options are not intended to find the best configuration:
+This will perform a search across limited configurable model parameters on the
+`add_sub` model. This can take up to 60 minutes to finish. If you want a shorter
+run (1-2 minutes) for example purposes, you can run with the below additional
+options. Note that these options are not intended to find the best
+configuration:
 
 ```
 --run-config-search-max-concurrency 2 \
 --run-config-search-max-instance-count 2 \
 --run-config-search-preferred-batch-size-disable true
 ```
+
+`--run-config-search-max-concurrency` sets the max concurrency value that run
+config search should not go beyond. `--run-config-search-max-instance-count`
+sets the max instance count value that run config search should not go beyond. `--run-config-search-preferred-batch-size-disable` disables the preferred batch
+size search. With these options, model analyzer will test four configs. This
+significantly reduces the search space, and therefore, model analyzer's runtime.
 
 Here is some sample output:
 
