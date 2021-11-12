@@ -39,4 +39,7 @@ else
     echo -e "\n***\n*** Test FAILED\n***"
 fi
 
+# Generate html files
+coverage html
+
 exit $RET
