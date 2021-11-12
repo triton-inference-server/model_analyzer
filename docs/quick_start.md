@@ -45,35 +45,49 @@ libtorch model which calculates the sum and difference of two inputs. Run the
 Model Analyzer `profile` subcommand inside the container with:
 
 ```
-$ model-analyzer profile -m /quick_start_repository/ \
-    --profile-models add_sub \
-    --run-config-search-max-concurrency 2 \
-    --run-config-search-max-instance-count 2 \
-    --run-config-search-preferred-batch-size-disable true
+$ model-analyzer profile --model-repository /quick_start_repository --profile-models add_sub
 ```
 
 If you already ran this earlier in the container, you can use the `--override-output-model-repository` option to overwrite the earlier results.
 
-This will perform a search across various config parameters on the `add_sub`
-model. This should take no more than a few minutes to finish. Here is some sample output:
+This will perform a search across limited configurable model parameters on the
+`add_sub` model. This can take up to 60 minutes to finish. If you want a shorter
+run (1-2 minutes) for example purposes, you can run with the below additional
+options. Note that these options are not intended to find the best
+configuration:
+
+```
+--run-config-search-max-concurrency 2 \
+--run-config-search-max-instance-count 2 \
+--run-config-search-preferred-batch-size-disable true
+```
+
+`--run-config-search-max-concurrency` sets the max concurrency value that run
+config search should not go beyond. `--run-config-search-max-instance-count`
+sets the max instance count value that run config search should not go beyond. `--run-config-search-preferred-batch-size-disable` disables the preferred batch
+size search. With these options, model analyzer will test four configs. This
+significantly reduces the search space, and therefore, model analyzer's runtime.
+
+Here is some sample output:
 
 ```
 ...
-2021-11-09 22:45:44.479 INFO[run_search.py:292] [Search Step] Concurrency set to 1. Instance count set to 1, and dynamic batching is disabled.
-2021-11-09 22:45:44.502 INFO[server_local.py:99] Triton Server started.
-2021-11-09 22:45:46.646 INFO[client.py:83] Model add_sub_i0 loaded.
-2021-11-09 22:45:46.647 INFO[model_manager.py:221] Profiling model add_sub_i0...
-2021-11-09 22:45:57.731 INFO[server_local.py:120] Stopped Triton Server.
-2021-11-09 22:45:57.731 INFO[run_search.py:292] [Search Step] Concurrency set to 2. Instance count set to 1, and dynamic batching is disabled.
-2021-11-09 22:45:57.752 INFO[server_local.py:99] Triton Server started.
-2021-11-09 22:45:59.894 INFO[client.py:83] Model add_sub_i0 loaded.
-2021-11-09 22:45:59.895 INFO[model_manager.py:221] Profiling model add_sub_i0...
-2021-11-09 22:46:11.925 INFO[server_local.py:120] Stopped Triton Server.
-2021-11-09 22:46:11.925 INFO[run_search.py:292] [Search Step] Concurrency set to 1. Instance count set to 2, and dynamic batching is disabled.
-2021-11-09 22:46:11.945 INFO[server_local.py:99] Triton Server started.
-2021-11-09 22:46:14.88 INFO[client.py:83] Model add_sub_i1 loaded.
-2021-11-09 22:46:14.89 INFO[model_manager.py:221] Profiling model add_sub_i1...
-2021-11-09 22:46:25.118 INFO[server_local.py:120] Stopped Triton Server....
+2021-11-11 19:57:22.638 INFO[run_search.py:292] [Search Step] Concurrency set to 1. Instance count set to 1, and dynamic batching is disabled.
+2021-11-11 19:57:22.662 INFO[server_local.py:99] Triton Server started.
+2021-11-11 19:57:24.821 INFO[client.py:83] Model add_sub_i0 loaded.
+2021-11-11 19:57:24.822 INFO[model_manager.py:221] Profiling model add_sub_i0...
+2021-11-11 19:57:39.862 INFO[server_local.py:120] Stopped Triton Server.
+2021-11-11 19:57:39.863 INFO[run_search.py:292] [Search Step] Concurrency set to 2. Instance count set to 1, and dynamic batching is disabled.
+2021-11-11 19:57:39.883 INFO[server_local.py:99] Triton Server started.
+2021-11-11 19:57:42.25 INFO[client.py:83] Model add_sub_i0 loaded.
+2021-11-11 19:57:42.26 INFO[model_manager.py:221] Profiling model add_sub_i0...
+2021-11-11 19:57:53.100 INFO[server_local.py:120] Stopped Triton Server.
+2021-11-11 19:57:53.101 INFO[run_search.py:292] [Search Step] Concurrency set to 4. Instance count set to 1, and dynamic batching is disabled.
+2021-11-11 19:57:53.121 INFO[server_local.py:99] Triton Server started.
+2021-11-11 19:57:55.261 INFO[client.py:83] Model add_sub_i0 loaded.
+2021-11-11 19:57:55.262 INFO[model_manager.py:221] Profiling model add_sub_i0...
+2021-11-11 19:58:06.337 INFO[server_local.py:120] Stopped Triton Server.
+...
 ```
 
 ## Generate tables and summary reports
