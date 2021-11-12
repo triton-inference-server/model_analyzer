@@ -165,7 +165,7 @@ class ModelManager:
         while not self._state_manager.exiting():
 
             # Get next model sweep
-            next_model, auto_model_config_sweep = self._run_search.get_model_sweep(
+            next_model, auto_model_config_sweep = self._run_search.get_next_model_sweep(
                 next_model)
 
             # End search when get_model sweep returns empty
@@ -189,6 +189,7 @@ class ModelManager:
         """
 
         measurements = []
+
         while self._run_config_generator.run_configs():
             # Check if exiting
             if self._state_manager.exiting():

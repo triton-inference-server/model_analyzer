@@ -77,7 +77,7 @@ class TestRunSearch(trc.TestResultCollector):
 
         concurrencies = config.profile_models[0].parameters()['concurrency']
         run_search.init_model_sweep(concurrencies, True)
-        config_model, model_sweeps = run_search.get_model_sweep(
+        config_model, model_sweeps = run_search.get_next_model_sweep(
             config.profile_models[0])
 
         start_throughput = 2
@@ -100,7 +100,7 @@ class TestRunSearch(trc.TestResultCollector):
                 if expected_instance_count > config.run_config_search_max_instance_count:
                     expected_instance_count = 1
 
-            config_model, model_sweeps = run_search.get_model_sweep(
+            config_model, model_sweeps = run_search.get_next_model_sweep(
                 config_model)
 
     def test_run_search_failing(self):
@@ -125,7 +125,7 @@ class TestRunSearch(trc.TestResultCollector):
         for i in range(2):
             concurrencies = config.profile_models[0].parameters()['concurrency']
             run_search.init_model_sweep(concurrencies, True)
-            config_model, model_sweeps = run_search.get_model_sweep(
+            config_model, model_sweeps = run_search.get_next_model_sweep(
                 config.profile_models[0])
 
             start_throughput = 2
@@ -158,5 +158,5 @@ class TestRunSearch(trc.TestResultCollector):
                 else:
                     expected_concurrency *= 2
 
-                config_model, model_sweeps = run_search.get_model_sweep(
+                config_model, model_sweeps = run_search.get_next_model_sweep(
                     config_model)

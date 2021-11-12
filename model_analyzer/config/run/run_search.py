@@ -139,6 +139,7 @@ class RunSearch:
         # Reset the measurements after each init
         self._measurements = []
         if len(concurrency) != 0 and search_model_config_parameters:
+            logger.info('Will sweep only through model config parameters...')
             self._model_config_parameters = {'instance_count': 0}
             self._sweep_mode_function = self._sweep_model_config_only
         elif len(concurrency) == 0 and search_model_config_parameters:
@@ -151,9 +152,9 @@ class RunSearch:
             logger.info('Will sweep only through the concurrency values...')
             self._sweep_mode_function = self._sweep_concurrency_only
 
-    def get_model_sweep(self, config_model):
+    def get_next_model_sweep(self, config_model):
         """
-        Get the next iteration of the sweeps.
+        Get the next iteration of the sweep
 
         Parameters
         ----------
@@ -181,6 +182,7 @@ class RunSearch:
             # Only log message if there is new runs.
             if model_sweep:
                 self._log_message(new_model)
+
             return new_model, model_sweep
         return new_model, []
 
