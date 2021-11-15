@@ -36,9 +36,9 @@ Triton Inference Server.
 * GPU memory
 
 #### Model Analyzer can automatically sweep the following variables and provide results across the resulting range:
-* preferred batch size in triton server dynamic batching
-* number of concurrent model instance loaded in triton
-* number of concurrent requests sent by the perf analyzer client
+* [preferred batch size in triton server dynamic batching](https://github.com/triton-inference-server/server/blob/main/docs/optimization.md#dynamic-batcher)
+* [number of concurrent model instance loaded in triton](https://github.com/triton-inference-server/server/blob/main/docs/architecture.md#concurrent-model-execution)
+* [number of concurrent requests sent by the perf analyzer client](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#request-concurrency)
 
 #### Model Analyzer can manually sweep the following variables set by the user
 * framework
@@ -46,7 +46,7 @@ Triton Inference Server.
 * model precision (for the TensorRT model only)
 * [queue delay in dynamic batching](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#delayed-batching)
 * [Rate Limiter Priority options](https://github.com/triton-inference-server/server/blob/main/docs/rate_limiter.md#rate-limiter) (eg. a model instance with priority 2 will be given half the number of scheduling changes)
-* batch size of requests sent by the perf analyzer client
+* [batch size of requests sent by the perf analyzer client](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#input-data)
 
 ## Documentation
 
