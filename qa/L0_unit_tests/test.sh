@@ -40,6 +40,7 @@ else
 fi
 
 # Generate html files
+echo `pwd`
 coverage html
 
 exit $RET
