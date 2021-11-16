@@ -41,10 +41,10 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         self.less_is_better_types = {
             record_types[k] for k in [
                 'perf_latency_avg', 'perf_latency_p90', 'perf_latency_p95',
-                'perf_latency_p99', 'gpu_used_memory', 'cpu_used_ram', 
-                'perf_server_compute_infer', 'perf_latency', 
-                'perf_server_queue', 'perf_client_response_wait', 
-                'perf_server_compute_output', 'perf_client_send_recv', 
+                'perf_latency_p99', 'gpu_used_memory', 'cpu_used_ram',
+                'perf_server_compute_infer', 'perf_latency',
+                'perf_server_queue', 'perf_client_response_wait',
+                'perf_server_compute_output', 'perf_client_send_recv',
                 'perf_server_compute_input'
             ]
         }
@@ -62,7 +62,8 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         total_count = len(self.all_record_types)
         less_is_better_count = len(self.less_is_better_types)
         more_is_better_count = len(self.more_is_better_types)
-        self.assertEqual(total_count, less_is_better_count + more_is_better_count)
+        self.assertEqual(total_count,
+                         less_is_better_count + more_is_better_count)
 
     def test_add(self):
         """
