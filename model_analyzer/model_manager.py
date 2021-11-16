@@ -165,8 +165,13 @@ class ModelManager:
         while not self._state_manager.exiting():
 
             # Get next model sweep
+            if len(self._run_config_generator._model_configs):
+              profiled_model_max_batch_size = self._run_config_generator._model_configs[0]['max_batch_size']
+            else:
+              profiled_model_max_batch_size = self._run_search._max_preferred_batch_size;
+              
             next_model, auto_model_config_sweep = self._run_search.get_next_model_sweep(
-                next_model)
+                next_model, profiled_model_max_batch_size)
 
             # End search when get_model sweep returns empty
             if not auto_model_config_sweep:

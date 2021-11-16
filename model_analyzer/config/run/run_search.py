@@ -152,7 +152,7 @@ class RunSearch:
             logger.info('Will sweep only through the concurrency values...')
             self._sweep_mode_function = self._sweep_concurrency_only
 
-    def get_next_model_sweep(self, config_model):
+    def get_next_model_sweep(self, config_model, profiled_model_max_batch_size):
         """
         Get the next iteration of the sweep
 
@@ -177,7 +177,7 @@ class RunSearch:
             copy.deepcopy(config_model.perf_analyzer_flags()))
 
         if self._sweep_mode_function:
-            new_model, model_sweep = self._sweep_mode_function(new_model)
+            new_model, model_sweep = self._sweep_mode_function(new_model, profiled_model_max_batch_size)
 
             # Only log message if there is new runs.
             if model_sweep:
@@ -245,7 +245,7 @@ class RunSearch:
                 cpu_only=model.cpu_only()) if sweep_model_configs else None
         ]
 
-    def _sweep_model_config_only(self, model):
+    def _sweep_model_config_only(self, model, profiled_model_max_batch_size):
         """
         Gets next iteration model config
         parameters sweep
@@ -267,8 +267,11 @@ class RunSearch:
                 'dynamic_batching'] is not None
 
             if dynamic_batching_enabled:
-                batch_size_limit_reached = self._model_config_parameters[
-                    'dynamic_batching'] > self._max_preferred_batch_size
+                batch_size_limit_reached = (
+                    self._model_config_parameters['dynamic_batching'] >
+                    self._max_preferred_batch_size) or (
+                        self._model_config_parameters['dynamic_batching'] > profiled_model_max_batch_size)
+
                 if batch_size_limit_reached:
                     return model, []
         return model, [self._create_model_config(cpu_only=model.cpu_only())]
