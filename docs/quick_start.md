@@ -33,7 +33,7 @@ $ docker build --pull -t model-analyzer .
 ```
 $ docker run -it --rm --gpus all \
     -v /var/run/docker.sock:/var/run/docker.sock \
-    -v $HOME/model_analyzer/examples/quick-start:/quick_start_repository \
+    -v $(pwd)/examples/quick-start:/quick_start_repository \
     --net=host --name model-analyzer \
     model-analyzer /bin/bash
 ```
