@@ -238,3 +238,15 @@ class ConfigValue(abc.ABC):
         """
 
         self._name = name
+
+    def set_validator(self, validator):
+        """
+        Set the validator for this field.
+
+        Parameters
+        ----------
+        validator : callable
+            New validator to be set for this field.
+        """
+
+        self._validator = validator
