@@ -245,7 +245,7 @@ class ConfigValue(abc.ABC):
 
         Parameters
         ----------
-        validator : callable
+        validator : callable or None
             New validator to be set for this field.
         """
 
