@@ -160,6 +160,8 @@ class RunSearch:
         ----------
         config_model : ConfigModelProfileSpec
             The config model object of the model to sweep through
+        profiled_model_max_batch_size: FIXME - I don't know what goes here!
+            The profiled model's maximum batch size
 
         Returns
         -------
@@ -186,7 +188,7 @@ class RunSearch:
             return new_model, model_sweep
         return new_model, []
 
-    def _sweep_concurrency_and_model_config(self, model):
+    def _sweep_concurrency_and_model_config(self, model, profiled_model_max_batch_size):
         """
         Gets next iteration of both the concurrency and model config
         parameters
@@ -195,18 +197,27 @@ class RunSearch:
         ----------
         model : ConfigModelProfileSpec
             The model whose parameters are being swept over
+        profiled_model_max_batch_size: FIXME - I don't know what goes here!
+            The profiled model's maximum batch size
         """
 
-        return self._sweep_parameters(model, sweep_model_configs=True)
+        return self._sweep_parameters(model, profiled_model_max_batch_size, sweep_model_configs=True)
 
-    def _sweep_concurrency_only(self, model):
+    def _sweep_concurrency_only(self, model, profiled_model_max_batch_size):
         """
         Gets next iteration of the concurrency sweep
+        
+        Parameters
+        ----------
+        model : ConfigModelProfileSpec
+            The model whose parameters are being swept over
+        profiled_model_max_batch_size: FIXME - I don't know what goes here!
+            The profiled model's maximum batch size
         """
 
-        return self._sweep_parameters(model, sweep_model_configs=False)
+        return self._sweep_parameters(model, profiled_model_max_batch_size, sweep_model_configs=False)
 
-    def _sweep_parameters(self, model, sweep_model_configs):
+    def _sweep_parameters(self, model,  profiled_model_max_batch_size, sweep_model_configs):
         """
         A helper function that sweeps over concurrency
         and if required, over model configs as well
@@ -234,7 +245,7 @@ class RunSearch:
                     self._measurements = []
                     model.parameters()['concurrency'] = [1]
 
-                    return self._sweep_model_config_only(model)
+                    return self._sweep_model_config_only(model, profiled_model_max_batch_size)
                 else:
                     return model, []
 
