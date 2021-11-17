@@ -166,7 +166,10 @@ class ModelManager:
 
             # Get next model sweep
             if len(self._run_config_generator._model_configs):
-              profiled_model_max_batch_size = self._run_config_generator._model_configs[0]['max_batch_size']
+              if 'max_batch_size' in self._run_config_generator._model_configs[0]:
+                profiled_model_max_batch_size = self._run_config_generator._model_configs[0]['max_batch_size']
+              else:
+                profiled_model_max_batch_size = self._run_search._max_preferred_batch_size;6
             else:
               profiled_model_max_batch_size = self._run_search._max_preferred_batch_size;
               
