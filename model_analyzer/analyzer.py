@@ -119,9 +119,17 @@ class Analyzer:
         profiled_model_list = list(
             self._state_manager.get_state_variable(
                 'ResultManager.results').keys())
+
+        num_profiled_configs = sum([
+            len(x) for x in self._state_manager.get_state_variable(
+                'ResultManager.results').values()
+        ])
         logger.info(
-            f"Finished profiling. Obtained measurements for models: {profiled_model_list}."
-        )
+            f"Profile complete. Profiled {num_profiled_configs} configurations "
+            f"for models: {profiled_model_list}. To analyze the profile "
+            f"results and find the best configurations, please run "
+            f"`model-analyzer analyze --analysis-models "
+            f"{','.join(profiled_model_list)}`.")
 
     def analyze(self, mode, quiet):
         """
@@ -164,6 +172,16 @@ class Analyzer:
         self._result_manager.export_results()
         if not quiet:
             self._result_manager.write_results()
+
+        top_3_model_config_names = [
+            x.model_config().get_config()['name']
+            for x in self._result_manager.top_n_results(n=3)
+        ]
+        logger.info(f"Run `model-analyzer report --report-model-configs "
+                    f"{','.join(top_3_model_config_names)} -e "
+                    f"{self._config.export_path}` to generate detailed reports "
+                    f"for the {len(top_3_model_config_names)} best "
+                    f"configurations.")
 
     def report(self, mode):
         """
