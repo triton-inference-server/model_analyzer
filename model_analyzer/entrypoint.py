@@ -25,7 +25,7 @@ from .config.input.config_command_profile import ConfigCommandProfile
 from .config.input.config_command_analyze import ConfigCommandAnalyze
 from .config.input.config_command_report import ConfigCommandReport
 from model_analyzer.config.input.config_utils  import binary_path_validator
-
+from model_analyzer.constants import CONFIG_PARSER_FAILURE
 import sys
 import os
 import logging
@@ -94,10 +94,10 @@ def get_server_handle(config, gpus):
             ' the remote Triton Server.')
     elif config.triton_launch_mode == 'local':
         path = config.get_config()['triton_server_path'].value()
-        if not shutil.which(path):
-            raise TritonModelAnalyzerException(
-                f"Either the binary '{path}' is not on the PATH, or Model Analyzer does "
-                "not have permissions to execute os.stat on this path.")
+        config_status = binary_path_validator(path)
+        if config_status.status() == CONFIG_PARSER_FAILURE:
+            raise TritonModelAnalyzerException(config_status.message())
+
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
         triton_config['model-repository'] = config.output_model_repository_path
