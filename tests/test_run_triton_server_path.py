@@ -27,6 +27,8 @@ from model_analyzer.model_analyzer_exceptions \
 
 class TestRemoteTritonServerPath(trc.TestResultCollector):
 
+    _bogus_path = '/path/to/nowhere'
+
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
@@ -48,10 +50,10 @@ class TestRemoteTritonServerPath(trc.TestResultCollector):
         self.mock_client.start()
         self.client = TritonGRPCClient('localhost:8000')
 
-    def test_remote(self):
+    def test_remote_launch_mode(self):
         args = [
             'model-analyzer', 'profile', 
-            '--triton-server-path', '/path/to/nowhere',
+            '--triton-server-path', self._bogus_path,
             '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', 
             '--triton-launch-mode', 'remote', 
@@ -65,10 +67,10 @@ class TestRemoteTritonServerPath(trc.TestResultCollector):
 
         self._evaluate_config(args, yaml_content)
 
-    def test_local(self):
+    def test_local_launch_mode(self):
         args = [
             'model-analyzer', 'profile', 
-            '--triton-server-path', '/path/to/nowhere',
+            '--triton-server-path', self._bogus_path,
             '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', 
             '--triton-launch-mode', 'local', 
@@ -83,14 +85,17 @@ class TestRemoteTritonServerPath(trc.TestResultCollector):
         try:
             config = self._evaluate_config(args, yaml_content)
             assert False, "local launch mode needs to have validated triton-server-path"
-        except TritonModelAnalyzerException:
-            pass
+        except TritonModelAnalyzerException as e:
+            if self._bogus_path in str(e):
+                pass
+            else:
+                assert False, "expecting " + self._bogus_path + " in exception"
 
 
-    def test_docker(self):
+    def test_docker_launch_mode(self):
         args = [
             'model-analyzer', 'profile', 
-            '--triton-server-path', '/path/to/nowhere',
+            '--triton-server-path', self._bogus_path,
             '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', 
             '--triton-launch-mode', 'docker', 
@@ -105,14 +110,17 @@ class TestRemoteTritonServerPath(trc.TestResultCollector):
         try:
             config = self._evaluate_config(args, yaml_content)
             assert False, "docker launch mode needs to have validated triton-server-path"
-        except TritonModelAnalyzerException:
-            pass
+        except TritonModelAnalyzerException as e:
+            if self._bogus_path in str(e):
+                pass
+            else:
+                assert False, "expecting " + self._bogus_path + " in exception"
 
 
-    def test_c_api(self):
+    def test_c_api_launch_mode(self):
         args = [
             'model-analyzer', 'profile', 
-            '--triton-server-path', '/path/to/nowhere',
+            '--triton-server-path', self._bogus_path,
             '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', 
             '--triton-launch-mode', 'c_api', 
@@ -127,8 +135,11 @@ class TestRemoteTritonServerPath(trc.TestResultCollector):
         try:
             config = self._evaluate_config(args, yaml_content)
             assert False, "c_api launch mode needs to have validated triton-server-path"
-        except TritonModelAnalyzerException:
-            pass
+        except TritonModelAnalyzerException as e:
+            if self._bogus_path in str(e):
+                pass
+            else:
+                assert False, "expecting " + self._bogus_path + " in exception"
 
 
     def tearDown(self):
