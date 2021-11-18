@@ -52,9 +52,7 @@ For
 Model Analyzer tries values from 1 to 5. This value can be changed using the
 `run_config_search_max_instance_count` key in the Model Analyzer Config. For
 [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)
-settings, Model Analyzer tries enabling/disabling dynamic batching plus values
-from 1 to 16 for the `preferred_batch_size`. This value can be changed using the
-`run_config_search_max_preferred_batch_size` key in the Model Analyzer Config.
+settings, Model Analyzer tries enabling/disabling dynamic batching.
 
 An example config that limits the search space used by Model Analyzer is
 described below:
@@ -64,7 +62,6 @@ model_repository: /path/to/model/repository/
 
 run_config_search_max_instance_count: 3
 run_config_search_max_concurrency: 8
-run_config_search_max_preferred_batch_size: 4
 profile_models:
   - model_1
   - model_2
@@ -72,8 +69,6 @@ profile_models:
 
 If either `concurrency` or `model_config_parameters` is specified for one of the
 models, it will disable the automatic config search for the parameter provided.
-Additionally, the `run_config_search_preferred_batch_size_disable` flag can be
-set in order to disable automatic config search over the `preferred_batch_size`.
 
 For example, the config specified below will only automatically sweep through
 the `model_config_parameters` that was described above:
@@ -135,7 +130,6 @@ profile_models:
     model_config_parameters:
         max_batch_size: [6, 8]
         dynamic_batching:
-            preferred_batch_size: [[1], [2], [3]]
             max_queue_delay_microseconds: [200, 300]
         instance_group:
         -
@@ -152,15 +146,5 @@ works with your model. For example, in the above config, if we change `[6, 8]`
 as the range for the `max_batch_size` to `[1]`, it will no longer be a valid
 Triton Model Configuration.
 
-The configuration sweep described above, will sweep through 24 configs = (2
-`max_batch_size`) * (3 `preferred_batch_size`) * (2
-`max_queue_delay_microseconds`) * (2 `instance_group`) values.
-
-Also note that we have to use a list of lists for the `preferred_batch_size`
-value in order to sweep through different values. The reason is that
-`preferred_batch_size` accepts a list of values by default. Using
-`preferred_batch_size: [1, 2, 3]` in the Model Analyzer Config, will lead to a
-single value for `preferred_batch_size`. Check out [Triton Dynamic Batching's
-Preferred Batch
-Sizes](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#preferred-batch-sizes)
-for more info.
+The configuration sweep described above, will sweep through 8 configs = (2
+`max_batch_size`) * (2 `max_queue_delay_microseconds`) * (2 `instance_group`) values.

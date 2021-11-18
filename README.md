@@ -36,7 +36,6 @@ Triton Inference Server.
 * GPU memory
 
 #### Model Analyzer can automatically sweep the following variables and provide results across the resulting range:
-* [preferred batch size in triton server dynamic batching](https://github.com/triton-inference-server/server/blob/main/docs/optimization.md#dynamic-batcher)
 * [number of concurrent model instance loaded in triton](https://github.com/triton-inference-server/server/blob/main/docs/architecture.md#concurrent-model-execution)
 * [number of concurrent requests sent by the perf analyzer client](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#request-concurrency)
 

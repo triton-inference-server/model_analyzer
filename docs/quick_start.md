@@ -59,13 +59,11 @@ configuration:
 ```
 --run-config-search-max-concurrency 2 \
 --run-config-search-max-instance-count 2 \
---run-config-search-preferred-batch-size-disable true
 ```
 
 `--run-config-search-max-concurrency` sets the max concurrency value that run
 config search should not go beyond. `--run-config-search-max-instance-count`
-sets the max instance count value that run config search should not go beyond. `--run-config-search-preferred-batch-size-disable` disables the preferred batch
-size search. With these options, model analyzer will test four configs. This
+sets the max instance count value that run config search should not go beyond. With these options, model analyzer will test four configs. This
 significantly reduces the search space, and therefore, model analyzer's runtime.
 
 Here is some sample output:

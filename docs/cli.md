@@ -138,16 +138,12 @@ profile_models:
         -
           kind: KIND_GPU
           count: [1,2]
-      dynamic_batching:
-        preferred_batch_size: [[32]]
   classification_chestxray_v1:
     model_config_parameters:
       instance_group:
         -
           kind: KIND_GPU
           count: [1,2]
-      dynamic_batching:
-        preferred_batch_size: [[32]]
 
 ```
 
