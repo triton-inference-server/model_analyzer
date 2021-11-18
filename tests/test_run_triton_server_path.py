@@ -20,10 +20,6 @@ from model_analyzer.config.input.config_command_profile \
     import ConfigCommandProfile
 from model_analyzer.cli.cli import CLI
 from model_analyzer.triton.client.grpc_client import TritonGRPCClient
-from model_analyzer.config.run.run_config_generator \
-    import RunConfigGenerator
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
 from model_analyzer.config.input.config_utils  import binary_path_validator
 
 class TestRemoteTritonServerPath(trc.TestResultCollector):
