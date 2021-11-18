@@ -24,10 +24,12 @@ from model_analyzer.config.run.run_config_generator \
     import RunConfigGenerator
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
+from model_analyzer.config.input.config_utils  import binary_path_validator
 
 class TestRemoteTritonServerPath(trc.TestResultCollector):
 
     _bogus_path = '/path/to/nowhere'
+    _good_path = 'model-analyzer'
 
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
@@ -67,7 +69,7 @@ class TestRemoteTritonServerPath(trc.TestResultCollector):
 
         self._evaluate_config(args, yaml_content)
 
-    def test_local_launch_mode(self):
+    def test_bogus_local_launch_mode(self):
         args = [
             'model-analyzer', 'profile', 
             '--triton-server-path', self._bogus_path,
@@ -83,13 +85,41 @@ class TestRemoteTritonServerPath(trc.TestResultCollector):
             """
 
         try:
+            # Opt-in validator
             config = self._evaluate_config(args, yaml_content)
+            tsp = config.get_config()['triton_server_path']
+            path = tsp.value()
+            tsp.set_validator(binary_path_validator)
+            tsp.set_value(path)        
             assert False, "local launch mode needs to have validated triton-server-path"
         except TritonModelAnalyzerException as e:
             if self._bogus_path in str(e):
                 pass
             else:
                 assert False, "expecting " + self._bogus_path + " in exception"
+
+
+    def test_good_local_launch_mode(self):
+        args = [
+            'model-analyzer', 'profile', 
+            '--triton-server-path', self._good_path,
+            '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', 
+            '--triton-launch-mode', 'local', 
+        ]
+        yaml_content = """
+            concurrency: [1, 2, 3]
+            batch_sizes: [2, 3, 4]
+            profile_models:
+            - vgg_16_graphdef
+            """
+
+        # Opt-in validator
+        config = self._evaluate_config(args, yaml_content)
+        tsp = config.get_config()['triton_server_path']
+        path = tsp.value()
+        tsp.set_validator(binary_path_validator)
+        tsp.set_value(path)        
 
 
     def test_docker_launch_mode(self):
@@ -107,14 +137,7 @@ class TestRemoteTritonServerPath(trc.TestResultCollector):
             - vgg_16_graphdef
             """
 
-        try:
-            config = self._evaluate_config(args, yaml_content)
-            assert False, "docker launch mode needs to have validated triton-server-path"
-        except TritonModelAnalyzerException as e:
-            if self._bogus_path in str(e):
-                pass
-            else:
-                assert False, "expecting " + self._bogus_path + " in exception"
+        self._evaluate_config(args, yaml_content)
 
 
     def test_c_api_launch_mode(self):
@@ -132,14 +155,7 @@ class TestRemoteTritonServerPath(trc.TestResultCollector):
             - vgg_16_graphdef
             """
 
-        try:
-            config = self._evaluate_config(args, yaml_content)
-            assert False, "c_api launch mode needs to have validated triton-server-path"
-        except TritonModelAnalyzerException as e:
-            if self._bogus_path in str(e):
-                pass
-            else:
-                assert False, "expecting " + self._bogus_path + " in exception"
+        self._evaluate_config(args, yaml_content)
 
 
     def tearDown(self):

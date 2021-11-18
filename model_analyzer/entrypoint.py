@@ -24,6 +24,7 @@ from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
 from .config.input.config_command_analyze import ConfigCommandAnalyze
 from .config.input.config_command_report import ConfigCommandReport
+from model_analyzer.config.input.config_utils  import binary_path_validator
 
 import sys
 import os
@@ -92,6 +93,12 @@ def get_server_handle(config, gpus):
             ' Model Analyzer does not have access to the model repository of'
             ' the remote Triton Server.')
     elif config.triton_launch_mode == 'local':
+        # Opt-in validator
+        tsp = config.get_config()['triton_server_path']
+        path = tsp.value()
+        tsp.set_validator(binary_path_validator)
+        tsp.set_value(path)        
+
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
         triton_config['model-repository'] = config.output_model_repository_path

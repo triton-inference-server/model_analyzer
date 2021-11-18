@@ -96,11 +96,6 @@ class ConfigCommand:
         else:
             yaml_config = None
 
-        # Remove 'triton_server_path' validator when in 'remote' mode
-        if hasattr(args, 'triton_launch_mode') and args.triton_launch_mode == 'remote':
-            tsp = self.get_config()['triton_server_path']
-            tsp.set_validator(None)
-
         for key, value in self._fields.items():
             self._fields[key].set_name(key)
             if key in args:

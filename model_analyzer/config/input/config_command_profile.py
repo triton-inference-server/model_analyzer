@@ -546,8 +546,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 'triton_server_path',
-                field_type=ConfigPrimitive(str,
-                                           validator=binary_path_validator),
+                field_type=ConfigPrimitive(str),
                 flags=['--triton-server-path'],
                 default_value=DEFAULT_TRITON_SERVER_PATH,
                 description='The full path to the tritonserver binary executable'
