@@ -200,10 +200,3 @@ class ConfigField:
 
     def set_name(self, name):
         self._field_type.set_name(name)
-
-    def set_validator(self, validator):
-        """
-        Set the validator for the config field.
-        """
-
-        self._field_type.set_validator(validator)

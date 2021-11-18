@@ -93,12 +93,11 @@ def get_server_handle(config, gpus):
             ' Model Analyzer does not have access to the model repository of'
             ' the remote Triton Server.')
     elif config.triton_launch_mode == 'local':
-        # Opt-in validator
-        tsp = config.get_config()['triton_server_path']
-        path = tsp.value()
-        tsp.set_validator(binary_path_validator)
-        tsp.set_value(path)        
-
+        path = config.get_config()['triton_server_path'].value()
+        if not shutil.which(path):
+            raise TritonModelAnalyzerException(
+                f"Either the binary '{path}' is not on the PATH, or Model Analyzer does "
+                "not have permissions to execute os.stat on this path.")
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
         triton_config['model-repository'] = config.output_model_repository_path
