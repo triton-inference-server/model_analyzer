@@ -25,7 +25,6 @@ from model_analyzer.config.input.config_utils  import binary_path_validator
 class TestRemoteTritonServerPath(trc.TestResultCollector):
 
     _bogus_path = '/path/to/nowhere'
-    _good_path = 'model-analyzer'
 
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
