@@ -37,8 +37,8 @@ rm -rf $OUTPUT_MODEL_REPOSITORY
 
 python3 test_config_generator.py --model-names resnet_v1_50_cpu_graphdef
 
-# Compute expected columns (2 instance count * conccurrency * 7 dynamic batch size)
-let "TEST_OUTPUT_NUM_ROWS = 42"
+# Compute expected columns (instance count * conccurrency)
+let "TEST_OUTPUT_NUM_ROWS = 6"
 
 RET=0
 
