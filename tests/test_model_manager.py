@@ -50,7 +50,9 @@ class MockRunConfigs():
         """ 
         Add a single config from a dict
         """
-        list_of_tuples = [(y, config[y]) for y in sorted(config.keys()) if config[y] != None]
+        list_of_tuples = [
+            (y, config[y]) for y in sorted(config.keys()) if config[y] != None
+        ]
         out_tuple = tuple(item for x in list_of_tuples for item in x)
         self._configs.append(out_tuple)
 
@@ -91,9 +93,12 @@ class ModelManagerSubclass(ModelManager):
                 instances = model_config["instanceGroup"][0]["count"]
 
             dynamic_batching = None
+            max_queue_delay = None
             if model_config.get("dynamicBatching") is not None:
                 dynamic_batching = model_config["dynamicBatching"].get(
                     "preferredBatchSize", [0])[0]
+                max_queue_delay = model_config["dynamicBatching"].get(
+                    "maxQueueDelayMicroseconds")
 
             batch_size = perf_config.__getitem__("batch-size")
             concurrency = perf_config.__getitem__("concurrency-range")
@@ -103,7 +108,8 @@ class ModelManagerSubclass(ModelManager):
                 'batching': dynamic_batching,
                 'concurrency': concurrency,
                 'instances': instances,
-                'max_batch_size': max_batch_size
+                'max_batch_size': max_batch_size,
+                'max_queue_delay': max_queue_delay
             })
 
     def get_run_configs(self):
@@ -118,12 +124,12 @@ class TestModelManager(trc.TestResultCollector):
         """
         Test a normal full sweep of options
         """
-        expected_ranges = {
+        expected_ranges = [{
             'instances': [1, 2, 3, 4, 5],
             'batching': [None, 0, 1, 2, 4, 8, 16],
             'batch_sizes': [1],
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
-        }
+        }]
 
         yaml_content = """
             profile_models: test_model
@@ -141,12 +147,12 @@ class TestModelManager(trc.TestResultCollector):
         Test another full sweep of options
         """
 
-        expected_ranges = {
+        expected_ranges = [{
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1],
             'concurrency': [1, 2, 4, 8, 16, 32]
-        }
+        }]
 
         yaml_content = """
             profile_models: test_model
@@ -164,12 +170,12 @@ class TestModelManager(trc.TestResultCollector):
         Test with search_preferred_batch_size_disable=True
         """
 
-        expected_ranges = {
+        expected_ranges = [{
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None],
             'batch_sizes': [1],
             'concurrency': [1, 2, 4, 8, 16, 32]
-        }
+        }]
 
         yaml_content = """
             profile_models: test_model
@@ -189,12 +195,12 @@ class TestModelManager(trc.TestResultCollector):
         Expect 1 result because no manual search options provided and automatic search disabled/ignored
         """
 
-        expected_ranges = {
+        expected_ranges = [{
             'instances': [None],
             'batching': [None],
             'batch_sizes': [1],
             'concurrency': [1]
-        }
+        }]
 
         yaml_content = """
             profile_models: test_model
@@ -212,12 +218,12 @@ class TestModelManager(trc.TestResultCollector):
         Test with manually specified concurrencies
         """
 
-        expected_ranges = {
+        expected_ranges = [{
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1],
             'concurrency': [5, 7]
-        }
+        }]
 
         yaml_content = """
             profile_models: test_model
@@ -238,12 +244,12 @@ class TestModelManager(trc.TestResultCollector):
         In remote mode all model_config_parameters (preferred_batch_size, instance count) are ignored
         """
 
-        expected_ranges = {
+        expected_ranges = [{
             'instances': [None],
             'batching': [None],
             'batch_sizes': [1],
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
-        }
+        }]
 
         yaml_content = """
             profile_models: test_model
@@ -262,12 +268,12 @@ class TestModelManager(trc.TestResultCollector):
         Test with manually specified concurrencies and batch sizes
         """
 
-        expected_ranges = {
+        expected_ranges = [{
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1, 2, 3],
             'concurrency': [2, 10, 18, 26, 34, 42, 50, 58]
-        }
+        }]
 
         yaml_content = """
             profile_models: test_model
@@ -293,13 +299,14 @@ class TestModelManager(trc.TestResultCollector):
         config parameters are specified.
         """
 
-        expected_ranges = {
-            'instances': [1, 2],
-            'batching': [None],
+        expected_ranges = [{
+            'instances': [None],
+            'batching': [1, 2, 3],
+            'max_queue_delay': ['200', '300'],
             'batch_sizes': [1],
             'max_batch_size': [1, 2, 4, 8, 16],
             'concurrency': [1, 2, 4, 8]
-        }
+        }]
 
         yaml_content = """
             run_config_search_max_concurrency: 8
@@ -311,10 +318,45 @@ class TestModelManager(trc.TestResultCollector):
                 test_model:
                     model_config_parameters:
                         max_batch_size: [1,2,4,8,16]
-                        instance_group:
-                        -
-                            kind: KIND_CPU
-                            count: [1, 2]                        
+                        dynamic_batching:
+                            preferred_batch_size: [[1], [2], [3]]
+                            max_queue_delay_microseconds: [200, 300]                        
+            """
+
+        self._test_model_manager(yaml_content, expected_ranges)
+
+    def test_default_config_always_run(self):
+        """
+        Test that the default config is run even when not specified
+        """
+
+        expected_ranges = [{
+            'instances': [None],
+            'batching': [1, 2, 3],
+            'max_queue_delay': ['200', '300'],
+            'batch_sizes': [1],
+            'max_batch_size': [1, 2, 4, 8, 16],
+            'concurrency': [1, 2, 4, 8]
+        }, {
+            'instances': [None],
+            'batching': [None],
+            'batch_sizes': [1],
+            'concurrency': [1, 2, 4, 8]
+        }]
+
+        yaml_content = """
+            run_config_search_max_concurrency: 8
+            run_config_search_max_preferred_batch_size: 16
+            run_config_search_max_instance_count: 16
+            run_config_search_preferred_batch_size_disable : False
+            run_config_search_disable: False
+            profile_models:
+                test_model:
+                    model_config_parameters:
+                        max_batch_size: [1,2,4,8,16]
+                        dynamic_batching:
+                            preferred_batch_size: [[1], [2], [3]]
+                            max_queue_delay_microseconds: [200, 300]                        
             """
 
         self._test_model_manager(yaml_content, expected_ranges)
@@ -348,8 +390,8 @@ class TestModelManager(trc.TestResultCollector):
         run_configs = model_manager.get_run_configs()
         expected_configs = self._convert_ranges_to_run_configs(expected_ranges)
 
-        self.assertEqual(run_configs.get_configs(), expected_configs.get_configs())
-
+        self.assertEqual(run_configs.get_configs(),
+                         expected_configs.get_configs())
 
     def _evaluate_config(self, args, yaml_content):
         """ Parse the given yaml_content into a config and return it """
@@ -374,13 +416,14 @@ class TestModelManager(trc.TestResultCollector):
         """
         run_configs = MockRunConfigs()
 
-        ranges_keys = list(sorted(ranges.keys()))
-        value_lists = []
-        for key in ranges_keys:
-            value_lists.append(ranges[key])
-        configs = list(itertools.product(*value_lists))
+        for ranges_dict in ranges:
+            ranges_keys = list(sorted(ranges_dict.keys()))
+            value_lists = []
+            for key in ranges_keys:
+                value_lists.append(ranges_dict[key])
+            configs = list(itertools.product(*value_lists))
+            run_configs.populate_from_keys_and_configs(ranges_keys, configs)
 
-        run_configs.populate_from_keys_and_configs(ranges_keys, configs)
         return run_configs
 
     def setUp(self):
