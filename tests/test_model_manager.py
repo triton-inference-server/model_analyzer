@@ -42,33 +42,32 @@ class MockRunConfigs():
 
     def __init__(self):
         self._configs = []
-        self._keys = []
+
+    def get_configs(self):
+        return set(self._configs)
 
     def add_config(self, config):
-        if self._keys:
-            if self._keys != sorted(config.keys()):
-                raise TritonModelAnalyzerException("Keys mismatch")
-        else:
-            self._keys = sorted(config.keys())
-
-        self._configs.append(tuple(config[y] for y in self._keys))
-
-    def set_keys_and_configs(self, keys, configs):
+        """ 
+        Add a single config from a dict
         """
-        Manually set keys and configs
-        """
-        self._keys = sorted(keys)
-        self._configs = configs
+        list_of_tuples = [(y, config[y]) for y in sorted(config.keys()) if config[y] != None]
+        out_tuple = tuple(item for x in list_of_tuples for item in x)
+        self._configs.append(out_tuple)
 
-    def __eq__(self, other):
-        return self._keys == other._keys and set(self._configs) == set(
-            other._configs)
+    def populate_from_keys_and_configs(self, keys, config_values):
+        """
+        Populate a full set of configs from input list of config_values 
+        and the associated list of keys
+        """
+        for value in config_values:
+            config_dict = {keys[i]: value[i] for i in range(len(keys))}
+            self.add_config(config_dict)
 
 
 class ModelManagerSubclass(ModelManager):
     """ 
-    Overrides execute_run_configs() to gather a list of tuples that contain 
-    the main values of each 'executed' run_config
+    Overrides execute_run_configs() to gather a list of MockRunConfigs that
+    contain the configured values of each 'executed' run_config
     """
 
     def __init__(self, config, client, server, metrics_manager, result_manager,
@@ -123,7 +122,6 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5],
             'batching': [None, 0, 1, 2, 4, 8, 16],
             'batch_sizes': [1],
-            'max_batch_size': [None],
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
         }
 
@@ -147,7 +145,6 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1],
-            'max_batch_size': [None],
             'concurrency': [1, 2, 4, 8, 16, 32]
         }
 
@@ -171,7 +168,6 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None],
             'batch_sizes': [1],
-            'max_batch_size': [None],
             'concurrency': [1, 2, 4, 8, 16, 32]
         }
 
@@ -197,7 +193,6 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [None],
             'batching': [None],
             'batch_sizes': [1],
-            'max_batch_size': [None],
             'concurrency': [1]
         }
 
@@ -221,7 +216,6 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1],
-            'max_batch_size': [None],
             'concurrency': [5, 7]
         }
 
@@ -248,7 +242,6 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [None],
             'batching': [None],
             'batch_sizes': [1],
-            'max_batch_size': [None],
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
         }
 
@@ -273,7 +266,6 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1, 2, 3],
-            'max_batch_size': [None],
             'concurrency': [2, 10, 18, 26, 34, 42, 50, 58]
         }
 
@@ -295,15 +287,16 @@ class TestModelManager(trc.TestResultCollector):
 
     def test_triton_parameters(self):
         """
-        Test with manually specified triton options. In this case we don't 
-        automatically search since model config parameters are specified.
+        Test with manually specified triton options. 
+        
+        In this case we don't automatically search since model 
+        config parameters are specified.
         """
 
         expected_ranges = {
             'instances': [1, 2],
             'batching': [None],
             'batch_sizes': [1],
-            'max_batch_size': [None],
             'max_batch_size': [1, 2, 4, 8, 16],
             'concurrency': [1, 2, 4, 8]
         }
@@ -329,8 +322,8 @@ class TestModelManager(trc.TestResultCollector):
     def _test_model_manager(self, yaml_content, expected_ranges):
         """ 
         Test helper function that passes the given yaml_content into
-        model_manager and asserts that the number of run_configs generated
-        is equal to the passed in expected_count 
+        model_manager, runs the model, and confirms the result is as expected
+        based on a full cartesian product of the lists in the input dict expected_ranges
         """
 
         args = [
@@ -349,13 +342,14 @@ class TestModelManager(trc.TestResultCollector):
         self._check_results(model_manager, expected_ranges)
 
     def _check_results(self, model_manager, expected_ranges):
+        """ 
+        Create a set of expected and actual run configs and confirm they are equal
+        """
         run_configs = model_manager.get_run_configs()
         expected_configs = self._convert_ranges_to_run_configs(expected_ranges)
 
-        if (run_configs != expected_configs):
-            print(f"Run configs: {run_configs._configs}")
-            print(f"Expected configs: {expected_configs._configs}")
-        self.assertEqual(run_configs, expected_configs)
+        self.assertEqual(run_configs.get_configs(), expected_configs.get_configs())
+
 
     def _evaluate_config(self, args, yaml_content):
         """ Parse the given yaml_content into a config and return it """
@@ -374,14 +368,19 @@ class TestModelManager(trc.TestResultCollector):
         return config
 
     def _convert_ranges_to_run_configs(self, ranges):
+        """ 
+        Given a dict of key-to-list, create the set of run_configs based on 
+        the full cartesian product of the lists
+        """
         run_configs = MockRunConfigs()
 
+        ranges_keys = list(sorted(ranges.keys()))
         value_lists = []
-        for key in sorted(ranges.keys()):
+        for key in ranges_keys:
             value_lists.append(ranges[key])
-        configs = tuple(itertools.product(*value_lists))
+        configs = list(itertools.product(*value_lists))
 
-        run_configs.set_keys_and_configs(list(ranges.keys()), configs)
+        run_configs.populate_from_keys_and_configs(ranges_keys, configs)
         return run_configs
 
     def setUp(self):
