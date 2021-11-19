@@ -17,6 +17,7 @@ from .analyzer import Analyzer
 from .cli.cli import CLI
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.constants import CONFIG_PARSER_FAILURE
 from .triton.server.server_factory import TritonServerFactory
 from .triton.server.server_config import TritonServerConfig
 from .triton.client.client_factory import TritonClientFactory
@@ -25,7 +26,6 @@ from .config.input.config_command_profile import ConfigCommandProfile
 from .config.input.config_command_analyze import ConfigCommandAnalyze
 from .config.input.config_command_report import ConfigCommandReport
 from model_analyzer.config.input.config_utils  import binary_path_validator
-from model_analyzer.constants import CONFIG_PARSER_FAILURE
 import sys
 import os
 import logging
