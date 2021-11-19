@@ -395,14 +395,18 @@ class TestModelManager(trc.TestResultCollector):
                          expected_configs.get_configs())
 
     def _default_config_in_run_configs(self, run_configs):
-            for config in run_configs.get_configs():
-                config_dict = {config[i]:config[i+1] for i in range (0, len(config), 2)}
+        """ Returns true if a default configuration is within the passed in run_configs. Else returns false """
 
-                # Config is "default" if instances is unspecified or 1, and dynamic_batching is off
-                if config_dict.get("instances") is None or 1 and config_dict.get("dynamic_batching") is None:
-                    return True
-            return False
+        for config in run_configs.get_configs():
+            config_dict = {
+                config[i]: config[i + 1] for i in range(0, len(config), 2)
+            }
 
+            # Config is "default" if instances is unspecified or 1, and dynamic_batching is off
+            if config_dict.get("instances") is None or 1 and config_dict.get(
+                    "dynamic_batching") is None:
+                return True
+        return False
 
     def _evaluate_config(self, args, yaml_content):
         """ Parse the given yaml_content into a config and return it """
