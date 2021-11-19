@@ -119,17 +119,13 @@ class Analyzer:
         profiled_model_list = list(
             self._state_manager.get_state_variable(
                 'ResultManager.results').keys())
+        num_profiled_configs = self._get_num_profiled_configs()
 
-        num_profiled_configs = sum([
-            len(x) for x in self._state_manager.get_state_variable(
-                'ResultManager.results').values()
-        ])
-        logger.info(
-            f"Profile complete. Profiled {num_profiled_configs} configurations "
-            f"for models: {profiled_model_list}. To analyze the profile "
-            f"results and find the best configurations, please run "
-            f"`model-analyzer analyze --analysis-models "
-            f"{','.join(profiled_model_list)}`.")
+        logger.info(f"Profile complete. Profiled {num_profiled_configs} "
+                    f"configurations for models: {profiled_model_list}.")
+        logger.info(f"To analyze the profile results and find the best "
+                    f"configurations, please run `model-analyzer analyze "
+                    f"--analysis-models {','.join(profiled_model_list)}`.")
 
     def analyze(self, mode, quiet):
         """
@@ -173,15 +169,12 @@ class Analyzer:
         if not quiet:
             self._result_manager.write_results()
 
-        top_3_model_config_names = [
-            x.model_config().get_config()['name']
-            for x in self._result_manager.top_n_results(n=3)
-        ]
-        logger.info(f"Run `model-analyzer report --report-model-configs "
+        top_3_model_config_names = self._get_top_3_model_config_names()
+        logger.info(f"To generate detailed reports for the "
+                    f"{len(top_3_model_config_names)} best configurations, run "
+                    f"`model-analyzer report --report-model-configs "
                     f"{','.join(top_3_model_config_names)} -e "
-                    f"{self._config.export_path}` to generate detailed reports "
-                    f"for the {len(top_3_model_config_names)} best "
-                    f"configurations.")
+                    f"{self._config.export_path}`")
 
     def report(self, mode):
         """
@@ -212,3 +205,15 @@ class Analyzer:
 
         self._report_manager.create_detailed_reports()
         self._report_manager.export_detailed_reports()
+
+    def _get_num_profiled_configs(self):
+        return sum([
+            len(x) for x in self._state_manager.get_state_variable(
+                'ResultManager.results').values()
+        ])
+
+    def _get_top_3_model_config_names(self):
+        return [
+            x.model_config().get_config()['name']
+            for x in self._result_manager.top_n_results(n=3)
+        ]
