@@ -83,6 +83,10 @@ class ModelManagerSubclass(ModelManager):
             model_config = config.model_config().to_dict()
             perf_config = config.perf_config()
 
+            max_batch_size = None
+            if model_config.get("maxBatchSize") is not None:
+                max_batch_size = model_config["maxBatchSize"]
+
             instances = None
             if model_config.get("instanceGroup") is not None:
                 instances = model_config["instanceGroup"][0]["count"]
@@ -99,7 +103,8 @@ class ModelManagerSubclass(ModelManager):
                 'batch_sizes': batch_size,
                 'batching': dynamic_batching,
                 'concurrency': concurrency,
-                'instances': instances
+                'instances': instances,
+                'max_batch_size': max_batch_size
             })
 
     def get_run_configs(self):
@@ -118,10 +123,12 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5],
             'batching': [None, 0, 1, 2, 4, 8, 16],
             'batch_sizes': [1],
+            'max_batch_size': [None],
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
         }
 
         yaml_content = """
+            profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_preferred_batch_size: 16
             run_config_search_max_instance_count: 5
@@ -140,10 +147,12 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1],
+            'max_batch_size': [None],
             'concurrency': [1, 2, 4, 8, 16, 32]
         }
 
         yaml_content = """
+            profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_preferred_batch_size: 8
             run_config_search_max_instance_count: 7
@@ -162,10 +171,12 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None],
             'batch_sizes': [1],
+            'max_batch_size': [None],
             'concurrency': [1, 2, 4, 8, 16, 32]
         }
 
         yaml_content = """
+            profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_preferred_batch_size: 8
             run_config_search_max_instance_count: 7
@@ -186,10 +197,12 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [None],
             'batching': [None],
             'batch_sizes': [1],
+            'max_batch_size': [None],
             'concurrency': [1]
         }
 
         yaml_content = """
+            profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_preferred_batch_size: 8
             run_config_search_max_instance_count: 7
@@ -208,10 +221,12 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1],
+            'max_batch_size': [None],
             'concurrency': [5, 7]
         }
 
         yaml_content = """
+            profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_preferred_batch_size: 8
             run_config_search_max_instance_count: 7
@@ -233,10 +248,12 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [None],
             'batching': [None],
             'batch_sizes': [1],
+            'max_batch_size': [None],
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
         }
 
         yaml_content = """
+            profile_models: test_model
             run_config_search_max_concurrency: 512
             run_config_search_max_preferred_batch_size: 8
             run_config_search_max_instance_count: 7
@@ -256,10 +273,12 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1, 2, 3],
+            'max_batch_size': [None],
             'concurrency': [2, 10, 18, 26, 34, 42, 50, 58]
         }
 
         yaml_content = """
+            profile_models: test_model
             run_config_search_max_concurrency: 512
             run_config_search_max_preferred_batch_size: 8
             run_config_search_max_instance_count: 7
@@ -274,6 +293,39 @@ class TestModelManager(trc.TestResultCollector):
 
         self._test_model_manager(yaml_content, expected_ranges)
 
+    def test_triton_parameters(self):
+        """
+        Test with manually specified triton options. In this case we don't 
+        automatically search since model config parameters are specified.
+        """
+
+        expected_ranges = {
+            'instances': [1, 2],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [None],
+            'max_batch_size': [1, 2, 4, 8, 16],
+            'concurrency': [1, 2, 4, 8]
+        }
+
+        yaml_content = """
+            run_config_search_max_concurrency: 8
+            run_config_search_max_preferred_batch_size: 16
+            run_config_search_max_instance_count: 16
+            run_config_search_preferred_batch_size_disable : False
+            run_config_search_disable: False
+            profile_models:
+                test_model:
+                    model_config_parameters:
+                        max_batch_size: [1,2,4,8,16]
+                        instance_group:
+                        -
+                            kind: KIND_CPU
+                            count: [1, 2]                        
+            """
+
+        self._test_model_manager(yaml_content, expected_ranges)
+
     def _test_model_manager(self, yaml_content, expected_ranges):
         """ 
         Test helper function that passes the given yaml_content into
@@ -283,7 +335,7 @@ class TestModelManager(trc.TestResultCollector):
 
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file', '--profile-models', 'vgg11'
+            '-f', 'path-to-config-file'
         ]
 
         config = self._evaluate_config(args, yaml_content)
@@ -300,6 +352,9 @@ class TestModelManager(trc.TestResultCollector):
         run_configs = model_manager.get_run_configs()
         expected_configs = self._convert_ranges_to_run_configs(expected_ranges)
 
+        if (run_configs != expected_configs):
+            print(f"Run configs: {run_configs._configs}")
+            print(f"Expected configs: {expected_configs._configs}")
         self.assertEqual(run_configs, expected_configs)
 
     def _evaluate_config(self, args, yaml_content):
