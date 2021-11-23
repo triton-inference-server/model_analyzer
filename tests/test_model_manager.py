@@ -24,15 +24,12 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.config.run.run_config_generator import RunConfigGenerator
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
 from model_analyzer.model_manager import ModelManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
 import itertools
 import logging
 import sys
-from copy import deepcopy
 
 from unittest.mock import MagicMock
 from unittest.mock import patch
