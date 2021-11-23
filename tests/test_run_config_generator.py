@@ -271,7 +271,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_CPU',
                 'count': 1
             }]
-        }]
+        }, {}]
+
         self.assertEqual(expected_model_configs, model_configs)
 
         yaml_content = """
@@ -328,7 +329,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_GPU',
                 'count': 1
             }]
-        }]
+        }, {}]
         self.assertEqual(expected_model_configs, model_configs)
 
         # list under dynamic batching
@@ -354,7 +355,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                                                   client=self.client)
         model_configs = run_config_generator.generate_model_config_combinations(
             config.profile_models[0].model_config_parameters())
-        self.assertEqual(len(model_configs), 8)
+        self.assertEqual(len(model_configs), 9)
         expected_model_configs = [{
             'dynamic_batching': {
                 'preferred_batch_size': [4, 8],
@@ -427,7 +428,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_CPU',
                 'count': 2
             }]
-        }]
+        }, {}]
         self.assertEqual(expected_model_configs, model_configs)
 
     def test_generate_run_config_for_model_sweep(self):

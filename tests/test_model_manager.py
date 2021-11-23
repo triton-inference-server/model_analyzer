@@ -295,14 +295,12 @@ class TestModelManager(trc.TestResultCollector):
         """
         Test with manually specified triton options. 
         
-        In this case we don't automatically search since model 
-        config parameters are specified.
+        In this case we don't automatically search instances or dynamic_batching
+        since model config parameters are specified.
         """
 
         expected_ranges = [{
             'instances': [None],
-            'batching': [1, 2, 3],
-            'max_queue_delay': ['200', '300'],
             'batch_sizes': [1],
             'max_batch_size': [1, 2, 4, 8, 16],
             'concurrency': [1, 2, 4, 8]
@@ -318,16 +316,14 @@ class TestModelManager(trc.TestResultCollector):
                 test_model:
                     model_config_parameters:
                         max_batch_size: [1,2,4,8,16]
-                        dynamic_batching:
-                            preferred_batch_size: [[1], [2], [3]]
-                            max_queue_delay_microseconds: [200, 300]                        
             """
 
         self._test_model_manager(yaml_content, expected_ranges)
 
-    def test_default_config_always_run(self):
+    def test_default_config_always_run_no_dynamic_batching_off(self):
         """
-        Test that the default config is run even when not specified
+        Test that the default config (dynamic batching off) is run even when 
+        manual search excludes that case
         """
 
         expected_ranges = [{
@@ -357,6 +353,41 @@ class TestModelManager(trc.TestResultCollector):
                         dynamic_batching:
                             preferred_batch_size: [[1], [2], [3]]
                             max_queue_delay_microseconds: [200, 300]                        
+            """
+
+        self._test_model_manager(yaml_content, expected_ranges)
+
+    def test_default_config_always_run_no_single_instance(self):
+        """
+        Test that the default config (1 instance, aka unspecified) is 
+        run even when manual search excludes that case
+        """
+
+        expected_ranges = [{
+            'instances': [2, 3],
+            'batching': [None],
+            'batch_sizes': [1],
+            'concurrency': [1, 2, 4, 8]
+        }, {
+            'instances': [None],
+            'batching': [None],
+            'batch_sizes': [1],
+            'concurrency': [1, 2, 4, 8]
+        }]
+
+        yaml_content = """
+            run_config_search_max_concurrency: 8
+            run_config_search_max_preferred_batch_size: 16
+            run_config_search_max_instance_count: 16
+            run_config_search_preferred_batch_size_disable : False
+            run_config_search_disable: False
+            profile_models:
+                test_model:
+                    model_config_parameters:
+                        instance_group:
+                        -
+                            kind: KIND_GPU
+                            count: [2,3]
             """
 
         self._test_model_manager(yaml_content, expected_ranges)

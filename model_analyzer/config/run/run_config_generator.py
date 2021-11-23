@@ -136,6 +136,42 @@ class RunConfigGenerator:
                               model.triton_server_environment()))
 
     def generate_model_config_combinations(self, value):
+        configs = self._generate_model_config_combinations_helper(value)
+        if not self._default_config_in_configs(configs):
+            self._add_default_config(configs)
+        return configs
+
+    def _default_config_in_configs(self, configs):
+        """ 
+        Returns true if a default configuration exists within the
+        specified list of configs
+        """
+
+        found = False
+        for config in configs:
+            if config is None:
+                found = True
+                break
+
+            default_dynamic_batching_found = config.get(
+                "dynamic_batching") is None
+
+            instances = None
+            instance_group = config.get("instance_group")
+            if instance_group is not None:
+                instances = instance_group[0]["count"]
+            default_instances_found = instances is None or instances == 1
+
+            if default_instances_found and default_dynamic_batching_found:
+                found = True
+                break
+        return found
+
+    def _add_default_config(self, configs):
+        # Add in an empty configuration, which will apply the default values
+        configs.append({})
+
+    def _generate_model_config_combinations_helper(self, value):
         """
         Generates all the alternative config fields for
         a given value.
@@ -163,7 +199,7 @@ class RunConfigGenerator:
                 # here.
                 for sweep_choice in sweep_choices:
                     sweep_parameter_list += \
-                        self.generate_model_config_combinations(
+                        self._generate_model_config_combinations_helper(
                                                     sweep_choice
                                                     )
 
@@ -184,7 +220,7 @@ class RunConfigGenerator:
             sweep_parameter_list = []
             for item in value:
                 sweep_parameter_list_item = \
-                    self.generate_model_config_combinations(
+                    self._generate_model_config_combinations_helper(
                         item)
                 sweep_parameter_list.append(sweep_parameter_list_item)
 
