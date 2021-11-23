@@ -17,6 +17,7 @@ from .analyzer import Analyzer
 from .cli.cli import CLI
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.constants import CONFIG_PARSER_FAILURE
 from .triton.server.server_factory import TritonServerFactory
 from .triton.server.server_config import TritonServerConfig
 from .triton.client.client_factory import TritonClientFactory
@@ -24,7 +25,7 @@ from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
 from .config.input.config_command_analyze import ConfigCommandAnalyze
 from .config.input.config_command_report import ConfigCommandReport
-
+from model_analyzer.config.input.config_utils  import binary_path_validator
 import sys
 import os
 import logging
@@ -92,6 +93,8 @@ def get_server_handle(config, gpus):
             ' Model Analyzer does not have access to the model repository of'
             ' the remote Triton Server.')
     elif config.triton_launch_mode == 'local':
+        validate_triton_server_path(config)
+
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
         triton_config['model-repository'] = config.output_model_repository_path
@@ -147,6 +150,21 @@ def get_server_handle(config, gpus):
             f"Unrecognized triton-launch-mode : {config.triton_launch_mode}")
 
     return server
+
+
+def validate_triton_server_path(config):
+    """
+    Validates that the value of 'triton_server_path' exists on disk
+
+    Parameters
+    ----------
+    config : namespace
+        Arguments parsed from the CLI
+    """
+    path = config.get_config()['triton_server_path'].value()
+    config_status = binary_path_validator(path)
+    if config_status.status() == CONFIG_PARSER_FAILURE:
+        raise TritonModelAnalyzerException(config_status.message())
 
 
 def get_triton_handles(config, gpus):

@@ -67,6 +67,7 @@ class TestConfigGenerator:
     def generate_configs(self):
         for launch_mode in self.launch_modes:
             self.config['triton_launch_mode'] = launch_mode
+            self.set_triton_server_path(launch_mode, self.config)
 
             if launch_mode == 'c_api':
                 self.config['perf_output'] = True
@@ -88,6 +89,18 @@ class TestConfigGenerator:
                     with open(f'config-{launch_mode}-{protocol}.yaml',
                               'w') as f:
                         yaml.dump(self.config, f)
+
+
+    def set_triton_server_path(self, launch_mode, config):
+        """
+        Helper function to set the 'triton_server_path' to something bogus
+            for all configuration except 'local'
+        This ensures only the 'local' launch mode uses 'triton_server_path'.
+        """
+        config.pop('triton_server_path', None)
+
+        if launch_mode != 'local':
+            config['triton_server_path'] = '/path/to/nowhere'
 
 
 if __name__ == '__main__':
