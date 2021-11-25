@@ -15,7 +15,10 @@
 from unittest.mock import patch
 from model_analyzer.analyzer import Analyzer
 from model_analyzer.cli.cli import CLI
+from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_status import ConfigStatus
+from model_analyzer.constants import CONFIG_PARSER_SUCCESS
 from model_analyzer.result.model_result import ModelResult
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
@@ -33,23 +36,9 @@ class TestAnalyzer(trc.TestResultCollector):
     Tests the methods of the Analyzer class
     """
 
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandProfile()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
-
     def mock_get_state_variable(self, name):
         return {
-            'model': {
+            'model1': {
                 'config1': None,
                 'config2': None,
                 'config3': None,
@@ -60,20 +49,26 @@ class TestAnalyzer(trc.TestResultCollector):
     @patch(
         'model_analyzer.state.analyzer_state_manager.AnalyzerStateManager.get_state_variable',
         mock_get_state_variable)
-    def test_get_num_profiled_configs(self):
+    def test_get_analyze_command_help_string(self):
         """
-        Tests that the member function returning the number of profiled configs
+        Tests that the member function returning the analyze command help string
         works correctly.
         """
 
         args = [
-            "model-analyzer", "profile", "--model-repository", "/tmp",
-            "--profile-models", "test"
+            'model-analyzer', 'profile', '--model-repository', '/tmp',
+            '--profile-models', 'model1', '--config-file', '/tmp/my_config.yml',
+            '--checkpoint-directory', '/tmp/my_checkpoints'
         ]
-        config = self._evaluate_config(args, '')
+        config = self._evaluate_profile_config(args, '')
         state_manager = AnalyzerStateManager(config, None)
         analyzer = Analyzer(config, None, state_manager)
-        self.assertEqual(analyzer._get_num_profiled_configs(), 4)
+        self.assertEqual(
+            analyzer._get_analyze_command_help_string(),
+            'To analyze the profile results and find the best configurations, '
+            'run `model-analyzer analyze --analysis-models model1 '
+            '--config_file /tmp/my_config.yml --checkpoint-directory '
+            '/tmp/my_checkpoints`')
 
     def mock_top_n_results(self, model_name=None, n=-1):
         return [
@@ -97,20 +92,60 @@ class TestAnalyzer(trc.TestResultCollector):
                 None)
         ]
 
+    @patch(
+        'model_analyzer.config.input.config_command_analyze.file_path_validator',
+        lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
+    @patch(
+        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._preprocess_and_verify_arguments',
+        lambda _: None)
     @patch('model_analyzer.result.result_manager.ResultManager.top_n_results',
            mock_top_n_results)
-    def test_get_top_3_model_config_names(self):
+    def test_get_report_command_help_string(self):
         """
-        Tests that the member function returning the top 3 model config names
+        Tests that the member function returning the report command help string
         works correctly.
         """
 
         args = [
-            "model-analyzer", "profile", "--model-repository", "/tmp",
-            "--profile-models", "test"
+            'model-analyzer', 'analyze', '--analysis-models', 'model1',
+            '--config-file', '/tmp/my_config.yml', '--checkpoint-directory',
+            '/tmp/my_checkpoints', '--export-path', '/tmp/my_export_path'
         ]
-        config = self._evaluate_config(args, '')
+        config = self._evaluate_analyze_config(args, '')
         state_manager = AnalyzerStateManager(config, None)
         analyzer = Analyzer(config, None, state_manager)
-        self.assertEqual(analyzer._get_top_3_model_config_names(),
-                         ['config1', 'config3', 'config4'])
+        self.assertEqual(
+            analyzer._get_report_command_help_string(),
+            'To generate detailed reports for the 3 best configurations, run '
+            '`model-analyzer report --report-model-configs '
+            'config1,config3,config4 --export-path /tmp/my_export_path '
+            '--config-file /tmp/my_config.yml --checkpoint-directory '
+            '/tmp/my_checkpoints`')
+
+    def _evaluate_profile_config(self, args, yaml_content):
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = ConfigCommandProfile()
+        cli = CLI()
+        cli.add_subcommand(
+            cmd='profile',
+            help='Run model inference profiling based on specified CLI or '
+            'config options.',
+            config=config)
+        cli.parse()
+        mock_config.stop()
+        return config
+
+    def _evaluate_analyze_config(self, args, yaml_content):
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = ConfigCommandAnalyze()
+        cli = CLI()
+        cli.add_subcommand(
+            cmd='analyze',
+            help='Collect and sort profiling results and generate data and '
+            'summaries.',
+            config=config)
+        cli.parse()
+        mock_config.stop()
+        return config
