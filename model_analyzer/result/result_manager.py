@@ -45,7 +45,8 @@ class ResultManager:
         'model_config_path': 'Model Config Path',
         'instance_group': 'Instance Group',
         'satisfies_constraints': 'Satisfies Constraints',
-        'gpu_uuid': 'GPU UUID'
+        'gpu_uuid': 'GPU UUID',
++       "backend_parameters": "Backend Parameters",
     }
 
     server_only_table_key = 'server_gpu_metrics'
@@ -400,6 +401,7 @@ class ResultManager:
         model_name = result.model_name()
         instance_group = result.model_config().instance_group_string()
         dynamic_batching = result.model_config().dynamic_batching_string()
+        backend_parameters = result.model_config().backend_parameters_string()
         cpu_only = result.model_config().cpu_only()
 
         passing_measurements = result.passing_measurements()
@@ -414,10 +416,12 @@ class ResultManager:
                                            dynamic_batching=dynamic_batching,
                                            measurement=next_best_measurement,
                                            passes=passes,
-                                           cpu_only=cpu_only)
+                                           cpu_only=cpu_only,
+                                           backend_parameters=backend_parameters)
 
-    def _tabulate_measurement(self, model_name, instance_group,
-                              dynamic_batching, measurement, passes, cpu_only):
+    def _tabulate_measurement(self, *, model_name, instance_group,
+                              dynamic_batching, measurement, passes, cpu_only, 
+                              backend_parameters):
         """
         Add a single measurement to the specified
         table
@@ -435,7 +439,8 @@ class ResultManager:
                                                    concurrency, satisfies,
                                                    model_name, tmp_model_name,
                                                    dynamic_batching,
-                                                   instance_group)
+                                                   instance_group,
+                                                   backend_parameters)
 
         for metric in measurement.non_gpu_data():
             metric_tag_index = self._find_index_for_field(
@@ -455,7 +460,8 @@ class ResultManager:
                                                      concurrency, satisfies,
                                                      model_name, tmp_model_name,
                                                      dynamic_batching,
-                                                     instance_group)
+                                                     instance_group,
+                                                     backend_parameters)
                 gpu_uuid_index = self._find_index_for_field(
                     gpu_fields, 'gpu_uuid')
                 if gpu_uuid_index is not None:
@@ -470,7 +476,7 @@ class ResultManager:
 
     def _get_common_row_items(self, fields, batch_size, concurrency, satisfies,
                               model_name, model_config_path, dynamic_batching,
-                              instance_group):
+                              instance_group, backend_parameters):
         row = [None] * len(fields)
 
         # Model Name
@@ -505,6 +511,12 @@ class ResultManager:
                                                         'instance_group')
         if instance_group_idx is not None:
             row[instance_group_idx] = instance_group
+
+        # Backend Parameters
+        parameters_idx = self._find_index_for_field(fields, 'backend_parameters')
+        if parameters_idx is not None:
+            row[parameters_idx] = backend_parameters
+
         return row
 
     def _add_server_data(self):

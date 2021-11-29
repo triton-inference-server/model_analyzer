@@ -50,9 +50,9 @@ class TritonGRPCClient(TritonClient):
             A dictionary containg the model config.
         """
 
-        self.load_model(model_name)
+        # self.load_model(model_name)
         self.wait_for_model_ready(model_name, num_retries)
         model_config_dict = self._client.get_model_config(model_name,
                                                           as_json=True)
-        self.unload_model(model_name)
+        # self.unload_model(model_name)
         return model_config_dict['config']
