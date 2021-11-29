@@ -24,6 +24,8 @@ from .config.input.config_command_report \
     import ConfigCommandReport
 from .config.input.config_command_profile \
     import ConfigCommandProfile
+from .config.input.config_defaults import \
+    DEFAULT_CHECKPOINT_DIRECTORY
 from .model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
@@ -116,12 +118,8 @@ class Analyzer:
             finally:
                 self._state_manager.save_checkpoint()
 
-        profiled_model_list = list(
-            self._state_manager.get_state_variable(
-                'ResultManager.results').keys())
-        logger.info(
-            f"Finished profiling. Obtained measurements for models: {profiled_model_list}."
-        )
+        logger.info(self._get_profile_complete_string())
+        logger.info(self._get_analyze_command_help_string())
 
     def analyze(self, mode, quiet):
         """
@@ -165,6 +163,8 @@ class Analyzer:
         if not quiet:
             self._result_manager.write_results()
 
+        logger.info(self._get_report_command_help_string())
+
     def report(self, mode):
         """
         Subcommand: REPORT
@@ -194,3 +194,74 @@ class Analyzer:
 
         self._report_manager.create_detailed_reports()
         self._report_manager.export_detailed_reports()
+
+    def _get_profile_complete_string(self):
+        profiled_model_list = list(
+            self._state_manager.get_state_variable(
+                'ResultManager.results').keys())
+        num_profiled_configs = self._get_num_profiled_configs()
+
+        return (f'Profile complete. Profiled {num_profiled_configs} '
+                f'configurations for models: {profiled_model_list}.')
+
+    def _get_num_profiled_configs(self):
+        return sum([
+            len(x) for x in self._state_manager.get_state_variable(
+                'ResultManager.results').values()
+        ])
+
+    def _get_analyze_command_help_string(self):
+        return (f'To analyze the profile results and find the best '
+                f'configurations, run `{self._get_analyze_command_string()}`')
+
+    def _get_analyze_command_string(self):
+        profiled_model_list = list(
+            self._state_manager.get_state_variable(
+                'ResultManager.results').keys())
+
+        analyze_command_string = (f'model-analyzer analyze --analysis-models '
+                                  f'{",".join(profiled_model_list)}')
+
+        if self._config.config_file is not None:
+            analyze_command_string += (f' --config_file '
+                                       f'{self._config.config_file}')
+
+        if self._config.checkpoint_directory != DEFAULT_CHECKPOINT_DIRECTORY:
+            analyze_command_string += (f' --checkpoint-directory '
+                                       f'{self._config.checkpoint_directory}')
+
+        return analyze_command_string
+
+    def _get_report_command_help_string(self):
+        top_3_model_config_names = self._get_top_n_model_config_names(n=3)
+
+        return (f'To generate detailed reports for the '
+                f'{len(top_3_model_config_names)} best configurations, run '
+                f'`{self._get_report_command_string()}`')
+
+    def _get_report_command_string(self):
+        top_3_model_config_names = self._get_top_n_model_config_names(n=3)
+
+        report_command_string = (f'model-analyzer report '
+                                 f'--report-model-configs '
+                                 f'{",".join(top_3_model_config_names)}')
+
+        if self._config.export_path is not None:
+            report_command_string += (f' --export-path '
+                                      f'{self._config.export_path}')
+
+        if self._config.config_file is not None:
+            report_command_string += (f' --config-file '
+                                      f'{self._config.config_file}')
+
+        if self._config.checkpoint_directory != DEFAULT_CHECKPOINT_DIRECTORY:
+            report_command_string += (f' --checkpoint-directory '
+                                      f'{self._config.checkpoint_directory}')
+
+        return report_command_string
+
+    def _get_top_n_model_config_names(self, n=-1):
+        return [
+            x.model_config().get_config()['name']
+            for x in self._result_manager.top_n_results(n=n)
+        ]

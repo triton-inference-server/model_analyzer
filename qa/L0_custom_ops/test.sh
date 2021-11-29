@@ -84,7 +84,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
             cat $ANALYZER_LOG
             RET=1
             break
-        elif [[ ! -z `grep "Finished profiling" $ANALYZER_LOG` ]]; then
+        elif [[ ! -z `grep "Profile complete" $ANALYZER_LOG` ]]; then
             break
         # In the docker/local launch modes, triton log errors will be returned by triton client and printed in ANALYZER_LOG
         elif [[ ! -z `grep "This op may not exist or may not be currently supported" $ANALYZER_LOG` ]]; then
@@ -101,7 +101,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         fi
         ((WAIT_TIME_SECS--));
     done
-    if [[ -z `grep "Finished profiling" $ANALYZER_LOG` ]]; then
+    if [[ -z `grep "Profile complete" $ANALYZER_LOG` ]]; then
         echo -e "\n***\n*** Test Failed. model-analyzer hangs. \n***"
         cat $ANALYZER_LOG
         RET=1
