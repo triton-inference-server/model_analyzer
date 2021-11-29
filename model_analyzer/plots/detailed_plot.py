@@ -69,12 +69,12 @@ class DetailedPlot:
         ]
 
         self._bar_colors = {
-            'perf_client_send_recv': '#018564',
-            'perf_client_response_wait': '#76B901',
-            'perf_server_queue': '#0171C5',
-            'perf_server_compute_input': '#890C58',
-            'perf_server_compute_infer': '#FAC201',
-            'perf_server_compute_output': '#5D1682',
+            'perf_client_send_recv': '#5D1682',
+            'perf_client_response_wait': '#165D82',
+            'perf_server_queue': '#825D16',
+            'perf_server_compute_input': '#0071C5',
+            'perf_server_compute_infer': '#C5B600',
+            'perf_server_compute_output': '#C55400',
             'perf_throughput': '#5E5E5E'
         }
 
