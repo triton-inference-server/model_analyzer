@@ -32,6 +32,7 @@ class RunSearch:
         self._max_instance_count = config.run_config_search_max_instance_count
         self._max_preferred_batch_size = config.run_config_search_max_preferred_batch_size
         self._sweep_preferred_batch_size_disable = config.run_config_search_preferred_batch_size_disable
+        self._profile_models_concurrently_enable = config.run_config_profile_models_concurrently_enable
         self._model_config_parameters = {'instance_count': 1}
         self._measurements = []
         self._last_batch_length = None

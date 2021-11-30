@@ -173,6 +173,9 @@ profile_models: <comma-delimited-string-list>
 # Disables automatic config search
 [ run_config_search_disable: <bool> | default: false ]
 
+# Enables profiling models concurrently
+[ run_config_profile_models_concurrently_enable: <bool> | default: false ]
+
 # Specify path to config yaml file
 [ config_file: <string> ]
 ```
