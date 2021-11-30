@@ -46,7 +46,7 @@ class ResultManager:
         'instance_group': 'Instance Group',
         'satisfies_constraints': 'Satisfies Constraints',
         'gpu_uuid': 'GPU UUID',
-+       "backend_parameters": "Backend Parameters",
+        'backend_parameters': 'Backend Parameters',
     }
 
     server_only_table_key = 'server_gpu_metrics'
