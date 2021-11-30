@@ -223,7 +223,7 @@ class Analyzer:
                                   f'{",".join(profiled_model_list)}')
 
         if self._config.config_file is not None:
-            analyze_command_string += (f' --config_file '
+            analyze_command_string += (f' --config-file '
                                        f'{self._config.config_file}')
 
         if self._config.checkpoint_directory != DEFAULT_CHECKPOINT_DIRECTORY:
