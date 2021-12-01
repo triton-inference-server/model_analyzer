@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -194,8 +194,10 @@ class ModelConfig:
                     if file == 'config.pbtxt':
                         continue
                     else:
-                        os.symlink(os.path.join(last_model_path, file),
-                                   os.path.join(model_path, file))
+                        os.symlink(
+                            os.path.join(
+                                os.path.relpath(last_model_path, model_path),
+                                file), os.path.join(model_path, file))
 
         if not reusued_previous_model_dir:
             copy_tree(src_model_path, model_path)
