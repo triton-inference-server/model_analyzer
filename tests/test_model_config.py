@@ -132,12 +132,7 @@ instance_group [
         return ['1', 'config.pbtxt', 'output0_labels.txt']
 
     def mock_os_symlink(src, dst):
-        if src == '../model_i0/1':
-            assert dst == './output_model_repository/model_i1/1'
-        elif src == '../model_i0/output0_labels.txt':
-            assert dst == './output_model_repository/model_i1/output0_labels.txt'
-        else:
-            assert False
+        assert src in ['../model_i0/1', '../model_i0/output0_labels.txt']
 
     @patch('model_analyzer.triton.model.model_config.os.listdir',
            mock_os_listdir)
@@ -145,6 +140,12 @@ instance_group [
            mock_os_symlink)
     @patch('model_analyzer.triton.model.model_config.copy_tree', MagicMock())
     def test_write_config_to_file_with_relative_path(self):
+        """
+        Tests that the call to os.symlink() within write_config_to_file() uses
+        a valid relative path when user uses a relative path with the
+        `--output-model-repository-path` option
+        """
+
         model_config = ModelConfig.create_from_dictionary(self._model_config)
 
         model_path = './output_model_repository/model_i1'
