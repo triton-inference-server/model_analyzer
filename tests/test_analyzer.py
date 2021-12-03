@@ -65,10 +65,10 @@ class TestAnalyzer(trc.TestResultCollector):
         analyzer = Analyzer(config, None, state_manager)
         self.assertEqual(
             analyzer._get_analyze_command_help_string(),
-            'To analyze the profile results and find the best configurations, '
-            'run `model-analyzer analyze --analysis-models model1 '
-            '--config-file /tmp/my_config.yml --checkpoint-directory '
-            '/tmp/my_checkpoints`')
+            ('To analyze the profile results and find the best configurations, '
+             'run `model-analyzer analyze --analysis-models model1 '
+             '--config-file /tmp/my_config.yml --checkpoint-directory '
+             '/tmp/my_checkpoints`'))
 
     def mock_top_n_results(self, model_name=None, n=-1):
         return [
@@ -116,11 +116,11 @@ class TestAnalyzer(trc.TestResultCollector):
         analyzer = Analyzer(config, None, state_manager)
         self.assertEqual(
             analyzer._get_report_command_help_string(),
-            'To generate detailed reports for the 3 best configurations, run '
-            '`model-analyzer report --report-model-configs '
-            'config1,config3,config4 --export-path /tmp/my_export_path '
-            '--config-file /tmp/my_config.yml --checkpoint-directory '
-            '/tmp/my_checkpoints`')
+            ('To generate detailed reports for the 3 best configurations, run '
+             '`model-analyzer report --report-model-configs '
+             'config1,config3,config4 --export-path /tmp/my_export_path '
+             '--config-file /tmp/my_config.yml --checkpoint-directory '
+             '/tmp/my_checkpoints`'))
 
     def _evaluate_profile_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
