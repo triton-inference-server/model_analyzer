@@ -74,7 +74,7 @@ class DetailedPlot:
             'perf_server_queue': '#825D16',
             'perf_server_compute_input': '#0071C5',
             'perf_server_compute_infer': '#C5B600',
-            'perf_server_compute_output': '#F0D4BF',
+            'perf_server_compute_output': '#C55400',
             'perf_throughput': '#5E5E5E'
         }
 
