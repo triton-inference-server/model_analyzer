@@ -117,6 +117,39 @@ class ModelManagerSubclass(ModelManager):
        MagicMock())
 class TestModelManager(trc.TestResultCollector):
 
+    def __init__(self, methodname):
+        super().__init__(methodname)
+        self._args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file'
+        ]
+
+        self._model_config_protobuf = """
+            name: "test_model"
+            platform: "tensorflow_graphdef"
+            max_batch_size: 8
+            input [
+            {
+                name: "INPUT__0"
+                data_type: TYPE_FP32
+                dims: [16]
+            }
+            ]
+            output [
+            {
+                name: "OUTPUT__0"
+                data_type: TYPE_FP32
+                dims: [16]
+            }
+            ]
+            instance_group [
+            {
+                kind: KIND_GPU
+                count: 1
+            }
+            ]
+            """
+
     def test_full_sweep(self):
         """
         Test a normal full sweep of options
@@ -125,6 +158,7 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5],
             'batching': [None, 0, 1, 2, 4, 8, 16],
             'batch_sizes': [1],
+            'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
         }]
 
@@ -148,6 +182,7 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1],
+            'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8, 16, 32]
         }]
 
@@ -171,6 +206,7 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None],
             'batch_sizes': [1],
+            'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8, 16, 32]
         }]
 
@@ -193,9 +229,10 @@ class TestModelManager(trc.TestResultCollector):
         """
 
         expected_ranges = [{
-            'instances': [None],
+            'instances': [1],
             'batching': [None],
             'batch_sizes': [1],
+            'max_batch_size': [8],
             'concurrency': [1]
         }]
 
@@ -219,6 +256,7 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1],
+            'max_batch_size': [8],
             'concurrency': [5, 7]
         }]
 
@@ -269,6 +307,7 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'batching': [None, 0, 1, 2, 4, 8],
             'batch_sizes': [1, 2, 3],
+            'max_batch_size': [8],
             'concurrency': [2, 10, 18, 26, 34, 42, 50, 58]
         }]
 
@@ -297,7 +336,7 @@ class TestModelManager(trc.TestResultCollector):
         """
 
         expected_ranges = [{
-            'instances': [None],
+            'instances': [1],
             'batch_sizes': [1],
             'max_batch_size': [1, 2, 4, 8, 16],
             'concurrency': [1, 2, 4, 8]
@@ -319,21 +358,23 @@ class TestModelManager(trc.TestResultCollector):
 
     def test_default_config_always_run_no_dynamic_batching_off(self):
         """
-        Test that the default config (dynamic batching off) is run even when 
-        manual search excludes that case
+        Test that the default config is run even when manual search excludes that case
+        In this case, default config is (1 instance, max_batch_size=8, dynamic batching off)
+        We should have a case of dynamic_batching off even though manual search only has it on
         """
 
         expected_ranges = [{
-            'instances': [None],
+            'instances': [1],
             'batching': [1, 2, 3],
             'max_queue_delay': ['200', '300'],
             'batch_sizes': [1],
             'max_batch_size': [1, 2, 4, 8, 16],
             'concurrency': [1, 2, 4, 8]
         }, {
-            'instances': [None],
+            'instances': [1],
             'batching': [None],
             'batch_sizes': [1],
+            'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8]
         }]
 
@@ -356,24 +397,27 @@ class TestModelManager(trc.TestResultCollector):
 
     def test_default_config_always_run_no_single_instance(self):
         """
-        Test that the default config (1 instance, aka unspecified) is 
-        run even when manual search excludes that case
+        Test that the default config is run even when manual search excludes that case
+        In this case, default config is (1 instance, max_batch_size=8, dynamic batching off)
+        We should have a 1-instance case even though manual search only has 2 and 3
         """
 
         expected_ranges = [{
             'instances': [2, 3],
             'batching': [None],
             'batch_sizes': [1],
-            'concurrency': [1, 2, 4, 8]
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4]
         }, {
-            'instances': [None],
+            'instances': [1],
             'batching': [None],
             'batch_sizes': [1],
-            'concurrency': [1, 2, 4, 8]
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4]
         }]
 
         yaml_content = """
-            run_config_search_max_concurrency: 8
+            run_config_search_max_concurrency: 4
             run_config_search_max_preferred_batch_size: 16
             run_config_search_max_instance_count: 16
             run_config_search_preferred_batch_size_disable : False
@@ -389,25 +433,83 @@ class TestModelManager(trc.TestResultCollector):
 
         self._test_model_manager(yaml_content, expected_ranges)
 
+    def test_default_config_always_run_automatic_search(self):
+        """
+        Test that the default config is run even when automatic search excludes that case
+        In this case, default config is (4 instance, max_batch_size=8, dynamic batching off)
+        We should have a 4 instance case though run_config_search_max_instance_count=1
+        """
+
+        self._model_config_protobuf = """
+            name: "test_model"
+            platform: "tensorflow_graphdef"
+            max_batch_size: 8
+            input [
+            {
+                name: "INPUT__0"
+                data_type: TYPE_FP32
+                dims: [16]
+            }
+            ]
+            output [
+            {
+                name: "OUTPUT__0"
+                data_type: TYPE_FP32
+                dims: [16]
+            }
+            ]
+            instance_group [
+            {
+                kind: KIND_GPU
+                count: 4
+            }
+            ]
+            """
+
+        expected_ranges = [{
+            'instances': [1],
+            'batching': [None, 0, 1, 2],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4]
+        }, {
+            'instances': [4],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4]
+        }]
+
+        yaml_content = """
+            run_config_search_max_concurrency: 4
+            run_config_search_max_preferred_batch_size: 2
+            run_config_search_max_instance_count: 1
+            run_config_search_preferred_batch_size_disable : False
+            run_config_search_disable: False
+            profile_models: test_model
+            """
+        self._test_model_manager(yaml_content, expected_ranges)
+
     def _test_model_manager(self, yaml_content, expected_ranges):
         """ 
         Test helper function that passes the given yaml_content into
         model_manager, runs the model, and confirms the result is as expected
-        based on a full cartesian product of the lists in the input dict expected_ranges
+        based on a full cartesian product of the lists in the input list of 
+        dicts expected_ranges
         """
 
-        args = [
-            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
-        ]
+        # Use mock model config or else TritonModelAnalyzerException will be thrown as it tries to read from disk
+        self.mock_model_config = MockModelConfig(self._model_config_protobuf)
+        self.mock_model_config.start()
+        config = self._evaluate_config(self._args, yaml_content)
 
-        config = self._evaluate_config(args, yaml_content)
         state_manager = AnalyzerStateManager(config, MagicMock())
         model_manager = ModelManagerSubclass(config, MagicMock(), MagicMock(),
                                              MagicMock(), MagicMock(),
                                              state_manager)
 
         model_manager.run_model(config.profile_models[0])
+        self.mock_model_config.stop()
 
         self._check_results(model_manager, expected_ranges)
 
@@ -418,23 +520,8 @@ class TestModelManager(trc.TestResultCollector):
         run_configs = model_manager.get_run_configs()
         expected_configs = self._convert_ranges_to_run_configs(expected_ranges)
 
-        self.assertTrue(self._default_config_in_run_configs(run_configs))
         self.assertEqual(run_configs.get_configs(),
                          expected_configs.get_configs())
-
-    def _default_config_in_run_configs(self, run_configs):
-        """ Returns true if a default configuration is within the passed in run_configs. Else returns false """
-
-        for config in run_configs.get_configs():
-            config_dict = {
-                config[i]: config[i + 1] for i in range(0, len(config), 2)
-            }
-
-            # Config is "default" if instances is unspecified or 1, and dynamic_batching is off
-            if config_dict.get("instances") is None or 1 and config_dict.get(
-                    "dynamic_batching") is None:
-                return True
-        return False
 
     def _evaluate_config(self, args, yaml_content):
         """ Parse the given yaml_content into a config and return it """
@@ -468,11 +555,3 @@ class TestModelManager(trc.TestResultCollector):
             run_configs.populate_from_keys_and_configs(ranges_keys, configs)
 
         return run_configs
-
-    def setUp(self):
-        # Use mock model config or else TritonModelAnalyzerException will be thrown as it tries to read from disk
-        self.mock_model_config = MockModelConfig()
-        self.mock_model_config.start()
-
-    def tearDown(self):
-        self.mock_model_config.stop()
