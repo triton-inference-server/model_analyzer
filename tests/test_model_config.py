@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -127,3 +127,33 @@ instance_group [
                    MagicMock(return_value=True)):
             with self.assertRaises(TritonModelAnalyzerException):
                 ModelConfig.create_from_file(model_output_path)
+
+    @patch('model_analyzer.triton.model.model_config.os.listdir',
+           MagicMock(return_value=['1', 'config.pbtxt', 'output0_labels.txt']))
+    @patch('model_analyzer.triton.model.model_config.copy_tree')
+    @patch('model_analyzer.triton.model.model_config.os.symlink')
+    def test_write_config_to_file_with_relative_path(self, mock_os_symlink,
+                                                     *args):
+        """
+        Tests that the call to os.symlink() within write_config_to_file() uses
+        a valid relative path when user uses a relative path with the
+        `--output-model-repository-path` option
+        """
+
+        model_config = ModelConfig.create_from_dictionary(self._model_config)
+
+        model_path = './output_model_repository/model_i1'
+        src_model_path = '/tmp/src_model_repository/model'
+        last_model_path = './output_model_repository/model_i0'
+
+        mock_model_config = MockModelConfig()
+        mock_model_config.start()
+        model_config.write_config_to_file(model_path, src_model_path,
+                                          last_model_path)
+        mock_model_config.stop()
+
+        mock_os_symlink.assert_any_call('../model_i0/1',
+                                        './output_model_repository/model_i1/1')
+        mock_os_symlink.assert_any_call(
+            '../model_i0/output0_labels.txt',
+            './output_model_repository/model_i1/output0_labels.txt')
