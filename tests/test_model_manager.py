@@ -31,6 +31,8 @@ import itertools
 import logging
 import sys
 
+# FIXME -- add kind_cpu test
+
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -395,21 +397,47 @@ class TestModelManager(trc.TestResultCollector):
 
         self._test_model_manager(yaml_content, expected_ranges)
 
-    def test_default_config_always_run_no_single_instance(self):
+    def test_default_config_always_run_wrong_instances(self):
         """
         Test that the default config is run even when manual search excludes that case
-        In this case, default config is (1 instance, max_batch_size=8, dynamic batching off)
-        We should have a 1-instance case even though manual search only has 2 and 3
+        In this case, default config is (2 instances, max_batch_size=8, dynamic batching off)
+        We should have a 2-instance case even though manual search only has 1-instance
         """
 
+        self._model_config_protobuf = """
+            name: "test_model"
+            platform: "tensorflow_graphdef"
+            max_batch_size: 8
+            input [
+            {
+                name: "INPUT__0"
+                data_type: TYPE_FP32
+                dims: [16]
+            }
+            ]
+            output [
+            {
+                name: "OUTPUT__0"
+                data_type: TYPE_FP32
+                dims: [16]
+            }
+            ]
+            instance_group [
+            {
+                kind: KIND_GPU
+                count: 2
+            }
+            ]
+            """
+
         expected_ranges = [{
-            'instances': [2, 3],
+            'instances': [1],
             'batching': [None],
             'batch_sizes': [1],
             'max_batch_size': [8],
             'concurrency': [1, 2, 4]
         }, {
-            'instances': [1],
+            'instances': [2],
             'batching': [None],
             'batch_sizes': [1],
             'max_batch_size': [8],
@@ -428,9 +456,66 @@ class TestModelManager(trc.TestResultCollector):
                         instance_group:
                         -
                             kind: KIND_GPU
-                            count: [2,3]
+                            count: 1
             """
 
+        self._test_model_manager(yaml_content, expected_ranges)
+
+    def test_default_config_always_run_automatic_search(self):
+        """
+        Test that the default config is run even when automatic search excludes that case
+        In this case, default config is (4 instance, max_batch_size=8, dynamic batching off)
+        We should have a 4 instance case though run_config_search_max_instance_count=1
+        """
+
+        self._model_config_protobuf = """
+            name: "test_model"
+            platform: "tensorflow_graphdef"
+            max_batch_size: 8
+            input [
+            {
+                name: "INPUT__0"
+                data_type: TYPE_FP32
+                dims: [16]
+            }
+            ]
+            output [
+            {
+                name: "OUTPUT__0"
+                data_type: TYPE_FP32
+                dims: [16]
+            }
+            ]
+            instance_group [
+            {
+                kind: KIND_GPU
+                count: 4
+            }
+            ]
+            """
+
+        expected_ranges = [{
+            'instances': [1],
+            'batching': [None, 0, 1, 2],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4]
+        }, {
+            'instances': [4],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4]
+        }]
+
+        yaml_content = """
+            run_config_search_max_concurrency: 4
+            run_config_search_max_preferred_batch_size: 2
+            run_config_search_max_instance_count: 1
+            run_config_search_preferred_batch_size_disable : False
+            run_config_search_disable: False
+            profile_models: test_model
+            """
         self._test_model_manager(yaml_content, expected_ranges)
 
     def test_default_config_always_run_automatic_search(self):
