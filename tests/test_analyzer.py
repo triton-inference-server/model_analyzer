@@ -67,7 +67,7 @@ class TestAnalyzer(trc.TestResultCollector):
             analyzer._get_analyze_command_help_string(),
             'To analyze the profile results and find the best configurations, '
             'run `model-analyzer analyze --analysis-models model1 '
-            '--config_file /tmp/my_config.yml --checkpoint-directory '
+            '--config-file /tmp/my_config.yml --checkpoint-directory '
             '/tmp/my_checkpoints`')
 
     def mock_top_n_results(self, model_name=None, n=-1):
