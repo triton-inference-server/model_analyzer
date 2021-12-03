@@ -26,12 +26,13 @@ class PerfAnalyzerConfig:
         'service-kind', 'model-signature-name', 'async', 'sync',
         'measurement-interval', 'concurrency-range', 'request-rate-range',
         'request-distribution', 'request-intervals', 'binary-search',
-        'num-of-sequence', 'latency-threshold', 'max-threads',
+        'num-of-sequences', 'latency-threshold', 'max-threads',
         'stability-percentage', 'max-trials', 'percentile', 'input-data',
         'shared-memory', 'output-shared-memory-size', 'shape',
-        'sequence-length', 'string-length', 'string-data', 'measurement-mode',
-        'measurement-request-count', 'streaming', 'grpc-compression-algorithm',
-        'triton-server-directory', 'model-repository'
+        'sequence-length', 'sequence-id-range', 'string-length', 'string-data',
+        'measurement-mode', 'measurement-request-count', 'streaming',
+        'grpc-compression-algorithm', 'triton-server-directory',
+        'model-repository'
     ]
 
     input_to_options = [
