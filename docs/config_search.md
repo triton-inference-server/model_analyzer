@@ -31,7 +31,6 @@ and
 settings.
 
 
-
 An example model analyzer config that performs automatic config search looks
 like below:
 
@@ -120,9 +119,11 @@ Analyzer Config.
 In this mode, values for both `concurrency` and `model_config_parameters` needs
 to be specified. If no value for `concurrency` is specified, the default value,
 1, will be used. This mode in comparison to the automatic mode, is not limited
-to `dynamic_batching` and `instance_count` config parameters. In this mode you
-have complete control over the config parameters and their range that you want
-to sweep.
+to `dynamic_batching` and `instance_count` config parameters. Using manual
+config search, you can create custom sweeps for every parameter that can be
+specified in the model configuration. Model Analyzer only checks the syntax
+of the `model_config_parameters` that is specified and cannot guarantee that
+the configuration that is generated is loadable by Triton.
 
 An example Model Analyzer Config that performs manual sweeping looks like below:
 
@@ -164,3 +165,14 @@ single value for `preferred_batch_size`. Check out [Triton Dynamic Batching's
 Preferred Batch
 Sizes](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#preferred-batch-sizes)
 for more info.
+
+### Examples of Additional Model Config Parameters
+
+As mentioned in the previous section, manual configuration search allows you to
+sweep on every parameter that can be specified in Triton model configuration. In
+this section, we describe some of the parameters that might be of interest for
+manual sweep:
+
+* [Rate limiter](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#rate-limiter-config) setting
+* If the model is using [ONNX](https://github.com/triton-inference-server/onnxruntime_backend) or [Tensorflow backend](https://github.com/triton-inference-server/tensorflow_backend), the "execution_accelerators" parameters. More information about this parameter is
+available in the [Triton Optimization Guide](https://github.com/triton-inference-server/server/blob/main/docs/optimization.md#framework-specific-optimization)

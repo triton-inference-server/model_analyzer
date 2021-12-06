@@ -25,28 +25,30 @@ branch
 [r21.11](https://github.com/triton-inference-server/model_analyzer/tree/r21.11).**
 
 Triton Model Analyzer is a CLI tool to help with better understanding of the
-compute and memory requirements of the Triton Inference Server models. These
+compute and memory requirements of the
+[Triton Inference Server](https://github.com/triton-inference-server/server/) models. These
 reports will help the user better understand the trade-offs in different
 configurations and choose a configuration that maximizes the performance of
 Triton Inference Server.
 
-#### Model Analyzer can optimize for the following user constraints
-* latency
-* throughput
-* GPU memory
+## Features
 
-#### Model Analyzer can automatically sweep the following variables and provide results across the resulting range:
-* [preferred batch size in triton server dynamic batching](https://github.com/triton-inference-server/server/blob/main/docs/optimization.md#dynamic-batcher)
-* [number of concurrent model instance loaded in triton](https://github.com/triton-inference-server/server/blob/main/docs/architecture.md#concurrent-model-execution)
-* [number of concurrent requests sent by the perf analyzer client](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#request-concurrency)
+* [Automatic and manual configuration search](docs/config_search.md). Model Analyzer can
+help you automatically find the optimal settings for
+[Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#dynamic-batcher) and
+[Instance Group](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#instance-groups)
+parameters of your model configuration. Using
+[Manual Config Search](docs/config_search.md#manual-configuration-search), you can create manual sweeps
+for every parameter that can be specified in the model configuration.
 
-#### Model Analyzer can manually sweep the following variables set by the user
-* framework
-* hardware (CPU or GPU)
-* model precision (for the TensorRT model only)
-* [queue delay in dynamic batching](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#delayed-batching)
-* [Rate Limiter Priority options](https://github.com/triton-inference-server/server/blob/main/docs/rate_limiter.md#rate-limiter) (eg. a model instance with priority 2 will be given half the number of scheduling changes)
-* [batch size of requests sent by the perf analyzer client](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#input-data)
+* [Detailed and summary reports](docs/report.md). Model Analyzer is able to generate
+summarized and detailed reports that can help you better understand the trade-offs
+between different model configurations that can be used for your model.
+
+* [QoS Constraints](docs/config.md#constraint). Constraints can help you
+filter out the Model Analyzer results based on your QoS requirements. For
+example, you can specify a latency budget to filter out model configurations
+that do not satisfy the specified latency threshold.
 
 ## Documentation
 
