@@ -31,8 +31,6 @@ import itertools
 import logging
 import sys
 
-# FIXME -- add kind_cpu test
-
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -165,6 +163,13 @@ class TestModelManager(trc.TestResultCollector):
             'batch_sizes': [1],
             'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
         }]
 
         yaml_content = """
@@ -190,6 +195,13 @@ class TestModelManager(trc.TestResultCollector):
             'batch_sizes': [1],
             'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8, 16, 32]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4, 8, 16, 32]
         }]
 
         yaml_content = """
@@ -211,6 +223,13 @@ class TestModelManager(trc.TestResultCollector):
         expected_ranges = [{
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'kind': ["KIND_GPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4, 8, 16, 32]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
             'batching': [None],
             'batch_sizes': [1],
             'max_batch_size': [8],
@@ -268,6 +287,13 @@ class TestModelManager(trc.TestResultCollector):
             'batch_sizes': [1],
             'max_batch_size': [8],
             'concurrency': [5, 7]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [5, 7]
         }]
 
         yaml_content = """
@@ -318,6 +344,13 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'kind': ["KIND_GPU"],
             'batching': [None, 0, 1, 2, 4, 8],
+            'batch_sizes': [1, 2, 3],
+            'max_batch_size': [8],
+            'concurrency': [2, 10, 18, 26, 34, 42, 50, 58]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
             'batch_sizes': [1, 2, 3],
             'max_batch_size': [8],
             'concurrency': [2, 10, 18, 26, 34, 42, 50, 58]
@@ -445,7 +478,7 @@ class TestModelManager(trc.TestResultCollector):
 
         expected_ranges = [{
             'instances': [1],
-            'kind': ["KIND_CPU"],
+            'kind': ["KIND_GPU"],
             'batching': [None],
             'batch_sizes': [1],
             'max_batch_size': [8],
@@ -478,7 +511,8 @@ class TestModelManager(trc.TestResultCollector):
 
     def test_default_config_always_run_cpu_vs_gpu(self):
         """
-        FIXME
+        If the default configuration had KIND_CPU, make sure it is run (even if everything
+        else is the same)
         """
 
         self._model_config_protobuf = """
@@ -515,7 +549,7 @@ class TestModelManager(trc.TestResultCollector):
             'max_batch_size': [8],
             'concurrency': [1, 2, 4]
         }, {
-            'instances': [2],
+            'instances': [1],
             'kind': ["KIND_GPU"],
             'batching': [None],
             'batch_sizes': [1],
@@ -540,64 +574,64 @@ class TestModelManager(trc.TestResultCollector):
 
         self._test_model_manager(yaml_content, expected_ranges)
 
+    def test_default_config_always_run_automatic_search(self):
+        """
+        Test that the default config is run even when automatic search excludes that case
+        In this case, default config is (4 instance, CPU, max_batch_size=8, dynamic batching off)
+        We should have this 4 instance case though run_config_search_max_instance_count=1
+        """
 
-# FIXME TKG
-#    def test_default_config_always_run_automatic_search(self):
-#        """
-#        Test that the default config is run even when automatic search excludes that case
-#        In this case, default config is (4 instance, max_batch_size=8, dynamic batching off)
-#        We should have a 4 instance case though run_config_search_max_instance_count=1
-#        """
-#
-#        self._model_config_protobuf = """
-#            name: "test_model"
-#            platform: "tensorflow_graphdef"
-#            max_batch_size: 8
-#            input [
-#            {
-#                name: "INPUT__0"
-#                data_type: TYPE_FP32
-#                dims: [16]
-#            }
-#            ]
-#            output [
-#            {
-#                name: "OUTPUT__0"
-#                data_type: TYPE_FP32
-#                dims: [16]
-#            }
-#            ]
-#            instance_group [
-#            {
-#                kind: KIND_GPU
-#                count: 4
-#            }
-#            ]
-#            """
-#
-#        expected_ranges = [{
-#            'instances': [1],
-#            'batching': [None, 0, 1, 2],
-#            'batch_sizes': [1],
-#            'max_batch_size': [8],
-#            'concurrency': [1, 2, 4]
-#        }, {
-#            'instances': [4],
-#            'batching': [None],
-#            'batch_sizes': [1],
-#            'max_batch_size': [8],
-#            'concurrency': [1, 2, 4]
-#        }]
-#
-#        yaml_content = """
-#            run_config_search_max_concurrency: 4
-#            run_config_search_max_preferred_batch_size: 2
-#            run_config_search_max_instance_count: 1
-#            run_config_search_preferred_batch_size_disable : False
-#            run_config_search_disable: False
-#            profile_models: test_model
-#            """
-#        self._test_model_manager(yaml_content, expected_ranges)
+        self._model_config_protobuf = """
+            name: "test_model"
+            platform: "tensorflow_graphdef"
+            max_batch_size: 8
+            input [
+            {
+                name: "INPUT__0"
+                data_type: TYPE_FP32
+                dims: [16]
+            }
+            ]
+            output [
+            {
+                name: "OUTPUT__0"
+                data_type: TYPE_FP32
+                dims: [16]
+            }
+            ]
+            instance_group [
+            {
+                kind: KIND_CPU
+                count: 4
+            }
+            ]
+            """
+
+        expected_ranges = [{
+            'instances': [1],
+            'kind': ["KIND_GPU"],
+            'batching': [None, 0, 1, 2],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4]
+        }, {
+            'instances': [4],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4]
+        }]
+
+        yaml_content = """
+            run_config_search_max_concurrency: 4
+            run_config_search_max_preferred_batch_size: 2
+            run_config_search_max_instance_count: 1
+            run_config_search_preferred_batch_size_disable : False
+            run_config_search_disable: False
+            profile_models: test_model
+            """
+        self._test_model_manager(yaml_content, expected_ranges)
 
     def _test_model_manager(self, yaml_content, expected_ranges):
         """ 

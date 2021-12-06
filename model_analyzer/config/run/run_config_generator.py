@@ -137,36 +137,8 @@ class RunConfigGenerator:
 
     def generate_model_config_combinations(self, value):
         configs = self._generate_model_config_combinations_helper(value)
-        if not self._default_config_in_configs(configs):
-            self._add_default_config(configs)
+        self._add_default_config(configs)
         return configs
-
-    def _default_config_in_configs(self, configs):
-        """ 
-        Returns true if a default configuration exists within the
-        specified list of configs
-        """
-
-        return False  # FIXME
-        found = False
-        for config in configs:
-            if config is None:
-                found = True
-                break
-
-            default_dynamic_batching_found = config.get(
-                "dynamic_batching") is None
-
-            instances = None
-            instance_group = config.get("instance_group")
-            if instance_group is not None:
-                instances = instance_group[0]["count"]
-            default_instances_found = instances is None or instances == 1
-
-            if default_instances_found and default_dynamic_batching_found:
-                found = True
-                break
-        return found
 
     def _add_default_config(self, configs):
         # Add in an empty configuration, which will apply the default values
