@@ -189,8 +189,11 @@ class PerfAnalyzerConfig:
         for key, value in self._args.items():
             if value:
                 if key in self._additive_args:
-                    for additive_value in value:
-                        args.append(f'--{key}={additive_value}')
+                    if type(value) is list:
+                        for additive_value in value:
+                            args.append(f'--{key}={additive_value}')
+                    elif type(value) is str:
+                        args.append(f'--{key}={value}')
                 else:
                     args.append(f'--{key}={value}')
 
