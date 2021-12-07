@@ -42,5 +42,6 @@ fi
 # Generate html files
 echo `pwd`
 coverage html
+cp -rf htmlcov /tmp/html/
 
 exit $RET
