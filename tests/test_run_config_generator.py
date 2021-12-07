@@ -52,6 +52,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', '--profile-models', 'vgg11',
             '--run-config-profile-models-concurrently-enable'
+            '--run-config-search-preferred-batch-size-disable'
         ]
 
         # Empty yaml

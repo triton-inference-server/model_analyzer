@@ -24,7 +24,7 @@ model-analyzer profile \
   --profile-models add_sub \
   --run-config-search-max-concurrency 2 \
   --run-config-search-max-instance-count 2 \
-  --run-config-search-preferred-batch-size-disable true ; \
+  --run-config-search-preferred-batch-size-disable; \
   exit_early_if_nonzero $?
 
 mkdir analysis_results ; \

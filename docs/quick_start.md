@@ -59,7 +59,7 @@ configuration:
 ```
 --run-config-search-max-concurrency 2 \
 --run-config-search-max-instance-count 2 \
---run-config-search-preferred-batch-size-disable true
+--run-config-search-preferred-batch-size-disable
 ```
 
 `--run-config-search-max-concurrency` sets the max concurrency value that run
