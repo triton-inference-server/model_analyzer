@@ -50,11 +50,6 @@ RUN \
       echo "invalid architecture: $(uname -m)" ; exit 1 ; \
     fi ; \
 
-    # Install libgfortran5 for arm64 version of docker image
-    if [ "${TARGETARCH}" = "arm64" ] ; then \
-      apt update ; apt install -y libgfortran5 ; \
-    fi ; \
-
     # Set ARCH_DIR variable for correct architecture-specific DCGM installation
     if [ "${TARGETARCH}" = "amd64" ] ; then ARCH_DIR="x86_64" ; \
     elif [ "${TARGETARCH}" = "arm64" ] ; then ARCH_DIR="sbsa" ; \
