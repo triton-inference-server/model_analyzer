@@ -83,7 +83,7 @@ def get_server_handle(config, gpus):
                                                          log_path="")
         logger.warning(
             'GPU memory metrics reported in the remote mode are not'
-            ' accuracte. Model Analyzer uses Triton explicit model control to'
+            ' accurate. Model Analyzer uses Triton explicit model control to'
             ' load/unload models. Some frameworks do not release the GPU'
             ' memory even when the memory is not being used. Consider'
             ' using the "local" or "docker" mode if you want to accurately'
