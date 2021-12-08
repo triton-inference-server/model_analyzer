@@ -35,7 +35,7 @@ from .config_defaults import \
     DEFAULT_PERF_ANALYZER_CPU_UTIL, DEFAULT_PERF_ANALYZER_PATH, DEFAULT_PERF_MAX_AUTO_ADJUSTS, \
     DEFAULT_PERF_OUTPUT_FLAG, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, \
     DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MAX_PREFERRED_BATCH_SIZE, \
-    DEFAULT_RUN_CONFIG_PREFERRED_BATCH_SIZE_DISABLE, \
+    DEFAULT_RUN_CONFIG_PREFERRED_BATCH_SIZE_DISABLE, DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE, \
     DEFAULT_RUN_CONFIG_SEARCH_DISABLE, DEFAULT_TRITON_DOCKER_IMAGE, DEFAULT_TRITON_GRPC_ENDPOINT, \
     DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_TRITON_METRICS_URL, \
     DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT, DEFAULT_USE_LOCAL_GPU_MONITOR
@@ -425,10 +425,8 @@ class ConfigCommandProfile(ConfigCommand):
                 parser_args={'action': 'store_true'},
                 default_value=False,
                 flags=['--reload-model-disable'],
-                description=
-                'Flag to indicate whether or not to disable model '
-                'loading and unloading in remote mode.'
-            ))
+                description='Flag to indicate whether or not to disable model '
+                'loading and unloading in remote mode.'))
 
     def _add_client_configs(self):
         """
