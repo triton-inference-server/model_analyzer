@@ -656,13 +656,16 @@ perf_analyzer_flags:
 The `input-data`, `shape`, and `streaming` perf_analyzer options are additive and can take either a single string (non-list) or a list of strings:
 
 ```yaml
-...
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    parameters:
+        batch_sizes: 4
 perf_analyzer_flags:
   input-data: my-input-data-1
   shape:
-    - my-shape-1
-    - my-shape-2
-...
+    - INPUT0:1024,1024
+    - INPUT1:1024,1024
 ```
 
 **Important Notes**:
