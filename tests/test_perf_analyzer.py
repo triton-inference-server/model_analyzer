@@ -131,6 +131,12 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
+        shape = 5
+        self.config['shape'] = shape
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self.config.to_cli_string()
+
     def test_run(self):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH

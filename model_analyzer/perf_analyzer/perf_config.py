@@ -194,6 +194,10 @@ class PerfAnalyzerConfig:
                             args.append(f'--{key}={additive_value}')
                     elif type(value) is str:
                         args.append(f'--{key}={value}')
+                    else:
+                        raise TritonModelAnalyzerException(
+                            f"Unexpected type {type(value)} for perf_analyzer_flag {key}."
+                        )
                 else:
                     args.append(f'--{key}={value}')
 
