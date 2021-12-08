@@ -59,6 +59,10 @@ configuration:
 ```
 --run-config-search-max-concurrency 2 \
 --run-config-search-max-instance-count 2 \
+<<<<<<< HEAD
+=======
+--run-config-search-preferred-batch-size-disable
+>>>>>>> Add concurrent profile option to CLI (#267)
 ```
 
 `--run-config-search-max-concurrency` sets the max concurrency value that run
