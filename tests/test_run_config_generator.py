@@ -49,14 +49,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
     def test_generate_model_config_combinations(self):
         args = [
-            'model-analyzer',
-            'profile',
-            '--model-repository',
-            'cli_repository',
-            '-f',
-            'path-to-config-file',
-            '--profile-models',
-            'vgg11',
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--profile-models', 'vgg11'
         ]
 
         # Empty yaml
