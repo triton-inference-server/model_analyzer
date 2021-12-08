@@ -653,6 +653,21 @@ perf_analyzer_flags:
     latency-report-file: /path/to/latency/report/file
 ```
 
+The `input-data`, `shape`, and `streaming` perf_analyzer options are additive and can take either a single string (non-list) or a list of strings:
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    parameters:
+        batch_sizes: 4
+perf_analyzer_flags:
+  input-data: my-input-data-1
+  shape:
+    - INPUT0:1024,1024
+    - INPUT1:1024,1024
+```
+
 **Important Notes**:
 * When providing arguments under `perf_analyzer_flags`, you must use `-` instead
   of `_`. This casing is important and Model Analyzer will not recognize
