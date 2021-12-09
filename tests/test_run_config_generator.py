@@ -96,7 +96,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_CPU',
                 'count': 1
             }]
-        }]
+        }, None]
         self.assertEqual(expected_model_configs, model_configs)
 
         yaml_content = """
@@ -130,7 +130,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_CPU',
                 'count': 1
             }]
-        }]
+        }, None]
         self.assertEqual(expected_model_configs, model_configs)
 
         yaml_content = """
@@ -161,7 +161,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_CPU',
                 'count': 1
             }]
-        }]
+        }, None]
         self.assertEqual(expected_model_configs, model_configs)
 
         yaml_content = """
@@ -210,7 +210,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_CPU',
                 'count': 3
             }]
-        }]
+        }, None]
         self.assertEqual(expected_model_configs, model_configs)
 
         yaml_content = """
@@ -271,7 +271,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_CPU',
                 'count': 1
             }]
-        }, {}]
+        }, None]
 
         self.assertEqual(expected_model_configs, model_configs)
 
@@ -329,7 +329,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_GPU',
                 'count': 1
             }]
-        }, {}]
+        }, None]
         self.assertEqual(expected_model_configs, model_configs)
 
         # list under dynamic batching
@@ -428,7 +428,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_CPU',
                 'count': 2
             }]
-        }, {}]
+        }, None]
         self.assertEqual(expected_model_configs, model_configs)
 
     def test_generate_run_config_for_model_sweep(self):
@@ -479,7 +479,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                                                   client=self.client)
         model_configs = run_config_generator.generate_model_config_combinations(
             config.profile_models[0].model_config_parameters())
-        self.assertEqual(len(model_configs), 2)
+        self.assertEqual(len(model_configs), 3)
         self.mock_client.set_model_config(
             {'config': {
                 'name': 'vgg_16_graphdef'
@@ -487,7 +487,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         for model_config in model_configs:
             run_config_generator.generate_run_config_for_model_sweep(
                 config.profile_models[0], model_config)
-        self.assertEqual(len(run_config_generator.run_configs()), 18)
+        self.assertEqual(len(run_config_generator.run_configs()), 27)
         self.assertEqual(
             run_config_generator.run_configs()[0].model_config().get_field(
                 'name'), 'vgg_16_graphdef')
@@ -540,11 +540,11 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                                                   client=self.client)
         model_configs = run_config_generator.generate_model_config_combinations(
             config.profile_models[0].model_config_parameters())
-        self.assertEqual(len(model_configs), 2)
+        self.assertEqual(len(model_configs), 3)
         for model_config in model_configs:
             run_config_generator.generate_run_config_for_model_sweep(
                 config.profile_models[0], model_config)
-        self.assertEqual(len(run_config_generator.run_configs()), 18)
+        self.assertEqual(len(run_config_generator.run_configs()), 27)
         self.assertEqual(
             run_config_generator.run_configs()[0].model_config().get_field(
                 'name'), 'vgg_16_graphdef_i0')
@@ -574,7 +574,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                                                   client=self.client)
         model_configs = run_config_generator.generate_model_config_combinations(
             config.profile_models[0].model_config_parameters())
-        self.assertEqual(len(model_configs), 10)
+        self.assertEqual(len(model_configs), 11)
         self.mock_client.set_model_config(
             {'config': {
                 'name': 'vgg_16_graphdef'
@@ -582,7 +582,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         for model_config in model_configs:
             run_config_generator.generate_run_config_for_model_sweep(
                 config.profile_models[0], model_config)
-        self.assertEqual(len(run_config_generator.run_configs()), 90)
+        self.assertEqual(len(run_config_generator.run_configs()), 99)
         self.assertEqual(
             run_config_generator.run_configs()[0].model_config().get_field(
                 'name'), 'vgg_16_graphdef_i0')

@@ -113,6 +113,8 @@ class RunConfigGenerator:
 
             model_name_index = self._model_name_index
             model_config_dict = model_config.get_config()
+            self._apply_model_config_defaults(model_config_dict,
+                                              model_config.cpu_only())
 
             try:
                 model_name_index = self._model_configs.index(model_config_dict)
@@ -135,14 +137,33 @@ class RunConfigGenerator:
                     RunConfig(model.model_name(), model_config, perf_config,
                               model.triton_server_environment()))
 
+    def _apply_model_config_defaults(self, config_dict, cpu_only):
+        if "instance_group" not in config_dict:
+            config_dict["instance_group"] = [{}]
+        for instance_group in config_dict["instance_group"]:
+            self._apply_instance_group_defaults(instance_group, cpu_only)
+
+    def _apply_instance_group_defaults(self, instance_group, cpu_only):
+        if "count" not in instance_group:
+            instance_group["count"] = 1
+        if "kind" not in instance_group:
+            if (cpu_only):
+                instance_group["kind"] = "KIND_CPU"
+            else:
+                instance_group["kind"] = "KIND_GPU"
+
     def generate_model_config_combinations(self, value):
         configs = self._generate_model_config_combinations_helper(value)
-        self._add_default_config(configs)
+        if not self._default_config_in_configs(configs):
+            self._add_default_config(configs)
         return configs
+
+    def _default_config_in_configs(self, configs):
+        return None in configs
 
     def _add_default_config(self, configs):
         # Add in an empty configuration, which will apply the default values
-        configs.append({})
+        configs.append(None)
 
     def _generate_model_config_combinations_helper(self, value):
         """

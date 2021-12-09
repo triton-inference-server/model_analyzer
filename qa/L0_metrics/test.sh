@@ -88,13 +88,16 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
             METRICS_NUM_COLUMNS=`cat $METRICS_NUM_COLUMNS_FILE`
             INFERENCE_NUM_COLUMNS=`cat $INFERENCE_NUM_COLUMNS_FILE`
             SERVER_METRICS_NUM_COLUMNS=`cat $SERVER_NUM_COLUMNS_FILE`
+            INFERENCE_NUM_ROWS=2 # normal run + default config
+            METRICS_NUM_ROWS=$((${INFERENCE_NUM_ROWS} * ${#GPUS[@]}))
+            SERVER_NUM_ROWS=$((1 * ${#GPUS[@]}))
 
             check_table_row_column \
                 $ANALYZER_LOG $ANALYZER_LOG $ANALYZER_LOG \
                 $MODEL_METRICS_INFERENCE_FILE $MODEL_METRICS_GPU_FILE $SERVER_METRICS_FILE \
-                $INFERENCE_NUM_COLUMNS 1 \
-                $METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]})) \
-                $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]}))
+                $INFERENCE_NUM_COLUMNS $INFERENCE_NUM_ROWS \
+                $METRICS_NUM_COLUMNS $METRICS_NUM_ROWS \
+                $SERVER_METRICS_NUM_COLUMNS $SERVER_NUM_ROWS
             if [ $? -ne 0 ]; then
                 echo -e "\n***\n*** Test Output Verification Failed.\n***"
                 cat $ANALYZER_LOG
