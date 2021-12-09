@@ -82,6 +82,9 @@ RUN chmod +x build_wheel.sh && \
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install nvidia-pyindex && \
     python3 -m pip install wheels/triton_model_analyzer-*-manylinux*.whl
+#Other pip packages
+RUN python3 -m pip install \
+    coverage
 
 RUN apt-get install -y wkhtmltopdf
 
