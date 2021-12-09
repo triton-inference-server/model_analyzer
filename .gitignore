@@ -6,6 +6,9 @@
 #vscode
 .vscode/
 
+#python editable files
+*.egg-info
+
 # User-specific files
 *.rsuser
 *.suo
