@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from .mock_base import MockBase
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open, MagicMock
 
 
 class MockConfig(MockBase):
@@ -29,3 +29,4 @@ class MockConfig(MockBase):
         patchers.append(
             patch("builtins.open", mock_open(read_data=self.yaml_file_content)))
         patchers.append(patch("sys.argv", self.args))
+        patchers.append(patch('numba.cuda.is_available', MagicMock(True)))

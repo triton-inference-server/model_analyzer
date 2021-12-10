@@ -126,27 +126,29 @@ class ModelManager:
         if self._config.triton_launch_mode == 'remote':
             self._run_model_config_sweep(model, search_model_config=False)
         else:
-            if model_config_parameters:
-                user_model_config_sweeps = \
-                    self._run_config_generator.generate_model_config_combinations(
-                        model_config_parameters)
-                if model.parameters()['concurrency']:
-                    # Both are specified, search over neither
-                    for user_model_config_sweep in user_model_config_sweeps:
-                        self._run_config_generator.generate_run_config_for_model_sweep(
-                            model, user_model_config_sweep)
-                    self._execute_run_configs()
-                else:
-                    # Search through concurrency values only
-                    for user_model_config_sweep in user_model_config_sweeps:
-                        if self._state_manager.exiting():
-                            return
-                        self._run_model_config_sweep(
-                            model,
-                            search_model_config=False,
-                            user_model_config_sweep=user_model_config_sweep)
+            user_model_config_sweeps = \
+                self._run_config_generator.generate_model_config_combinations(
+                    model_config_parameters)
+            if model.parameters()['concurrency']:
+                # Both are specified, search over neither
+                for user_model_config_sweep in user_model_config_sweeps:
+                    self._run_config_generator.generate_run_config_for_model_sweep(
+                        model, user_model_config_sweep)
+                self._execute_run_configs()
             else:
-                # Model Config parameters unspecified
+                # Search through concurrency values only
+                for user_model_config_sweep in user_model_config_sweeps:
+                    if self._state_manager.exiting():
+                        return
+                    self._run_model_config_sweep(
+                        model,
+                        search_model_config=False,
+                        user_model_config_sweep=user_model_config_sweep)
+
+            # If no model config parameters were specified, then we only ran the default
+            # configuration above and need to do an automatic sweep
+            #
+            if not model_config_parameters:
                 self._run_model_config_sweep(model, search_model_config=True)
 
     def _run_model_config_sweep(self,
