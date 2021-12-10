@@ -136,7 +136,7 @@ class TestConfigGenerator:
             "run_config_search_preferred_batch_size_disable": True,
             "profile_models": self.profile_models,
         }
-        self._write_file(5, 2, 4, 1, model_config)
+        self._write_file(6, 2, 4, 1, model_config)
 
     def _write_file(self, total_param, total_param_remote, total_models,
                     total_models_remote, model_config):

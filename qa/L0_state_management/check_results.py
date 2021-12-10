@@ -111,10 +111,12 @@ class TestOutputValidator:
             return False
         return True
 
-    def check_continue_after_checkpoint(self):
+    def check_continue_after_checkpoint(self,
+                                        expected_resnet_count=3,
+                                        expected_vgg_count=2):
         """
-        Check that the 2nd model onwards have been run
-        once
+        Check that the 2nd model onwards have been run the correct
+        number of times
         """
 
         profiled_models = self._profile_models[-2:]
@@ -132,8 +134,21 @@ class TestOutputValidator:
                                       len('Profiling model '):end_of_model_name]
             found_models_count[model_name.rsplit('_', 1)[0]] += 1
 
+        # resnet50 libtorch normally has 4 runs:
+        #   ([2 models, one of which is default] x [2 concurrencies])
+        # but 1 was checkpointed from the previous interrupted run, so it
+        # will do the remaining 3
+        #
+        # vgg19 will have 2 runs:
+        #   ([2 models, one of which is default] x [1 concurrency])
+        #
+        expected_models_count = {}
+        expected_models_count['resnet50_libtorch'] = expected_resnet_count
+        expected_models_count['vgg19_libtorch'] = expected_vgg_count
+
         for i in range(2):
-            if found_models_count[profiled_models[i]] != 1:
+            model = profiled_models[i]
+            if found_models_count[model] != expected_models_count[model]:
                 return False
         return True
 
@@ -145,8 +160,13 @@ class TestOutputValidator:
         twice in the result table
         """
 
-        # Make sure first model out 2 was only profiled only once
-        if not self.check_continue_after_checkpoint():
+        # Make sure models are run the correct number of times.
+        # Normally resnet would be run 4 times. However, 2 were
+        # already handled by the previous setup test, so it will
+        # only execute twice.
+        #
+        if not self.check_continue_after_checkpoint(expected_resnet_count=2,
+                                                    expected_vgg_count=2):
             return False
 
         profiled_models = self._profile_models[-2:]
@@ -170,8 +190,13 @@ class TestOutputValidator:
             model_name = line.split()[0]
             table_measurement_count[model_name] += 1
 
+        # resnet50 libtorch has 4 results:
+        #   ([2 models, one of which is default] x [2 concurrencies])
+        # vgg19 will have 2 results:
+        #   ([2 models, one of which is default] x [1 concurrency])
+        #
         return table_measurement_count[profiled_models[
-            0]] == 2 and table_measurement_count[profiled_models[1]] == 1
+            0]] == 4 and table_measurement_count[profiled_models[1]] == 2
 
 
 if __name__ == '__main__':
