@@ -64,7 +64,7 @@ class TestConfigGenerator:
                 } for model in self.profile_models
             }
         }
-        self._write_file(2, 1, 2, 1, model_config)
+        self._write_file(3, 1, 2, 1, model_config)
 
     def generate_max_limit_with_model_config(self):
         model_config = {
@@ -82,7 +82,7 @@ class TestConfigGenerator:
                 } for model in self.profile_models
             },
         }
-        self._write_file(4, 2, 2, 1, model_config)
+        self._write_file(6, 2, 2, 1, model_config)
 
     def generate_max_limit(self):
         model_config = {
@@ -91,7 +91,7 @@ class TestConfigGenerator:
             "run_config_search_max_preferred_batch_size": 2,
             "profile_models": self.profile_models,
         }
-        self._write_file(16, 2, 8, 1, model_config)
+        self._write_file(18, 2, 8, 1, model_config)
 
     def generate_max_limit_with_param(self):
         model_config = {
@@ -106,7 +106,7 @@ class TestConfigGenerator:
                 } for model in self.profile_models
             },
         }
-        self._write_file(6, 1, 6, 1, model_config)
+        self._write_file(7, 1, 6, 1, model_config)
 
     def generate_max_limit_with_param_and_model_config(self):
         model_config = {
@@ -127,7 +127,7 @@ class TestConfigGenerator:
                 } for model in self.profile_models
             },
         }
-        self._write_file(2, 1, 2, 1, model_config)
+        self._write_file(3, 1, 2, 1, model_config)
 
     def generate_max_limit_with_dynamic_batch_disable(self):
         model_config = {
@@ -136,7 +136,7 @@ class TestConfigGenerator:
             "run_config_search_preferred_batch_size_disable": True,
             "profile_models": self.profile_models,
         }
-        self._write_file(4, 2, 4, 1, model_config)
+        self._write_file(5, 2, 4, 1, model_config)
 
     def _write_file(self, total_param, total_param_remote, total_models,
                     total_models_remote, model_config):
