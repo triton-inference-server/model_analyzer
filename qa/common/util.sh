@@ -129,12 +129,23 @@ function check_csv_table_row_column() {
     num_rows=`awk -v pattern=$tag '$0 ~ pattern {getline; i=0; while(getline) {i+=1}; print i}' $csv_file`
     if [[ "$num_rows" != "$expected_num_rows" ]]; then
         echo -e "\n***\n*** Test Failed: Expected $expected_num_rows rows in $csv_file, got ${num_rows}\n***"
+        echo -e "csv tag = ${tag}"
+        echo -e "csv csv_file = ${csv_file}"
+        echo -e "vvvvvvvvv"
+        cat ${csv_file}
+        echo -e "^^^^^^^^^"
         return 1
     fi
     for i in $( seq 1 $expected_num_rows ); do
         num_columns_found=`awk -v pattern=$tag -F ',' -v row="$i" '$0 ~ pattern {for (n=0; n<row;n++) {getline}; print NF}' $csv_file`
         if [[ "$num_columns_found" != "$expected_num_columns" ]]; then
             echo -e "\n***\n*** Test Failed: Expected $expected_num_columns columns in row $i, got ${num_columns_found}\n***"
+            echo -e "csv tag = ${tag}"
+            echo -e "csv row = ${i}"
+            echo -e "csv csv_file = ${csv_file}"
+            echo -e "vvvvvvvvv"
+            cat ${csv_file}
+            echo -e "^^^^^^^^^"
             return 1
         fi
     done
@@ -167,6 +178,11 @@ function check_log_table_row_column() {
     num_rows_found=`awk  "BEGIN{i=0} /$tag/{flag=1;getline;getline} /^$/{flag=0} flag {i+=1} END{print i}" $log_file`
     if [[ "$num_rows_found" != "$expected_num_rows" ]]; then
         echo -e "\n***\n*** Test Failed: Expected $expected_num_rows rows $log_file, got ${num_rows_found}\n***"
+        echo -e "log tag = ${tag}"
+        echo -e "log log_file = ${log_file}"
+        echo -e "vvvvvvvvv"
+        cat ${log_file}
+        echo -e "^^^^^^^^^"
         return 1
     fi
 
@@ -176,6 +192,12 @@ function check_log_table_row_column() {
         num_columns_found=`awk -v row="$i" "/$tag/{getline; for (n=0; n<row;n++) {getline}; print NF}" $log_file`
         if [[ "$num_columns_found" != "$expected_num_columns" ]]; then
             echo -e "\n***\n*** Test Failed: Expected $expected_num_columns columns in row $i of $tag, got ${num_columns_found}\n***"
+            echo -e "log tag = ${tag}"
+            echo -e "log row = ${i}"
+            echo -e "log log_file = ${log_file}"
+            echo -e "vvvvvvvvv"
+            cat ${log_file}
+            echo -e "^^^^^^^^^"
             return 1
         fi
     done
