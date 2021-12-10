@@ -505,7 +505,6 @@ class ResultManager:
                                                         'instance_group')
         if instance_group_idx is not None:
             row[instance_group_idx] = instance_group
-
         return row
 
     def _add_server_data(self):
