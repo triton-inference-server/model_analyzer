@@ -420,11 +420,11 @@ class ConfigCommandProfile(ConfigCommand):
                 " to be used during profiling"))
         self._add_config(
             ConfigField(
-                'model_loading_unloading_disable',
+                'reload_model_disable',
                 field_type=ConfigPrimitive(bool),
                 parser_args={'action': 'store_true'},
                 default_value=False,
-                flags=['--model-loading-unloading-disable'],
+                flags=['--reload-model-disable'],
                 description=
                 'Flag to indicate whether or not to disable model '
                 'loading and unloading in remote mode.'

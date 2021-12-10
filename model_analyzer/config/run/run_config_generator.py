@@ -87,12 +87,12 @@ class RunConfigGenerator:
         num_retries = analyzer_config['client_max_retries']
 
         if analyzer_config['triton_launch_mode'] == 'remote':
-            load_and_unload_model  = not analyzer_config['model_loading_unloading_disable']
-            if load_and_unload_model:
+            reload_model  = not analyzer_config['reload_model_disable']
+            if reload_model:
                 self._client.load_model(model.model_name())
             model_config = ModelConfig.create_from_triton_api(
                 self._client, model.model_name(), num_retries)
-            if load_and_unload_model:
+            if reload_model:
                 self._client.unload_model(model.model_name())
             model_config.set_cpu_only(model.cpu_only())
             perf_configs = self._generate_perf_config_for_model(
