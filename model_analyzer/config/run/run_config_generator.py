@@ -147,18 +147,18 @@ class RunConfigGenerator:
         if "count" not in instance_group:
             instance_group["count"] = 1
         if "kind" not in instance_group:
-            if (cpu_only):
+            if cpu_only:
                 instance_group["kind"] = "KIND_CPU"
             else:
                 instance_group["kind"] = "KIND_GPU"
 
     def generate_model_config_combinations(self, value):
         configs = self._generate_model_config_combinations_helper(value)
-        if not self._default_config_in_configs(configs):
+        if not self._is_default_config_in_configs(configs):
             self._add_default_config(configs)
         return configs
 
-    def _default_config_in_configs(self, configs):
+    def _is_default_config_in_configs(self, configs):
         return None in configs
 
     def _add_default_config(self, configs):

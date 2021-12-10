@@ -15,9 +15,8 @@
 from .common import test_result_collector as trc
 
 from .mocks.mock_config import MockConfig
-from .mocks.mock_os import MockOSMethods
 from .mocks.mock_model_config import MockModelConfig
-from .mocks.mock_client import MockTritonClientMethods
+from .mocks.mock_run_configs import MockRunConfigs
 
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
@@ -27,46 +26,14 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_manager import ModelManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
-import itertools
-import logging
-import sys
-
 from unittest.mock import MagicMock
 from unittest.mock import patch
-
-
-class MockRunConfigs():
-
-    def __init__(self):
-        self._configs = []
-
-    def get_configs(self):
-        return set(self._configs)
-
-    def add_config(self, config):
-        """ 
-        Add a single config from a dict
-        """
-        list_of_tuples = [
-            (y, config[y]) for y in sorted(config.keys()) if config[y] != None
-        ]
-        out_tuple = tuple(item for x in list_of_tuples for item in x)
-        self._configs.append(out_tuple)
-
-    def populate_from_keys_and_configs(self, keys, config_values):
-        """
-        Populate a full set of configs from input list of config_values 
-        and the associated list of keys
-        """
-        for value in config_values:
-            config_dict = {keys[i]: value[i] for i in range(len(keys))}
-            self.add_config(config_dict)
 
 
 class ModelManagerSubclass(ModelManager):
     """ 
     Overrides execute_run_configs() to gather a list of MockRunConfigs that
-    contain the configured values of each 'executed' run_config
+    contain the configured values of each would-be 'executed' run_config
     """
 
     def __init__(self, config, client, server, metrics_manager, result_manager,
@@ -77,39 +44,8 @@ class ModelManagerSubclass(ModelManager):
 
     def _execute_run_configs(self):
         while self._run_config_generator.run_configs():
-            config = self._run_config_generator.next_config()
-            model_config = config.model_config().to_dict()
-            perf_config = config.perf_config()
-
-            max_batch_size = None
-            if model_config.get("maxBatchSize") is not None:
-                max_batch_size = model_config["maxBatchSize"]
-
-            instances = None
-            kind = None
-            if model_config.get("instanceGroup") is not None:
-                instances = model_config["instanceGroup"][0]["count"]
-                kind = model_config["instanceGroup"][0]["kind"]
-            dynamic_batching = None
-            max_queue_delay = None
-            if model_config.get("dynamicBatching") is not None:
-                dynamic_batching = model_config["dynamicBatching"].get(
-                    "preferredBatchSize", [0])[0]
-                max_queue_delay = model_config["dynamicBatching"].get(
-                    "maxQueueDelayMicroseconds")
-
-            batch_size = perf_config.__getitem__("batch-size")
-            concurrency = perf_config.__getitem__("concurrency-range")
-
-            self._configs.add_config({
-                'kind': kind,
-                'batch_sizes': batch_size,
-                'batching': dynamic_batching,
-                'concurrency': concurrency,
-                'instances': instances,
-                'max_batch_size': max_batch_size,
-                'max_queue_delay': max_queue_delay
-            })
+            run_config = self._run_config_generator.next_config()
+            self._configs.add_from_run_config(run_config)
 
     def get_run_configs(self):
         return self._configs
@@ -661,10 +597,11 @@ class TestModelManager(trc.TestResultCollector):
         Create a set of expected and actual run configs and confirm they are equal
         """
         run_configs = model_manager.get_run_configs()
-        expected_configs = self._convert_ranges_to_run_configs(expected_ranges)
+        expected_configs = MockRunConfigs()
+        expected_configs.populate_from_ranges(expected_ranges)
 
-        self.assertEqual(run_configs.get_configs(),
-                         expected_configs.get_configs())
+        self.assertEqual(run_configs.get_configs_set(),
+                         expected_configs.get_configs_set())
 
     def _evaluate_config(self, args, yaml_content):
         """ Parse the given yaml_content into a config and return it """
@@ -681,20 +618,3 @@ class TestModelManager(trc.TestResultCollector):
         cli.parse()
         mock_config.stop()
         return config
-
-    def _convert_ranges_to_run_configs(self, ranges):
-        """ 
-        Given a dict of key-to-list, create the set of run_configs based on 
-        the full cartesian product of the lists
-        """
-        run_configs = MockRunConfigs()
-
-        for ranges_dict in ranges:
-            ranges_keys = list(sorted(ranges_dict.keys()))
-            value_lists = []
-            for key in ranges_keys:
-                value_lists.append(ranges_dict[key])
-            configs = list(itertools.product(*value_lists))
-            run_configs.populate_from_keys_and_configs(ranges_keys, configs)
-
-        return run_configs
