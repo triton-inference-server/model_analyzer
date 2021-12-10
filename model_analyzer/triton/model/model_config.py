@@ -276,20 +276,6 @@ class ModelConfig:
         else:
             return "Disabled"
 
-    def backend_parameters_string(self):
-        model_config = self.get_config()
-        PARAMS_OF_INTEREST = {"pipeline_para_size": "PP", "tensor_para_size": "TP", "is_half": "half", "max_input_len": "max_input", "max_seq_len": "max_seq"}
-        if 'parameters' in model_config:
-            parameters = model_config["parameters"]
-
-            def _get_entry(k):
-                value = parameters[k]["string_value"]
-                return f"{PARAMS_OF_INTEREST[k]}={value}"
-
-            return f"{' '.join([f'{_get_entry(k)}' for k in PARAMS_OF_INTEREST if k in parameters])}"
-        else:
-            return "Disabled"
-
     def instance_group_string(self):
         """
         Returns
