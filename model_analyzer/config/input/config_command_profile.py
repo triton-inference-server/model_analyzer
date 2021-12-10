@@ -474,22 +474,6 @@ class ConfigCommandProfile(ConfigCommand):
                         parser_args={'action': 'store_true'},
                         default_value=DEFAULT_RUN_CONFIG_SEARCH_DISABLE,
                         description="Disable run config search."))
-        self._add_config(
-            ConfigField(
-                'run_config_search_max_preferred_batch_size',
-                flags=['--run-config-search-max-preferred-batch-size'],
-                field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_RUN_CONFIG_MAX_PREFERRED_BATCH_SIZE,
-                description=
-                "Max preferred batch size value that run config search should not go beyond that."
-            ))
-        self._add_config(
-            ConfigField(
-                'run_config_search_preferred_batch_size_disable',
-                flags=['--run-config-search-preferred-batch-size-disable'],
-                field_type=ConfigPrimitive(bool),
-                default_value=DEFAULT_RUN_CONFIG_PREFERRED_BATCH_SIZE_DISABLE,
-                description="Disable preferred batch size search."))
 
     def _add_triton_configs(self):
         """

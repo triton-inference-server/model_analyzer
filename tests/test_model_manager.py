@@ -111,9 +111,7 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = """
             profile_models: test_model
             run_config_search_max_concurrency: 128
-            run_config_search_max_preferred_batch_size: 16
             run_config_search_max_instance_count: 5
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: False
             """
 

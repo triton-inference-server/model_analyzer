@@ -30,8 +30,6 @@ class RunSearch:
     def __init__(self, config):
         self._max_concurrency = config.run_config_search_max_concurrency
         self._max_instance_count = config.run_config_search_max_instance_count
-        self._max_preferred_batch_size = config.run_config_search_max_preferred_batch_size
-        self._sweep_preferred_batch_size_disable = config.run_config_search_preferred_batch_size_disable
         self._model_config_parameters = {'instance_count': 1}
         self._measurements = []
         self._last_batch_length = None
@@ -50,10 +48,6 @@ class RunSearch:
         if 'dynamic_batching' in model_config:
             if model_config['dynamic_batching'] is None:
                 new_config['dynamic_batching'] = {}
-            else:
-                new_config['dynamic_batching'] = {
-                    'preferred_batch_size': [model_config['dynamic_batching']]
-                }
 
         if 'instance_count' in model_config:
             if not cpu_only:
@@ -213,7 +207,8 @@ class RunSearch:
         """
 
         concurrency = model.parameters()['concurrency']
-
+        # Enable dynamic batching
+        self._model_config_parameters['dynamic_batching'] = None
         if len(concurrency) == 0:
             model.parameters()['concurrency'] = [1]
         else:
@@ -256,21 +251,7 @@ class RunSearch:
             'instance_count'] > self._max_instance_count
 
         if instance_limit_reached:
-            if self._sweep_preferred_batch_size_disable:
-                return model, []
-
-            # Reset instance_count
-            self._model_config_parameters['instance_count'] = 1
-
-            self._step_dynamic_batching()
-            dynamic_batching_enabled = self._model_config_parameters[
-                'dynamic_batching'] is not None
-
-            if dynamic_batching_enabled:
-                batch_size_limit_reached = self._model_config_parameters[
-                    'dynamic_batching'] > self._max_preferred_batch_size
-                if batch_size_limit_reached:
-                    return model, []
+            return model, []
         return model, [self._create_model_config(cpu_only=model.cpu_only())]
 
     def _log_message(self, model):
