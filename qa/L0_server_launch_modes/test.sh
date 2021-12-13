@@ -86,64 +86,76 @@ function run_server_launch_modes() {
         MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
 
-        # Set arguments for various launch modes
-        if [ "$LAUNCH_MODE" == "remote" ]; then    
-            # For remote launch, set server args and start server
-            SERVER=`which tritonserver`
-            SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
-            SERVER_HTTP_PORT=${http_port}
-            
-            run_server
-            if [ "$SERVER_PID" == "0" ]; then
-                echo -e "\n***\n*** Failed to start $SERVER\n***"
-                cat $SERVER_LOG
-                exit 1
-            fi
-        elif [ "$LAUNCH_MODE" == "c_api" ]; then
-            # c_api does not get server only metrics, so for GPUs to appear in log, we must profile (delete checkpoint)
-            rm -f $CHECKPOINT_DIRECTORY/*
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
-        else
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
-        fi
+        _run_server
 
         # Run the analyzer and check the results, enough to just profile the server
-        set +e
-        MODEL_ANALYZER_SUBCOMMAND="profile"
-        run_analyzer
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
-                    "\n***     model-analyzer exited with non-zero exit code. \n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
-
-        if [ "$LAUNCH_MODE" == "remote" ]; then
-            kill $SERVER_PID
-            wait $SERVER_PID
-        else
-            if [ ! -s "$SERVER_LOG" ]; then
-                echo -e "\n***\n*** Test Output Verification Failed : No logs found\n***"
-                cat $ANALYZER_LOG
-                RET=1
-            fi
-        fi
-
-        if [ "$gpus" == "empty_gpu_flag" ]; then
-            python3 check_gpus.py --analyzer-log $ANALYZER_LOG
-        elif [ -z "$gpus" ]; then
-            python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${GPUS[@]} | sed "s/ /,/g"` --check-visible
-        else
-            python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${gpus[@]} | sed "s/ /,/g"`
-        fi
-        if [ $? -ne 0 ]; then
-            RET=1
-            break
-        fi
-        set -e
+        set +e              # turn off error checking
+        _run_analyzer
+        _check_gpus $gpus
+        set -e              # turn error checking back on
 
         rm -rf $OUTPUT_MODEL_REPOSITORY
     done
+}
+
+function _run_server() {
+    # Set arguments for various launch modes
+    if [ "$LAUNCH_MODE" == "remote" ]; then    
+        # For remote launch, set server args and start server
+        SERVER=`which tritonserver`
+        SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
+        SERVER_HTTP_PORT=${http_port}
+        
+        run_server
+        if [ "$SERVER_PID" == "0" ]; then
+            echo -e "\n***\n*** Failed to start $SERVER\n***"
+            cat $SERVER_LOG
+            exit 1
+        fi
+    elif [ "$LAUNCH_MODE" == "c_api" ]; then
+        # c_api does not get server only metrics, so for GPUs to appear in log, we must profile (delete checkpoint)
+        rm -f $CHECKPOINT_DIRECTORY/*
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
+    else
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
+    fi
+}
+
+function _run_analyzer() {
+    MODEL_ANALYZER_SUBCOMMAND="profile"
+    run_analyzer
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
+                "\n***     model-analyzer exited with non-zero exit code. \n***"
+        cat $ANALYZER_LOG
+        RET=1
+    fi
+
+    if [ "$LAUNCH_MODE" == "remote" ]; then
+        kill $SERVER_PID
+        wait $SERVER_PID
+    else
+        if [ ! -s "$SERVER_LOG" ]; then
+            echo -e "\n***\n*** Test Output Verification Failed : No logs found\n***"
+            cat $ANALYZER_LOG
+            RET=1
+        fi
+    fi
+}
+
+function _check_gpus() {
+    gpus = "$1"
+    if [ "$gpus" == "empty_gpu_flag" ]; then
+        python3 check_gpus.py --analyzer-log $ANALYZER_LOG
+    elif [ -z "$gpus" ]; then
+        python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${GPUS[@]} | sed "s/ /,/g"` --check-visible
+    else
+        python3 check_gpus.py --analyzer-log $ANALYZER_LOG --gpus `echo ${gpus[@]} | sed "s/ /,/g"`
+    fi
+    if [ $? -ne 0 ]; then
+        RET=1
+        break
+    fi
 }
 
 # This test will be executed with 4-GPUs.
