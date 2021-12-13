@@ -36,6 +36,8 @@ MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY --profile-models $MODEL_NAMES"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:$metrics_port/metrics"
+MODEL_CONTROL_MODE="--model-control-mode=explicit"
+RELOAD_MODEL_DISABLE=""
 
 # mkdir $CHECKPOINT_DIRECTORY
 # cp $CHECKPOINT_REPOSITORY/server_launch_modes.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
@@ -103,7 +105,7 @@ function _run_server() {
     if [ "$LAUNCH_MODE" == "remote" ]; then    
         # For remote launch, set server args and start server
         SERVER=`which tritonserver`
-        SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
+        SERVER_ARGS="--model-repository=$MODEL_REPOSITORY $MODEL_CONTROL_MODE --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
         SERVER_HTTP_PORT=${http_port}
         
         run_server
@@ -112,17 +114,19 @@ function _run_server() {
             cat $SERVER_LOG
             exit 1
         fi
-    elif [ "$LAUNCH_MODE" == "c_api" ]; then
+    fi
+}
+
+function _run_analyzer() {
+    MODEL_ANALYZER_SUBCOMMAND="profile"
+    if [ "$LAUNCH_MODE" == "c_api" ]; then
         # c_api does not get server only metrics, so for GPUs to appear in log, we must profile (delete checkpoint)
         rm -f $CHECKPOINT_DIRECTORY/*
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
     else
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
     fi
-}
-
-function _run_analyzer() {
-    MODEL_ANALYZER_SUBCOMMAND="profile"
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $RELOAD_MODEL_DISABLE"
     run_analyzer
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
@@ -194,6 +198,16 @@ run_server_launch_modes "$CURRENT_GPUS"
 
 CURRENT_GPUS="1 2"
 run_server_launch_modes "$CURRENT_GPUS"
+
+################################################################
+# Test loading/unloading feature once using last configuration #
+################################################################
+
+MODEL_CONTROL_MODE=""
+_run_server
+
+RELOAD_MODEL_DISABLE="--reload_model_disable"
+_run_analyzer
 
 rm -rf $CHECKPOINT_DIRECTORY
 
