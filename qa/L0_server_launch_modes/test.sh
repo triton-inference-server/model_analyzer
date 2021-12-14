@@ -106,6 +106,11 @@ function run_server_launch_modes() {
         _check_gpus $@
         set -e
 
+        if [ $RET -ne 0 ]; then
+            echo "run_server_launch_modes: RET=$RET for CONFIG_FILE=$CONFIG_FILE, LAUNCH_MODE=$LAUNCH_MODE, and PROTOCOL=$PROTOCOL"
+            break
+        fi
+
         rm -rf $OUTPUT_MODEL_REPOSITORY
     done
 }
@@ -134,6 +139,11 @@ function run_model_modes() {
         _kill_server
         _check_gpus $@
         set -e
+
+        if [ $RET -ne 0 ]; then
+            echo "run_model_modes: RET=$RET for MODEL_CONTROL_MODE=$MODEL_CONTROL_MODE and RELOAD_MODEL_DISABLE=$RELOAD_MODEL_DISABLE"
+            return
+        fi
     done
 }
 
@@ -169,6 +179,9 @@ function _run_analyzer() {
 
     if [ "$LAUNCH_MODE" != "remote" ]; then
         if [ ! -s "$SERVER_LOG" ]; then
+
+            echo "LAUNCH_MODE = $LAUNCH_MODE, and SERVER_LOG = $SERVER_LOG"
+
             echo -e "\n***\n*** Test Output Verification Failed : No logs found\n***"
             cat $ANALYZER_LOG
             RET=1
@@ -197,7 +210,6 @@ function _check_gpus() {
     fi
     if [ $? -ne 0 ]; then
         RET=1
-        break
     fi
 }
 
