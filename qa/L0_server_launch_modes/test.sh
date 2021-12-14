@@ -138,6 +138,7 @@ function run_model_modes() {
         _run_analyzer
         _kill_server
         _check_gpus $@
+        rm -rf $OUTPUT_MODEL_REPOSITORY
         set -e
 
         if [ $RET -ne 0 ]; then
