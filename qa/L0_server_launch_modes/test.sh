@@ -36,8 +36,6 @@ MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY --profile-models $MODEL_NAMES"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:$metrics_port/metrics"
-MODEL_CONTROL_MODE="--model-control-mode=explicit"
-RELOAD_MODEL_DISABLE=""
 
 # mkdir $CHECKPOINT_DIRECTORY
 # cp $CHECKPOINT_REPOSITORY/server_launch_modes.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
@@ -87,46 +85,80 @@ function run_server_launch_modes() {
 
         MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
+        MODEL_CONTROL_MODE='--explicit-model-control=explicit'
+        RELOAD_MODEL_DISABLE=''
 
-        _run_server
+        # Set arguments for various launch modes
+        if [ "$LAUNCH_MODE" == "remote" ]; then 
+            run_model_modes $@
+            continue
+        elif [ "$LAUNCH_MODE" == "c_api" ]; then
+            # c_api does not get server only metrics, so for GPUs to appear in log, we must profile (delete checkpoint)
+            rm -f $CHECKPOINT_DIRECTORY/*
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
+        else
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
+        fi
 
         # Run the analyzer and check the results, enough to just profile the server
-        set +e              # turn off error checking
+        set +e
         _run_analyzer
-        _check_gpus $gpus
-        set -e              # turn error checking back on
+        _check_gpus $@
+        set -e
 
         rm -rf $OUTPUT_MODEL_REPOSITORY
     done
 }
 
+function run_model_modes() {
+    if [ "$LAUNCH_MODE" != "remote" ]; then 
+        echo -e "\n***\n*** Test Failed. Function 'run_model_modes' can only be run in remote mode (not '${LAUNCH_MODE}' mode). \n***"
+        exit 1
+    fi
+
+    model_mode_combos=('--model-control-mode=explicit,' ',--reload-model-disable')
+
+    for model_mode_combo in ${model_mode_combos[@]}
+    do
+        # delete previous array/list (this is crucial!)
+        unset model_mode
+
+        # make array from simple string
+        model_mode=(${model_mode_combo//,/ })
+        MODEL_CONTROL_MODE=${model_mode[0]}
+        RELOAD_MODEL_DISABLE=${model_mode[1]}
+
+        set +e
+        _run_server $@
+        _run_analyzer
+        _kill_server
+        _check_gpus $@
+        set -e
+    done
+}
+
 function _run_server() {
-    # Set arguments for various launch modes
-    if [ "$LAUNCH_MODE" == "remote" ]; then    
-        # For remote launch, set server args and start server
-        SERVER=`which tritonserver`
-        SERVER_ARGS="--model-repository=$MODEL_REPOSITORY $MODEL_CONTROL_MODE --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
-        SERVER_HTTP_PORT=${http_port}
-        
-        run_server
-        if [ "$SERVER_PID" == "0" ]; then
-            echo -e "\n***\n*** Failed to start $SERVER\n***"
-            cat $SERVER_LOG
-            exit 1
-        fi
+    if [ "$LAUNCH_MODE" != "remote" ]; then 
+        echo -e "\n***\n*** Test Failed. Function '_run_server' can only be run in remote mode (not '${LAUNCH_MODE}' mode). \n***"
+        exit 1
+    fi
+
+    # For remote launch, set server args and start server
+    SERVER=`which tritonserver`
+    SERVER_ARGS="--model-repository=$MODEL_REPOSITORY $MODEL_CONTROL_MODE --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
+    SERVER_HTTP_PORT=${http_port}
+    
+    run_server
+    if [ "$SERVER_PID" == "0" ]; then
+        echo -e "\n***\n*** Failed to start $SERVER\n***"
+        cat $SERVER_LOG
+        exit 1
     fi
 }
 
 function _run_analyzer() {
     MODEL_ANALYZER_SUBCOMMAND="profile"
-    if [ "$LAUNCH_MODE" == "c_api" ]; then
-        # c_api does not get server only metrics, so for GPUs to appear in log, we must profile (delete checkpoint)
-        rm -f $CHECKPOINT_DIRECTORY/*
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
-    else
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
-    fi
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $RELOAD_MODEL_DISABLE"
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS $RELOAD_MODEL_DISABLE"
     run_analyzer
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
@@ -135,10 +167,7 @@ function _run_analyzer() {
         RET=1
     fi
 
-    if [ "$LAUNCH_MODE" == "remote" ]; then
-        kill $SERVER_PID
-        wait $SERVER_PID
-    else
+    if [ "$LAUNCH_MODE" != "remote" ]; then
         if [ ! -s "$SERVER_LOG" ]; then
             echo -e "\n***\n*** Test Output Verification Failed : No logs found\n***"
             cat $ANALYZER_LOG
@@ -147,8 +176,18 @@ function _run_analyzer() {
     fi
 }
 
+function _kill_server() {
+    if [ "$LAUNCH_MODE" != "remote" ]; then 
+        echo -e "\n***\n*** Test Failed. Function '_kill_server' can only be run in remote mode (not '${LAUNCH_MODE}' mode). \n***"
+        exit 1
+    fi
+
+    kill $SERVER_PID
+    wait $SERVER_PID
+}
+
 function _check_gpus() {
-    gpus = "$1"
+    gpus=($@)
     if [ "$gpus" == "empty_gpu_flag" ]; then
         python3 check_gpus.py --analyzer-log $ANALYZER_LOG
     elif [ -z "$gpus" ]; then
@@ -198,16 +237,6 @@ run_server_launch_modes "$CURRENT_GPUS"
 
 CURRENT_GPUS="1 2"
 run_server_launch_modes "$CURRENT_GPUS"
-
-################################################################
-# Test loading/unloading feature once using last configuration #
-################################################################
-
-MODEL_CONTROL_MODE=""
-_run_server
-
-RELOAD_MODEL_DISABLE="--reload_model_disable"
-_run_analyzer
 
 rm -rf $CHECKPOINT_DIRECTORY
 
