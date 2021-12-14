@@ -86,20 +86,6 @@ class RunSearch:
 
         self._model_config_parameters['instance_count'] += 1
 
-    def _step_dynamic_batching(self):
-        """
-        Advances the dynamic batching by one step.
-        """
-
-        if 'dynamic_batching' not in self._model_config_parameters:
-            # Enable dynamic batching
-            self._model_config_parameters['dynamic_batching'] = None
-        else:
-            if self._model_config_parameters['dynamic_batching'] is None:
-                self._model_config_parameters['dynamic_batching'] = 1
-            else:
-                self._model_config_parameters['dynamic_batching'] *= 2
-
     def _get_throughput(self, measurement):
         return measurement.get_metric_value('perf_throughput')
 
@@ -245,7 +231,8 @@ class RunSearch:
         Gets next iteration model config
         parameters sweep
         """
-
+        #TODO remove the duplicate code from this line and 216
+        self._model_config_parameters['dynamic_batching'] = None
         self._step_instance_count()
         instance_limit_reached = self._model_config_parameters[
             'instance_count'] > self._max_instance_count

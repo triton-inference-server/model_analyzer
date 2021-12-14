@@ -61,8 +61,7 @@ class MockRunConfig():
         dynamic_batching = None
         max_queue_delay = None
         if model_config.get("dynamic_batching") is not None:
-            dynamic_batching = model_config["dynamic_batching"].get(
-                "preferred_batch_size", [0])[0]
+            dynamic_batching = 0
             max_queue_delay = model_config["dynamic_batching"].get(
                 "max_queue_delay_microseconds")
 
