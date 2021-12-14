@@ -668,6 +668,9 @@ perf_analyzer_flags:
     - INPUT1:1024,1024
 ```
 
+If a model configuration has variable-sized dimensions in the inputs section, 
+then the `shape` option of the `perf_analyzer_flags` option must be specified.
+
 **Important Notes**:
 * When providing arguments under `perf_analyzer_flags`, you must use `-` instead
   of `_`. This casing is important and Model Analyzer will not recognize
