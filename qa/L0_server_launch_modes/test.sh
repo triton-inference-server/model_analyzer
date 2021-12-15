@@ -88,86 +88,65 @@ function run_server_launch_modes() {
         MODEL_CONTROL_MODE='--explicit-model-control=explicit'
         RELOAD_MODEL_DISABLE=''
 
-        # Set arguments for various launch modes
-        if [ "$LAUNCH_MODE" == "remote" ]; then 
-            run_model_modes $@
-            continue
-        elif [ "$LAUNCH_MODE" == "c_api" ]; then
-            # c_api does not get server only metrics, so for GPUs to appear in log, we must profile (delete checkpoint)
-            rm -f $CHECKPOINT_DIRECTORY/*
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
-        else
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
-        fi
-
-        # Run the analyzer and check the results, enough to just profile the server
-        set +e
-        _run_analyzer
-        _check_gpus $@
-        set -e
-
-        if [ $RET -ne 0 ]; then
-            echo "run_server_launch_modes: RET=$RET for CONFIG_FILE=$CONFIG_FILE, LAUNCH_MODE=$LAUNCH_MODE, and PROTOCOL=$PROTOCOL"
+        _do_config
+        if [ $? -ne 0 ]; then
             break
-        fi
+        fi        
 
-        rm -rf $OUTPUT_MODEL_REPOSITORY
     done
 }
 
-function run_model_modes() {
-    if [ "$LAUNCH_MODE" != "remote" ]; then 
-        echo -e "\n***\n*** Test Failed. Function 'run_model_modes' can only be run in remote mode (not '${LAUNCH_MODE}' mode). \n***"
-        exit 1
-    fi
+function _do_config() {
+    # Set arguments for various launch modes
+    if [ "$LAUNCH_MODE" == "remote" ]; then    
 
-    model_mode_combos=('--model-control-mode=explicit,' ',--reload-model-disable')
+        model_mode_combos=('--model-control-mode=explicit,' ',--reload-model-disable')
 
-    for model_mode_combo in ${model_mode_combos[@]}
-    do
-        # delete previous array/list (this is crucial!)
-        unset model_mode
+        for model_mode_combo in ${model_mode_combos[@]}
+        do
+            # delete previous array/list (this is crucial!)
+            unset model_mode
 
-        # make array from simple string
-        model_mode=(${model_mode_combo//,/ })
-        MODEL_CONTROL_MODE=${model_mode[0]}
-        RELOAD_MODEL_DISABLE=${model_mode[1]}
+            # make array from simple string
+            model_mode=(${model_mode_combo//,/ })
+            MODEL_CONTROL_MODE=${model_mode[0]}
+            RELOAD_MODEL_DISABLE=${model_mode[1]}
 
-        set +e
-        _run_server $@
-        _run_analyzer
-        _kill_server
-        _check_gpus $@
-        rm -rf $OUTPUT_MODEL_REPOSITORY
-        set -e
-
-        if [ $RET -ne 0 ]; then
-            echo "run_model_modes: RET=$RET for MODEL_CONTROL_MODE=$MODEL_CONTROL_MODE and RELOAD_MODEL_DISABLE=$RELOAD_MODEL_DISABLE"
-            return
-        fi
-    done
-}
-
-function _run_server() {
-    if [ "$LAUNCH_MODE" != "remote" ]; then 
-        echo -e "\n***\n*** Test Failed. Function '_run_server' can only be run in remote mode (not '${LAUNCH_MODE}' mode). \n***"
-        exit 1
-    fi
-
-    # For remote launch, set server args and start server
-    SERVER=`which tritonserver`
-    SERVER_ARGS="--model-repository=$MODEL_REPOSITORY $MODEL_CONTROL_MODE --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
-    SERVER_HTTP_PORT=${http_port}
+            # For remote launch, set server args and start server
+            SERVER=`which tritonserver`
+            SERVER_ARGS="--model-repository=$MODEL_REPOSITORY $MODEL_CONTROL_MODE --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
+            SERVER_HTTP_PORT=${http_port}
     
-    run_server
-    if [ "$SERVER_PID" == "0" ]; then
-        echo -e "\n***\n*** Failed to start $SERVER\n***"
-        cat $SERVER_LOG
-        exit 1
+            run_server
+            if [ "$SERVER_PID" == "0" ]; then
+                echo -e "\n***\n*** Failed to start $SERVER\n***"
+                cat $SERVER_LOG
+                exit 1
+            fi
+
+            _do_analyzer
+            if [ $? -ne 0 ]; then
+                return 1
+            fi        
+        done
+
+    elif [ "$LAUNCH_MODE" == "c_api" ]; then
+        # c_api does not get server only metrics, so for GPUs to appear in log, we must profile (delete checkpoint)
+        rm -f $CHECKPOINT_DIRECTORY/*
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
+    else
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
     fi
+
+    _do_analyzer
+    if [ $? -ne 0 ]; then
+        return 1
+    fi        
 }
 
-function _run_analyzer() {
+function _do_analyzer() {
+    # Run the analyzer and check the results, enough to just profile the server
+    set +e
     MODEL_ANALYZER_SUBCOMMAND="profile"
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS $RELOAD_MODEL_DISABLE"
     run_analyzer
@@ -178,30 +157,17 @@ function _run_analyzer() {
         RET=1
     fi
 
-    if [ "$LAUNCH_MODE" != "remote" ]; then
+    if [ "$LAUNCH_MODE" == "remote" ]; then
+        kill $SERVER_PID
+        wait $SERVER_PID
+    else
         if [ ! -s "$SERVER_LOG" ]; then
-
-            echo "LAUNCH_MODE = $LAUNCH_MODE, and SERVER_LOG = $SERVER_LOG"
-
             echo -e "\n***\n*** Test Output Verification Failed : No logs found\n***"
             cat $ANALYZER_LOG
             RET=1
         fi
     fi
-}
 
-function _kill_server() {
-    if [ "$LAUNCH_MODE" != "remote" ]; then 
-        echo -e "\n***\n*** Test Failed. Function '_kill_server' can only be run in remote mode (not '${LAUNCH_MODE}' mode). \n***"
-        exit 1
-    fi
-
-    kill $SERVER_PID
-    wait $SERVER_PID
-}
-
-function _check_gpus() {
-    gpus=($@)
     if [ "$gpus" == "empty_gpu_flag" ]; then
         python3 check_gpus.py --analyzer-log $ANALYZER_LOG
     elif [ -z "$gpus" ]; then
@@ -211,7 +177,11 @@ function _check_gpus() {
     fi
     if [ $? -ne 0 ]; then
         RET=1
+        return 1
     fi
+    set -e
+
+    rm -rf $OUTPUT_MODEL_REPOSITORY
 }
 
 # This test will be executed with 4-GPUs.
