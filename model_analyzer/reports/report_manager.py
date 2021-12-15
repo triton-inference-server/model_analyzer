@@ -396,7 +396,7 @@ class ReportManager:
         elif dynamic_batching_str == "Enabled":
             dynamic_batch_phrase = "dynamic batching enabled"
         else:
-            dynamic_batch_phrase = f"preferred batch size of {dynamic_batching_str}"
+            dynamic_batch_phrase = f"dynamic batching unknown"
         return dynamic_batch_phrase
 
     def _build_summary_table(self,

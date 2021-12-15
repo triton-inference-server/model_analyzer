@@ -271,12 +271,7 @@ class ModelConfig:
 
         model_config = self.get_config()
         if 'dynamic_batching' in model_config:
-            if 'max_batch_size' in model_config:
-                dynamic_batch_sizes = [model_config['max_batch_size']]
-            else:
-                # Model doesn't support batching
-                return 'N/A'
-            return f"[{' '.join([str(x) for x in dynamic_batch_sizes])}]"
+            return "Enabled"
         else:
             return "Disabled"
 
