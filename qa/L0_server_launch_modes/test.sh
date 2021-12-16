@@ -104,8 +104,9 @@ function _do_config() {
         for model_mode_combo in ${model_mode_combos[@]}
         do
             IFS=';' read -ra model_mode <<< "$model_mode_combo"
+            length=${#model_mode[@]}
             # trailing spaces are omitted from array
-            if [ $length -ne 0 ] && [ $length -ne 1 ]; then
+            if [ $length -ne 1 ] && [ $length -ne 2 ]; then
                 echo -e "\n***\n*** Array setup incorrectly\n***"
                 exit 1
             fi
@@ -130,7 +131,7 @@ function _do_config() {
                 exit 1
             fi
 
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS $MODEL_ANALYZER_ARGS `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS $RELOAD_MODEL_DISABLE `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
             _do_analyzer
             if [ $? -ne 0 ]; then
                 return 1
