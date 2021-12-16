@@ -97,9 +97,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 "count": 1,
                 "kind": "KIND_GPU"
             }],
-            "dynamic_batching": {
-                "preferred_batch_size": [4, 8],
-            }
+            "dynamic_batching": {}
         }
 
         self.os_mock = MockOSMethods(mock_paths=[

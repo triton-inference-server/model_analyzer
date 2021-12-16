@@ -207,7 +207,7 @@ class TestModelManager(trc.TestResultCollector):
         """
         Test remote mode
 
-        In remote mode all model_config_parameters (preferred_batch_size, instance count) are ignored
+        In remote mode all model_config_parameters (ie. instance count) are ignored
         """
 
         expected_ranges = [{
@@ -281,9 +281,7 @@ class TestModelManager(trc.TestResultCollector):
 
         yaml_content = """
             run_config_search_max_concurrency: 8
-            run_config_search_max_preferred_batch_size: 16
             run_config_search_max_instance_count: 16
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: False
             profile_models:
                 test_model:
