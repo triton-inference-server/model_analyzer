@@ -63,7 +63,6 @@ def _get_sweep_configs(profile_models):
             model: {
                 'model_config_parameters': {
                     'dynamic_batching': {
-                        'preferred_batch_size': [[4, 8], [5, 6]],
                         'max_queue_delay_microseconds': [100, 200]
                     }
                 }

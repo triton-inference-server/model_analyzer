@@ -127,7 +127,6 @@ class TestConfigGenerator:
         model_config = {
             "run_config_search_max_concurrency": 2,
             "run_config_search_max_instance_count": 2,
-            "run_config_search_max_preferred_batch_size": 2,
             "profile_models": {
                 model: {
                     "parameters": {
@@ -150,7 +149,6 @@ class TestConfigGenerator:
         model_config = {
             "run_config_search_max_concurrency": 2,
             "run_config_search_max_instance_count": 2,
-            "run_config_search_preferred_batch_size_disable": True,
             "profile_models": self.profile_models,
         }
         self._write_file(6, 2, 4, 1, model_config)

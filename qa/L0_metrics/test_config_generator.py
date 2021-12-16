@@ -63,9 +63,7 @@ class TestConfigGenerator:
                             "count": [1],
                             "kind": "KIND_GPU"
                         }],
-                        "dynamic_batching": [{
-                            "preferred_batch_size": [[1]]
-                        }]
+                        "dynamic_batching": {}
                     }
                 } for model in self.profile_models
             },
@@ -92,9 +90,7 @@ class TestConfigGenerator:
                             "count": [1],
                             "kind": "KIND_GPU"
                         }],
-                        "dynamic_batching": [{
-                            "preferred_batch_size": [[1]]
-                        }]
+                        "dynamic_batching": {}
                     }
                 } for model in self.profile_models
             }
@@ -117,9 +113,7 @@ class TestConfigGenerator:
                             "count": [1],
                             "kind": "KIND_GPU"
                         }],
-                        "dynamic_batching": [{
-                            "preferred_batch_size": [[1]]
-                        }]
+                        "dynamic_batching": {}
                     }
                 } for model in self.profile_models
             },
