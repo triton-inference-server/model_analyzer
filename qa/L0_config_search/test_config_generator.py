@@ -157,8 +157,8 @@ class TestConfigGenerator:
                                 concurrency,
                                 instance_count,
                                 default_config_count=1):
-        concurrency_count = len(range[1, concurrency])
-        instance_count = len(range[1, instance_count])
+        concurrency_count = len(range(1, concurrency))
+        instance_count = len(range(1, instance_count))
         return concurrency_count * (instance_count + default_config_count)
 
     def _write_file(self, total_param, total_param_remote, total_models,
