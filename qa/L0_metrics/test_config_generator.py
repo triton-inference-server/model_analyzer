@@ -73,7 +73,7 @@ class TestConfigGenerator:
                 "perf_latency_p99", "cpu_used_ram"
             ]
         }
-        self._write_file(5, 11, 10, model_config)
+        self._write_file(5, 10, 9, model_config)
 
     def generate_without_cpu_metrics(self):
         model_config = {
@@ -94,7 +94,7 @@ class TestConfigGenerator:
                 } for model in self.profile_models
             }
         }
-        self._write_file(5, 11, 9, model_config)
+        self._write_file(5, 10, 8, model_config)
 
     def generate_perf_latency_test(self):
         model_config = {
@@ -123,7 +123,7 @@ class TestConfigGenerator:
                 "perf_latency"
             ]
         }
-        self._write_file(5, 11, 12, model_config)
+        self._write_file(5, 10, 11, model_config)
 
     def _write_file(self, total_param_server, total_param_gpu,
                     total_param_inference, model_config):
