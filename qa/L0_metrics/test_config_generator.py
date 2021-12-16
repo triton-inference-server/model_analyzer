@@ -69,9 +69,8 @@ class TestConfigGenerator:
             },
             "inference_output_fields": [
                 "model_name", "batch_size", "concurrency", "model_config_path",
-                "instance_group", "dynamic_batch_sizes",
-                "satisfies_constraints", "perf_throughput", "perf_latency_p99",
-                "cpu_used_ram"
+                "instance_group", "satisfies_constraints", "perf_throughput",
+                "perf_latency_p99", "cpu_used_ram"
             ]
         }
         self._write_file(5, 11, 10, model_config)
@@ -119,9 +118,9 @@ class TestConfigGenerator:
             },
             "inference_output_fields": [
                 "model_name", "batch_size", "concurrency", "model_config_path",
-                "instance_group", "dynamic_batch_sizes",
-                "satisfies_constraints", "perf_throughput", "perf_latency_avg",
-                "perf_latency_p90", "perf_latency_p95", "perf_latency"
+                "instance_group", "satisfies_constraints", "perf_throughput",
+                "perf_latency_avg", "perf_latency_p90", "perf_latency_p95",
+                "perf_latency"
             ]
         }
         self._write_file(5, 11, 12, model_config)

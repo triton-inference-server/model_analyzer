@@ -44,7 +44,6 @@ class ResultManager:
         'concurrency': 'Concurrency',
         'model_config_path': 'Model Config Path',
         'instance_group': 'Instance Group',
-        'dynamic_batch_sizes': 'Preferred Batch Sizes',
         'satisfies_constraints': 'Satisfies Constraints',
         'gpu_uuid': 'GPU UUID'
     }
@@ -500,12 +499,6 @@ class ResultManager:
             fields, 'model_config_path')
         if model_config_path_idx is not None:
             row[model_config_path_idx] = model_config_path
-
-        # Dynamic Batching
-        dynamic_batching_idx = self._find_index_for_field(
-            fields, 'dynamic_batch_sizes')
-        if dynamic_batching_idx is not None:
-            row[dynamic_batching_idx] = dynamic_batching
 
         # Instance Group
         instance_group_idx = self._find_index_for_field(fields,
