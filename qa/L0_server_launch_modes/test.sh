@@ -148,7 +148,7 @@ function _do_analyzer() {
     # Run the analyzer and check the results, enough to just profile the server
     set +e
     MODEL_ANALYZER_SUBCOMMAND="profile"
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS $RELOAD_MODEL_DISABLE"
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $RELOAD_MODEL_DISABLE"
     run_analyzer
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
