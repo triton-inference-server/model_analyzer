@@ -193,8 +193,7 @@ class RunSearch:
         """
 
         concurrency = model.parameters()['concurrency']
-        # Enable dynamic batching
-        self._model_config_parameters['dynamic_batching'] = None
+        self._enable_dynamic_batching()
         if len(concurrency) == 0:
             model.parameters()['concurrency'] = [1]
         else:
@@ -231,8 +230,7 @@ class RunSearch:
         Gets next iteration model config
         parameters sweep
         """
-        #TODO remove the duplicate code from this line and 216
-        self._model_config_parameters['dynamic_batching'] = None
+        self._enable_dynamic_batching()
         self._step_instance_count()
         instance_limit_reached = self._model_config_parameters[
             'instance_count'] > self._max_instance_count
@@ -240,6 +238,9 @@ class RunSearch:
         if instance_limit_reached:
             return model, []
         return model, [self._create_model_config(cpu_only=model.cpu_only())]
+
+    def _enable_dynamic_batching(self):
+        self._model_config_parameters['dynamic_batching'] = None
 
     def _log_message(self, model):
         """
