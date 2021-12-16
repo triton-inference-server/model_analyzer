@@ -100,17 +100,23 @@ function _do_config() {
     # Set arguments for various launch modes
     if [ "$LAUNCH_MODE" == "remote" ]; then    
 
-        model_mode_combos=('--model-control-mode=explicit,' ',--reload-model-disable')
-
+        model_mode_combos=('--model-control-mode=explicit;' ';--reload-model-disable')
         for model_mode_combo in ${model_mode_combos[@]}
         do
-            # delete previous array/list (this is crucial!)
-            unset model_mode
+            IFS=';' read -ra model_mode <<< "$model_mode_combo"
+            # trailing spaces are omitted from array
+            if [ $length -ne 0 ] && [ $length -ne 1 ]; then
+                echo -e "\n***\n*** Array setup incorrectly\n***"
+                exit 1
+            fi
 
-            # make array from simple string
-            model_mode=(${model_mode_combo//,/ })
-            MODEL_CONTROL_MODE=${model_mode[0]}
-            RELOAD_MODEL_DISABLE=${model_mode[1]}
+            for i in ${!model_mode[@]}; do
+                if [ $i -eq 0 ]; then
+                    MODEL_CONTROL_MODE=${model_mode[$i]}
+                elif [ $i -eq 1 ]; then
+                    RELOAD_MODEL_DISABLE=${model_mode[$i]}
+                fi
+            done
 
             # For remote launch, set server args and start server
             SERVER=`which tritonserver`
