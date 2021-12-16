@@ -130,11 +130,14 @@ function _do_config() {
                 exit 1
             fi
 
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS $MODEL_ANALYZER_ARGS `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
             _do_analyzer
             if [ $? -ne 0 ]; then
                 return 1
             fi        
         done
+
+        return
 
     elif [ "$LAUNCH_MODE" == "c_api" ]; then
         # c_api does not get server only metrics, so for GPUs to appear in log, we must profile (delete checkpoint)
@@ -154,13 +157,13 @@ function _do_analyzer() {
     # Run the analyzer and check the results, enough to just profile the server
     set +e
     MODEL_ANALYZER_SUBCOMMAND="profile"
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $RELOAD_MODEL_DISABLE"
     run_analyzer
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
                 "\n***     model-analyzer exited with non-zero exit code. \n***"
         cat $ANALYZER_LOG
         RET=1
+        exit 1
     fi
 
     if [ "$LAUNCH_MODE" == "remote" ]; then
@@ -171,6 +174,7 @@ function _do_analyzer() {
             echo -e "\n***\n*** Test Output Verification Failed : No logs found\n***"
             cat $ANALYZER_LOG
             RET=1
+            exit 1
         fi
     fi
 
