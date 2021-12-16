@@ -578,9 +578,7 @@ class ReportManager:
         elif dynamic_batching_string == 'Disabled':
             sentence += "This model config has dynamic batching disabled. "
         else:
-            sentence += (
-                "This model config has dynamic batching enabled "
-                f"with preferred batch size(s) {dynamic_batching_string}. ")
+            sentence += ("This model config has dynamic batching enabled. ")
 
         return sentence
 
