@@ -139,6 +139,7 @@ profile_models:
           kind: KIND_GPU
           count: [1,2]
       dynamic_batching:
+        max_queue_delay_microseconds: [100]
   classification_chestxray_v1:
     model_config_parameters:
       instance_group:
@@ -146,6 +147,7 @@ profile_models:
           kind: KIND_GPU
           count: [1,2]
       dynamic_batching:
+        max_queue_delay_microseconds: [100]
 
 ```
 
