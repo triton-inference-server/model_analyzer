@@ -78,6 +78,9 @@ class ModelManager:
         # Clear any configs from previous model run
         self._run_config_generator.clear_configs()
 
+        # Reset first config variant for new model
+        self._first_config_variant = None
+
         # Save the global server config and update the server's config for this model run
         server_config_copy = self._server.config().copy()
         self._server.update_config(params=model.triton_server_flags())
