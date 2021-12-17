@@ -85,7 +85,7 @@ function run_server_launch_modes() {
 
         MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
-        MODEL_CONTROL_MODE='--explicit-model-control=explicit'
+        MODEL_CONTROL_MODE=''
         RELOAD_MODEL_DISABLE=''
 
         _do_config
