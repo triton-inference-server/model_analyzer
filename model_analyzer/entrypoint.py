@@ -274,7 +274,7 @@ def create_output_model_repository(config):
                 ' the "--override-output-model-repository" flag.')
         else:
             shutil.rmtree(config.output_model_repository_path)
-            shutil.rmtree(config.checkpoint_directory)
+            shutil.rmtree(config.checkpoint_directory, ignore_errors=True)
             logger.warning('Overriding the output model repo path '
                            f'"{config.output_model_repository_path}"...')
             os.mkdir(config.output_model_repository_path)
