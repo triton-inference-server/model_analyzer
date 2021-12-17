@@ -240,6 +240,10 @@ class RunSearch:
         return model, [self._create_model_config(cpu_only=model.cpu_only())]
 
     def _enable_dynamic_batching(self):
+        """
+        The existence of dynamic batching as a key in the model config parameters dictionary
+        indicates that it is enabled. 
+        """
         self._model_config_parameters['dynamic_batching'] = None
 
     def _log_message(self, model):

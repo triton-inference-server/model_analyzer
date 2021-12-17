@@ -162,7 +162,12 @@ class TestConfigGenerator:
                                 instance_count,
                                 default_config_count=1):
         """
-        Calculate the total number of configs that MA will try
+        Given the count of concurrencies and instances to sweep over, 
+        calculate and return the total number of parameter combinations 
+        that MA will try. default_config_count indicates how many extra 
+        model configs will be run in addition to the normal sweep, 
+        and should be set to 0 if the default config is already part of 
+        the sweep space.
         """
         return concurrency_count * (instance_count + default_config_count)
 
