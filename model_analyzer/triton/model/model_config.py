@@ -150,7 +150,8 @@ class ModelConfig:
 
         return self._cpu_only
 
-    def write_config_to_file(self, model_path, src_model_path, last_model_path):
+    def write_config_to_file(self, model_path, src_model_path,
+                             first_variant_model_path):
         """
         Writes a protobuf config file.
 
@@ -162,8 +163,8 @@ class ModelConfig:
         src_model_path : str
             Path to the source model in the Triton Model Repository
 
-        last_model_path : str
-            Indicates the path to the last model variant.
+        first_variant_model_path : str
+            Indicates the path to the first model variant.
 
         Raises
         ------
@@ -181,25 +182,25 @@ class ModelConfig:
 
         model_config_bytes = text_format.MessageToBytes(self._model_config)
 
-        reusued_previous_model_dir = False
-        if last_model_path is not None:
+        # Create current variant model as symlinks to first variant model
+        if first_variant_model_path is not None:
             src_model_name = Path(src_model_path).name
-            last_model_name = Path(last_model_path).name
+            first_variant_model_name = Path(first_variant_model_path).name
 
             # If the model files have been copied once, do not copy it again
-            if re.search(f'^{src_model_name}_i\d+$', last_model_name):
-                reusued_previous_model_dir = True
-                for file in os.listdir(last_model_path):
+            if re.search(f'^{src_model_name}_i\d+$', first_variant_model_name):
+                for file in os.listdir(first_variant_model_path):
                     # Do not copy the config.pbtxt file
                     if file == 'config.pbtxt':
                         continue
                     else:
                         os.symlink(
                             os.path.join(
-                                os.path.relpath(last_model_path, model_path),
-                                file), os.path.join(model_path, file))
-
-        if not reusued_previous_model_dir:
+                                os.path.relpath(first_variant_model_path,
+                                                model_path), file),
+                            os.path.join(model_path, file))
+        else:
+            # Create first variant model as copy of source model
             copy_tree(src_model_path, model_path)
 
         with open(os.path.join(model_path, "config.pbtxt"), 'wb') as f:
