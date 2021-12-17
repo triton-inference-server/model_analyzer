@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -63,4 +63,5 @@ incremented before it is saved again, thus creating a new latest checkpoint.
 
 **Note**: Model analyzer does not clean up old checkpoints. It merely guarantees
 that the checkpoint with the highest integer index is the one with the most
-up-to-date measurements.
+up-to-date measurements. The checkpoint directory should be removed between
+consecutive runs of the `model-analyzer profile` command.

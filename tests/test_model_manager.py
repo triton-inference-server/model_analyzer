@@ -25,6 +25,10 @@ from model_analyzer.config.run.run_config_generator import RunConfigGenerator
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_manager import ModelManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.triton.model.model_config import ModelConfig
+
+from google.protobuf import json_format
+from tritonclient.grpc import model_config_pb2
 
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -618,3 +622,68 @@ class TestModelManager(trc.TestResultCollector):
         cli.parse()
         mock_config.stop()
         return config
+
+    @patch('model_analyzer.model_manager.ModelManager.__init__',
+           return_value=None)
+    def test_is_config_in_results(self, mock_model_manager_init):
+        """
+        Tests that ModelManager._is_config_in_results() works correctly.
+        """
+
+        model_manager = ModelManager()
+
+        model_i0_config = ModelConfig(
+            json_format.ParseDict(
+                {
+                    'name': 'model_i0',
+                    'instance_group': [{
+                        'kind': 'KIND_GPU',
+                        'count': 1
+                    }]
+                }, model_config_pb2.ModelConfig()))
+        model_i1_config = ModelConfig(
+            json_format.ParseDict(
+                {
+                    'name': 'model_i1',
+                    'instance_group': [{
+                        'kind': 'KIND_GPU',
+                        'count': 2
+                    }]
+                }, model_config_pb2.ModelConfig()))
+        model_results = {
+            'model_i0': (model_i0_config,),
+            'model_i1': (model_i1_config,)
+        }
+
+        model_config = json_format.ParseDict(
+            {
+                'name': 'model_i0',
+                'instance_group': [{
+                    'kind': 'KIND_GPU',
+                    'count': 1
+                }]
+            }, model_config_pb2.ModelConfig())
+        self.assertEqual(
+            model_manager._is_config_in_results(model_config, model_results),
+            True)
+
+        model_config = json_format.ParseDict(
+            {
+                'name': 'model_i2',
+                'instance_group': [{
+                    'kind': 'KIND_GPU',
+                    'count': 2
+                }]
+            }, model_config_pb2.ModelConfig())
+        self.assertEqual(
+            model_manager._is_config_in_results(model_config, model_results),
+            False)
+
+        model_config = json_format.ParseDict(
+            {
+                'name': 'model_i1',
+                'max_batch_size': 1
+            }, model_config_pb2.ModelConfig())
+        self.assertEqual(
+            model_manager._is_config_in_results(model_config, model_results),
+            False)
