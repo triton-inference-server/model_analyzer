@@ -146,19 +146,24 @@ class TestConfigGenerator:
         self._write_file(total_param_count, 1, 2, 1, model_config)
 
     def generate_max_limit_with_dynamic_batch_disable(self):
+        concurrency_count = 2
+        instance_count = 2
         model_config = {
-            "run_config_search_max_concurrency": 2,
-            "run_config_search_max_instance_count": 2,
+            "run_config_search_max_concurrency": concurrency_count,
+            "run_config_search_max_instance_count": instance_count,
             "profile_models": self.profile_models,
         }
-        self._write_file(6, 2, 4, 1, model_config)
+        total_param_count = self._calculate_total_params(
+            concurrency_count, instance_count)
+        self._write_file(total_param_count, 2, 4, 1, model_config)
 
     def _calculate_total_params(self,
-                                concurrency,
+                                concurrency_count,
                                 instance_count,
                                 default_config_count=1):
-        concurrency_count = len(range(1, concurrency + 1))
-        instance_count = len(range(1, instance_count + 1))
+        """
+        Calculate the total number of configs that MA will try
+        """
         return concurrency_count * (instance_count + default_config_count)
 
     def _write_file(self, total_param, total_param_remote, total_models,
