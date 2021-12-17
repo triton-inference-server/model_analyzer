@@ -152,8 +152,7 @@ profile_models:
 ```
 
 **Note**: The checkpoint directory should be removed between consecutive runs of
-the `model-analyzer profile` command. If you use the
-`--override-output-model-repository` flag, this will be done automatically.
+the `model-analyzer profile` command.
 
 ## Subcommand: `analyze`
 

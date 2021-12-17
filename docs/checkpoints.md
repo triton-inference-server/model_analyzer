@@ -64,5 +64,4 @@ incremented before it is saved again, thus creating a new latest checkpoint.
 **Note**: Model analyzer does not clean up old checkpoints. It merely guarantees
 that the checkpoint with the highest integer index is the one with the most
 up-to-date measurements. The checkpoint directory should be removed between
-consecutive runs of the `model-analyzer profile` command. If you use the
-`--override-output-model-repository` flag, this will be done automatically.
+consecutive runs of the `model-analyzer profile` command.
