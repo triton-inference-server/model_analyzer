@@ -91,7 +91,8 @@ Here is some sample output:
 ```
 
 **Note**: The checkpoint directory should be removed between consecutive runs of
-the `model-analyzer profile` command.
+the `model-analyzer profile` command. If you use the
+`--override-output-model-repository` flag, this will be done automatically.
 
 ## Generate tables and summary reports
 In order to generate tables and summary reports, use the `analyze` subcommand as
