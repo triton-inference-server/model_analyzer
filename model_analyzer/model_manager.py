@@ -204,12 +204,6 @@ class ModelManager:
             self._create_model_variant(original_name=run_config.model_name(),
                                        variant_config=run_config.model_config())
 
-            # If this run config was already run, do not run again, just get the measurement
-            measurement = self._get_measurement_if_config_duplicate(run_config)
-            if measurement:
-                measurements.append(measurement)
-                continue
-
             # Start server, and load model variant
             self._server.start(env=run_config.triton_environment())
             if not self._load_model_variant(
@@ -275,44 +269,3 @@ class ModelManager:
                     num_retries=self._config.client_max_retries) == -1:
                 return False
         return True
-
-    def _get_measurement_if_config_duplicate(self, run_config):
-        """
-        Checks whether this run config has measurements
-        in the state manager's results object
-        """
-
-        model_name = run_config.model_name()
-        model_config_name = run_config.model_config().get_field('name')
-        perf_config_str = run_config.perf_config().representation()
-
-        results = self._state_manager.get_state_variable(
-            'ResultManager.results')
-
-        # check whether perf config string is a key in result dict
-        if model_name not in results:
-            return False
-        if not self._is_config_in_results(
-                run_config.model_config()._model_config, results[model_name]):
-            return False
-        measurements = results[model_name][model_config_name][1]
-
-        # For backward compatibility with keys that still have -u,
-        # we will remove -u from all keys, convert to set and check
-        # perf_config_str is present
-        if perf_config_str in set(
-                map(PerfAnalyzerConfig.remove_url_from_cli_string,
-                    measurements.keys())):
-            return measurements[perf_config_str]
-        else:
-            return None
-
-    def _is_config_in_results(self, config, model_results):
-        """
-        Returns true if `config` exists in the checkpoint `model_results`
-        """
-
-        for result in model_results.values():
-            if config == result[0]._model_config:
-                return True
-        return False
