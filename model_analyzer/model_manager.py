@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ class ModelManager:
         self._result_manager = result_manager
         self._state_manager = state_manager
         self._run_search = RunSearch(config=config)
-        self._last_config_variant = None
+        self._first_config_variant = None
         self._run_config_generator = RunConfigGenerator(config=config,
                                                         client=self._client)
 
@@ -249,9 +249,10 @@ class ModelManager:
                 os.makedirs(new_model_dir, exist_ok=False)
                 variant_config.write_config_to_file(new_model_dir,
                                                     original_model_dir,
-                                                    self._last_config_variant)
-                self._last_config_variant = os.path.join(
-                    self._output_model_repo_path, variant_name)
+                                                    self._first_config_variant)
+                if self._first_config_variant is None:
+                    self._first_config_variant = os.path.join(
+                        self._output_model_repo_path, variant_name)
             except FileExistsError:
                 pass
 
