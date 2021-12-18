@@ -203,7 +203,7 @@ function _do_analyzer() {
 function _check_analyzer() {
     if [ "$MA_EXPECTED_RESULT" == "EP" ]; then
         # Expected Pass
-        if [ "$MA_ACTUAL_RESULT" == "0" ]; then
+        if [ "$MA_ACTUAL_RESULT" != "0" ]; then
             echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
                     "\n***     model-analyzer exited with non-zero exit code (${MA_ACTUAL_RESULT}). \n***"
             cat $ANALYZER_LOG
