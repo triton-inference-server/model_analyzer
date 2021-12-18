@@ -87,12 +87,12 @@ function run_server_launch_modes() {
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
         MODEL_CONTROL_MODE=''
         RELOAD_MODEL_DISABLE=''
+        MA_EXPECTED_RESULT='EP'     # Expected Pass
 
         _do_config
         if [ $? -ne 0 ]; then
             break
-        fi        
-
+        fi
     done
 }
 
@@ -100,13 +100,21 @@ function _do_config() {
     # Set arguments for various launch modes
     if [ "$LAUNCH_MODE" == "remote" ]; then    
 
-        model_mode_combos=('--model-control-mode=explicit;' ';--reload-model-disable')
+        # EP = "expected pass"
+        # EF = "expected fail"
+        model_mode_combos=(
+            '--model-control-mode=explicit;;EP'
+            ';--reload-model-disable;EP'
+            '--model-control-mode=explicit;--reload-model-disable;EF' 
+            ';;EF' 
+            )
+
         for model_mode_combo in ${model_mode_combos[@]}
         do
             IFS=';' read -ra model_mode <<< "$model_mode_combo"
             length=${#model_mode[@]}
             # trailing spaces are omitted from array
-            if [ $length -ne 1 ] && [ $length -ne 2 ]; then
+            if [ $length -ne 3 ]; then
                 echo -e "\n***\n*** Array setup incorrectly\n***"
                 exit 1
             fi
@@ -116,6 +124,8 @@ function _do_config() {
                     MODEL_CONTROL_MODE=${model_mode[$i]}
                 elif [ $i -eq 1 ]; then
                     RELOAD_MODEL_DISABLE=${model_mode[$i]}
+                elif [ $i -eq 2 ]; then
+                    MA_EXPECTED_RESULT=${model_mode[$i]}
                 fi
             done
 
@@ -159,13 +169,8 @@ function _do_analyzer() {
     set +e
     MODEL_ANALYZER_SUBCOMMAND="profile"
     run_analyzer
-    if [ $? -ne 0 ]; then
-        echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
-                "\n***     model-analyzer exited with non-zero exit code. \n***"
-        cat $ANALYZER_LOG
-        RET=1
-        exit 1
-    fi
+    MA_ACTUAL_RESULT = $?
+    _check_analyzer
 
     if [ "$LAUNCH_MODE" == "remote" ]; then
         kill $SERVER_PID
@@ -193,6 +198,32 @@ function _do_analyzer() {
     set -e
 
     rm -rf $OUTPUT_MODEL_REPOSITORY
+}
+
+function _check_analyzer() {
+    if [ MA_EXPECTED_RESULT -eq 'EP' ]; then
+        # Expected Pass
+        if [ MA_ACTUAL_RESULT -ne 0 ]; then
+            echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
+                    "\n***     model-analyzer exited with non-zero exit code (${MA_ACTUAL_RESULT}). \n***"
+            cat $ANALYZER_LOG
+            RET=1
+            exit 1
+        fi
+    elif [MA_EXPECTED_RESULT -eq 'EF' ]; then
+        # Expected fail
+        if [ MA_ACTUAL_RESULT -eq 0 ]; then
+            echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} should have Failed."\
+                    "\n***     model-analyzer exited with zero exit code. (${MA_ACTUAL_RESULT})\n***"
+            cat $ANALYZER_LOG
+            RET=1
+            exit 1
+        fi
+    else
+        echo -e "\n***\n*** MA_EXPECTED_RESULT not setup properly. \n***"
+        RET=1
+        exit 1
+    fi
 }
 
 # This test will be executed with 4-GPUs.
