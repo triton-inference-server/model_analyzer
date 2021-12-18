@@ -169,7 +169,7 @@ function _do_analyzer() {
     set +e
     MODEL_ANALYZER_SUBCOMMAND="profile"
     run_analyzer
-    MA_ACTUAL_RESULT = $?
+    MA_ACTUAL_RESULT=$?
     _check_analyzer
 
     if [ "$LAUNCH_MODE" == "remote" ]; then
@@ -220,7 +220,7 @@ function _check_analyzer() {
             exit 1
         fi
     else
-        echo -e "\n***\n*** MA_EXPECTED_RESULT not setup properly. \n***"
+        echo -e "\n***\n*** MA_EXPECTED_RESULT not setup properly. MA_EXPECTED_RESULT=${MA_EXPECTED_RESULT}\n***"
         RET=1
         exit 1
     fi
