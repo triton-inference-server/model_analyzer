@@ -79,8 +79,6 @@ just metrics) that should be displayed in the output tables.
 * `concurrency`: Client request conccurency used for measurement
 * `model_config_path`: The path to the model config
 * `instance_group`: The number/type of instances
-* `dynamic_batch_sizes`: The values passed as preferred batch sizes to the
-  dynamic batcher
 * `satisfies_constraints`: `Yes` if this measurement satisfies constraints, `No`
   otherwise.
 * `gpu_uuid`: The UUID of the GPU this measurement was taken on.

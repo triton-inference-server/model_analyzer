@@ -113,7 +113,6 @@ data:
               kind: KIND_GPU
               count: [1]
           dynamic_batching:
-            preferred_batch_size: [[32]]
 
     ######################
     # Config for analyze #

@@ -48,6 +48,8 @@ class TestConfigGenerator:
         self.test_id += 1
 
     def generate_search_disable(self):
+        concurrency_count = 1  # 1 element in concurrency below
+        instance_count = 2  # 2 elements in instance_group below
         model_config = {
             "run_config_search_disable": True,
             "profile_models": {
@@ -64,13 +66,16 @@ class TestConfigGenerator:
                 } for model in self.profile_models
             }
         }
-        self._write_file(3, 1, 2, 1, model_config)
+        total_param_count = self._calculate_total_params(
+            concurrency_count, instance_count)
+        self._write_file(total_param_count, 1, 2, 1, model_config)
 
     def generate_max_limit_with_model_config(self):
+        concurrency_count = 2
+        instance_count = 2
         model_config = {
-            "run_config_search_max_concurrency": 2,
-            "run_config_search_max_instance_count": 2,
-            "run_config_search_max_preferred_batch_size": 2,
+            "run_config_search_max_concurrency": concurrency_count,
+            "run_config_search_max_instance_count": instance_count,
             "profile_models": {
                 model: {
                     "model_config_parameters": {
@@ -82,22 +87,28 @@ class TestConfigGenerator:
                 } for model in self.profile_models
             },
         }
-        self._write_file(6, 2, 2, 1, model_config)
+        total_param_count = self._calculate_total_params(
+            concurrency_count, instance_count)
+        self._write_file(total_param_count, 2, 2, 1, model_config)
 
     def generate_max_limit(self):
+        concurrency_count = 2
+        instance_count = 2
         model_config = {
-            "run_config_search_max_concurrency": 2,
-            "run_config_search_max_instance_count": 2,
-            "run_config_search_max_preferred_batch_size": 2,
+            "run_config_search_max_concurrency": concurrency_count,
+            "run_config_search_max_instance_count": instance_count,
             "profile_models": self.profile_models,
         }
-        self._write_file(18, 2, 8, 1, model_config)
+        total_param_count = self._calculate_total_params(
+            concurrency_count, instance_count)
+        self._write_file(total_param_count, 2, 8, 1, model_config)
 
     def generate_max_limit_with_param(self):
+        concurrency_count = 1  # 1 because concurrency parameter is 1 entry below
+        instance_count = 2
         model_config = {
             "run_config_search_max_concurrency": 2,
             "run_config_search_max_instance_count": 2,
-            "run_config_search_max_preferred_batch_size": 1,
             "profile_models": {
                 model: {
                     "parameters": {
@@ -106,13 +117,16 @@ class TestConfigGenerator:
                 } for model in self.profile_models
             },
         }
-        self._write_file(7, 1, 6, 1, model_config)
+        total_param_count = self._calculate_total_params(
+            concurrency_count, instance_count)
+        self._write_file(total_param_count, 1, 6, 1, model_config)
 
     def generate_max_limit_with_param_and_model_config(self):
+        concurrency_count = 1  # 1 because concurrency parameter is 1 entry below
+        instance_count = 2
         model_config = {
             "run_config_search_max_concurrency": 2,
             "run_config_search_max_instance_count": 2,
-            "run_config_search_max_preferred_batch_size": 2,
             "profile_models": {
                 model: {
                     "parameters": {
@@ -127,16 +141,35 @@ class TestConfigGenerator:
                 } for model in self.profile_models
             },
         }
-        self._write_file(3, 1, 2, 1, model_config)
+        total_param_count = self._calculate_total_params(
+            concurrency_count, instance_count)
+        self._write_file(total_param_count, 1, 2, 1, model_config)
 
     def generate_max_limit_with_dynamic_batch_disable(self):
+        concurrency_count = 2
+        instance_count = 2
         model_config = {
-            "run_config_search_max_concurrency": 2,
-            "run_config_search_max_instance_count": 2,
-            "run_config_search_preferred_batch_size_disable": True,
+            "run_config_search_max_concurrency": concurrency_count,
+            "run_config_search_max_instance_count": instance_count,
             "profile_models": self.profile_models,
         }
-        self._write_file(6, 2, 4, 1, model_config)
+        total_param_count = self._calculate_total_params(
+            concurrency_count, instance_count)
+        self._write_file(total_param_count, 2, 4, 1, model_config)
+
+    def _calculate_total_params(self,
+                                concurrency_count,
+                                instance_count,
+                                default_config_count=1):
+        """
+        Given the count of concurrencies and instances to sweep over, 
+        calculate and return the total number of parameter combinations 
+        that MA will try. default_config_count indicates how many extra 
+        model configs will be run in addition to the normal sweep, 
+        and should be set to 0 if the default config is already part of 
+        the sweep space.
+        """
+        return concurrency_count * (instance_count + default_config_count)
 
     def _write_file(self, total_param, total_param_remote, total_models,
                     total_models_remote, model_config):

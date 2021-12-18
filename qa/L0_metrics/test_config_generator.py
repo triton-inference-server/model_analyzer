@@ -63,20 +63,17 @@ class TestConfigGenerator:
                             "count": [1],
                             "kind": "KIND_GPU"
                         }],
-                        "dynamic_batching": [{
-                            "preferred_batch_size": [[1]]
-                        }]
+                        "dynamic_batching": {}
                     }
                 } for model in self.profile_models
             },
             "inference_output_fields": [
                 "model_name", "batch_size", "concurrency", "model_config_path",
-                "instance_group", "dynamic_batch_sizes",
-                "satisfies_constraints", "perf_throughput", "perf_latency_p99",
-                "cpu_used_ram"
+                "instance_group", "satisfies_constraints", "perf_throughput",
+                "perf_latency_p99", "cpu_used_ram"
             ]
         }
-        self._write_file(5, 11, 10, model_config)
+        self._write_file(5, 10, 9, model_config)
 
     def generate_without_cpu_metrics(self):
         model_config = {
@@ -92,14 +89,12 @@ class TestConfigGenerator:
                             "count": [1],
                             "kind": "KIND_GPU"
                         }],
-                        "dynamic_batching": [{
-                            "preferred_batch_size": [[1]]
-                        }]
+                        "dynamic_batching": {}
                     }
                 } for model in self.profile_models
             }
         }
-        self._write_file(5, 11, 9, model_config)
+        self._write_file(5, 10, 8, model_config)
 
     def generate_perf_latency_test(self):
         model_config = {
@@ -117,20 +112,18 @@ class TestConfigGenerator:
                             "count": [1],
                             "kind": "KIND_GPU"
                         }],
-                        "dynamic_batching": [{
-                            "preferred_batch_size": [[1]]
-                        }]
+                        "dynamic_batching": {}
                     }
                 } for model in self.profile_models
             },
             "inference_output_fields": [
                 "model_name", "batch_size", "concurrency", "model_config_path",
-                "instance_group", "dynamic_batch_sizes",
-                "satisfies_constraints", "perf_throughput", "perf_latency_avg",
-                "perf_latency_p90", "perf_latency_p95", "perf_latency"
+                "instance_group", "satisfies_constraints", "perf_throughput",
+                "perf_latency_avg", "perf_latency_p90", "perf_latency_p95",
+                "perf_latency"
             ]
         }
-        self._write_file(5, 11, 12, model_config)
+        self._write_file(5, 10, 11, model_config)
 
     def _write_file(self, total_param_server, total_param_gpu,
                     total_param_inference, model_config):

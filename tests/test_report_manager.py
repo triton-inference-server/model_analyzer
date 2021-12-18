@@ -97,9 +97,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 "count": 1,
                 "kind": "KIND_GPU"
             }],
-            "dynamic_batching": {
-                "preferred_batch_size": [4, 8],
-            }
+            "dynamic_batching": {}
         }
 
         self.os_mock = MockOSMethods(mock_paths=[
@@ -201,7 +199,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
             expected_summary_sentence = (
                 "In 10 measurement(s), 1/GPU model instance(s)"
-                " with preferred batch size of [4 8] on"
+                " with dynamic batching enabled on"
                 " platform tensorflow_graphdef delivers maximum"
                 " throughput under the given constraints on GPU(s) TITAN RTX.")
             self.assertEqual(expected_summary_sentence, summary_sentence)

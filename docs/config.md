@@ -164,12 +164,6 @@ profile_models: <comma-delimited-string-list>
 # Maximum instance count used for the automatic config search.
 [ run_config_search_max_instance_count: <int> | default: 5 ]
 
-# Maximum preferred batch size used for the automatic config search.
-[ run_config_search_max_preferred_batch_size: <int> | default: 16 ]
-
-# Disables automatic preferred batch size search.
-[ run_config_search_preferred_batch_size_disable: <bool> | default: false ]
-
 # Disables automatic config search
 [ run_config_search_disable: <bool> | default: false ]
 
@@ -533,7 +527,6 @@ An example `<model-config-parameters>` look like below:
 model_config_parameters:
     max_batch_size: [6, 8]
     dynamic_batching:
-        preferred_batch_size: [[1], [2], [3]]
         max_queue_delay_microseconds: [200, 300]
     instance_group:
     -
@@ -544,8 +537,8 @@ model_config_parameters:
 Note that for values that accept a list by default the user needs to specify an
 additional list if want to sweep through it. Otherwise, it will only change the
 original model config to the value specified and it will not sweep through it.
-`preferred_batch_size` is an example for this. To read more about the automatic
-config search, checkout [Config Search](./config_search.md) docs.
+To read more about the automatic config search, check out 
+[Config Search](./config_search.md) docs.
 
 A complete `profile` YAML config looks like below:
 ```yaml
@@ -557,7 +550,6 @@ profile_models:
     model_config_parameters:
         max_batch_size: 2
         dynamic_batching:
-            preferred_batch_size: [1, 2, 3]
             max_queue_delay_microseconds: 200
         instance_group:
         -
@@ -569,8 +561,8 @@ profile_models:
 ```
 
 Note that in the above configuration, it will not sweep through any of the
-parameters. The reason is that both `instance_group` and `preferred_batch_size`
-accept a list by default. Sweeping thorough different parameters can be achieved
+parameters. The reason is that `instance_group` accepts a list by default. 
+Sweeping thorough different parameters can be achieved
 using the configuration below:
 ```yaml
 model_repository: /path/to/model/repository/
@@ -581,8 +573,7 @@ profile_models:
     model_config_parameters:
         max_batch_size: 2
         dynamic_batching:
-            preferred_batch_size: [[1], [2], [3]]
-            max_queue_delay_microseconds: 200
+            max_queue_delay_microseconds: [200, 400, 600]
         instance_group:
         -
             -
@@ -594,7 +585,7 @@ profile_models:
                 count: 1
 ```
 
-This will lead to 6 different configurations (3 different preferred batch sizes
+This will lead to 6 different configurations (3 different max queue delays
 and two instance group combinations). If both `model_config_parameters` and
 `parameters` keys are specified, the list of sweep configurations will be the
 cartesian product of both of the lists.
@@ -827,7 +818,6 @@ profile_models:
     model_config_parameters:
         max_batch_size: 2
         dynamic_batching:
-            preferred_batch_size: [[1], [2], [3]]
             max_queue_delay_microseconds: 200
         instance_group:
         -
@@ -862,7 +852,6 @@ profile_models:
         batch_sizes: 1, 2, 3
     model_config_parameters:
         dynamic_batching:
-            preferred_batch_size: [[2], [3]]
             max_queue_delay_microseconds: 200
         instance_group:
         -
@@ -877,7 +866,6 @@ profile_models:
             step: 8
       model_config_parameters:
         dynamic_batching:
-            preferred_batch_size: [[1], [2]]
             max_queue_delay_microseconds: 200
         instance_group:
         -
@@ -902,13 +890,11 @@ model-analyzer -f config.yml
 
 It will run the model `vgg_19_graphdef` over combinations of batch sizes
 `[1,2,3]`, `concurrency` `[2,4,8]` (taken from the global concurrency section),
-with dynamic batching enabled and preferred batch sizes `2` and `3` and a single
-CPU instance.
+with dynamic batching enabled and a single CPU instance.
 
 It will also run the model `vgg_16_graphdef` over combinations of batch sizes
 `[4,5,6,7,8,9]`(taken from the global `batch_sizes` section), concurrency
-`[2,10,18,26,34,42,50,58]`, with dynamic batching enabled and preferred batch
-sizes `1` and `2` and a single GPU instance.
+`[2,10,18,26,34,42,50,58]`, with dynamic batching enabled and a single GPU instance.
 
 ## `<analysis-model>`
 The `--analysis-models` argument can be provided as a list of strings (names of

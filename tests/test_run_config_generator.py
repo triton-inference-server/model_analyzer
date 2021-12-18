@@ -236,7 +236,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 vgg_16_graphdef:
                     model_config_parameters:
                         dynamic_batching:
-                            preferred_batch_size: [ 4, 8 ]
                             max_queue_delay_microseconds: 100
                         instance_group:
                         -
@@ -255,7 +254,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             config.profile_models[0].model_config_parameters())
         expected_model_configs = [{
             'dynamic_batching': {
-                'preferred_batch_size': [4, 8],
                 'max_queue_delay_microseconds': 100
             },
             'instance_group': [{
@@ -264,7 +262,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             }]
         }, {
             'dynamic_batching': {
-                'preferred_batch_size': [4, 8],
                 'max_queue_delay_microseconds': 100
             },
             'instance_group': [{
@@ -281,7 +278,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 vgg_16_graphdef:
                     model_config_parameters:
                         dynamic_batching:
-                            preferred_batch_size: [[ 4, 8 ], [ 5, 6 ]]
                             max_queue_delay_microseconds: [100, 200]
                         instance_group:
                         -
@@ -295,7 +291,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             config.profile_models[0].model_config_parameters())
         expected_model_configs = [{
             'dynamic_batching': {
-                'preferred_batch_size': [4, 8],
                 'max_queue_delay_microseconds': 100
             },
             'instance_group': [{
@@ -304,25 +299,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             }]
         }, {
             'dynamic_batching': {
-                'preferred_batch_size': [4, 8],
-                'max_queue_delay_microseconds': 200
-            },
-            'instance_group': [{
-                'kind': 'KIND_GPU',
-                'count': 1
-            }]
-        }, {
-            'dynamic_batching': {
-                'preferred_batch_size': [5, 6],
-                'max_queue_delay_microseconds': 100
-            },
-            'instance_group': [{
-                'kind': 'KIND_GPU',
-                'count': 1
-            }]
-        }, {
-            'dynamic_batching': {
-                'preferred_batch_size': [5, 6],
                 'max_queue_delay_microseconds': 200
             },
             'instance_group': [{
@@ -340,10 +316,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                     model_config_parameters:
                         dynamic_batching:
                         -
-                            preferred_batch_size: [ 4, 8 ]
                             max_queue_delay_microseconds: 100
                         -
-                            preferred_batch_size: [ 5, 6 ]
                             max_queue_delay_microseconds: 200
                         instance_group:
                         -
@@ -358,7 +332,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(len(model_configs), 9)
         expected_model_configs = [{
             'dynamic_batching': {
-                'preferred_batch_size': [4, 8],
                 'max_queue_delay_microseconds': 100
             },
             'instance_group': [{
@@ -367,7 +340,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             }]
         }, {
             'dynamic_batching': {
-                'preferred_batch_size': [4, 8],
                 'max_queue_delay_microseconds': 100
             },
             'instance_group': [{
@@ -376,7 +348,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             }]
         }, {
             'dynamic_batching': {
-                'preferred_batch_size': [4, 8],
                 'max_queue_delay_microseconds': 100
             },
             'instance_group': [{
@@ -385,7 +356,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             }]
         }, {
             'dynamic_batching': {
-                'preferred_batch_size': [4, 8],
                 'max_queue_delay_microseconds': 100
             },
             'instance_group': [{
@@ -394,7 +364,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             }]
         }, {
             'dynamic_batching': {
-                'preferred_batch_size': [5, 6],
                 'max_queue_delay_microseconds': 200
             },
             'instance_group': [{
@@ -403,7 +372,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             }]
         }, {
             'dynamic_batching': {
-                'preferred_batch_size': [5, 6],
                 'max_queue_delay_microseconds': 200
             },
             'instance_group': [{
@@ -412,7 +380,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             }]
         }, {
             'dynamic_batching': {
-                'preferred_batch_size': [5, 6],
                 'max_queue_delay_microseconds': 200
             },
             'instance_group': [{
@@ -421,7 +388,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             }]
         }, {
             'dynamic_batching': {
-                'preferred_batch_size': [5, 6],
                 'max_queue_delay_microseconds': 200
             },
             'instance_group': [{

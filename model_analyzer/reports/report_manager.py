@@ -391,12 +391,11 @@ class ReportManager:
 
     def _get_dynamic_batching_phrase(self, config):
         dynamic_batching_str = config.dynamic_batching_string()
+        assert dynamic_batching_str == "Disabled" or dynamic_batching_str == "Enabled", f"dynamic batching unknown"
         if dynamic_batching_str == "Disabled":
             dynamic_batch_phrase = "dynamic batching disabled"
-        elif dynamic_batching_str == "Enabled":
-            dynamic_batch_phrase = "dynamic batching enabled"
         else:
-            dynamic_batch_phrase = f"preferred batch size of {dynamic_batching_str}"
+            dynamic_batch_phrase = "dynamic batching enabled"
         return dynamic_batch_phrase
 
     def _build_summary_table(self,
@@ -578,9 +577,7 @@ class ReportManager:
         elif dynamic_batching_string == 'Disabled':
             sentence += "This model config has dynamic batching disabled. "
         else:
-            sentence += (
-                "This model config has dynamic batching enabled "
-                f"with preferred batch size(s) {dynamic_batching_string}. ")
+            sentence += ("This model config has dynamic batching enabled. ")
 
         return sentence
 

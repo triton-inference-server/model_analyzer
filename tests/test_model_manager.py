@@ -95,7 +95,7 @@ class TestModelManager(trc.TestResultCollector):
         expected_ranges = [{
             'instances': [1, 2, 3, 4, 5],
             'kind': ["KIND_GPU"],
-            'batching': [None, 0, 1, 2, 4, 8, 16],
+            'batching': [0],
             'batch_sizes': [1],
             'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
@@ -111,9 +111,7 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = """
             profile_models: test_model
             run_config_search_max_concurrency: 128
-            run_config_search_max_preferred_batch_size: 16
             run_config_search_max_instance_count: 5
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: False
             """
 
@@ -127,7 +125,7 @@ class TestModelManager(trc.TestResultCollector):
         expected_ranges = [{
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'kind': ["KIND_GPU"],
-            'batching': [None, 0, 1, 2, 4, 8],
+            'batching': [0],
             'batch_sizes': [1],
             'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8, 16, 32]
@@ -143,41 +141,7 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = """
             profile_models: test_model
             run_config_search_max_concurrency: 32
-            run_config_search_max_preferred_batch_size: 8
             run_config_search_max_instance_count: 7
-            run_config_search_preferred_batch_size_disable : False
-            run_config_search_disable: False
-            """
-
-        self._test_model_manager(yaml_content, expected_ranges)
-
-    def test_preferred_batch_size_disable(self):
-        """
-        Test with search_preferred_batch_size_disable=True
-        """
-
-        expected_ranges = [{
-            'instances': [1, 2, 3, 4, 5, 6, 7],
-            'kind': ["KIND_GPU"],
-            'batching': [None],
-            'batch_sizes': [1],
-            'max_batch_size': [8],
-            'concurrency': [1, 2, 4, 8, 16, 32]
-        }, {
-            'instances': [1],
-            'kind': ["KIND_CPU"],
-            'batching': [None],
-            'batch_sizes': [1],
-            'max_batch_size': [8],
-            'concurrency': [1, 2, 4, 8, 16, 32]
-        }]
-
-        yaml_content = """
-            profile_models: test_model
-            run_config_search_max_concurrency: 32
-            run_config_search_max_preferred_batch_size: 8
-            run_config_search_max_instance_count: 7
-            run_config_search_preferred_batch_size_disable : True
             run_config_search_disable: False
             """
 
@@ -203,9 +167,7 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = """
             profile_models: test_model
             run_config_search_max_concurrency: 32
-            run_config_search_max_preferred_batch_size: 8
             run_config_search_max_instance_count: 7
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: True
             """
 
@@ -215,11 +177,10 @@ class TestModelManager(trc.TestResultCollector):
         """
         Test with manually specified concurrencies
         """
-
         expected_ranges = [{
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'kind': ["KIND_GPU"],
-            'batching': [None, 0, 1, 2, 4, 8],
+            'batching': [0],
             'batch_sizes': [1],
             'max_batch_size': [8],
             'concurrency': [5, 7]
@@ -235,9 +196,7 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = """
             profile_models: test_model
             run_config_search_max_concurrency: 32
-            run_config_search_max_preferred_batch_size: 8
             run_config_search_max_instance_count: 7
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: False
             concurrency: [5, 7]
             """
@@ -248,7 +207,7 @@ class TestModelManager(trc.TestResultCollector):
         """
         Test remote mode
 
-        In remote mode all model_config_parameters (preferred_batch_size, instance count) are ignored
+        In remote mode all model_config_parameters (ie. instance count) are ignored
         """
 
         expected_ranges = [{
@@ -262,9 +221,7 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = """
             profile_models: test_model
             run_config_search_max_concurrency: 512
-            run_config_search_max_preferred_batch_size: 8
             run_config_search_max_instance_count: 7
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: False
             triton_launch_mode: remote            
             """
@@ -279,7 +236,7 @@ class TestModelManager(trc.TestResultCollector):
         expected_ranges = [{
             'instances': [1, 2, 3, 4, 5, 6, 7],
             'kind': ["KIND_GPU"],
-            'batching': [None, 0, 1, 2, 4, 8],
+            'batching': [0],
             'batch_sizes': [1, 2, 3],
             'max_batch_size': [8],
             'concurrency': [2, 10, 18, 26, 34, 42, 50, 58]
@@ -295,9 +252,7 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = """
             profile_models: test_model
             run_config_search_max_concurrency: 512
-            run_config_search_max_preferred_batch_size: 8
             run_config_search_max_instance_count: 7
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: False
             concurrency:
                 start: 2
@@ -326,9 +281,7 @@ class TestModelManager(trc.TestResultCollector):
 
         yaml_content = """
             run_config_search_max_concurrency: 8
-            run_config_search_max_preferred_batch_size: 16
             run_config_search_max_instance_count: 16
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: False
             profile_models:
                 test_model:
@@ -348,7 +301,7 @@ class TestModelManager(trc.TestResultCollector):
         expected_ranges = [{
             'instances': [1],
             'kind': ["KIND_CPU"],
-            'batching': [1, 2, 3],
+            'batching': [0],
             'max_queue_delay': ['200', '300'],
             'batch_sizes': [1],
             'max_batch_size': [1, 2, 4, 8, 16],
@@ -364,16 +317,13 @@ class TestModelManager(trc.TestResultCollector):
 
         yaml_content = """
             run_config_search_max_concurrency: 8
-            run_config_search_max_preferred_batch_size: 16
             run_config_search_max_instance_count: 16
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: False
             profile_models:
                 test_model:
                     model_config_parameters:
                         max_batch_size: [1,2,4,8,16]
                         dynamic_batching:
-                            preferred_batch_size: [[1], [2], [3]]
                             max_queue_delay_microseconds: [200, 300]                        
             """
 
@@ -430,9 +380,7 @@ class TestModelManager(trc.TestResultCollector):
 
         yaml_content = """
             run_config_search_max_concurrency: 4
-            run_config_search_max_preferred_batch_size: 16
             run_config_search_max_instance_count: 16
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: False
             profile_models:
                 test_model:
@@ -495,9 +443,7 @@ class TestModelManager(trc.TestResultCollector):
 
         yaml_content = """
             run_config_search_max_concurrency: 4
-            run_config_search_max_preferred_batch_size: 16
             run_config_search_max_instance_count: 16
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: False
             profile_models:
                 test_model:
@@ -546,7 +492,7 @@ class TestModelManager(trc.TestResultCollector):
         expected_ranges = [{
             'instances': [1],
             'kind': ["KIND_GPU"],
-            'batching': [None, 0, 1, 2],
+            'batching': [0],
             'batch_sizes': [1],
             'max_batch_size': [8],
             'concurrency': [1, 2, 4]
@@ -561,9 +507,7 @@ class TestModelManager(trc.TestResultCollector):
 
         yaml_content = """
             run_config_search_max_concurrency: 4
-            run_config_search_max_preferred_batch_size: 2
             run_config_search_max_instance_count: 1
-            run_config_search_preferred_batch_size_disable : False
             run_config_search_disable: False
             profile_models: test_model
             """

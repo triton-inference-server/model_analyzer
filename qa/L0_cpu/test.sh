@@ -37,8 +37,13 @@ rm -rf $OUTPUT_MODEL_REPOSITORY
 
 python3 test_config_generator.py --model-names resnet_v1_50_cpu_graphdef
 
-# Compute expected columns (2 instance count * conccurrency * 7 dynamic batch size)
-let "TEST_OUTPUT_NUM_ROWS = 42"
+# Compute expected rows: concurrency * (instance count * dynamic batch size + 1)
+# concurrency:          3       ->  [1, 2, 4]; set in config-profile.yml
+# instance count:       2         ->  [1, 2]; set in config-profile.yml; 
+# dynamic batch size:   1       ->  [1]; now always on when searching
+# default config:       +1 is for the default configuration
+# => 3 * (2 * 1 + 1) = 9
+let "TEST_OUTPUT_NUM_ROWS = 9"
 
 RET=0
 
@@ -69,7 +74,7 @@ else
     SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
     MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
     MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
-    INFERENCE_NUM_COLUMNS=9
+    INFERENCE_NUM_COLUMNS=8
 
     check_table_row_column \
         $ANALYZER_LOG "" "" \
