@@ -201,18 +201,18 @@ function _do_analyzer() {
 }
 
 function _check_analyzer() {
-    if [ MA_EXPECTED_RESULT -eq 'EP' ]; then
+    if [ "$MA_EXPECTED_RESULT" -eq "EP" ]; then
         # Expected Pass
-        if [ MA_ACTUAL_RESULT -ne 0 ]; then
+        if [ "$MA_ACTUAL_RESULT" -ne "0" ]; then
             echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} client Failed."\
                     "\n***     model-analyzer exited with non-zero exit code (${MA_ACTUAL_RESULT}). \n***"
             cat $ANALYZER_LOG
             RET=1
             exit 1
         fi
-    elif [MA_EXPECTED_RESULT -eq 'EF' ]; then
+    elif [ "$MA_EXPECTED_RESULT" -eq "EF" ]; then
         # Expected fail
-        if [ MA_ACTUAL_RESULT -eq 0 ]; then
+        if [ "$MA_ACTUAL_RESULT" -eq "0" ]; then
             echo -e "\n***\n*** Test with launch mode '${LAUNCH_MODE}' using ${PROTOCOL} should have Failed."\
                     "\n***     model-analyzer exited with zero exit code. (${MA_ACTUAL_RESULT})\n***"
             cat $ANALYZER_LOG
