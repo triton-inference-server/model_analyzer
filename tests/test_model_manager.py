@@ -23,6 +23,7 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.config.run.run_config_generator import RunConfigGenerator
 from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.model_manager import ModelManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
@@ -34,19 +35,19 @@ from unittest.mock import MagicMock
 from unittest.mock import patch
 
 
-class ModelManagerSubclass(ModelManager):
+class MetricsManagerSubclass(MetricsManager):
     """ 
     Overrides execute_run_configs() to gather a list of MockRunConfigs that
     contain the configured values of each would-be 'executed' run_config
     """
 
-    def __init__(self, config, client, server, metrics_manager, result_manager,
+    def __init__(self, config, client, server, gpus, result_manager,
                  state_manager):
-        super().__init__(config, client, server, metrics_manager,
-                         result_manager, state_manager)
+        super().__init__(config, client, server, gpus, result_manager,
+                         state_manager)
         self._configs = MockRunConfigs()
 
-    def _execute_run_config(self, config):
+    def execute_run_config(self, config):
         self._configs.add_from_run_config(config)
 
     def get_run_configs(self):
@@ -529,9 +530,12 @@ class TestModelManager(trc.TestResultCollector):
         config = self._evaluate_config(self._args, yaml_content)
 
         state_manager = AnalyzerStateManager(config, MagicMock())
-        model_manager = ModelManagerSubclass(config, MagicMock(), MagicMock(),
-                                             MagicMock(), MagicMock(),
-                                             state_manager)
+        metrics_manager = MetricsManagerSubclass(config, MagicMock(),
+                                                 MagicMock(), MagicMock(),
+                                                 MagicMock(), state_manager)
+        model_manager = ModelManager(config,
+                                     MagicMock(), MagicMock(), metrics_manager,
+                                     MagicMock(), state_manager)
 
         model_manager.run_model(config.profile_models[0])
         self.mock_model_config.stop()
@@ -542,7 +546,7 @@ class TestModelManager(trc.TestResultCollector):
         """ 
         Create a set of expected and actual run configs and confirm they are equal
         """
-        run_configs = model_manager.get_run_configs()
+        run_configs = model_manager._metrics_manager.get_run_configs()
         expected_configs = MockRunConfigs()
         expected_configs.populate_from_ranges(expected_ranges)
 
