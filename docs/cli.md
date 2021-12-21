@@ -151,6 +151,9 @@ profile_models:
 
 ```
 
+**Note**: The checkpoint directory should be removed between consecutive runs of
+the `model-analyzer profile` command.
+
 ## Subcommand: `analyze`
 
 The `analyze` subcommand allows the user to create summaries and data tables
