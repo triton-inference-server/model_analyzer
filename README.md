@@ -37,7 +37,9 @@ Triton Inference Server.
 help you automatically find the optimal settings for
 [Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#dynamic-batcher) and
 [Instance Group](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#instance-groups)
-parameters of your model configuration. Using
+parameters of your model configuration and utilizes 
+[Performance Analyzer](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md) 
+to test the model with different concurrency and batch sizes of requests. Using
 [Manual Config Search](docs/config_search.md#manual-configuration-search), you can create manual sweeps
 for every parameter that can be specified in the model configuration.
 
