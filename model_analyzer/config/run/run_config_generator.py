@@ -15,8 +15,13 @@
 from itertools import product
 
 from .run_config import RunConfig
+from model_analyzer.config.run.run_search import RunSearch
+from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class RunConfigGenerator:
@@ -36,21 +41,117 @@ class RunConfigGenerator:
             TritonClient to be used for interacting with the Triton API
         """
 
+        self._config = config
         self._analyzer_config = config.get_all_config()
+        self._run_search = RunSearch(config=config)
         self._run_configs = []
         self._client = client
         self._model_name_index = 0
         self._model_configs = []
 
-    def run_configs(self):
+    def init(self, model):
+
+        if self._config.run_config_search_disable:
+            logger.info(
+                f"Running manual config search for model: {model.model_name()}")
+            self._run_model_no_search(model)
+        else:
+            logger.info(
+                f"Running auto config search for model: {model.model_name()}")
+            self._run_model_with_search(model)
+
+    def is_done(self):
+        """ Return true if all RunConfigs for the model have been returned """
+        return len(self._run_configs) == 0
+
+    def add_measurement(self, measurement):
+        """ 
+        Given the results from the last RunConfig, make decisions 
+        about future configurations to generate
         """
-        Returns
-        -------
-        list
-            The run configs currently in this generator
+        if measurement:
+            self._run_search.add_measurements([measurement])
+
+    def _run_model_no_search(self, model):
+        """
+        Creates run configs from specified combinations and executes
+        them without any run search
         """
 
-        return self._run_configs
+        # Generate all the run configs at once and return
+        if self._config.triton_launch_mode != 'remote':
+            user_model_config_sweeps = \
+                self.generate_model_config_combinations(
+                    model.model_config_parameters())
+            for user_model_config_sweep in user_model_config_sweeps:
+                self.generate_run_config_for_model_sweep(
+                    model, user_model_config_sweep)
+        else:
+            self.generate_run_config_for_model_sweep(model, None)
+
+    def _run_model_with_search(self, model):
+        """
+        Searches over the required config elements,
+        creates run configs and executes them
+        """
+
+        model_config_parameters = model.model_config_parameters()
+
+        # Run config search is enabled, figure out which parameters to sweep over and do sweep
+        if self._config.triton_launch_mode == 'remote':
+            self._run_model_config_sweep(model, search_model_config=False)
+        else:
+            user_model_config_sweeps = \
+                self.generate_model_config_combinations(
+                    model_config_parameters)
+            if model.parameters()['concurrency']:
+                # Both are specified, search over neither
+                for user_model_config_sweep in user_model_config_sweeps:
+                    self.generate_run_config_for_model_sweep(
+                        model, user_model_config_sweep)
+            else:
+                # Search through concurrency values only
+                for user_model_config_sweep in user_model_config_sweeps:
+                    self._run_model_config_sweep(
+                        model,
+                        search_model_config=False,
+                        user_model_config_sweep=user_model_config_sweep)
+
+            # If no model config parameters were specified, then we only ran the default
+            # configuration above and need to do an automatic sweep
+            #
+            if not model_config_parameters:
+                self._run_model_config_sweep(model, search_model_config=True)
+
+    def _run_model_config_sweep(self,
+                                model,
+                                search_model_config,
+                                user_model_config_sweep=None):
+        """
+        Initializes the model sweep, iterates until search bounds,
+        and executes run configs
+        """
+
+        self._run_search.init_model_sweep(model.parameters()['concurrency'],
+                                          search_model_config)
+
+        next_model = model
+
+        while True:
+            # Get next model sweep
+            next_model, auto_model_config_sweep = self._run_search.get_next_model_sweep(
+                next_model)
+
+            # End search when get_model sweep returns empty
+            if not auto_model_config_sweep:
+                return
+            if user_model_config_sweep:
+                model_sweep_for_run_config = user_model_config_sweep
+            else:
+                model_sweep_for_run_config = auto_model_config_sweep[0]
+
+            self.generate_run_config_for_model_sweep(
+                next_model, model_sweep_for_run_config)
 
     def next_config(self):
         """
@@ -61,7 +162,7 @@ class RunConfigGenerator:
             generated by this instance
         """
 
-        return self._run_configs.pop()
+        return self._run_configs.pop(0)
 
     def clear_configs(self):
         """

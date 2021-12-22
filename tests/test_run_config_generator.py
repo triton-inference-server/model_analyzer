@@ -28,27 +28,6 @@ from .common.test_utils import convert_to_bytes
 
 class TestRunConfigGenerator(trc.TestResultCollector):
 
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandProfile()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
-
-    def setUp(self):
-        self.mock_model_config = MockModelConfig()
-        self.mock_model_config.start()
-        self.mock_client = MockTritonClientMethods()
-        self.mock_client.start()
-        self.client = TritonGRPCClient('localhost:8000')
-
     def test_generate_model_config_combinations(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
@@ -423,10 +402,10 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             }})
         run_config_generator.generate_run_config_for_model_sweep(
             config.profile_models[0], model_configs[0])
-        self.assertEqual(len(run_config_generator.run_configs()), 9)
-        self.assertEqual(
-            run_config_generator.run_configs()[0].model_config().get_field(
-                'name'), 'vgg_16_graphdef')
+        run_configs = self._get_run_configs(run_config_generator)
+        self.assertEqual(len(run_configs), 9)
+        self.assertEqual(run_configs[0].model_config().get_field('name'),
+                         'vgg_16_graphdef')
 
         # remote mode, with model sweeps
         yaml_content = convert_to_bytes("""
@@ -455,10 +434,10 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         for model_config in model_configs:
             run_config_generator.generate_run_config_for_model_sweep(
                 config.profile_models[0], model_config)
-        self.assertEqual(len(run_config_generator.run_configs()), 27)
-        self.assertEqual(
-            run_config_generator.run_configs()[0].model_config().get_field(
-                'name'), 'vgg_16_graphdef')
+        run_configs = self._get_run_configs(run_config_generator)
+        self.assertEqual(len(run_configs), 27)
+        self.assertEqual(run_configs[0].model_config().get_field('name'),
+                         'vgg_16_graphdef')
 
         # Not remote, no model sweep
         args = [
@@ -480,10 +459,10 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(len(model_configs), 1)
         run_config_generator.generate_run_config_for_model_sweep(
             config.profile_models[0], model_configs[0])
-        self.assertEqual(len(run_config_generator.run_configs()), 9)
-        self.assertEqual(
-            run_config_generator.run_configs()[0].model_config().get_field(
-                'name'), 'vgg_16_graphdef_i0')
+        run_configs = self._get_run_configs(run_config_generator)
+        self.assertEqual(len(run_configs), 9)
+        self.assertEqual(run_configs[0].model_config().get_field('name'),
+                         'vgg_16_graphdef_i0')
 
         # Not remote, with model sweep
         args = [
@@ -512,13 +491,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         for model_config in model_configs:
             run_config_generator.generate_run_config_for_model_sweep(
                 config.profile_models[0], model_config)
-        self.assertEqual(len(run_config_generator.run_configs()), 27)
-        self.assertEqual(
-            run_config_generator.run_configs()[0].model_config().get_field(
-                'name'), 'vgg_16_graphdef_i0')
-        self.assertEqual(
-            run_config_generator.run_configs()[9].model_config().get_field(
-                'name'), 'vgg_16_graphdef_i1')
+        run_configs = self._get_run_configs(run_config_generator)
+        self.assertEqual(len(run_configs), 27)
+
+        self.assertEqual(run_configs[0].model_config().get_field('name'),
+                         'vgg_16_graphdef_i0')
+        self.assertEqual(run_configs[9].model_config().get_field('name'),
+                         'vgg_16_graphdef_i1')
 
         # Test map fields
         yaml_content = convert_to_bytes("""
@@ -550,10 +529,37 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         for model_config in model_configs:
             run_config_generator.generate_run_config_for_model_sweep(
                 config.profile_models[0], model_config)
-        self.assertEqual(len(run_config_generator.run_configs()), 99)
-        self.assertEqual(
-            run_config_generator.run_configs()[0].model_config().get_field(
-                'name'), 'vgg_16_graphdef_i0')
+        run_configs = self._get_run_configs(run_config_generator)
+        self.assertEqual(len(run_configs), 99)
+        self.assertEqual(run_configs[0].model_config().get_field('name'),
+                         'vgg_16_graphdef_i0')
+
+    def _evaluate_config(self, args, yaml_content):
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
+        config = ConfigCommandProfile()
+        cli = CLI()
+        cli.add_subcommand(
+            cmd='profile',
+            help=
+            'Run model inference profiling based on specified CLI or config options.',
+            config=config)
+        cli.parse()
+        mock_config.stop()
+        return config
+
+    def _get_run_configs(self, run_config_generator):
+        run_configs = []
+        while not run_config_generator.is_done():
+            run_configs.append(run_config_generator.next_config())
+        return run_configs
+
+    def setUp(self):
+        self.mock_model_config = MockModelConfig()
+        self.mock_model_config.start()
+        self.mock_client = MockTritonClientMethods()
+        self.mock_client.start()
+        self.client = TritonGRPCClient('localhost:8000')
 
     def tearDown(self):
         self.mock_model_config.stop()
