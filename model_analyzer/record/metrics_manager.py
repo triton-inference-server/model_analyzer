@@ -166,10 +166,18 @@ class MetricsManager:
         measurement to the result manager
         """
 
+        # Create model variant
+        self._create_model_variant(original_name=run_config.model_name(),
+                                   variant_config=run_config.model_config())
+
+        # If this run config was already run, do not run again, just get the measurement
+        measurement = self._get_measurement_if_config_duplicate(run_config)
+        if measurement:
+            return measurement
+
         # Start server, and load model variant
         self._server.start(env=run_config.triton_environment())
-        if not self._create_and_load_model_variant(
-                original_name=run_config.model_name(),
+        if not self._load_model_variant(
                 variant_config=run_config.model_config()):
             self._server.stop()
             return
@@ -189,10 +197,10 @@ class MetricsManager:
 
         return measurement
 
-    def _create_and_load_model_variant(self, original_name, variant_config):
+    def _create_model_variant(self, original_name, variant_config):
         """
-        Creates a directory for the model config
-        variant in the output model repository
+        Creates a directory for the model config variant in the output model
+        repository and fills directory with config
         """
 
         variant_name = variant_config.get_field('name')
@@ -214,6 +222,12 @@ class MetricsManager:
             except FileExistsError:
                 pass
 
+    def _load_model_variant(self, variant_config):
+        """
+        Loads a model variant in the client
+        """
+
+        variant_name = variant_config.get_field('name')
         if self._config.triton_launch_mode != 'c_api':
             self._client.wait_for_server_ready(self._config.client_max_retries)
 
