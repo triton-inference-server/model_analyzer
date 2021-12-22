@@ -242,7 +242,8 @@ class MetricsManager:
         # check whether perf config string is a key in result dict
         if model_name not in results:
             return False
-        if model_config_name not in results[model_name]:
+        if not self._is_config_in_results(
+                run_config.model_config()._model_config, results[model_name]):
             return False
         measurements = results[model_name][model_config_name][1]
 
@@ -255,6 +256,16 @@ class MetricsManager:
             return measurements[perf_config_str]
         else:
             return None
+
+    def _is_config_in_results(self, config, model_results):
+        """
+        Returns true if `config` exists in the checkpoint `model_results`
+        """
+
+        for result in model_results.values():
+            if config == result[0]._model_config:
+                return True
+        return False
 
     def profile_model(self, run_config, perf_output_writer=None):
         """

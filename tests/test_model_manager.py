@@ -569,14 +569,14 @@ class TestModelManager(trc.TestResultCollector):
         mock_config.stop()
         return config
 
-    @patch('model_analyzer.model_manager.ModelManager.__init__',
+    @patch('model_analyzer.record.metrics_manager.MetricsManager.__init__',
            return_value=None)
-    def test_is_config_in_results(self, mock_model_manager_init):
+    def test_is_config_in_results(self, mock_metrics_manager_init):
         """
-        Tests that ModelManager._is_config_in_results() works correctly.
+        Tests that MetricsManager._is_config_in_results() works correctly.
         """
 
-        model_manager = ModelManager()
+        metrics_manager = MetricsManager()
 
         model_i0_config = ModelConfig(
             json_format.ParseDict(
@@ -610,7 +610,7 @@ class TestModelManager(trc.TestResultCollector):
                 }]
             }, model_config_pb2.ModelConfig())
         self.assertEqual(
-            model_manager._is_config_in_results(model_config, model_results),
+            metrics_manager._is_config_in_results(model_config, model_results),
             True)
 
         model_config = json_format.ParseDict(
@@ -622,7 +622,7 @@ class TestModelManager(trc.TestResultCollector):
                 }]
             }, model_config_pb2.ModelConfig())
         self.assertEqual(
-            model_manager._is_config_in_results(model_config, model_results),
+            metrics_manager._is_config_in_results(model_config, model_results),
             False)
 
         model_config = json_format.ParseDict(
@@ -631,5 +631,5 @@ class TestModelManager(trc.TestResultCollector):
                 'max_batch_size': 1
             }, model_config_pb2.ModelConfig())
         self.assertEqual(
-            model_manager._is_config_in_results(model_config, model_results),
+            metrics_manager._is_config_in_results(model_config, model_results),
             False)
