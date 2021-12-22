@@ -48,10 +48,8 @@ class ModelManagerSubclass(ModelManager):
                          result_manager, state_manager)
         self._configs = MockRunConfigs()
 
-    def _execute_run_configs(self):
-        while self._run_config_generator.run_configs():
-            run_config = self._run_config_generator.next_config()
-            self._configs.add_from_run_config(run_config)
+    def _execute_run_config(self, config):
+        self._configs.add_from_run_config(config)
 
     def get_run_configs(self):
         return self._configs
