@@ -23,6 +23,7 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.config.run.run_config_generator import RunConfigGenerator
 from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.model_manager import ModelManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
@@ -36,19 +37,19 @@ from unittest.mock import patch
 from .common.test_utils import convert_to_bytes
 
 
-class ModelManagerSubclass(ModelManager):
+class MetricsManagerSubclass(MetricsManager):
     """ 
     Overrides execute_run_configs() to gather a list of MockRunConfigs that
     contain the configured values of each would-be 'executed' run_config
     """
 
-    def __init__(self, config, client, server, metrics_manager, result_manager,
+    def __init__(self, config, client, server, gpus, result_manager,
                  state_manager):
-        super().__init__(config, client, server, metrics_manager,
-                         result_manager, state_manager)
+        super().__init__(config, client, server, gpus, result_manager,
+                         state_manager)
         self._configs = MockRunConfigs()
 
-    def _execute_run_config(self, config):
+    def execute_run_config(self, config):
         self._configs.add_from_run_config(config)
 
     def get_run_configs(self):
@@ -531,9 +532,12 @@ class TestModelManager(trc.TestResultCollector):
         config = self._evaluate_config(self._args, yaml_content)
 
         state_manager = AnalyzerStateManager(config, MagicMock())
-        model_manager = ModelManagerSubclass(config, MagicMock(), MagicMock(),
-                                             MagicMock(), MagicMock(),
-                                             state_manager)
+        metrics_manager = MetricsManagerSubclass(config, MagicMock(),
+                                                 MagicMock(), MagicMock(),
+                                                 MagicMock(), state_manager)
+        model_manager = ModelManager(config,
+                                     MagicMock(), MagicMock(), metrics_manager,
+                                     MagicMock(), state_manager)
 
         model_manager.run_model(config.profile_models[0])
         self.mock_model_config.stop()
@@ -544,7 +548,7 @@ class TestModelManager(trc.TestResultCollector):
         """ 
         Create a set of expected and actual run configs and confirm they are equal
         """
-        run_configs = model_manager.get_run_configs()
+        run_configs = model_manager._metrics_manager.get_run_configs()
         expected_configs = MockRunConfigs()
         expected_configs.populate_from_ranges(expected_ranges)
 
@@ -567,14 +571,14 @@ class TestModelManager(trc.TestResultCollector):
         mock_config.stop()
         return config
 
-    @patch('model_analyzer.model_manager.ModelManager.__init__',
+    @patch('model_analyzer.record.metrics_manager.MetricsManager.__init__',
            return_value=None)
-    def test_is_config_in_results(self, mock_model_manager_init):
+    def test_is_config_in_results(self, mock_metrics_manager_init):
         """
-        Tests that ModelManager._is_config_in_results() works correctly.
+        Tests that MetricsManager._is_config_in_results() works correctly.
         """
 
-        model_manager = ModelManager()
+        metrics_manager = MetricsManager()
 
         model_i0_config = ModelConfig(
             json_format.ParseDict(
@@ -608,7 +612,7 @@ class TestModelManager(trc.TestResultCollector):
                 }]
             }, model_config_pb2.ModelConfig())
         self.assertEqual(
-            model_manager._is_config_in_results(model_config, model_results),
+            metrics_manager._is_config_in_results(model_config, model_results),
             True)
 
         model_config = json_format.ParseDict(
@@ -620,7 +624,7 @@ class TestModelManager(trc.TestResultCollector):
                 }]
             }, model_config_pb2.ModelConfig())
         self.assertEqual(
-            model_manager._is_config_in_results(model_config, model_results),
+            metrics_manager._is_config_in_results(model_config, model_results),
             False)
 
         model_config = json_format.ParseDict(
@@ -629,5 +633,5 @@ class TestModelManager(trc.TestResultCollector):
                 'max_batch_size': 1
             }, model_config_pb2.ModelConfig())
         self.assertEqual(
-            model_manager._is_config_in_results(model_config, model_results),
+            metrics_manager._is_config_in_results(model_config, model_results),
             False)
