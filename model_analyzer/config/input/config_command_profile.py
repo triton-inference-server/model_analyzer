@@ -418,6 +418,17 @@ class ConfigCommandProfile(ConfigCommand):
                 description=
                 "Comma-delimited list of concurrency values or ranges <start:end:step>"
                 " to be used during profiling"))
+        self._add_config(
+            ConfigField(
+                'reload_model_disable',
+                field_type=ConfigPrimitive(bool),
+                parser_args={'action': 'store_true'},
+                default_value=False,
+                flags=['--reload-model-disable'],
+                description=
+                'Flag to indicate whether or not to disable model '
+                'loading and unloading in remote mode.'
+            ))
 
     def _add_client_configs(self):
         """
