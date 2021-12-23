@@ -89,14 +89,14 @@ function run_server_launch_modes() {
         RELOAD_MODEL_DISABLE=''
         MA_EXPECTED_RESULT='EP'     # Expected Pass
 
-        _do_config
+        _run_single_config
         if [ $? -ne 0 ]; then
             break
         fi
     done
 }
 
-function _do_config() {
+function _run_single_config() {
     # Set arguments for various launch modes
     if [ "$LAUNCH_MODE" == "remote" ]; then    
 
