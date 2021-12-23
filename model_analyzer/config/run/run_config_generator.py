@@ -87,7 +87,7 @@ class RunConfigGenerator:
         num_retries = analyzer_config['client_max_retries']
 
         if analyzer_config['triton_launch_mode'] == 'remote':
-            reload_model  = not analyzer_config['reload_model_disable']
+            reload_model = not analyzer_config['reload_model_disable']
             if reload_model:
                 self._client.load_model(model.model_name())
             model_config = ModelConfig.create_from_triton_api(
