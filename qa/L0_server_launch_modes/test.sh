@@ -172,7 +172,7 @@ function _run_analyzer_and_check_results() {
     MODEL_ANALYZER_SUBCOMMAND="profile"
     run_analyzer
     MA_ACTUAL_RESULT=$?
-    _check_analyzer
+    _check_analyzer_exit_status
 
     if [ "$LAUNCH_MODE" == "remote" ]; then
         kill $SERVER_PID
@@ -202,7 +202,7 @@ function _run_analyzer_and_check_results() {
     rm -rf $OUTPUT_MODEL_REPOSITORY
 }
 
-function _check_analyzer() {
+function _check_analyzer_exit_status() {
     if [ "$MA_EXPECTED_RESULT" == "EP" ]; then
         # Expected Pass
         if [ "$MA_ACTUAL_RESULT" != "0" ]; then
