@@ -144,7 +144,7 @@ function _run_single_config() {
             fi
 
             MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS $RELOAD_MODEL_DISABLE `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
-            _do_analyzer
+            _run_analyzer_and_check_results
             if [ $? -ne 0 ]; then
                 return 1
             fi        
@@ -160,13 +160,13 @@ function _run_single_config() {
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
     fi
 
-    _do_analyzer
+    _run_analyzer_and_check_results
     if [ $? -ne 0 ]; then
         return 1
     fi        
 }
 
-function _do_analyzer() {
+function _run_analyzer_and_check_results() {
     # Run the analyzer and check the results, enough to just profile the server
     set +e
     MODEL_ANALYZER_SUBCOMMAND="profile"
