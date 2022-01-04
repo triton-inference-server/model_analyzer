@@ -29,6 +29,8 @@ from .common import test_result_collector as trc
 
 import unittest
 
+from .common.test_utils import create_yaml
+
 
 class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
 
@@ -51,9 +53,9 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', '--profile-models', 'test_model'
         ]
-        yaml_content = """
+        yaml_content = create_yaml("""
             export_path: /test_export_path/
-        """
+        """)
 
         # start mocks
         self.mock_io = MockIOMethods(

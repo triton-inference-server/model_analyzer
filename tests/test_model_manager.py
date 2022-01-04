@@ -33,6 +33,8 @@ from tritonclient.grpc import model_config_pb2
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
+from .common.test_utils import create_yaml
+
 
 class ModelManagerSubclass(ModelManager):
     """ 
@@ -112,12 +114,12 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
         }]
 
-        yaml_content = """
+        yaml_content = create_yaml("""
             profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 5
             run_config_search_disable: False
-            """
+            """)
 
         self._test_model_manager(yaml_content, expected_ranges)
 
@@ -142,12 +144,12 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8, 16, 32]
         }]
 
-        yaml_content = """
+        yaml_content = create_yaml("""
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
             run_config_search_disable: False
-            """
+            """)
 
         self._test_model_manager(yaml_content, expected_ranges)
 
@@ -168,12 +170,12 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1]
         }]
 
-        yaml_content = """
+        yaml_content = create_yaml("""
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
             run_config_search_disable: True
-            """
+            """)
 
         self._test_model_manager(yaml_content, expected_ranges)
 
@@ -197,13 +199,13 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [5, 7]
         }]
 
-        yaml_content = """
+        yaml_content = create_yaml("""
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
             run_config_search_disable: False
             concurrency: [5, 7]
-            """
+            """)
 
         self._test_model_manager(yaml_content, expected_ranges)
 
@@ -222,13 +224,13 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
         }]
 
-        yaml_content = """
+        yaml_content = create_yaml("""
             profile_models: test_model
             run_config_search_max_concurrency: 512
             run_config_search_max_instance_count: 7
             run_config_search_disable: False
             triton_launch_mode: remote            
-            """
+            """)
 
         self._test_model_manager(yaml_content, expected_ranges)
 
@@ -253,7 +255,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [2, 10, 18, 26, 34, 42, 50, 58]
         }]
 
-        yaml_content = """
+        yaml_content = create_yaml("""
             profile_models: test_model
             run_config_search_max_concurrency: 512
             run_config_search_max_instance_count: 7
@@ -263,7 +265,7 @@ class TestModelManager(trc.TestResultCollector):
                 stop: 64
                 step: 8
             batch_sizes: 1,2,3     
-            """
+            """)
 
         self._test_model_manager(yaml_content, expected_ranges)
 
@@ -283,7 +285,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8]
         }]
 
-        yaml_content = """
+        yaml_content = create_yaml("""
             run_config_search_max_concurrency: 8
             run_config_search_max_instance_count: 16
             run_config_search_disable: False
@@ -291,7 +293,7 @@ class TestModelManager(trc.TestResultCollector):
                 test_model:
                     model_config_parameters:
                         max_batch_size: [1,2,4,8,16]
-            """
+            """)
 
         self._test_model_manager(yaml_content, expected_ranges)
 
@@ -319,7 +321,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8]
         }]
 
-        yaml_content = """
+        yaml_content = create_yaml("""
             run_config_search_max_concurrency: 8
             run_config_search_max_instance_count: 16
             run_config_search_disable: False
@@ -329,7 +331,7 @@ class TestModelManager(trc.TestResultCollector):
                         max_batch_size: [1,2,4,8,16]
                         dynamic_batching:
                             max_queue_delay_microseconds: [200, 300]                        
-            """
+            """)
 
         self._test_model_manager(yaml_content, expected_ranges)
 
@@ -382,7 +384,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4]
         }]
 
-        yaml_content = """
+        yaml_content = create_yaml("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 16
             run_config_search_disable: False
@@ -393,7 +395,7 @@ class TestModelManager(trc.TestResultCollector):
                         -
                             kind: KIND_GPU
                             count: 1
-            """
+            """)
 
         self._test_model_manager(yaml_content, expected_ranges)
 
@@ -445,7 +447,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4]
         }]
 
-        yaml_content = """
+        yaml_content = create_yaml("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 16
             run_config_search_disable: False
@@ -456,7 +458,7 @@ class TestModelManager(trc.TestResultCollector):
                         -
                             kind: KIND_GPU
                             count: 1
-            """
+            """)
 
         self._test_model_manager(yaml_content, expected_ranges)
 
@@ -509,12 +511,12 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4]
         }]
 
-        yaml_content = """
+        yaml_content = create_yaml("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 1
             run_config_search_disable: False
             profile_models: test_model
-            """
+            """)
         self._test_model_manager(yaml_content, expected_ranges)
 
     def _test_model_manager(self, yaml_content, expected_ranges):
