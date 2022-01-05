@@ -23,12 +23,12 @@ sweeping through different configurations for Triton models.
 
 Automatic configuration search is the default behavior when running Model
 Analyzer. This mode is enabled when there is not any parameter specified for the
-`model_config_parameters` section of the Model Analyzer Config. The parameters
-that are automatically searched are
+`model_config_parameters` section of the Model Analyzer Config. The parameter
+that is automatically searched is
 [`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups)
-and
+and 
 [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)
-settings.
+ will be enabled.
 
 
 An example model analyzer config that performs automatic config search looks
@@ -51,7 +51,7 @@ For
 Model Analyzer tries values from 1 to 5. This value can be changed using the
 `run_config_search_max_instance_count` key in the Model Analyzer Config. For
 [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)
-settings, Model Analyzer tries enabling dynamic batching.
+settings, Model Analyzer always enables dynamic batching during automatic configuration search.
 
 An example config that limits the search space used by Model Analyzer is
 described below:
