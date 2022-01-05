@@ -29,6 +29,8 @@ from .common import test_result_collector as trc
 
 import unittest
 
+from .common.test_utils import convert_to_bytes
+
 
 class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
 
@@ -51,9 +53,9 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', '--profile-models', 'test_model'
         ]
-        yaml_content = """
+        yaml_content = convert_to_bytes("""
             export_path: /test_export_path/
-        """
+        """)
 
         # start mocks
         self.mock_io = MockIOMethods(

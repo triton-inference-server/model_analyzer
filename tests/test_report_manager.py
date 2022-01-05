@@ -35,6 +35,8 @@ from .common import test_result_collector as trc
 
 import unittest
 
+from .common.test_utils import convert_to_bytes
+
 
 class TestReportManagerMethods(trc.TestResultCollector):
 
@@ -60,14 +62,14 @@ class TestReportManagerMethods(trc.TestResultCollector):
             "model-analyzer", "analyze", "-f", "path-to-config-file",
             "--analysis-models", analysis_models
         ]
-        yaml_content = """
+        yaml_content = convert_to_bytes("""
             num_configs_per_model: """ + str(num_configs_per_model) + """
             client_protocol: grpc
             export_path: /test/export/path
             constraints:
               perf_latency_p99:
                 max: 100
-        """
+        """)
         config = self._evaluate_config(args, yaml_content)
         state_manager = AnalyzerStateManager(config=config, server=None)
         gpu_info = {'gpu_uuid': {'name': 'gpu_name', 'total_memory': 10}}

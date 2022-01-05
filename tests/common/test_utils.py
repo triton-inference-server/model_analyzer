@@ -18,6 +18,17 @@ from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 
+def convert_to_bytes(string):
+    """
+    Converts string into bytes and ensures minimum length requirement 
+    for compatibility with unpack function called in usr/lib/python3.8/gettext.py
+    """
+    if (len(string) > 4):
+        return bytes(string, 'utf-8')
+    else:
+        return bytes(string + "    ", 'utf-8')
+
+
 def construct_measurement(model_name, gpu_metric_values, non_gpu_metric_values,
                           comparator):
     """
