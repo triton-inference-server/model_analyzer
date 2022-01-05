@@ -23,7 +23,7 @@ from model_analyzer.triton.client.grpc_client import TritonGRPCClient
 from model_analyzer.config.run.run_config_generator \
     import RunConfigGenerator
 
-from .common.test_utils import create_yaml
+from .common.test_utils import convert_to_bytes
 
 
 class TestRunConfigGenerator(trc.TestResultCollector):
@@ -56,7 +56,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         ]
 
         # Empty yaml
-        yaml_content = create_yaml('')
+        yaml_content = convert_to_bytes('')
         config = self._evaluate_config(args, yaml_content)
         run_config_generator = RunConfigGenerator(config=config,
                                                   client=self.client)
@@ -71,7 +71,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         ]
 
         # List of instance groups
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models:
             -
                 vgg_16_graphdef:
@@ -101,7 +101,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         }, None]
         self.assertEqual(expected_model_configs, model_configs)
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models:
             -
                 vgg_16_graphdef:
@@ -135,7 +135,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         }, None]
         self.assertEqual(expected_model_configs, model_configs)
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models:
             -
                 vgg_16_graphdef:
@@ -166,7 +166,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         }, None]
         self.assertEqual(expected_model_configs, model_configs)
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models:
             -
                 vgg_16_graphdef:
@@ -215,7 +215,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         }, None]
         self.assertEqual(expected_model_configs, model_configs)
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models:
             -
                 vgg_16_graphdef:
@@ -232,7 +232,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             config.profile_models[0].model_config_parameters())
         self.assertEqual(expected_model_configs, model_configs)
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models:
             -
                 vgg_16_graphdef:
@@ -274,7 +274,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         self.assertEqual(expected_model_configs, model_configs)
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models:
             -
                 vgg_16_graphdef:
@@ -311,7 +311,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(expected_model_configs, model_configs)
 
         # list under dynamic batching
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models:
             -
                 vgg_16_graphdef:
@@ -405,7 +405,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', '--triton-launch-mode', 'remote'
         ]
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             concurrency: [1, 2, 3]
             batch_sizes: [2, 3, 4]
             profile_models:
@@ -429,7 +429,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'name'), 'vgg_16_graphdef')
 
         # remote mode, with model sweeps
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             concurrency: [1, 2, 3]
             batch_sizes: [2, 3, 4]
             profile_models:
@@ -465,7 +465,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file'
         ]
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             concurrency: [1, 2, 3]
             batch_sizes: [2, 3, 4]
             profile_models:
@@ -490,7 +490,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file'
         ]
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             concurrency: [1, 2, 3]
             batch_sizes: [2, 3, 4]
             profile_models:
@@ -521,7 +521,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 'name'), 'vgg_16_graphdef_i1')
 
         # Test map fields
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             concurrency: [1, 2, 3]
             batch_sizes: [2, 3, 4]
             profile_models:

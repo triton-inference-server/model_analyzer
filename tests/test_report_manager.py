@@ -35,7 +35,7 @@ from .common import test_result_collector as trc
 
 import unittest
 
-from .common.test_utils import create_yaml
+from .common.test_utils import convert_to_bytes
 
 
 class TestReportManagerMethods(trc.TestResultCollector):
@@ -62,7 +62,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             "model-analyzer", "analyze", "-f", "path-to-config-file",
             "--analysis-models", analysis_models
         ]
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             num_configs_per_model: """ + str(num_configs_per_model) + """
             client_protocol: grpc
             export_path: /test/export/path

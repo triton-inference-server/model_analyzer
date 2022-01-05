@@ -29,7 +29,7 @@ from .common import test_result_collector as trc
 
 import unittest
 
-from .common.test_utils import create_yaml
+from .common.test_utils import convert_to_bytes
 
 
 class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
@@ -53,7 +53,7 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', '--profile-models', 'test_model'
         ]
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             export_path: /test_export_path/
         """)
 

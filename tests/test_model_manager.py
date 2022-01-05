@@ -33,7 +33,7 @@ from tritonclient.grpc import model_config_pb2
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from .common.test_utils import create_yaml
+from .common.test_utils import convert_to_bytes
 
 
 class ModelManagerSubclass(ModelManager):
@@ -114,7 +114,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
         }]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 5
@@ -144,7 +144,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8, 16, 32]
         }]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
@@ -170,7 +170,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1]
         }]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
@@ -199,7 +199,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [5, 7]
         }]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
@@ -224,7 +224,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
         }]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models: test_model
             run_config_search_max_concurrency: 512
             run_config_search_max_instance_count: 7
@@ -255,7 +255,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [2, 10, 18, 26, 34, 42, 50, 58]
         }]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             profile_models: test_model
             run_config_search_max_concurrency: 512
             run_config_search_max_instance_count: 7
@@ -285,7 +285,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8]
         }]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 8
             run_config_search_max_instance_count: 16
             run_config_search_disable: False
@@ -321,7 +321,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8]
         }]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 8
             run_config_search_max_instance_count: 16
             run_config_search_disable: False
@@ -384,7 +384,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4]
         }]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 16
             run_config_search_disable: False
@@ -447,7 +447,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4]
         }]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 16
             run_config_search_disable: False
@@ -511,7 +511,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4]
         }]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 1
             run_config_search_disable: False

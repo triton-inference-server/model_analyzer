@@ -23,7 +23,7 @@ from model_analyzer.cli.cli import CLI
 from .mocks.mock_config import MockConfig
 from .mocks.mock_os import MockOSMethods
 
-from .common.test_utils import create_yaml
+from .common.test_utils import convert_to_bytes
 
 
 class TestRunSearch(trc.TestResultCollector):
@@ -65,7 +65,7 @@ class TestRunSearch(trc.TestResultCollector):
             '-f', 'path-to-config-file', '--profile-models', 'vgg11'
         ]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 5
             concurrency: []
@@ -110,7 +110,7 @@ class TestRunSearch(trc.TestResultCollector):
             '-f', 'path-to-config-file', '--profile-models', 'vgg11'
         ]
 
-        yaml_content = create_yaml("""
+        yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 5
             concurrency: []
