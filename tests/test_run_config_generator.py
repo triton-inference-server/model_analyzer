@@ -483,7 +483,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(len(run_config_generator.run_configs()), 9)
         self.assertEqual(
             run_config_generator.run_configs()[0].model_config().get_field(
-                'name'), 'vgg_16_graphdef_i0')
+                'name'), 'vgg_16_graphdef_config0')
 
         # Not remote, with model sweep
         args = [
@@ -515,10 +515,10 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(len(run_config_generator.run_configs()), 27)
         self.assertEqual(
             run_config_generator.run_configs()[0].model_config().get_field(
-                'name'), 'vgg_16_graphdef_i0')
+                'name'), 'vgg_16_graphdef_config0')
         self.assertEqual(
             run_config_generator.run_configs()[9].model_config().get_field(
-                'name'), 'vgg_16_graphdef_i1')
+                'name'), 'vgg_16_graphdef_config1')
 
         # Test map fields
         yaml_content = convert_to_bytes("""
@@ -553,7 +553,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(len(run_config_generator.run_configs()), 99)
         self.assertEqual(
             run_config_generator.run_configs()[0].model_config().get_field(
-                'name'), 'vgg_16_graphdef_i0')
+                'name'), 'vgg_16_graphdef_config0')
 
     def tearDown(self):
         self.mock_model_config.stop()
