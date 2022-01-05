@@ -62,7 +62,12 @@ class TritonServerLocal(TritonServer):
         if self._server_path:
             # Create command list and run subprocess
             cmd = [self._server_path]
-            cmd += self._server_config.to_cli_string().replace('=', ' ').split()
+
+            args = self._server_config.to_cli_string().split()
+            for arg in args:
+                list = arg.split('=', 1)
+                cmd += list
+
             # Set environment, update with user config env
             triton_env = os.environ.copy()
 
