@@ -95,14 +95,9 @@ class TestConfigGenerator:
         with open('config-triton-global.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
-    def generate_triton_flags_backend_with_default_version(self):
-        self.config['triton_server_flags'] = {'backend_config': 'tensorflow'}
-
-        with open('config-triton-backend-with-default-version.yml', 'w+') as f:
-            yaml.dump(self.config, f)
-
     def generate_triton_flags_backend_with_specific_version(self):
         self.config['triton_server_flags'] = {
+            'strict_model_config': False,
             'backend_config': 'tensorflow,version=2'
         }
 
