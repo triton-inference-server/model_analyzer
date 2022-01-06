@@ -181,14 +181,14 @@ class ModelConfig:
                 'Model output path must be a directory.')
 
         model_config_bytes = text_format.MessageToBytes(self._model_config)
-
         # Create current variant model as symlinks to first variant model
         if first_variant_model_path is not None:
             src_model_name = Path(src_model_path).name
             first_variant_model_name = Path(first_variant_model_path).name
 
             # If the model files have been copied once, do not copy it again
-            if re.search(f'^{src_model_name}_i\d+$', first_variant_model_name):
+            if re.search(f'^{src_model_name}_config\d+$',
+                         first_variant_model_name):
                 for file in os.listdir(first_variant_model_path):
                     # Do not copy the config.pbtxt file
                     if file == 'config.pbtxt':
