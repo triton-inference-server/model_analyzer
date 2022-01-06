@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2022, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -122,6 +122,31 @@ class TritonServerConfig:
 
         return ' '.join(
             [f'--{key}={val}' for key, val in self._server_args.items() if val])
+
+    def to_args_list(self):
+        """
+        Utility function to convert a cli string into a list of arguments while
+        taking into account "smart" delimiters.  Notice in the example below
+        that only the first equals sign is used as split delimiter.
+
+        Returns
+        -------
+        list
+            the list of arguments consisting of all set arguments to
+            the tritonserver.
+
+            Example:
+            input cli_string: "--model-control-mode=explicit 
+                --backend-config=tensorflow,version=2"
+
+            output: ['--model-control-mode', 'explicit', 
+                '--backend-config', 'tensorflow,version=2']
+        """
+        list = []
+        args = self.to_cli_string().split()
+        for arg in args:
+            list += arg.split('=', 1)
+        return list
 
     def copy(self):
         """

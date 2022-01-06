@@ -1,4 +1,4 @@
-# Copyright (c) 2020,21 NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2022 NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,11 +62,7 @@ class TritonServerLocal(TritonServer):
         if self._server_path:
             # Create command list and run subprocess
             cmd = [self._server_path]
-
-            args = self._server_config.to_cli_string().split()
-            for arg in args:
-                list = arg.split('=', 1)
-                cmd += list
+            cmd += self._server_config.to_args_list()
 
             # Set environment, update with user config env
             triton_env = os.environ.copy()
