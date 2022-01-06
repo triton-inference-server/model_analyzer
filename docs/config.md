@@ -662,8 +662,7 @@ perf_analyzer_flags:
 If a model configuration has variable-sized dimensions in the inputs section, 
 then the `shape` option of the `perf_analyzer_flags` option must be specified.
 More information about this can be found in the 
-[Perf Analyzer](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#input-data)
-documentation.
+[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#input-data).
 
 **Important Notes**:
 * When providing arguments under `perf_analyzer_flags`, you must use `-` instead
