@@ -142,11 +142,11 @@ class TritonServerConfig:
             output: ['--model-control-mode', 'explicit', 
                 '--backend-config', 'tensorflow,version=2']
         """
-        list = []
+        args_list = []
         args = self.to_cli_string().split()
         for arg in args:
-            list += arg.split('=', 1)
-        return list
+            args_list += arg.split('=', 1)
+        return args_list
 
     def copy(self):
         """
