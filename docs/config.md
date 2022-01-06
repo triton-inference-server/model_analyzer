@@ -644,7 +644,8 @@ perf_analyzer_flags:
     latency-report-file: /path/to/latency/report/file
 ```
 
-The `input-data`, `shape`, and `streaming` perf_analyzer options are additive and can take either a single string (non-list) or a list of strings:
+The `input-data`, `shape`, and `streaming` perf_analyzer options are additive and can take either
+a single string (non-list) or a list of strings. Below is an example for `shape` argument:
 
 ```yaml
 model_repository: /path/to/model/repository/
@@ -653,7 +654,6 @@ profile_models:
     parameters:
         batch_sizes: 4
 perf_analyzer_flags:
-  input-data: my-input-data-1
   shape:
     - INPUT0:1024,1024
     - INPUT1:1024,1024
@@ -661,6 +661,8 @@ perf_analyzer_flags:
 
 If a model configuration has variable-sized dimensions in the inputs section, 
 then the `shape` option of the `perf_analyzer_flags` option must be specified.
+More information about this can be found in the 
+[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#input-data).
 
 **Important Notes**:
 * When providing arguments under `perf_analyzer_flags`, you must use `-` instead
