@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,6 +71,20 @@ class TestOutputValidator:
                     "\n***\n*** Unexpected count window adjustment found.\n***")
                 return False
         return True
+
+    def check_perf_output_timeout(self):
+        """
+        Look for no perf output message in log. The goal of this test is to run
+        model analyzer profile with a very small perf analyzer timeout so that
+        no output gets capture, but the execution of model analyzer should still
+        continue.
+        """
+
+        with open(self._analyzer_log, "r") as f:
+            if "perf_analyzer did not produce any output." in f.read():
+                return True
+        print("\n***\n*** No perf output message expected but not found.\n***")
+        return False
 
 
 if __name__ == '__main__':
