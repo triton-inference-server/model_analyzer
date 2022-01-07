@@ -51,7 +51,7 @@ class TestOutputValidator:
         expected_num_measurements = len(self._config['batch_sizes']) * len(
             self._config['concurrency'])
         for model in self._models:
-            token = f"Profiling model {model}_i0..."
+            token = f"Profiling model {model}_config0..."
             token_idx = 0
             found_count = 0
             while True:
