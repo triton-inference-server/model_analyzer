@@ -1,4 +1,4 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -87,6 +87,19 @@ class TestConfigGenerator:
             }
         }
         with open('./config-additive-args-count-no-adjust.yml', 'w') as f:
+            yaml.dump(model_config, f)
+
+    def generate_perf_output_timeout(self):
+        model_config = {
+            'profile_models': ['vgg19_libtorch'],
+            'perf_output': True,
+            'perf_analyzer_timeout': 2,
+            'perf_analyzer_flags': {
+                'measurement-mode': 'time_windows',
+                'measurement-interval': 2,
+            }
+        }
+        with open('./config-perf-output-timeout.yml', 'w') as f:
             yaml.dump(model_config, f)
 
 

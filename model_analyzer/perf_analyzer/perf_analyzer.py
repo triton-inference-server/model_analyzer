@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -269,9 +269,7 @@ class PerfAnalyzer:
 
         if self._output:
             return self._output
-        raise TritonModelAnalyzerException(
-            "Attempted to get perf_analyzer output"
-            "without calling run first.")
+        logger.info('perf_analyzer did not produce any output.')
 
     def get_records(self):
         """

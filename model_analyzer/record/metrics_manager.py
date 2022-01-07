@@ -1,4 +1,4 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -312,7 +312,9 @@ class MetricsManager:
                 '============== Perf Analyzer Launched ==============\n '
                 f'Command: perf_analyzer {perf_config.to_cli_string()} \n\n',
                 append=True)
-            perf_output_writer.write(perf_analyzer.output() + '\n', append=True)
+            if perf_analyzer.output():
+                perf_output_writer.write(perf_analyzer.output() + '\n',
+                                         append=True)
 
         # PerfAnalzyer run was not succesful
         if status == 1:
