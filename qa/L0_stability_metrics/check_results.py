@@ -72,21 +72,24 @@ class TestOutputValidator:
         for model in metric_values:
             for metric, values in metric_values[model].items():
                 start_value = values[0]
+                deviations = []
                 for value in values[1:]:
                     deviation_percent = abs(
                         (value - start_value) / start_value) * 100
+                    str_deviation = '{:.2%}'.format(deviation_percent / 100)
+                    deviations.append(str_deviation)
                     if deviation_percent > self._tolerance:
                         low = start_value - self._tolerance * start_value / 100
                         high = start_value + self._tolerance * start_value / 100
-                        str_deviation = '{:.2%}'.format(deviation_percent / 100)
                         print(
                             f"\n***"
                             f"\n***  For model {model}, value for metric {metric} is unstable."
                             f"\n***"
                             f"\n***  Expected range: {low} to {high}."
                             f"\n***  Values: {values}."
-                            f"\n***  Bad value found: {value}"
-                            f"\n***  Deviation: {str_deviation}"
+                            f"\n***     First bad value found: {value}"
+                            f"\n***     First bad value's deviation: {str_deviation}"
+                            f"\n***  All deviations: {deviations}."
                             f"\n***  Tolerance: {self._tolerance}%"
                             f"\n***")
                         return False
