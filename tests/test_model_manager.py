@@ -564,12 +564,12 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8]
         }]
 
-        yaml_content = """
+        yaml_content = convert_to_bytes("""
             profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 2
             run_config_search_disable: False
-            """
+            """)
 
         with patch.object(MetricsManagerSubclass,
                           "_get_next_perf_throughput_value") as mock_method:
@@ -603,12 +603,12 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1]
         }]
 
-        yaml_content = """
+        yaml_content = convert_to_bytes("""
             profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 2
             run_config_search_disable: False
-            """
+            """)
 
         with patch.object(MetricsManagerSubclass,
                           "_get_next_measurements") as mock_method:
