@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021-2022, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -93,6 +93,15 @@ class TestConfigGenerator:
     def generate_triton_flags_global(self):
         self.config['triton_server_flags'] = {'strict_model_config': False}
         with open('config-triton-global.yml', 'w+') as f:
+            yaml.dump(self.config, f)
+
+    def generate_triton_flags_backend_with_specific_version(self):
+        self.config['triton_server_flags'] = {
+            'strict_model_config': False,
+            'backend_config': 'tensorflow,version=2'
+        }
+
+        with open('config-triton-backend-with-specific-version.yml', 'w+') as f:
             yaml.dump(self.config, f)
 
 
