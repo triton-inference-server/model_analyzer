@@ -24,10 +24,11 @@ from model_analyzer.config.run.run_search import RunSearch
 from model_analyzer.config.run.run_config_generator import RunConfigGenerator
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.record.metrics_manager import MetricsManager
+from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.model_manager import ModelManager
+from model_analyzer.result.measurement import Measurement
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
-
 from google.protobuf import json_format
 from tritonclient.grpc import model_config_pb2
 
@@ -48,16 +49,32 @@ class MetricsManagerSubclass(MetricsManager):
         super().__init__(config, client, server, gpus, result_manager,
                          state_manager)
         self._configs = MockRunConfigs()
+        self._perf_throughput = 1
+
+    def get_run_configs(self):
+        """ Return the list of configs that would have been 'executed' """
+        return self._configs
 
     def execute_run_config(self, config):
         self._configs.add_from_run_config(config)
+        return self._get_next_measurements()
 
-    def get_run_configs(self):
-        return self._configs
+    def _get_next_measurements(self):
+        """ Return fake measurements as if the run_configs had been executed """
+
+        perf_throughput = PerfThroughput(self._get_next_perf_throughput_value())
+        non_gpu_data = [perf_throughput]
+        return [
+            Measurement(gpu_data=MagicMock(),
+                        non_gpu_data=non_gpu_data,
+                        perf_config=MagicMock())
+        ]
+
+    def _get_next_perf_throughput_value(self):
+        self._perf_throughput *= 2
+        return self._perf_throughput
 
 
-@patch('model_analyzer.config.run.run_search.RunSearch.add_measurements',
-       MagicMock())
 class TestModelManager(trc.TestResultCollector):
 
     def __init__(self, methodname):
@@ -517,6 +534,86 @@ class TestModelManager(trc.TestResultCollector):
             profile_models: test_model
             """)
         self._test_model_manager(yaml_content, expected_ranges)
+
+    def test_throughput_early_exit(self):
+        """
+        Test that there is an early backoff when sweeping concurrency
+
+        The behavior is that MA will try at least 4 concurrencies. If 
+        at that point none of the last 3 attempts have had satisfactory 
+        gain, it will stop
+
+        This test hardcodes the 'throughput' to 1, so for all model
+        configs the gain will be invalid and it will only try 4 
+        concurrencies of (1,2,4,8) despite max_concurrency=128
+        """
+
+        expected_ranges = [{
+            'instances': [1, 2],
+            'kind': ["KIND_GPU"],
+            'batching': [0],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4, 8]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4, 8]
+        }]
+
+        yaml_content = convert_to_bytes("""
+            profile_models: test_model
+            run_config_search_max_concurrency: 128
+            run_config_search_max_instance_count: 2
+            run_config_search_disable: False
+            """)
+
+        with patch.object(MetricsManagerSubclass,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.return_value = 1
+            self._test_model_manager(yaml_content, expected_ranges)
+
+    def test_bad_result_early_exit(self):
+        """
+        Test that there is an early backoff for bad result (out of memory)
+
+        If no measurements are returned in an attempt, no further concurrencies
+        should be tried.
+
+        This test hardcodes the measurements to be empty (bad result), so for all 
+        model configs it will only try 1 concurrency despite max_concurrency=128
+        """
+
+        expected_ranges = [{
+            'instances': [1, 2],
+            'kind': ["KIND_GPU"],
+            'batching': [0],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1]
+        }]
+
+        yaml_content = convert_to_bytes("""
+            profile_models: test_model
+            run_config_search_max_concurrency: 128
+            run_config_search_max_instance_count: 2
+            run_config_search_disable: False
+            """)
+
+        with patch.object(MetricsManagerSubclass,
+                          "_get_next_measurements") as mock_method:
+            mock_method.return_value = []
+            self._test_model_manager(yaml_content, expected_ranges)
 
     def _test_model_manager(self, yaml_content, expected_ranges):
         """ 
