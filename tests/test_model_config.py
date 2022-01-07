@@ -142,9 +142,9 @@ instance_group [
 
         model_config = ModelConfig.create_from_dictionary(self._model_config)
 
-        model_path = './output_model_repository/model_i1'
+        model_path = './output_model_repository/model_config1'
         src_model_path = '/tmp/src_model_repository/model'
-        last_model_path = './output_model_repository/model_i0'
+        last_model_path = './output_model_repository/model_config0'
 
         mock_model_config = MockModelConfig()
         mock_model_config.start()
@@ -152,8 +152,8 @@ instance_group [
                                           last_model_path)
         mock_model_config.stop()
 
-        mock_os_symlink.assert_any_call('../model_i0/1',
-                                        './output_model_repository/model_i1/1')
         mock_os_symlink.assert_any_call(
-            '../model_i0/output0_labels.txt',
-            './output_model_repository/model_i1/output0_labels.txt')
+            '../model_config0/1', './output_model_repository/model_config1/1')
+        mock_os_symlink.assert_any_call(
+            '../model_config0/output0_labels.txt',
+            './output_model_repository/model_config1/output0_labels.txt')

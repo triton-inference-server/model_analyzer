@@ -130,7 +130,7 @@ class RunConfigGenerator:
             # The new model name is the original model suffixed with
             # _i<config_index>. Where the config index is the index
             # of the model config alternative.
-            model_tmp_name = f'{model.model_name()}_i{model_name_index}'
+            model_tmp_name = f'{model.model_name()}_config{model_name_index}'
             model_config.set_field('name', model_tmp_name)
             model_config.set_cpu_only(model.cpu_only())
             perf_configs = self._generate_perf_config_for_model(
