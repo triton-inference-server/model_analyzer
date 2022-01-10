@@ -21,7 +21,7 @@ class GeneratorUtils:
     @staticmethod
     def generate_combinations(value):
         """
-        Generates all the alternative config fields for
+        Generates all the alternative fields for
         a given value.
 
         Parameters
@@ -40,8 +40,8 @@ class GeneratorUtils:
             for key, sweep_choices in value.items():
                 sweep_parameter_list = []
 
-                # This is the list of sweep parameters. When parsing the Model
-                # Analyzer Config every sweepable parameter will be converted
+                # This is the list of sweep parameters. When parsing a
+                # config every sweepable parameter will be converted
                 # to a list of values to make the parameter sweeping easier in
                 # here.
                 for sweep_choice in sweep_choices:
