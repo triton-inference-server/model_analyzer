@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,11 +22,19 @@ mode, the Triton Inference Server is launched locally via a C API. In the
 `remote` mode, it is assumed there is an already running instance of
 Triton Inference Server.
 
-1. **`--triton-launch-mode=local`** In this mode, Model Analyzer will launch
+### Local
+
+CLI Option: **`--triton-launch-mode=local`**
+
+In this mode, Model Analyzer will launch
    Triton Server using the local binary supplied using `--triton-server-path`,
    or if none is supplied, the `tritonserver` binary in `$PATH`.
 
-2. **`--triton-launch-mode=docker`** In this mode, Model Analyzer uses the
+### Docker
+
+CLI Option: **`--triton-launch-mode=docker`**
+
+In this mode, Model Analyzer uses the
    Python Docker API to launch the Triton Inference Server container. If you are
    running Model Analyzer inside a Docker container, make sure that the
    container is launched with appropriate flags. The following flags are
@@ -56,12 +64,20 @@ Triton Inference Server.
    --output-model-repository=<path-to-output-model-repository>/output
    ```
 
-3. **`--triton-launch-mode=c_api`** In this mode, Triton server is launched
+### C API
+
+CLI Option: **`--triton-launch-mode=c_api`**
+
+In this mode, Triton server is launched
    locally via the
    [C_API](https://github.com/triton-inference-server/server/blob/main/docs/inference_protocols.md#c-api)
    by the perf_analyzer instances launched by Model Analyzer.
 
-4. **`--triton-launch-mode=remote`**. This mode is beneficial when you want to
+### Remote
+
+CLI Option: **`--triton-launch-mode=remote`**
+
+This mode is beneficial when you want to
    use an already running Triton Inference Server. You may provide the URLs for
    the Triton instance's HTTP or GRPC endpoint depending on your chosen client
    protocol using the `--triton-grpc-endpoint`, and `--triton-http-endpoint`
@@ -70,3 +86,12 @@ Triton Inference Server.
    Analyzer does not currently support profiling remote GPUs. Triton Server in this
    mode needs to be launched with `--model-control-mode explicit` flag to support
    loading/unloading of the models.
+
+### Tradeoffs
+
+| Mode | Pro | Con |
+| - | - | - |
+| *docker* | Don't need Triton Server or its dependencies installed locally | Need Docker installed |
+| *local* | Don't need Docker installed | Need Triton Server and all of its dependencies installed locally |
+| *c_api* | Same as local, but uses faster C API | Need Triton Server and all of its dependencies installed locally |
+| *remote* | Can use Model Analzer on already-running Triton Server | Need Triton Server running on same machine as Model Analyzer |
