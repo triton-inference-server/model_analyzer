@@ -72,9 +72,15 @@ class TestOutputValidator:
             for metric, values in metric_values[model].items():
                 for value in values:
                     str_value = '{:.2}'.format(value)
-                    is_value = isinstance(value, (int, float))
-                    is_zero = str_value == '0.0'
-                    if is_zero or not is_value:
+                    is_legal_type = isinstance(value, (int, float))
+                    is_zero_value = str_value == '0.0'
+
+                    # Fail test if value is zero, or if type is not int/float
+                    # Examples:
+                    #   Pass: 0.000001, 1.0
+                    #   Fail: 0.0, 0.00000, '0', 'zero', ''
+                    #
+                    if is_zero_value or not is_legal_type:
                         print(
                             f"\n***"
                             f"\n***  For model {model}, value for metric {metric} is unstable."
