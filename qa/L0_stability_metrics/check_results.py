@@ -1,4 +1,4 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,26 +71,18 @@ class TestOutputValidator:
         # Compare metrics
         for model in metric_values:
             for metric, values in metric_values[model].items():
-                start_value = values[0]
-                deviations = []
-                for value in values[1:]:
-                    deviation_percent = abs(
-                        (value - start_value) / start_value) * 100
-                    str_deviation = '{:.2%}'.format(deviation_percent / 100)
-                    deviations.append(str_deviation)
-                    if deviation_percent > self._tolerance:
-                        low = start_value - self._tolerance * start_value / 100
-                        high = start_value + self._tolerance * start_value / 100
+                for value in values:
+                    str_value = '{:.2}'.format(value)
+                    is_value = isinstance(value, (int, float))
+                    is_zero = str_value == '0.0'
+                    if is_zero or not is_value:
                         print(
                             f"\n***"
                             f"\n***  For model {model}, value for metric {metric} is unstable."
                             f"\n***"
-                            f"\n***  Expected range: {low} to {high}."
+                            f"\n***  Expected: non-zero value, and float or int datatype"
                             f"\n***  Values: {values}."
-                            f"\n***     First bad value found: {value}"
-                            f"\n***     First bad value's deviation: {str_deviation}"
-                            f"\n***  All deviations: {deviations}."
-                            f"\n***  Tolerance: {self._tolerance}%"
+                            f"\n***     First bad value found: {value} ({str_value})"
                             f"\n***")
                         return False
         return True
