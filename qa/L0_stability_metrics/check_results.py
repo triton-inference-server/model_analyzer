@@ -25,11 +25,10 @@ class TestOutputValidator:
     of the test
     """
 
-    def __init__(self, config, test_name, results_path, tolerance):
+    def __init__(self, config, test_name, results_path):
         self._config = config
         self._models = list(config['profile_models'])
         self._result_path = results_path
-        self._tolerance = tolerance
 
         check_function = self.__getattribute__(f'check_{test_name}')
 
@@ -105,16 +104,9 @@ if __name__ == '__main__':
                         type=str,
                         required=True,
                         help='The name of the test to be run.')
-    parser.add_argument(
-        '--tolerance',
-        type=int,
-        default=10,
-        help='The percent tolerance allowed for the metrics to vary.')
-
     args = parser.parse_args()
 
     with open(args.config_file, 'r') as f:
         config = yaml.safe_load(f)
 
-    TestOutputValidator(config, args.test_name, args.inference_results_path,
-                        args.tolerance)
+    TestOutputValidator(config, args.test_name, args.inference_results_path)
