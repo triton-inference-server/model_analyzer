@@ -1,4 +1,4 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,11 +25,10 @@ class TestOutputValidator:
     of the test
     """
 
-    def __init__(self, config, test_name, results_path, tolerance):
+    def __init__(self, config, test_name, results_path):
         self._config = config
         self._models = list(config['profile_models'])
         self._result_path = results_path
-        self._tolerance = tolerance
 
         check_function = self.__getattribute__(f'check_{test_name}')
 
@@ -49,6 +48,7 @@ class TestOutputValidator:
         pathname = os.path.join(self._result_path, 'result_*.csv')
         csv_contents = []
         for filename in glob.glob(pathname):
+            print('Opening file <' + str(filename) + '>')
             with open(filename, 'r+') as f:
                 csv_contents.append(f.read())
 
@@ -69,20 +69,32 @@ class TestOutputValidator:
                     }
 
         # Compare metrics
+        counter = 0
         for model in metric_values:
             for metric, values in metric_values[model].items():
-                start_value = values[0]
-                for value in values[1:]:
-                    deviation_percent = abs(
-                        (value - start_value) / start_value) * 100
-                    if deviation_percent > self._tolerance:
+                for value in values:
+                    counter += 1
+                    str_value = '{:.2}'.format(value)
+                    is_legal_type = isinstance(value, (int, float))
+                    is_zero_value = str_value == '0.0'
+
+                    # Fail test if value is zero, or if type is not int/float
+                    # Examples:
+                    #   Pass: 0.000001, 1.0
+                    #   Fail: 0.0, 0.00000, '0', 'zero', ''
+                    #
+                    if is_zero_value or not is_legal_type:
                         print(
                             f"\n***"
-                            f"\n***  For model {model}, value for metric {metric}"
-                            "\n***  is unstable.\n***\n"
-                            f"\n***\n***  Expected: {start_value} +/- {self._tolerance*start_value/100}."
-                            f"\n***  Found: {values[1:]}.\n***")
+                            f"\n***  For model {model}, value for metric {metric} is unstable."
+                            f"\n***"
+                            f"\n***  Expected: non-zero value, and float or int datatype"
+                            f"\n***  Values: {values}."
+                            f"\n***     First bad value found: {value} ({str_value})"
+                            f"\n***")
                         return False
+
+        print('Successfully compared ' + str(counter) + ' values.')
         return True
 
 
@@ -103,16 +115,9 @@ if __name__ == '__main__':
                         type=str,
                         required=True,
                         help='The name of the test to be run.')
-    parser.add_argument(
-        '--tolerance',
-        type=int,
-        default=10,
-        help='The percent tolerance allowed for the metrics to vary.')
-
     args = parser.parse_args()
 
     with open(args.config_file, 'r') as f:
         config = yaml.safe_load(f)
 
-    TestOutputValidator(config, args.test_name, args.inference_results_path,
-                        args.tolerance)
+    TestOutputValidator(config, args.test_name, args.inference_results_path)
