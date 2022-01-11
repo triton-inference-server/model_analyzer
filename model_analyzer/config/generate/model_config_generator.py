@@ -38,7 +38,7 @@ class ModelConfigGenerator:
         if self._remote_mode:
             configs = self._get_remote_mode_model_configs()
         else:
-            configs = self._get_local_mode_model_configs()
+            configs = self._get_direct_modes_model_configs()
 
         if not self._is_default_config_in_configs(configs):
             self._add_default_config(configs)
@@ -47,27 +47,33 @@ class ModelConfigGenerator:
 
     def _get_remote_mode_model_configs(self):
         """ Generate model configs for remote mode """
-        return []
+        return [None]
 
-    def _get_local_mode_model_configs(self):
-        """ Generate model configs for local mode """
+    def _get_direct_modes_model_configs(self):
+        """ Generate model configs for direct (non-remote) modes """
 
         model_config_params = self._model.model_config_parameters()
         if model_config_params:
             configs = GeneratorUtils.generate_combinations(model_config_params)
         else:
-            configs = self._automatic_search_configs()
+            if self._search_disabled:
+                configs = self._automatic_search_disabled_configs()
+            else:
+                configs = self._automatic_search_configs()
 
         return configs
+
+    def _automatic_search_disabled_configs(self):
+        """ Return the configs when we want to search but searching is disabled """
+        return [{'dynamic_batching': {}}]
 
     def _automatic_search_configs(self):
         """ Search through automatic search variables to generate configs """
 
         configs = []
-        if not self._search_disabled:
-            for instances in range(1, self._max_instance_count + 1):
-                config = {'dynamic_batching': {}, 'instance_count': instances}
-                configs.append(config)
+        for instances in range(1, self._max_instance_count + 1):
+            config = {'dynamic_batching': {}, 'instance_count': instances}
+            configs.append(config)
 
         return configs
 

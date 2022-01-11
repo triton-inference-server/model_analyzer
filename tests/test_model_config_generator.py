@@ -24,9 +24,9 @@ from .mocks.mock_os import MockOSMethods
 
 class TestModelConfigGenerator(trc.TestResultCollector):
 
-    def test_local_no_params(self):
+    def test_direct_no_params(self):
         ''' 
-        Test local mode with no model_config_parameters specified
+        Test direct modes with no model_config_parameters specified
         
         It will just sweep instance count (with dynamic batching on), and 
         default config (None) will be included 
@@ -51,9 +51,9 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         self._run_and_test_model_config_generator(yaml_content,
                                                   expected_configs)
 
-    def test_local_no_params_search_disable(self):
+    def test_direct_no_params_search_disable(self):
         ''' 
-        Test local mode with no model_config_parameters specified and run_search disabled
+        Test direct mode with no model_config_parameters specified and run_search disabled
         
         This will just return empty config, since there are no parameters to combine
         '''
@@ -65,15 +65,18 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                 - my-model
             """)
 
-        expected_configs = [None]
+        expected_configs = [
+            {'dynamic_batching': {}},
+            None
+        ]
         # yapf: enable
 
         self._run_and_test_model_config_generator(yaml_content,
                                                   expected_configs)
 
-    def test_local_yes_params_search_disable(self):
+    def test_direct_yes_params_search_disable(self):
         ''' 
-        Test local mode with model_config_parameters specified and run_search disabled
+        Test direct modes with model_config_parameters specified and run_search disabled
         
         This will just combine all model_config_parameters
         '''
@@ -106,7 +109,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         self._run_and_test_model_config_generator(yaml_content,
                                                   expected_configs)
 
-    def test_local_max_instance_count(self):
+    def test_direct_max_instance_count(self):
         ''' 
         Test that ModelConfigGenerator will honor run_config_search_max_instance_count
         '''
@@ -129,9 +132,9 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         self._run_and_test_model_config_generator(yaml_content,
                                                   expected_configs)
 
-    def test_local_yes_params_specified(self):
+    def test_direct_yes_params_specified(self):
         ''' 
-        Test local mode with model_config_parameters specified
+        Test direct mode with model_config_parameters specified
         
         It will combine all legal combinations of config values, and 
         default config (None) will be included 
