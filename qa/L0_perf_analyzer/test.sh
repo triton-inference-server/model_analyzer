@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,21 +54,20 @@ fi
 RET=0
 
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
-    if [[ "$CONFIG_FILE" == *"no-adjust"* ]]; then
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
-        if [[ "$CONFIG_FILE" = *"time"* ]]; then
-            TEST_NAME="time_window"
-        else
-            TEST_NAME="count_window"
-        fi
-    else
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE --perf-output=True"
-        if [[ "$CONFIG_FILE" = *"time"* ]]; then
-            TEST_NAME="time_window_adjust"
-        else
-            TEST_NAME="count_window_adjust"
-        fi
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
+    if [[ "$CONFIG_FILE" == "config-time-no-adjust.yml" ]]; then
+        TEST_NAME="time_window"
+    elif [[ "$CONFIG_FILE" == "config-time-adjust.yml" ]]; then
+        TEST_NAME="time_window_adjust"
+    elif [[ "$CONFIG_FILE" == "config-count-no-adjust.yml" ]]; then
+        TEST_NAME="count_window"
+    elif [[ "$CONFIG_FILE" == "config-additive-args-count-no-adjust.yml" ]]; then
+        TEST_NAME="count_window"
+    elif [[ "$CONFIG_FILE" == "config_perf_output_timeout.yml" ]]; then
+        TEST_NAME="perf_output_timeout"
     fi
+
+    echo $TEST_NAME
 
     set +e
 
