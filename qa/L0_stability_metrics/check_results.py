@@ -48,6 +48,7 @@ class TestOutputValidator:
         pathname = os.path.join(self._result_path, 'result_*.csv')
         csv_contents = []
         for filename in glob.glob(pathname):
+            print('Opening file <' + str(filename) + '>')
             with open(filename, 'r+') as f:
                 csv_contents.append(f.read())
 
@@ -68,9 +69,11 @@ class TestOutputValidator:
                     }
 
         # Compare metrics
+        counter = 0
         for model in metric_values:
             for metric, values in metric_values[model].items():
                 for value in values:
+                    counter += 1
                     str_value = '{:.2}'.format(value)
                     is_legal_type = isinstance(value, (int, float))
                     is_zero_value = str_value == '0.0'
@@ -90,6 +93,8 @@ class TestOutputValidator:
                             f"\n***     First bad value found: {value} ({str_value})"
                             f"\n***")
                         return False
+
+        print('Successfully compared ' + str(counter) + ' values.')
         return True
 
 
