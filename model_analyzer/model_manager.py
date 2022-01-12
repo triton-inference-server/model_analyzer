@@ -264,20 +264,32 @@ class ModelManager:
 
     def _load_model_variant(self, variant_config):
         """
+        Decides on whether or not to load a model variant in the client
+        """
+        retval = True
+        if self._config.triton_launch_mode == 'remote':
+            # Don't load model if in remote and reload disabled
+            reload_model = not self._config.reload_model_disable
+            if reload_model:
+                retval = self._do_load_model_variant(variant_config)
+        elif self._config.triton_launch_mode != 'c_api':
+            retval = self._do_load_model_variant(variant_config)
+        return retval
+
+    def _do_load_model_variant(self, variant_config):
+        """
         Loads a model variant in the client
         """
+        self._client.wait_for_server_ready(self._config.client_max_retries)
 
         variant_name = variant_config.get_field('name')
-        if self._config.triton_launch_mode != 'c_api':
-            self._client.wait_for_server_ready(self._config.client_max_retries)
+        if self._client.load_model(model_name=variant_name) == -1:
+            return False
 
-            if self._client.load_model(model_name=variant_name) == -1:
-                return False
-
-            if self._client.wait_for_model_ready(
-                    model_name=variant_name,
-                    num_retries=self._config.client_max_retries) == -1:
-                return False
+        if self._client.wait_for_model_ready(
+                model_name=variant_name,
+                num_retries=self._config.client_max_retries) == -1:
+            return False
         return True
 
     def _get_measurement_if_config_duplicate(self, run_config):
