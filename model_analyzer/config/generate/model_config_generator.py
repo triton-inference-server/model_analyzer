@@ -13,12 +13,16 @@
 # limitations under the License.
 
 from model_analyzer.config.generate.generator_utils import GeneratorUtils
+from model_analyzer.triton.model.model_config import ModelConfig
 
 
 class ModelConfigGenerator:
     """ Given a model, generates model configs """
 
-    def __init__(self, config, model):
+    def __init__(self, config, model, client):
+        self._client = client
+        self._model_repository = config.model_repository
+        self._num_retries = config.client_max_retries
         self._max_instance_count = config.run_config_search_max_instance_count
         self._search_disabled = config.run_config_search_disable
         self._remote_mode = config.triton_launch_mode == 'remote'
@@ -40,28 +44,57 @@ class ModelConfigGenerator:
         else:
             configs = self._get_direct_modes_model_configs()
 
-        if not self._is_default_config_in_configs(configs):
-            self._add_default_config(configs)
-
         return configs
 
     def _get_remote_mode_model_configs(self):
         """ Generate model configs for remote mode """
-        return [None]
+        return [self._make_remote_model_config()]
 
     def _get_direct_modes_model_configs(self):
         """ Generate model configs for direct (non-remote) modes """
+        model_configs = []
+        param_combos = self._get_param_combinations()
+        base_model_config = ModelConfig.create_from_file(
+            f'{self._model_repository}/{self._model.model_name()}')
+        for param_combo in param_combos:
+            model_config = self._make_direct_mode_model_config(
+                base_model_config, param_combo)
+            model_configs.append(model_config)
 
+        return model_configs
+
+    def _make_direct_mode_model_config(self, base_model_config, param_combo):
+        """ 
+        Given a base model config and a combination of parameters to change,
+        apply the changes on top of the base and return the new model config
+        """
+        model_config_dict = base_model_config.get_config()
+        if param_combo is not None:
+            for key, value in param_combo.items():
+                if value is not None:
+                    model_config_dict[key] = value
+        model_config = ModelConfig.create_from_dictionary(model_config_dict)
+        return model_config
+
+    def _get_param_combinations(self):
+        """
+        Calculate all parameter combinations to apply on top of the
+        base model config
+        """
         model_config_params = self._model.model_config_parameters()
         if model_config_params:
-            configs = GeneratorUtils.generate_combinations(model_config_params)
+            param_combos = GeneratorUtils.generate_combinations(
+                model_config_params)
         else:
             if self._search_disabled:
-                configs = self._automatic_search_disabled_configs()
+                param_combos = self._automatic_search_disabled_configs()
             else:
-                configs = self._automatic_search_configs()
+                param_combos = self._automatic_search_configs()
 
-        return configs
+        if not self._is_default_config_in_configs(param_combos):
+            self._add_default_config(param_combos)
+
+        return param_combos
 
     def _automatic_search_disabled_configs(self):
         """ Return the configs when we want to search but searching is disabled """
@@ -71,11 +104,27 @@ class ModelConfigGenerator:
         """ Search through automatic search variables to generate configs """
 
         configs = []
+        kind = "KIND_GPU"
+        if self._model.cpu_only():
+            kind = "KIND_CPU"
+
         for instances in range(1, self._max_instance_count + 1):
-            config = {'dynamic_batching': {}, 'instance_count': instances}
+            config = {
+                'dynamic_batching': {},
+                'instance_group': [{
+                    'count': instances,
+                    'kind': kind
+                }]
+            }
             configs.append(config)
 
         return configs
+
+    def _make_remote_model_config(self):
+        model_config = ModelConfig.create_from_triton_api(
+            self._client, self._model.model_name(), self._num_retries)
+        model_config.set_cpu_only(self._model.cpu_only())
+        return model_config
 
     def _is_default_config_in_configs(self, configs):
         return None in configs
