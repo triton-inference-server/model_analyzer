@@ -19,7 +19,9 @@ from model_analyzer.cli.cli import CLI
 from .common import test_result_collector as trc
 from .common.test_utils import convert_to_bytes
 from .mocks.mock_config import MockConfig
+from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
+from unittest.mock import MagicMock
 
 
 class TestModelConfigGenerator(trc.TestResultCollector):
@@ -39,12 +41,12 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             """)
 
         expected_configs = [
-            {'dynamic_batching': {}, 'instance_count': 1},
-            {'dynamic_batching': {}, 'instance_count': 2},
-            {'dynamic_batching': {}, 'instance_count': 3},
-            {'dynamic_batching': {}, 'instance_count': 4},
-            {'dynamic_batching': {}, 'instance_count': 5},
-            None
+            {'dynamic_batching': {}, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
+            {}
         ]
         # yapf: enable
 
@@ -67,7 +69,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
         expected_configs = [
             {'dynamic_batching': {}},
-            None
+            {}
         ]
         # yapf: enable
 
@@ -102,7 +104,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 1},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 4},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 16},
-            None
+            {}
         ]
         # yapf: enable
 
@@ -122,10 +124,10 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             """)
 
         expected_configs = [
-            {'dynamic_batching': {}, 'instance_count': 1},
-            {'dynamic_batching': {}, 'instance_count': 2},
-            {'dynamic_batching': {}, 'instance_count': 3},
-            None
+            {'dynamic_batching': {}, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {}
         ]
         # yapf: enable
 
@@ -161,12 +163,73 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 1},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 4},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 16},
-            None
+            {}
         ]
         # yapf: enable
 
         self._run_and_test_model_config_generator(yaml_content,
                                                   expected_configs)
+
+    def test_direct_cpu_only(self):
+        ''' 
+        Test direct mode with cpu_only=true
+        '''
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_instance_count: 2
+            profile_models:
+                - my-model:
+                    cpu_only: True
+            """)
+
+        expected_configs = [
+            {'dynamic_batching': {}, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]},
+            {'dynamic_batching': {}, 'instance_group': [{'count': 2, 'kind': 'KIND_CPU'}]},
+            {}
+        ]
+        # yapf: enable
+
+        self._run_and_test_model_config_generator(yaml_content,
+                                                  expected_configs)
+
+    def test_direct_nonempty_default_config(self):
+        ''' 
+        Test direct mode with the the default config containing some values
+
+        It will keep values that aren't part of the search, and will overwrite
+        any values that are part of the search
+        '''
+
+        # yapf: disable
+        protobuf = """
+            name: "my-model"
+            max_batch_size: 8
+            instance_group [
+            {
+                kind: KIND_CPU
+                count: 1
+            }
+            ]
+            """
+
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_instance_count: 4
+            profile_models:
+                - my-model
+            """)
+
+        expected_configs = [
+            {'name': 'my-model', 'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'name': 'my-model', 'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'name': 'my-model', 'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'name': 'my-model', 'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'name': 'my-model', 'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]}
+        ]
+        # yapf: enable
+
+        self._run_and_test_model_config_generator(yaml_content,
+                                                  expected_configs, protobuf)
 
     def test_remote_yes_params_specified(self):
         ''' 
@@ -189,7 +252,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                             count: [1,2]                        
             """)
 
-        expected_configs = [None]
+        expected_configs = [{}]
         # yapf: enable
 
         self._run_and_test_model_config_generator(yaml_content,
@@ -210,28 +273,43 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                 - my-model
             """)
 
-        expected_configs = [None]
+        expected_configs = [{}]
         # yapf: enable
 
         self._run_and_test_model_config_generator(yaml_content,
                                                   expected_configs)
 
-    def _run_and_test_model_config_generator(self, yaml_content,
-                                             expected_configs):
+    def _run_and_test_model_config_generator(self,
+                                             yaml_content,
+                                             expected_configs,
+                                             protobuf=""):
+        ''' 
+        Main function that creates a config from the yaml_content, runs it through
+        ModelConfigGenerator, and compares the resulting model_configs vs the expected_configs
+        '''
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file'
         ]
 
+        # Use mock model config or else TritonModelAnalyzerException will be thrown as it tries to read from disk
+        self.mock_model_config = MockModelConfig(protobuf)
+        self.mock_model_config.start()
         config = self._evaluate_config(args, yaml_content)
-        mcg = ModelConfigGenerator(config, config.profile_models[0])
+
+        mcg = ModelConfigGenerator(config, config.profile_models[0],
+                                   MagicMock())
         model_configs = []
         while not mcg.is_done():
-            model_configs.append(mcg.next_config())
+            model_config = mcg.next_config()
+            model_config_dict = model_config.get_config()
+            model_configs.append(model_config_dict)
 
         self.assertEqual(len(expected_configs), len(model_configs))
         for config in expected_configs:
             self.assertIn(config, model_configs)
+
+        self.mock_model_config.stop()
 
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
