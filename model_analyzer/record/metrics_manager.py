@@ -445,7 +445,7 @@ class MetricsManager:
                 append=True)
             perf_output_writer.write(perf_analyzer.output() + '\n', append=True)
 
-        # PerfAnalzyer run was not succesful
+        # PerfAnalyzer run was not succesful
         if status == 1:
             return 1
 

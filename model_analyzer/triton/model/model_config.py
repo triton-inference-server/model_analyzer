@@ -168,7 +168,7 @@ class ModelConfig:
 
         Raises
         ------
-        TritonModelAnalzyerException
+        TritonModelAnalyzerException
             If the path doesn't exist or the path is a file
         """
 
