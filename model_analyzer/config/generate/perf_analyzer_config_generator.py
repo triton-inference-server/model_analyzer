@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#FIXME: Include this once ModelConfigGenerator refactor is checked in
-#from model_analyzer.config.generate.generator_utils import GeneratorUtils
+from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
 
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
@@ -61,7 +60,7 @@ class PerfAnalyzerConfigGenerator:
 
         self._configs = []
 
-        for params in self._generate_parameter_combinations(perf_config_params):
+        for params in utils.generate_parameter_combinations(perf_config_params):
             new_perf_config = PerfAnalyzerConfig()
             new_perf_config.update_config(params)
             # User provided flags can override the search parameters
@@ -93,20 +92,3 @@ class PerfAnalyzerConfigGenerator:
             })
 
         return perf_config_params
-
-    # FIXME: Remove this once ModelConfigGenerator refactor is checked-in
-    def _generate_parameter_combinations(self, params):
-        """
-        Generate a list of all possible subdictionaries
-        from given dictionary. The subdictionaries will
-        have all the same keys, but only one value from
-        each key.
-
-        Parameters
-        ----------
-        params : dict
-            keys are strings and the values must be lists
-        """
-
-        param_combinations = list(product(*tuple(params.values())))
-        return [dict(zip(params.keys(), vals)) for vals in param_combinations]
