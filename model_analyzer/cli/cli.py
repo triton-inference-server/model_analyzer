@@ -88,13 +88,13 @@ class CLI:
         config : Config
             Model Analyzer config object.
         """
-
+        #configs is dictionary of config_fields objects from config_command_*
         configs = config.get_config()
-        for config in configs.values():
-            parser_args = config.parser_args()
+        for config_field in configs.values():
+            parser_args = config_field.parser_args()
 
             # Skip the non-CLI flags
-            if config.flags() is None:
+            if config_field.flags() is None:
                 continue
 
             # 'store_true' and 'store_false' does not
@@ -103,19 +103,19 @@ class CLI:
                     parser_args['action'] == 'store_true' or
                     parser_args['action'] == 'store_false'):
                 subparser.add_argument(
-                    *config.flags(),
+                    *config_field.flags(),
                     default=argparse.SUPPRESS,
-                    help=config.description(),
-                    **config.parser_args(),
+                    help=config_field.description(),
+                    **config_field.parser_args(),
                 )
             else:
                 subparser.add_argument(
-                    *config.flags(),
+                    *config_field.flags(),
                     default=argparse.SUPPRESS,
-                    choices=config.choices(),
-                    help=config.description(),
-                    type=config.cli_type(),
-                    **config.parser_args(),
+                    choices=config_field.choices(),
+                    help=config_field.description(),
+                    type=config_field.cli_type(),
+                    **config_field.parser_args(),
                 )
 
     def parse(self):
