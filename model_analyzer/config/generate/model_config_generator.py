@@ -14,9 +14,10 @@
 
 from model_analyzer.config.generate.generator_utils import GeneratorUtils
 from model_analyzer.triton.model.model_config import ModelConfig
+from .config_generator_interface import ConfigGeneratorInterface
 
 
-class ModelConfigGenerator:
+class ModelConfigGenerator(ConfigGeneratorInterface):
     """ Given a model, generates model configs """
 
     def __init__(self, config, model, client):
@@ -36,6 +37,9 @@ class ModelConfigGenerator:
     def next_config(self):
         """ Returns the next generated config """
         return self._configs.pop(0)
+
+    def set_last_results(self, measurement):
+        pass
 
     def _generate_model_configs(self):
         """ Generate all model config combinations """
