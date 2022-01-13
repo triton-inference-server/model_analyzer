@@ -31,8 +31,9 @@ In this mode, Model Analyzer will launch Triton Server using the local binary
 supplied using `--triton-server-path`, or if none is supplied, the
 `tritonserver` binary in `$PATH`.
 
-This mode is useful if you don't want to install/use Docker. You will need
-Triton Server and all of its dependencies installed locally, though.
+Local mode is the recommended method of getting started with Model Analyzer.
+There are detailed instructions about using this mode in the
+[Quick Start Guide](quick_start.md).
 
 ### Docker
 
@@ -69,8 +70,8 @@ directory need not exist.
 --output-model-repository=<path-to-output-model-repository>/output
 ```
 
-This mode is useful if you don't want to install Triton Server and all of its
-dependencies locally. You will need Docker installed, though.
+This mode is useful if you want to use the Model Analyzer installed in the
+Triton SDK Container. You will need Docker installed, though.
 
 ### C API
 
@@ -82,8 +83,9 @@ In this mode, Triton server is launched locally via the
 by the perf_analyzer instances launched by Model Analyzer.
 
 This mode is useful if you want to run with the Triton Server installed locally
-and want the increased performance from the C API. You will need Triton Server
-and all of its dependencies installed locally, though.
+and want the increased performance from the C API. Similar to the
+[local mode](#local), Triton Server must be installed in the environment that
+the Model Analyzer is being used.
 
 ### Remote
 
