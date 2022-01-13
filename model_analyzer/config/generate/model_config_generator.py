@@ -168,5 +168,6 @@ class ModelConfigGenerator(ConfigGeneratorInterface):
             config.set_cpu_only(self._base_model.cpu_only())
 
     def _get_model_variant_name(self):
+        variant_name = f'{self._base_model_name}_config{self._model_name_index}'
         self._model_name_index += 1
-        return f'{self._base_model_name}_config{self._model_name_index}'
+        return variant_name
