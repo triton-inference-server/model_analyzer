@@ -12,16 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
+from .config_generator_interface import ConfigGeneratorInterface
+from .generator_utils import GeneratorUtils as utils
 
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
 
 
-class PerfAnalyzerConfigGenerator:
+class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     """ Given Perf Analyzer configuration options, generates Perf Analyzer configs """
 
-    def __init__(self, cli_config, model_name):
+    def __init__(self, cli_config, model_name, model_perf_analyzer_flags):
         """
         Parameters
         ----------
@@ -33,11 +34,10 @@ class PerfAnalyzerConfigGenerator:
         """
 
         self._model_name = model_name
+        self._perf_analyzer_flags = model_perf_analyzer_flags
 
         self._batch_sizes = cli_config.batch_sizes
         self._concurrency = self._create_concurrency_list(cli_config)
-
-        self._perf_analyzer_flags = cli_config.perf_analyzer_flags
         self._client_protocol_is_http = (cli_config.client_protocol == 'http')
         self._launch_mode_is_c_api = (cli_config.triton_launch_mode == 'c_api')
         self._triton_install_path = cli_config.triton_install_path
@@ -56,6 +56,17 @@ class PerfAnalyzerConfigGenerator:
     def next_config(self):
         """ Returns the next generated config """
         return self._configs.pop(0)
+
+    def set_last_results(self, measurement):
+        """ 
+        Given the results from the last PerfAnalyzerConfig, make decisions 
+        about future configurations to generate
+
+        Parameters
+        ----------
+        measurement: Measurement from the last run
+        """
+        pass
 
     def _create_concurrency_list(self, cli_config):
         if cli_config.concurrency:
