@@ -13,8 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.config.run.run_config_generator \
-    import RunConfigGenerator
+from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
 
 import os
 import logging
@@ -71,12 +70,13 @@ class ModelManager:
         server_config_copy = self._server.config().copy()
         self._server.update_config(params=model.triton_server_flags())
 
-        rcg = RunConfigGenerator(config=self._config, client=self._client)
-        rcg.init(model)
+        rcg = RunConfigGenerator(config=self._config,
+                                 model=model,
+                                 client=self._client)
         while not rcg.is_done() and not self._state_manager.exiting():
             run_config = rcg.next_config()
             measurement = self._metrics_manager.execute_run_config(run_config)
-            rcg.add_measurement(measurement)
+            rcg.set_last_results(measurement)
 
         # Reset the server args to global config
         self._server.update_config(params=server_config_copy.server_args())
