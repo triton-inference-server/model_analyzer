@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.generator_utils import GeneratorUtils
-from model_analyzer.triton.model.model_config import ModelConfig
 from .config_generator_interface import ConfigGeneratorInterface
+from .generator_utils import GeneratorUtils
+
+from model_analyzer.triton.model.model_config import ModelConfig
 
 
 class ModelConfigGenerator(ConfigGeneratorInterface):
@@ -53,6 +54,14 @@ class ModelConfigGenerator(ConfigGeneratorInterface):
         return self._configs.pop(0)
 
     def set_last_results(self, measurement):
+        """ 
+        Given the results from the last ModelConfig, make decisions 
+        about future configurations to generate
+
+        Parameters
+        ----------
+        measurement: Measurement from the last run
+        """
         pass
 
     def _generate_model_configs(self):

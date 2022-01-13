@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.run.run_config import RunConfig
+from .config_generator_interface import ConfigGeneratorInterface
 from .model_config_generator import ModelConfigGenerator
 from .perf_analyzer_config_generator import PerfAnalyzerConfigGenerator
 
+from model_analyzer.config.run.run_config import RunConfig
 
-class RunConfigGenerator:
+
+class RunConfigGenerator(ConfigGeneratorInterface):
     """
     Generates all RunConfigs to execute for the given model
     """
@@ -48,10 +50,14 @@ class RunConfigGenerator:
         """
         return self._configs.pop(0)
 
-    def add_measurement(self, measurement):
+    def set_last_results(self, measurement):
         """ 
         Given the results from the last RunConfig, make decisions 
         about future configurations to generate
+
+        Parameters
+        ----------
+        measurement: Measurement from the last run
         """
         pass
 

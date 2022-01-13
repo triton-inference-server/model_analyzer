@@ -200,7 +200,6 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
         # yapf: disable
         protobuf = """
-            name: "my-model"
             max_batch_size: 8
             instance_group [
             {
@@ -217,11 +216,11 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             """)
 
         expected_configs = [
-            {'name': 'my-model', 'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
-            {'name': 'my-model', 'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
-            {'name': 'my-model', 'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
-            {'name': 'my-model', 'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
-            {'name': 'my-model', 'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]}
+            {'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]}
         ]
         # yapf: enable
 
@@ -303,6 +302,16 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             model_configs.append(model_config_dict)
 
         self.assertEqual(len(expected_configs), len(model_configs))
+
+        # Rip out the model name (so the order doesn't have to exactly match),
+        # but verify that it exists and is not none
+        #
+        for config in model_configs:
+            name = config.pop('name', None)
+            self.assertIsNotNone(name)
+
+        # Confirm the configs match
+        #
         for config in expected_configs:
             self.assertIn(config, model_configs)
 

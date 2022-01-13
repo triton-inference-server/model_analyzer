@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
+from .config_generator_interface import ConfigGeneratorInterface
+from .generator_utils import GeneratorUtils as utils
 
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
 
 
-class PerfAnalyzerConfigGenerator:
+class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     """ Given Perf Analyzer configuration options, generates Perf Analyzer configs """
 
     def __init__(self, cli_config, model_name):
@@ -56,6 +57,17 @@ class PerfAnalyzerConfigGenerator:
     def next_config(self):
         """ Returns the next generated config """
         return self._configs.pop(0)
+
+    def set_last_results(self, measurement):
+        """ 
+        Given the results from the last PerfAnalyzerConfig, make decisions 
+        about future configurations to generate
+
+        Parameters
+        ----------
+        measurement: Measurement from the last run
+        """
+        pass
 
     def _create_concurrency_list(self, cli_config):
         if cli_config.concurrency:
