@@ -69,7 +69,9 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         while not mcg.is_done():
             model_config = mcg.next_config()
             variant_name = model_config.get_field("name")
-            pacg = PerfAnalyzerConfigGenerator(self._config, variant_name)
+            model_pa_flags = model.perf_analyzer_flags()
+            pacg = PerfAnalyzerConfigGenerator(self._config, variant_name,
+                                               model_pa_flags)
             while not pacg.is_done():
                 perf_analyzer_config = pacg.next_config()
 
