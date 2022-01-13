@@ -69,7 +69,7 @@ model_repository: <string>
 profile_models: <comma-delimited-string-list>
 
 # Full path to directory to which to read and write checkpoints and profile data.
-[ checkpoint_directory: <string> | default: '.' ]
+[ checkpoint_directory: <string> | default: './checkpoints' ]
 
 # The directory to which the modela analyzer will save model config variants
 [ output_model_repository_path: <string> | default: 'output_model_repository' ]
@@ -134,7 +134,7 @@ profile_models: <comma-delimited-string-list>
 [ triton_grpc_endpoint: <string> | default: localhost:8001 ]
 
 # Triton Server metrics endpoint url used by Model Analyzer client. Will be ignored if server-launch-mode is not 'remote'".
-[ triton_metrics_url: <string> | default: localhost:8002 ]
+[ triton_metrics_url: <string> | default: http://localhost:8002/metrics ]
 
 # The full path to the tritonserver binary executable
 [ triton_server_path: <string> | default: tritonserver ]
