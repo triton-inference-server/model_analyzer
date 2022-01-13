@@ -257,6 +257,32 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         self._run_and_test_perf_analyzer_config_generator(
             yaml_content, expected_configs, pa_cli_args)
 
+    def test_max_concurrency(self):
+        """ 
+        Test Max Concurrency: 
+            - Change max concurrency to non-default value
+        
+        Max Concurrency: 16
+        Default (1) value will be used for batch size 
+        and 5 configs (log2(16)+1) will be generated 
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        concurrencies = utils.generate_log2_list(16)
+        expected_configs = [
+            self._create_expected_config(concurrency=c) for c in concurrencies
+        ]
+
+        pa_cli_args = ['--run-config-search-max-concurrency', '16']
+        self._run_and_test_perf_analyzer_config_generator(
+            yaml_content, expected_configs, pa_cli_args)
+
     def _create_expected_config(self,
                                 batch_size=DEFAULT_BATCH_SIZES,
                                 concurrency=1,
