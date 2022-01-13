@@ -28,24 +28,17 @@ class PerfAnalyzerConfigGenerator:
         self._batch_sizes = cli_config.batch_sizes
         self._concurrency = self._create_concurrency_list(cli_config)
 
-        # Extracts a dict of CLI config fields
-        cli_config_fields = cli_config.get_all_config()
+        self._perf_analyzer_flags = cli_config.perf_analyzer_flags
+        self._client_protocol_is_http = (cli_config.client_protocol == 'http')
+        self._launch_mode_is_c_api = (cli_config.triton_launch_mode == 'c_api')
+        self._triton_install_path = cli_config.triton_install_path
+        self._output_model_repo_path = cli_config.output_model_repository_path
+        self._protocol = cli_config.client_protocol
+        self._triton_http_endpoint = cli_config.triton_http_endpoint
+        self._triton_grpc_endpoint = cli_config.triton_grpc_endpoint
+        self._client_protocol = cli_config.client_protocol
 
-        self._perf_analyzer_flags = cli_config_fields['perf_analyzer_flags']
-        self._client_protocol_is_http = (
-            cli_config_fields['client_protocol'] == 'http')
-        self._launch_mode_is_c_api = (
-            cli_config_fields['triton_launch_mode'] == 'c_api')
-
-        self._triton_install_path = cli_config_fields['triton_install_path']
-        self._output_model_repo_path = cli_config_fields[
-            'output_model_repository_path']
-        self._protocol = cli_config_fields['client_protocol']
-        self._triton_http_endpoint = cli_config_fields['triton_http_endpoint']
-        self._triton_grpc_endpoint = cli_config_fields['triton_grpc_endpoint']
-        self._client_protocol = cli_config_fields['client_protocol']
-
-        self._generate_perf_config_fields()
+        self._generate_perf_configs()
 
     def is_done(self):
         """ Returns true if this generator is done generating configs """
@@ -64,7 +57,7 @@ class PerfAnalyzerConfigGenerator:
             return utils.generate_log_list(
                 cli_config.run_config_search_max_concurrency)
 
-    def _generate_perf_config_fields(self):
+    def _generate_perf_configs(self):
         perf_config_params = self._create_perf_config_params()
 
         self._configs = []
