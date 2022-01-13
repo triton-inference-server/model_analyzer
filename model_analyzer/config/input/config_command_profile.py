@@ -203,6 +203,7 @@ class ConfigCommandProfile(ConfigCommand):
                 'collect_cpu_metrics',
                 field_type=ConfigPrimitive(bool),
                 flags=['--collect-cpu-metrics'],
+                parser_args={'action': 'store_true'},
                 default_value=DEFAULT_COLLECT_CPU_METRICS,
                 description='Specify whether CPU metrics are collected or not'))
         self._add_config(
@@ -613,6 +614,7 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 'perf_output',
                 flags=['--perf-output'],
+                parser_args={'action': 'store_true'},
                 field_type=ConfigPrimitive(bool),
                 default_value=DEFAULT_PERF_OUTPUT_FLAG,
                 description=

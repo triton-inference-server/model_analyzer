@@ -21,8 +21,11 @@ from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
-from model_analyzer.constants import CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
 from model_analyzer.config.input.config_status import ConfigStatus
+from model_analyzer.constants import CONFIG_PARSER_SUCCESS
+from model_analyzer.config.input.config_defaults import DEFAULT_USE_LOCAL_GPU_MONITOR
+from model_analyzer.model_analyzer_exceptions \
+    import TritonModelAnalyzerException
 
 from unittest.mock import patch
 
@@ -78,26 +81,10 @@ class TestCLIOptions(trc.TestResultCollector):
     Tests the methods of the CLI class
     """
 
-    # @patch(
-    #     'model_analyzer.config.input.config_command_profile.file_path_validator',
-    #     lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
     def test_basic_cli_config(self):
         """
         Test the minimal set of cli commands necessary to run Model Analyzer profile
         """
-        # #yapf: disable
-        # sys.argv = [
-        #     '/usr/local/bin/model-analyzer',
-        #     'profile',
-        #     '--model-repository',
-        #     'foo',
-        #     '--profile-models',
-        #     'bar'
-        # ]
-        # #yapf: enable
-        # config_profile = ConfigCommandProfile()
-        # cli = CLI()
-        # cli.add_subcommand(cmd='profile', help='', config=config_profile)
         cli = CLIConfigStruct()
         _, config = cli.parse()
         model_repo = config.model_repository
@@ -106,13 +93,6 @@ class TestCLIOptions(trc.TestResultCollector):
         self.assertEqual('bar', profile_model)
 
     # @patch.object(ConfigCommandProfile, '_load_config_file')
-    # @patch(
-    #     'model_analyzer.config.input.config_command_profile.file_path_validator',
-    #     lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
-
-
-
-
     @patch(
         'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file'
     )
@@ -120,23 +100,61 @@ class TestCLIOptions(trc.TestResultCollector):
         """
         Test the -f flag
         """
-        # #yapf: disable
-        # sys.argv = [
-        #     '/usr/local/bin/model-analyzer',
-        #     'profile',
-        #     '--model-repository',
-        #     'foo',
-        #     '--profile-models',
-        #     'bar'
-        # ]
-        # #yapf: enable
         cli = CLIConfigStruct()
         test_file_name = 'baz'
         cli.args.extend(['-f', test_file_name])
-        # sys.argv.extend(['-f', test_file_name])
-        # config_profile = ConfigCommandProfile()
-        # cli = CLI()
-        # cli.add_subcommand(cmd='profile', help='', config=config_profile)
         _, config = cli.parse()
         config_file_name = config.config_file
         self.assertEqual(config_file_name, test_file_name)
+
+    def test_boolean_options(self):
+
+        options = [
+            "--use-local-gpu-monitor", "--collect-cpu-metrics", "--perf-output",
+            "--run-config-search-disable"
+        ]
+        for option in options:
+            self._test_boolean_option(option)
+        # self._test_boolean_option("--use-local-gpu-monitor")
+        # cli = CLIConfigStruct()
+        # _, config = cli.parse()
+        # # print(
+        # #     f"type of config: {config.get_config().get('use_local_gpu_monitor').value()}"
+        # # )
+        # # print(
+        # #     f"\nuse local gpu monitor: {config.get_config().get('use_local_gpu_monitor').value()}, {config.use_local_gpu_monitor}"
+        # # )
+        # use_local_gpu_monitor_value = config.use_local_gpu_monitor
+        # self.assertEqual(use_local_gpu_monitor_value, False)
+
+        # cli = CLIConfigStruct()
+        # cli.args.extend(['--use-local-gpu-monitor'])
+        # _, config = cli.parse()
+        # use_local_gpu_monitor_value = config.use_local_gpu_monitor
+        # self.assertEqual(use_local_gpu_monitor_value, True)
+
+        # cli = CLIConfigStruct()
+        # cli.args.extend(['--use-local-gpu-monitor', 'SHOULD_FAIL'])
+        # with self.assertRaises(SystemExit):
+        #     _, config = cli.parse()
+
+    def _test_boolean_option(self, option):
+        option_with_underscores = option.lstrip("-").replace("-", "_")
+        print(f"\n> {option}")
+        cli = CLIConfigStruct()
+        _, config = cli.parse()
+        # use_local_gpu_monitor_value = config.use_local_gpu_monitor
+        option_value = config.get_config().get(option_with_underscores).value()
+        self.assertEqual(option_value, False)
+
+        cli = CLIConfigStruct()
+        cli.args.extend([option])
+        _, config = cli.parse()
+        # use_local_gpu_monitor_value = config.use_local_gpu_monitor
+        option_value = config.get_config().get(option_with_underscores).value()
+        self.assertEqual(option_value, True)
+
+        cli = CLIConfigStruct()
+        cli.args.extend([option, 'SHOULD_FAIL'])
+        with self.assertRaises(SystemExit):
+            _, config = cli.parse()
