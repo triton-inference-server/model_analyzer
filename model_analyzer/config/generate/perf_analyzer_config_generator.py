@@ -22,6 +22,16 @@ class PerfAnalyzerConfigGenerator:
     """ Given Perf Analyzer configuration options, generates Perf Analyzer configs """
 
     def __init__(self, cli_config, model_name):
+        """
+        Parameters
+        ----------
+        cli_config: ConfigCommandProfile
+            CLI Configuration Options
+            
+        model_name: str
+            Name of the model
+        """
+
         self._model_name = model_name
 
         self._batch_sizes = cli_config.batch_sizes
@@ -53,7 +63,7 @@ class PerfAnalyzerConfigGenerator:
         elif cli_config.run_config_search_disable:
             return [1]
         else:
-            return utils.generate_log_list(
+            return utils.generate_log2_list(
                 cli_config.run_config_search_max_concurrency)
 
     def _generate_perf_configs(self):
