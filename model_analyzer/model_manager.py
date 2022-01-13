@@ -264,15 +264,15 @@ class ModelManager:
 
     def _load_model_variant(self, variant_config):
         """
-        Decides on whether or not to load a model variant in the client
+        Conditionally loads a model variant in the client
         """
+        remote = self._config.triton_launch_mode == 'remote'
+        c_api = self._config.triton_launch_mode == 'c_api'
+        disabled = self._config.reload_model_disable
+
+        do_load = (remote and not disabled) or (not remote and not c_api)
         retval = True
-        if self._config.triton_launch_mode == 'remote':
-            # Don't load model if in remote and reload disabled
-            reload_model = not self._config.reload_model_disable
-            if reload_model:
-                retval = self._do_load_model_variant(variant_config)
-        elif self._config.triton_launch_mode != 'c_api':
+        if do_load:
             retval = self._do_load_model_variant(variant_config)
         return retval
 
