@@ -16,7 +16,6 @@ from model_analyzer.config.generate.generator_utils import GeneratorUtils as uti
 
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
-from itertools import product
 
 
 class PerfAnalyzerConfigGenerator:
