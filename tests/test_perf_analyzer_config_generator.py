@@ -50,11 +50,10 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrency_list = utils.generate_log_list(
+        concurrencies = utils.generate_log_list(
             DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
-            self._create_expected_config(concurrency=c)
-            for c in concurrency_list
+            self._create_expected_config(concurrency=c) for c in concurrencies
         ]
 
         self._run_and_test_perf_analyzer_config_generator(
@@ -97,11 +96,11 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrency_list = utils.generate_log_list(
+        concurrencies = utils.generate_log_list(
             DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             self._create_expected_config(concurrency=c, launch_mode='c_api')
-            for c in concurrency_list
+            for c in concurrencies
         ]
 
         self._run_and_test_perf_analyzer_config_generator(
@@ -123,17 +122,17 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrency_list = utils.generate_log_list(
+        concurrencies = utils.generate_log_list(
             DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             self._create_expected_config(concurrency=c, client_protocol='http')
-            for c in concurrency_list
+            for c in concurrencies
         ]
 
         self._run_and_test_perf_analyzer_config_generator(
             yaml_content, expected_configs, '--client-protocol=http')
 
-    def test_batch_size_no_search(self):
+    def test_batch_size_search_disabled(self):
         ''' 
         Test: 
             - Schmoo batch sizes
@@ -157,6 +156,36 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         ]
 
         pa_cli_args = ['-b 1,2,4', '--run-config-search-disable']
+        self._run_and_test_perf_analyzer_config_generator(
+            yaml_content, expected_configs, pa_cli_args)
+
+    def test_batch_size_search_enabled(self):
+        ''' 
+        Test: 
+            - Schmoo batch sizes
+            - Run Config Search enabled
+        
+        Batch sizes: 1,2,4
+        Concurrency: log2(DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)+1
+        '''
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        batch_sizes = [1, 2, 4]
+        concurrencies = utils.generate_log_list(
+            DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+        expected_configs = [
+            self._create_expected_config(batch_size=b, concurrency=c)
+            for b in batch_sizes
+            for c in concurrencies
+        ]
+
+        pa_cli_args = ['-b 1,2,4']
         self._run_and_test_perf_analyzer_config_generator(
             yaml_content, expected_configs, pa_cli_args)
 
