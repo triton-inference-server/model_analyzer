@@ -57,7 +57,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ''' 
         Test direct mode with no model_config_parameters specified and run_search disabled
         
-        This will just return empty config, since there are no parameters to combine
+        This will just return a single empty config, since there are no parameters to combine
         '''
 
         # yapf: disable
@@ -67,10 +67,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                 - my-model
             """)
 
-        expected_configs = [
-            {'dynamic_batching': {}},
-            {}
-        ]
+        expected_configs = [{}]
         # yapf: enable
 
         self._run_and_test_model_config_generator(yaml_content,
