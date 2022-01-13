@@ -26,7 +26,7 @@ class PerfAnalyzerConfigGenerator:
         self._model_name = model_name
 
         self._batch_sizes = cli_config.batch_sizes
-        self._concurrency = cli_config.concurrency
+        self._concurrency = self._create_concurrency_list(cli_config)
 
         # Extracts a dict of CLI config fields
         cli_config_fields = cli_config.get_all_config()
@@ -54,6 +54,15 @@ class PerfAnalyzerConfigGenerator:
     def next_config(self):
         """ Returns the next generated config """
         return self._configs.pop(0)
+
+    def _create_concurrency_list(self, cli_config):
+        if cli_config.concurrency:
+            return cli_config.concurrency
+        elif cli_config.run_config_search_disable:
+            return [1]
+        else:
+            return utils.generate_log_list(
+                cli_config.run_config_search_max_concurrency)
 
     def _generate_perf_config_fields(self):
         perf_config_params = self._create_perf_config_params()

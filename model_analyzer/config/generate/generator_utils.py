@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from itertools import product
+from math import log2
 
 
 class GeneratorUtils:
@@ -90,3 +91,10 @@ class GeneratorUtils:
 
         param_combinations = list(product(*tuple(params.values())))
         return [dict(zip(params.keys(), vals)) for vals in param_combinations]
+
+    def generate_log_list(value):
+        """
+        Returns a list of exponential numbers from 1 to value
+        """
+        log_value = int(log2(value))
+        return [2**c for c in range(0, log_value + 1)]
