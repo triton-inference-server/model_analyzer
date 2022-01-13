@@ -269,8 +269,8 @@ class ModelManager:
         remote = self._config.triton_launch_mode == 'remote'
         c_api = self._config.triton_launch_mode == 'c_api'
         disabled = self._config.reload_model_disable
-
         do_load = (remote and not disabled) or (not remote and not c_api)
+
         retval = True
         if do_load:
             retval = self._do_load_model_variant(variant_config)
