@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+Copyright (c) 2020-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -102,7 +102,7 @@ profile_models: <comma-delimited-string-list>
 [ client_protocol: <string> | default: grpc ]
 
 # The full path to the perf_analyzer binary executable
-[ perf_analyzer_path: <string> | default: perf_analzyer ]
+[ perf_analyzer_path: <string> | default: perf_analyzer ]
 
 # Time interval in milliseconds between perf_analyzer measurements.
 # perf_analyzer will take measurements over all the requests completed within
