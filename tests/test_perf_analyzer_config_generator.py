@@ -24,7 +24,7 @@ from .mocks.mock_os import MockOSMethods
 from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
 
 from model_analyzer.config.input.config_defaults import \
-    DEFAULT_BATCH_SIZES, DEFAULT_CONCURRENCY, DEFAULT_TRITON_LAUNCH_MODE, \
+    DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, \
     DEFAULT_CLIENT_PROTOCOL, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY, \
     DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY, \
     DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_GRPC_ENDPOINT, DEFAULT_MEASUREMENT_MODE, \
@@ -259,7 +259,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
     def _create_expected_config(self,
                                 batch_size=DEFAULT_BATCH_SIZES,
-                                concurrency=DEFAULT_CONCURRENCY,
+                                concurrency=1,
                                 launch_mode=DEFAULT_TRITON_LAUNCH_MODE,
                                 client_protocol=DEFAULT_CLIENT_PROTOCOL):
         expected_config = PerfAnalyzerConfig()
