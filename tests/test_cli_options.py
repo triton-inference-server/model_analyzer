@@ -25,8 +25,8 @@ from model_analyzer.config.input.config_command_analyze import ConfigCommandAnal
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.config.input.config_status import ConfigStatus
 from model_analyzer.constants import CONFIG_PARSER_SUCCESS
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
+
+import psutil
 
 from unittest.mock import patch
 
@@ -130,8 +130,9 @@ class TestCLIOptions(trc.TestResultCollector):
             ("--config-file", "-f", "baz", None, None),
             ("--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
             ("--output-model-repository-path", None, "./test_dir", os.path.join(os.getcwd(), "output_model_repository"), None),
-            ("--client-protocol", None, "http", "grpc", "SHOULD_FAIL"),
-            ("--client-protocol", None, "grpc", "grpc", "SHOULD_FAIL"),
+            # ("--client-protocol", None, "http", "grpc", "SHOULD_FAIL"),
+            # ("--client-protocol", None, "grpc", "grpc", "SHOULD_FAIL"),
+            ("--client-protocol", None, ["http", "grpc"], "grpc", "SHOULD_FAIL"),
             ("--perf-analyzer-path", None, ".", "perf_analyzer", None),
             ("--perf-output-path", None, ".", None, None),
             ("--triton-docker-image", None, "test_image", DEFAULT_TRITON_DOCKER_IMAGE, None),
@@ -140,16 +141,17 @@ class TestCLIOptions(trc.TestResultCollector):
             ("--triton-metrics-url", None, "localhost:4002", "http://localhost:8002/metrics", None),
             ("--triton-server-path", None, "test_path", "tritonserver", None),
             ("--triton-output-path", None, "test_path", None, None),
-            ("--triton-launch-mode", None, "local", "local", "SHOULD_FAIL"),
-            ("--triton-launch-mode", None, "docker", "local", None),
-            ("--triton-launch-mode", None, "remote", "local", None),
-            ("--triton-launch-mode", None, "c_api", "local", None)
+            # ("--triton-launch-mode", None, "local", "local", "SHOULD_FAIL"),
+            # ("--triton-launch-mode", None, "docker", "local", None),
+            # ("--triton-launch-mode", None, "remote", "local", None),
+            # ("--triton-launch-mode", None, "c_api", "local", None),
+            ("--triton-launch-mode", None, ["local", "docker", "remote","c_api"], "local", "SHOULD_FAIL")
         ]
         #yapf: enable
         for option_tuple in options:
             self._test_string_option(option_tuple)
 
-    def test_int_options(self):
+    def test_numeric_options(self):
         #yapf: disable
         # Options format:
         #   (long_option, short_option, test_value, default_value)
@@ -162,11 +164,13 @@ class TestCLIOptions(trc.TestResultCollector):
             ("--duration-seconds", "-d", "10", "3"),
             ("--perf-analyzer-timeout", None, "100", "600"),
             ("--run-config-search-max-concurrency", None, "100", "1024"),
-            ("--run-config-search-max-instance-count", None, "10", "5")
+            ("--run-config-search-max-instance-count", None, "10", "5"),
+            ("--monitoring-interval", "-i", "10.0", "1.0"),
+            ("--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0))
         ]
         #yapf: enable
         for option_tuple in options:
-            self._test_int_option(option_tuple)
+            self._test_numeric_option(option_tuple)
 
     def _test_boolean_option(self, option):
         option_with_underscores = self._convert_flag(option)
@@ -194,14 +198,64 @@ class TestCLIOptions(trc.TestResultCollector):
         default_value = option_tuple[3]
         expected_failing_value = option_tuple[4]
 
+        if type(expected_value) is list:
+            for value in expected_value:
+                new_tuple = (long_option, short_option, value, default_value,
+                             expected_failing_value)
+                self._test_string_option(new_tuple)
+        else:
+            # print(
+            #     f"\n>>> {long_option}, {short_option}, {expected_value}, {default_value}, {expected_failing_value}"
+            # )
+            long_option_with_underscores = self._convert_flag(long_option)
+
+            # print(f"\t>>> long option flag: {long_option}, {expected_value}")
+            cli = CLIConfigStruct()
+            cli.args.extend([long_option, expected_value])
+            _, config = cli.parse()
+            option_value = config.get_config().get(
+                long_option_with_underscores).value()
+            self.assertEqual(option_value, expected_value)
+
+            if short_option is not None:
+                # print(f"\t>>> short option flag: {short_option}, {expected_value}")
+                cli = CLIConfigStruct()
+                cli.args.extend([short_option, expected_value])
+                _, config = cli.parse()
+                option_value = config.get_config().get(
+                    long_option_with_underscores).value()
+                self.assertEqual(option_value, expected_value)
+
+            if default_value is not None:
+                # print(f"\t>>> default value: {long_option}, {default_value}")
+                cli = CLIConfigStruct()
+                _, config = cli.parse()
+                option_value = config.get_config().get(
+                    long_option_with_underscores).default_value()
+                self.assertEqual(option_value, default_value)
+
+            if expected_failing_value is not None:
+                # print(f"\t>>> error value: {long_option}, {expected_failing_value}")
+                cli = CLIConfigStruct()
+                cli.args.extend([long_option, expected_failing_value])
+                with self.assertRaises(SystemExit):
+                    _, config = cli.parse()
+
+    def _test_numeric_option(self, option_tuple):
+        long_option = option_tuple[0]
+        short_option = option_tuple[1]
+        expected_value_string = option_tuple[2]
+        expected_value = self._convert_string_to_numeric(option_tuple[2])
+        default_value = self._convert_string_to_numeric(option_tuple[3])
+
         # print(
-        # f"\n>>> {long_option},{short_option}, {expected_value}, {default_value}, {expected_failing_value}"
+        #     f"\n>>> {long_option},{short_option}, {expected_value}, {default_value}"
         # )
         long_option_with_underscores = self._convert_flag(long_option)
 
         # print(f"\t>>> long option flag: {long_option}, {expected_value}")
         cli = CLIConfigStruct()
-        cli.args.extend([long_option, expected_value])
+        cli.args.extend([long_option, expected_value_string])
         _, config = cli.parse()
         option_value = config.get_config().get(
             long_option_with_underscores).value()
@@ -210,7 +264,7 @@ class TestCLIOptions(trc.TestResultCollector):
         if short_option is not None:
             # print(f"\t>>> short option flag: {short_option}, {expected_value}")
             cli = CLIConfigStruct()
-            cli.args.extend([short_option, expected_value])
+            cli.args.extend([short_option, expected_value_string])
             _, config = cli.parse()
             option_value = config.get_config().get(
                 long_option_with_underscores).value()
@@ -224,48 +278,8 @@ class TestCLIOptions(trc.TestResultCollector):
                 long_option_with_underscores).default_value()
             self.assertEqual(option_value, default_value)
 
-        if expected_failing_value is not None:
-            # print(f"\t>>> error value: {long_option}, {expected_failing_value}")
-            cli = CLIConfigStruct()
-            cli.args.extend([long_option, expected_failing_value])
-            with self.assertRaises(SystemExit):
-                _, config = cli.parse()
-
-    def _test_int_option(self, option_tuple):
-        long_option = option_tuple[0]
-        short_option = option_tuple[1]
-        expected_value = option_tuple[2]
-        default_value = option_tuple[3]
-
-        print(
-            f"\n>>> {long_option},{short_option}, {expected_value}, {default_value}"
-        )
-        long_option_with_underscores = self._convert_flag(long_option)
-
-        print(f"\t>>> long option flag: {long_option}, {expected_value}")
-        cli = CLIConfigStruct()
-        cli.args.extend([long_option, expected_value])
-        _, config = cli.parse()
-        option_value = config.get_config().get(
-            long_option_with_underscores).value()
-        self.assertEqual(option_value, int(expected_value))
-
-        if short_option is not None:
-            print(f"\t>>> short option flag: {short_option}, {expected_value}")
-            cli = CLIConfigStruct()
-            cli.args.extend([short_option, expected_value])
-            _, config = cli.parse()
-            option_value = config.get_config().get(
-                long_option_with_underscores).value()
-            self.assertEqual(option_value, int(expected_value))
-
-        if default_value is not None:
-            print(f"\t>>> default value: {long_option}, {default_value}")
-            cli = CLIConfigStruct()
-            _, config = cli.parse()
-            option_value = config.get_config().get(
-                long_option_with_underscores).default_value()
-            self.assertEqual(option_value, int(default_value))
+    def _convert_string_to_numeric(self, number):
+        return float(number) if "." in number else int(number)
 
     def _convert_flag(self, option):
         return option.lstrip("-").replace("-", "_")
