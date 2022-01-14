@@ -66,16 +66,16 @@ class RunConfigGenerator(ConfigGeneratorInterface):
 
         return run_config
 
-    def set_last_results(self, measurement):
+    def set_last_results(self, measurements):
         """ 
         Given the results from the last RunConfig, make decisions 
         about future configurations to generate
 
         Parameters
         ----------
-        measurement: Measurement from the last run
+        measurements: List of Measurements from the last run(s)
         """
-        self._curr_pacg.set_last_results(measurement)
+        self._curr_pacg.set_last_results(measurements)
 
     def _generate_run_config(self, model_config, perf_analyzer_config):
         run_config = RunConfig(self._model_name, model_config,

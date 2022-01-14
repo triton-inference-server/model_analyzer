@@ -53,14 +53,14 @@ class ModelConfigGenerator(ConfigGeneratorInterface):
         """
         return self._configs.pop(0)
 
-    def set_last_results(self, measurement):
+    def set_last_results(self, measurements):
         """ 
         Given the results from the last ModelConfig, make decisions 
         about future configurations to generate
 
         Parameters
         ----------
-        measurement: Measurement from the last run
+        measurements: List of Measurements from the last run(s)
         """
         pass
 
