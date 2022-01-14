@@ -35,6 +35,7 @@ class ModelConfigGenerator(ConfigGeneratorInterface):
         self._max_instance_count = config.run_config_search_max_instance_count
         self._search_disabled = config.run_config_search_disable
         self._remote_mode = config.triton_launch_mode == 'remote'
+        self._reload_model_disable = config.reload_model_disable
         self._base_model = model
         self._base_model_name = model.model_name()
         self._model_name_index = 0
@@ -150,8 +151,13 @@ class ModelConfigGenerator(ConfigGeneratorInterface):
         return configs
 
     def _make_remote_model_config(self):
+        if not self._reload_model_disable:
+            self._client.load_model(self._base_model_name)
         model_config = ModelConfig.create_from_triton_api(
             self._client, self._base_model_name, self._num_retries)
+        if not self._reload_model_disable:
+            self._client.unload_model(self._base_model_name)
+
         return model_config
 
     def _is_default_config_in_configs(self, configs):
@@ -163,7 +169,10 @@ class ModelConfigGenerator(ConfigGeneratorInterface):
 
     def _finalize_configs(self, configs):
         for config in configs:
-            model_tmp_name = self._get_model_variant_name()
+            model_tmp_name = self._base_model_name
+            if not self._remote_mode:
+                model_tmp_name = self._get_model_variant_name()
+
             config.set_field('name', model_tmp_name)
             config.set_cpu_only(self._base_model.cpu_only())
 
