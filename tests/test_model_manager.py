@@ -62,11 +62,9 @@ class MetricsManagerSubclass(MetricsManager):
 
         perf_throughput = PerfThroughput(self._get_next_perf_throughput_value())
         non_gpu_data = [perf_throughput]
-        return [
-            Measurement(gpu_data=MagicMock(),
-                        non_gpu_data=non_gpu_data,
-                        perf_config=MagicMock())
-        ]
+        return Measurement(gpu_data=MagicMock(),
+                           non_gpu_data=non_gpu_data,
+                           perf_config=MagicMock())
 
     def _get_next_perf_throughput_value(self):
         self._perf_throughput *= 2
@@ -533,7 +531,7 @@ class TestModelManager(trc.TestResultCollector):
             """)
         self._test_model_manager(yaml_content, expected_ranges)
 
-    def test_throughput_early_exit(self):
+    def test_throughput_early_exit_minimum_runs(self):
         """
         Test that there is an early backoff when sweeping concurrency
 
@@ -574,6 +572,48 @@ class TestModelManager(trc.TestResultCollector):
             mock_method.return_value = 1
             self._test_model_manager(yaml_content, expected_ranges)
 
+    def test_throughput_early_exit(self):
+        """
+        Test that there is an early backoff when sweeping concurrency
+
+        The behavior is that MA stop if it had 4 concurrencies in a row
+        without any valid gain amongst any of them
+
+        This test sets the 'throughput' to [1,2,4,8,16,16,16,16], which 
+        will cause an early exit after trying the 8th concurrency (128)
+        instead of searching all the way to 2048
+        """
+
+        expected_ranges = [{
+            'instances': [1],
+            'kind': ["KIND_GPU"],
+            'batching': [0],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
+        }]
+
+        yaml_content = convert_to_bytes("""
+            profile_models: test_model
+            run_config_search_max_concurrency: 2048
+            run_config_search_max_instance_count: 1
+            run_config_search_disable: False
+            """)
+
+        with patch.object(MetricsManagerSubclass,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = [
+                1, 2, 4, 8, 16, 16, 16, 16, 1, 2, 4, 8, 16, 16, 16, 16
+            ]
+            self._test_model_manager(yaml_content, expected_ranges)
+
     def test_bad_result_early_exit(self):
         """
         Test that there is an early backoff for bad result (out of memory)
@@ -610,7 +650,7 @@ class TestModelManager(trc.TestResultCollector):
 
         with patch.object(MetricsManagerSubclass,
                           "_get_next_measurements") as mock_method:
-            mock_method.return_value = []
+            mock_method.return_value = None
             self._test_model_manager(yaml_content, expected_ranges)
 
     def _test_model_manager(self, yaml_content, expected_ranges):

@@ -15,12 +15,18 @@
 from .config_generator_interface import ConfigGeneratorInterface
 from .generator_utils import GeneratorUtils as utils
 
-from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
+from model_analyzer.constants import THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_TRIES
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 
 class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
-    """ Given Perf Analyzer configuration options, generates Perf Analyzer configs """
+    """ 
+    Given Perf Analyzer configuration options, generates Perf Analyzer configs 
+    
+    All combinations are pregenerated in __init__, but it may return is_done==true 
+    earlier depending on results that it receives
+    """
 
     def __init__(self, cli_config, model_name, model_perf_analyzer_flags):
         """
@@ -32,6 +38,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         model_name: str
             Name of the model
         """
+        self._curr_config_index = 0
+        self._last_results = ["valid"]
+        self._all_results = []
 
         self._model_name = model_name
         self._perf_analyzer_flags = model_perf_analyzer_flags
@@ -51,22 +60,29 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def is_done(self):
         """ Returns true if this generator is done generating configs """
-        return len(self._configs) == 0
+        # yapf: disable
+        return       self._all_configs_returned()   \
+              or     self._last_results_erroneous() \
+              or not self._throughput_gain_valid()
+        #yapf: enable
 
     def next_config(self):
         """ Returns the next generated config """
-        return self._configs.pop(0)
+        config = self._configs[self._curr_config_index]
+        self._curr_config_index += 1
+        return config
 
-    def set_last_results(self, measurement):
+    def set_last_results(self, measurements):
         """ 
         Given the results from the last PerfAnalyzerConfig, make decisions 
         about future configurations to generate
 
         Parameters
         ----------
-        measurement: Measurement from the last run
+        measurements: List of Measurements from the last run(s)
         """
-        pass
+        self._last_results = measurements
+        self._all_results.extend(measurements)
 
     def _create_concurrency_list(self, cli_config):
         if cli_config.concurrency:
@@ -114,3 +130,40 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             })
 
         return perf_config_params
+
+    def _all_configs_returned(self):
+        return len(self._configs) == self._curr_config_index
+
+    def _last_results_erroneous(self):
+        return self._last_results is None or self._last_results[0] is None
+
+    def _throughput_gain_valid(self):
+        """ Check if any of the last X results resulted in valid gain """
+
+        if len(self._all_results) < THROUGHPUT_MINIMUM_CONSECUTIVE_TRIES:
+            return True
+
+        valid_gains = [self._calculate_throughput_gain(x) > THROUGHPUT_MINIMUM_GAIN \
+                       for x in range(1,THROUGHPUT_MINIMUM_CONSECUTIVE_TRIES)
+                      ]
+        return True in valid_gains
+
+    def _calculate_throughput_gain(self, reverse_index):
+        """ 
+        Given a reverse index, calculate the throughput gain at that index when
+        indexing from the back of the results list, when compared to its previous
+        results
+
+        For example, setting reverse_index=1 will calculate the gain for the last
+        two results in the list (indexes -2 and -1)
+        """
+        before_index = -(reverse_index + 1)
+        after_index = -reverse_index
+        throughput_before = self._get_throughput(
+            self._all_results[before_index])
+        throughput_after = self._get_throughput(self._all_results[after_index])
+        gain = (throughput_after - throughput_before) / throughput_before
+        return gain
+
+    def _get_throughput(self, measurement):
+        return measurement.get_metric_value('perf_throughput')
