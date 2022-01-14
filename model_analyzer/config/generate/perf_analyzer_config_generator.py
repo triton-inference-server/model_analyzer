@@ -60,8 +60,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def is_done(self):
         """ Returns true if this generator is done generating configs """
-        return self._all_configs_returned() or self._last_results_erroneous(
-        ) or not self._throughput_gain_valid()
+        # yapf: disable
+        return       self._all_configs_returned()   \
+              or     self._last_results_erroneous() \
+              or not self._throughput_gain_valid()
+        #yapf: enable
 
     def next_config(self):
         """ Returns the next generated config """
