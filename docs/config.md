@@ -84,10 +84,10 @@ profile_models: <comma-delimited-string-list>
 [ batch_sizes: <comma-delimited-string|list|range> | default: 1 ]
 
 # Specifies the maximum number of retries for any retry attempt.
-[ max_retries: <int> | default: 100 ]
+[ client_max_retries: <int> | default: 50 ]
 
 # Specifies how long (seconds) to gather server-only metrics
-[ duration_seconds: <int> | default: 2 ]
+[ duration_seconds: <int> | default: 3 ]
 
 # Specify whether DCGM should be used by Model Analyzer to collect GPU metricss
 [ use_local_gpu_monitor: <bool> | default: False ]
@@ -103,11 +103,6 @@ profile_models: <comma-delimited-string-list>
 
 # The full path to the perf_analyzer binary executable
 [ perf_analyzer_path: <string> | default: perf_analyzer ]
-
-# Time interval in milliseconds between perf_analyzer measurements.
-# perf_analyzer will take measurements over all the requests completed within
-# this time interval.
-[ perf_measurement_window: <int> | default: 5000 ]
 
 # Perf analyzer timeout value in seconds.
 [ perf_analyzer_timeout: <int> | default: 600]

@@ -90,7 +90,11 @@ class TestCLIOptions(trc.TestResultCollector):
         Test the minimal set of cli commands necessary to run Model Analyzer profile
         """
         cli = CLIConfigStruct()
-        _, config = cli.parse()
+        args, config = cli.parse()
+        # print(f"NUMBER OF ARGS: {len(vars(args))}")
+        # print(f"ARGS: {vars(args)}")
+        # print(f"config: {config.get_config().keys()}")
+        # print(f"number of config: {len(config.get_config().keys())}")
         model_repo = config.model_repository
         profile_model = config.profile_models[0].model_name()
         self.assertEqual('foo', model_repo)
@@ -145,9 +149,28 @@ class TestCLIOptions(trc.TestResultCollector):
         for option_tuple in options:
             self._test_string_option(option_tuple)
 
+    def test_int_options(self):
+        #yapf: disable
+        # Options format:
+        #   (long_option, short_option, test_value, default_value)
+        # The following options can be None:
+        #   short_option
+        #   default_value
+
+        options = [
+            ("--client-max-retries", "-r", "125", "50"),
+            ("--duration-seconds", "-d", "10", "3"),
+            ("--perf-analyzer-timeout", None, "100", "600"),
+            ("--run-config-search-max-concurrency", None, "100", "1024"),
+            ("--run-config-search-max-instance-count", None, "10", "5")
+        ]
+        #yapf: enable
+        for option_tuple in options:
+            self._test_int_option(option_tuple)
+
     def _test_boolean_option(self, option):
         option_with_underscores = self._convert_flag(option)
-        print(f"\n>>> {option}")
+        # print(f"\n>>> {option}")
         cli = CLIConfigStruct()
         _, config = cli.parse()
         option_value = config.get_config().get(option_with_underscores).value()
@@ -171,8 +194,51 @@ class TestCLIOptions(trc.TestResultCollector):
         default_value = option_tuple[3]
         expected_failing_value = option_tuple[4]
 
+        # print(
+        # f"\n>>> {long_option},{short_option}, {expected_value}, {default_value}, {expected_failing_value}"
+        # )
+        long_option_with_underscores = self._convert_flag(long_option)
+
+        # print(f"\t>>> long option flag: {long_option}, {expected_value}")
+        cli = CLIConfigStruct()
+        cli.args.extend([long_option, expected_value])
+        _, config = cli.parse()
+        option_value = config.get_config().get(
+            long_option_with_underscores).value()
+        self.assertEqual(option_value, expected_value)
+
+        if short_option is not None:
+            # print(f"\t>>> short option flag: {short_option}, {expected_value}")
+            cli = CLIConfigStruct()
+            cli.args.extend([short_option, expected_value])
+            _, config = cli.parse()
+            option_value = config.get_config().get(
+                long_option_with_underscores).value()
+            self.assertEqual(option_value, expected_value)
+
+        if default_value is not None:
+            # print(f"\t>>> default value: {long_option}, {default_value}")
+            cli = CLIConfigStruct()
+            _, config = cli.parse()
+            option_value = config.get_config().get(
+                long_option_with_underscores).default_value()
+            self.assertEqual(option_value, default_value)
+
+        if expected_failing_value is not None:
+            # print(f"\t>>> error value: {long_option}, {expected_failing_value}")
+            cli = CLIConfigStruct()
+            cli.args.extend([long_option, expected_failing_value])
+            with self.assertRaises(SystemExit):
+                _, config = cli.parse()
+
+    def _test_int_option(self, option_tuple):
+        long_option = option_tuple[0]
+        short_option = option_tuple[1]
+        expected_value = option_tuple[2]
+        default_value = option_tuple[3]
+
         print(
-            f"\n>>> {long_option},{short_option}, {expected_value}, {default_value}, {expected_failing_value}"
+            f"\n>>> {long_option},{short_option}, {expected_value}, {default_value}"
         )
         long_option_with_underscores = self._convert_flag(long_option)
 
@@ -182,7 +248,7 @@ class TestCLIOptions(trc.TestResultCollector):
         _, config = cli.parse()
         option_value = config.get_config().get(
             long_option_with_underscores).value()
-        self.assertEqual(option_value, expected_value)
+        self.assertEqual(option_value, int(expected_value))
 
         if short_option is not None:
             print(f"\t>>> short option flag: {short_option}, {expected_value}")
@@ -191,7 +257,7 @@ class TestCLIOptions(trc.TestResultCollector):
             _, config = cli.parse()
             option_value = config.get_config().get(
                 long_option_with_underscores).value()
-            self.assertEqual(option_value, expected_value)
+            self.assertEqual(option_value, int(expected_value))
 
         if default_value is not None:
             print(f"\t>>> default value: {long_option}, {default_value}")
@@ -199,14 +265,7 @@ class TestCLIOptions(trc.TestResultCollector):
             _, config = cli.parse()
             option_value = config.get_config().get(
                 long_option_with_underscores).default_value()
-            self.assertEqual(option_value, default_value)
-
-        if expected_failing_value is not None:
-            print(f"\t>>> error value: {long_option}, {expected_failing_value}")
-            cli = CLIConfigStruct()
-            cli.args.extend([long_option, expected_failing_value])
-            with self.assertRaises(SystemExit):
-                _, config = cli.parse()
+            self.assertEqual(option_value, int(default_value))
 
     def _convert_flag(self, option):
         return option.lstrip("-").replace("-", "_")
