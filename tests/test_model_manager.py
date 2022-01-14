@@ -20,8 +20,6 @@ from .mocks.mock_run_configs import MockRunConfigs
 
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.config.run.run_search import RunSearch
-from model_analyzer.config.run.run_config_generator import RunConfigGenerator
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.record.types.perf_throughput import PerfThroughput
