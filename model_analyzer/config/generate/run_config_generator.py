@@ -36,12 +36,13 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._model = model
         self._model_name = model.model_name()
         self._model_pa_flags = model.perf_analyzer_flags()
+        self._model_parameters = model.parameters()
 
         self._curr_mcg = ModelConfigGenerator(config, model, client)
         self._curr_model_config = self._curr_mcg.next_config()
         self._curr_pacg = PerfAnalyzerConfigGenerator(
             self._config, self._curr_model_config.get_field("name"),
-            self._model_pa_flags)
+            self._model_pa_flags, self._model_parameters)
 
     def is_done(self):
         """ Returns true if this generator is done generating configs """
@@ -58,7 +59,7 @@ class RunConfigGenerator(ConfigGeneratorInterface):
             self._curr_model_config = self._curr_mcg.next_config()
             self._curr_pacg = PerfAnalyzerConfigGenerator(
                 self._config, self._curr_model_config.get_field("name"),
-                self._model_pa_flags)
+                self._model_pa_flags, self._model_parameters)
 
         perf_analyzer_config = self._curr_pacg.next_config()
         run_config = self._generate_run_config(self._curr_model_config,

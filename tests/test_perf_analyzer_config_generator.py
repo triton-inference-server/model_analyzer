@@ -361,7 +361,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         pacg = PerfAnalyzerConfigGenerator(
             config, config.profile_models[0].model_name(),
-            config.profile_models[0].perf_analyzer_flags())
+            config.profile_models[0].perf_analyzer_flags(),
+            config.profile_models[0].parameters())
 
         perf_analyzer_configs = []
         while not pacg.is_done():

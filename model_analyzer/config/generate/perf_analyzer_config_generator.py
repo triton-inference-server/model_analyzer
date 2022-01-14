@@ -28,7 +28,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     earlier depending on results that it receives
     """
 
-    def __init__(self, cli_config, model_name, model_perf_analyzer_flags):
+    def __init__(self, cli_config, model_name, model_perf_analyzer_flags,
+                 model_parameters):
         """
         Parameters
         ----------
@@ -45,8 +46,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._model_name = model_name
         self._perf_analyzer_flags = model_perf_analyzer_flags
 
-        self._batch_sizes = cli_config.batch_sizes
-        self._concurrency = self._create_concurrency_list(cli_config)
+        self._batch_sizes = model_parameters['batch_sizes']
+        self._concurrency = self._create_concurrency_list(
+            cli_config, model_parameters)
+
         self._client_protocol_is_http = (cli_config.client_protocol == 'http')
         self._launch_mode_is_c_api = (cli_config.triton_launch_mode == 'c_api')
         self._triton_install_path = cli_config.triton_install_path
@@ -84,9 +87,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._last_results = measurements
         self._all_results.extend(measurements)
 
-    def _create_concurrency_list(self, cli_config):
-        if cli_config.concurrency:
-            return cli_config.concurrency
+    def _create_concurrency_list(self, cli_config, model_parameters):
+        if model_parameters['concurrency']:
+            return model_parameters['concurrency']
         elif cli_config.run_config_search_disable:
             return [1]
         else:
