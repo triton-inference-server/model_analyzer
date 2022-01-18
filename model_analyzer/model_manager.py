@@ -71,7 +71,7 @@ class ModelManager:
         self._server.update_config(params=model.triton_server_flags())
 
         rcg = RunConfigGenerator(config=self._config,
-                                 model=model,
+                                 models=[model],
                                  client=self._client)
         while not rcg.is_done() and not self._state_manager.exiting():
             run_config = rcg.next_config()
