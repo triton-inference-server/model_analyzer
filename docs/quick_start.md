@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ $ docker build --pull -t model-analyzer .
 2. Run the docker:
 ```
 $ docker run -it --rm --gpus all \
-    -v /var/run/docker.sock:/var/run/docker.sock \
     -v $(pwd)/examples/quick-start:/quick_start_repository \
     --net=host --name model-analyzer \
     model-analyzer /bin/bash
@@ -58,7 +57,7 @@ configuration:
 
 ```
 --run-config-search-max-concurrency 2 \
---run-config-search-max-instance-count 2 \
+--run-config-search-max-instance-count 2
 ```
 
 `--run-config-search-max-concurrency` sets the max concurrency value that run
