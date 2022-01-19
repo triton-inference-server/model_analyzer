@@ -94,6 +94,7 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         run_config = RunConfig(self._model_name, model_configs,
                                perf_analyzer_config,
                                self._models[0].triton_server_environment())
+
         return run_config
 
     def _generate_all_model_config_permuations(self, models):
