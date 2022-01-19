@@ -51,7 +51,7 @@ class CLISubclass(CLI):
         return args, config
 
 
-class CLIConfigStruct():
+class CLIConfigProfileStruct():
     """
     Struct class to hold the common variables shared between tests
     """
@@ -96,7 +96,7 @@ class OptionStruct():
         self.extra_commands = extra_commands
 
         if stage == "profile":
-            self.cli_subcommand = CLIConfigStruct
+            self.cli_subcommand = CLIConfigProfileStruct
 
 
 @patch('model_analyzer.config.input.config_command_profile.file_path_validator',
@@ -109,11 +109,11 @@ class TestCLIOptions(trc.TestResultCollector):
     Tests the methods of the CLI class
     """
 
-    def test_basic_cli_config_options(self):
+    def test_basic_cli_config_profile_options(self):
         """
         Test the minimal set of cli commands necessary to run Model Analyzer profile
         """
-        cli = CLIConfigStruct()
+        cli = CLIConfigProfileStruct()
         args, config = cli.parse()
         # print(f"NUMBER OF ARGS: {len(vars(args))}")
         # print(f"ARGS: {vars(args)}")
@@ -206,21 +206,20 @@ class TestCLIOptions(trc.TestResultCollector):
         option = option_struct.long_flag
         option_with_underscores = self._convert_flag(option)
         # print(f"\n>>> {option}")
-        cli = CLIConfigStruct()
         cli = option_struct.cli_subcommand()
         _, config = cli.parse()
         option_value = config.get_config().get(option_with_underscores).value()
         self.assertEqual(option_value, False)
 
         # Test boolean option
-        cli = CLIConfigStruct()
+        cli = option_struct.cli_subcommand()
         cli.args.extend([option])
         _, config = cli.parse()
         option_value = config.get_config().get(option_with_underscores).value()
         self.assertEqual(option_value, True)
 
         # Test boolean option followed by value fails
-        cli = CLIConfigStruct()
+        cli = option_struct.cli_subcommand()
         cli.args.extend([option, 'SHOULD_FAIL'])
         with self.assertRaises(SystemExit):
             _, config = cli.parse()
@@ -241,7 +240,7 @@ class TestCLIOptions(trc.TestResultCollector):
 
         # print(f"\t>>> long option flag: {long_option}, {expected_value}")
         # Test long_flag
-        cli = CLIConfigStruct()
+        cli = option_struct.cli_subcommand()
         cli.args.extend([long_option, expected_value_string])
         _, config = cli.parse()
         option_value = config.get_config().get(
@@ -251,7 +250,7 @@ class TestCLIOptions(trc.TestResultCollector):
         # Test short_flag
         if short_option is not None:
             # print(f"\t>>> short option flag: {short_option}, {expected_value}")
-            cli = CLIConfigStruct()
+            cli = option_struct.cli_subcommand()
             cli.args.extend([short_option, expected_value_string])
             _, config = cli.parse()
             option_value = config.get_config().get(
@@ -261,7 +260,7 @@ class TestCLIOptions(trc.TestResultCollector):
         # Test default value for option
         if default_value is not None:
             # print(f"\t>>> default value: {long_option}, {default_value}")
-            cli = CLIConfigStruct()
+            cli = option_struct.cli_subcommand()
             _, config = cli.parse()
             option_value = config.get_config().get(
                 long_option_with_underscores).default_value()
@@ -290,7 +289,7 @@ class TestCLIOptions(trc.TestResultCollector):
 
             # print(f"\t>>> long option flag: {long_option}, {expected_value}")
             # Test long flag
-            cli = CLIConfigStruct()
+            cli = option_struct.cli_subcommand()
             cli.args.extend([long_option, expected_value])
             _, config = cli.parse()
             option_value = config.get_config().get(
@@ -300,7 +299,7 @@ class TestCLIOptions(trc.TestResultCollector):
             # Test short flag
             if short_option is not None:
                 # print(f"\t>>> short option flag: {short_option}, {expected_value}")
-                cli = CLIConfigStruct()
+                cli = option_struct.cli_subcommand()
                 cli.args.extend([short_option, expected_value])
                 _, config = cli.parse()
                 option_value = config.get_config().get(
@@ -310,7 +309,7 @@ class TestCLIOptions(trc.TestResultCollector):
             # Test default value for option
             if default_value is not None:
                 # print(f"\t>>> default value: {long_option}, {default_value}")
-                cli = CLIConfigStruct()
+                cli = option_struct.cli_subcommand()
                 _, config = cli.parse()
                 option_value = config.get_config().get(
                     long_option_with_underscores).default_value()
@@ -319,7 +318,7 @@ class TestCLIOptions(trc.TestResultCollector):
             # Verify that a incorrect value causes a failure
             if expected_failing_value is not None:
                 # print(f"\t>>> error value: {long_option}, {expected_failing_value}")
-                cli = CLIConfigStruct()
+                cli = option_struct.cli_subcommand()
                 cli.args.extend([long_option, expected_failing_value])
                 with self.assertRaises(SystemExit):
                     _, config = cli.parse()
@@ -349,7 +348,7 @@ class TestCLIOptions(trc.TestResultCollector):
 
         # print(f"\t>>> long option flag: {long_option}, {expected_value}")
         # Test the long flag
-        cli = CLIConfigStruct()
+        cli = option_struct.cli_subcommand()
         cli.args.extend([long_option, expected_value])
         # print(f"extra commands: {option_struct.extra_commands}")
         if option_struct.extra_commands is not None:
@@ -362,7 +361,7 @@ class TestCLIOptions(trc.TestResultCollector):
         # Test the short flag
         if short_option is not None:
             # print(f"\t>>> short option flag: {short_option}, {expected_value}")
-            cli = CLIConfigStruct()
+            cli = option_struct.cli_subcommand()
             cli.args.extend([short_option, expected_value])
             _, config = cli.parse()
             option_value = config.get_config().get(
@@ -372,7 +371,7 @@ class TestCLIOptions(trc.TestResultCollector):
         # Verify the default value for the option
         if default_value is not None:
             # print(f"\t>>> default value: {long_option}, {default_value}")
-            cli = CLIConfigStruct()
+            cli = option_struct.cli_subcommand()
             _, config = cli.parse()
             option_value = config.get_config().get(
                 long_option_with_underscores).default_value()
