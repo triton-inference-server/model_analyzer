@@ -78,7 +78,7 @@ profile_models: <comma-delimited-string-list>
 [ override_output_model_repository: <boolean> | default: false ]
 
 # Concurrency values to be used for the analysis
-[ concurrency: <comma-delimited-string|list|range> | default: 1 ]
+[ concurrency: <comma-delimited-string|list|range> ]
 
 # Batch size values to be used for the analysis
 [ batch_sizes: <comma-delimited-string|list|range> | default: 1 ]
