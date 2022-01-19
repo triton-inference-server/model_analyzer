@@ -141,10 +141,6 @@ profile_models: <comma-delimited-string-list>
 # containers launched by model-analyzer. Will be ignored in other launch modes
 [ triton_docker_mounts: <list of strings> ]
 
-# Dict of name=value pairs containing metadata for the tritonserve docker container 
-# launched in docker launch mode
-[ triton_docker_labels: <dict> ]
-
 # How Model Analyzer will launch triton. It should
 # be either "docker", "local", "remote" or "c_api".
 # See docs/launch_modes.md for more information.
@@ -190,6 +186,10 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 # Allows custom configuration of the environment variables for tritonserver instances
 # launched by model analyzer
 [ triton_server_environment: <dict> ]
+
+# Dict of name=value pairs containing metadata for the tritonserve docker container 
+# launched in docker launch mode
+[ triton_docker_labels: <dict> ]
 ```
 
 ## Config Options for `analyze`

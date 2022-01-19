@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-import subprocess
+import copy
 
 from model_analyzer.config.input.config_defaults import DEFAULT_TRITON_DOCKER_IMAGE
 
@@ -75,6 +75,28 @@ class CLIConfigStruct():
         return self.cli.parse(self.args)
 
 
+class OptionStruct():
+
+    def __init__(self,
+                 type_str,
+                 stage,
+                 long_flag,
+                 short_flag=None,
+                 expected_value=None,
+                 default_value=None,
+                 expected_failing_value=None):
+
+        self.long_flag = long_flag
+        self.short_flag = short_flag
+        self.expected_value = expected_value
+        self.default_value = default_value
+        self.expected_failing_value = expected_failing_value
+        self.type = type_str
+
+        # if stage is "profile":
+        #     self.stage = CLIConfigStruct()
+
+
 @patch('model_analyzer.config.input.config_command_profile.file_path_validator',
        lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
 @patch(
@@ -84,6 +106,76 @@ class TestCLIOptions(trc.TestResultCollector):
     """
     Tests the methods of the CLI class
     """
+
+    @patch(
+        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file'
+    )
+    def test_all_options(self, mocked_load_config_file):
+
+        #yapf: disable
+        options = [
+            #Boolean options
+            # Options format:
+            #   (bool, MA step, long_option)
+            OptionStruct("bool", "profile","--override-output-model-repository"),
+            OptionStruct("bool", "profile","--use-local-gpu-monitor"),
+            OptionStruct("bool", "profile","--collect-cpu-metrics"),
+            OptionStruct("bool", "profile","--perf-output"),
+            OptionStruct("bool", "profile","--run-config-search-disable"),
+
+            #Int/Float options
+            # Options format:
+            #   (int/float, MA step, long_option, short_option, test_value, default_value)
+            # The following options can be None:
+            #   short_option
+            #   default_value
+            OptionStruct("int", "profile", "--client-max-retries", "-r", "125", "50"),
+            OptionStruct("int", "profile", "--duration-seconds", "-d", "10", "3"),
+            OptionStruct("int", "profile", "--perf-analyzer-timeout", None, "100", "600"),
+            OptionStruct("int", "profile", "--run-config-search-max-concurrency", None, "100", "1024"),
+            OptionStruct("int", "profile", "--run-config-search-max-instance-count", None, "10", "5"),
+            OptionStruct("float", "profile", "--monitoring-interval", "-i", "10.0", "1.0"),
+            OptionStruct("float", "profile", "--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0)),
+
+            #String options
+            # Options format:
+            #   (string, MA step, long_flag, short_flag, test_value, default_value, expected_failing_value)
+            # The following options can be None:
+            #   short_flag
+            #   default_value
+            #   expected_failing_value
+            # For options with choices, list the test_values in a list of strings
+            OptionStruct("string", "profile", "--config-file", "-f", "baz", None, None),
+            OptionStruct("string", "profile", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
+            OptionStruct("string", "profile", "--output-model-repository-path", None, "./test_dir", os.path.join(os.getcwd(), "output_model_repository"), None),
+            OptionStruct("string", "profile", "--client-protocol", None, ["http", "grpc"], "grpc", "SHOULD_FAIL"),
+            OptionStruct("string", "profile", "--perf-analyzer-path", None, ".", "perf_analyzer", None),
+            OptionStruct("string", "profile", "--perf-output-path", None, ".", None, None),
+            OptionStruct("string", "profile", "--triton-docker-image", None, "test_image", DEFAULT_TRITON_DOCKER_IMAGE, None),
+            OptionStruct("string", "profile", "--triton-http-endpoint", None, "localhost:4000", "localhost:8000", None),
+            OptionStruct("string", "profile", "--triton-grpc-endpoint", None, "localhost:4001", "localhost:8001", None),
+            OptionStruct("string", "profile", "--triton-metrics-url", None, "localhost:4002", "http://localhost:8002/metrics", None),
+            OptionStruct("string", "profile", "--triton-server-path", None, "test_path", "tritonserver", None),
+            OptionStruct("string", "profile", "--triton-output-path", None, "test_path", None, None),
+            OptionStruct("string", "profile", "--triton-launch-mode", None, ["local", "docker", "remote","c_api"], "local", "SHOULD_FAIL"),
+
+            # ("--batch-sizes", "-b", "2, 4, 6", "2, 4, 6", "1", None),
+        ]
+        #yapf: enable
+
+        for option in options:
+            print(f"option in all tests: {option.type}")
+            self._resolve_test_values(option)
+
+    def _resolve_test_values(self, option):
+        print(f"option inside resolve: {option.type}")
+        if option.type in "bool":
+            self._test_boolean_option(option)
+        elif option.type in ("int" or "float"):
+            self._test_numeric_option(option)
+        elif option.type in "string":
+            print(option.long_flag)
+            self._test_string_option(option)
 
     def test_basic_cli_config_options(self):
         """
@@ -100,79 +192,74 @@ class TestCLIOptions(trc.TestResultCollector):
         self.assertEqual('foo', model_repo)
         self.assertEqual('bar', profile_model)
 
-    def test_boolean_options(self):
-        #yapf: disable
-        options = [
-            "--override-output-model-repository",
-            "--use-local-gpu-monitor",
-            "--collect-cpu-metrics",
-            "--perf-output",
-            "--run-config-search-disable"
-        ]
-        #yapf: enable
-        for option in options:
-            self._test_boolean_option(option)
+    # def test_boolean_options(self):
+    #     #yapf: disable
+    #     options = [
+    #         "--override-output-model-repository",
+    #         "--use-local-gpu-monitor",
+    #         "--collect-cpu-metrics",
+    #         "--perf-output",
+    #         "--run-config-search-disable"
+    #     ]
+    #     #yapf: enable
+    #     for option in options:
+    #         self._test_boolean_option(option)
 
     # @patch.object(ConfigCommandProfile, '_load_config_file')
-    @patch(
-        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file'
-    )
-    def test_string_options(self, mocked_load_config_file):
-        #yapf: disable
-        # Options format:
-        #   (long_flag, short_flag, test_value, default_value, expected_failing_value)
-        # The following options can be None:
-        #   short_flag
-        #   default_value
-        #   expected_failing_value
-        #TODO: ask Tim if launch mode, client protocol are handled correctly
-        options = [
-            ("--config-file", "-f", "baz", None, None),
-            ("--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
-            ("--output-model-repository-path", None, "./test_dir", os.path.join(os.getcwd(), "output_model_repository"), None),
-            # ("--client-protocol", None, "http", "grpc", "SHOULD_FAIL"),
-            # ("--client-protocol", None, "grpc", "grpc", "SHOULD_FAIL"),
-            ("--client-protocol", None, ["http", "grpc"], "grpc", "SHOULD_FAIL"),
-            ("--perf-analyzer-path", None, ".", "perf_analyzer", None),
-            ("--perf-output-path", None, ".", None, None),
-            ("--triton-docker-image", None, "test_image", DEFAULT_TRITON_DOCKER_IMAGE, None),
-            ("--triton-http-endpoint", None, "localhost:4000", "localhost:8000", None),
-            ("--triton-grpc-endpoint", None, "localhost:4001", "localhost:8001", None),
-            ("--triton-metrics-url", None, "localhost:4002", "http://localhost:8002/metrics", None),
-            ("--triton-server-path", None, "test_path", "tritonserver", None),
-            ("--triton-output-path", None, "test_path", None, None),
-            # ("--triton-launch-mode", None, "local", "local", "SHOULD_FAIL"),
-            # ("--triton-launch-mode", None, "docker", "local", None),
-            # ("--triton-launch-mode", None, "remote", "local", None),
-            # ("--triton-launch-mode", None, "c_api", "local", None),
-            ("--triton-launch-mode", None, ["local", "docker", "remote","c_api"], "local", "SHOULD_FAIL")
-        ]
-        #yapf: enable
-        for option_tuple in options:
-            self._test_string_option(option_tuple)
+    # @patch(
+    #     'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file'
+    # )
+    # def test_string_options(self, mocked_load_config_file):
+    #     #yapf: disable
+    #     # Options format:
+    #     #   (long_flag, short_flag, test_value, default_value, expected_failing_value)
+    #     # The following options can be None:
+    #     #   short_flag
+    #     #   default_value
+    #     #   expected_failing_value
+    #     # For options with choices, list the test_values in a list of strings
+    #     options = [
+    #         ("--config-file", "-f", "baz", None, None),
+    #         ("--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
+    #         ("--output-model-repository-path", None, "./test_dir", os.path.join(os.getcwd(), "output_model_repository"), None),
+    #         ("--client-protocol", None, ["http", "grpc"], "grpc", "SHOULD_FAIL"),
+    #         ("--perf-analyzer-path", None, ".", "perf_analyzer", None),
+    #         ("--perf-output-path", None, ".", None, None),
+    #         ("--triton-docker-image", None, "test_image", DEFAULT_TRITON_DOCKER_IMAGE, None),
+    #         ("--triton-http-endpoint", None, "localhost:4000", "localhost:8000", None),
+    #         ("--triton-grpc-endpoint", None, "localhost:4001", "localhost:8001", None),
+    #         ("--triton-metrics-url", None, "localhost:4002", "http://localhost:8002/metrics", None),
+    #         ("--triton-server-path", None, "test_path", "tritonserver", None),
+    #         ("--triton-output-path", None, "test_path", None, None),
+    #         ("--triton-launch-mode", None, ["local", "docker", "remote","c_api"], "local", "SHOULD_FAIL")
+    #     ]
+    #     #yapf: enable
+    #     for option_tuple in options:
+    #         self._test_string_option(option_tuple)
 
-    def test_numeric_options(self):
-        #yapf: disable
-        # Options format:
-        #   (long_option, short_option, test_value, default_value)
-        # The following options can be None:
-        #   short_option
-        #   default_value
+    # def test_numeric_options(self):
+    #     #yapf: disable
+    #     # Options format:
+    #     #   (long_option, short_option, test_value, default_value)
+    #     # The following options can be None:
+    #     #   short_option
+    #     #   default_value
 
-        options = [
-            ("--client-max-retries", "-r", "125", "50"),
-            ("--duration-seconds", "-d", "10", "3"),
-            ("--perf-analyzer-timeout", None, "100", "600"),
-            ("--run-config-search-max-concurrency", None, "100", "1024"),
-            ("--run-config-search-max-instance-count", None, "10", "5"),
-            ("--monitoring-interval", "-i", "10.0", "1.0"),
-            ("--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0))
-        ]
-        #yapf: enable
-        for option_tuple in options:
-            self._test_numeric_option(option_tuple)
+    #     options = [
+    #         ("--client-max-retries", "-r", "125", "50"),
+    #         ("--duration-seconds", "-d", "10", "3"),
+    #         ("--perf-analyzer-timeout", None, "100", "600"),
+    #         ("--run-config-search-max-concurrency", None, "100", "1024"),
+    #         ("--run-config-search-max-instance-count", None, "10", "5"),
+    #         ("--monitoring-interval", "-i", "10.0", "1.0"),
+    #         ("--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0))
+    #     ]
+    #     #yapf: enable
+    #     for option_tuple in options:
+    #         self._test_numeric_option(option_tuple)
 
-    def _test_boolean_option(self, option):
+    def _test_boolean_option(self, option_struct):
+        option = option_struct.long_flag
         option_with_underscores = self._convert_flag(option)
         # print(f"\n>>> {option}")
         cli = CLIConfigStruct()
@@ -191,18 +278,20 @@ class TestCLIOptions(trc.TestResultCollector):
         with self.assertRaises(SystemExit):
             _, config = cli.parse()
 
-    def _test_string_option(self, option_tuple):
-        long_option = option_tuple[0]
-        short_option = option_tuple[1]
-        expected_value = option_tuple[2]
-        default_value = option_tuple[3]
-        expected_failing_value = option_tuple[4]
+    def _test_string_option(self, option_struct):
+        long_option = option_struct.long_flag
+        short_option = option_struct.short_flag
+        expected_value = option_struct.expected_value
+        default_value = option_struct.default_value
+        expected_failing_value = option_struct.expected_failing_value
 
+        # This covers strings that have choices
+        print(f"expected value: {expected_value}, {type(expected_value)}")
         if type(expected_value) is list:
             for value in expected_value:
-                new_tuple = (long_option, short_option, value, default_value,
-                             expected_failing_value)
-                self._test_string_option(new_tuple)
+                new_struct = copy.deepcopy(option_struct)
+                new_struct.expected_value = value
+                self._test_string_option(new_struct)
         else:
             # print(
             #     f"\n>>> {long_option}, {short_option}, {expected_value}, {default_value}, {expected_failing_value}"
@@ -241,12 +330,14 @@ class TestCLIOptions(trc.TestResultCollector):
                 with self.assertRaises(SystemExit):
                     _, config = cli.parse()
 
-    def _test_numeric_option(self, option_tuple):
-        long_option = option_tuple[0]
-        short_option = option_tuple[1]
-        expected_value_string = option_tuple[2]
-        expected_value = self._convert_string_to_numeric(option_tuple[2])
-        default_value = self._convert_string_to_numeric(option_tuple[3])
+    def _test_numeric_option(self, option_struct):
+        long_option = option_struct.long_flag
+        short_option = option_struct.short_flag
+        expected_value_string = option_struct.expected_value
+        expected_value = self._convert_string_to_numeric(
+            option_struct.expected_value)
+        default_value = self._convert_string_to_numeric(
+            option_struct.default_value)
 
         # print(
         #     f"\n>>> {long_option},{short_option}, {expected_value}, {default_value}"
