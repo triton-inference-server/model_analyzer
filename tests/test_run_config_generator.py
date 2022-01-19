@@ -179,11 +179,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         self.assertEqual(expected_config_count, len(set(run_configs)))
 
-        [
-            self.assertEqual(len(config.profile_models),
-                             len(set(run_config.model_configs())))
-            for run_config in run_configs
+        # Checks that each RunConfig contains the expected number of model_configs
+        model_configs = [
+            run_config.model_configs() for run_config in run_configs
         ]
+
+        (self.assertEqual(len(config.profile_models),
+                          len(set(model_configs[c]))) for c in model_configs)
 
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
