@@ -34,8 +34,7 @@ from .config_defaults import \
     DEFAULT_OUTPUT_MODEL_REPOSITORY, DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG, \
     DEFAULT_PERF_ANALYZER_CPU_UTIL, DEFAULT_PERF_ANALYZER_PATH, DEFAULT_PERF_MAX_AUTO_ADJUSTS, \
     DEFAULT_PERF_OUTPUT_FLAG, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, \
-    DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MAX_PREFERRED_BATCH_SIZE, \
-    DEFAULT_RUN_CONFIG_PREFERRED_BATCH_SIZE_DISABLE, DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE, \
+    DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE, \
     DEFAULT_RUN_CONFIG_SEARCH_DISABLE, DEFAULT_TRITON_DOCKER_IMAGE, DEFAULT_TRITON_GRPC_ENDPOINT, \
     DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_TRITON_METRICS_URL, \
     DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT, DEFAULT_USE_LOCAL_GPU_MONITOR
@@ -483,6 +482,16 @@ class ConfigCommandProfile(ConfigCommand):
                         parser_args={'action': 'store_true'},
                         default_value=DEFAULT_RUN_CONFIG_SEARCH_DISABLE,
                         description="Disable run config search."))
+        self._add_config(
+            ConfigField(
+                'run_config_profile_models_concurrently_enable',
+                flags=['--run-config-profile-models-concurrently-enable'],
+                field_type=ConfigPrimitive(bool),
+                parser_args={'action': 'store_true'},
+                default_value=
+                DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE,
+                description=
+                "Enable the profiling of multiple models concurrently."))
 
     def _add_triton_configs(self):
         """
