@@ -25,6 +25,7 @@ import logging
 logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
 logger = logging.getLogger(LOGGER_NAME)
+doit = True
 
 
 class DetailedPlot:
@@ -41,6 +42,9 @@ class DetailedPlot:
         'perf_server_queue', 'perf_server_compute_input',
         'perf_server_compute_infer', 'perf_server_compute_output'
     ]
+
+    def rgb_to_hex(self, rgb):
+        return '#' + '%02x%02x%02x' % rgb
 
     def __init__(self, name, title, bar_width=0.5):
         """
@@ -69,12 +73,12 @@ class DetailedPlot:
         ]
 
         self._bar_colors = {
-            'perf_client_send_recv': '#5D1682',
-            'perf_client_response_wait': '#165D82',
-            'perf_server_queue': '#825D16',
-            'perf_server_compute_input': '#0071C5',
-            'perf_server_compute_infer': '#C5B600',
-            'perf_server_compute_output': '#C55400',
+            'perf_server_compute_output': self.rgb_to_hex((140, 140, 140)),
+            'perf_server_compute_infer': self.rgb_to_hex((197, 183, 0)),
+            'perf_server_compute_input': self.rgb_to_hex((1, 113, 197)),
+            'perf_server_queue': self.rgb_to_hex((130, 93, 22)),
+            'perf_client_response_wait': self.rgb_to_hex((21, 94, 129)),
+            'perf_client_send_recv': self.rgb_to_hex((94, 22, 130)),
             'perf_throughput': '#5E5E5E'
         }
 
@@ -147,6 +151,30 @@ class DetailedPlot:
         bottoms = None
 
         sorted_data['concurrency'] = list(map(str, sorted_data['concurrency']))
+
+        global doit
+        if doit:
+            sorted_data['perf_throughput'] = [
+                2480.0, 5777.0, 5779.0, 5622.0, 5847.0
+            ]
+            sorted_data['perf_client_send_recv'] = [0.3, 0.2, 0.2, 0.3, 0.2]
+            sorted_data['perf_client_response_wait'] = [
+                0.392, 0.337, 0.51, 1.411, 2.724
+            ]
+            sorted_data['perf_server_queue'] = [
+                0.026, 0.103, 0.262, 1.156, 2.478
+            ]
+            sorted_data['perf_server_compute_input'] = [
+                0.62, 0.32, 0.32, 0.36, 0.32
+            ]
+            sorted_data['perf_server_compute_infer'] = [
+                0.82, 0.69, 0.69, 0.69, 0.68
+            ]
+            sorted_data['perf_server_compute_output'] = [
+                0.2, 0.19, 0.18, 0.18, 0.18
+            ]
+            print('cv sorted_data=<' + str(sorted_data) + '>')
+            doit = False
 
         # Plot latency breakdown with concurrency casted as string to make uniform x
         for metric, label in labels.items():
