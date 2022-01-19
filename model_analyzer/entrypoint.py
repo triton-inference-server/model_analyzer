@@ -93,7 +93,7 @@ def get_server_handle(config, gpus):
             ' Model Analyzer does not have access to the model repository of'
             ' the remote Triton Server.')
     elif config.triton_launch_mode == 'local':
-        validate_triton_server_path(config)
+        validate_triton_path(config, 'triton_server_path')
 
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
@@ -132,6 +132,8 @@ def get_server_handle(config, gpus):
             mounts=config.triton_docker_mounts,
             labels=config.triton_docker_labels)
     elif config.triton_launch_mode == 'c_api':
+        validate_triton_path(config, 'triton_install_path')
+
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = os.path.abspath(
             config.output_model_repository_path)
@@ -152,16 +154,16 @@ def get_server_handle(config, gpus):
     return server
 
 
-def validate_triton_server_path(config):
+def validate_triton_path(config, key):
     """
-    Validates that the value of 'triton_server_path' exists on disk
+    Validates that the value of {key} exists on disk
 
     Parameters
     ----------
     config : namespace
         Arguments parsed from the CLI
     """
-    path = config.get_config()['triton_server_path'].value()
+    path = config.get_config()[key].value()
     config_status = binary_path_validator(path)
     if config_status.status() == CONFIG_PARSER_FAILURE:
         raise TritonModelAnalyzerException(config_status.message())

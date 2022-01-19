@@ -425,10 +425,8 @@ class ConfigCommandProfile(ConfigCommand):
                 parser_args={'action': 'store_true'},
                 default_value=False,
                 flags=['--reload-model-disable'],
-                description=
-                'Flag to indicate whether or not to disable model '
-                'loading and unloading in remote mode.'
-            ))
+                description='Flag to indicate whether or not to disable model '
+                'loading and unloading in remote mode.'))
 
     def _add_client_configs(self):
         """
@@ -574,7 +572,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 'triton_install_path',
-                field_type=ConfigPrimitive(str, validator=file_path_validator),
+                field_type=ConfigPrimitive(str),
                 default_value=DEFAULT_TRITON_INSTALL_PATH,
                 flags=['--triton-install-path'],
                 description=
