@@ -105,8 +105,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_pa_configs = len(
             utils.generate_log2_list(DEFAULT_RUN_CONFIG_MAX_CONCURRENCY))
         expected_model_configs = DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT + 1
-        expected_num_of_configs = expected_pa_configs * expected_model_configs
-
+        expected_num_of_configs = expected_pa_configs * expected_model_configs**2
         self._run_and_test_run_config_generator(
             yaml_content,
             protobuf=protobuf,
@@ -145,7 +144,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_pa_configs = len(
             utils.generate_log2_list(DEFAULT_RUN_CONFIG_MAX_CONCURRENCY))
         expected_model_configs = DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT + 1
-        expected_num_of_configs = expected_pa_configs * expected_model_configs
+        expected_num_of_configs = expected_pa_configs * expected_model_configs**4
 
         self._run_and_test_run_config_generator(
             yaml_content,
@@ -174,14 +173,15 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         rcg = RunConfigGenerator(config, config.profile_models, MagicMock())
 
         run_configs = []
+        rcg_config = rcg.next_config()
         while not rcg.is_done():
-            run_configs.append(rcg.next_config())
+            run_configs.append(next(rcg_config))
 
-        self.assertEqual(expected_config_count, len(run_configs))
+        self.assertEqual(expected_config_count, len(set(run_configs)))
 
-        foo = [
+        [
             self.assertEqual(len(config.profile_models),
-                             len(run_config.model_configs()))
+                             len(set(run_config.model_configs())))
             for run_config in run_configs
         ]
 
