@@ -493,7 +493,7 @@ class ConfigCommandProfile(ConfigCommand):
                 default_value=
                 DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE,
                 description=
-                "Enable the profiling of multiple models concurrently."))
+                "Enable the profiling of all supplied models concurrently."))
 
     def _add_triton_configs(self):
         """
