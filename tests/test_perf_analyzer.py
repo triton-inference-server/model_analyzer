@@ -73,7 +73,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # PerfAnalyzer config for all tests
         self.config = PerfAnalyzerConfig()
-        self.config['model-names'] = [TEST_MODEL_NAME]
+        self.config['model-names'] = TEST_MODEL_NAME
         self.config['measurement-interval'] = 1000
         self.config['measurement-request-count'] = 50
 
@@ -106,8 +106,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             self.config['dummy'] = 1
 
         # set and get value for each subtype of arguments
-        self.config['model-names'] = [TEST_MODEL_NAME]
-        self.assertEqual(self.config['model-names'], [TEST_MODEL_NAME])
+        self.config['model-names'] = TEST_MODEL_NAME
+        self.assertEqual(self.config['model-names'], TEST_MODEL_NAME)
 
         self.config['concurrency-range'] = TEST_CONCURRENCY_RANGE
         self.assertEqual(self.config['concurrency-range'],
@@ -118,7 +118,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         # Verify multiple model string
         self.config['model-names'] = ["model1,model2"]
-        self.assertEqual(self.config['model-names'], ["model1,model2"])
+        self.assertEqual(self.config['model-names'], "model1,model2")
 
     def test_perf_analyzer_additive_args(self):
         shape = ['name1:1,2,3', 'name2:4,5,6']
@@ -261,7 +261,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.server = TritonServerFactory.create_server_local(
             path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=self.gpus)
         perf_analyzer_config = PerfAnalyzerConfig()
-        perf_analyzer_config['model-names'] = [TEST_MODEL_NAME]
+        perf_analyzer_config['model-names'] = TEST_MODEL_NAME
         perf_analyzer_config['concurrency-range'] = TEST_CONCURRENCY_RANGE
         perf_analyzer_config['measurement-mode'] = 'time_windows'
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
