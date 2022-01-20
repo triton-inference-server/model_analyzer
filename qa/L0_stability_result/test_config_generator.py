@@ -48,7 +48,6 @@ class TestConfigGenerator:
 
         self.args = parser.parse_args()
         self.config = {}
-        self.config['summarize'] = False
         self.config['analysis_models'] = {}
         for model in sorted(self.args.analysis_models.split(',')):
             self.config['analysis_models'][model] = {

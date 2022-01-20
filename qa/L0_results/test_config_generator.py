@@ -53,7 +53,6 @@ class TestConfigGenerator:
         self.config = {'constraints': {'perf_latency_p99': {'max': 50}}}
         self.config['analysis_models'] = analysis_models
 
-        self.config['summarize'] = True
         self.config['num_top_model_configs'] = 2
         with open('config-summaries.yml', 'w+') as f:
             yaml.dump(self.config, f)
