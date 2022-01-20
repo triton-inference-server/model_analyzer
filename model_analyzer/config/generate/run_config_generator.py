@@ -39,8 +39,9 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._models = models
         self._client = client
 
-        # MM-PHASE 0: Assuming that all models are identical, so using first model's name/flag/parameters
-        self._model_name = models[0].model_name()
+        self._model_name = [m.model_name() for m in models]
+
+        # MM-PHASE 0: Assuming that all models are identical, so using first model's flag/parameters
         self._model_pa_flags = models[0].perf_analyzer_flags()
         self._model_parameters = models[0].parameters()
 
