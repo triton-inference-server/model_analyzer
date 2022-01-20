@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from distutils.cmd import Command
 from email.policy import default
 import os
 import copy
@@ -167,11 +168,7 @@ class TestCLIOptions(trc.TestResultCollector):
         Test the minimal set of cli commands necessary to run Model Analyzer profile
         """
         cli = CLIConfigProfileStruct()
-        args, config = cli.parse()
-        # print(f"NUMBER OF ARGS: {len(vars(args))}")
-        # print(f"ARGS: {vars(args)}")
-        # print(f"config: {config.get_config().keys()}")
-        # print(f"number of config: {len(config.get_config().keys())}")
+        _, config = cli.parse()
         model_repo = config.model_repository
         profile_model = config.profile_models[0].model_name()
         self.assertEqual('foo', model_repo)
@@ -208,6 +205,7 @@ class TestCLIOptions(trc.TestResultCollector):
             OptionStruct("bool", "profile","--collect-cpu-metrics"),
             OptionStruct("bool", "profile","--perf-output"),
             OptionStruct("bool", "profile","--run-config-search-disable"),
+            OptionStruct("bool", "profile","--reload-model-disable"),
 
             #Int/Float options
             # Options format:
@@ -218,6 +216,7 @@ class TestCLIOptions(trc.TestResultCollector):
             OptionStruct("int", "profile", "--client-max-retries", "-r", "125", "50"),
             OptionStruct("int", "profile", "--duration-seconds", "-d", "10", "3"),
             OptionStruct("int", "profile", "--perf-analyzer-timeout", None, "100", "600"),
+            OptionStruct("int", "profile", "--perf-analyzer-max-auto-adjusts", None, "100", "10"),
             OptionStruct("int", "profile", "--run-config-search-max-concurrency", None, "100", "1024"),
             OptionStruct("int", "profile", "--run-config-search-max-instance-count", None, "10", "5"),
             OptionStruct("float", "profile", "--monitoring-interval", "-i", "10.0", "1.0"),
@@ -248,6 +247,7 @@ class TestCLIOptions(trc.TestResultCollector):
             OptionStruct("string", "profile", "--triton-server-path", None, "test_path", "tritonserver", None),
             OptionStruct("string", "profile", "--triton-output-path", None, "test_path", None, None),
             OptionStruct("string", "profile", "--triton-launch-mode", None, ["local", "docker", "remote","c_api"], "local", "SHOULD_FAIL"),
+            OptionStruct("string", "profile", "--triton-install-path", None, "test_path", "/opt/tritonserver", None),
             OptionStruct("string", "analyze", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
             OptionStruct("string", "analyze", "--export-path", "-e", "./test_dir", os.getcwd(), None),
             OptionStruct("string", "analyze", "--filename-model-inference", None, "foo", "metrics-model-inference.csv", None),
@@ -273,11 +273,37 @@ class TestCLIOptions(trc.TestResultCollector):
             OptionStruct("stringlist", "analyze", "--gpu-output-fields", None, "a, b, c",
                 "model_name,gpu_uuid,batch_size,concurrency,model_config_path,instance_group,satisfies_constraints,gpu_used_memory,gpu_utilization,gpu_power_usage"),
             OptionStruct("stringlist", "analyze", "--server-output-fields", None, "a, b, c",
-                "model_name,gpu_uuid,gpu_used_memory,gpu_utilization,gpu_power_usage")
+                "model_name,gpu_uuid,gpu_used_memory,gpu_utilization,gpu_power_usage"),
+
+            # No OP Options:
+            # Option format:
+            # (noop, any MA step, long_flag,)
+            # These commands arent tested directly but are here to ensure that
+            # the count is correct for all options in the config.
+            # Some of these are required to run the subcommand
+            # Others are yaml only options
+            OptionStruct("noop", "profile", "--model-repository"),
+            OptionStruct("noop", "profile", "--profile-models"),
+            OptionStruct("noop", "analyze", "--analysis-models"),
+            OptionStruct("noop", "report", "--report-model-configs"),
+            OptionStruct("noop", "report", "--output-formats", "-o", ["pdf", "csv", "png"], "pdf", "SHOULD_FAIL"),
+            OptionStruct("noop", "yaml_profile", "constraints"),
+            OptionStruct("noop", "yaml_profile", "objectives"),
+            OptionStruct("noop", "yaml_profile", "triton_server_flags"),
+            OptionStruct("noop", "yaml_profile", "perf_analyzer_flags"),
+            OptionStruct("noop", "yaml_profile", "triton_docker_labels"),
+            OptionStruct("noop", "yaml_profile", "triton_server_environment"),
+            OptionStruct("noop", "yaml_analyze", "constraints"),
+            OptionStruct("noop", "yaml_analyze", "objectives"),
+            OptionStruct("noop", "yaml_analyze", "plots"),
         ]
         #yapf: enable
 
+        all_tested_options_set = set()
+
         for option in options:
+            all_tested_options_set.add(self._convert_flag(option.long_flag))
+
             if option.type in ["bool"]:
                 self._test_boolean_option(option)
             elif option.type in ["int", "float"]:
@@ -286,6 +312,24 @@ class TestCLIOptions(trc.TestResultCollector):
                 self._test_string_option(option)
             elif option.type in ["intlist", "stringlist"]:
                 self._test_list_option(option)
+
+        self._verify_all_options_tested(all_tested_options_set)
+
+    def _verify_all_options_tested(self, all_tested_options_set):
+        cli_option_set = set()
+
+        # Get all of the options in the CLI Configs
+        structs = [
+            CLIConfigProfileStruct, CLIConfigAnalyzeStruct,
+            CLIConfigReportStruct
+        ]
+        for struct in structs:
+            cli = struct()
+            _, config = cli.parse()
+            for key in config.get_config().keys():
+                cli_option_set.add(key)
+
+        self.assertEqual(cli_option_set, all_tested_options_set)
 
     def _test_boolean_option(self, option_struct):
         option = option_struct.long_flag
@@ -317,8 +361,6 @@ class TestCLIOptions(trc.TestResultCollector):
             option_struct.expected_value)
         default_value = None if option_struct.default_value == None else self._convert_string_to_numeric(
             option_struct.default_value)
-        # default_value = self._convert_string_to_numeric(
-        #     option_struct.default_value)
 
         # print(
         #     f"\n>>> {long_option},{short_option}, {expected_value}, {default_value}"

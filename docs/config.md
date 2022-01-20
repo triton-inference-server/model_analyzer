@@ -119,11 +119,17 @@ profile_models: <comma-delimited-string-list>
 # Maximum number of times perf_analyzer is launched with auto adjusted parameters in an attempt to profile a model
 [ perf_analyzer_max_auto_adjusts: <int> | default: 10 ]
 
+# Disables model loading and unloading in remote mode
+[ reload_model_disable: <bool> | default: false]
+
 # Triton Docker image tag used when launching using Docker mode
 [ triton_docker_image: <string> | default: nvcr.io/nvidia/tritonserver:21.12-py3 ]
 
 # Triton Server HTTP endpoint url used by Model Analyzer client. Will be ignored if server-launch-mode is not 'remote'".
 [ triton_http_endpoint: <string> | default: localhost:8000 ]
+
+# The full path to the parent directory of 'lib/libtritonserver.so. Only required when using triton_launch_mode=c_api.
+[ triton_install_path: <string> | default: /opt/tritonserver ]
 
 # Triton Server GRPC endpoint url used by Model Analyzer client. Will be ignored if server-launch-mode is not 'remote'".
 [ triton_grpc_endpoint: <string> | default: localhost:8001 ]

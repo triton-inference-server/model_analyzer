@@ -632,6 +632,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 'perf_analyzer_max_auto_adjusts',
+                flags=['--perf-analyzer-max-auto-adjusts'],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_PERF_MAX_AUTO_ADJUSTS,
                 description="Maximum number of times perf_analyzer is "
