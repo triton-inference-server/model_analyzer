@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from email.policy import default
 import os
 import copy
 
@@ -53,7 +54,7 @@ class CLISubclass(CLI):
 
 class CLIConfigProfileStruct():
     """
-    Struct class to hold the common variables shared between tests
+    Struct class to hold the common variables shared between profile tests
     """
 
     def __init__(self):
@@ -70,6 +71,28 @@ class CLIConfigProfileStruct():
         config_profile = ConfigCommandProfile()
         self.cli = CLISubclass()
         self.cli.add_subcommand(cmd='profile', help='', config=config_profile)
+
+    def parse(self):
+        return self.cli.parse(self.args)
+
+
+class CLIConfigAnalyzeStruct():
+    """
+    Struct class to hold the common variables shared between analyze tests
+    """
+
+    def __init__(self):
+        #yapf: disable
+        self.args = [
+            '/usr/local/bin/model-analyzer',
+            'analyze',
+            '--analysis-models',
+            'a,b,c'
+        ]
+        #yapf: enable
+        config_analyze = ConfigCommandAnalyze()
+        self.cli = CLISubclass()
+        self.cli.add_subcommand(cmd='analyze', help='', config=config_analyze)
 
     def parse(self):
         return self.cli.parse(self.args)
@@ -97,6 +120,8 @@ class OptionStruct():
 
         if stage == "profile":
             self.cli_subcommand = CLIConfigProfileStruct
+        elif stage == "analyze":
+            self.cli_subcommand = CLIConfigAnalyzeStruct
 
 
 @patch('model_analyzer.config.input.config_command_profile.file_path_validator',
@@ -104,6 +129,8 @@ class OptionStruct():
 @patch(
     'model_analyzer.config.input.config_command_profile.binary_path_validator',
     lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
+@patch('model_analyzer.config.input.config_command_analyze.file_path_validator',
+       lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
 class TestCLIOptions(trc.TestResultCollector):
     """
     Tests the methods of the CLI class
@@ -127,7 +154,14 @@ class TestCLIOptions(trc.TestResultCollector):
     @patch(
         'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file'
     )
-    def test_all_options(self, mocked_load_config_file):
+    @patch(
+        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._preprocess_and_verify_arguments'
+    )
+    @patch(
+        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._load_config_file'
+    )
+    def test_all_options(self, mocked_load_config_file_profile,
+                         mocked_verify_args, mocked_load_config_file_analyze):
 
         #yapf: disable
         options = [
@@ -153,6 +187,10 @@ class TestCLIOptions(trc.TestResultCollector):
             OptionStruct("int", "profile", "--run-config-search-max-instance-count", None, "10", "5"),
             OptionStruct("float", "profile", "--monitoring-interval", "-i", "10.0", "1.0"),
             OptionStruct("float", "profile", "--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0)),
+            OptionStruct("int", "analyze", "--num-configs-per-model", None, "10", "3"),
+            OptionStruct("int", "analyze", "--num-top-model-configs", None, "10", "0"),
+            OptionStruct("int", "analyze", "--latency-budget", None, "200", None),
+            OptionStruct("int", "analyze", "--min-throughput", None, "300", None),
 
             #String options
             # Options format:
@@ -175,6 +213,13 @@ class TestCLIOptions(trc.TestResultCollector):
             OptionStruct("string", "profile", "--triton-server-path", None, "test_path", "tritonserver", None),
             OptionStruct("string", "profile", "--triton-output-path", None, "test_path", None, None),
             OptionStruct("string", "profile", "--triton-launch-mode", None, ["local", "docker", "remote","c_api"], "local", "SHOULD_FAIL"),
+            OptionStruct("string", "analyze", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
+            OptionStruct("string", "analyze", "--export-path", "-e", "./test_dir", os.getcwd(), None),
+            OptionStruct("string", "analyze", "--filename-model-inference", None, "foo", "metrics-model-inference.csv", None),
+            OptionStruct("string", "analyze", "--filename-model-gpu", None, "foo", "metrics-model-gpu.csv", None),
+            OptionStruct("string", "analyze", "--filename-server-only", None, "foo", "metrics-server-only.csv", None),
+            OptionStruct("string", "analyze", "--config-file", "-f", "baz", None, None),
+
 
             #List of Strings Options:
             # Options format:
@@ -186,21 +231,24 @@ class TestCLIOptions(trc.TestResultCollector):
             OptionStruct("intlist", "profile", "--concurrency", "-c", "1, 2, 3", None),
             OptionStruct("stringlist", "profile", "--triton-docker-mounts", None, "a:b:c, d:e:f", None, extra_commands=["--triton-launch-mode", "docker"]),
             OptionStruct("stringlist", "profile", "--gpus", None, "a, b, c", "all"),
+            OptionStruct("stringlist", "analyze", "--inference-output-fields", None, "a, b, c",
+                "model_name,batch_size,concurrency,model_config_path,instance_group,satisfies_constraints,perf_throughput,perf_latency_p99"),
+            OptionStruct("stringlist", "analyze", "--gpu-output-fields", None, "a, b, c",
+                "model_name,gpu_uuid,batch_size,concurrency,model_config_path,instance_group,satisfies_constraints,gpu_used_memory,gpu_utilization,gpu_power_usage"),
+            OptionStruct("stringlist", "analyze", "--server-output-fields", None, "a, b, c",
+                "model_name,gpu_uuid,gpu_used_memory,gpu_utilization,gpu_power_usage")
         ]
         #yapf: enable
 
         for option in options:
-            self._resolve_test_values(option)
-
-    def _resolve_test_values(self, option):
-        if option.type in ["bool"]:
-            self._test_boolean_option(option)
-        elif option.type in ["int", "float"]:
-            self._test_numeric_option(option)
-        elif option.type in ["string"]:
-            self._test_string_option(option)
-        elif option.type in ["intlist", "stringlist"]:
-            self._test_list_option(option)
+            if option.type in ["bool"]:
+                self._test_boolean_option(option)
+            elif option.type in ["int", "float"]:
+                self._test_numeric_option(option)
+            elif option.type in ["string"]:
+                self._test_string_option(option)
+            elif option.type in ["intlist", "stringlist"]:
+                self._test_list_option(option)
 
     def _test_boolean_option(self, option_struct):
         option = option_struct.long_flag
@@ -230,8 +278,10 @@ class TestCLIOptions(trc.TestResultCollector):
         expected_value_string = option_struct.expected_value
         expected_value = self._convert_string_to_numeric(
             option_struct.expected_value)
-        default_value = self._convert_string_to_numeric(
+        default_value = None if option_struct.default_value == None else self._convert_string_to_numeric(
             option_struct.default_value)
+        # default_value = self._convert_string_to_numeric(
+        #     option_struct.default_value)
 
         # print(
         #     f"\n>>> {long_option},{short_option}, {expected_value}, {default_value}"
