@@ -98,6 +98,28 @@ class CLIConfigAnalyzeStruct():
         return self.cli.parse(self.args)
 
 
+class CLIConfigReportStruct():
+    """
+    Struct class to hold the common variables shared between analyze tests
+    """
+
+    def __init__(self):
+        #yapf: disable
+        self.args = [
+            '/usr/local/bin/model-analyzer',
+            'report',
+            '--report-model-configs',
+            'a, b, c'
+        ]
+        #yapf: enable
+        config_report = ConfigCommandReport()
+        self.cli = CLISubclass()
+        self.cli.add_subcommand(cmd='report', help='', config=config_report)
+
+    def parse(self):
+        return self.cli.parse(self.args)
+
+
 class OptionStruct():
 
     def __init__(self,
@@ -122,6 +144,8 @@ class OptionStruct():
             self.cli_subcommand = CLIConfigProfileStruct
         elif stage == "analyze":
             self.cli_subcommand = CLIConfigAnalyzeStruct
+        elif stage == "report":
+            self.cli_subcommand = CLIConfigReportStruct
 
 
 @patch('model_analyzer.config.input.config_command_profile.file_path_validator',
@@ -130,6 +154,8 @@ class OptionStruct():
     'model_analyzer.config.input.config_command_profile.binary_path_validator',
     lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
 @patch('model_analyzer.config.input.config_command_analyze.file_path_validator',
+       lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
+@patch('model_analyzer.config.input.config_command_report.file_path_validator',
        lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
 class TestCLIOptions(trc.TestResultCollector):
     """
@@ -152,16 +178,25 @@ class TestCLIOptions(trc.TestResultCollector):
         self.assertEqual('bar', profile_model)
 
     @patch(
-        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file'
+        'model_analyzer.config.input.config_command_report.ConfigCommandReport._load_config_file'
+    )
+    @patch(
+        'model_analyzer.config.input.config_command_report.ConfigCommandReport._preprocess_and_verify_arguments'
+    )
+    @patch(
+        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._load_config_file'
     )
     @patch(
         'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._preprocess_and_verify_arguments'
     )
     @patch(
-        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._load_config_file'
+        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file'
     )
     def test_all_options(self, mocked_load_config_file_profile,
-                         mocked_verify_args, mocked_load_config_file_analyze):
+                         mocked_verify_args_analyze,
+                         mocked_load_config_file_analyze,
+                         mocked_verify_args_report,
+                         mocked_load_config_file_report):
 
         #yapf: disable
         options = [
@@ -219,7 +254,9 @@ class TestCLIOptions(trc.TestResultCollector):
             OptionStruct("string", "analyze", "--filename-model-gpu", None, "foo", "metrics-model-gpu.csv", None),
             OptionStruct("string", "analyze", "--filename-server-only", None, "foo", "metrics-server-only.csv", None),
             OptionStruct("string", "analyze", "--config-file", "-f", "baz", None, None),
-
+            OptionStruct("string", "report", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
+            OptionStruct("string", "report", "--export-path", "-e", "./test_dir", os.getcwd(), None),
+            OptionStruct("string", "report", "--config-file", "-f", "baz", None, None),
 
             #List of Strings Options:
             # Options format:
