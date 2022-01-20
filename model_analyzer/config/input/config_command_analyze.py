@@ -21,7 +21,7 @@ from .config_defaults import \
     DEFAULT_FILENAME_SERVER_ONLY, DEFAULT_GPU_OUTPUT_FIELDS, \
     DEFAULT_INFERENCE_OUTPUT_FIELDS, DEFAULT_NUM_CONFIGS_PER_MODEL, \
     DEFAULT_NUM_TOP_MODEL_CONFIGS, DEFAULT_OFFLINE_OBJECTIVES, DEFAULT_ONLINE_ANALYSIS_PLOTS, \
-    DEFAULT_OFFLINE_ANALYSIS_PLOTS, DEFAULT_ONLINE_OBJECTIVES,DEFAULT_SERVER_OUTPUT_FIELDS, DEFAULT_SUMMARIZE_FLAG
+    DEFAULT_OFFLINE_ANALYSIS_PLOTS, DEFAULT_ONLINE_OBJECTIVES,DEFAULT_SERVER_OUTPUT_FIELDS
 from .config_field import ConfigField
 from .config_object import ConfigObject
 from .config_union import ConfigUnion
@@ -249,15 +249,6 @@ class ConfigCommandAnalyze(ConfigCommand):
         Adds report related configs
         """
 
-        self._add_config(
-            ConfigField(
-                'summarize',
-                flags=['--summarize'],
-                field_type=ConfigPrimitive(bool),
-                default_value=DEFAULT_SUMMARIZE_FLAG,
-                description=
-                'Model Analyzer generates a brief summary of the collected data.'
-            ))
         self._add_config(
             ConfigField(
                 'num_configs_per_model',

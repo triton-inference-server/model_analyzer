@@ -212,9 +212,6 @@ analysis_models: <comma-delimited-string-list>
 # Export path to be used
 [ export_path: <string> | default: '.' ]
 
-# Generate summary of results
-[ summarize: <boolean>  | default: true ]
-
 # Number of top configs to show in summary plots
 [ num_configs_per_model: <int> | default: 3]
 
