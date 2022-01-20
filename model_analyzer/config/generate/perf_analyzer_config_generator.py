@@ -178,4 +178,4 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return measurement.get_metric_value('perf_throughput')
 
     def _make_model_names_str(self, model_names):
-        return ",".join(model_names)
+        return ','.join(model_names)

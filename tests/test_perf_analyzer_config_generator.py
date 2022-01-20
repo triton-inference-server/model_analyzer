@@ -334,7 +334,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         while not pacg.is_done():
             perf_analyzer_configs.append(pacg.next_config())
 
-        self.assertGreater(len(perf_analyzer_configs), 0)
+        self.assertTrue(len(perf_analyzer_configs) > 0)
 
         pa_cli = perf_analyzer_configs[0].to_cli_string()
         self.assertRegex(pa_cli, "model1,model2")
