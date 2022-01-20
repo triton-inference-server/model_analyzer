@@ -60,7 +60,7 @@ class ModelManager:
         Parameters
         ----------
         models : List of ConfigModelProfileSpec
-            The list models being run
+            The list of models being run
         """
 
         self._metrics_manager.start_new_model()
