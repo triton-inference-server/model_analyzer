@@ -1,4 +1,4 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ class ResultManager:
     server_only_table_key = 'server_gpu_metrics'
     model_gpu_table_key = 'model_gpu_metrics'
     model_inference_table_key = 'model_inference_metrics'
+    backend_parameter_key_prefix = 'backend_parameter/'
 
     def __init__(self, config, state_manager):
         """
@@ -119,6 +120,9 @@ class ResultManager:
             elif inference_output_field in self._non_gpu_metrics_to_headers:
                 inference_output_headers.append(
                     self._non_gpu_metrics_to_headers[inference_output_field])
+            elif inference_output_field.startswith(
+                    self.backend_parameter_key_prefix):
+                inference_output_headers.append(inference_output_field)
             else:
                 logger.warning(
                     f'Inference output field "{inference_output_field}", has no data'
@@ -401,6 +405,7 @@ class ResultManager:
         instance_group = result.model_config().instance_group_string()
         dynamic_batching = result.model_config().dynamic_batching_string()
         cpu_only = result.model_config().cpu_only()
+        backend_parameters = result.model_config()._model_config.parameters
 
         passing_measurements = result.passing_measurements()
         failing_measurements = result.failing_measurements()
@@ -409,15 +414,18 @@ class ResultManager:
                                        (failing_measurements, False)]:
             while measurements:
                 next_best_measurement = heapq.heappop(measurements)
-                self._tabulate_measurement(model_name=model_name,
-                                           instance_group=instance_group,
-                                           dynamic_batching=dynamic_batching,
-                                           measurement=next_best_measurement,
-                                           passes=passes,
-                                           cpu_only=cpu_only)
+                self._tabulate_measurement(
+                    model_name=model_name,
+                    instance_group=instance_group,
+                    dynamic_batching=dynamic_batching,
+                    measurement=next_best_measurement,
+                    passes=passes,
+                    cpu_only=cpu_only,
+                    backend_parameters=backend_parameters)
 
     def _tabulate_measurement(self, model_name, instance_group,
-                              dynamic_batching, measurement, passes, cpu_only):
+                              dynamic_batching, measurement, passes, cpu_only,
+                              backend_parameters):
         """
         Add a single measurement to the specified
         table
@@ -435,7 +443,8 @@ class ResultManager:
                                                    concurrency, satisfies,
                                                    model_name, tmp_model_name,
                                                    dynamic_batching,
-                                                   instance_group)
+                                                   instance_group,
+                                                   backend_parameters)
 
         for metric in measurement.non_gpu_data():
             metric_tag_index = self._find_index_for_field(
@@ -468,9 +477,16 @@ class ResultManager:
                 self._result_tables[
                     self.model_gpu_table_key].insert_row_by_index(row=gpu_row)
 
-    def _get_common_row_items(self, fields, batch_size, concurrency, satisfies,
-                              model_name, model_config_path, dynamic_batching,
-                              instance_group):
+    def _get_common_row_items(self,
+                              fields,
+                              batch_size,
+                              concurrency,
+                              satisfies,
+                              model_name,
+                              model_config_path,
+                              dynamic_batching,
+                              instance_group,
+                              backend_parameters=None):
         row = [None] * len(fields)
 
         # Model Name
@@ -505,6 +521,21 @@ class ResultManager:
                                                         'instance_group')
         if instance_group_idx is not None:
             row[instance_group_idx] = instance_group
+
+        # Backend parameters
+        if backend_parameters is not None:
+            for key in fields:
+                if key.startswith(self.backend_parameter_key_prefix):
+                    backend_parameter_key = key.replace(
+                        self.backend_parameter_key_prefix, '')
+                    backend_parameter_idx = self._find_index_for_field(
+                        fields, key)
+
+                    if backend_parameter_idx is not None and \
+                        backend_parameter_key in backend_parameters:
+                        row[backend_parameter_idx] = backend_parameters[
+                            backend_parameter_key].string_value
+
         return row
 
     def _add_server_data(self):
