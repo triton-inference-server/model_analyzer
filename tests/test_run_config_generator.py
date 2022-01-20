@@ -48,16 +48,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        protobuf = """
-            max_batch_size: 8
-            instance_group [
-            {
-                kind: KIND_CPU
-                count: 1
-            }
-            ]
-            """
-
         yaml_content = convert_to_bytes("""
             profile_models:
                 - my-model
@@ -70,9 +60,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_num_of_configs = expected_pa_configs * expected_model_configs
 
         self._run_and_test_run_config_generator(
-            yaml_content,
-            protobuf=protobuf,
-            expected_config_count=expected_num_of_configs)
+            yaml_content, expected_config_count=expected_num_of_configs)
 
     def test_default_config_two_models(self):
         """
@@ -85,16 +73,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        protobuf = """
-            max_batch_size: 8
-            instance_group [
-            {
-                kind: KIND_CPU
-                count: 1
-            }
-            ]
-            """
-
         yaml_content = convert_to_bytes("""
             profile_models:
                 - my-model0
@@ -107,9 +85,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_model_configs = DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT + 1
         expected_num_of_configs = expected_pa_configs * expected_model_configs**2
         self._run_and_test_run_config_generator(
-            yaml_content,
-            protobuf=protobuf,
-            expected_config_count=expected_num_of_configs)
+            yaml_content, expected_config_count=expected_num_of_configs)
 
     def test_default_config_four_models(self):
         """
@@ -122,16 +98,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        protobuf = """
-            max_batch_size: 8
-            instance_group [
-            {
-                kind: KIND_CPU
-                count: 1
-            }
-            ]
-            """
-
         yaml_content = convert_to_bytes("""
             profile_models:
                 - my-model0
@@ -147,15 +113,12 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_num_of_configs = expected_pa_configs * expected_model_configs**4
 
         self._run_and_test_run_config_generator(
-            yaml_content,
-            protobuf=protobuf,
-            expected_config_count=expected_num_of_configs)
+            yaml_content, expected_config_count=expected_num_of_configs)
 
     def _run_and_test_run_config_generator(self,
                                            yaml_content,
                                            expected_config_count,
-                                           pa_cli_args=None,
-                                           protobuf=""):
+                                           pa_cli_args=None):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file'
@@ -165,6 +128,16 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             args = args + pa_cli_args
         elif type(pa_cli_args) == str:
             args.append(pa_cli_args)
+
+        protobuf = """
+            max_batch_size: 8
+            instance_group [
+            {
+                kind: KIND_CPU
+                count: 1
+            }
+            ]
+            """
 
         self.mock_model_config = MockModelConfig(protobuf)
         self.mock_model_config.start()
