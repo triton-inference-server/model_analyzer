@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
 from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
@@ -115,19 +114,12 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self._run_and_test_run_config_generator(
             yaml_content, expected_config_count=expected_num_of_configs)
 
-    def _run_and_test_run_config_generator(self,
-                                           yaml_content,
-                                           expected_config_count,
-                                           pa_cli_args=None):
+    def _run_and_test_run_config_generator(self, yaml_content,
+                                           expected_config_count):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file'
         ]
-
-        if type(pa_cli_args) == list:
-            args = args + pa_cli_args
-        elif type(pa_cli_args) == str:
-            args.append(pa_cli_args)
 
         protobuf = """
             max_batch_size: 8
@@ -159,6 +151,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         (self.assertEqual(len(config.profile_models),
                           len(set(model_configs[c]))) for c in model_configs)
+
+        self.mock_model_config.stop()
 
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)

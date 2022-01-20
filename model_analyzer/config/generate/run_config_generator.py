@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ class RunConfigGenerator(ConfigGeneratorInterface):
 
         self._model_names = [m.model_name() for m in models]
 
-        # MM-PHASE 0: Assuming that all models are identical, so using first model's flag/parameters/env
+        # MM-PHASE 1: Assuming that all models are identical, so using first model's flag/parameters/env
         self._model_pa_flags = models[0].perf_analyzer_flags()
         self._model_parameters = models[0].parameters()
         self._triton_server_env = self._models[0].triton_server_environment()
