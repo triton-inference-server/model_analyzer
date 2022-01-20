@@ -117,7 +117,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertTrue(self.config['extra-verbose'])
 
         # Verify multiple model string
-        self.config['model-names'] = ["model1,model2"]
+        self.config['model-names'] = "model1,model2"
         self.assertEqual(self.config['model-names'], "model1,model2")
 
     def test_perf_analyzer_additive_args(self):
