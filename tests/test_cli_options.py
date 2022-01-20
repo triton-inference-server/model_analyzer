@@ -124,7 +124,7 @@ class CLIConfigReportStruct():
 class OptionStruct():
 
     def __init__(self,
-                 type_str,
+                 type,
                  stage,
                  long_flag,
                  short_flag=None,
@@ -138,7 +138,7 @@ class OptionStruct():
         self.expected_value = expected_value
         self.default_value = default_value
         self.expected_failing_value = expected_failing_value
-        self.type = type_str
+        self.type = type
         self.extra_commands = extra_commands
 
         if stage == "profile":
