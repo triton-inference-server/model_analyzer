@@ -172,7 +172,12 @@ def validate_triton_server_path(config):
 
 def validate_triton_install_path(config):
     """
-    Validates that the value of 'triton_install_path' exists on disk
+    Validates that the value of 'triton_install_path':
+        is specified
+        exists
+        is a directory
+        contains more than one file
+    
 
     Parameters
     ----------
@@ -180,9 +185,18 @@ def validate_triton_install_path(config):
         Arguments parsed from the CLI
     """
     path = config.get_config()['triton_install_path'].value()
-    config_status = file_path_validator(path)
-    if config_status.status() == CONFIG_PARSER_FAILURE:
-        raise TritonModelAnalyzerException(config_status.message())
+
+    # Check the file system
+    if not path or not os.path.exists(path) or not os.path.isdir(path):
+        raise TritonModelAnalyzerException(
+            f"triton_install_path {path} is not specified, does not exist, " \
+            "or is not a directory."
+        )
+
+    # Make sure that files exist in the install directory
+    if len(os.listdir(path)) == 0:
+        raise TritonModelAnalyzerException(
+            f"triton_install_path {path} should not be empty.")
 
 
 def get_triton_handles(config, gpus):
