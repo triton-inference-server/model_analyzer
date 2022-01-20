@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,8 @@ class MockRunConfig():
 
     def load_from_run_config(self, run_config):
         """ Populate from a RunConfig object """
-        model_config = run_config.model_config().get_config()
+        # MM-PHASE 1: Assuming that all models are identical, so using first model's config
+        model_config = run_config.model_configs()[0].get_config()
         perf_config = run_config.perf_config()
         self._load_from_model_and_perf_config(model_config, perf_config)
 
