@@ -25,7 +25,8 @@ from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
 from .config.input.config_command_analyze import ConfigCommandAnalyze
 from .config.input.config_command_report import ConfigCommandReport
-from model_analyzer.config.input.config_utils import binary_path_validator
+from model_analyzer.config.input.config_utils import \
+        binary_path_validator, file_path_validator
 import sys
 import os
 import logging
@@ -93,7 +94,7 @@ def get_server_handle(config, gpus):
             ' Model Analyzer does not have access to the model repository of'
             ' the remote Triton Server.')
     elif config.triton_launch_mode == 'local':
-        validate_triton_path(config, 'triton_server_path')
+        validate_triton_server_path(config)
 
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
@@ -132,7 +133,7 @@ def get_server_handle(config, gpus):
             mounts=config.triton_docker_mounts,
             labels=config.triton_docker_labels)
     elif config.triton_launch_mode == 'c_api':
-        validate_triton_path(config, 'triton_install_path')
+        validate_triton_install_path(config)
 
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = os.path.abspath(
@@ -154,17 +155,32 @@ def get_server_handle(config, gpus):
     return server
 
 
-def validate_triton_path(config, key):
+def validate_triton_server_path(config):
     """
-    Validates that the value of {key} exists on disk
+    Validates that the value of 'triton_server_path' exists on disk
 
     Parameters
     ----------
     config : namespace
         Arguments parsed from the CLI
     """
-    path = config.get_config()[key].value()
+    path = config.get_config()['triton_server_path'].value()
     config_status = binary_path_validator(path)
+    if config_status.status() == CONFIG_PARSER_FAILURE:
+        raise TritonModelAnalyzerException(config_status.message())
+
+
+def validate_triton_install_path(config):
+    """
+    Validates that the value of 'triton_install_path' exists on disk
+
+    Parameters
+    ----------
+    config : namespace
+        Arguments parsed from the CLI
+    """
+    path = config.get_config()['triton_install_path'].value()
+    config_status = file_path_validator(path)
     if config_status.status() == CONFIG_PARSER_FAILURE:
         raise TritonModelAnalyzerException(config_status.message())
 
