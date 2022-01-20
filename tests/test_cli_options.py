@@ -334,7 +334,6 @@ class TestCLIOptions(trc.TestResultCollector):
     def _test_boolean_option(self, option_struct):
         option = option_struct.long_flag
         option_with_underscores = self._convert_flag(option)
-        # print(f"\n>>> {option}")
         cli = option_struct.cli_subcommand()
         _, config = cli.parse()
         option_value = config.get_config().get(option_with_underscores).value()
@@ -362,12 +361,8 @@ class TestCLIOptions(trc.TestResultCollector):
         default_value = None if option_struct.default_value == None else self._convert_string_to_numeric(
             option_struct.default_value)
 
-        # print(
-        #     f"\n>>> {long_option},{short_option}, {expected_value}, {default_value}"
-        # )
         long_option_with_underscores = self._convert_flag(long_option)
 
-        # print(f"\t>>> long option flag: {long_option}, {expected_value}")
         # Test long_flag
         cli = option_struct.cli_subcommand()
         cli.args.extend([long_option, expected_value_string])
@@ -378,7 +373,6 @@ class TestCLIOptions(trc.TestResultCollector):
 
         # Test short_flag
         if short_option is not None:
-            # print(f"\t>>> short option flag: {short_option}, {expected_value}")
             cli = option_struct.cli_subcommand()
             cli.args.extend([short_option, expected_value_string])
             _, config = cli.parse()
@@ -388,7 +382,6 @@ class TestCLIOptions(trc.TestResultCollector):
 
         # Test default value for option
         if default_value is not None:
-            # print(f"\t>>> default value: {long_option}, {default_value}")
             cli = option_struct.cli_subcommand()
             _, config = cli.parse()
             option_value = config.get_config().get(
@@ -404,19 +397,14 @@ class TestCLIOptions(trc.TestResultCollector):
 
         # This covers strings that have choices
         # Recursively call this method with choices
-        # print(f"expected value: {expected_value}, {type(expected_value)}")
         if type(expected_value) is list:
             for value in expected_value:
                 new_struct = copy.deepcopy(option_struct)
                 new_struct.expected_value = value
                 self._test_string_option(new_struct)
         else:
-            # print(
-            #     f"\n>>> {long_option}, {short_option}, {expected_value}, {default_value}, {expected_failing_value}"
-            # )
             long_option_with_underscores = self._convert_flag(long_option)
 
-            # print(f"\t>>> long option flag: {long_option}, {expected_value}")
             # Test long flag
             cli = option_struct.cli_subcommand()
             cli.args.extend([long_option, expected_value])
@@ -427,7 +415,6 @@ class TestCLIOptions(trc.TestResultCollector):
 
             # Test short flag
             if short_option is not None:
-                # print(f"\t>>> short option flag: {short_option}, {expected_value}")
                 cli = option_struct.cli_subcommand()
                 cli.args.extend([short_option, expected_value])
                 _, config = cli.parse()
@@ -437,7 +424,6 @@ class TestCLIOptions(trc.TestResultCollector):
 
             # Test default value for option
             if default_value is not None:
-                # print(f"\t>>> default value: {long_option}, {default_value}")
                 cli = option_struct.cli_subcommand()
                 _, config = cli.parse()
                 option_value = config.get_config().get(
@@ -446,7 +432,6 @@ class TestCLIOptions(trc.TestResultCollector):
 
             # Verify that a incorrect value causes a failure
             if expected_failing_value is not None:
-                # print(f"\t>>> error value: {long_option}, {expected_failing_value}")
                 cli = option_struct.cli_subcommand()
                 cli.args.extend([long_option, expected_failing_value])
                 with self.assertRaises(SystemExit):
@@ -475,11 +460,9 @@ class TestCLIOptions(trc.TestResultCollector):
 
         long_option_with_underscores = self._convert_flag(long_option)
 
-        # print(f"\t>>> long option flag: {long_option}, {expected_value}")
         # Test the long flag
         cli = option_struct.cli_subcommand()
         cli.args.extend([long_option, expected_value])
-        # print(f"extra commands: {option_struct.extra_commands}")
         if option_struct.extra_commands is not None:
             cli.args.extend(option_struct.extra_commands)
         _, config = cli.parse()
@@ -489,7 +472,6 @@ class TestCLIOptions(trc.TestResultCollector):
 
         # Test the short flag
         if short_option is not None:
-            # print(f"\t>>> short option flag: {short_option}, {expected_value}")
             cli = option_struct.cli_subcommand()
             cli.args.extend([short_option, expected_value])
             _, config = cli.parse()
@@ -499,7 +481,6 @@ class TestCLIOptions(trc.TestResultCollector):
 
         # Verify the default value for the option
         if default_value is not None:
-            # print(f"\t>>> default value: {long_option}, {default_value}")
             cli = option_struct.cli_subcommand()
             _, config = cli.parse()
             option_value = config.get_config().get(
