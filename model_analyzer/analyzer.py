@@ -109,14 +109,22 @@ class Analyzer:
             self._metrics_manager.profile_server()
             self._server.stop()
 
-        # Profile each model, save state after each
-        for model in self._config.profile_models:
-            if self._state_manager.exiting():
-                break
+        # Profile all models concurrently
+        if self._config.run_config_profile_models_concurrently_enable:
             try:
-                self._model_manager.run_model(model=model)
+                self._model_manager.run_models(
+                    models=self._config.profile_models)
             finally:
                 self._state_manager.save_checkpoint()
+        else:
+            # Profile each model, save state after each
+            for model in self._config.profile_models:
+                if self._state_manager.exiting():
+                    break
+                try:
+                    self._model_manager.run_models(models=[model])
+                finally:
+                    self._state_manager.save_checkpoint()
 
         logger.info(self._get_profile_complete_string())
         logger.info(self._get_analyze_command_help_string())

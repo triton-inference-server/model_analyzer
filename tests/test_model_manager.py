@@ -674,7 +674,7 @@ class TestModelManager(trc.TestResultCollector):
                                      MagicMock(), MagicMock(), metrics_manager,
                                      MagicMock(), state_manager)
 
-        model_manager.run_model(config.profile_models[0])
+        model_manager.run_models(config.profile_models[0])
         self.mock_model_config.stop()
 
         self._check_results(model_manager, expected_ranges)
