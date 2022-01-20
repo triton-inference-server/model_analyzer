@@ -1,4 +1,4 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -491,7 +491,7 @@ class ConfigCommandProfile(ConfigCommand):
                 default_value=
                 DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE,
                 description=
-                "Enable the profiling of multiple models concurrently."))
+                "Enable the profiling of all supplied models concurrently."))
 
     def _add_triton_configs(self):
         """
