@@ -110,7 +110,7 @@ class Analyzer:
             self._server.stop()
 
         # Profile all models concurrently
-        if self._config.run_config_profile_models_concurrently_enable:
+        if self._should_profile_multiple_models_concurrently():
             try:
                 self._model_manager.run_models(
                     models=self._config.profile_models)
@@ -201,6 +201,10 @@ class Analyzer:
 
         self._report_manager.create_detailed_reports()
         self._report_manager.export_detailed_reports()
+
+    def _should_profile_multiple_models_concurrently(self):
+        return (self._config.run_config_profile_models_concurrently_enable and
+                len(self._config.profile_models) > 1)
 
     def _get_profile_complete_string(self):
         profiled_model_list = list(
