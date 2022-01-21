@@ -384,13 +384,6 @@ class TestCLIOptions(trc.TestResultCollector):
         self._test_short_flag(short_option, option_struct.cli_subcommand,
                               expected_value_string,
                               long_option_with_underscores, expected_value)
-        # if short_option is not None:
-        #     cli = option_struct.cli_subcommand()
-        #     cli.args.extend([short_option, expected_value_string])
-        #     _, config = cli.parse()
-        #     option_value = config.get_config().get(
-        #         long_option_with_underscores).value()
-        #     self.assertEqual(option_value, expected_value)
 
         # Test default value for option
         if default_value is not None:
@@ -429,13 +422,6 @@ class TestCLIOptions(trc.TestResultCollector):
             self._test_short_flag(short_option, option_struct.cli_subcommand,
                                   expected_value, long_option_with_underscores,
                                   expected_value)
-            # if short_option is not None:
-            #     cli = option_struct.cli_subcommand()
-            #     cli.args.extend([short_option, expected_value])
-            #     _, config = cli.parse()
-            #     option_value = config.get_config().get(
-            #         long_option_with_underscores).value()
-            #     self.assertEqual(option_value, expected_value)
 
             # Test default value for option
             if default_value is not None:
@@ -490,13 +476,6 @@ class TestCLIOptions(trc.TestResultCollector):
         self._test_short_flag(short_option, option_struct.cli_subcommand,
                               expected_value, long_option_with_underscores,
                               expected_value_converted)
-        # if short_option is not None:
-        #     cli = option_struct.cli_subcommand()
-        #     cli.args.extend([short_option, expected_value])
-        #     _, config = cli.parse()
-        #     option_value = config.get_config().get(
-        #         long_option_with_underscores).value()
-        #     self.assertEqual(option_value, expected_value_converted)
 
         # Verify the default value for the option
         if default_value is not None:
