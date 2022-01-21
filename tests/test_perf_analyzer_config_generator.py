@@ -314,6 +314,31 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         self._run_and_test_perf_analyzer_config_generator(
             yaml_content, expected_configs)
 
+    def test_multiple_models(self):
+        """
+        Test Multiple Models:  
+            Confirm that if multiple model names are passed in, that
+            they will end up in the PA CLI
+        """
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--profile-models', "model1,model2"
+        ]
+        config = self._evaluate_config(args, yaml_content="")
+        pacg = PerfAnalyzerConfigGenerator(
+            config, [model.model_name() for model in config.profile_models],
+            config.profile_models[0].perf_analyzer_flags(),
+            config.profile_models[0].parameters())
+
+        perf_analyzer_configs = []
+        while not pacg.is_done():
+            perf_analyzer_configs.append(pacg.next_config())
+
+        self.assertTrue(len(perf_analyzer_configs) > 0)
+
+        pa_cli = perf_analyzer_configs[0].to_cli_string()
+        self.assertRegex(pa_cli, "model1,model2")
+
     def _create_expected_config(self,
                                 batch_size=DEFAULT_BATCH_SIZES,
                                 concurrency=1,
@@ -360,7 +385,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         config = self._evaluate_config(args, yaml_content)
 
         pacg = PerfAnalyzerConfigGenerator(
-            config, config.profile_models[0].model_name(),
+            config, [config.profile_models[0].model_name()],
             config.profile_models[0].perf_analyzer_flags(),
             config.profile_models[0].parameters())
 

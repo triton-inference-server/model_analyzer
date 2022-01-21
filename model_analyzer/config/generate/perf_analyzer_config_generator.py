@@ -28,7 +28,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     earlier depending on results that it receives
     """
 
-    def __init__(self, cli_config, model_name, model_perf_analyzer_flags,
+    def __init__(self, cli_config, model_names, model_perf_analyzer_flags,
                  model_parameters):
         """
         Parameters
@@ -36,14 +36,20 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         cli_config: ConfigCommandProfile
             CLI Configuration Options
             
-        model_name: str
-            Name of the model
+        model_names: List of strings
+            The model names to profile
+        
+        model_perf_analyzer_flags: Dict
+            custom perf analyzer configuration
+
+        model_parameters: Dict
+            model constraints for batch_sizes and/or concurrency
         """
         self._curr_config_index = 0
         self._last_results = ["valid"]
         self._all_results = []
 
-        self._model_name = model_name
+        self._model_names = self._make_model_names_str(model_names)
         self._perf_analyzer_flags = model_perf_analyzer_flags
 
         self._batch_sizes = model_parameters['batch_sizes']
@@ -111,7 +117,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _create_perf_config_params(self):
         perf_config_params = {
-            'model-name': [self._model_name],
+            'model-names': [self._model_names],
             'batch-size': self._batch_sizes,
             'concurrency-range': self._concurrency,
             'measurement-mode': [DEFAULT_MEASUREMENT_MODE]
@@ -170,3 +176,6 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _get_throughput(self, measurement):
         return measurement.get_metric_value('perf_throughput')
+
+    def _make_model_names_str(self, model_names):
+        return ','.join(model_names)
