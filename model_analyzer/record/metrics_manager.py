@@ -182,7 +182,7 @@ class MetricsManager:
             if not self._load_model_variant(variant_config=model_config):
                 self._server.stop()
                 return
-        return
+
         # Profile various batch size and concurrency values.
         # TODO: Need to sort the values for batch size and concurrency
         # for correct measurment of the GPU memory metrics.

@@ -37,7 +37,7 @@ class TestMetricsManager(trc.TestResultCollector):
            return_value=None)
     def test_execute_run_config(self, mock_metrics_manager_init):
         """
-        Tests that something something.
+        Tests that multiple models are loaded onto the triton server.
         """
 
         args = [
@@ -53,18 +53,20 @@ class TestMetricsManager(trc.TestResultCollector):
         metrics_manager._server = MagicMock()
         metrics_manager._config = config
         metrics_manager._client = MagicMock()
+        metrics_manager.profile_model = MagicMock()
         model_configs = [
             ModelConfig(
                 json_format.ParseDict({'name': 'model_config_1'},
                                       model_config_pb2.ModelConfig())),
             ModelConfig(
-                json_format.ParseDict({'name': 'model_config_1'},
+                json_format.ParseDict({'name': 'model_config_2'},
                                       model_config_pb2.ModelConfig()))
         ]
         run_config = RunConfig(model_name=None,
                                model_configs=model_configs,
                                perf_config=None,
                                triton_env=None)
+        run_config.perf_config = MagicMock()
 
         metrics_manager.execute_run_config(run_config)
 
