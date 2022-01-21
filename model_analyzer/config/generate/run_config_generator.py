@@ -55,8 +55,8 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._model_configs_are_on_final_iteration = False
 
     def is_done(self):
-        return self._pacg.is_done(
-        ) and self._model_configs_are_on_final_iteration
+        return (self._pacg.is_done() and
+                self._model_configs_are_on_final_iteration)
 
     def next_config(self):
         """
@@ -97,6 +97,8 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._pacg.set_last_results(measurements)
 
     def _create_run_config(self, model_configs, perf_analyzer_config):
+        # This check exists because _generate_all_model_config_permuations doesn't
+        # return a list when a single model only has one configuration
         if isinstance(model_configs, list):
             run_config = self._generate_run_config(model_configs,
                                                    perf_analyzer_config)
