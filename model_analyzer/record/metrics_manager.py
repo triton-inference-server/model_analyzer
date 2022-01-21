@@ -77,7 +77,12 @@ class MetricsManager:
         # Generate the output model repository path folder.
         self._output_model_repo_path = config.output_model_repository_path
 
-        self._first_config_variant = None
+        if len(config.profile_models) != len(
+                set([model['model_name'] for model in config.profile_models])):
+            raise TritonModelAnalyzerException(
+                f"Duplicate model names detected: "
+                f"{[model['model_name'] for model in config.profile_models]}")
+        self._first_config_variant = {}
 
         self._config = config
         self._client = client
@@ -92,7 +97,7 @@ class MetricsManager:
 
     def start_new_model(self):
         """ Indicate that profiling of a new model is starting """
-        self._first_config_variant = None
+        self._first_config_variant = {}
 
     def _init_state(self):
         """
@@ -212,11 +217,12 @@ class MetricsManager:
             try:
                 # Create the directory for the new model
                 os.makedirs(new_model_dir, exist_ok=False)
-                variant_config.write_config_to_file(new_model_dir,
-                                                    original_model_dir,
-                                                    self._first_config_variant)
-                if self._first_config_variant is None:
-                    self._first_config_variant = os.path.join(
+                self._first_config_variant.setdefault(original_name, None)
+                variant_config.write_config_to_file(
+                    new_model_dir, original_model_dir,
+                    self._first_config_variant[original_name])
+                if self._first_config_variant[original_name] is None:
+                    self._first_config_variant[original_name] = os.path.join(
                         self._output_model_repo_path, variant_name)
             except FileExistsError:
                 pass
