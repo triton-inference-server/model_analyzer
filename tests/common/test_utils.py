@@ -73,7 +73,7 @@ def construct_measurement(model_name, gpu_metric_values, non_gpu_metric_values,
 
     # Perf Config needs a protocol
     perf_config = PerfAnalyzerConfig()
-    perf_config['model-name'] = model_name
+    perf_config['model-names'] = model_name
     perf_config['protocol'] = 'http'
 
     measurement = Measurement(gpu_data=gpu_data,

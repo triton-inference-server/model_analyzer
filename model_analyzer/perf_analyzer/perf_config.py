@@ -36,7 +36,7 @@ class PerfAnalyzerConfig:
     ]
 
     input_to_options = [
-        'model-name', 'model-version', 'batch-size', 'url', 'protocol',
+        'model-names', 'model-version', 'batch-size', 'url', 'protocol',
         'latency-report-file', 'http-header'
     ]
 
@@ -63,7 +63,7 @@ class PerfAnalyzerConfig:
         self._verbose = {'-v': None, '-v -v': None}
 
         self._input_to_options = {
-            'model-name': '-m',
+            'model-names': '-m',
             'model-version': '-x',
             'batch-size': '-b',
             'url': '-u',
