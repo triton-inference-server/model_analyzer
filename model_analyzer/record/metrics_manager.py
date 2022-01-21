@@ -166,22 +166,23 @@ class MetricsManager:
         measurement to the result manager
         """
 
-        # Create model variant
-        self._create_model_variant(original_name=run_config.model_name(),
-                                   variant_config=run_config.model_config())
+        # Create model variants
+        for model_config in run_config.model_configs():
+            self._create_model_variant(original_name=run_config.model_name(),
+                                       variant_config=model_config)
 
         # If this run config was already run, do not run again, just get the measurement
         measurement = self._get_measurement_if_config_duplicate(run_config)
         if measurement:
             return measurement
 
-        # Start server, and load model variant
+        # Start server, and load model variants
         self._server.start(env=run_config.triton_environment())
-        if not self._load_model_variant(
-                variant_config=run_config.model_config()):
-            self._server.stop()
-            return
-
+        for model_config in run_config.model_configs():
+            if not self._load_model_variant(variant_config=model_config):
+                self._server.stop()
+                return
+        return
         # Profile various batch size and concurrency values.
         # TODO: Need to sort the values for batch size and concurrency
         # for correct measurment of the GPU memory metrics.
