@@ -27,6 +27,7 @@ from model_analyzer.config.input.config_command_analyze import ConfigCommandAnal
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.config.input.config_status import ConfigStatus
 from model_analyzer.constants import CONFIG_PARSER_SUCCESS
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 import psutil
 
@@ -277,7 +278,7 @@ class TestCLIOptions(trc.TestResultCollector):
 
             # No OP Options:
             # Option format:
-            # (noop, any MA step, long_flag,)
+            # (noop, any MA step, long_flag)
             # These commands arent tested directly but are here to ensure that
             # the count is correct for all options in the config.
             # Some of these are required to run the subcommand
@@ -302,7 +303,8 @@ class TestCLIOptions(trc.TestResultCollector):
         all_tested_options_set = set()
 
         for option in options:
-            all_tested_options_set.add(self._convert_flag(option.long_flag))
+            all_tested_options_set.add(
+                self._convert_flag_to_use_underscores(option.long_flag))
 
             if option.type in ["bool"]:
                 self._test_boolean_option(option)
@@ -312,6 +314,10 @@ class TestCLIOptions(trc.TestResultCollector):
                 self._test_string_option(option)
             elif option.type in ["intlist", "stringlist"]:
                 self._test_list_option(option)
+            elif option.type in ["noop"]:
+                pass
+            else:
+                raise (TritonModelAnalyzerException("Invalid option type"))
 
         self._verify_all_options_tested(all_tested_options_set)
 
@@ -329,11 +335,14 @@ class TestCLIOptions(trc.TestResultCollector):
             for key in config.get_config().keys():
                 cli_option_set.add(key)
 
-        self.assertEqual(cli_option_set, all_tested_options_set)
+        self.assertEqual(
+            cli_option_set, all_tested_options_set,
+            "The available options on the CLI does not match the available options tested."
+        )
 
     def _test_boolean_option(self, option_struct):
         option = option_struct.long_flag
-        option_with_underscores = self._convert_flag(option)
+        option_with_underscores = self._convert_flag_to_use_underscores(option)
         cli = option_struct.cli_subcommand()
         _, config = cli.parse()
         option_value = config.get_config().get(option_with_underscores).value()
@@ -361,7 +370,8 @@ class TestCLIOptions(trc.TestResultCollector):
         default_value = None if option_struct.default_value == None else self._convert_string_to_numeric(
             option_struct.default_value)
 
-        long_option_with_underscores = self._convert_flag(long_option)
+        long_option_with_underscores = self._convert_flag_to_use_underscores(
+            long_option)
 
         # Test long_flag
         cli = option_struct.cli_subcommand()
@@ -371,14 +381,16 @@ class TestCLIOptions(trc.TestResultCollector):
             long_option_with_underscores).value()
         self.assertEqual(option_value, expected_value)
 
-        # Test short_flag
-        if short_option is not None:
-            cli = option_struct.cli_subcommand()
-            cli.args.extend([short_option, expected_value_string])
-            _, config = cli.parse()
-            option_value = config.get_config().get(
-                long_option_with_underscores).value()
-            self.assertEqual(option_value, expected_value)
+        self._test_short_flag(short_option, option_struct.cli_subcommand,
+                              expected_value_string,
+                              long_option_with_underscores, expected_value)
+        # if short_option is not None:
+        #     cli = option_struct.cli_subcommand()
+        #     cli.args.extend([short_option, expected_value_string])
+        #     _, config = cli.parse()
+        #     option_value = config.get_config().get(
+        #         long_option_with_underscores).value()
+        #     self.assertEqual(option_value, expected_value)
 
         # Test default value for option
         if default_value is not None:
@@ -403,7 +415,8 @@ class TestCLIOptions(trc.TestResultCollector):
                 new_struct.expected_value = value
                 self._test_string_option(new_struct)
         else:
-            long_option_with_underscores = self._convert_flag(long_option)
+            long_option_with_underscores = self._convert_flag_to_use_underscores(
+                long_option)
 
             # Test long flag
             cli = option_struct.cli_subcommand()
@@ -413,14 +426,16 @@ class TestCLIOptions(trc.TestResultCollector):
                 long_option_with_underscores).value()
             self.assertEqual(option_value, expected_value)
 
-            # Test short flag
-            if short_option is not None:
-                cli = option_struct.cli_subcommand()
-                cli.args.extend([short_option, expected_value])
-                _, config = cli.parse()
-                option_value = config.get_config().get(
-                    long_option_with_underscores).value()
-                self.assertEqual(option_value, expected_value)
+            self._test_short_flag(short_option, option_struct.cli_subcommand,
+                                  expected_value, long_option_with_underscores,
+                                  expected_value)
+            # if short_option is not None:
+            #     cli = option_struct.cli_subcommand()
+            #     cli.args.extend([short_option, expected_value])
+            #     _, config = cli.parse()
+            #     option_value = config.get_config().get(
+            #         long_option_with_underscores).value()
+            #     self.assertEqual(option_value, expected_value)
 
             # Test default value for option
             if default_value is not None:
@@ -458,7 +473,8 @@ class TestCLIOptions(trc.TestResultCollector):
                 default_value_converted = self._convert_string_to_string_list(
                     default_value)
 
-        long_option_with_underscores = self._convert_flag(long_option)
+        long_option_with_underscores = self._convert_flag_to_use_underscores(
+            long_option)
 
         # Test the long flag
         cli = option_struct.cli_subcommand()
@@ -471,13 +487,16 @@ class TestCLIOptions(trc.TestResultCollector):
         self.assertEqual(option_value, expected_value_converted)
 
         # Test the short flag
-        if short_option is not None:
-            cli = option_struct.cli_subcommand()
-            cli.args.extend([short_option, expected_value])
-            _, config = cli.parse()
-            option_value = config.get_config().get(
-                long_option_with_underscores).value()
-            self.assertEqual(option_value, expected_value_converted)
+        self._test_short_flag(short_option, option_struct.cli_subcommand,
+                              expected_value, long_option_with_underscores,
+                              expected_value_converted)
+        # if short_option is not None:
+        #     cli = option_struct.cli_subcommand()
+        #     cli.args.extend([short_option, expected_value])
+        #     _, config = cli.parse()
+        #     option_value = config.get_config().get(
+        #         long_option_with_underscores).value()
+        #     self.assertEqual(option_value, expected_value_converted)
 
         # Verify the default value for the option
         if default_value is not None:
@@ -488,7 +507,19 @@ class TestCLIOptions(trc.TestResultCollector):
             self.assertEqual(option_value, default_value_converted)
 
     # Helper methods
-    def _convert_flag(self, option):
+
+    def _test_short_flag(self, short_option, cli_subcommand,
+                         expected_value_string, long_option_with_underscores,
+                         expected_value):
+        if short_option is not None:
+            cli = cli_subcommand()
+            cli.args.extend([short_option, expected_value_string])
+            _, config = cli.parse()
+            option_value = config.get_config().get(
+                long_option_with_underscores).value()
+            self.assertEqual(option_value, expected_value)
+
+    def _convert_flag_to_use_underscores(self, option):
         return option.lstrip("-").replace("-", "_")
 
     def _convert_string_to_numeric(self, number):
