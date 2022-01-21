@@ -77,8 +77,8 @@ class RunConfigGenerator(ConfigGeneratorInterface):
 
             while not self._pacg.is_done():
                 perf_analyzer_config = self._pacg.next_config()
-                run_config = self._create_run_config(model_configs,
-                                                     perf_analyzer_config)
+                run_config = self._generate_run_config(model_configs,
+                                                       perf_analyzer_config)
 
                 self._model_configs_are_on_final_iteration = (
                     model_configs == model_configs_list[-1])
@@ -96,19 +96,8 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         """
         self._pacg.set_last_results(measurements)
 
-    def _create_run_config(self, model_configs, perf_analyzer_config):
-        # This check exists because _generate_all_model_config_permuations doesn't
-        # return a list when a single model only has one configuration
-        if isinstance(model_configs, list):
-            run_config = self._generate_run_config(model_configs,
-                                                   perf_analyzer_config)
-        else:
-            run_config = self._generate_run_config([model_configs],
-                                                   perf_analyzer_config)
-        return run_config
-
     def _generate_run_config(self, model_configs, perf_analyzer_config):
-        run_config = RunConfig(self._model_names, model_configs,
+        run_config = RunConfig(self._model_names, [model_configs],
                                perf_analyzer_config, self._triton_server_env)
 
         return run_config
