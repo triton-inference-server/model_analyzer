@@ -85,19 +85,6 @@ class RunConfigGenerator(ConfigGeneratorInterface):
 
                 yield run_config
 
-        # while not self._pacg.is_done():
-        #     perf_analyzer_config = self._pacg.next_config()
-        #     self._model_configs_iteration_complete = False
-
-        #     for model_configs in model_configs_list:
-        #         run_config = self._create_run_config(model_configs,
-        #                                              perf_analyzer_config)
-
-        #         self._model_configs_iteration_complete = (
-        #             model_configs == model_configs_list[-1])
-
-        #         yield run_config
-
     def set_last_results(self, measurements):
         """ 
         Given the results from the last RunConfig, make decisions 
