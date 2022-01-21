@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from distutils.cmd import Command
-from email.policy import default
 import os
 import copy
 
@@ -373,13 +372,9 @@ class TestCLIOptions(trc.TestResultCollector):
         long_option_with_underscores = self._convert_flag_to_use_underscores(
             long_option)
 
-        # Test long_flag
-        cli = option_struct.cli_subcommand()
-        cli.args.extend([long_option, expected_value_string])
-        _, config = cli.parse()
-        option_value = config.get_config().get(
-            long_option_with_underscores).value()
-        self.assertEqual(option_value, expected_value)
+        self._test_long_flag(long_option, option_struct.cli_subcommand,
+                             expected_value_string,
+                             long_option_with_underscores, expected_value)
 
         self._test_short_flag(short_option, option_struct.cli_subcommand,
                               expected_value_string,
@@ -411,13 +406,9 @@ class TestCLIOptions(trc.TestResultCollector):
             long_option_with_underscores = self._convert_flag_to_use_underscores(
                 long_option)
 
-            # Test long flag
-            cli = option_struct.cli_subcommand()
-            cli.args.extend([long_option, expected_value])
-            _, config = cli.parse()
-            option_value = config.get_config().get(
-                long_option_with_underscores).value()
-            self.assertEqual(option_value, expected_value)
+            self._test_long_flag(long_option, option_struct.cli_subcommand,
+                                 expected_value, long_option_with_underscores,
+                                 expected_value)
 
             self._test_short_flag(short_option, option_struct.cli_subcommand,
                                   expected_value, long_option_with_underscores,
@@ -462,17 +453,11 @@ class TestCLIOptions(trc.TestResultCollector):
         long_option_with_underscores = self._convert_flag_to_use_underscores(
             long_option)
 
-        # Test the long flag
-        cli = option_struct.cli_subcommand()
-        cli.args.extend([long_option, expected_value])
-        if option_struct.extra_commands is not None:
-            cli.args.extend(option_struct.extra_commands)
-        _, config = cli.parse()
-        option_value = config.get_config().get(
-            long_option_with_underscores).value()
-        self.assertEqual(option_value, expected_value_converted)
+        self._test_long_flag(long_option, option_struct.cli_subcommand,
+                             expected_value, long_option_with_underscores,
+                             expected_value_converted,
+                             option_struct.extra_commands)
 
-        # Test the short flag
         self._test_short_flag(short_option, option_struct.cli_subcommand,
                               expected_value, long_option_with_underscores,
                               expected_value_converted)
@@ -486,6 +471,22 @@ class TestCLIOptions(trc.TestResultCollector):
             self.assertEqual(option_value, default_value_converted)
 
     # Helper methods
+
+    def _test_long_flag(self,
+                        long_option,
+                        cli_subcommand,
+                        expected_value_string,
+                        long_option_with_underscores,
+                        expected_value,
+                        extra_commands=None):
+        cli = cli_subcommand()
+        cli.args.extend([long_option, expected_value_string])
+        if extra_commands is not None:
+            cli.args.extend(extra_commands)
+        _, config = cli.parse()
+        option_value = config.get_config().get(
+            long_option_with_underscores).value()
+        self.assertEqual(option_value, expected_value)
 
     def _test_short_flag(self, short_option, cli_subcommand,
                          expected_value_string, long_option_with_underscores,
