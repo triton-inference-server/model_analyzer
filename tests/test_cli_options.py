@@ -380,13 +380,10 @@ class TestCLIOptions(trc.TestResultCollector):
                               expected_value_string,
                               long_option_with_underscores, expected_value)
 
-        # Test default value for option
         if default_value is not None:
-            cli = option_struct.cli_subcommand()
-            _, config = cli.parse()
-            option_value = config.get_config().get(
-                long_option_with_underscores).default_value()
-            self.assertEqual(option_value, default_value)
+            self._test_default_value(option_struct.cli_subcommand,
+                                     long_option_with_underscores,
+                                     default_value)
 
     def _test_string_option(self, option_struct):
         long_option = option_struct.long_flag
@@ -414,13 +411,10 @@ class TestCLIOptions(trc.TestResultCollector):
                                   expected_value, long_option_with_underscores,
                                   expected_value)
 
-            # Test default value for option
             if default_value is not None:
-                cli = option_struct.cli_subcommand()
-                _, config = cli.parse()
-                option_value = config.get_config().get(
-                    long_option_with_underscores).default_value()
-                self.assertEqual(option_value, default_value)
+                self._test_default_value(option_struct.cli_subcommand,
+                                         long_option_with_underscores,
+                                         default_value)
 
             # Verify that a incorrect value causes a failure
             if expected_failing_value is not None:
@@ -462,13 +456,10 @@ class TestCLIOptions(trc.TestResultCollector):
                               expected_value, long_option_with_underscores,
                               expected_value_converted)
 
-        # Verify the default value for the option
         if default_value is not None:
-            cli = option_struct.cli_subcommand()
-            _, config = cli.parse()
-            option_value = config.get_config().get(
-                long_option_with_underscores).default_value()
-            self.assertEqual(option_value, default_value_converted)
+            self._test_default_value(option_struct.cli_subcommand,
+                                     long_option_with_underscores,
+                                     default_value_converted)
 
     # Helper methods
 
@@ -498,6 +489,14 @@ class TestCLIOptions(trc.TestResultCollector):
             option_value = config.get_config().get(
                 long_option_with_underscores).value()
             self.assertEqual(option_value, expected_value)
+
+    def _test_default_value(self, cli_subcommand, long_option_with_underscores,
+                            default_value):
+        cli = cli_subcommand()
+        _, config = cli.parse()
+        option_value = config.get_config().get(
+            long_option_with_underscores).default_value()
+        self.assertEqual(option_value, default_value)
 
     def _convert_flag_to_use_underscores(self, option):
         return option.lstrip("-").replace("-", "_")
