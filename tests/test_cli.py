@@ -42,6 +42,112 @@ import psutil
 from unittest.mock import patch
 
 
+def get_test_options():
+    """
+    Returns the list of OptionStructs that are used for testing.
+    """
+    #yapf: disable
+    options = [
+        #Boolean options
+        # Options format:
+        #   (bool, MA step, long_option)
+        OptionStruct("bool", "profile","--override-output-model-repository"),
+        OptionStruct("bool", "profile","--use-local-gpu-monitor"),
+        OptionStruct("bool", "profile","--collect-cpu-metrics"),
+        OptionStruct("bool", "profile","--perf-output"),
+        OptionStruct("bool", "profile","--run-config-search-disable"),
+        OptionStruct("bool", "profile","--reload-model-disable"),
+        #Int/Float options
+        # Options format:
+        #   (int/float, MA step, long_option, short_option, test_value, expected_default_value)
+        # The following options can be None:
+        #   short_option
+        #   expected_default_value
+        OptionStruct("int", "profile", "--client-max-retries", "-r", "125", "50"),
+        OptionStruct("int", "profile", "--duration-seconds", "-d", "10", "3"),
+        OptionStruct("int", "profile", "--perf-analyzer-timeout", None, "100", "600"),
+        OptionStruct("int", "profile", "--perf-analyzer-max-auto-adjusts", None, "100", "10"),
+        OptionStruct("int", "profile", "--run-config-search-max-concurrency", None, "100", "1024"),
+        OptionStruct("int", "profile", "--run-config-search-max-instance-count", None, "10", "5"),
+        OptionStruct("float", "profile", "--monitoring-interval", "-i", "10.0", "1.0"),
+        OptionStruct("float", "profile", "--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0)),
+        OptionStruct("int", "analyze", "--num-configs-per-model", None, "10", "3"),
+        OptionStruct("int", "analyze", "--num-top-model-configs", None, "10", "0"),
+        OptionStruct("int", "analyze", "--latency-budget", None, "200", None),
+        OptionStruct("int", "analyze", "--min-throughput", None, "300", None),
+        #String options
+        # Options format:
+        #   (string, MA step, long_flag, short_flag, test_value, expected_default_value, expected_failing_value)
+        # The following options can be None:
+        #   short_flag
+        #   expected_default_value
+        #   expected_failing_value
+        # For options with choices, list the test_values in a list of strings
+        OptionStruct("string", "profile", "--config-file", "-f", "baz", None, None),
+        OptionStruct("string", "profile", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
+        OptionStruct("string", "profile", "--output-model-repository-path", None, "./test_dir", os.path.join(os.getcwd(), "output_model_repository"), None),
+        OptionStruct("string", "profile", "--client-protocol", None, ["http", "grpc"], "grpc", "SHOULD_FAIL"),
+        OptionStruct("string", "profile", "--perf-analyzer-path", None, ".", "perf_analyzer", None),
+        OptionStruct("string", "profile", "--perf-output-path", None, ".", None, None),
+        OptionStruct("string", "profile", "--triton-docker-image", None, "test_image", DEFAULT_TRITON_DOCKER_IMAGE, None),
+        OptionStruct("string", "profile", "--triton-http-endpoint", None, "localhost:4000", "localhost:8000", None),
+        OptionStruct("string", "profile", "--triton-grpc-endpoint", None, "localhost:4001", "localhost:8001", None),
+        OptionStruct("string", "profile", "--triton-metrics-url", None, "localhost:4002", "http://localhost:8002/metrics", None),
+        OptionStruct("string", "profile", "--triton-server-path", None, "test_path", "tritonserver", None),
+        OptionStruct("string", "profile", "--triton-output-path", None, "test_path", None, None),
+        OptionStruct("string", "profile", "--triton-launch-mode", None, ["local", "docker", "remote","c_api"], "local", "SHOULD_FAIL"),
+        OptionStruct("string", "profile", "--triton-install-path", None, "test_path", "/opt/tritonserver", None),
+        OptionStruct("string", "analyze", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
+        OptionStruct("string", "analyze", "--export-path", "-e", "./test_dir", os.getcwd(), None),
+        OptionStruct("string", "analyze", "--filename-model-inference", None, "foo", "metrics-model-inference.csv", None),
+        OptionStruct("string", "analyze", "--filename-model-gpu", None, "foo", "metrics-model-gpu.csv", None),
+        OptionStruct("string", "analyze", "--filename-server-only", None, "foo", "metrics-server-only.csv", None),
+        OptionStruct("string", "analyze", "--config-file", "-f", "baz", None, None),
+        OptionStruct("string", "report", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
+        OptionStruct("string", "report", "--export-path", "-e", "./test_dir", os.getcwd(), None),
+        OptionStruct("string", "report", "--config-file", "-f", "baz", None, None),
+        #List of Strings Options:
+        # Options format:
+        #   (intlist/stringlist, MA step, long_flag, short_flag, test_value, expected_default_value)
+        # The following options can be None:
+        #   short_flag
+        #   expected_default_value
+        OptionStruct("intlist", "profile", "--batch-sizes", "-b", "2, 4, 6", "1"),
+        OptionStruct("intlist", "profile", "--concurrency", "-c", "1, 2, 3", None),
+        OptionStruct("stringlist", "profile", "--triton-docker-mounts", None, "a:b:c, d:e:f", None, extra_commands=["--triton-launch-mode", "docker"]),
+        OptionStruct("stringlist", "profile", "--gpus", None, "a, b, c", "all"),
+        OptionStruct("stringlist", "analyze", "--inference-output-fields", None, "a, b, c",
+            "model_name,batch_size,concurrency,model_config_path,instance_group,satisfies_constraints,perf_throughput,perf_latency_p99"),
+        OptionStruct("stringlist", "analyze", "--gpu-output-fields", None, "a, b, c",
+            "model_name,gpu_uuid,batch_size,concurrency,model_config_path,instance_group,satisfies_constraints,gpu_used_memory,gpu_utilization,gpu_power_usage"),
+        OptionStruct("stringlist", "analyze", "--server-output-fields", None, "a, b, c",
+            "model_name,gpu_uuid,gpu_used_memory,gpu_utilization,gpu_power_usage"),
+        # No OP Options:
+        # Option format:
+        # (noop, any MA step, long_flag)
+        # These commands arent tested directly but are here to ensure that
+        # the count is correct for all options in the config.
+        # Some of these are required to run the subcommand
+        # Others are yaml only options
+        OptionStruct("noop", "profile", "--model-repository"),
+        OptionStruct("noop", "profile", "--profile-models"),
+        OptionStruct("noop", "analyze", "--analysis-models"),
+        OptionStruct("noop", "report", "--report-model-configs"),
+        OptionStruct("noop", "report", "--output-formats", "-o", ["pdf", "csv", "png"], "pdf", "SHOULD_FAIL"),
+        OptionStruct("noop", "yaml_profile", "constraints"),
+        OptionStruct("noop", "yaml_profile", "objectives"),
+        OptionStruct("noop", "yaml_profile", "triton_server_flags"),
+        OptionStruct("noop", "yaml_profile", "perf_analyzer_flags"),
+        OptionStruct("noop", "yaml_profile", "triton_docker_labels"),
+        OptionStruct("noop", "yaml_profile", "triton_server_environment"),
+        OptionStruct("noop", "yaml_analyze", "constraints"),
+        OptionStruct("noop", "yaml_analyze", "objectives"),
+        OptionStruct("noop", "yaml_analyze", "plots"),
+    ]
+    #yapf: enable
+    return options
+
+
 class CLISubclass(CLI):
     """
     Subclass of CLI to overwrite the parse method.
@@ -221,110 +327,7 @@ class TestCLI(trc.TestResultCollector):
                          mocked_verify_args_report,
                          mocked_load_config_file_report):
 
-        #yapf: disable
-        options = [
-            #Boolean options
-            # Options format:
-            #   (bool, MA step, long_option)
-            OptionStruct("bool", "profile","--override-output-model-repository"),
-            OptionStruct("bool", "profile","--use-local-gpu-monitor"),
-            OptionStruct("bool", "profile","--collect-cpu-metrics"),
-            OptionStruct("bool", "profile","--perf-output"),
-            OptionStruct("bool", "profile","--run-config-search-disable"),
-            OptionStruct("bool", "profile","--reload-model-disable"),
-
-            #Int/Float options
-            # Options format:
-            #   (int/float, MA step, long_option, short_option, test_value, expected_default_value)
-            # The following options can be None:
-            #   short_option
-            #   expected_default_value
-            OptionStruct("int", "profile", "--client-max-retries", "-r", "125", "50"),
-            OptionStruct("int", "profile", "--duration-seconds", "-d", "10", "3"),
-            OptionStruct("int", "profile", "--perf-analyzer-timeout", None, "100", "600"),
-            OptionStruct("int", "profile", "--perf-analyzer-max-auto-adjusts", None, "100", "10"),
-            OptionStruct("int", "profile", "--run-config-search-max-concurrency", None, "100", "1024"),
-            OptionStruct("int", "profile", "--run-config-search-max-instance-count", None, "10", "5"),
-            OptionStruct("float", "profile", "--monitoring-interval", "-i", "10.0", "1.0"),
-            OptionStruct("float", "profile", "--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0)),
-            OptionStruct("int", "analyze", "--num-configs-per-model", None, "10", "3"),
-            OptionStruct("int", "analyze", "--num-top-model-configs", None, "10", "0"),
-            OptionStruct("int", "analyze", "--latency-budget", None, "200", None),
-            OptionStruct("int", "analyze", "--min-throughput", None, "300", None),
-
-            #String options
-            # Options format:
-            #   (string, MA step, long_flag, short_flag, test_value, expected_default_value, expected_failing_value)
-            # The following options can be None:
-            #   short_flag
-            #   expected_default_value
-            #   expected_failing_value
-            # For options with choices, list the test_values in a list of strings
-            OptionStruct("string", "profile", "--config-file", "-f", "baz", None, None),
-            OptionStruct("string", "profile", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
-            OptionStruct("string", "profile", "--output-model-repository-path", None, "./test_dir", os.path.join(os.getcwd(), "output_model_repository"), None),
-            OptionStruct("string", "profile", "--client-protocol", None, ["http", "grpc"], "grpc", "SHOULD_FAIL"),
-            OptionStruct("string", "profile", "--perf-analyzer-path", None, ".", "perf_analyzer", None),
-            OptionStruct("string", "profile", "--perf-output-path", None, ".", None, None),
-            OptionStruct("string", "profile", "--triton-docker-image", None, "test_image", DEFAULT_TRITON_DOCKER_IMAGE, None),
-            OptionStruct("string", "profile", "--triton-http-endpoint", None, "localhost:4000", "localhost:8000", None),
-            OptionStruct("string", "profile", "--triton-grpc-endpoint", None, "localhost:4001", "localhost:8001", None),
-            OptionStruct("string", "profile", "--triton-metrics-url", None, "localhost:4002", "http://localhost:8002/metrics", None),
-            OptionStruct("string", "profile", "--triton-server-path", None, "test_path", "tritonserver", None),
-            OptionStruct("string", "profile", "--triton-output-path", None, "test_path", None, None),
-            OptionStruct("string", "profile", "--triton-launch-mode", None, ["local", "docker", "remote","c_api"], "local", "SHOULD_FAIL"),
-            OptionStruct("string", "profile", "--triton-install-path", None, "test_path", "/opt/tritonserver", None),
-            OptionStruct("string", "analyze", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
-            OptionStruct("string", "analyze", "--export-path", "-e", "./test_dir", os.getcwd(), None),
-            OptionStruct("string", "analyze", "--filename-model-inference", None, "foo", "metrics-model-inference.csv", None),
-            OptionStruct("string", "analyze", "--filename-model-gpu", None, "foo", "metrics-model-gpu.csv", None),
-            OptionStruct("string", "analyze", "--filename-server-only", None, "foo", "metrics-server-only.csv", None),
-            OptionStruct("string", "analyze", "--config-file", "-f", "baz", None, None),
-            OptionStruct("string", "report", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
-            OptionStruct("string", "report", "--export-path", "-e", "./test_dir", os.getcwd(), None),
-            OptionStruct("string", "report", "--config-file", "-f", "baz", None, None),
-
-            #List of Strings Options:
-            # Options format:
-            #   (intlist/stringlist, MA step, long_flag, short_flag, test_value, expected_default_value)
-            # The following options can be None:
-            #   short_flag
-            #   expected_default_value
-            OptionStruct("intlist", "profile", "--batch-sizes", "-b", "2, 4, 6", "1"),
-            OptionStruct("intlist", "profile", "--concurrency", "-c", "1, 2, 3", None),
-            OptionStruct("stringlist", "profile", "--triton-docker-mounts", None, "a:b:c, d:e:f", None, extra_commands=["--triton-launch-mode", "docker"]),
-            OptionStruct("stringlist", "profile", "--gpus", None, "a, b, c", "all"),
-            OptionStruct("stringlist", "analyze", "--inference-output-fields", None, "a, b, c",
-                "model_name,batch_size,concurrency,model_config_path,instance_group,satisfies_constraints,perf_throughput,perf_latency_p99"),
-            OptionStruct("stringlist", "analyze", "--gpu-output-fields", None, "a, b, c",
-                "model_name,gpu_uuid,batch_size,concurrency,model_config_path,instance_group,satisfies_constraints,gpu_used_memory,gpu_utilization,gpu_power_usage"),
-            OptionStruct("stringlist", "analyze", "--server-output-fields", None, "a, b, c",
-                "model_name,gpu_uuid,gpu_used_memory,gpu_utilization,gpu_power_usage"),
-
-            # No OP Options:
-            # Option format:
-            # (noop, any MA step, long_flag)
-            # These commands arent tested directly but are here to ensure that
-            # the count is correct for all options in the config.
-            # Some of these are required to run the subcommand
-            # Others are yaml only options
-            OptionStruct("noop", "profile", "--model-repository"),
-            OptionStruct("noop", "profile", "--profile-models"),
-            OptionStruct("noop", "analyze", "--analysis-models"),
-            OptionStruct("noop", "report", "--report-model-configs"),
-            OptionStruct("noop", "report", "--output-formats", "-o", ["pdf", "csv", "png"], "pdf", "SHOULD_FAIL"),
-            OptionStruct("noop", "yaml_profile", "constraints"),
-            OptionStruct("noop", "yaml_profile", "objectives"),
-            OptionStruct("noop", "yaml_profile", "triton_server_flags"),
-            OptionStruct("noop", "yaml_profile", "perf_analyzer_flags"),
-            OptionStruct("noop", "yaml_profile", "triton_docker_labels"),
-            OptionStruct("noop", "yaml_profile", "triton_server_environment"),
-            OptionStruct("noop", "yaml_analyze", "constraints"),
-            OptionStruct("noop", "yaml_analyze", "objectives"),
-            OptionStruct("noop", "yaml_analyze", "plots"),
-        ]
-        #yapf: enable
-
+        options = get_test_options()
         all_tested_options_set = set()
 
         for option in options:
