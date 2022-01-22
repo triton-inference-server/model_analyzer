@@ -12,6 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This test exercises all of the cli options.
+# It does a basic test of the cli and help message.
+# Then the rest of the testing uses an OptionStruct, which holds all
+# of the data necessary to test a command, and feeds that to the
+# CLI parser. The result of the CLI parsing is compared against the
+# expected value for the CLI. Default values are also verified as well as
+# values that are expected to cause failures.
+
 from distutils.cmd import Command
 import os
 import sys
@@ -123,6 +131,9 @@ class CLIConfigReportStruct():
 
 
 class OptionStruct():
+    """
+    Struct that holds all of the data necessary to test a single command
+    """
 
     def __init__(self,
                  type,
@@ -130,14 +141,14 @@ class OptionStruct():
                  long_flag,
                  short_flag=None,
                  expected_value=None,
-                 default_value=None,
+                 expected_default_value=None,
                  expected_failing_value=None,
                  extra_commands=None):
 
         self.long_flag = long_flag
         self.short_flag = short_flag
         self.expected_value = expected_value
-        self.default_value = default_value
+        self.expected_default_value = expected_default_value
         self.expected_failing_value = expected_failing_value
         self.type = type
         self.extra_commands = extra_commands
@@ -224,10 +235,10 @@ class TestCLI(trc.TestResultCollector):
 
             #Int/Float options
             # Options format:
-            #   (int/float, MA step, long_option, short_option, test_value, default_value)
+            #   (int/float, MA step, long_option, short_option, test_value, expected_default_value)
             # The following options can be None:
             #   short_option
-            #   default_value
+            #   expected_default_value
             OptionStruct("int", "profile", "--client-max-retries", "-r", "125", "50"),
             OptionStruct("int", "profile", "--duration-seconds", "-d", "10", "3"),
             OptionStruct("int", "profile", "--perf-analyzer-timeout", None, "100", "600"),
@@ -243,10 +254,10 @@ class TestCLI(trc.TestResultCollector):
 
             #String options
             # Options format:
-            #   (string, MA step, long_flag, short_flag, test_value, default_value, expected_failing_value)
+            #   (string, MA step, long_flag, short_flag, test_value, expected_default_value, expected_failing_value)
             # The following options can be None:
             #   short_flag
-            #   default_value
+            #   expected_default_value
             #   expected_failing_value
             # For options with choices, list the test_values in a list of strings
             OptionStruct("string", "profile", "--config-file", "-f", "baz", None, None),
@@ -275,10 +286,10 @@ class TestCLI(trc.TestResultCollector):
 
             #List of Strings Options:
             # Options format:
-            #   (intlist/stringlist, MA step, long_flag, short_flag, test_value, default_value)
+            #   (intlist/stringlist, MA step, long_flag, short_flag, test_value, expected_default_value)
             # The following options can be None:
             #   short_flag
-            #   default_value
+            #   expected_default_value
             OptionStruct("intlist", "profile", "--batch-sizes", "-b", "2, 4, 6", "1"),
             OptionStruct("intlist", "profile", "--concurrency", "-c", "1, 2, 3", None),
             OptionStruct("stringlist", "profile", "--triton-docker-mounts", None, "a:b:c, d:e:f", None, extra_commands=["--triton-launch-mode", "docker"]),
@@ -351,7 +362,8 @@ class TestCLI(trc.TestResultCollector):
 
         self.assertEqual(
             cli_option_set, all_tested_options_set,
-            "The available options on the CLI does not match the available options tested."
+            "The available options for the CLI does not match the available options tested. "\
+            "If you recently added or removed a CLI option, please update the OptionStruct list above."
         )
 
     def _test_boolean_option(self, option_struct):
@@ -381,8 +393,8 @@ class TestCLI(trc.TestResultCollector):
         expected_value_string = option_struct.expected_value
         expected_value = self._convert_string_to_numeric(
             option_struct.expected_value)
-        default_value = None if option_struct.default_value == None else self._convert_string_to_numeric(
-            option_struct.default_value)
+        expected_default_value = None if option_struct.expected_default_value == None else self._convert_string_to_numeric(
+            option_struct.expected_default_value)
 
         long_option_with_underscores = self._convert_flag_to_use_underscores(
             long_option)
@@ -395,16 +407,16 @@ class TestCLI(trc.TestResultCollector):
                               expected_value_string,
                               long_option_with_underscores, expected_value)
 
-        if default_value is not None:
-            self._test_default_value(option_struct.cli_subcommand,
-                                     long_option_with_underscores,
-                                     default_value)
+        if expected_default_value is not None:
+            self._test_expected_default_value(option_struct.cli_subcommand,
+                                              long_option_with_underscores,
+                                              expected_default_value)
 
     def _test_string_option(self, option_struct):
         long_option = option_struct.long_flag
         short_option = option_struct.short_flag
         expected_value = option_struct.expected_value
-        default_value = option_struct.default_value
+        expected_default_value = option_struct.expected_default_value
         expected_failing_value = option_struct.expected_failing_value
 
         # This covers strings that have choices
@@ -426,10 +438,10 @@ class TestCLI(trc.TestResultCollector):
                                   expected_value, long_option_with_underscores,
                                   expected_value)
 
-            if default_value is not None:
-                self._test_default_value(option_struct.cli_subcommand,
-                                         long_option_with_underscores,
-                                         default_value)
+            if expected_default_value is not None:
+                self._test_expected_default_value(option_struct.cli_subcommand,
+                                                  long_option_with_underscores,
+                                                  expected_default_value)
 
             # Verify that a incorrect value causes a failure
             if expected_failing_value is not None:
@@ -442,22 +454,22 @@ class TestCLI(trc.TestResultCollector):
         long_option = option_struct.long_flag
         short_option = option_struct.short_flag
         expected_value = option_struct.expected_value
-        default_value = option_struct.default_value
+        expected_default_value = option_struct.expected_default_value
 
         # Convert expected and default values to proper types for comparison
         if option_struct.type == "intlist":
             expected_value_converted = self._convert_string_to_int_list(
                 expected_value)
-            if default_value is not None:
-                default_value_converted = self._convert_string_to_int_list(
-                    default_value)
+            if expected_default_value is not None:
+                expected_default_value_converted = self._convert_string_to_int_list(
+                    expected_default_value)
         else:
             expected_value_converted = expected_value.split(",")
             expected_value_converted = self._convert_string_to_string_list(
                 expected_value)
-            if default_value is not None:
-                default_value_converted = self._convert_string_to_string_list(
-                    default_value)
+            if expected_default_value is not None:
+                expected_default_value_converted = self._convert_string_to_string_list(
+                    expected_default_value)
 
         long_option_with_underscores = self._convert_flag_to_use_underscores(
             long_option)
@@ -471,10 +483,10 @@ class TestCLI(trc.TestResultCollector):
                               expected_value, long_option_with_underscores,
                               expected_value_converted)
 
-        if default_value is not None:
-            self._test_default_value(option_struct.cli_subcommand,
-                                     long_option_with_underscores,
-                                     default_value_converted)
+        if expected_default_value is not None:
+            self._test_expected_default_value(option_struct.cli_subcommand,
+                                              long_option_with_underscores,
+                                              expected_default_value_converted)
 
     # Helper methods
 
@@ -505,13 +517,14 @@ class TestCLI(trc.TestResultCollector):
                 long_option_with_underscores).value()
             self.assertEqual(option_value, expected_value)
 
-    def _test_default_value(self, cli_subcommand, long_option_with_underscores,
-                            default_value):
+    def _test_expected_default_value(self, cli_subcommand,
+                                     long_option_with_underscores,
+                                     expected_default_value):
         cli = cli_subcommand()
         _, config = cli.parse()
         option_value = config.get_config().get(
             long_option_with_underscores).default_value()
-        self.assertEqual(option_value, default_value)
+        self.assertEqual(option_value, expected_default_value)
 
     def _convert_flag_to_use_underscores(self, option):
         return option.lstrip("-").replace("-", "_")
