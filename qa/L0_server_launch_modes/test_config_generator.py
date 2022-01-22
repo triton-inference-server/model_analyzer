@@ -1,4 +1,4 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -68,6 +68,7 @@ class TestConfigGenerator:
         for launch_mode in self.launch_modes:
             self.config['triton_launch_mode'] = launch_mode
             self.set_triton_server_path(launch_mode, self.config)
+            self.set_triton_install_path(launch_mode, self.config)
 
             if launch_mode == 'c_api':
                 self.config['perf_output'] = True
@@ -90,7 +91,6 @@ class TestConfigGenerator:
                               'w') as f:
                         yaml.dump(self.config, f)
 
-
     def set_triton_server_path(self, launch_mode, config):
         """
         Helper function to set the 'triton_server_path' to something bogus
@@ -101,6 +101,17 @@ class TestConfigGenerator:
 
         if launch_mode != 'local':
             config['triton_server_path'] = '/path/to/nowhere'
+
+    def set_triton_install_path(self, launch_mode, config):
+        """
+        Helper function to set the 'triton_install_path' to something bogus
+            for all configuration except 'c_api'
+        This ensures only the 'c_api' launch mode uses 'triton_install_path'.
+        """
+        config.pop('triton_install_path', None)
+
+        if launch_mode != 'c_api':
+            config['triton_install_path'] = '/path/to/nowhere'
 
 
 if __name__ == '__main__':

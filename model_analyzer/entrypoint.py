@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@ from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
 from .config.input.config_command_analyze import ConfigCommandAnalyze
 from .config.input.config_command_report import ConfigCommandReport
-from model_analyzer.config.input.config_utils import binary_path_validator
+from model_analyzer.config.input.config_utils import \
+        binary_path_validator, file_path_validator
 import sys
 import os
 import logging
@@ -132,6 +133,8 @@ def get_server_handle(config, gpus):
             mounts=config.triton_docker_mounts,
             labels=config.triton_docker_labels)
     elif config.triton_launch_mode == 'c_api':
+        validate_triton_install_path(config)
+
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = os.path.abspath(
             config.output_model_repository_path)
@@ -165,6 +168,35 @@ def validate_triton_server_path(config):
     config_status = binary_path_validator(path)
     if config_status.status() == CONFIG_PARSER_FAILURE:
         raise TritonModelAnalyzerException(config_status.message())
+
+
+def validate_triton_install_path(config):
+    """
+    Validates that the value of 'triton_install_path':
+        is specified
+        exists
+        is a directory
+        contains more than one file
+    
+
+    Parameters
+    ----------
+    config : namespace
+        Arguments parsed from the CLI
+    """
+    path = config.get_config()['triton_install_path'].value()
+
+    # Check the file system
+    if not path or not os.path.exists(path) or not os.path.isdir(path):
+        raise TritonModelAnalyzerException(
+            f"triton_install_path {path} is not specified, does not exist, " \
+            "or is not a directory."
+        )
+
+    # Make sure that files exist in the install directory
+    if len(os.listdir(path)) == 0:
+        raise TritonModelAnalyzerException(
+            f"triton_install_path {path} should not be empty.")
 
 
 def get_triton_handles(config, gpus):
