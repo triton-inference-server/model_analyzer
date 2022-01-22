@@ -14,6 +14,7 @@
 
 from distutils.cmd import Command
 import os
+import sys
 import copy
 
 from model_analyzer.config.input.config_defaults import DEFAULT_TRITON_DOCKER_IMAGE
@@ -162,6 +163,20 @@ class TestCLIOptions(trc.TestResultCollector):
     """
     Tests the methods of the CLI class
     """
+
+    @patch('model_analyzer.cli.cli.ArgumentParser.print_help')
+    def test_help_message_no_args(self, mock_print_help):
+        """
+        Tests that model-analyzer prints the help message when no arguments are
+        given
+        """
+
+        sys.argv = ['/usr/local/bin/model-analyzer']
+
+        cli = CLI()
+
+        self.assertRaises(SystemExit, cli.parse)
+        mock_print_help.assert_called()
 
     def test_basic_cli_config_profile_options(self):
         """
