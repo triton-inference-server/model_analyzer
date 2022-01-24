@@ -203,8 +203,10 @@ class Analyzer:
         self._report_manager.export_detailed_reports()
 
     def _should_profile_multiple_models_concurrently(self):
-        return (self._config.run_config_profile_models_concurrently_enable and
-                len(self._config.profile_models) > 1)
+        # FIXME: TODO-MM: Disable until we support this feature
+        # return (self._config.run_config_profile_models_concurrently_enable and
+        #         len(self._config.profile_models) > 1)
+        return False
 
     def _get_profile_complete_string(self):
         profiled_model_list = list(

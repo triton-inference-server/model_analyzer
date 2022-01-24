@@ -484,16 +484,17 @@ class ConfigCommandProfile(ConfigCommand):
                         parser_args={'action': 'store_true'},
                         default_value=DEFAULT_RUN_CONFIG_SEARCH_DISABLE,
                         description="Disable run config search."))
-        self._add_config(
-            ConfigField(
-                'run_config_profile_models_concurrently_enable',
-                flags=['--run-config-profile-models-concurrently-enable'],
-                field_type=ConfigPrimitive(bool),
-                parser_args={'action': 'store_true'},
-                default_value=
-                DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE,
-                description=
-                "Enable the profiling of all supplied models concurrently."))
+        # FIXME: TODO-MM:  Disable until we support this feature
+        # self._add_config(
+        #     ConfigField(
+        #         'run_config_profile_models_concurrently_enable',
+        #         flags=['--run-config-profile-models-concurrently-enable'],
+        #         field_type=ConfigPrimitive(bool),
+        #         parser_args={'action': 'store_true'},
+        #         default_value=
+        #         DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE,
+        #         description=
+        #         "Enable the profiling of all supplied models concurrently."))
 
     def _add_triton_configs(self):
         """
