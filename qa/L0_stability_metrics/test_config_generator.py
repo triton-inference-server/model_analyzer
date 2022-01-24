@@ -58,7 +58,6 @@ class TestConfigGenerator:
         self.config['profile_models'] = self.models
 
         # Analyze config
-        self.config['summarize'] = False
         self.config['collect_cpu_metrics'] = True
         self.config['gpu_output_fields'] = [
             'model_name', 'batch_size', 'concurrency', 'gpu_used_memory',

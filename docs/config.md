@@ -69,7 +69,7 @@ model_repository: <string>
 profile_models: <comma-delimited-string-list>
 
 # Full path to directory to which to read and write checkpoints and profile data.
-[ checkpoint_directory: <string> | default: '.' ]
+[ checkpoint_directory: <string> | default: './checkpoints' ]
 
 # The directory to which the modela analyzer will save model config variants
 [ output_model_repository_path: <string> | default: 'output_model_repository' ]
@@ -78,16 +78,16 @@ profile_models: <comma-delimited-string-list>
 [ override_output_model_repository: <boolean> | default: false ]
 
 # Concurrency values to be used for the analysis
-[ concurrency: <comma-delimited-string|list|range> | default: 1 ]
+[ concurrency: <comma-delimited-string|list|range> ]
 
 # Batch size values to be used for the analysis
 [ batch_sizes: <comma-delimited-string|list|range> | default: 1 ]
 
 # Specifies the maximum number of retries for any retry attempt.
-[ max_retries: <int> | default: 100 ]
+[ client_max_retries: <int> | default: 50 ]
 
 # Specifies how long (seconds) to gather server-only metrics
-[ duration_seconds: <int> | default: 2 ]
+[ duration_seconds: <int> | default: 3 ]
 
 # Specify whether DCGM should be used by Model Analyzer to collect GPU metricss
 [ use_local_gpu_monitor: <bool> | default: False ]
@@ -104,11 +104,6 @@ profile_models: <comma-delimited-string-list>
 # The full path to the perf_analyzer binary executable
 [ perf_analyzer_path: <string> | default: perf_analyzer ]
 
-# Time interval in milliseconds between perf_analyzer measurements.
-# perf_analyzer will take measurements over all the requests completed within
-# this time interval.
-[ perf_measurement_window: <int> | default: 5000 ]
-
 # Perf analyzer timeout value in seconds.
 [ perf_analyzer_timeout: <int> | default: 600]
 
@@ -124,17 +119,23 @@ profile_models: <comma-delimited-string-list>
 # Maximum number of times perf_analyzer is launched with auto adjusted parameters in an attempt to profile a model
 [ perf_analyzer_max_auto_adjusts: <int> | default: 10 ]
 
+# Disables model loading and unloading in remote mode
+[ reload_model_disable: <bool> | default: false]
+
 # Triton Docker image tag used when launching using Docker mode
 [ triton_docker_image: <string> | default: nvcr.io/nvidia/tritonserver:21.12-py3 ]
 
 # Triton Server HTTP endpoint url used by Model Analyzer client. Will be ignored if server-launch-mode is not 'remote'".
 [ triton_http_endpoint: <string> | default: localhost:8000 ]
 
+# The full path to the parent directory of 'lib/libtritonserver.so. Only required when using triton_launch_mode=c_api.
+[ triton_install_path: <string> | default: /opt/tritonserver ]
+
 # Triton Server GRPC endpoint url used by Model Analyzer client. Will be ignored if server-launch-mode is not 'remote'".
 [ triton_grpc_endpoint: <string> | default: localhost:8001 ]
 
 # Triton Server metrics endpoint url used by Model Analyzer client. Will be ignored if server-launch-mode is not 'remote'".
-[ triton_metrics_url: <string> | default: localhost:8002 ]
+[ triton_metrics_url: <string> | default: http://localhost:8002/metrics ]
 
 # The full path to the tritonserver binary executable
 [ triton_server_path: <string> | default: tritonserver ]
@@ -145,10 +146,6 @@ profile_models: <comma-delimited-string-list>
 # List of strings containing the paths to the volumes to be mounted into the tritonserver docker 
 # containers launched by model-analyzer. Will be ignored in other launch modes
 [ triton_docker_mounts: <list of strings> ]
-
-# Dict of name=value pairs containing metadata for the tritonserve docker container 
-# launched in docker launch mode
-[ triton_docker_labels: <dict> ]
 
 # How Model Analyzer will launch triton. It should
 # be either "docker", "local", "remote" or "c_api".
@@ -195,6 +192,10 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 # Allows custom configuration of the environment variables for tritonserver instances
 # launched by model analyzer
 [ triton_server_environment: <dict> ]
+
+# Dict of name=value pairs containing metadata for the tritonserve docker container 
+# launched in docker launch mode
+[ triton_docker_labels: <dict> ]
 ```
 
 ## Config Options for `analyze`
@@ -216,9 +217,6 @@ analysis_models: <comma-delimited-string-list>
 
 # Export path to be used
 [ export_path: <string> | default: '.' ]
-
-# Generate summary of results
-[ summarize: <boolean>  | default: true ]
 
 # Number of top configs to show in summary plots
 [ num_configs_per_model: <int> | default: 3]

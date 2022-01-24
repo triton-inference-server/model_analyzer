@@ -209,7 +209,7 @@ fi
 
 # Run analyze because here we check the results not just the logs
 MODEL_ANALYZER_SUBCOMMAND="analyze"
-MODEL_ANALYZER_ARGS="-e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY --summarize False"
+MODEL_ANALYZER_ARGS="-e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --analysis-models $MODEL_NAMES"
 run_analyzer
 if [ $? -ne 0 ]; then

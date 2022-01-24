@@ -153,9 +153,8 @@ class Analyzer:
         # Create result tables, put top results and get stats
         self._result_manager.create_tables()
         self._result_manager.compile_and_sort_results()
-        if self._config.summarize:
-            self._report_manager.create_summaries()
-            self._report_manager.export_summaries()
+        self._report_manager.create_summaries()
+        self._report_manager.export_summaries()
 
         # Dump to tables and write to disk
         self._result_manager.tabulate_results()

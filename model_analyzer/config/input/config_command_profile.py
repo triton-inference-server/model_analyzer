@@ -192,6 +192,7 @@ class ConfigCommandProfile(ConfigCommand):
                 'use_local_gpu_monitor',
                 field_type=ConfigPrimitive(bool),
                 flags=['--use-local-gpu-monitor'],
+                parser_args={'action': 'store_true'},
                 default_value=DEFAULT_USE_LOCAL_GPU_MONITOR,
                 description=
                 'Specify whether GPU metrics should be monitored by local DCGM monitor. '
@@ -202,6 +203,7 @@ class ConfigCommandProfile(ConfigCommand):
                 'collect_cpu_metrics',
                 field_type=ConfigPrimitive(bool),
                 flags=['--collect-cpu-metrics'],
+                parser_args={'action': 'store_true'},
                 default_value=DEFAULT_COLLECT_CPU_METRICS,
                 description='Specify whether CPU metrics are collected or not'))
         self._add_config(
@@ -612,6 +614,7 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField(
                 'perf_output',
                 flags=['--perf-output'],
+                parser_args={'action': 'store_true'},
                 field_type=ConfigPrimitive(bool),
                 default_value=DEFAULT_PERF_OUTPUT_FLAG,
                 description=
@@ -629,6 +632,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 'perf_analyzer_max_auto_adjusts',
+                flags=['--perf-analyzer-max-auto-adjusts'],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_PERF_MAX_AUTO_ADJUSTS,
                 description="Maximum number of times perf_analyzer is "
