@@ -97,7 +97,7 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._pacg.set_last_results(measurements)
 
     def _generate_run_config(self, model_configs, perf_analyzer_config):
-        run_config = RunConfig(self._model_names, [model_configs],
+        run_config = RunConfig(','.join(self._model_names), [model_configs],
                                perf_analyzer_config, self._triton_server_env)
 
         return run_config
