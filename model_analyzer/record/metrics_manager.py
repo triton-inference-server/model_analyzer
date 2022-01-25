@@ -78,10 +78,10 @@ class MetricsManager:
         self._output_model_repo_path = config.output_model_repository_path
 
         if len(config.profile_models) != len(
-                set([model['model_name'] for model in config.profile_models])):
+                set([model._model_name for model in config.profile_models])):
             raise TritonModelAnalyzerException(
                 f"Duplicate model names detected: "
-                f"{[model['model_name'] for model in config.profile_models]}")
+                f"{[model._model_name for model in config.profile_models]}")
         self._first_config_variant = {}
 
         self._config = config
