@@ -75,3 +75,10 @@ class Report(ABC):
         filename : str
             The name of the report
         """
+
+    @abstractmethod
+    def get_file_extension(self):
+        """
+        Return the file extension for 
+        the type of report
+        """

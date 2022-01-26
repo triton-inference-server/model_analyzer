@@ -43,3 +43,10 @@ class PDFReport(HTMLReport):
         pdfkit.from_string(self.document(),
                            f'{filename}',
                            options={'quiet': ''})
+
+    def get_file_extension(self):
+        """
+        Return the file extension for 
+        the type of report
+        """
+        return "pdf"

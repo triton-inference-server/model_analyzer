@@ -175,3 +175,10 @@ class HTMLReport(Report):
         """
         with open(f"{filename}", 'w') as file:
             file.write(self.document())
+
+    def get_file_extension(self):
+        """
+        Return the file extension for 
+        the type of report
+        """
+        return "html"
