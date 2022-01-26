@@ -109,7 +109,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
             "model_analyzer.config.input.config_utils"
         ])
         self.os_mock.start()
+        # Required patch ordering here
+        # html_report must be patched before pdf_report
+        # Likely due to patching dealing with parent + child classes
         self.io_mock = MockIOMethods(mock_paths=[
+            "model_analyzer.reports.html_report",
             "model_analyzer.reports.pdf_report",
             "model_analyzer.state.analyzer_state_manager"
         ],
