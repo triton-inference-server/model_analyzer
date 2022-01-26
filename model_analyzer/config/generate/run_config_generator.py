@@ -70,8 +70,12 @@ class RunConfigGenerator(ConfigGeneratorInterface):
             self._models)
 
         for model_configs in model_configs_list:
-            self._pacg = PerfAnalyzerConfigGenerator(self._config,
-                                                     self._model_names,
+
+            # FIXME model_configs should always be a list regardless of single or multiple models, so this can be list comprehension?
+            #
+            model_names = [model_configs.get_field('name')]
+
+            self._pacg = PerfAnalyzerConfigGenerator(self._config, model_names,
                                                      self._model_pa_flags,
                                                      self._model_parameters)
 
@@ -97,6 +101,8 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._pacg.set_last_results(measurements)
 
     def _generate_run_config(self, model_configs, perf_analyzer_config):
+
+        # FIXME: why do we have to turn model_configs into an array? It should always be an array already
         run_config = RunConfig(','.join(self._model_names), [model_configs],
                                perf_analyzer_config, self._triton_server_env)
 
