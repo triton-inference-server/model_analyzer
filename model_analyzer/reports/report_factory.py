@@ -22,11 +22,17 @@ class ReportFactory:
     Factory that returns the correct report object
     """
 
+    PDF_PACKAGE = "wkhtmltopdf"
+
     @staticmethod
     def create_report():
-        if ReportFactory._is_apt_package_installed("wkhtmltopdf"):
+        if ReportFactory._is_apt_package_installed(
+                f"{ReportFactory.PDF_PACKAGE}"):
             return ReportFactory.create_pdf_report()
         else:
+            print(f"Warning: {ReportFactory.PDF_PACKAGE} is not installed. Pdf reports cannot be generated. "\
+                f"Html reports will be generated instead."
+                )
             return ReportFactory.create_html_report()
 
     @staticmethod
