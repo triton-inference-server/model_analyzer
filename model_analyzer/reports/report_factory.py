@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
 from .pdf_report import PDFReport
 from .html_report import HTMLReport
 import apt
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class ReportFactory:
@@ -30,8 +34,8 @@ class ReportFactory:
                 f"{ReportFactory.PDF_PACKAGE}"):
             return ReportFactory.create_pdf_report()
         else:
-            print(f"Warning: {ReportFactory.PDF_PACKAGE} is not installed. Pdf reports cannot be generated. "\
-                f"Html reports will be generated instead."
+            logging.warning(f"Warning: {ReportFactory.PDF_PACKAGE} is not installed. "\
+                f"Pdf reports cannot be generated. Html reports will be generated instead."
                 )
             return ReportFactory.create_html_report()
 
