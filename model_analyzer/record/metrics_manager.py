@@ -274,7 +274,8 @@ class MetricsManager:
         """
 
         model_name = run_config.model_name()
-        model_config_name = run_config.model_config().get_field('name')
+        # FIXME: MM-PHASE-1: Assuming all models are identical, so using first model's name
+        model_config_name = run_config.model_configs()[0].get_field('name')
         perf_config_str = run_config.perf_config().representation()
 
         results = self._state_manager.get_state_variable(
@@ -284,7 +285,9 @@ class MetricsManager:
         if model_name not in results:
             return False
         if not self._is_config_in_results(
-                run_config.model_config()._model_config, results[model_name]):
+                # FIXME: MM-PHASE-1: Assuming all models are identical, so using first model's name
+                run_config.model_configs()[0]._model_config,
+                results[model_name]):
             return False
         measurements = results[model_name][model_config_name][1]
 
@@ -329,9 +332,10 @@ class MetricsManager:
         perf_output_writer = None if \
             not self._config.perf_output else FileWriter(self._config.perf_output_path)
         perf_config = run_config.perf_config()
-        logger.info(f"Profiling model {perf_config['model-name']}...")
+        logger.info(f"Profiling model {perf_config['model-names']}...")
 
-        cpu_only = run_config.model_config().cpu_only()
+        # FIXME: MM-PHASE-1: Assuming all models are identical, so using first model's config
+        cpu_only = run_config.model_configs()[0].cpu_only()
         perf_config = run_config.perf_config()
 
         # Inform user CPU metric(s) are not being collected under CPU mode

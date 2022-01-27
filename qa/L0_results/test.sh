@@ -22,7 +22,7 @@ rm -rf results && mkdir -p results
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
-CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints"}
+CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2022_01_26"}
 QA_MODELS="vgg19_libtorch resnet50_libtorch"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
 EXPORT_PATH="`pwd`/results"

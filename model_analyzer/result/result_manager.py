@@ -433,7 +433,7 @@ class ResultManager:
         """
 
         perf_config = measurement.perf_config()
-        tmp_model_name = perf_config['model-name']
+        tmp_model_name = perf_config['model-names']
         batch_size = perf_config['batch-size']
         concurrency = perf_config['concurrency-range']
         satisfies = "Yes" if passes else "No"
