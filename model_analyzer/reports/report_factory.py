@@ -32,19 +32,19 @@ class ReportFactory:
     def create_report():
         if ReportFactory._is_apt_package_installed(
                 f"{ReportFactory.PDF_PACKAGE}"):
-            return ReportFactory.create_pdf_report()
+            return ReportFactory._create_pdf_report()
         else:
             logging.warning(f"Warning: {ReportFactory.PDF_PACKAGE} is not installed. "\
                 f"Pdf reports cannot be generated. Html reports will be generated instead."
                 )
-            return ReportFactory.create_html_report()
+            return ReportFactory._create_html_report()
 
     @staticmethod
-    def create_pdf_report():
+    def _create_pdf_report():
         return PDFReport()
 
     @staticmethod
-    def create_html_report():
+    def _create_html_report():
         return HTMLReport()
 
     @staticmethod
