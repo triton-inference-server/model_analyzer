@@ -233,13 +233,13 @@ for more details).
 
 ### Examples
 
-1. Generate detailed reports for a model configs of `resnet50_libtorch` called `resnet50_libtorch_i1` and `resnet50_libtorch_i2`. Read from `checkpoints` and write to `export_directory`.
+1. Generate detailed reports for a model configs of `resnet50_libtorch` called `resnet50_libtorch_config_1` and `resnet50_libtorch_config_2`. Read from `checkpoints` and write to `export_directory`.
 
   ```
-  $ model-analyzer --report-model-configs resnet50_libtorch_i1,resnet50_libtorch_i2 --checkpoint-directory checkpoints -e export_directory
+  $ model-analyzer --report-model-configs resnet50_libtorch_config_1,resnet50_libtorch_config_2 --checkpoint-directory checkpoints -e export_directory
   ```
 
-2. Generate detailed report for `resnet50_libtorch_i2` with a custom plot using YAML config file
+2. Generate detailed report for `resnet50_libtorch_config_2` with a custom plot using YAML config file
 
   ```
   $ model-analyzer report -f config.yaml
@@ -251,7 +251,7 @@ The contents of the `config.yaml` are shown below
   checkpoint_directory: ./checkpoints/
   export_path: './export_directory'
   report_model_configs:
-    resnet50_libtorch_i2:
+    resnet50_libtorch_config_2:
       plots:
         throughput_v_memory:
            title: Thoughput vs GPU Memory

@@ -752,7 +752,7 @@ class TestModelManager(trc.TestResultCollector):
 
         model_config = json_format.ParseDict(
             {
-                'name': 'model_i2',
+                'name': 'model_config_2',
                 'instance_group': [{
                     'kind': 'KIND_GPU',
                     'count': 2
