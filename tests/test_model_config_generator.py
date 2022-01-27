@@ -293,8 +293,14 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         self.mock_model_config.start()
         config = self._evaluate_config(args, yaml_content)
 
+        # Fake out a client that can return a 'model_config' dict with
+        # a valid name (only used by remote mode)
+        #
+        fake_client = MagicMock()
+        fake_client.get_model_config = lambda name, retry_count: {'name': name}
+
         mcg = ModelConfigGenerator(config, config.profile_models[0],
-                                   MagicMock())
+                                   fake_client)
         model_configs = []
         while not mcg.is_done():
             model_config = mcg.next_config()

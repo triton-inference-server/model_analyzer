@@ -39,6 +39,7 @@ class ModelConfigGenerator(ConfigGeneratorInterface):
         self._base_model = model
         self._base_model_name = model.model_name()
         self._model_name_index = 0
+        self._default_param_combo = {}
         self._configs = self._generate_model_configs()
 
     def is_done(self):
@@ -103,6 +104,9 @@ class ModelConfigGenerator(ConfigGeneratorInterface):
             for key, value in param_combo.items():
                 if value is not None:
                     model_config_dict[key] = value
+
+        model_config_dict['name'] = self._get_model_variant_name(param_combo)
+
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
         return model_config
 
@@ -121,14 +125,14 @@ class ModelConfigGenerator(ConfigGeneratorInterface):
             else:
                 param_combos = self._automatic_search_configs()
 
-        if not self._is_default_config_in_configs(param_combos):
-            self._add_default_config(param_combos)
+        if not self._is_default_combo_in_param_combos(param_combos):
+            self._add_default_combo(param_combos)
 
         return param_combos
 
     def _automatic_search_disabled_configs(self):
         """ Return the configs when we want to search but searching is disabled """
-        return [{}]
+        return [self._default_param_combo]
 
     def _automatic_search_configs(self):
         """ Search through automatic search variables to generate configs """
@@ -160,23 +164,22 @@ class ModelConfigGenerator(ConfigGeneratorInterface):
 
         return model_config
 
-    def _is_default_config_in_configs(self, configs):
-        return {} in configs
+    def _is_default_combo_in_param_combos(self, param_combos):
+        return self._default_param_combo in param_combos
 
-    def _add_default_config(self, configs):
-        # Add in an empty configuration, which will apply the default values
-        configs.append({})
+    def _add_default_combo(self, param_combos):
+        # Add in an empty combo at the start of the list, which will just apply the default values
+        #
+        param_combos.insert(0, self._default_param_combo)
 
     def _finalize_configs(self, configs):
         for config in configs:
-            model_tmp_name = self._base_model_name
-            if not self._remote_mode:
-                model_tmp_name = self._get_model_variant_name()
-
-            config.set_field('name', model_tmp_name)
             config.set_cpu_only(self._base_model.cpu_only())
 
-    def _get_model_variant_name(self):
-        variant_name = f'{self._base_model_name}_config{self._model_name_index}'
-        self._model_name_index += 1
+    def _get_model_variant_name(self, param_combo):
+        if param_combo is self._default_param_combo:
+            variant_name = f'{self._base_model_name}_config_default'
+        else:
+            variant_name = f'{self._base_model_name}_config_{self._model_name_index}'
+            self._model_name_index += 1
         return variant_name

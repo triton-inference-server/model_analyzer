@@ -1538,7 +1538,7 @@ profile_models:
         args = ['model-analyzer', 'report', '-f', 'path-to-config-file']
         yaml_content = """
         report_model_configs:
-            - test_model_i0
+            - test_model_config_0
         output_formats:
           - pdf
           - csv
@@ -1548,7 +1548,7 @@ profile_models:
         config = self._evaluate_config(args, yaml_content, subcommand='report')
         self.assertEqual(
             config.get_all_config()['report_model_configs']
-            [0].model_config_name(), 'test_model_i0')
+            [0].model_config_name(), 'test_model_config_0')
         self.assertEqual(config.get_all_config()['output_formats'],
                          ['pdf', 'csv', 'png'])
 
@@ -1556,8 +1556,8 @@ profile_models:
         args = ['model-analyzer', 'report', '-f', 'path-to-config-file']
         yaml_content = """
         report_model_configs:
-           - test_model_i0
-           - test_model_i1
+           - test_model_config_0
+           - test_model_config_1
         plots:
             throughput_v_latency:
                 title: Throughput vs. Latency
@@ -1569,10 +1569,10 @@ profile_models:
         config = self._evaluate_config(args, yaml_content, subcommand='report')
         self.assertEqual(
             config.get_all_config()['report_model_configs']
-            [0].model_config_name(), 'test_model_i0')
+            [0].model_config_name(), 'test_model_config_0')
         self.assertEqual(
             config.get_all_config()['report_model_configs']
-            [1].model_config_name(), 'test_model_i1')
+            [1].model_config_name(), 'test_model_config_1')
         expected_config_plot = {
             'throughput_v_latency': {
                 'title': 'Throughput vs. Latency',
@@ -1606,7 +1606,7 @@ profile_models:
         # Check individual plots
         yaml_content = """
         report_model_configs:
-            test_model_i0:
+            test_model_config_0:
                 plots:
                   model_specific_throughput_v_latency:
                     title: model specific title

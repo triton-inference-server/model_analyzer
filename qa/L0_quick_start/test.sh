@@ -35,7 +35,7 @@ model-analyzer analyze \
   exit_early_if_nonzero $?
 
 model-analyzer report \
-  --report-model-configs add_sub_config0,add_sub_config1 \
+  --report-model-configs add_sub_config_0,add_sub_config_1 \
   -e analysis_results ; \
   exit_early_if_nonzero $?
 

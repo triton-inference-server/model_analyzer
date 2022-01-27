@@ -715,32 +715,32 @@ class TestModelManager(trc.TestResultCollector):
 
         metrics_manager = MetricsManager()
 
-        model_i0_config = ModelConfig(
+        model_config_0 = ModelConfig(
             json_format.ParseDict(
                 {
-                    'name': 'model_i0',
+                    'name': 'model_config_0',
                     'instance_group': [{
                         'kind': 'KIND_GPU',
                         'count': 1
                     }]
                 }, model_config_pb2.ModelConfig()))
-        model_i1_config = ModelConfig(
+        model_config_1 = ModelConfig(
             json_format.ParseDict(
                 {
-                    'name': 'model_i1',
+                    'name': 'model_config_1',
                     'instance_group': [{
                         'kind': 'KIND_GPU',
                         'count': 2
                     }]
                 }, model_config_pb2.ModelConfig()))
         model_results = {
-            'model_i0': (model_i0_config,),
-            'model_i1': (model_i1_config,)
+            'model_config_0': (model_config_0,),
+            'model_config_1': (model_config_1,)
         }
 
         model_config = json_format.ParseDict(
             {
-                'name': 'model_i0',
+                'name': 'model_config_0',
                 'instance_group': [{
                     'kind': 'KIND_GPU',
                     'count': 1
@@ -764,7 +764,7 @@ class TestModelManager(trc.TestResultCollector):
 
         model_config = json_format.ParseDict(
             {
-                'name': 'model_i1',
+                'name': 'model_config_1',
                 'max_batch_size': 1
             }, model_config_pb2.ModelConfig())
         self.assertEqual(
