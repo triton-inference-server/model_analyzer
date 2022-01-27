@@ -67,7 +67,8 @@ class TestConfigGenerator:
         args = parser.parse_args()
         self.config = {}
         self.config['report_model_configs'] = [
-            f"{model}_i0" for model in args.report_model_configs.split(',')
+            f"{model}_config_0"
+            for model in args.report_model_configs.split(',')
         ]
         self.config['output_format'] = ['pdf']
         with open('config-detailed-reports.yml', 'w+') as f:

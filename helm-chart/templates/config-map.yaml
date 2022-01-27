@@ -60,4 +60,4 @@ data:
     ######################
 
     report_model_configs:
-      - add_sub_i0
+      - add_sub_config_default

@@ -183,22 +183,16 @@ class ModelConfig:
         model_config_bytes = text_format.MessageToBytes(self._model_config)
         # Create current variant model as symlinks to first variant model
         if first_variant_model_path is not None:
-            src_model_name = Path(src_model_path).name
-            first_variant_model_name = Path(first_variant_model_path).name
-
-            # If the model files have been copied once, do not copy it again
-            if re.search(f'^{src_model_name}_config\d+$',
-                         first_variant_model_name):
-                for file in os.listdir(first_variant_model_path):
-                    # Do not copy the config.pbtxt file
-                    if file == 'config.pbtxt':
-                        continue
-                    else:
-                        os.symlink(
-                            os.path.join(
-                                os.path.relpath(first_variant_model_path,
-                                                model_path), file),
-                            os.path.join(model_path, file))
+            for file in os.listdir(first_variant_model_path):
+                # Do not copy the config.pbtxt file
+                if file == 'config.pbtxt':
+                    continue
+                else:
+                    os.symlink(
+                        os.path.join(
+                            os.path.relpath(first_variant_model_path,
+                                            model_path), file),
+                        os.path.join(model_path, file))
         else:
             # Create first variant model as copy of source model
             copy_tree(src_model_path, model_path)

@@ -132,7 +132,7 @@ class TestOutputValidator:
             end_of_model_name = log_contents.find('...', token_idx)
             model_name = log_contents[token_idx +
                                       len('Profiling model '):end_of_model_name]
-            found_models_count[model_name.rsplit('_', 1)[0]] += 1
+            found_models_count[model_name.rsplit('_', 2)[0]] += 1
 
         # resnet50 libtorch normally has 4 runs:
         #   ([2 models, one of which is default] x [2 concurrencies])

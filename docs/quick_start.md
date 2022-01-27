@@ -71,18 +71,18 @@ Here is some sample output:
 ...
 2021-11-11 19:57:22.638 INFO[run_search.py:292] [Search Step] Concurrency set to 1. Instance count set to 1, and dynamic batching is disabled.
 2021-11-11 19:57:22.662 INFO[server_local.py:99] Triton Server started.
-2021-11-11 19:57:24.821 INFO[client.py:83] Model add_sub_i0 loaded.
-2021-11-11 19:57:24.822 INFO[model_manager.py:221] Profiling model add_sub_i0...
+2021-11-11 19:57:24.821 INFO[client.py:83] Model add_sub_config_default loaded.
+2021-11-11 19:57:24.822 INFO[model_manager.py:221] Profiling model add_sub_config_default...
 2021-11-11 19:57:39.862 INFO[server_local.py:120] Stopped Triton Server.
 2021-11-11 19:57:39.863 INFO[run_search.py:292] [Search Step] Concurrency set to 2. Instance count set to 1, and dynamic batching is disabled.
 2021-11-11 19:57:39.883 INFO[server_local.py:99] Triton Server started.
-2021-11-11 19:57:42.25 INFO[client.py:83] Model add_sub_i0 loaded.
-2021-11-11 19:57:42.26 INFO[model_manager.py:221] Profiling model add_sub_i0...
+2021-11-11 19:57:42.25 INFO[client.py:83] Model add_sub_config_default loaded.
+2021-11-11 19:57:42.26 INFO[model_manager.py:221] Profiling model add_sub_config_default...
 2021-11-11 19:57:53.100 INFO[server_local.py:120] Stopped Triton Server.
 2021-11-11 19:57:53.101 INFO[run_search.py:292] [Search Step] Concurrency set to 4. Instance count set to 1, and dynamic batching is disabled.
 2021-11-11 19:57:53.121 INFO[server_local.py:99] Triton Server started.
-2021-11-11 19:57:55.261 INFO[client.py:83] Model add_sub_i0 loaded.
-2021-11-11 19:57:55.262 INFO[model_manager.py:221] Profiling model add_sub_i0...
+2021-11-11 19:57:55.261 INFO[client.py:83] Model add_sub_config_default loaded.
+2021-11-11 19:57:55.262 INFO[model_manager.py:221] Profiling model add_sub_config_default...
 2021-11-11 19:58:06.337 INFO[server_local.py:120] Stopped Triton Server.
 ...
 ```
@@ -135,11 +135,11 @@ model config variant in detail. For example, it can show you the latency
 breakdown of your model to help you identify potential bottlenecks in your model
 performance. The detailed reports also contain other configurable plots and a
 table of measurements taken of that particular config. You can generate a
-detailed report for the two `add_sub` model configs `add_sub_i0` and
-`add_sub_i1` using:
+detailed report for the two `add_sub` model configs `add_sub_config_default` and
+`add_sub_config_0` using:
 
 ```
-$ model-analyzer report --report-model-configs add_sub_i0,add_sub_i1 -e analysis_results 
+$ model-analyzer report --report-model-configs add_sub_config_default,add_sub_config_0 -e analysis_results 
 ```
 
 This will create directories named after each of the model configs under
@@ -158,10 +158,10 @@ $HOME
                               .
                               .
                               |--- detailed
-                                       |--- add_sub_i0
+                                       |--- add_sub_config_default
                                        |        |--- detailed_report.pdf
                                        |
-                                       |--- add_sub_i1
+                                       |--- add_sub_config_0
                                                 |--- detailed_report.pdf
 
 ```

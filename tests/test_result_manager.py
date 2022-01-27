@@ -57,9 +57,9 @@ class TestResultManager(trc.TestResultCollector):
 
         Models (Inference):
         Model     Model Config Path   backend_parameter/add_sub_key_1   backend_parameter/add_sub_key_2  
-        add_sub   add_sub_config2     add_sub_value_1                   add_sub_value_2                  
-        add_sub   add_sub_config0     add_sub_value_1                   add_sub_value_2                  
-        add_sub   add_sub_config1     add_sub_value_1                   add_sub_value_2                  
+        add_sub   add_sub_config_2    add_sub_value_1                   add_sub_value_2                  
+        add_sub   add_sub_config_0    add_sub_value_1                   add_sub_value_2                  
+        add_sub   add_sub_config_1    add_sub_value_1                   add_sub_value_2                  
 
         Each row of the metrics model inference table corresponds to one model
         config variant.
@@ -76,12 +76,12 @@ class TestResultManager(trc.TestResultCollector):
 
         Models (Inference):
         Model       Model Config Path   backend_parameter/add_sub_key_1   backend_parameter/add_sub_key_2   backend_parameter/add_sub_2_key_1   backend_parameter/add_sub_2_key_2  
-        add_sub     add_sub_config2     add_sub_value_1                   add_sub_value_2                   None                                None                               
-        add_sub     add_sub_config0     add_sub_value_1                   add_sub_value_2                   None                                None                               
-        add_sub     add_sub_config1     add_sub_value_1                   add_sub_value_2                   None                                None                               
-        add_sub_2   add_sub_2_config2   None                              None                              add_sub_2_value_1                   add_sub_2_value_2                  
-        add_sub_2   add_sub_2_config1   None                              None                              add_sub_2_value_1                   add_sub_2_value_2                  
-        add_sub_2   add_sub_2_config0   None                              None                              add_sub_2_value_1                   add_sub_2_value_2       
+        add_sub     add_sub_config_2    add_sub_value_1                   add_sub_value_2                   None                                None                               
+        add_sub     add_sub_config_0    add_sub_value_1                   add_sub_value_2                   None                                None                               
+        add_sub     add_sub_config_1    add_sub_value_1                   add_sub_value_2                   None                                None                               
+        add_sub_2   add_sub_2_config_2  None                              None                              add_sub_2_value_1                   add_sub_2_value_2                  
+        add_sub_2   add_sub_2_config_1  None                              None                              add_sub_2_value_1                   add_sub_2_value_2                  
+        add_sub_2   add_sub_2_config_0  None                              None                              add_sub_2_value_1                   add_sub_2_value_2       
         """
 
         args = ['model-analyzer', 'analyze', '-f', 'config.yml']
