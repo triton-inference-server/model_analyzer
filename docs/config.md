@@ -163,11 +163,7 @@ profile_models: <comma-delimited-string-list>
 
 # Disables automatic config search
 [ run_config_search_disable: <bool> | default: false ]
-```
-# Enables profiling models concurrently - FIXME: TODO-MM: removed until this feature is supported
-[ run_config_profile_models_concurrently_enable: <bool> | default: false ]
 
-```yaml
 # Specify path to config yaml file
 [ config_file: <string> ]
 ```
