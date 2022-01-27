@@ -548,14 +548,14 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1, 2],
             'kind': ["KIND_GPU"],
             'batching': [0],
-            'batch_sizes': [1],
+            'batch_sizes': [1, 2],
             'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8]
         }, {
             'instances': [1],
             'kind': ["KIND_CPU"],
             'batching': [None],
-            'batch_sizes': [1],
+            'batch_sizes': [1, 2],
             'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8]
         }]
@@ -565,6 +565,7 @@ class TestModelManager(trc.TestResultCollector):
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 2
             run_config_search_disable: False
+            batch_sizes: 1,2
             """)
 
         with patch.object(MetricsManagerSubclass,
