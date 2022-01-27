@@ -17,7 +17,7 @@ from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.result.result_table import ResultTable
-from .pdf_report import PDFReport
+from .report_factory import ReportFactory
 
 import os
 from collections import defaultdict
@@ -129,15 +129,16 @@ class ReportManager:
 
     def export_summaries(self):
         """
-        Write a PDF summary to disk
+        Write a summary to disk
         """
 
         for report_key, summary in self._summaries.items():
             model_report_dir = os.path.join(self._reports_export_directory,
                                             'summaries', report_key)
             os.makedirs(model_report_dir, exist_ok=True)
-            output_filename = os.path.join(model_report_dir,
-                                           'result_summary.pdf')
+            output_filename = os.path.join(
+                model_report_dir,
+                f'result_summary.{summary.get_file_extension()}')
             logger.info(f"Exporting Summary Report to {output_filename}...")
             summary.write_report(filename=output_filename)
 
@@ -158,15 +159,16 @@ class ReportManager:
 
     def export_detailed_reports(self):
         """
-        Write a detailed report PDF to disk
+        Write a detailed report to disk
         """
 
         for report_key, report in self._detailed_reports.items():
             model_report_dir = os.path.join(self._reports_export_directory,
                                             'detailed', report_key)
             os.makedirs(model_report_dir, exist_ok=True)
-            output_filename = os.path.join(model_report_dir,
-                                           'detailed_report.pdf')
+            output_filename = os.path.join(
+                model_report_dir,
+                f'detailed_report.{report.get_file_extension()}')
             logger.info(f"Exporting Detailed Report to {output_filename}...")
             report.write_report(filename=output_filename)
 
@@ -219,7 +221,7 @@ class ReportManager:
         Builder method for a detailed report
         """
 
-        detailed_report = PDFReport()
+        detailed_report = ReportFactory.create_report()
 
         report_key = report_model_config.model_config_name()
         model_config, _ = self._detailed_report_data[report_key]
@@ -286,7 +288,7 @@ class ReportManager:
         report.
         """
 
-        summary = PDFReport()
+        summary = ReportFactory.create_report()
 
         total_measurements = statistics.total_measurements(report_key)
         total_configurations = statistics.total_configurations(report_key)

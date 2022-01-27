@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -74,4 +74,11 @@ class Report(ABC):
         ----------
         filename : str
             The name of the report
+        """
+
+    @abstractmethod
+    def get_file_extension(self):
+        """
+        Return the file extension for 
+        the type of report
         """
