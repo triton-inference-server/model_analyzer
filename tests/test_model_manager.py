@@ -542,6 +542,9 @@ class TestModelManager(trc.TestResultCollector):
         This test hardcodes the 'throughput' to 1, so for all model
         configs the gain will be invalid and it will only try 4 
         concurrencies of (1,2,4,8) despite max_concurrency=128
+
+        This test also has multiple batch sizes to make sure that hitting
+        an early exit on one doesn't cause the next one to be skipped
         """
 
         expected_ranges = [{
