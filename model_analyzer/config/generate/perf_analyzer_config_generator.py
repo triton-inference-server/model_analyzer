@@ -85,8 +85,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def next_config(self):
         """ Returns the next generated config """
-        while (1):
-            self._live = True
+        self._live = True
+        while True:
             config = self._configs[self._curr_config_index][
                 self._curr_concurrency_index]
             yield (config)
