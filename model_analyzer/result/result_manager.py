@@ -750,17 +750,15 @@ class ResultManager:
         if not model_name:
             return
 
-        found = False
         for result in results:
             if result.model_config().get_field(
                     'name') == f"{model_name}_config_default":
-                found = True
-        if not found:
-            for result in result_heap.results():
-                if result.model_config().get_field(
-                        'name') == f"{model_name}_config_default":
-                    results.append(result)
-                    break
+                return
+        for result in result_heap.results():
+            if result.model_config().get_field(
+                    'name') == f"{model_name}_config_default":
+                results.append(result)
+                return
 
     def get_result_statistics(self):
         """
