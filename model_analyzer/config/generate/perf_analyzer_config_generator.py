@@ -54,6 +54,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._curr_config_index = 0
         self._configs = []
 
+        # Flag to indicate we have started to return results
+        #
+        self._live = False
+
         self._last_results = ["valid"]
         self._all_results = []
 
@@ -81,14 +85,13 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def next_config(self):
         """ Returns the next generated config """
-        if self._done_walking_concurrencies():
-            self._step_config()
+        while (1):
+            self._live = True
+            config = self._configs[self._curr_config_index][
+                self._curr_concurrency_index]
+            yield (config)
 
-        config = self._configs[self._curr_config_index][
-            self._curr_concurrency_index]
-
-        self._step_concurrency()
-        return config
+            self._step()
 
     def set_last_results(self, measurements):
         """ 
@@ -153,6 +156,12 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         return perf_config_params
 
+    def _step(self):
+        if self._done_walking_concurrencies():
+            self._step_config()
+        else:
+            self._step_concurrency()
+
     def _step_config(self):
         self._curr_config_index += 1
         self._curr_concurrency_index = 0
@@ -162,15 +171,16 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._curr_concurrency_index += 1
 
     def _done_walking(self):
-        return self._done_walking_configs(
-        ) and self._done_walking_concurrencies()
+        return self._live \
+           and self._done_walking_configs() \
+           and self._done_walking_concurrencies()
 
     def _done_walking_configs(self):
         return len(self._configs) == self._curr_config_index + 1
 
     def _done_walking_concurrencies(self):
-        return (len(self._concurrencies) == self._curr_concurrency_index
-               ) or not self._throughput_gain_valid()
+        return (len(self._concurrencies) == self._curr_concurrency_index +
+                1) or not self._throughput_gain_valid()
 
     def _last_results_erroneous(self):
         return self._last_results is None or self._last_results[0] is None

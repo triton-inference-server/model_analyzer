@@ -75,10 +75,10 @@ class ModelManager:
                                  models=models,
                                  client=self._client)
 
-        run_config = rcg.next_config()
+        run_config_generator = rcg.next_config()
         while not rcg.is_done() and not self._state_manager.exiting():
             measurement = self._metrics_manager.execute_run_config(
-                next(run_config))
+                next(run_config_generator))
             rcg.set_last_results([measurement])
 
         # Reset the server args to global config

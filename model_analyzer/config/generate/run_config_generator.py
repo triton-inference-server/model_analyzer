@@ -77,9 +77,9 @@ class RunConfigGenerator(ConfigGeneratorInterface):
                                                      model_config_names,
                                                      self._model_pa_flags,
                                                      self._model_parameters)
-
+            perf_analyzer_config_generator = self._pacg.next_config()
             while not self._pacg.is_done():
-                perf_analyzer_config = self._pacg.next_config()
+                perf_analyzer_config = next(perf_analyzer_config_generator)
                 run_config = self._generate_run_config(model_configs,
                                                        perf_analyzer_config)
 
