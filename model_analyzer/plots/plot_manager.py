@@ -90,7 +90,7 @@ class PlotManager:
             if plots_key in self._constraints:
                 constraints = self._constraints[plots_key]
             for result in self._result_manager.top_n_results(
-                    model_name=model_name, n=num_results):
+                    model_name=model_name, n=num_results, include_default=True):
                 if result.model_config().cpu_only():
                     if plot_config.y_axis() == 'gpu_used_memory':
                         plot_name, plot_config_dict = list(

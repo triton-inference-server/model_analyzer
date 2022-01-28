@@ -34,6 +34,7 @@ from .common.test_utils import construct_measurement
 from .common import test_result_collector as trc
 
 import unittest
+from unittest.mock import MagicMock, patch
 
 from .common.test_utils import convert_to_bytes
 
@@ -221,6 +222,75 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 self.assertEqual(current_row[model_name_index], f"model_{10-i}")
                 self.assertGreaterEqual(current_row[throughput_index],
                                         next_row[throughput_index])
+
+    @patch(
+        'model_analyzer.plots.plot_manager.PlotManager._create_update_simple_plot'
+    )
+    @patch('model_analyzer.result.result_table.ResultTable.insert_row_by_index')
+    def test_summary_default_within_top(self, add_table_fn, add_plot_fn):
+        '''
+        Test summary report generation when default is in the top n configs
+        
+        Creates some results where the default config is within the top n configs, 
+        and then confirms that the number of entries added to plots and tables
+        is correct
+        '''
+
+        default_within_top = True
+        top_n = 3
+        self._test_summary_counts(add_table_fn, add_plot_fn, default_within_top,
+                                  top_n)
+
+    @patch(
+        'model_analyzer.plots.plot_manager.PlotManager._create_update_simple_plot'
+    )
+    @patch('model_analyzer.result.result_table.ResultTable.insert_row_by_index')
+    def test_summary_default_not_within_top(self, add_table_fn, add_plot_fn):
+        '''
+        Test summary report generation when default is not in the top n configs
+        
+        Creates some results where the default config is not within the top n configs, 
+        and then confirms that the number of entries added to plots and tables
+        is correct such that it includes the default config data
+        '''
+        default_within_top = False
+        top_n = 3
+        self._test_summary_counts(add_table_fn, add_plot_fn, default_within_top,
+                                  top_n)
+
+    def _test_summary_counts(self, add_table_fn, add_plot_fn,
+                             default_within_top, top_n):
+        '''
+        Helper function to test creating summary reports and confirming that the number
+        of entries added to plots and tables is as expected
+        '''
+        num_plots_in_summary_report = 2
+        num_tables_in_summary_report = 1
+        expected_config_count = top_n + 1 if default_within_top else top_n
+        expected_plot_count = num_plots_in_summary_report * expected_config_count
+        expected_table_count = num_tables_in_summary_report * expected_config_count
+
+        self._init_managers("test_model1", num_configs_per_model=top_n)
+        result_comparator = ResultComparator(
+            metric_objectives={"perf_throughput": 10})
+        avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
+        for i in range(10):
+            p99 = 20 - i if default_within_top else 20 + i
+            avg_non_gpu_metrics = {
+                "perf_throughput": 100 + 10 * i,
+                "perf_latency_p99": p99,
+                "cpu_used_ram": 1000
+            }
+            name = f"test_model1_config_{i}"
+            if not i:
+                name = f"test_model1_config_default"
+            self._add_result_measurement(name, "test_model1", avg_gpu_metrics,
+                                         avg_non_gpu_metrics, result_comparator)
+        self.result_manager.compile_and_sort_results()
+        self.report_manager.create_summaries()
+
+        self.assertEqual(expected_plot_count, add_plot_fn.call_count)
+        self.assertEqual(expected_table_count, add_table_fn.call_count)
 
     def tearDown(self):
         self.matplotlib_mock.stop()

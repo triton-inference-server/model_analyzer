@@ -184,9 +184,12 @@ class ReportManager:
         ]
 
         for model_name in model_names:
-            for result in self._result_manager.top_n_results(
-                    model_name=model_name,
-                    n=self._config.num_configs_per_model):
+            top_results = self._result_manager.top_n_results(
+                model_name=model_name,
+                n=self._config.num_configs_per_model,
+                include_default=True)
+
+            for result in top_results:
                 model_config = result.model_config()
                 for measurement in result.top_n_measurements(n=1):
                     self._summary_data[model_name].append(

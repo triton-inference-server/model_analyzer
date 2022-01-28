@@ -358,7 +358,7 @@ class ResultManager:
             model_config_data = results[model_name][model_config_name]
             return model_config_data[0], list(model_config_data[1].values())
 
-    def top_n_results(self, model_name=None, n=-1):
+    def top_n_results(self, model_name=None, n=-1, include_default=False):
         """
         Parameters
         ----------
@@ -370,7 +370,11 @@ class ResultManager:
             The number of  top results
             to retrieve. Returns all by 
             default
-
+        include_default : bool
+            If true, the model's default config results will
+            be included in the returned results. In the case
+            that the default isn't one of the top n results,
+            then n+1 results will be returned
         Returns
         -------
         list of ModelResults
@@ -382,7 +386,12 @@ class ResultManager:
             result_heap = self._per_model_sorted_results[model_name]
         else:
             result_heap = self._across_model_sorted_results
-        return result_heap.top_n_results(n)
+        results = result_heap.top_n_results(n)
+
+        if include_default:
+            self._add_default_to_results(model_name, results, result_heap)
+
+        return results
 
     def tabulate_results(self):
         """
@@ -732,6 +741,24 @@ class ResultManager:
             writer.write(
                 table.to_formatted_string(separator=column_separator,
                                           ignore_widths=ignore_widths) + "\n\n")
+
+    def _add_default_to_results(self, model_name, results, result_heap):
+        '''
+        If default config is already in results, keep it there. Else, find and
+        add it from the result heap
+        '''
+        if not model_name:
+            return
+
+        for result in results:
+            if result.model_config().get_field(
+                    'name') == f"{model_name}_config_default":
+                return
+        for result in result_heap.results():
+            if result.model_config().get_field(
+                    'name') == f"{model_name}_config_default":
+                results.append(result)
+                return
 
     def get_result_statistics(self):
         """
