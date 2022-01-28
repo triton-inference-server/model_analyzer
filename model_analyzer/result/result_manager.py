@@ -743,6 +743,13 @@ class ResultManager:
                                           ignore_widths=ignore_widths) + "\n\n")
 
     def _add_default_to_results(self, model_name, results, result_heap):
+        '''
+        If default config is already in results, keep it there. Else, find and
+        add it from the result heap
+        '''
+        if not model_name:
+            return
+
         found = False
         for result in results:
             if result.model_config().get_field(
