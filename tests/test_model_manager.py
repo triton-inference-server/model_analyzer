@@ -542,20 +542,23 @@ class TestModelManager(trc.TestResultCollector):
         This test hardcodes the 'throughput' to 1, so for all model
         configs the gain will be invalid and it will only try 4 
         concurrencies of (1,2,4,8) despite max_concurrency=128
+
+        This test also has multiple batch sizes to make sure that hitting
+        an early exit on one doesn't cause the next one to be skipped
         """
 
         expected_ranges = [{
             'instances': [1, 2],
             'kind': ["KIND_GPU"],
             'batching': [0],
-            'batch_sizes': [1],
+            'batch_sizes': [1, 2],
             'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8]
         }, {
             'instances': [1],
             'kind': ["KIND_CPU"],
             'batching': [None],
-            'batch_sizes': [1],
+            'batch_sizes': [1, 2],
             'max_batch_size': [8],
             'concurrency': [1, 2, 4, 8]
         }]
@@ -565,6 +568,7 @@ class TestModelManager(trc.TestResultCollector):
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 2
             run_config_search_disable: False
+            batch_sizes: 1,2
             """)
 
         with patch.object(MetricsManagerSubclass,

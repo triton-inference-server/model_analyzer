@@ -331,8 +331,9 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             config.profile_models[0].parameters())
 
         perf_analyzer_configs = []
+        pacg_generator = pacg.next_config()
         while not pacg.is_done():
-            perf_analyzer_configs.append(pacg.next_config())
+            perf_analyzer_configs.append(next(pacg_generator))
 
         self.assertTrue(len(perf_analyzer_configs) > 0)
 
@@ -390,8 +391,9 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             config.profile_models[0].parameters())
 
         perf_analyzer_configs = []
+        pacg_generator = pacg.next_config()
         while not pacg.is_done():
-            perf_analyzer_configs.append(pacg.next_config())
+            perf_analyzer_configs.append(next(pacg_generator))
 
         self.assertEqual(len(expected_configs), len(perf_analyzer_configs))
         for i in range(len(expected_configs)):

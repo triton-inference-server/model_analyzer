@@ -138,9 +138,9 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         rcg = RunConfigGenerator(config, config.profile_models, MagicMock())
 
         run_configs = []
-        rcg_config = rcg.next_config()
+        rcg_config_generator = rcg.next_config()
         while not rcg.is_done():
-            run_configs.append(next(rcg_config))
+            run_configs.append(next(rcg_config_generator))
 
         self.assertEqual(expected_config_count, len(set(run_configs)))
 

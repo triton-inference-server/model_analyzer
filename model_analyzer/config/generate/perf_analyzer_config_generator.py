@@ -45,7 +45,19 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         model_parameters: Dict
             model constraints for batch_sizes and/or concurrency
         """
+
+        # All configs are pregenerated in _configs[][]
+        # Indexed as follows:
+        #    _configs[_curr_config_index][_curr_concurrency_index]
+        #
+        self._curr_concurrency_index = 0
         self._curr_config_index = 0
+        self._configs = []
+
+        # Flag to indicate we have started to return results
+        #
+        self._live = False
+
         self._last_results = ["valid"]
         self._all_results = []
 
@@ -53,7 +65,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._perf_analyzer_flags = model_perf_analyzer_flags
 
         self._batch_sizes = model_parameters['batch_sizes']
-        self._concurrency = self._create_concurrency_list(
+        self._concurrencies = self._create_concurrency_list(
             cli_config, model_parameters)
 
         self._client_protocol_is_http = (cli_config.client_protocol == 'http')
@@ -69,17 +81,17 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def is_done(self):
         """ Returns true if this generator is done generating configs """
-        # yapf: disable
-        return       self._all_configs_returned()   \
-              or     self._last_results_erroneous() \
-              or not self._throughput_gain_valid()
-        #yapf: enable
+        return self._done_walking() or self._last_results_erroneous()
 
     def next_config(self):
         """ Returns the next generated config """
-        config = self._configs[self._curr_config_index]
-        self._curr_config_index += 1
-        return config
+        self._live = True
+        while True:
+            config = self._configs[self._curr_config_index][
+                self._curr_concurrency_index]
+            yield (config)
+
+            self._step()
 
     def set_last_results(self, measurements):
         """ 
@@ -95,7 +107,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _create_concurrency_list(self, cli_config, model_parameters):
         if model_parameters['concurrency']:
-            return model_parameters['concurrency']
+            return sorted(model_parameters['concurrency'])
         elif cli_config.run_config_search_disable:
             return [1]
         else:
@@ -103,23 +115,27 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 cli_config.run_config_search_max_concurrency)
 
     def _generate_perf_configs(self):
-        perf_config_params = self._create_perf_config_params()
+        perf_config_non_concurrency_params = self._create_non_concurrency_perf_config_params(
+        )
 
-        self._configs = []
+        for params in utils.generate_parameter_combinations(
+                perf_config_non_concurrency_params):
+            configs_with_concurrency = []
+            for concurrency in self._concurrencies:
+                new_perf_config = PerfAnalyzerConfig()
+                new_perf_config.update_config(params)
+                new_perf_config.update_config(
+                    {'concurrency-range': concurrency})
+                # User provided flags can override the search parameters
+                new_perf_config.update_config(self._perf_analyzer_flags)
 
-        for params in utils.generate_parameter_combinations(perf_config_params):
-            new_perf_config = PerfAnalyzerConfig()
-            new_perf_config.update_config(params)
-            # User provided flags can override the search parameters
-            new_perf_config.update_config(self._perf_analyzer_flags)
+                configs_with_concurrency.append(new_perf_config)
+            self._configs.append(configs_with_concurrency)
 
-            self._configs.append(new_perf_config)
-
-    def _create_perf_config_params(self):
+    def _create_non_concurrency_perf_config_params(self):
         perf_config_params = {
             'model-names': [self._model_names],
             'batch-size': self._batch_sizes,
-            'concurrency-range': self._concurrency,
             'measurement-mode': [DEFAULT_MEASUREMENT_MODE]
         }
 
@@ -140,8 +156,31 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         return perf_config_params
 
-    def _all_configs_returned(self):
-        return len(self._configs) == self._curr_config_index
+    def _step(self):
+        if self._done_walking_concurrencies():
+            self._step_config()
+        else:
+            self._step_concurrency()
+
+    def _step_config(self):
+        self._curr_config_index += 1
+        self._curr_concurrency_index = 0
+        self._all_results = []
+
+    def _step_concurrency(self):
+        self._curr_concurrency_index += 1
+
+    def _done_walking(self):
+        return self._live \
+           and self._done_walking_configs() \
+           and self._done_walking_concurrencies()
+
+    def _done_walking_configs(self):
+        return len(self._configs) == self._curr_config_index + 1
+
+    def _done_walking_concurrencies(self):
+        return (len(self._concurrencies) == self._curr_concurrency_index +
+                1) or not self._throughput_gain_valid()
 
     def _last_results_erroneous(self):
         return self._last_results is None or self._last_results[0] is None
