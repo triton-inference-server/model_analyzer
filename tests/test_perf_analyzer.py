@@ -219,6 +219,15 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].value(), 46.8)
 
+        # Test throughput parsing
+        test_throughput_output = "Client:\n  Throughput: 5.88368e+07 infer/sec\n\n\n\n"
+        self.perf_mock.set_perf_analyzer_result_string(test_throughput_output)
+        perf_metrics = [PerfThroughput]
+        perf_analyzer.run(perf_metrics)
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].value(), 58836800)
+
         # Test parsing for both
         test_both_output = "Client:\n  Throughput: 0.001 infer/sec\nAvg latency: 3600 us\np90 latency: 3700 us\np95 latency: 3800 us\np99 latency: 3900 us\n\n\n\n"
         self.perf_mock.set_perf_analyzer_result_string(test_both_output)
