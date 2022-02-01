@@ -603,7 +603,7 @@ profile_models:
   model_2:
     perf_analyzer_flags:
     percentile: 95
-    latency_report_file: /path/to/latency/report/file
+    latency-report-file: /path/to/latency/report/file
 ```
 The above config tells model analyzer to profile `model_1` on CPU only,
 but profile `model_2` using GPU.
@@ -841,7 +841,7 @@ profile_models:
   model_1:
     perf_analyzer_flags:
         percentile: 95
-        latency_report_file: /path/to/latency/report/file
+        latency-report-file: /path/to/latency/report/file
     model_config_parameters:
         max_batch_size: 2
         dynamic_batching:
