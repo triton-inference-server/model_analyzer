@@ -32,7 +32,12 @@ class PerfAnalyzerConfig:
         'sequence-length', 'sequence-id-range', 'string-length', 'string-data',
         'measurement-mode', 'measurement-request-count', 'streaming',
         'grpc-compression-algorithm', 'triton-server-directory',
-        'model-repository'
+        'model-repository', 'ssl-grpc-root-certifications-file',
+        'ssl-grpc-private-key-file', 'ssl-grpc-certificate-chain-file',
+        'ssl-http-verify-peer', 'ssl-http-verify-host',
+        'ssl-http-ca-certificates-file', 'ssl-http-client-certificate-type',
+        'ssl-http-client-certificate-file', 'ssl-http-private-key-type',
+        'ssl-http-private-key-file'
     ]
 
     input_to_options = [

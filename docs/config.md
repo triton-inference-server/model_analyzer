@@ -662,6 +662,33 @@ then the `shape` option of the `perf_analyzer_flags` option must be specified.
 More information about this can be found in the 
 [Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#input-data).
 
+**Note**:
+Perf Analyzer now supports SSL and can be enabled via Model Analyzer configuration file updates.
+
+GRPC example:
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    perf_analyzer_flags:
+        ssl-grpc-root-certifications-file: /path/to/PEM/encoded/server/root/cert
+```
+
+HTML example:
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    perf_analyzer_flags:
+        ssl-http-ca-certificates-file: /path/to/cert/authority/cert/file
+        ssl-http-client-certificate-file: /path/to/client/cert/file
+        ssl-http-private-key-file: /path/to/private/key/file
+```
+More information about this can be found in the 
+[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md).
+
 **Important Notes**:
 * When providing arguments under `perf_analyzer_flags`, you must use `-` instead
   of `_`. This casing is important and Model Analyzer will not recognize
