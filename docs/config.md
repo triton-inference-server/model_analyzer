@@ -675,16 +675,16 @@ profile_models:
         ssl-grpc-root-certifications-file: /path/to/PEM/encoded/server/root/cert
 ```
 
-HTML example:
+HTTPS example:
 
 ```yaml
 model_repository: /path/to/model/repository/
 profile_models:
   model_1:
     perf_analyzer_flags:
-        ssl-http-ca-certificates-file: /path/to/cert/authority/cert/file
-        ssl-http-client-certificate-file: /path/to/client/cert/file
-        ssl-http-private-key-file: /path/to/private/key/file
+        ssl-https-ca-certificates-file: /path/to/cert/authority/cert/file
+        ssl-https-client-certificate-file: /path/to/client/cert/file
+        ssl-https-private-key-file: /path/to/private/key/file
 ```
 More information about this can be found in the 
 [Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md).

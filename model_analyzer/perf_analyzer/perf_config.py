@@ -35,10 +35,11 @@ class PerfAnalyzerConfig:
         'grpc-compression-algorithm', 'triton-server-directory',
         'model-repository', 'ssl-grpc-use-ssl',
         'ssl-grpc-root-certifications-file', 'ssl-grpc-private-key-file',
-        'ssl-grpc-certificate-chain-file', 'ssl-http-verify-peer',
-        'ssl-http-verify-host', 'ssl-http-ca-certificates-file',
-        'ssl-http-client-certificate-type', 'ssl-http-client-certificate-file',
-        'ssl-http-private-key-type', 'ssl-http-private-key-file'
+        'ssl-grpc-certificate-chain-file', 'ssl-https-verify-peer',
+        'ssl-https-verify-host', 'ssl-https-ca-certificates-file',
+        'ssl-https-client-certificate-type',
+        'ssl-https-client-certificate-file', 'ssl-https-private-key-type',
+        'ssl-https-private-key-file'
     ]
 
     input_to_options = [
@@ -239,7 +240,7 @@ class PerfAnalyzerConfig:
         """
         Parse perf analyzer long args that should not add a value to the cli string
         """
-        if value.lower() == "true":
+        if value != None and value.lower() == "true":
             temp_args.append(f'--{key}')
         return temp_args
 

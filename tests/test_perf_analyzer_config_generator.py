@@ -328,13 +328,13 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                         ssl-grpc-root-certifications-file: a
                         ssl-grpc-private-key-file: b
                         ssl-grpc-certificate-chain-file: c
-                        ssl-http-verify-peer: 1
-                        ssl-http-verify-host: 2
-                        ssl-http-ca-certificates-file: d
-                        ssl-http-client-certificate-type: e
-                        ssl-http-client-certificate-file: f
-                        ssl-http-private-key-type: g
-                        ssl-http-private-key-file: h
+                        ssl-https-verify-peer: 1
+                        ssl-https-verify-host: 2
+                        ssl-https-ca-certificates-file: d
+                        ssl-https-client-certificate-type: e
+                        ssl-https-client-certificate-file: f
+                        ssl-https-private-key-type: g
+                        ssl-https-private-key-file: h
             """)
         # yapf: enable
 
@@ -347,13 +347,13 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                     'ssl-grpc-root-certifications-file': 'a',
                     'ssl-grpc-private-key-file': 'b',
                     'ssl-grpc-certificate-chain-file': 'c',
-                    'ssl-http-verify-peer': '1',
-                    'ssl-http-verify-host': '2',
-                    'ssl-http-ca-certificates-file': 'd',
-                    'ssl-http-client-certificate-type': 'e',
-                    'ssl-http-client-certificate-file': 'f',
-                    'ssl-http-private-key-type': 'g',
-                    'ssl-http-private-key-file': 'h',
+                    'ssl-https-verify-peer': '1',
+                    'ssl-https-verify-host': '2',
+                    'ssl-https-ca-certificates-file': 'd',
+                    'ssl-https-client-certificate-type': 'e',
+                    'ssl-https-client-certificate-file': 'f',
+                    'ssl-https-private-key-type': 'g',
+                    'ssl-https-private-key-file': 'h',
                 }) for c in concurrencies
         ]
 
