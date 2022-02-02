@@ -202,6 +202,16 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
+        # Set ssl-grpc-use-ssl to False should remove it from the cli string
+        ssl_grpc_use_ssl = 'False'
+        self.config['ssl-grpc-use-ssl'] = ssl_grpc_use_ssl
+        self.assertEqual(self.config['ssl-grpc-use-ssl'], ssl_grpc_use_ssl)
+        expected_cli_str = f'-m test_model --measurement-interval=1000 --measurement-request-count=50 '\
+            f'--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c '\
+            f'--ssl-http-verify-peer=1 --ssl-http-verify-host=2 --ssl-http-ca-certificates-file=d --ssl-http-client-certificate-type=e '\
+            f'--ssl-http-client-certificate-file=f --ssl-http-private-key-type=g --ssl-http-private-key-file=h'
+        self.assertEqual(self.config.to_cli_string(), expected_cli_str)
+
     def test_run(self):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH

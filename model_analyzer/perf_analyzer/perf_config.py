@@ -190,7 +190,6 @@ class PerfAnalyzerConfig:
         args.extend(self._parse_verbose_options())
         args.extend(self._parse_long_options())
 
-        print(f"{' '.join(args)}")
         return ' '.join(args)
 
     def _parse_short_options(self):
@@ -220,7 +219,7 @@ class PerfAnalyzerConfig:
         temp_args = []
         for key, value in self._args.items():
             if key in self.boolean_args:
-                temp_args.append(self._parse_boolean_args(key, value))
+                temp_args = self._parse_boolean_args(key, value, temp_args)
             elif value:
                 if key in self._additive_args:
                     if type(value) is list:
@@ -236,13 +235,13 @@ class PerfAnalyzerConfig:
                     temp_args.append(f'--{key}={value}')
         return temp_args
 
-    def _parse_boolean_args(self, key, value):
+    def _parse_boolean_args(self, key, value, temp_args):
         """
         Parse perf analyzer long args that should not add a value to the cli string
         """
-        if value == "True":
-            return f'--{key}'
-        return
+        if value.lower() == "true":
+            temp_args.append(f'--{key}')
+        return temp_args
 
     def __getitem__(self, key):
         """
