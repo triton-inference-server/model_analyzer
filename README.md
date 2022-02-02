@@ -20,9 +20,9 @@ limitations under the License.
 
 **LATEST RELEASE: You are currently on the main branch which tracks
 under-development progress towards the next release. The latest
-release of the Triton Model Analyzer is 1.11.0 and is available on
+release of the Triton Model Analyzer is 1.12.0 and is available on
 branch
-[r21.12](https://github.com/triton-inference-server/model_analyzer/tree/r21.12).**
+[r22.01](https://github.com/triton-inference-server/model_analyzer/tree/r22.01).**
 
 Triton Model Analyzer is a CLI tool to help with better understanding of the
 compute and memory requirements of the
