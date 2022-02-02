@@ -60,6 +60,8 @@ TEST_GRPC_URL = 'test_hostname:test_port'
 
 class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
+    maxDiff = None
+
     def setUp(self):
         # Mocks
         self.server_local_mock = MockServerLocalMethods()
@@ -142,6 +144,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             self.config.to_cli_string()
 
     def test_perf_analyzer_ssl_args(self):
+        ssl_grpc_use_ssl = 'True'
         ssl_grpc_root_certifications_file = 'a'
         ssl_grpc_private_key_file = 'b'
         ssl_grpc_certificate_chain_file = 'c'
@@ -153,11 +156,12 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         ssl_http_private_key_type = 'g'
         ssl_http_private_key_file = 'h'
 
-        expected_cli_str = f'-m test_model --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-root-certifications-file=a '\
-            f'--ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c --ssl-http-verify-peer=1 --ssl-http-verify-host=2 '\
-            f'--ssl-http-ca-certificates-file=d --ssl-http-client-certificate-type=e --ssl-http-client-certificate-file=f '\
-            f'--ssl-http-private-key-type=g --ssl-http-private-key-file=h'
+        expected_cli_str = f'-m test_model --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl '\
+            f'--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c '\
+            f'--ssl-http-verify-peer=1 --ssl-http-verify-host=2 --ssl-http-ca-certificates-file=d --ssl-http-client-certificate-type=e '\
+            f'--ssl-http-client-certificate-file=f --ssl-http-private-key-type=g --ssl-http-private-key-file=h'
 
+        self.config['ssl-grpc-use-ssl'] = ssl_grpc_use_ssl
         self.config[
             'ssl-grpc-root-certifications-file'] = ssl_grpc_root_certifications_file
         self.config['ssl-grpc-private-key-file'] = ssl_grpc_private_key_file
@@ -174,6 +178,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config['ssl-http-private-key-type'] = ssl_http_private_key_type
         self.config['ssl-http-private-key-file'] = ssl_http_private_key_file
 
+        self.assertEqual(self.config['ssl-grpc-use-ssl'], ssl_grpc_use_ssl)
         self.assertEqual(self.config['ssl-grpc-root-certifications-file'],
                          ssl_grpc_root_certifications_file)
         self.assertEqual(self.config['ssl-grpc-private-key-file'],
