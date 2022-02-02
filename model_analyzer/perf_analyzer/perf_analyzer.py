@@ -356,7 +356,8 @@ class PerfAnalyzer:
         Parses throughput from the perf analyzer output
         """
 
-        throughput = re.search('Throughput: (\d+\.\d+|\d+)', section)
+        throughput = re.search('Throughput: (\d+\.\d+e\+\d+|\d+\.\d+|\d+)',
+                               section)
         if throughput:
             throughput = float(throughput.group(1))
             return PerfThroughput(value=throughput)
