@@ -663,7 +663,7 @@ More information about this can be found in the
 [Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#input-data).
 
 **Note**:
-Perf Analyzer now supports SSL and can be enabled via Model Analyzer configuration file updates.
+Perf Analyzer now supports SSL via GRPC and HTTP. It can be enabled via Model Analyzer configuration file updates.
 
 GRPC example:
 
@@ -747,6 +747,33 @@ profile_models:
     triton_server_flags:
         exit_timeout_secs: 120
 ```
+
+**Note**:
+Triton Server now supports SSL via GRPC. It can be enabled via Model Analyzer configuration file updates.
+
+GRPC example:
+
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    parameters:
+        batch_sizes:
+            start: 4
+            stop: 9
+        concurrency:
+            - 2
+            - 4
+            - 8
+triton_server_flags:
+    grpc-use-ssl: 1
+    grpc-server-cert: /path/to/grpc/server/cert
+    grpc-server-key: /path/to/grpc/server/keyfile
+    grpc-root-cert: /path/to/grpc/root/cert
+```
+More information about this can be found in the 
+[Triton Server documentation](https://github.com/triton-inference-server/server/blob/main/docs/inference_protocols.md#ssltls).
 
 **Important Notes**:
 * The Model Analyzer also provides certain arguments to the `tritonserver`

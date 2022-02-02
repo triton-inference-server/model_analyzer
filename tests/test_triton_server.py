@@ -42,6 +42,8 @@ CLI_TO_STRING_TEST_ARGS = {
 
 class TestTritonServerMethods(trc.TestResultCollector):
 
+    maxDiff = None
+
     def setUp(self):
         # GPUs for this test
         self._sys_gpus = [
@@ -140,6 +142,22 @@ class TestTritonServerMethods(trc.TestResultCollector):
                 "server without specifying model repository."):
             self.server = TritonServerFactory.create_server_local(
                 path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=gpus)
+
+    def test_triton_server_ssl_options(self):
+        server_config = TritonServerConfig()
+
+        triton_server_flags = {
+            'grpc-use-ssl': '1',
+            'grpc-use-ssl-mutual': '1',
+            'grpc-server-cert': 'a',
+            'grpc-server-key': 'b',
+            'grpc-root-cert': 'c',
+        }
+        server_config.update_config(triton_server_flags)
+
+        expected_cli_str = f"--grpc-use-ssl=1 --grpc-use-ssl-mutual=1 "\
+            f"--grpc-server-cert=a --grpc-server-key=b --grpc-root-cert=c"
+        self.assertEqual(server_config.to_cli_string(), expected_cli_str)
 
     def test_create_server_no_gpu(self):
         self._test_create_server(gpus=[])
