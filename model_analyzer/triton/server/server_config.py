@@ -45,6 +45,7 @@ class TritonServerConfig:
         'grpc-port',
         'grpc-infer-allocation-pool-size',
         'grpc-use-ssl',
+        'grpc-use-ssl-mutual',
         'grpc-server-cert',
         'grpc-server-key',
         'grpc-root-cert',

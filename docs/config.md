@@ -603,7 +603,7 @@ profile_models:
   model_2:
     perf_analyzer_flags:
     percentile: 95
-    latency_report_file: /path/to/latency/report/file
+    latency-report-file: /path/to/latency/report/file
 ```
 The above config tells model analyzer to profile `model_1` on CPU only,
 but profile `model_2` using GPU.
@@ -661,6 +661,33 @@ If a model configuration has variable-sized dimensions in the inputs section,
 then the `shape` option of the `perf_analyzer_flags` option must be specified.
 More information about this can be found in the 
 [Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#input-data).
+
+**Note**:
+Perf Analyzer now supports SSL via GRPC and HTTP. It can be enabled via Model Analyzer configuration file updates.
+
+GRPC example:
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    perf_analyzer_flags:
+        ssl-grpc-root-certifications-file: /path/to/PEM/encoded/server/root/cert
+```
+
+HTTPS example:
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    perf_analyzer_flags:
+        ssl-https-ca-certificates-file: /path/to/cert/authority/cert/file
+        ssl-https-client-certificate-file: /path/to/client/cert/file
+        ssl-https-private-key-file: /path/to/private/key/file
+```
+More information about this can be found in the 
+[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#ssltls-support).
 
 **Important Notes**:
 * When providing arguments under `perf_analyzer_flags`, you must use `-` instead
@@ -720,6 +747,33 @@ profile_models:
     triton_server_flags:
         exit_timeout_secs: 120
 ```
+
+**Note**:
+Triton Server now supports SSL via GRPC. It can be enabled via Model Analyzer configuration file updates.
+
+GRPC example:
+
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    parameters:
+        batch_sizes:
+            start: 4
+            stop: 9
+        concurrency:
+            - 2
+            - 4
+            - 8
+triton_server_flags:
+    grpc-use-ssl: 1
+    grpc-server-cert: /path/to/grpc/server/cert
+    grpc-server-key: /path/to/grpc/server/keyfile
+    grpc-root-cert: /path/to/grpc/root/cert
+```
+More information about this can be found in the 
+[Triton Server documentation](https://github.com/triton-inference-server/server/blob/main/docs/inference_protocols.md#ssltls).
 
 **Important Notes**:
 * The Model Analyzer also provides certain arguments to the `tritonserver`
@@ -814,7 +868,7 @@ profile_models:
   model_1:
     perf_analyzer_flags:
         percentile: 95
-        latency_report_file: /path/to/latency/report/file
+        latency-report-file: /path/to/latency/report/file
     model_config_parameters:
         max_batch_size: 2
         dynamic_batching:

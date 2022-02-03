@@ -141,6 +141,78 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         with self.assertRaises(TritonModelAnalyzerException):
             self.config.to_cli_string()
 
+    def test_perf_analyzer_ssl_args(self):
+        """
+        Verify that the generated cli string passed to PA matches our expected output.
+        """
+        ssl_grpc_use_ssl = 'True'
+        ssl_grpc_root_certifications_file = 'a'
+        ssl_grpc_private_key_file = 'b'
+        ssl_grpc_certificate_chain_file = 'c'
+        ssl_https_verify_peer = 1
+        ssl_https_verify_host = 2
+        ssl_https_ca_certificates_file = 'd'
+        ssl_https_client_certificate_type = 'e'
+        ssl_https_client_certificate_file = 'f'
+        ssl_https_private_key_type = 'g'
+        ssl_https_private_key_file = 'h'
+
+        expected_cli_str = f'-m test_model --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl '\
+            f'--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c '\
+            f'--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e '\
+            f'--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h'
+
+        self.config['ssl-grpc-use-ssl'] = ssl_grpc_use_ssl
+        self.config[
+            'ssl-grpc-root-certifications-file'] = ssl_grpc_root_certifications_file
+        self.config['ssl-grpc-private-key-file'] = ssl_grpc_private_key_file
+        self.config[
+            'ssl-grpc-certificate-chain-file'] = ssl_grpc_certificate_chain_file
+        self.config['ssl-https-verify-peer'] = ssl_https_verify_peer
+        self.config['ssl-https-verify-host'] = ssl_https_verify_host
+        self.config[
+            'ssl-https-ca-certificates-file'] = ssl_https_ca_certificates_file
+        self.config[
+            'ssl-https-client-certificate-type'] = ssl_https_client_certificate_type
+        self.config[
+            'ssl-https-client-certificate-file'] = ssl_https_client_certificate_file
+        self.config['ssl-https-private-key-type'] = ssl_https_private_key_type
+        self.config['ssl-https-private-key-file'] = ssl_https_private_key_file
+
+        self.assertEqual(self.config['ssl-grpc-use-ssl'], ssl_grpc_use_ssl)
+        self.assertEqual(self.config['ssl-grpc-root-certifications-file'],
+                         ssl_grpc_root_certifications_file)
+        self.assertEqual(self.config['ssl-grpc-private-key-file'],
+                         ssl_grpc_private_key_file)
+        self.assertEqual(self.config['ssl-grpc-certificate-chain-file'],
+                         ssl_grpc_certificate_chain_file)
+        self.assertEqual(self.config['ssl-https-verify-peer'],
+                         ssl_https_verify_peer)
+        self.assertEqual(self.config['ssl-https-verify-host'],
+                         ssl_https_verify_host)
+        self.assertEqual(self.config['ssl-https-ca-certificates-file'],
+                         ssl_https_ca_certificates_file)
+        self.assertEqual(self.config['ssl-https-client-certificate-type'],
+                         ssl_https_client_certificate_type)
+        self.assertEqual(self.config['ssl-https-client-certificate-file'],
+                         ssl_https_client_certificate_file)
+        self.assertEqual(self.config['ssl-https-private-key-type'],
+                         ssl_https_private_key_type)
+        self.assertEqual(self.config['ssl-https-private-key-file'],
+                         ssl_https_private_key_file)
+
+        self.assertEqual(self.config.to_cli_string(), expected_cli_str)
+
+        # Set ssl-grpc-use-ssl to False should remove it from the cli string
+        ssl_grpc_use_ssl = 'False'
+        self.config['ssl-grpc-use-ssl'] = ssl_grpc_use_ssl
+        self.assertEqual(self.config['ssl-grpc-use-ssl'], ssl_grpc_use_ssl)
+        expected_cli_str = f'-m test_model --measurement-interval=1000 --measurement-request-count=50 '\
+            f'--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c '\
+            f'--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e '\
+            f'--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h'
+        self.assertEqual(self.config.to_cli_string(), expected_cli_str)
+
     def test_run(self):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH

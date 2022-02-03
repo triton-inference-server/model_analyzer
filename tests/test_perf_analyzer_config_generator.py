@@ -314,6 +314,52 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         self._run_and_test_perf_analyzer_config_generator(
             yaml_content, expected_configs)
 
+    def test_perf_analyzer_config_ssl_options(self):
+        """
+        Test Perf Analyzer SSL options:  
+            - No CLI options specified
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                - my-model:
+                    perf_analyzer_flags:
+                        ssl-grpc-root-certifications-file: a
+                        ssl-grpc-private-key-file: b
+                        ssl-grpc-certificate-chain-file: c
+                        ssl-https-verify-peer: 1
+                        ssl-https-verify-host: 2
+                        ssl-https-ca-certificates-file: d
+                        ssl-https-client-certificate-type: e
+                        ssl-https-client-certificate-file: f
+                        ssl-https-private-key-type: g
+                        ssl-https-private-key-file: h
+            """)
+        # yapf: enable
+
+        concurrencies = utils.generate_log2_list(
+            DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+        expected_configs = [
+            self._create_expected_config(
+                concurrency=c,
+                perf_analyzer_flags={
+                    'ssl-grpc-root-certifications-file': 'a',
+                    'ssl-grpc-private-key-file': 'b',
+                    'ssl-grpc-certificate-chain-file': 'c',
+                    'ssl-https-verify-peer': '1',
+                    'ssl-https-verify-host': '2',
+                    'ssl-https-ca-certificates-file': 'd',
+                    'ssl-https-client-certificate-type': 'e',
+                    'ssl-https-client-certificate-file': 'f',
+                    'ssl-https-private-key-type': 'g',
+                    'ssl-https-private-key-file': 'h',
+                }) for c in concurrencies
+        ]
+
+        self._run_and_test_perf_analyzer_config_generator(
+            yaml_content, expected_configs)
+
     def test_multiple_models(self):
         """
         Test Multiple Models:  
@@ -424,6 +470,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                              perf_analyzer_configs[i]._options)
             self.assertEqual(expected_configs[i]._args,
                              perf_analyzer_configs[i]._args)
+            self.assertEqual(expected_configs[i]._additive_args,
+                             perf_analyzer_configs[i]._additive_args)
 
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)

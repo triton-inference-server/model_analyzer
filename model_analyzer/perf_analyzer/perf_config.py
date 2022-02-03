@@ -32,7 +32,13 @@ class PerfAnalyzerConfig:
         'sequence-length', 'sequence-id-range', 'string-length', 'string-data',
         'measurement-mode', 'measurement-request-count', 'streaming',
         'grpc-compression-algorithm', 'triton-server-directory',
-        'model-repository'
+        'model-repository', 'ssl-grpc-use-ssl',
+        'ssl-grpc-root-certifications-file', 'ssl-grpc-private-key-file',
+        'ssl-grpc-certificate-chain-file', 'ssl-https-verify-peer',
+        'ssl-https-verify-host', 'ssl-https-ca-certificates-file',
+        'ssl-https-client-certificate-type',
+        'ssl-https-client-certificate-file', 'ssl-https-private-key-type',
+        'ssl-https-private-key-file'
     ]
 
     input_to_options = [
@@ -43,6 +49,8 @@ class PerfAnalyzerConfig:
     input_to_verbose = ['verbose', 'extra-verbose']
 
     additive_args = ['input-data', 'shape', 'streaming']
+
+    boolean_args = ['ssl-grpc-use-ssl']
 
     def __init__(self):
         """
@@ -178,30 +186,62 @@ class PerfAnalyzerConfig:
 
         # single dashed options, then verbose flags, then main args
         args = []
+        args.extend(self._parse_short_options())
+        args.extend(self._parse_verbose_options())
+        args.extend(self._parse_long_options())
+
+        return ' '.join(args)
+
+    def _parse_short_options(self):
+        """
+        Parse the perf analyzer single dash options
+        """
+        temp_args = []
         for key, value in self._options.items():
             if value:
                 if key in self._additive_args:
                     for additive_value in value:
-                        args.append(f'{key} {additive_value}')
+                        temp_args.append(f'{key} {additive_value}')
                 else:
-                    args.append(f'{key} {value}')
-        args += [k for k, v in self._verbose.items() if v]
+                    temp_args.append(f'{key} {value}')
+        return temp_args
+
+    def _parse_verbose_options(self):
+        """
+        Add the verbose flags to the args cli list
+        """
+        return [k for k, v in self._verbose.items() if v]
+
+    def _parse_long_options(self):
+        """
+        Parse the perf analyzer long args 
+        """
+        temp_args = []
         for key, value in self._args.items():
-            if value:
+            if key in self.boolean_args:
+                temp_args = self._parse_boolean_args(key, value, temp_args)
+            elif value:
                 if key in self._additive_args:
                     if type(value) is list:
                         for additive_value in value:
-                            args.append(f'--{key}={additive_value}')
+                            temp_args.append(f'--{key}={additive_value}')
                     elif type(value) is str:
-                        args.append(f'--{key}={value}')
+                        temp_args.append(f'--{key}={value}')
                     else:
                         raise TritonModelAnalyzerException(
                             f"Unexpected type {type(value)} for perf_analyzer_flag {key}."
                         )
                 else:
-                    args.append(f'--{key}={value}')
+                    temp_args.append(f'--{key}={value}')
+        return temp_args
 
-        return ' '.join(args)
+    def _parse_boolean_args(self, key, value, temp_args):
+        """
+        Parse perf analyzer long args that should not add a value to the cli string
+        """
+        if value != None and value.lower() == "true":
+            temp_args.append(f'--{key}')
+        return temp_args
 
     def __getitem__(self, key):
         """
