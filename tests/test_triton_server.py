@@ -42,8 +42,6 @@ CLI_TO_STRING_TEST_ARGS = {
 
 class TestTritonServerMethods(trc.TestResultCollector):
 
-    maxDiff = None
-
     def setUp(self):
         # GPUs for this test
         self._sys_gpus = [

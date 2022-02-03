@@ -314,7 +314,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         self._run_and_test_perf_analyzer_config_generator(
             yaml_content, expected_configs)
 
-    def test_perf_analyzer_ssl_options(self):
+    def test_perf_analyzer_config_ssl_options(self):
         """
         Test Perf Analyzer SSL options:  
             - No CLI options specified

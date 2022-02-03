@@ -687,7 +687,7 @@ profile_models:
         ssl-https-private-key-file: /path/to/private/key/file
 ```
 More information about this can be found in the 
-[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md).
+[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#ssltls-support).
 
 **Important Notes**:
 * When providing arguments under `perf_analyzer_flags`, you must use `-` instead

@@ -60,8 +60,6 @@ TEST_GRPC_URL = 'test_hostname:test_port'
 
 class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
-    maxDiff = None
-
     def setUp(self):
         # Mocks
         self.server_local_mock = MockServerLocalMethods()
@@ -144,6 +142,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             self.config.to_cli_string()
 
     def test_perf_analyzer_ssl_args(self):
+        """
+        Verify that the generated cli string passed to PA matches our expected output.
+        """
         ssl_grpc_use_ssl = 'True'
         ssl_grpc_root_certifications_file = 'a'
         ssl_grpc_private_key_file = 'b'
