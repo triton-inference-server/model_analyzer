@@ -37,7 +37,7 @@ from .config_defaults import \
     DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE, \
     DEFAULT_RUN_CONFIG_SEARCH_DISABLE, DEFAULT_TRITON_DOCKER_IMAGE, DEFAULT_TRITON_GRPC_ENDPOINT, \
     DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_TRITON_METRICS_URL, \
-    DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT, DEFAULT_USE_LOCAL_GPU_MONITOR
+    DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT, DEFAULT_USE_LOCAL_GPU_MONITOR, DEFAULT_TRITON_SHM_SIZE
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.server.server_config import \
@@ -581,6 +581,15 @@ class ConfigCommandProfile(ConfigCommand):
                 description=
                 'A dictionary of name-value labels to set metadata for the Triton '
                 'server docker container in docker launch mode'))
+        self._add_config(
+            ConfigField(
+                'triton_docker_shm_size',
+                field_type=ConfigPrimitive(str),
+                flags=['--triton-docker-shm-size'],
+                default_value=DEFAULT_TRITON_SHM_SIZE,
+                description=(
+                    'The size of the /dev/shm for the triton docker container'
+                )))
         self._add_config(
             ConfigField(
                 'triton_install_path',
