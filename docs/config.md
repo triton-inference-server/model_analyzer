@@ -148,7 +148,7 @@ profile_models: <comma-delimited-string-list>
 [ triton_docker_mounts: <list of strings> ]
 
 # The size of /dev/shm for the triton docker container
-[ triton_docker_shm_size: <string> | default: '64M']
+[ triton_docker_shm_size: <string>]
 
 # How Model Analyzer will launch triton. It should
 # be either "docker", "local", "remote" or "c_api".

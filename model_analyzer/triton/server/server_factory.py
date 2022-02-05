@@ -29,7 +29,8 @@ class TritonServerFactory:
                              gpus,
                              log_path=None,
                              mounts=None,
-                             labels=None):
+                             labels=None,
+                             shm_size=None):
         """
         Parameters
         ----------
@@ -47,7 +48,8 @@ class TritonServerFactory:
         labels: dict
             name-value pairs for label to set metadata for triton docker
             container. (Not the same as environment variables)
-
+        shm-size: str
+            The size of /dev/shm for the triton docker container.
         Returns
         -------
         TritonServerDocker
@@ -58,7 +60,8 @@ class TritonServerFactory:
                                   gpus=gpus,
                                   log_path=log_path,
                                   mounts=mounts,
-                                  labels=labels)
+                                  labels=labels,
+                                  shm_size=shm_size)
 
     @staticmethod
     def create_server_local(path, config, gpus, log_path=None):
