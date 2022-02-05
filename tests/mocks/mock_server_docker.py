@@ -94,7 +94,8 @@ class MockServerDockerMethods(MockServerMethods):
                                                 grpc_port=8001,
                                                 metrics_port=8002,
                                                 mounts=None,
-                                                labels=None):
+                                                labels=None,
+                                                shm_size=None):
         """
         Asserts that a triton container was created using the
         supplied arguments
@@ -134,7 +135,8 @@ class MockServerDockerMethods(MockServerMethods):
             publish_all_ports=True,
             tty=False,
             stdin_open=False,
-            detach=True)
+            detach=True,
+            shm_size=shm_size)
 
     def raise_exception_on_container_run(self):
         """
