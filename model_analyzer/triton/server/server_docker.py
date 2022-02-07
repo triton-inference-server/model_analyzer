@@ -34,7 +34,7 @@ class TritonServerDocker(TritonServer):
     triton in a docker container.
     """
 
-    def __init__(self, image, config, gpus, log_path, mounts, labels):
+    def __init__(self, image, config, gpus, log_path, mounts, labels, shm_size):
         """
         Parameters
         ----------
@@ -51,6 +51,8 @@ class TritonServerDocker(TritonServer):
         labels: dict
             name-value pairs for label to set metadata for triton docker
             container. (Not the same as environment variables)
+        shm-size: str
+            The size of /dev/shm for the triton docker container.
         """
 
         self._server_config = config
@@ -61,6 +63,7 @@ class TritonServerDocker(TritonServer):
         self._mounts = mounts
         self._labels = labels if labels else {}
         self._gpus = gpus
+        self._shm_size = shm_size
 
         assert self._server_config['model-repository'], \
             "Triton Server requires --model-repository argument to be set."
@@ -131,7 +134,8 @@ class TritonServerDocker(TritonServer):
                 publish_all_ports=True,
                 tty=False,
                 stdin_open=False,
-                detach=True)
+                detach=True,
+                shm_size=self._shm_size)
             logger.info('Triton Server started.')
         except docker.errors.APIError as e:
             if e.explanation.find('port is already allocated') != -1:

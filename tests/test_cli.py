@@ -77,7 +77,7 @@ def get_test_options():
         OptionStruct("int", "analyze", "--min-throughput", None, "300", None),
         #String options
         # Options format:
-        #   (string, MA step, long_flag, short_flag, test_value, expected_default_value, expected_failing_value)
+        #   (string, MA step, long_flag, short_flag, test_value, expected_default_value, expected_failing_value, extra_commands)
         # The following options can be None:
         #   short_flag
         #   expected_default_value
@@ -106,9 +106,10 @@ def get_test_options():
         OptionStruct("string", "report", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
         OptionStruct("string", "report", "--export-path", "-e", "./test_dir", os.getcwd(), None),
         OptionStruct("string", "report", "--config-file", "-f", "baz", None, None),
-        #List of Strings Options:
+        OptionStruct("string", "profile", "--triton-docker-shm-size", None, "1G", None, extra_commands=["--triton-launch-mode", "docker"]),
+        #List Options:
         # Options format:
-        #   (intlist/stringlist, MA step, long_flag, short_flag, test_value, expected_default_value)
+        #   (intlist/stringlist, MA step, long_flag, short_flag, test_value, expected_default_value, extra_commands)
         # The following options can be None:
         #   short_flag
         #   expected_default_value
@@ -421,6 +422,7 @@ class TestCLI(trc.TestResultCollector):
         expected_value = option_struct.expected_value
         expected_default_value = option_struct.expected_default_value
         expected_failing_value = option_struct.expected_failing_value
+        extra_commands = option_struct.extra_commands
 
         # This covers strings that have choices
         # Recursively call this method with choices
@@ -435,7 +437,7 @@ class TestCLI(trc.TestResultCollector):
 
             self._test_long_flag(long_option, option_struct.cli_subcommand,
                                  expected_value, long_option_with_underscores,
-                                 expected_value)
+                                 expected_value, extra_commands)
 
             self._test_short_flag(short_option, option_struct.cli_subcommand,
                                   expected_value, long_option_with_underscores,
@@ -458,6 +460,7 @@ class TestCLI(trc.TestResultCollector):
         short_option = option_struct.short_flag
         expected_value = option_struct.expected_value
         expected_default_value = option_struct.expected_default_value
+        extra_commands = option_struct.extra_commands
 
         # Convert expected and default values to proper types for comparison
         if option_struct.type == "intlist":
@@ -479,8 +482,7 @@ class TestCLI(trc.TestResultCollector):
 
         self._test_long_flag(long_option, option_struct.cli_subcommand,
                              expected_value, long_option_with_underscores,
-                             expected_value_converted,
-                             option_struct.extra_commands)
+                             expected_value_converted, extra_commands)
 
         self._test_short_flag(short_option, option_struct.cli_subcommand,
                               expected_value, long_option_with_underscores,

@@ -131,7 +131,8 @@ def get_server_handle(config, gpus):
             gpus=gpus,
             log_path=config.triton_output_path,
             mounts=config.triton_docker_mounts,
-            labels=config.triton_docker_labels)
+            labels=config.triton_docker_labels,
+            shm_size=config.triton_docker_shm_size)
     elif config.triton_launch_mode == 'c_api':
         validate_triton_install_path(config)
 

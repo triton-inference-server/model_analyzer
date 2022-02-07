@@ -583,6 +583,14 @@ class ConfigCommandProfile(ConfigCommand):
                 'server docker container in docker launch mode'))
         self._add_config(
             ConfigField(
+                'triton_docker_shm_size',
+                field_type=ConfigPrimitive(str),
+                flags=['--triton-docker-shm-size'],
+                description=(
+                    'The size of the /dev/shm for the triton docker container'
+                )))
+        self._add_config(
+            ConfigField(
                 'triton_install_path',
                 field_type=ConfigPrimitive(str),
                 default_value=DEFAULT_TRITON_INSTALL_PATH,
