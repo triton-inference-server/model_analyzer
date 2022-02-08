@@ -15,8 +15,8 @@
 from model_analyzer.constants import LOGGER_NAME
 from .pdf_report import PDFReport
 from .html_report import HTMLReport
-import apt
 import logging
+import shutil
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -30,8 +30,7 @@ class ReportFactory:
 
     @staticmethod
     def create_report():
-        if ReportFactory._is_apt_package_installed(
-                f"{ReportFactory.PDF_PACKAGE}"):
+        if ReportFactory._is_package_installed(f"{ReportFactory.PDF_PACKAGE}"):
             return ReportFactory._create_pdf_report()
         else:
             logging.warning(f"Warning: {ReportFactory.PDF_PACKAGE} is not installed. "\
@@ -48,6 +47,6 @@ class ReportFactory:
         return HTMLReport()
 
     @staticmethod
-    def _is_apt_package_installed(package_name):
-        cache = apt.Cache()
-        return cache[f"{package_name}"].is_installed
+    def _is_package_installed(package_name):
+        package_found = shutil.which(f"{package_name}")
+        return package_found is not None
