@@ -68,8 +68,6 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --t
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --ssl-grpc-use-ssl --ssl-grpc-root-certifications-file=ca.crt "
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --ssl-grpc-private-key-file=client.key --ssl-grpc-certificate-chain-file=client.crt "
 MODEL_ANALYZER_SUBCOMMAND="profile"
 run_analyzer
 if [ $? -ne 0 ]; then
