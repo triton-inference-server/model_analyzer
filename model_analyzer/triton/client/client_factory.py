@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,29 +23,33 @@ class TritonClientFactory:
     """
 
     @staticmethod
-    def create_grpc_client(server_url):
+    def create_grpc_client(server_url, ssl_options={}):
         """
         Parameters
         ----------
         server_url : str
             The url for Triton server's GRPC endpoint
+        ssl_options : dict
+            Dictionary of SSL options for gRPC python client
 
         Returns
         -------
         TritonGRPCClient
         """
-        return TritonGRPCClient(server_url=server_url)
+        return TritonGRPCClient(server_url=server_url, ssl_options=ssl_options)
 
     @staticmethod
-    def create_http_client(server_url):
+    def create_http_client(server_url, ssl_options={}):
         """
         Parameters
         ----------
         server_url : str
             The url for Triton server's HTTP endpoint
+        ssl_options : dict
+            Dictionary of SSL options for HTTP python client
 
         Returns
         -------
         TritonHTTPClient
         """
-        return TritonHTTPClient(server_url=server_url)
+        return TritonHTTPClient(server_url=server_url, ssl_options=ssl_options)

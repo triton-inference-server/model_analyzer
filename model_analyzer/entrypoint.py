@@ -47,17 +47,43 @@ def get_client_handle(config):
         Arguments parsed from the CLI
     """
 
+    ssl_options = get_ssl_options(config)
     if config.client_protocol == 'http':
         client = TritonClientFactory.create_http_client(
-            server_url=config.triton_http_endpoint)
+            server_url=config.triton_http_endpoint, ssl_options=ssl_options)
     elif config.client_protocol == 'grpc':
         client = TritonClientFactory.create_grpc_client(
-            server_url=config.triton_grpc_endpoint)
+            server_url=config.triton_grpc_endpoint, ssl_options=ssl_options)
     else:
         raise TritonModelAnalyzerException(
             f"Unrecognized client-protocol : {config.client_protocol}")
 
     return client
+
+
+def get_ssl_options(config):
+    """
+    Returns SSL options dictionary
+
+    Parameters
+    ----------
+    config : namespace
+        Arguments parsed from the CLI
+    """
+
+    ssl_option_keys = [
+        'ssl-grpc-use-ssl', 'ssl-grpc-root-certifications-file',
+        'ssl-grpc-private-key-file', 'ssl-grpc-certificate-chain-file',
+        'ssl-https-verify-peer', 'ssl-https-verify-host',
+        'ssl-https-ca-certificates-file', 'ssl-https-client-certificate-file',
+        'ssl-https-client-certificate-type', 'ssl-https-private-key-file',
+        'ssl-https-private-key-type'
+    ]
+    return {
+        key: config.perf_analyzer_flags[key]
+        for key in ssl_option_keys
+        if key in config.perf_analyzer_flags
+    }
 
 
 def get_server_handle(config, gpus):
