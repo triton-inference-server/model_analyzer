@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -51,16 +51,21 @@ class TestConfigGenerator:
         self.config['profile_models'] = sorted(args.profile_models.split(','))
         self.config['run_config_search_disable'] = True
         # Triton Server ssl flags
-        self.config['grpc-use-ssl'] = '1'
-        self.config['grpc-use-ssl-mutual'] = '1'
-        self.config['grpc-server-cert'] = './server.crt'
-        self.config['grpc-server-key'] = './server.key'
-        self.config['grpc-root-cert'] = './ca.crt'
+        self.config['triton_server_flags'] = {}
+        self.config['triton_server_flags']['grpc-use-ssl'] = '1'
+        self.config['triton_server_flags']['grpc-use-ssl-mutual'] = '1'
+        self.config['triton_server_flags']['grpc-server-cert'] = './server.crt'
+        self.config['triton_server_flags']['grpc-server-key'] = './server.key'
+        self.config['triton_server_flags']['grpc-root-cert'] = './ca.crt'
         # Perf Analyzer ssl flags
-        self.config['ssl-grpc-use-ssl'] = True
-        self.config['ssl-grpc-root-certifications-file'] = './ca.crt'
-        self.config['ssl-grpc-private-key-file'] = './client.key'
-        self.config['ssl-grpc-certificate-chain-file'] = './client.crt'
+        self.config['perf_analyzer_flags'] = {}
+        self.config['perf_analyzer_flags']['ssl-grpc-use-ssl'] = True
+        self.config['perf_analyzer_flags'][
+            'ssl-grpc-root-certifications-file'] = './ca.crt'
+        self.config['perf_analyzer_flags'][
+            'ssl-grpc-private-key-file'] = './client.key'
+        self.config['perf_analyzer_flags'][
+            'ssl-grpc-certificate-chain-file'] = './client.crt'
 
     def generate_config(self):
         with open('config.yml', 'w+') as f:

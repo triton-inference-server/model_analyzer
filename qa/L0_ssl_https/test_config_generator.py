@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -51,13 +51,18 @@ class TestConfigGenerator:
         self.config['profile_models'] = sorted(args.profile_models.split(','))
         self.config['run_config_search_disable'] = True
         # Perf Analyzer ssl flags
-        self.config['ssl-https-verify-peer'] = 1
-        self.config['ssl-https-verify-host'] = 2
-        self.config['ssl-https-ca-certificates-file'] = './ca.crt'
-        self.config['ssl-https-client-certificate-type'] = 'PEM'
-        self.config['ssl-https-client-certificate-file'] = './client.crt'
-        self.config['ssl-https-private-key-type'] = 'PEM'
-        self.config['ssl-https-private-key-file'] = './client.key'
+        self.config['perf_analyzer_flags'] = {}
+        self.config['perf_analyzer_flags']['ssl-https-verify-peer'] = 1
+        self.config['perf_analyzer_flags']['ssl-https-verify-host'] = 2
+        self.config['perf_analyzer_flags'][
+            'ssl-https-ca-certificates-file'] = './ca.crt'
+        self.config['perf_analyzer_flags'][
+            'ssl-https-client-certificate-type'] = 'PEM'
+        self.config['perf_analyzer_flags'][
+            'ssl-https-client-certificate-file'] = './client.crt'
+        self.config['perf_analyzer_flags']['ssl-https-private-key-type'] = 'PEM'
+        self.config['perf_analyzer_flags'][
+            'ssl-https-private-key-file'] = './client.key'
 
     def generate_config(self):
         with open('config.yml', 'w+') as f:
