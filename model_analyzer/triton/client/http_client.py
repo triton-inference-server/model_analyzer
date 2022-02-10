@@ -37,13 +37,12 @@ class TritonHTTPClient(TritonClient):
 
         ssl = False
         client_ssl_options = {}
-        ssl_context_factory = None
-        insecure = False
+        ssl_context_factory = gevent.ssl._create_unverified_context
+        insecure = True
         verify_peer = 0
         verify_host = 0
 
         if server_url.startswith('http://'):
-            ssl = False
             server_url = server_url.replace('http://', '', 1)
         elif server_url.startswith('https://'):
             ssl = True
@@ -73,10 +72,9 @@ class TritonHTTPClient(TritonClient):
             verify_peer = ssl_options['ssl-https-verify-peer']
         if 'ssl-https-verify-host' in ssl_options:
             verify_host = ssl_options['ssl-https-verify-host']
-        if verify_peer == 0 or verify_host == 0:
-            insecure = True
-        if insecure == True:
-            ssl_context_factory = gevent.ssl._create_unverified_context
+        if verify_peer != 0 and verify_host != 0:
+            ssl_context_factory = None
+            insecure = False
 
         self._client = httpclient.InferenceServerClient(
             url=server_url,
