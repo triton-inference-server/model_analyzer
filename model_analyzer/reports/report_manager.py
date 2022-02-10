@@ -441,21 +441,14 @@ class ReportManager:
             else model_config_dict['platform']
         dynamic_batch_phrase = self._get_dynamic_batching_phrase(best_config)
 
-        if not best_config.cpu_only():
-            summary_sentence = (
-                f"In {num_measurements} measurement(s), "
-                f"{best_config.instance_group_string()} model instance(s) "
-                f"with {dynamic_batch_phrase} "
-                f"on platform {platform} delivers "
-                f"maximum throughput under the given constraints on GPU(s) {gpu_name}."
-            )
-        else:
-            summary_sentence = (
-                f"In {num_measurements} measurement(s), "
-                f"{best_config.instance_group_string()} model instance(s) "
-                f"with {dynamic_batch_phrase} "
-                f"on platform {platform} delivers "
-                f"maximum throughput.")
+        summary_sentence = (
+            f"In {num_measurements} measurement(s), "
+            f"config {best_config.get_field('name')} ("
+            f"{best_config.instance_group_string()} model instance(s) "
+            f"with {dynamic_batch_phrase}) "
+            f"on platform {platform} delivers maximum throughput under "
+            f"the given constraints{' on GPU(s) '+gpu_name if not best_config.cpu_only() else ''}."
+        )
 
         # Construct table
         if not cpu_only:
