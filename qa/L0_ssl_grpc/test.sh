@@ -23,20 +23,15 @@ mkdir -p /tmp/output
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
-QA_MODELS="resnet50_libtorch"
-MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
-BATCH_SIZES="1,2"
-CONCURRENCY="1,2"
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-CONFIG_FILE="config.yml"
+WORKING_CONFIG_FILE="working_config.yml"
+BROKEN_CONFIG_FILE="broken_config.yml"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
-
-python3 test_config_generator.py --profile-models $MODEL_NAMES
 
 # Run the analyzer and check the results
 RET=0
@@ -63,8 +58,12 @@ openssl x509 -passin pass:1234 -req -days 365 -in client.csr -CA ca.crt -CAkey c
 # Remove passphrase from Client Key
 openssl rsa -passin pass:1234 -in client.key -out client.key
 
+# Create mutated client key (Make first char of each like capital)
+cp client.key client2.key && sed -i "s/\b\(.\)/\u\1/g" client2.key
+cp client.crt client2.crt && sed -i "s/\b\(.\)/\u\1/g" client2.crt
 
-MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $CONFIG_FILE"
+# Test with working keys
+MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $WORKING_CONFIG_FILE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
@@ -78,13 +77,30 @@ if [ $? -ne 0 ]; then
 else
     # Check the Analyzer log for correct output
     TEST_NAME='profile_logs'
-    python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -l $ANALYZER_LOG
+    python3 check_results.py -f $WORKING_CONFIG_FILE -t $TEST_NAME -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
         RET=1
     fi
 fi
+
+
+# Test with broken keys
+MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $BROKEN_CONFIG_FILE"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
+MODEL_ANALYZER_SUBCOMMAND="profile"
+run_analyzer
+if [ $? -eq 0 ]; then
+    echo -e "\n***\n*** Expected Test Failure. \n***"
+    cat $ANALYZER_LOG
+    RET=1
+fi
+
+
 set -e
 
 if [ $RET -eq 0 ]; then

@@ -25,20 +25,16 @@ mkdir -p /tmp/output
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
-QA_MODELS="resnet50_libtorch"
-MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
-CONCURRENCY="1,2"
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="remote"}
 CLIENT_PROTOCOL="http"
 PORTS=(`find_available_ports 2`)
 HTTP_PORT="8000"
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-CONFIG_FILE="config.yml"
+WORKING_CONFIG_FILE="working_config.yml"
+BROKEN_CONFIG_FILE="broken_config.yml"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
-
-python3 test_config_generator.py --profile-models $MODEL_NAMES
 
 # Run the analyzer and check the results
 RET=0
@@ -66,6 +62,10 @@ openssl rsa -passin pass:1234 -in client.key -out client.key
 cp server.crt /etc/nginx/cert.crt
 cp server.key /etc/nginx/cert.key
 
+# Create mutated client key (Make first char of each like capital)
+cp client.key client2.key && sed -i "s/\b\(.\)/\u\1/g" client2.key
+cp client.crt client2.crt && sed -i "s/\b\(.\)/\u\1/g" client2.crt
+
 # For remote launch, set server args and start server
 SERVER=`which tritonserver`
 SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode explicit --http-port ${HTTP_PORT} --grpc-port ${PORTS[0]} --metrics-port ${PORTS[1]}"
@@ -84,7 +84,8 @@ service nginx restart
 
 set +e
 
-MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $CONFIG_FILE"
+# Test with working keys
+MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $WORKING_CONFIG_FILE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint https://localhost:443 --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url https://localhost:${PORTS[2]}/metrics"
@@ -96,6 +97,21 @@ if [ $? -ne 0 ]; then
     cat $ANALYZER_LOG
     RET=1
 fi
+
+# Test with broken keys
+MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $BROKEN_CONFIG_FILE"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint https://localhost:443 --triton-grpc-endpoint localhost:${PORTS[1]}"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url https://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
+MODEL_ANALYZER_SUBCOMMAND="profile"
+run_analyzer
+if [ $? -eq 0 ]; then
+    echo -e "\n***\n*** Expected Test Failure. \n***"
+    cat $ANALYZER_LOG
+    RET=1
+fi
+
 set -e
 
 service nginx stop
