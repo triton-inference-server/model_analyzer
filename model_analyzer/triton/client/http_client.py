@@ -73,7 +73,7 @@ class TritonHTTPClient(TritonClient):
             verify_peer = ssl_options['ssl-https-verify-peer']
         if 'ssl-https-verify-host' in ssl_options:
             verify_host = ssl_options['ssl-https-verify-host']
-        if verify_peer == 0 and verify_host == 0:
+        if verify_peer == 0 or verify_host == 0:
             insecure = True
         if insecure == True:
             ssl_context_factory = gevent.ssl._create_unverified_context
