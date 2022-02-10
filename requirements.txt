@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,3 +24,4 @@ pdfkit>=0.6.1
 cryptography>=3.3.2
 httplib2>=0.19.0
 tritonclient[all]>=2.4.0
+gevent>=21.12.0

@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -48,16 +48,68 @@ def get_client_handle(config):
     """
 
     if config.client_protocol == 'http':
+        http_ssl_options = get_http_ssl_options(config)
         client = TritonClientFactory.create_http_client(
-            server_url=config.triton_http_endpoint)
+            server_url=config.triton_http_endpoint,
+            ssl_options=http_ssl_options)
     elif config.client_protocol == 'grpc':
+        grpc_ssl_options = get_grpc_ssl_options(config)
         client = TritonClientFactory.create_grpc_client(
-            server_url=config.triton_grpc_endpoint)
+            server_url=config.triton_grpc_endpoint,
+            ssl_options=grpc_ssl_options)
     else:
         raise TritonModelAnalyzerException(
             f"Unrecognized client-protocol : {config.client_protocol}")
 
     return client
+
+
+def get_http_ssl_options(config):
+    """
+    Returns HTTP SSL options dictionary
+
+    Parameters
+    ----------
+    config : namespace
+        Arguments parsed from the CLI
+    """
+
+    ssl_option_keys = [
+        'ssl-https-verify-peer', 'ssl-https-verify-host',
+        'ssl-https-ca-certificates-file', 'ssl-https-client-certificate-file',
+        'ssl-https-client-certificate-type', 'ssl-https-private-key-file',
+        'ssl-https-private-key-type'
+    ]
+
+    return {
+        key: config.perf_analyzer_flags[key]
+        for key in ssl_option_keys
+        if key in config.perf_analyzer_flags
+    }
+
+
+def get_grpc_ssl_options(config):
+    """
+    Returns gRPC SSL options dictionary
+
+    Parameters
+    ----------
+    config : namespace
+        Arguments parsed from the CLI
+    """
+
+    ssl_option_keys = [
+        'ssl-grpc-use-ssl',
+        'ssl-grpc-root-certifications-file',
+        'ssl-grpc-private-key-file',
+        'ssl-grpc-certificate-chain-file',
+    ]
+
+    return {
+        key: config.perf_analyzer_flags[key]
+        for key in ssl_option_keys
+        if key in config.perf_analyzer_flags
+    }
 
 
 def get_server_handle(config, gpus):
