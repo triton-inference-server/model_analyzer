@@ -355,11 +355,11 @@ class ReportManager:
 
         caption_throughput = f"{throughput_plot_config.title()} curves for {num_best_configs} best configurations."
 
+        memory_consumption_text = self._get_summary_memory_consumption_text(
+            cpu_only, gpu_names, max_memories)
+        summary.add_paragraph(memory_consumption_text)
+
         if not cpu_only:
-            summary.add_paragraph(
-                "The maximum GPU memory consumption for each of the above points is"
-                f" shown in the second plot. The GPUs {gpu_names} have"
-                f" a total available memory of {max_memories} respectively.")
 
             summary.add_images([throughput_plot], [caption_throughput],
                                image_width=66)
@@ -373,9 +373,6 @@ class ReportManager:
                                    [caption_memory_latency],
                                    image_width=66)
         else:
-            summary.add_paragraph(
-                "The maximum GPU memory consumption for each of the above points is"
-                f" shown in the second plot.")
             summary.add_images([throughput_plot], [caption_throughput],
                                image_width=66)
             if self._mode == 'online':
@@ -393,6 +390,18 @@ class ReportManager:
             " that optimizes the desired metrics under the given constraints.")
         summary.add_table(table=table)
         return summary
+
+    def _get_summary_memory_consumption_text(self, cpu_only, gpu_names,
+                                             max_memories):
+        memory_consumption_text = f"The maximum {'GPU' if not cpu_only else 'CPU'} memory consumption for each of the points in the first plot is shown in the second plot."
+
+        if not cpu_only:
+            multiple_gpus = ',' in gpu_names
+            if multiple_gpus:
+                memory_consumption_text += f" The GPUs {gpu_names} have a total available memory of {max_memories} respectively."
+            else:
+                memory_consumption_text += f" The GPU {gpu_names} has a total available memory of {max_memories}."
+        return memory_consumption_text
 
     def _get_dynamic_batching_phrase(self, config):
         dynamic_batching_str = config.dynamic_batching_string()

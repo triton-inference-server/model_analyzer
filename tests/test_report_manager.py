@@ -232,6 +232,26 @@ class TestReportManagerMethods(trc.TestResultCollector):
             self.assertGreaterEqual(current_row[throughput_index],
                                     next_row[throughput_index])
 
+    def test_summary_memory_consumption_text(self):
+        self._init_managers()
+
+        result = self.report_manager._get_summary_memory_consumption_text(
+            cpu_only=True, gpu_names="FAKE_GPU", max_memories="8GB")
+        expected_result = "The maximum CPU memory consumption for each of the points in the first plot is shown in the second plot."
+        self.assertEqual(expected_result, result)
+
+        result = self.report_manager._get_summary_memory_consumption_text(
+            cpu_only=False, gpu_names="FAKE_GPU", max_memories="8GB")
+        expected_result = "The maximum GPU memory consumption for each of the points in the first plot is shown in the second plot. The GPU FAKE_GPU has a total available memory of 8GB."
+        self.assertEqual(expected_result, result)
+
+        result = self.report_manager._get_summary_memory_consumption_text(
+            cpu_only=False,
+            gpu_names="FAKE_GPU1,FAKE_GPU2",
+            max_memories="8GB, 10GB")
+        expected_result = "The maximum GPU memory consumption for each of the points in the first plot is shown in the second plot. The GPUs FAKE_GPU1,FAKE_GPU2 have a total available memory of 8GB, 10GB respectively."
+        self.assertEqual(expected_result, result)
+
     @patch(
         'model_analyzer.plots.plot_manager.PlotManager._create_update_simple_plot'
     )
