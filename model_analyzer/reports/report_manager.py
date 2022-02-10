@@ -306,13 +306,7 @@ class ReportManager:
         gpu_names = ','.join(list(gpu_dict.keys()))
         max_memories = ','.join([str(x) + ' GB' for x in gpu_dict.values()])
 
-        # Get batch sizes and constraints
-        static_batch_sizes = ','.join(
-            sorted(
-                set([
-                    str(measurement[1].perf_config()['batch-size'])
-                    for measurement in self._summary_data[report_key]
-                ])))
+        # Get constraints
         constraint_strs = self._build_constraint_strings()
         constraint_str = "None"
         if constraint_strs:
@@ -339,8 +333,6 @@ class ReportManager:
         if not cpu_only:
             summary.add_paragraph(f"GPU(s): {gpu_names}")
             summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
-        summary.add_paragraph(
-            f"Client Request Batch Size: {static_batch_sizes}")
         summary.add_paragraph(f"Constraint targets: {constraint_str}")
         summary.add_paragraph(summary_sentence)
         summary.add_paragraph(
