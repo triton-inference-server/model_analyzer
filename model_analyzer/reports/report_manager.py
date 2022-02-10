@@ -306,13 +306,7 @@ class ReportManager:
         gpu_names = ','.join(list(gpu_dict.keys()))
         max_memories = ','.join([str(x) + ' GB' for x in gpu_dict.values()])
 
-        # Get batch sizes and constraints
-        static_batch_sizes = ','.join(
-            sorted(
-                set([
-                    str(measurement[1].perf_config()['batch-size'])
-                    for measurement in self._summary_data[report_key]
-                ])))
+        # Get constraints
         constraint_strs = self._build_constraint_strings()
         constraint_str = "None"
         if constraint_strs:
@@ -339,8 +333,6 @@ class ReportManager:
         if not cpu_only:
             summary.add_paragraph(f"GPU(s): {gpu_names}")
             summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
-        summary.add_paragraph(
-            f"Client Request Batch Size: {static_batch_sizes}")
         summary.add_paragraph(f"Constraint targets: {constraint_str}")
         summary.add_paragraph(summary_sentence)
         summary.add_paragraph(
@@ -356,10 +348,6 @@ class ReportManager:
         caption_throughput = f"{throughput_plot_config.title()} curves for {num_best_configs} best configurations."
 
         if not cpu_only:
-            summary.add_paragraph(
-                "The maximum GPU memory consumption for each of the above points is"
-                f" shown in the second plot. The GPUs {gpu_names} have"
-                f" a total available memory of {max_memories} respectively.")
 
             summary.add_images([throughput_plot], [caption_throughput],
                                image_width=66)
@@ -373,9 +361,6 @@ class ReportManager:
                                    [caption_memory_latency],
                                    image_width=66)
         else:
-            summary.add_paragraph(
-                "The maximum GPU memory consumption for each of the above points is"
-                f" shown in the second plot.")
             summary.add_images([throughput_plot], [caption_throughput],
                                image_width=66)
             if self._mode == 'online':
@@ -416,7 +401,7 @@ class ReportManager:
 
         if not cpu_only:
             summary_table = ResultTable(headers=[
-                'Model Config Name', 'Preferred Batch Size', 'Instance Count',
+                'Model Config Name', 'Dynamic Batching', 'Instance Count',
                 'p99 Latency (ms)', 'Throughput (infer/sec)',
                 'Max CPU Memory Usage (MB)', 'Max GPU Memory Usage (MB)',
                 'Average GPU Utilization (%)'
@@ -424,7 +409,7 @@ class ReportManager:
                                         title="Report Table")
         else:
             summary_table = ResultTable(headers=[
-                'Model Config Name', 'Preferred Batch Size', 'Instance Count',
+                'Model Config Name', 'Dynamic Batching', 'Instance Count',
                 'p99 Latency (ms)', 'Throughput (infer/sec)',
                 'Max CPU Memory Usage (MB)'
             ],
@@ -441,21 +426,14 @@ class ReportManager:
             else model_config_dict['platform']
         dynamic_batch_phrase = self._get_dynamic_batching_phrase(best_config)
 
-        if not best_config.cpu_only():
-            summary_sentence = (
-                f"In {num_measurements} measurement(s), "
-                f"{best_config.instance_group_string()} model instance(s) "
-                f"with {dynamic_batch_phrase} "
-                f"on platform {platform} delivers "
-                f"maximum throughput under the given constraints on GPU(s) {gpu_name}."
-            )
-        else:
-            summary_sentence = (
-                f"In {num_measurements} measurement(s), "
-                f"{best_config.instance_group_string()} model instance(s) "
-                f"with {dynamic_batch_phrase} "
-                f"on platform {platform} delivers "
-                f"maximum throughput.")
+        summary_sentence = (
+            f"In {num_measurements} measurement(s), "
+            f"config {best_config.get_field('name')} ("
+            f"{best_config.instance_group_string()} model instance(s) "
+            f"with {dynamic_batch_phrase}) "
+            f"on platform {platform} delivers maximum throughput under "
+            f"the given constraints{' on GPU(s) '+gpu_name if not best_config.cpu_only() else ''}."
+        )
 
         # Construct table
         if not cpu_only:

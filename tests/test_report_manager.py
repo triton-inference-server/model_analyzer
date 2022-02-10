@@ -81,16 +81,24 @@ class TestReportManagerMethods(trc.TestResultCollector):
                                             gpu_info=gpu_info,
                                             result_manager=self.result_manager)
 
-    def _add_result_measurement(self, model_config_name, model_name,
-                                avg_gpu_metrics, avg_non_gpu_metrics,
-                                result_comparator):
-        self.model_config["name"] = model_config_name
+    def _add_result_measurement(self,
+                                model_config_name,
+                                model_name,
+                                avg_gpu_metrics,
+                                avg_non_gpu_metrics,
+                                result_comparator,
+                                cpu_only=False):
+
+        config_pb = self.model_config.copy()
+        config_pb["name"] = model_config_name
+        model_config = ModelConfig.create_from_dictionary(config_pb)
+        model_config._cpu_only = cpu_only
+
         measurement = construct_measurement(model_name, avg_gpu_metrics,
                                             avg_non_gpu_metrics,
                                             result_comparator)
-        run_config = RunConfig(
-            model_name, [ModelConfig.create_from_dictionary(self.model_config)],
-            measurement.perf_config(), None)
+        run_config = RunConfig(model_name, [model_config],
+                               measurement.perf_config(), None)
         self.result_manager.add_measurement(run_config, measurement)
 
     def setUp(self):
@@ -172,56 +180,57 @@ class TestReportManagerMethods(trc.TestResultCollector):
             self.assertEqual(len(report2_data), 5)
 
     def test_build_summary_table(self):
-        for mode in ['online', 'offline']:
-            self._init_managers(mode=mode)
-            result_comparator = ResultComparator(
-                metric_objectives={"perf_throughput": 10})
+        for mode in ['offline', 'online']:
+            for cpu_only in [True, False]:
+                self.subtest_build_summary_table(mode, cpu_only)
 
-            avg_gpu_metrics = {
-                0: {
-                    "gpu_used_memory": 6000,
-                    "gpu_utilization": 60
-                }
+    def subtest_build_summary_table(self, mode, cpu_only):
+        self._init_managers(mode=mode)
+        result_comparator = ResultComparator(
+            metric_objectives={"perf_throughput": 10})
+
+        avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
+
+        for i in range(10, 0, -1):
+            avg_non_gpu_metrics = {
+                "perf_throughput": 100 + 10 * i,
+                "perf_latency_p99": 4000,
+                "cpu_used_ram": 1000
             }
+            self._add_result_measurement(f"test_model_config_{i}", "test_model",
+                                         avg_gpu_metrics, avg_non_gpu_metrics,
+                                         result_comparator, cpu_only)
 
-            for i in range(10, 0, -1):
-                avg_non_gpu_metrics = {
-                    "perf_throughput": 100 + 10 * i,
-                    "perf_latency_p99": 4000,
-                    "cpu_used_ram": 1000
-                }
-                self._add_result_measurement(f"model_{i}", "test_model",
-                                             avg_gpu_metrics,
-                                             avg_non_gpu_metrics,
-                                             result_comparator)
+        self.result_manager.compile_and_sort_results()
+        self.report_manager.create_summaries()
 
-            self.result_manager.compile_and_sort_results()
-            self.report_manager.create_summaries()
+        summary_table, summary_sentence = \
+            self.report_manager._build_summary_table(
+                report_key="test_model",
+                num_measurements=10,
+                gpu_name="TITAN RTX")
 
-            summary_table, summary_sentence = \
-                self.report_manager._build_summary_table(
-                    report_key="test_model",
-                    num_measurements=10,
-                    gpu_name="TITAN RTX")
+        expected_summary_sentence = (
+            "In 10 measurement(s), config test_model_config_10 (1/GPU model instance(s)"
+            " with dynamic batching enabled) on"
+            " platform tensorflow_graphdef delivers maximum"
+            " throughput under the given constraints")
+        if not cpu_only:
+            expected_summary_sentence += " on GPU(s) TITAN RTX"
+        expected_summary_sentence += "."
+        self.assertEqual(expected_summary_sentence, summary_sentence)
 
-            expected_summary_sentence = (
-                "In 10 measurement(s), 1/GPU model instance(s)"
-                " with dynamic batching enabled on"
-                " platform tensorflow_graphdef delivers maximum"
-                " throughput under the given constraints on GPU(s) TITAN RTX.")
-            self.assertEqual(expected_summary_sentence, summary_sentence)
-
-            # Get throughput index and make sure results are sorted
-            throughput_index = summary_table.headers().index(
-                "Throughput (infer/sec)")
-            model_name_index = summary_table.headers().index(
-                "Model Config Name")
-            for i in range(9):
-                current_row = summary_table.get_row_by_index(i)
-                next_row = summary_table.get_row_by_index(i + 1)
-                self.assertEqual(current_row[model_name_index], f"model_{10-i}")
-                self.assertGreaterEqual(current_row[throughput_index],
-                                        next_row[throughput_index])
+        # Get throughput index and make sure results are sorted
+        throughput_index = summary_table.headers().index(
+            "Throughput (infer/sec)")
+        model_name_index = summary_table.headers().index("Model Config Name")
+        for i in range(9):
+            current_row = summary_table.get_row_by_index(i)
+            next_row = summary_table.get_row_by_index(i + 1)
+            self.assertEqual(current_row[model_name_index],
+                             f"test_model_config_{10-i}")
+            self.assertGreaterEqual(current_row[throughput_index],
+                                    next_row[throughput_index])
 
     @patch(
         'model_analyzer.plots.plot_manager.PlotManager._create_update_simple_plot'
