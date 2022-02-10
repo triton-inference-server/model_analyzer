@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+# Copyright 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from .mock_base import MockBase
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock, MagicMock, ANY
 
 
 class MockTritonClientMethods(MockBase):
@@ -59,21 +59,40 @@ class MockTritonClientMethods(MockBase):
         self._patchers.append(self.patcher_http_client)
         self._patchers.append(self.patcher_grpc_client)
 
-    def assert_created_grpc_client_with_args(self, url):
+    def assert_created_grpc_client_with_args(self,
+                                             url,
+                                             ssl=False,
+                                             root_certificates=None,
+                                             private_key=None,
+                                             certificate_chain=None):
         """
         Assert that the correct InferServerClient was
-        indeed constructed with the specified url
+        indeed constructed with the specified url and SSL options
         """
 
-        self.grpc_mock.assert_called_with(url=url)
+        self.grpc_mock.assert_called_with(url=url,
+                                          ssl=ssl,
+                                          root_certificates=root_certificates,
+                                          private_key=private_key,
+                                          certificate_chain=certificate_chain)
 
-    def assert_created_http_client_with_args(self, url):
+    def assert_created_http_client_with_args(self,
+                                             url,
+                                             ssl_options={},
+                                             ssl=False,
+                                             ssl_context_factory=ANY,
+                                             insecure=True):
         """
         Assert that the correct InferServerClient was
-        indeed constructed with the specified url
+        indeed constructed with the specified url  and SSL options
         """
 
-        self.http_mock.assert_called_with(url=url)
+        self.http_mock.assert_called_with(
+            url=url,
+            ssl_options=ssl_options,
+            ssl=ssl,
+            ssl_context_factory=ssl_context_factory,
+            insecure=insecure)
 
     def assert_grpc_client_waited_for_server_ready(self):
         """
