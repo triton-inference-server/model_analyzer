@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Invalid config file for Model Analyzer. It uses the corrupted ssl keys 
+# generated from the following lines:
+# cp client.key client2.key && sed -i "s/\b\(.\)/\u\1/g" client2.key
+# cp client.crt client2.crt && sed -i "s/\b\(.\)/\u\1/g" client2.crt
+
 batch_sizes:
 - 1
 - 2

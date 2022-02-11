@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Valid config file for Model Analyzer. It uses the correct ssl keys.
+
 batch_sizes:
 - 1
 - 2
