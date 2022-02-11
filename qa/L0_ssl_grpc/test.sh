@@ -74,15 +74,6 @@ if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"
     cat $ANALYZER_LOG
     RET=1
-else
-    # Check the Analyzer log for correct output
-    TEST_NAME='profile_logs'
-    python3 check_results.py -f $WORKING_CONFIG_FILE -t $TEST_NAME -l $ANALYZER_LOG
-    if [ $? -ne 0 ]; then
-        echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
-        cat $ANALYZER_LOG
-        RET=1
-    fi
 fi
 
 
