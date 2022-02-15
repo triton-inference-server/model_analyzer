@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ logger = logging.getLogger(LOGGER_NAME)
 
 
 @total_ordering
-class Measurement:
+class ModelConfigMeasurement:
     """
-    Encapsulates the set of metrics obtained from a single
+    Encapsulates the set of metrics obtained from a single model config's
     perf_analyzer run
     """
 
@@ -56,36 +56,39 @@ class Measurement:
 
     @classmethod
     def from_dict(cls, measurement_dict):
-        measurement = Measurement({}, [], None)
+        model_measurement = ModelConfigMeasurement({}, [], None)
 
         # Deserialize gpu_data
-        for gpu_uuid, gpu_data_list in measurement_dict['_gpu_data'].items():
+        for gpu_uuid, gpu_data_list in model_measurement_dict[
+                '_gpu_data'].items():
             metric_list = []
             for [tag, record_dict] in gpu_data_list:
                 record_type = RecordType.get(tag)
                 record = record_type.from_dict(record_dict)
                 metric_list.append(record)
-            measurement._gpu_data[gpu_uuid] = metric_list
+            model_measurement._gpu_data[gpu_uuid] = metric_list
 
         # non gpu data
-        measurement._non_gpu_data = []
-        for [tag, record_dict] in measurement_dict['_non_gpu_data']:
+        model_measurement._non_gpu_data = []
+        for [tag, record_dict] in model_measurement_dict['_non_gpu_data']:
             record_type = RecordType.get(tag)
             record = record_type.from_dict(record_dict)
-            measurement._non_gpu_data.append(record)
+            model_measurement._non_gpu_data.append(record)
 
         # perf config
-        measurement._perf_config = PerfAnalyzerConfig.from_dict(
-            measurement_dict['_perf_config'])
+        model_measurement._perf_config = PerfAnalyzerConfig.from_dict(
+            model_measurement_dict['_perf_config'])
 
         # Compute contigent data structures
-        measurement._avg_gpu_data = measurement._average_list(
-            list(measurement._gpu_data.values()))
-        measurement._gpu_data_from_tag = {
-            type(metric).tag: metric for metric in measurement._avg_gpu_data
+        model_measurement._avg_gpu_data = model_measurement._average_list(
+            list(model_measurement._gpu_data.values()))
+        model_measurement._gpu_data_from_tag = {
+            type(metric).tag: metric
+            for metric in model_measurement._avg_gpu_data
         }
-        measurement._non_gpu_data_from_tag = {
-            type(metric).tag: metric for metric in measurement._non_gpu_data
+        model_measurement._non_gpu_data_from_tag = {
+            type(metric).tag: metric
+            for metric in model_measurement._non_gpu_data
         }
 
         return measurement
@@ -155,9 +158,10 @@ class Measurement:
         elif tag in self._gpu_data_from_tag:
             return self._gpu_data_from_tag[tag]
         else:
-            logger.warning(f"No metric corresponding to tag '{tag}' "
-                           "found in measurement. Possibly comparing "
-                           "measurements across devices.")
+            logger.warning(
+                f"No metric corresponding to tag '{tag}' "
+                "found in the model's measurement. Possibly comparing "
+                "measurements across devices.")
             return None
 
     def get_metric_value(self, tag, default_value=0):
@@ -201,9 +205,10 @@ class Measurement:
         if tag.replace('_', '-') in self.perf_config():
             return self.perf_config()[tag.replace('_', '-')]
         else:
-            logger.warning(f"No parameter corresponding to tag '{tag}' "
-                           "found in measurement. Possibly comparing "
-                           "measurements across devices.")
+            logger.warning(
+                f"No parameter corresponding to tag '{tag}' "
+                "found in the model's measurement. Possibly comparing "
+                "measurements across devices.")
             return None
 
     def gpus_used(self):

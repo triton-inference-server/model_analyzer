@@ -24,7 +24,7 @@ from model_analyzer.monitor.remote_monitor import RemoteMonitor
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
-from model_analyzer.result.measurement import Measurement
+from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 
 from collections import defaultdict
 from prometheus_client.parser import text_string_to_metric_families
@@ -380,9 +380,10 @@ class MetricsManager:
 
         measurement = None
         if model_gpu_metrics is not None and model_non_gpu_metrics is not None:
-            measurement = Measurement(gpu_data=model_gpu_metrics,
-                                      non_gpu_data=model_non_gpu_metrics,
-                                      perf_config=perf_config)
+            measurement = ModelConfigMeasurement(
+                gpu_data=model_gpu_metrics,
+                non_gpu_data=model_non_gpu_metrics,
+                perf_config=perf_config)
             self._result_manager.add_measurement(run_config, measurement)
         return measurement
 

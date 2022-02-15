@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.triton.model.model_config import ModelConfig
-from model_analyzer.result.measurement import Measurement
+from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.record.record import RecordType
 
 
@@ -47,7 +47,8 @@ class AnalyzerState:
                 # Deserialize measurements
                 measurements_dict = {}
                 for measurement_key, measurement_dict in measurements.items():
-                    measurement = Measurement.from_dict(measurement_dict)
+                    measurement = ModelConfigMeasurement.from_dict(
+                        measurement_dict)
                     measurements_dict[measurement_key] = measurement
                 state._state_dict['ResultManager.results'][model_name][
                     model_config_name] = (model_config, measurements_dict)

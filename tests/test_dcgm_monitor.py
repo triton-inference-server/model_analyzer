@@ -52,7 +52,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
     def test_record_memory(self):
         # One measurement every 0.01 seconds
         frequency = 1
-        monitoring_time = 10
+        monitoring_time = 2
         metrics = [GPUUsedMemory, GPUFreeMemory]
         dcgm_monitor = DCGMMonitor(self._gpus, frequency, metrics)
         dcgm_monitor.start_recording_metrics()
@@ -84,7 +84,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
     def test_record_power(self):
         # One measurement every 0.01 seconds
         frequency = 1
-        monitoring_time = 10
+        monitoring_time = 2
         metrics = [GPUPowerUsage]
         dcgm_monitor = DCGMMonitor(self._gpus, frequency, metrics)
         dcgm_monitor.start_recording_metrics()
@@ -109,7 +109,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
     def test_record_utilization(self):
         # One measurement every 0.01 seconds
         frequency = 1
-        monitoring_time = 10
+        monitoring_time = 2
         metrics = [GPUUtilization]
         dcgm_monitor = DCGMMonitor(self._gpus, frequency, metrics)
         dcgm_monitor.start_recording_metrics()

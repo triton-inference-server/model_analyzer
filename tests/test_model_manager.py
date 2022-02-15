@@ -24,7 +24,7 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.model_manager import ModelManager
-from model_analyzer.result.measurement import Measurement
+from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
 from google.protobuf import json_format
@@ -62,9 +62,9 @@ class MetricsManagerSubclass(MetricsManager):
 
         perf_throughput = PerfThroughput(self._get_next_perf_throughput_value())
         non_gpu_data = [perf_throughput]
-        return Measurement(gpu_data=MagicMock(),
-                           non_gpu_data=non_gpu_data,
-                           perf_config=MagicMock())
+        return ModelConfigMeasurement(gpu_data=MagicMock(),
+                                      non_gpu_data=non_gpu_data,
+                                      perf_config=MagicMock())
 
     def _get_next_perf_throughput_value(self):
         self._perf_throughput *= 2

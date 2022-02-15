@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.result.measurement import Measurement
+from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.result.model_result import ModelResult
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
@@ -76,9 +76,9 @@ def construct_measurement(model_name, gpu_metric_values, non_gpu_metric_values,
     perf_config['model-names'] = model_name
     perf_config['protocol'] = 'http'
 
-    measurement = Measurement(gpu_data=gpu_data,
-                              non_gpu_data=non_gpu_data,
-                              perf_config=perf_config)
+    measurement = ModelConfigMeasurement(gpu_data=gpu_data,
+                                         non_gpu_data=non_gpu_data,
+                                         perf_config=perf_config)
     measurement.set_result_comparator(comparator=comparator)
     return measurement
 
