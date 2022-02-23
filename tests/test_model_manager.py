@@ -38,7 +38,7 @@ from .common.test_utils import convert_to_bytes
 
 class MetricsManagerSubclass(MetricsManager):
     """ 
-    Overrides execute_run_configs() to gather a list of MockRunConfigs that
+    Overrides execute_run_config() to gather a list of MockRunConfigs that
     contain the configured values of each would-be 'executed' run_config
     """
 
@@ -60,11 +60,15 @@ class MetricsManagerSubclass(MetricsManager):
     def _get_next_measurements(self):
         """ Return fake measurements as if the run_configs had been executed """
 
-        perf_throughput = PerfThroughput(self._get_next_perf_throughput_value())
-        non_gpu_data = [perf_throughput]
-        return Measurement(gpu_data=MagicMock(),
-                           non_gpu_data=non_gpu_data,
-                           perf_config=MagicMock())
+        throughput_value = self._get_next_perf_throughput_value()
+        if throughput_value is None:
+            return None
+        else:
+            perf_throughput = PerfThroughput(throughput_value)
+            non_gpu_data = [perf_throughput]
+            return Measurement(gpu_data=MagicMock(),
+                               non_gpu_data=non_gpu_data,
+                               perf_config=MagicMock())
 
     def _get_next_perf_throughput_value(self):
         self._perf_throughput *= 2
@@ -115,7 +119,7 @@ class TestModelManager(trc.TestResultCollector):
             'kind': ["KIND_GPU"],
             'batching': [0],
             'batch_sizes': [1],
-            'max_batch_size': [8],
+            'max_batch_size': [1, 2, 4, 8],
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
         }, {
             'instances': [1],
@@ -130,6 +134,7 @@ class TestModelManager(trc.TestResultCollector):
             profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 5
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             """)
 
@@ -160,6 +165,8 @@ class TestModelManager(trc.TestResultCollector):
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             """)
 
@@ -186,6 +193,8 @@ class TestModelManager(trc.TestResultCollector):
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: True
             """)
 
@@ -215,6 +224,8 @@ class TestModelManager(trc.TestResultCollector):
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             concurrency: [5, 7]
             """)
@@ -240,6 +251,8 @@ class TestModelManager(trc.TestResultCollector):
             profile_models: test_model
             run_config_search_max_concurrency: 512
             run_config_search_max_instance_count: 7
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             triton_launch_mode: remote            
             """)
@@ -271,6 +284,8 @@ class TestModelManager(trc.TestResultCollector):
             profile_models: test_model
             run_config_search_max_concurrency: 512
             run_config_search_max_instance_count: 7
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             concurrency:
                 start: 2
@@ -300,6 +315,8 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 8
             run_config_search_max_instance_count: 16
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             profile_models:
                 test_model:
@@ -336,6 +353,8 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 8
             run_config_search_max_instance_count: 16
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             profile_models:
                 test_model:
@@ -399,6 +418,8 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 16
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             profile_models:
                 test_model:
@@ -462,6 +483,8 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 16
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             profile_models:
                 test_model:
@@ -526,6 +549,8 @@ class TestModelManager(trc.TestResultCollector):
         yaml_content = convert_to_bytes("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 1
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             profile_models: test_model
             """)
@@ -567,6 +592,8 @@ class TestModelManager(trc.TestResultCollector):
             profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 2
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             batch_sizes: 1,2
             """)
@@ -608,6 +635,8 @@ class TestModelManager(trc.TestResultCollector):
             profile_models: test_model
             run_config_search_max_concurrency: 2048
             run_config_search_max_instance_count: 1
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             """)
 
@@ -618,7 +647,7 @@ class TestModelManager(trc.TestResultCollector):
             ]
             self._test_model_manager(yaml_content, expected_ranges)
 
-    def test_bad_result_early_exit(self):
+    def test_bad_result_early_PA_exit(self):
         """
         Test that there is an early backoff for bad result (out of memory)
 
@@ -649,11 +678,76 @@ class TestModelManager(trc.TestResultCollector):
             profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 2
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             run_config_search_disable: False
             """)
 
         with patch.object(MetricsManagerSubclass,
-                          "_get_next_measurements") as mock_method:
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.return_value = None
+            self._test_model_manager(yaml_content, expected_ranges)
+
+    def test_bad_result_early_batch_size_exit(self):
+        """
+        Test that there is an early backoff for bad result (out of memory)
+        when sweeping max_batch_size
+
+        If a bad (None) measurement is returned in a set of results for a model_config,
+        then we should early exit that max_batch_size sweep
+
+        This test sets measurements such that a None result will be returned when 
+        trying instances=1, max_batch_size=64, and when trying instances=2, max_batch_size=32. 
+        The combinations of (instance=1 max_batch_size=128) and (instance=2, max_batch_size=64,128)
+        should not exist
+        """
+
+        expected_ranges = [{
+            'instances': [1],
+            'kind': ["KIND_GPU"],
+            'batching': [0],
+            'batch_sizes': [1],
+            'max_batch_size': [8, 16, 32, 64],
+            'concurrency': [1, 2]
+        }, {
+            'instances': [2],
+            'kind': ["KIND_GPU"],
+            'batching': [0],
+            'batch_sizes': [1],
+            'max_batch_size': [8, 16, 32],
+            'concurrency': [1, 2]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1, 2]
+        }]
+
+        yaml_content = convert_to_bytes("""
+            profile_models: test_model
+            run_config_search_max_concurrency: 2
+            run_config_search_max_instance_count: 2
+            run_config_search_min_model_batch_size: 8
+            run_config_search_disable: False
+            """)
+
+        with patch.object(MetricsManagerSubclass,
+                          "_get_next_perf_throughput_value") as mock_method:
+            #yapf: disable
+            mock_method.side_effect = [
+                1, 2,     # Default config, concurrency 1 and 2 \
+                1, 2,     # 1 Instance, Batch size 8, concurency 1 and 2
+                1, 2,     # 1 Instance, Batch size 16, concurrency 1 and 2
+                1, 2,     # 1 Instance, Batch size 32, concurrency 1 and 2
+                1, None,  # 1 Instance, Batch size 64, concurrency 1 and 2
+                1, 2,     # 2 Instance, Batch size 8, concurency 1 and 2
+                1, 2,     # 2 Instance, Batch size 16, concurrency 1 and 2
+                1, None,  # 2 Instance, Batch size 32, concurrency 1 and 2
+            ]
+            #yapf: enable
+
             mock_method.return_value = None
             self._test_model_manager(yaml_content, expected_ranges)
 
@@ -678,7 +772,7 @@ class TestModelManager(trc.TestResultCollector):
                                      MagicMock(), MagicMock(), metrics_manager,
                                      MagicMock(), state_manager)
 
-        model_manager.run_models(config.profile_models)
+        model_manager.run_model(config.profile_models[0])
         self.mock_model_config.stop()
 
         self._check_results(model_manager, expected_ranges)

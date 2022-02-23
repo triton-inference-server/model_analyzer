@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.model_config_generator import ModelConfigGenerator
+from model_analyzer.config.generate.generator_factory import ConfigGeneratorFactory
 from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
 from model_analyzer.cli.cli import CLI
@@ -30,8 +30,8 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ''' 
         Test direct modes with no model_config_parameters specified
         
-        It will just sweep instance count (with dynamic batching on), and 
-        default config (None) will be included 
+        It will just sweep instance count and max_batch_size (with dynamic batching on),
+        and default config (empty dict) will be included 
         '''
 
         # yapf: disable
@@ -41,11 +41,46 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             """)
 
         expected_configs = [
-            {'dynamic_batching': {}, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
-            {'dynamic_batching': {}, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
-            {'dynamic_batching': {}, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
-            {'dynamic_batching': {}, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
-            {'dynamic_batching': {}, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 1, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 1, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 1, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 1, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 1, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 2, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 2, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 2, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 2, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 2, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 32, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 32, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 32, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 32, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 32, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 64, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 64, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 64, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 64, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 64, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
             {}
         ]
         # yapf: enable
@@ -108,22 +143,63 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         self._run_and_test_model_config_generator(yaml_content,
                                                   expected_configs)
 
-    def test_direct_max_instance_count(self):
+    def test_run_config_search_options(self):
         ''' 
         Test that ModelConfigGenerator will honor run_config_search_max_instance_count
+        and run_config_search_max_model_batch_size and run_config_search_min_model_batch_size
         '''
 
         # yapf: disable
         yaml_content = convert_to_bytes("""
             run_config_search_max_instance_count: 3
+            run_config_search_min_model_batch_size: 2
+            run_config_search_max_model_batch_size: 16
             profile_models:
                 - my-model
             """)
 
         expected_configs = [
-            {'dynamic_batching': {}, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
-            {'dynamic_batching': {}, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
-            {'dynamic_batching': {}, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 2, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 2, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 2, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {}
+        ]
+        # yapf: enable
+
+        self._run_and_test_model_config_generator(yaml_content,
+                                                  expected_configs)
+
+    def test_non_power_of_two_max_batch_size(self):
+        ''' 
+        Test that ModelConfigGenerator will correctly sweep max_batch_size with
+        input values that aren't a power of 2
+        '''
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_instance_count: 2
+            run_config_search_min_model_batch_size: 3
+            run_config_search_max_model_batch_size: 15
+            profile_models:
+                - my-model
+            """)
+
+        expected_configs = [
+            {'dynamic_batching': {}, 'max_batch_size': 3, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 3, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 6, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 6, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 12, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 12, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
             {}
         ]
         # yapf: enable
@@ -175,14 +251,18 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         # yapf: disable
         yaml_content = convert_to_bytes("""
             run_config_search_max_instance_count: 2
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 16
             profile_models:
                 - my-model:
                     cpu_only: True
             """)
 
         expected_configs = [
-            {'dynamic_batching': {}, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]},
-            {'dynamic_batching': {}, 'instance_group': [{'count': 2, 'kind': 'KIND_CPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_CPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 2, 'kind': 'KIND_CPU'}]},
             {}
         ]
         # yapf: enable
@@ -200,7 +280,8 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
         # yapf: disable
         protobuf = """
-            max_batch_size: 8
+            platform: "fake_platform"
+            max_batch_size: 4
             instance_group [
             {
                 kind: KIND_CPU
@@ -211,16 +292,18 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
         yaml_content = convert_to_bytes("""
             run_config_search_max_instance_count: 4
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             profile_models:
                 - my-model
             """)
 
         expected_configs = [
-            {'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
-            {'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
-            {'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
-            {'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
-            {'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]}
+            {'platform': "fake_platform", 'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'platform': "fake_platform", 'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'platform': "fake_platform", 'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'platform': "fake_platform", 'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'platform': "fake_platform", 'max_batch_size': 4, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]}
         ]
         # yapf: enable
 
@@ -299,11 +382,12 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         fake_client = MagicMock()
         fake_client.get_model_config = lambda name, retry_count: {'name': name}
 
-        mcg = ModelConfigGenerator(config, config.profile_models[0],
-                                   fake_client)
+        mcg = ConfigGeneratorFactory.create_model_config_generator(
+            config, config.profile_models[0], fake_client)
+        mcg_generator = mcg.next_config()
         model_configs = []
         while not mcg.is_done():
-            model_config = mcg.next_config()
+            model_config = next(mcg_generator)
             model_config_dict = model_config.get_config()
             model_configs.append(model_config_dict)
 

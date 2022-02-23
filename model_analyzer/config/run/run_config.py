@@ -21,14 +21,14 @@ class RunConfig:
     one ModelConfig and produces one ModelResult.
     """
 
-    def __init__(self, model_name, model_configs, perf_config, triton_env):
+    def __init__(self, model_name, model_config, perf_config, triton_env):
         """
         Parameters
         ----------
         model_name: str
             The name of the model
-        model_config : list of ModelConfig
-            List of model config(s) corresponding to this run
+        model_config : ModelConfig
+            model config corresponding to this run
         perf_config : PerfAnalyzerConfig
             List of possible run parameters to pass
             to Perf Analyzer
@@ -38,7 +38,7 @@ class RunConfig:
         """
 
         self._model_name = model_name
-        self._model_configs = model_configs
+        self._model_config = model_config
         self._perf_config = perf_config
         self._triton_env = triton_env
 
@@ -54,7 +54,7 @@ class RunConfig:
 
         return self._model_name
 
-    def model_configs(self):
+    def model_config(self):
         """
         Returns
         -------
@@ -62,7 +62,7 @@ class RunConfig:
             The list of ModelConfigs corresponding to this run.
         """
 
-        return self._model_configs
+        return self._model_config
 
     def perf_config(self):
         """

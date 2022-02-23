@@ -97,7 +97,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         measurement = construct_measurement(model_name, avg_gpu_metrics,
                                             avg_non_gpu_metrics,
                                             result_comparator)
-        run_config = RunConfig(model_name, [model_config],
+        run_config = RunConfig(model_name, model_config,
                                measurement.perf_config(), None)
         self.result_manager.add_measurement(run_config, measurement)
 

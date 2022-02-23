@@ -111,18 +111,15 @@ class Analyzer:
 
         # Profile all models concurrently
         if self._should_profile_multiple_models_concurrently():
-            try:
-                self._model_manager.run_models(
-                    models=self._config.profile_models)
-            finally:
-                self._state_manager.save_checkpoint()
+            raise TritonModelAnalyzerException(
+                f"Concurrent models not yet implemented")
         else:
             # Profile each model, save state after each
             for model in self._config.profile_models:
                 if self._state_manager.exiting():
                     break
                 try:
-                    self._model_manager.run_models(models=[model])
+                    self._model_manager.run_model(model=model)
                 finally:
                     self._state_manager.save_checkpoint()
 

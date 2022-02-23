@@ -197,9 +197,8 @@ class MetricsManager:
         Creates and fills all model variant directories
         """
 
-        for model_config in run_config.model_configs():
-            self._create_model_variant(original_name=run_config.model_name(),
-                                       variant_config=model_config)
+        self._create_model_variant(original_name=run_config.model_name(),
+                                   variant_config=run_config.model_config())
 
     def _create_model_variant(self, original_name, variant_config):
         """
@@ -232,9 +231,9 @@ class MetricsManager:
         Loads all model variants in the client
         """
 
-        for model_config in run_config.model_configs():
-            if not self._load_model_variant(variant_config=model_config):
-                return False
+        if not self._load_model_variant(
+                variant_config=run_config.model_config()):
+            return False
         return True
 
     def _load_model_variant(self, variant_config):
@@ -274,8 +273,7 @@ class MetricsManager:
         """
 
         model_name = run_config.model_name()
-        # FIXME: MM-PHASE-1: Assuming all models are identical, so using first model's name
-        model_config_name = run_config.model_configs()[0].get_field('name')
+        model_config_name = run_config.model_config().get_field('name')
         perf_config_str = run_config.perf_config().representation()
 
         results = self._state_manager.get_state_variable(
@@ -285,9 +283,7 @@ class MetricsManager:
         if model_name not in results:
             return False
         if not self._is_config_in_results(
-                # FIXME: MM-PHASE-1: Assuming all models are identical, so using first model's name
-                run_config.model_configs()[0]._model_config,
-                results[model_name]):
+                run_config.model_config()._model_config, results[model_name]):
             return False
         measurements = results[model_name][model_config_name][1]
 
@@ -332,10 +328,9 @@ class MetricsManager:
         perf_output_writer = None if \
             not self._config.perf_output else FileWriter(self._config.perf_output_path)
         perf_config = run_config.perf_config()
-        logger.info(f"Profiling model {perf_config['model-names']}...")
+        logger.info(f"Profiling model {perf_config['model-name']}...")
 
-        # FIXME: MM-PHASE-1: Assuming all models are identical, so using first model's config
-        cpu_only = run_config.model_configs()[0].cpu_only()
+        cpu_only = run_config.model_config().cpu_only()
         perf_config = run_config.perf_config()
 
         # Inform user CPU metric(s) are not being collected under CPU mode
