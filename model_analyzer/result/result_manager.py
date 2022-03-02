@@ -308,9 +308,10 @@ class ResultManager:
         ]
         for model_name in analysis_model_names:
             if model_name not in results:
-                logger.warning(
+                raise TritonModelAnalyzerException(
                     f"Model {model_name} requested for analysis but no results were found. "
-                    "Ensure that this model was actually profiled.")
+                    "Double check the name and ensure that this model was actually profiled."
+                )
             else:
                 result_dict = results[model_name]
                 for (model_config, measurements) in result_dict.values():
@@ -351,9 +352,10 @@ class ResultManager:
 
         if model_name not in results or model_config_name not in results[
                 model_name]:
-            logger.error(
-                f'No results found for model config: {model_config_name}')
-            return (None, [])
+            raise TritonModelAnalyzerException(
+                f"Model Config {model_config_name} requested for report step but no results were found. "
+                "Double check the name and ensure that this model config was actually profiled."
+            )
         else:
             model_config_data = results[model_name][model_config_name]
             return model_config_data[0], list(model_config_data[1].values())
