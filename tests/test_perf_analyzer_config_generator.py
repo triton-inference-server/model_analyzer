@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import unittest
+from tests.common.test_utils import construct_perf_analyzer_config
+
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.config.generate.perf_analyzer_config_generator import PerfAnalyzerConfigGenerator
 from model_analyzer.config.input.config_command_profile \
@@ -54,7 +56,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         concurrencies = utils.generate_log2_list(
             DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
-            self._create_expected_config(concurrency=c) for c in concurrencies
+            construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
 
         self._run_and_test_perf_analyzer_config_generator(
@@ -76,7 +78,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        expected_configs = [self._create_expected_config()]
+        expected_configs = [construct_perf_analyzer_config()]
 
         self._run_and_test_perf_analyzer_config_generator(
             yaml_content, expected_configs, '--run-config-search-disable')
@@ -100,7 +102,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         concurrencies = utils.generate_log2_list(
             DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
-            self._create_expected_config(concurrency=c, launch_mode='c_api')
+            construct_perf_analyzer_config(concurrency=c, launch_mode='c_api')
             for c in concurrencies
         ]
 
@@ -126,7 +128,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         concurrencies = utils.generate_log2_list(
             DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
-            self._create_expected_config(concurrency=c, client_protocol='http')
+            construct_perf_analyzer_config(concurrency=c,
+                                           client_protocol='http')
             for c in concurrencies
         ]
 
@@ -153,7 +156,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         batch_sizes = [1, 2, 4]
         expected_configs = [
-            self._create_expected_config(batch_size=b) for b in batch_sizes
+            construct_perf_analyzer_config(batch_size=b) for b in batch_sizes
         ]
 
         pa_cli_args = ['-b 1,2,4', '--run-config-search-disable']
@@ -181,7 +184,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         concurrencies = utils.generate_log2_list(
             DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
-            self._create_expected_config(batch_size=b, concurrency=c)
+            construct_perf_analyzer_config(batch_size=b, concurrency=c)
             for b in batch_sizes
             for c in concurrencies
         ]
@@ -210,7 +213,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         concurrencies = [1, 2, 3, 4]
         expected_configs = [
-            self._create_expected_config(concurrency=c) for c in concurrencies
+            construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
 
         pa_cli_args = ['-c 1,2,3,4']
@@ -245,7 +248,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         concurrencies = [1, 2, 3, 4]
 
         expected_configs = [
-            self._create_expected_config(batch_size=b, concurrency=c)
+            construct_perf_analyzer_config(batch_size=b, concurrency=c)
             for b in batch_sizes
             for c in concurrencies
         ]
@@ -277,7 +280,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         concurrencies = utils.generate_log2_list(16)
         expected_configs = [
-            self._create_expected_config(concurrency=c) for c in concurrencies
+            construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
 
         pa_cli_args = ['--run-config-search-max-concurrency', '16']
@@ -307,7 +310,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         concurrencies = utils.generate_log2_list(
             DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
-            self._create_expected_config(
+            construct_perf_analyzer_config(
                 concurrency=c, perf_analyzer_flags={'percentile': '96'})
             for c in concurrencies
         ]
@@ -342,7 +345,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         concurrencies = utils.generate_log2_list(
             DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
-            self._create_expected_config(
+            construct_perf_analyzer_config(
                 concurrency=c,
                 perf_analyzer_flags={
                     'ssl-grpc-root-certifications-file': 'a',
@@ -361,35 +364,31 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         self._run_and_test_perf_analyzer_config_generator(
             yaml_content, expected_configs)
 
-    def _create_expected_config(self,
-                                batch_size=DEFAULT_BATCH_SIZES,
-                                concurrency=1,
-                                launch_mode=DEFAULT_TRITON_LAUNCH_MODE,
-                                client_protocol=DEFAULT_CLIENT_PROTOCOL,
-                                perf_analyzer_flags=None):
-        expected_config = PerfAnalyzerConfig()
-        expected_config._options['-m'] = 'my-model'
-        expected_config._options['-f'] = 'my-model'
-        expected_config._options['-b'] = batch_size
-        expected_config._args['concurrency-range'] = concurrency
-        expected_config._args['measurement-mode'] = DEFAULT_MEASUREMENT_MODE
+    def test_multiple_models(self):
+        """
+        Test Multiple Models:  
+            Confirm that if multiple model names are passed in, that
+            they will end up in the PA CLI
+        """
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--profile-models', "model1,model2"
+        ]
+        config = self._evaluate_config(args, yaml_content="")
+        pacg = PerfAnalyzerConfigGenerator(
+            config, [model.model_name() for model in config.profile_models],
+            config.profile_models[0].perf_analyzer_flags(),
+            config.profile_models[0].parameters())
 
-        expected_config.update_config(perf_analyzer_flags)
+        perf_analyzer_configs = []
+        pacg_generator = pacg.next_config()
+        while not pacg.is_done():
+            perf_analyzer_configs.append(next(pacg_generator))
 
-        if launch_mode == 'c_api':
-            expected_config._args['service-kind'] = 'triton_c_api'
-            expected_config._args[
-                'triton-server-directory'] = DEFAULT_TRITON_INSTALL_PATH
-            expected_config._args[
-                'model-repository'] = DEFAULT_OUTPUT_MODEL_REPOSITORY
-        else:
-            expected_config._options['-i'] = client_protocol
-            if client_protocol == 'http':
-                expected_config._options['-u'] = DEFAULT_TRITON_HTTP_ENDPOINT
-            else:
-                expected_config._options['-u'] = DEFAULT_TRITON_GRPC_ENDPOINT
+        self.assertTrue(len(perf_analyzer_configs) > 0)
 
-        return expected_config
+        pa_cli = perf_analyzer_configs[0].to_cli_string()
+        self.assertRegex(pa_cli, "model1,model2")
 
     def _run_and_test_perf_analyzer_config_generator(self,
                                                      yaml_content,

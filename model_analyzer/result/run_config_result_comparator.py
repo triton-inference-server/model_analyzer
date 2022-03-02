@@ -15,9 +15,10 @@
 from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
 
 
-class ResultComparator:
+class RunConfigResultComparator:
     """
-    Stores information needed to compare results and measurements.
+    Contains methods to determine which RunConfigMeasurement is better
+    given a set of metric objectives and a weighting for each ModelConfig
     """
 
     def __init__(self, metric_objectives):
@@ -25,11 +26,10 @@ class ResultComparator:
         Parameters
         ----------
         metric_objectives : dict of RecordTypes
-            keys are the metric types, and values are The relative importance
-            of the keys with respect to other. If the values are 0,
+            keys are the metric types, and values are the weighting
+            of the keys (with respect to each other). 
         """
 
-        # Normalize metric weights
         self._metric_weights = {
             key: (val / sum(metric_objectives.values()))
             for key, val in metric_objectives.items()
@@ -110,6 +110,44 @@ class ResultComparator:
 
             metric_diff = metric1 - metric2
             score_gain += (weight * (metric_diff.value() / metric1.value()))
+
+        if score_gain > COMPARISON_SCORE_THRESHOLD:
+            return 1
+        elif score_gain < -COMPARISON_SCORE_THRESHOLD:
+            return -1
+        return 0
+
+    def compare_metrics(self, metric1, metric2):
+        """
+        Compares individual metrics retrieved from RunConfig runs
+        based on their scores
+
+        Parameters
+        ----------
+        metric1 : Record
+            first set of metrics to be compared
+        metric2 : Record
+            second set of metrics to be compared
+
+        Returns
+        -------
+        int
+            0
+                if the results are determined
+                to be the same within a threshold
+            1
+                if measurement1 > measurement2
+            -1
+                if measurement1 < measurement2
+        """
+
+        score_gain = 0.0
+        for objective, weight in self._metric_weights.items():
+            value1 = metric1[objective]
+            value2 = metric2[objective]
+
+            metric_diff = metric1 - metric2
+            score_gain += (weight * (metric_diff / value1))
 
         if score_gain > COMPARISON_SCORE_THRESHOLD:
             return 1
