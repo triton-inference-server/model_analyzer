@@ -42,6 +42,9 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         self._curr_instance_count = 0
         self._curr_max_batch_size = 0
 
+        self._sweep_max_batch_size_disabled = self._determine_sweep_max_batch_size_disabled(
+        )
+
         # We return the default combo first before starting the state machine.
         # This flag tracks if we have done that and thus are in the state machine
         #
@@ -60,7 +63,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     def _start_state_machine(self):
         self._state_machine_started = True
         self._curr_instance_count = 1
-        self._curr_max_batch_size = self._min_model_batch_size
+        self._reset_max_batch_size()
 
     def _step_state_machine(self):
         if self._done_walking_max_batch_size():
@@ -93,7 +96,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         return False
 
     def _reset_max_batch_size(self):
-        self._curr_max_batch_size = self._min_model_batch_size
+        if self._sweep_max_batch_size_disabled:
+            self._curr_max_batch_size = self._max_model_batch_size
+        else:
+            self._curr_max_batch_size = self._min_model_batch_size
 
     def _get_next_model_config(self):
         param_combo = self._get_curr_param_combo()
@@ -107,12 +113,20 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
         config = {
             'dynamic_batching': {},
-            'max_batch_size':
-                self._curr_max_batch_size,
             'instance_group': [{
                 'count': self._curr_instance_count,
                 'kind': self._instance_kind
             }]
         }
 
+        if not self._sweep_max_batch_size_disabled:
+            config['max_batch_size'] = self._curr_max_batch_size
+
         return config
+
+    def _determine_sweep_max_batch_size_disabled(self):
+        max_batch_size_disabled = False
+        config = self._get_base_model_config_dict()
+        if "max_batch_size" not in config or config['max_batch_size'] == 0:
+            max_batch_size_disabled = True
+        return max_batch_size_disabled

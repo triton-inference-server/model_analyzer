@@ -751,6 +751,46 @@ class TestModelManager(trc.TestResultCollector):
             mock_method.return_value = None
             self._test_model_manager(yaml_content, expected_ranges)
 
+    def test_no_max_batch_size_sweep_if_protobuf_0(self):
+        """
+        Test that if the max_batch_size is 0 in the original model config, 
+        then do not sweep max batch size
+        """
+
+        self._model_config_protobuf = """
+            name: "test_model"
+            platform: "tensorflow_graphdef"
+            max_batch_size: 0
+            instance_group [
+            {
+                kind: KIND_CPU
+                count: 1
+            }
+            ]
+            """
+
+        expected_ranges = [{
+            'instances': [1],
+            'kind': ["KIND_GPU"],
+            'batching': [0],
+            'batch_sizes': [1],
+            'concurrency': [1, 2, 4]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'concurrency': [1, 2, 4]
+        }]
+
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_concurrency: 4
+            run_config_search_max_instance_count: 1
+            run_config_search_disable: False
+            profile_models: test_model
+            """)
+        self._test_model_manager(yaml_content, expected_ranges)
+
     def _test_model_manager(self, yaml_content, expected_ranges):
         """ 
         Test helper function that passes the given yaml_content into
