@@ -81,7 +81,8 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
-            {}
+            {'max_batch_size': 8}
+
         ]
         # yapf: enable
 
@@ -102,7 +103,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                 - my-model
             """)
 
-        expected_configs = [{}]
+        expected_configs = [{'max_batch_size': 8}]
         # yapf: enable
 
         self._run_and_test_model_config_generator(yaml_content,
@@ -136,7 +137,8 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 1},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 4},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 16},
-            {}
+            {'max_batch_size': 8}
+
         ]
         # yapf: enable
 
@@ -171,7 +173,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
-            {}
+            {'max_batch_size': 8}
         ]
         # yapf: enable
 
@@ -200,7 +202,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'dynamic_batching': {}, 'max_batch_size': 6, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 12, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 12, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
-            {}
+            {'max_batch_size': 8}
         ]
         # yapf: enable
 
@@ -236,7 +238,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 1},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 4},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 16},
-            {}
+            {'max_batch_size': 8}
         ]
         # yapf: enable
 
@@ -263,7 +265,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_CPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 2, 'kind': 'KIND_CPU'}]},
-            {}
+            {'max_batch_size': 8}
         ]
         # yapf: enable
 
@@ -361,7 +363,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
     def _run_and_test_model_config_generator(self,
                                              yaml_content,
                                              expected_configs,
-                                             protobuf=""):
+                                             protobuf="max_batch_size: 8"):
         ''' 
         Main function that creates a config from the yaml_content, runs it through
         ModelConfigGenerator, and compares the resulting model_configs vs the expected_configs

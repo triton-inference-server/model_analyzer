@@ -791,6 +791,54 @@ class TestModelManager(trc.TestResultCollector):
             """)
         self._test_model_manager(yaml_content, expected_ranges)
 
+    def test_client_batch_size_never_above_max_batch_size(self):
+        """
+        When we are sweeping through values of PA batch size and model max_batch_size,
+        it should never be the case that PA batch size > model max_batch_size
+        """
+
+        expected_ranges = [{
+            'instances': [1],
+            'kind': ["KIND_GPU"],
+            'batching': [0],
+            'batch_sizes': [1, 2, 4, 8],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4, 8]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_GPU"],
+            'batching': [0],
+            'batch_sizes': [1, 2, 4, 8, 16],
+            'max_batch_size': [16],
+            'concurrency': [1, 2, 4, 8]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_GPU"],
+            'batching': [0],
+            'batch_sizes': [1, 2, 4, 8, 16, 32],
+            'max_batch_size': [32],
+            'concurrency': [1, 2, 4, 8]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1, 2, 4, 8],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4, 8]
+        }]
+
+        yaml_content = convert_to_bytes("""
+            profile_models: test_model
+            run_config_search_max_concurrency: 8
+            run_config_search_max_instance_count: 1
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 32
+            run_config_search_disable: False
+            batch_sizes: 1,2,4,8,16,32,64
+            """)
+
+        self._test_model_manager(yaml_content, expected_ranges)
+
     def _test_model_manager(self, yaml_content, expected_ranges):
         """ 
         Test helper function that passes the given yaml_content into
