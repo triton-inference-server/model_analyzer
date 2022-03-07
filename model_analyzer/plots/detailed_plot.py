@@ -70,8 +70,8 @@ class DetailedPlot:
 
         self._bar_colors = {
             'perf_client_send_recv': '#ffc372',
-            'perf_client_response_wait': '#baa496',
-            'perf_server_queue': '#e7938e',
+            'perf_client_response_wait': '#9daecc',
+            'perf_server_queue': '#addc91',
             'perf_server_compute_input': '#7eb7e8',
             'perf_server_compute_infer': '#0072ce',
             'perf_server_compute_output': '#254b87',
