@@ -350,6 +350,11 @@ class ResultManager:
         #
         model_name = model_config_name.rsplit('_', 2)[0]
 
+        # Remote mode has model_name == model_config_name
+        #
+        if model_name not in results:
+            model_name = model_config_name
+
         if model_name not in results or model_config_name not in results[
                 model_name]:
             raise TritonModelAnalyzerException(
