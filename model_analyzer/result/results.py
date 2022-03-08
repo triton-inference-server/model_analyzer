@@ -62,6 +62,41 @@ class Results:
         self._results[model_name][model_config_name][
             Results.MEASUREMENTS_INDEX][key] = measurement
 
+    def contains_model(self, model_name):
+        """
+        Checks if the model name exists
+        in the results
+
+        Parameters
+        ----------
+        model_name : str
+            The model name
+
+        Returns
+        -------
+        bool
+        """
+        return model_name in self._results
+
+    def contains_model_config(self, model_name, model_config_name):
+        """
+        Checks if the model name and model config name
+        exists in the results
+        
+        Parameters
+        ----------
+        model_name : str
+            The model name
+            
+        model_config_name: str
+            The model config name 
+            
+        Returns
+        -------
+        bool
+        """
+        return model_config_name in self._results[model_name]
+
     def is_done(self, model_name):
         return self._done[model_name]
 
@@ -77,7 +112,7 @@ class Results:
 
         Returns
         -------
-        Tuple
+        Tuple - (model_config_name, dict of measurements)
             Tuple consisting of the model_config_name and 
             it's corresponding measurements
         """
@@ -97,7 +132,7 @@ class Results:
             yield result[Results.MODEL_CONFIG_INDEX], result[
                 Results.MEASUREMENTS_INDEX]
 
-    def get_model_config_measurements(self, model_name, model_config_name):
+    def get_all_model_config_measurements(self, model_name, model_config_name):
         """
         Given a model name and model config name returns the model config and 
         a list of all associated measurement values
@@ -112,7 +147,7 @@ class Results:
 
         Returns
         -------
-        Tuple
+        Tuple - (ModelConfig, list of Measurements)
             Tuple consisting of the model_config and a list of
             all associated measurement values
         """

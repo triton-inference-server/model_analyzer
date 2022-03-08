@@ -25,6 +25,7 @@ from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.measurement import Measurement
+from model_analyzer.result.results import Results
 
 from collections import defaultdict
 from prometheus_client.parser import text_string_to_metric_families
@@ -283,13 +284,16 @@ class MetricsManager:
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        # check whether perf config string is a key in result dict
-        if model_name not in results:
+        if not results.contains_model(model_name):
             return False
+
+        if not results.contains_model_config(model_name, model_config_name):
+            return False
+
         if not self._is_config_in_results(
                 run_config.model_config()._model_config, results[model_name]):
-            return False
-        measurements = results[model_name][model_config_name][1]
+            _, measurements = results.get_all_model_config_measurements(
+                model_name, model_config_name)
 
         # For backward compatibility with keys that still have -u,
         # we will remove -u from all keys, convert to set and check
@@ -300,16 +304,6 @@ class MetricsManager:
             return measurements[perf_config_str]
         else:
             return None
-
-    def _is_config_in_results(self, config, model_results):
-        """
-        Returns true if `config` exists in the checkpoint `model_results`
-        """
-
-        for result in model_results.values():
-            if config == result[0]._model_config:
-                return True
-        return False
 
     def profile_model(self, run_config):
         """

@@ -69,18 +69,33 @@ class TestResults(trc.TestResultCollector):
         self._result.add_measurement(run_config_1, "key_B", "2")
         self._result.add_measurement(run_config_1, "key_A", "1")
 
+    def test_contains_model(self):
+        self.assertTrue(self._result.contains_model('modelA'))
+        self.assertTrue(self._result.contains_model('modelB'))
+        self.assertFalse(self._result.contains_model('modelC'))
+
+    def test_contains_model_config(self):
+        self.assertTrue(
+            self._result.contains_model_config('modelA', 'model_config_0'))
+        self.assertTrue(
+            self._result.contains_model_config('modelA', 'model_config_1'))
+        self.assertTrue(
+            self._result.contains_model_config('modelA', 'model_config_2'))
+        self.assertFalse(
+            self._result.contains_model_config('modelA', 'model_config_3'))
+
     def test_is_done(self):
         resultA = self._result.next_result('modelA')
         resultB = self._result.next_result('modelB')
 
         modelA_config_cnt = 0
         while not self._result.is_done('modelA'):
-            foo = next(resultA)
+            next(resultA)
             modelA_config_cnt = modelA_config_cnt + 1
 
         modelB_config_cnt = 0
         while not self._result.is_done('modelB'):
-            boo = next(resultB)
+            next(resultB)
             modelB_config_cnt = modelB_config_cnt + 1
 
         self.assertEqual(modelA_config_cnt, 3)
@@ -95,8 +110,8 @@ class TestResults(trc.TestResultCollector):
             self.assertEqual(model_config, run_config.model_configs()[0])
             self.assertEqual(measurements, self._measurements[index])
 
-    def test_get_model_config_measurements(self):
-        model_config, measurements = self._result.get_model_config_measurements(
+    def test_get_all_model_config_measurements(self):
+        model_config, measurements = self._result.get_all_model_config_measurements(
             'modelA', 'model_config_1')
 
         self.assertEqual(model_config, self._run_config[1].model_configs()[0])
@@ -108,6 +123,16 @@ class TestResults(trc.TestResultCollector):
             model_config_dict)
 
         return RunConfig(model_name, [self._model_config], None, None)
+
+    def test_from_dict(self):
+        result_dict = self._result.__dict__
+        result_from_dict = Results.from_dict(result_dict)
+
+        self.assertEqual(
+            result_from_dict.get_all_model_config_measurements(
+                'modelA', 'model_config_1'),
+            self._result.get_all_model_config_measurements(
+                'modelA', 'model_config_1'))
 
 
 if __name__ == '__main__':
