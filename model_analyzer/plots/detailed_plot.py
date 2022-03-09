@@ -69,13 +69,13 @@ class DetailedPlot:
         ]
 
         self._bar_colors = {
-            'perf_client_send_recv': '#4285f4',
-            'perf_client_response_wait': '#db4437',
-            'perf_server_queue': '#f4b400',
-            'perf_server_compute_input': '#0f9d58',
-            'perf_server_compute_infer': '#ff6d00',
-            'perf_server_compute_output': '#46bdc6',
-            'perf_throughput': '#c1bc1f'
+            'perf_client_send_recv': '#ffc372',
+            'perf_client_response_wait': '#9daecc',
+            'perf_server_queue': '#addc91',
+            'perf_server_compute_input': '#7eb7e8',
+            'perf_server_compute_infer': '#0072ce',
+            'perf_server_compute_output': '#254b87',
+            'perf_throughput': '#5E5E5E'
         }
 
         self._bar_width = bar_width
@@ -185,9 +185,12 @@ class DetailedPlot:
         # Annotate inferences
         for x, y in zip(sorted_data['concurrency'],
                         sorted_data['perf_throughput']):
-            self._ax_throughput.annotate(str(round(y, 2)),
-                                         xy=(x, y),
-                                         ha='center')
+            self._ax_throughput.annotate(
+                str(round(y, 2)),
+                xy=(x, y),
+                textcoords="offset points",  # how to position the text
+                xytext=(0, 10),  # distance from text to points (x,y)
+                ha='center')
 
         self._ax_latency.grid()
         self._ax_latency.set_axisbelow(True)
