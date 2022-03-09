@@ -346,10 +346,9 @@ class ResultManager:
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        # Remote mode has model_name == model_config_name
+        # Name format is <base_model_name>_config_<number_or_default>
         #
-        if model_name not in results:
-            model_name = model_config_name
+        model_name = model_config_name.rsplit('_', 2)[0]
 
         if model_name not in results or model_config_name not in results[
                 model_name]:
