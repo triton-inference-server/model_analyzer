@@ -34,27 +34,25 @@ in which it is being run. Currently model analyzer supports 2 modes.
 ### Online Mode
 
 This is the default mode. When in this mode, Model Analyzer will operate to find
-the optimal model configuration for an online inference scenario. In this
-scenario, Triton server will receive requests on demand with an expectation that
-latency will be minimized.
+the optimal model configuration for an online inference scenario. By default in 
+online mode, the best model configuration will be the one that maximizes 
+throughput. If a latency budget is specified to the [analyze subcommand](subcommand-analyze) via 
+`--latency-budget`, then the best model configuration will be the one with the highest throughput in the given budget. 
 
-By default in online mode, the best model configuration will be the one that
-minimizes latency. If a latency budget is specified the best model configuration
-will be the one with the highest throughput in the given budget. The analyze and
-report subcommands also generate summaries specific to online inference. See the
-example [online summary](../examples/online_summary.pdf) and [detailed
-report](../examples/online_summary.pdf).
+In online mode the analyze and report subcommands will generate summaries specific to online inference. 
+See the example [online summary](../examples/online_summary.pdf) and [online detailed report](../examples/online_summary.pdf).
 
 ### Offline Mode
 
-The offline mode `--mode=offline` tells Model Analyzer to set its defaults to
-find a model that maximizes throughput. In the offline scenario, Triton
-processes requests offline and therefore inference throughput is the priority. A
-minimum throughput can be specified using `--min-throughput` to ignore any
-configuration that does not exceed a minimum number of inferences per second.
-Both the summary and the detailed report will contain alternative graphs in the
-offline mode. See the [offline summary](../examples/offline_summary.pdf) and
-[detailed report](../examples/offline_detailed_report.pdf) examples.
+The offline mode `--mode=offline` tells Model Analyzer to operate to find the
+optimal model configuration for an offline inference scenario.  By default
+in offline mode, the best model configuration will be the one that maximizes throughput.
+A minimum throughput can be specified to the [analyze subcommand](subcommand-analyze)
+via `--min-throughput` to ignore any configuration that does not exceed a minimum number of inferences per second. 
+
+In offline mode the analyze and report subcommands will generate reports specific to offline inference.
+See the example [offline summary](../examples/offline_summary.pdf) and
+[offline detailed report](../examples/offline_detailed_report.pdf) examples.
 
 ## Model Analyzer Subcommands
 

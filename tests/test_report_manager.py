@@ -275,7 +275,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         '''
         num_plots_in_summary_report = 2
         num_tables_in_summary_report = 1
-        expected_config_count = top_n + 1 if default_within_top else top_n
+        expected_config_count = top_n + 1 if not default_within_top else top_n
         expected_plot_count = num_plots_in_summary_report * expected_config_count
         expected_table_count = num_tables_in_summary_report * expected_config_count
 
@@ -284,9 +284,10 @@ class TestReportManagerMethods(trc.TestResultCollector):
             metric_objectives={"perf_throughput": 10})
         avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
         for i in range(10):
-            p99 = 20 - i if default_within_top else 20 + i
+            p99 = 20 + i
+            throughput = 100 - 10 * i if default_within_top else 100 + 10 * i
             avg_non_gpu_metrics = {
-                "perf_throughput": 100 + 10 * i,
+                "perf_throughput": throughput,
                 "perf_latency_p99": p99,
                 "cpu_used_ram": 1000
             }
