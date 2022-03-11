@@ -688,46 +688,52 @@ class TestModelManager(trc.TestResultCollector):
             mock_method.return_value = None
             self._test_model_manager(yaml_content, expected_ranges)
 
-    def test_bad_result_early_batch_size_exit(self):
+    def test_lower_throughput_early_batch_size_exit(self):
         """
-        Test that there is an early backoff for bad result (out of memory)
+        Test that there is an early backoff for throughput decreasing
         when sweeping max_batch_size
 
-        If a bad (None) measurement is returned in a set of results for a model_config,
-        then we should early exit that max_batch_size sweep
+        If a list of measurements is provided with a lower max throughput than the previous
+        list of measurements, then we should early exit that max_batch_size sweep
 
-        This test sets measurements such that a None result will be returned when 
-        trying instances=1, max_batch_size=64, and when trying instances=2, max_batch_size=32. 
-        The combinations of (instance=1 max_batch_size=128) and (instance=2, max_batch_size=64,128)
-        should not exist
+        The test is set up such that at instance count 1, going from max_batch_size of 16 to 32
+        does not increase the throughput, and thus we should not continue stepping max_batch_size. 
+        The same is true for instance count 2, going from max_batch_size of 32 to 64
         """
 
-        expected_ranges = [{
-            'instances': [1],
-            'kind': ["KIND_GPU"],
-            'batching': [0],
-            'batch_sizes': [1],
-            'max_batch_size': [8, 16, 32, 64],
-            'concurrency': [1, 2]
-        }, {
-            'instances': [2],
-            'kind': ["KIND_GPU"],
-            'batching': [0],
-            'batch_sizes': [1],
-            'max_batch_size': [8, 16, 32],
-            'concurrency': [1, 2]
-        }, {
-            'instances': [1],
-            'kind': ["KIND_CPU"],
-            'batching': [None],
-            'batch_sizes': [1],
-            'max_batch_size': [8],
-            'concurrency': [1, 2]
-        }]
+        expected_ranges = [
+            # Instance count of 1 will stop after max_batch_size=32
+            {
+                'instances': [1],
+                'kind': ["KIND_GPU"],
+                'batching': [0],
+                'batch_sizes': [1],
+                'max_batch_size': [8, 16, 32],
+                'concurrency': [1, 2, 4]
+            },
+            # Instance count of 2 will stop after max_batch_size=64
+            {
+                'instances': [2],
+                'kind': ["KIND_GPU"],
+                'batching': [0],
+                'batch_sizes': [1],
+                'max_batch_size': [8, 16, 32, 64],
+                'concurrency': [1, 2, 4]
+            },
+            # Default config
+            {
+                'instances': [1],
+                'kind': ["KIND_CPU"],
+                'batching': [None],
+                'batch_sizes': [1],
+                'max_batch_size': [8],
+                'concurrency': [1, 2, 4]
+            }
+        ]
 
         yaml_content = convert_to_bytes("""
             profile_models: test_model
-            run_config_search_max_concurrency: 2
+            run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 2
             run_config_search_min_model_batch_size: 8
             run_config_search_disable: False
@@ -737,14 +743,15 @@ class TestModelManager(trc.TestResultCollector):
                           "_get_next_perf_throughput_value") as mock_method:
             #yapf: disable
             mock_method.side_effect = [
-                1, 2,     # Default config, concurrency 1 and 2 \
-                1, 2,     # 1 Instance, Batch size 8, concurency 1 and 2
-                1, 2,     # 1 Instance, Batch size 16, concurrency 1 and 2
-                1, 2,     # 1 Instance, Batch size 32, concurrency 1 and 2
-                1, None,  # 1 Instance, Batch size 64, concurrency 1 and 2
-                1, 2,     # 2 Instance, Batch size 8, concurency 1 and 2
-                1, 2,     # 2 Instance, Batch size 16, concurrency 1 and 2
-                1, None,  # 2 Instance, Batch size 32, concurrency 1 and 2
+                1, 2, 4,     # Default config, concurrency 1,2,4
+                1, 2, 4,     # 1 Instance, Batch size 8, concurency 1,2,4
+                2, 4, 8,     # 1 Instance, Batch size 16, concurrency 1,2,4
+                2, 4, 8,     # 1 Instance, Batch size 32, concurrency 1,2,4
+                1, 2, 4,     # 1 Instance, Batch size 8, concurency 1,2,4
+                8, 4, 2,     # 1 Instance, Batch size 16, concurrency 1,2,4
+                4, 8, 16,    # 1 Instance, Batch size 32, concurrency 1,2,4
+                4, 8, 16,    # 1 Instance, Batch size 64, concurrency 1,2,4
+                0,0,0,0,0,0,0,0,0,0,0,0 # Extra in case the test messes up
             ]
             #yapf: enable
 

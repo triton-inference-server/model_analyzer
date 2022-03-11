@@ -15,6 +15,8 @@
 from model_analyzer.config.generate.generator_factory import ConfigGeneratorFactory
 from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
+from model_analyzer.record.types.perf_throughput import PerfThroughput
+from model_analyzer.result.measurement import Measurement
 from model_analyzer.cli.cli import CLI
 from .common import test_result_collector as trc
 from .common.test_utils import convert_to_bytes
@@ -25,6 +27,10 @@ from unittest.mock import MagicMock
 
 
 class TestModelConfigGenerator(trc.TestResultCollector):
+
+    def __init__(self, methodname):
+        super().__init__(methodname)
+        self._fake_throughput = 1
 
     def test_direct_no_params(self):
         ''' 
@@ -390,6 +396,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         model_configs = []
         while not mcg.is_done():
             model_config = next(mcg_generator)
+            mcg.set_last_results(self._get_next_fake_results())
             model_config_dict = model_config.get_config()
             model_configs.append(model_config_dict)
 
@@ -408,6 +415,14 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             self.assertIn(config, model_configs)
 
         self.mock_model_config.stop()
+
+    def _get_next_fake_results(self):
+        self._fake_throughput += 1
+        perf_throughput = PerfThroughput(self._fake_throughput)
+        measurement = Measurement(gpu_data=MagicMock(),
+                                  non_gpu_data=[perf_throughput],
+                                  perf_config=MagicMock())
+        return [measurement]
 
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)

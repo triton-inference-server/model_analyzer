@@ -16,6 +16,8 @@ from model_analyzer.config.generate.run_config_generator import RunConfigGenerat
 from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
 from model_analyzer.cli.cli import CLI
+from model_analyzer.record.types.perf_throughput import PerfThroughput
+from model_analyzer.result.measurement import Measurement
 from .common import test_result_collector as trc
 from .common.test_utils import convert_to_bytes
 from .mocks.mock_config import MockConfig
@@ -34,6 +36,10 @@ from model_analyzer.config.input.config_defaults import \
 
 
 class TestRunConfigGenerator(trc.TestResultCollector):
+
+    def __init__(self, methodname):
+        super().__init__(methodname)
+        self._fake_throughput = 1
 
     def test_default_config_single_model(self):
         """
@@ -92,6 +98,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         rcg_config_generator = rcg.next_config()
         while not rcg.is_done():
             run_configs.append(next(rcg_config_generator))
+            rcg.set_last_results(self._get_next_fake_results())
 
         self.assertEqual(expected_config_count, len(set(run_configs)))
 
@@ -127,3 +134,11 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
     def tearDown(self):
         self.mock_os.stop()
+
+    def _get_next_fake_results(self):
+        self._fake_throughput *= 2
+        perf_throughput = PerfThroughput(self._fake_throughput)
+        measurement = Measurement(gpu_data=MagicMock(),
+                                  non_gpu_data=[perf_throughput],
+                                  perf_config=MagicMock())
+        return [measurement]

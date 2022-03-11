@@ -91,7 +91,7 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         measurements: List of Measurements from the last run(s)
         """
         self._pacg.set_last_results(measurements)
-        self._curr_mc_measurements.append(measurements)
+        self._curr_mc_measurements.extend(measurements)
         if self._pacg.is_done():
             self._mcg.set_last_results(self._curr_mc_measurements)
             self._curr_mc_measurements = []
