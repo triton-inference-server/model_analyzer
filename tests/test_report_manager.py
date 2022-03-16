@@ -250,6 +250,10 @@ class TestReportManagerMethods(trc.TestResultCollector):
                                     next_row[throughput_index])
 
     def test_build_detailed_info(self):
+        for cpu_only in [True, False]:
+            self._subtest_build_detailed_info(cpu_only)
+
+    def _subtest_build_detailed_info(self, cpu_only):
         self._init_managers(models="test_model_config_10", subcommand="report")
 
         result_comparator = ResultComparator(
@@ -273,18 +277,25 @@ class TestReportManagerMethods(trc.TestResultCollector):
                                          avg_gpu_metrics,
                                          avg_non_gpu_metrics,
                                          result_comparator,
-                                         cpu_only=False)
+                                         cpu_only=cpu_only)
 
         self.report_manager._add_detailed_report_data()
         self.report_manager._build_detailed_table("test_model_config_10")
-
         sentence = self.report_manager._build_detailed_info(
             "test_model_config_10")
-        expected_sentence = "The model config \"test_model_config_10\" uses "\
-                            "1 GPU instance(s) with a max batch size of 8 "\
-                            "and has dynamic batching enabled. 1 measurement(s) were "\
-                            "obtained for the model config on GPU(s) fake_gpu_name with memory limit(s) 1.0 GB. "\
-                            "This model uses the platform tensorflow_graphdef."
+
+        if cpu_only:
+            expected_sentence = (
+                f"The model config \"test_model_config_10\" uses 1 GPU instance(s) with "
+                f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
+                f"were obtained for the model config on CPU. "
+                f"This model uses the platform tensorflow_graphdef.")
+        else:
+            expected_sentence = (
+                f"The model config \"test_model_config_10\" uses 1 GPU instance(s) with "
+                f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
+                f"were obtained for the model config on GPU(s) fake_gpu_name with memory limit(s) 1.0 GB. "
+                f"This model uses the platform tensorflow_graphdef.")
 
         self.assertEqual(expected_sentence, sentence)
 

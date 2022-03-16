@@ -547,22 +547,19 @@ class ReportManager:
         else:
             dynamic_batching_string = "dynamic batching enabled"
 
-        # Measurements and GPU info
-        if model_config.cpu_only():
-            sentence = (
-                f"The model config {model_config_name} uses {instance_group_string.replace('/', ' ')} "
-                f"instances. {len(measurements)} measurements were obtained for the model config "
-                f"on CPU. ")
-        else:
+        gpu_cpu_string = "CPU"
 
+        if not model_config.cpu_only():
             gpu_dict = self._get_gpu_stats(measurements=measurements)
             gpu_names = ','.join(list(gpu_dict.keys()))
             max_memories = ','.join([str(x) + ' GB' for x in gpu_dict.values()])
-            sentence = (
-                f"The model config \"{model_config_name}\" uses {instance_group_string.replace('/', ' ')} "
-                f"instance(s) with {max_batch_size_string} and has {dynamic_batching_string}. {len(measurements)} measurement(s) were obtained for the model config "
-                f"on GPU(s) {gpu_names} with memory limit(s) {max_memories}. This model "
-                f"uses the platform {platform}.")
+            gpu_cpu_string = f"GPU(s) {gpu_names} with memory limit(s) {max_memories}"
+        sentence = (
+            f"The model config \"{model_config_name}\" uses {instance_group_string.replace('/', ' ')} "
+            f"instance(s) with {max_batch_size_string} and has {dynamic_batching_string}. "
+            f"{len(measurements)} measurement(s) were obtained for the model config on "
+            f"{gpu_cpu_string}. "
+            f"This model uses the platform {platform}.")
 
         return sentence
 
