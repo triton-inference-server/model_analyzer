@@ -32,11 +32,17 @@ class TestResults(trc.TestResultCollector):
         NotImplemented
 
     def test_contains_model(self):
+        """
+        Test for the existence of expected models
+        """
         self.assertTrue(self._result.contains_model('modelA'))
         self.assertTrue(self._result.contains_model('modelB'))
         self.assertFalse(self._result.contains_model('modelC'))
 
     def test_contains_model_config(self):
+        """
+        Test for the existence of expected model configs in modelA
+        """
         self.assertTrue(
             self._result.contains_model_config('modelA', 'model_config_0'))
         self.assertTrue(
@@ -47,11 +53,17 @@ class TestResults(trc.TestResultCollector):
             self._result.contains_model_config('modelA', 'model_config_3'))
 
     def test_get_list_of_models(self):
+        """
+        Test that the list of models is returned correctly
+        """
         model_list = self._result.get_list_of_models()
 
         self.assertEqual(model_list, ['modelA', 'modelB'])
 
     def test_get_list_of_model_config_measurements(self):
+        """
+        Test that the correct number of measurements is returned per model config
+        """
         model_config_measurements_list = self._result.get_list_of_model_config_measurements(
         )
         num_model_config_measurements = [
@@ -62,11 +74,17 @@ class TestResults(trc.TestResultCollector):
         self.assertEqual(num_model_config_measurements[1], 2)
 
     def test_get_measurements_dict(self):
+        """
+        Test that the measurements were correctly added to the dictionary
+        """
         measurements = self._result.get_list_of_measurements()
 
         self.assertEqual(measurements, self._measurements_added)
 
     def test_get_model_measurements_dict(self):
+        """
+        Test that the measurements were correctly added to the model dictionairies
+        """
         model_measurements = self._result.get_model_measurements_dict('modelA')
 
         for (index, (model_config,
@@ -76,12 +94,19 @@ class TestResults(trc.TestResultCollector):
             self.assertEqual(measurements, self._measurements[index])
 
     def test_get_model_config_measurements_dict(self):
+        """
+        Test that the measurements were correctly added to the model config dictionaries
+        """
         model_config_measurements = self._result.get_model_config_measurements_dict(
             'modelA', 'model_config_1')
 
         self.assertEqual(model_config_measurements, self._measurements[1])
 
     def test_get_all_model_config_measurements(self):
+        """
+        Test that the list of measurements were correctly generated for a 
+        given model + model_config combination
+        """
         model_config, measurements = self._result.get_all_model_config_measurements(
             'modelA', 'model_config_1')
 
@@ -89,6 +114,11 @@ class TestResults(trc.TestResultCollector):
         self.assertEqual(measurements, list(self._measurements[1].values()))
 
     def _construct_results(self):
+        """
+        Creates an instance of the results class with two models, and 
+        various model configs. Treating the measurements as strings,
+        which makes debugging easier
+        """
         self._result = Results()
 
         self._run_config = []

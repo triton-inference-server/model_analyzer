@@ -35,6 +35,17 @@ class Results:
 
     @classmethod
     def from_dict(cls, results_dict):
+        """
+        Populate the Results class based on the dictionary value
+        (stored in the checkpoint)
+        
+        The checkpoint format is:
+        {model_name: { [model_config: (key, {measurements} ) ] } }
+        ---results_dict-------------------------------------------
+                     ---model_dict------------------------------
+                       ---model_config_tuple_list-------------
+                                      -key, measurement_dict-
+        """
         results = Results()
 
         for model_name, model_dict in results_dict['_results'].items():
