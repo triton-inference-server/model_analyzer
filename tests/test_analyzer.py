@@ -19,6 +19,7 @@ from model_analyzer.config.input.config_command_analyze import ConfigCommandAnal
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_status import ConfigStatus
 from model_analyzer.constants import CONFIG_PARSER_SUCCESS
+from model_analyzer.result.results import Results
 from model_analyzer.result.model_result import ModelResult
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
@@ -37,18 +38,26 @@ class TestAnalyzer(trc.TestResultCollector):
     """
 
     def mock_get_state_variable(self, name):
-        return {
-            'model1': {
-                'config1': None,
-                'config2': None,
-                'config3': None,
-                'config4': None
+        if name == 'ResultManager.results':
+            return Results()
+        else:
+            return {
+                'model1': {
+                    'config1': None,
+                    'config2': None,
+                    'config3': None,
+                    'config4': None
+                }
             }
-        }
+
+    def mock_get_list_of_models(self):
+        return ['model1']
 
     @patch(
         'model_analyzer.state.analyzer_state_manager.AnalyzerStateManager.get_state_variable',
         mock_get_state_variable)
+    @patch('model_analyzer.result.results.Results.get_list_of_models',
+           mock_get_list_of_models)
     def test_get_analyze_command_help_string(self):
         """
         Tests that the member function returning the analyze command help string

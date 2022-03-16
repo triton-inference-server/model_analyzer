@@ -194,19 +194,17 @@ class ResultManager:
             # Measurements
             results = self._state_manager.get_state_variable(
                 "ResultManager.results")
-            for model_name, value in results.items():
-                for model_config_name, value in value.items():
-                    for measurement_key, measurement in value[1].items():
-                        for gpu_uuid, gpu_metrics in measurement.gpu_data(
-                        ).items():
-                            for gpu_metric in gpu_metrics:
-                                if gpu_metric.tag not in gpu_specific_metrics_from_measurements:
-                                    gpu_specific_metrics_from_measurements[
-                                        gpu_metric.tag] = gpu_metric
-                        for non_gpu_metric in measurement.non_gpu_data():
-                            if non_gpu_metric.tag not in non_gpu_specific_metrics_from_measurements:
-                                non_gpu_specific_metrics_from_measurements[
-                                    non_gpu_metric.tag] = non_gpu_metric
+            for measurement in results.get_list_of_measurements():
+                for gpu_uuid, gpu_metrics in measurement.gpu_data().items():
+                    for gpu_metric in gpu_metrics:
+                        if gpu_metric.tag not in gpu_specific_metrics_from_measurements:
+                            gpu_specific_metrics_from_measurements[
+                                gpu_metric.tag] = gpu_metric
+
+                for non_gpu_metric in measurement.non_gpu_data():
+                    if non_gpu_metric.tag not in non_gpu_specific_metrics_from_measurements:
+                        non_gpu_specific_metrics_from_measurements[
+                            non_gpu_metric.tag] = non_gpu_metric
 
         # Update not provided metric(s)
         if gpu_specific_metrics == None:
@@ -306,7 +304,7 @@ class ResultManager:
             model.model_name() for model in self._config.analysis_models
         ]
         for model_name in analysis_model_names:
-            model_measurements = results.get_all_model_measurements(model_name)
+            model_measurements = results.get_model_measurements_dict(model_name)
 
             for (model_config, measurements) in model_measurements.values():
                 model_result = ModelResult(model_name=model_name,
@@ -373,7 +371,7 @@ class ResultManager:
             model_name = model_config_name
 
         if results.contains_model(model_name) and results.contains_model_config(
-                model_config_name):
+                model_name, model_config_name):
             return results.get_all_model_config_measurements(
                 model_name, model_config_name)
         else:

@@ -290,10 +290,8 @@ class MetricsManager:
         if not results.contains_model_config(model_name, model_config_name):
             return False
 
-        if not self._is_config_in_results(
-                run_config.model_config()._model_config, results[model_name]):
-            _, measurements = results.get_all_model_config_measurements(
-                model_name, model_config_name)
+        measurements = results.get_model_config_measurements_dict(
+            model_name, model_config_name)
 
         # For backward compatibility with keys that still have -u,
         # we will remove -u from all keys, convert to set and check

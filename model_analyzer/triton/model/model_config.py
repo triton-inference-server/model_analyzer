@@ -46,10 +46,14 @@ class ModelConfig:
 
     @classmethod
     def from_dict(cls, model_config_dict):
-        cpu_only = model_config_dict['cpu_only']
-        del model_config_dict['cpu_only']
-        model_config = ModelConfig.create_from_dictionary(model_config_dict)
-        model_config._cpu_only = cpu_only
+        if 'cpu_only' in model_config_dict:
+            cpu_only = model_config_dict['cpu_only']
+            del model_config_dict['cpu_only']
+            model_config = ModelConfig.create_from_dictionary(model_config_dict)
+            model_config._cpu_only = cpu_only
+        else:
+            model_config = ModelConfig.create_from_dictionary(model_config_dict)
+
         return model_config
 
     @staticmethod

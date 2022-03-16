@@ -209,12 +209,12 @@ class ReportManager:
         for which we want detailed reports
         """
 
-        model_names = [
+        model_config_names = [
             model.model_config_name()
             for model in self._config.report_model_configs
         ]
 
-        for model_config_name in model_names:
+        for model_config_name in model_config_names:
             self._detailed_report_data[
                 model_config_name] = self._result_manager.get_model_config_measurements(
                     model_config_name)

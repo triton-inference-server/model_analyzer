@@ -210,9 +210,8 @@ class Analyzer:
         return False
 
     def _get_profile_complete_string(self):
-        profiled_model_list = list(
-            self._state_manager.get_state_variable(
-                'ResultManager.results').keys())
+        profiled_model_list = self._state_manager.get_state_variable(
+            'ResultManager.results').get_list_of_models()
         num_profiled_configs = self._get_num_profiled_configs()
 
         return (f'Profile complete. Profiled {num_profiled_configs} '
@@ -221,7 +220,8 @@ class Analyzer:
     def _get_num_profiled_configs(self):
         return sum([
             len(x) for x in self._state_manager.get_state_variable(
-                'ResultManager.results').values()
+                'ResultManager.results').get_list_of_model_config_measurements(
+                )
         ])
 
     def _get_analyze_command_help_string(self):
@@ -229,9 +229,8 @@ class Analyzer:
                 f'configurations, run `{self._get_analyze_command_string()}`')
 
     def _get_analyze_command_string(self):
-        profiled_model_list = list(
-            self._state_manager.get_state_variable(
-                'ResultManager.results').keys())
+        profiled_model_list = self._state_manager.get_state_variable(
+            'ResultManager.results').get_list_of_models()
 
         analyze_command_string = (f'model-analyzer analyze --analysis-models '
                                   f'{",".join(profiled_model_list)}')

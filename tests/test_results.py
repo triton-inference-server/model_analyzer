@@ -13,8 +13,10 @@
 # limitations under the License.
 
 from model_analyzer.result.results import Results
+from model_analyzer.result.measurement import Measurement
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 import unittest
 from unittest.mock import MagicMock, patch
@@ -70,16 +72,40 @@ class TestResults(trc.TestResultCollector):
             self.assertEqual(model_config, run_config.model_configs()[0])
             self.assertEqual(measurements, self._measurements[index])
 
-    def test_get_all_model_measurements(self):
-        model_config_measurements = self._result.get_all_model_measurements(
-            'modelA')
+    def test_get_list_of_models(self):
+        model_list = self._result.get_list_of_models()
 
-        for (index,
-             (model_config,
-              measurements)) in enumerate(model_config_measurements.values()):
+        self.assertEqual(model_list, ['modelA', 'modelB'])
+
+    def test_get_list_of_model_config_measurements(self):
+        model_config_measurements_list = self._result.get_list_of_model_config_measurements(
+        )
+        num_model_config_measurements = [
+            len(mcm) for mcm in model_config_measurements_list
+        ]
+
+        self.assertEqual(num_model_config_measurements[0], 3)
+        self.assertEqual(num_model_config_measurements[1], 2)
+
+    def test_get_measurements_dict(self):
+        measurements = self._result.get_list_of_measurements()
+
+        self.assertEqual(measurements, self._measurements_added)
+
+    def test_get_model_measurements_dict(self):
+        model_measurements = self._result.get_model_measurements_dict('modelA')
+
+        for (index, (model_config,
+                     measurements)) in enumerate(model_measurements.values()):
             self.assertEqual(model_config,
                              self._run_config[index].model_configs()[0])
             self.assertEqual(measurements, self._measurements[index])
+
+    def test_get_model_config_measurements_dict(self):
+        model_config_measurements = self._result.get_model_config_measurements_dict(
+            'modelA', 'model_config_1')
+
+        self.assertEqual(model_config_measurements, self._measurements[1])
 
     def test_get_all_model_config_measurements(self):
         model_config, measurements = self._result.get_all_model_config_measurements(
@@ -87,16 +113,6 @@ class TestResults(trc.TestResultCollector):
 
         self.assertEqual(model_config, self._run_config[1].model_configs()[0])
         self.assertEqual(measurements, list(self._measurements[1].values()))
-
-    def test_from_dict(self):
-        result_dict = self._result.__dict__
-        result_from_dict = Results.from_dict(result_dict)
-
-        self.assertEqual(
-            result_from_dict.get_all_model_config_measurements(
-                'modelA', 'model_config_1'),
-            self._result.get_all_model_config_measurements(
-                'modelA', 'model_config_1'))
 
     def _construct_results(self):
         self._result = Results()
@@ -137,6 +153,11 @@ class TestResults(trc.TestResultCollector):
         self._result.add_measurement(run_config_1, "key_C", "3")
         self._result.add_measurement(run_config_1, "key_B", "2")
         self._result.add_measurement(run_config_1, "key_A", "1")
+
+        self._measurements_added = [
+            '1', '2', '3', '4', '5', '6', '7', '8', '9', '6', '5', '4', '3',
+            '2', '1'
+        ]
 
     def _create_run_config(self, model_name, model_config_name):
         model_config_dict = {'name': model_config_name}

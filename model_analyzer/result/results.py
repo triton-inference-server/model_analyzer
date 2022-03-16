@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.result.measurement import Measurement
 from model_analyzer.constants import LOGGER_NAME
 
 import logging
@@ -35,7 +37,20 @@ class Results:
     @classmethod
     def from_dict(cls, results_dict):
         results = Results()
-        results._results = results_dict['_results']
+
+        for model_name, model_dict in results_dict['_results'].items():
+            for model_config_name, model_config_tuple_list in model_dict.items(
+            ):
+                model_config = ModelConfig.from_dict(
+                    model_config_tuple_list[Results.MODEL_CONFIG_INDEX])
+
+                for key, measurement_dict in model_config_tuple_list[
+                        Results.MEASUREMENTS_INDEX].items():
+                    measurement = Measurement.from_dict(measurement_dict)
+
+                    results._add_measurement(model_name, model_config,
+                                             model_config_name, key,
+                                             measurement)
 
         return results
 
@@ -52,6 +67,11 @@ class Results:
         model_name, model_config, model_config_name = self._extract_run_config_fields(
             run_config)
 
+        self._add_measurement(model_name, model_config, model_config_name, key,
+                              measurement)
+
+    def _add_measurement(self, model_name, model_config, model_config_name, key,
+                         measurement):
         if model_name not in self._results:
             self._results[model_name] = {}
             self._done[model_name] = False
@@ -132,7 +152,51 @@ class Results:
             yield result[Results.MODEL_CONFIG_INDEX], result[
                 Results.MEASUREMENTS_INDEX]
 
-    def get_all_model_measurements(self, model_name):
+    def get_list_of_models(self):
+        """
+        Returns the list of models profiled
+        
+        Returns
+        -------
+        list of str
+            List of the names of model's profiled
+        """
+        return list(self._results.keys())
+
+    def get_list_of_model_config_measurements(self):
+        """
+        Returns a list of model config measurements
+        
+        Returns
+        -------
+        list of tuples - [(ModelConfig, list of Measurements)]
+            List of model configs and a dict of all associated
+            measurement values
+        """
+        return list(self._results.values())
+
+    def get_list_of_measurements(self):
+        """
+        Return a list of measurements from every model/model_config
+        
+        Parameters
+        ----------
+        None
+        
+        Returns
+        -------
+        List of Measurements
+        """
+        measurements = []
+        for model_result in self._results.values():
+            for model_config_result in model_result.values():
+                for measurement in model_config_result[
+                        Results.MEASUREMENTS_INDEX].values():
+                    measurements.append(measurement)
+
+        return measurements
+
+    def get_model_measurements_dict(self, model_name):
         """
         Given a model name, return a dict of tuples of model configs and 
         a dict of all associated measurement values
@@ -153,6 +217,33 @@ class Results:
             return {(None, [])}
 
         return self._results[model_name]
+
+    def get_model_config_measurements_dict(self, model_name, model_config_name):
+        """
+        Given a model name and model config name, return a dict where the
+        key is model configs and the values are list of all associated measurements
+        
+        Parameters
+        ----------
+        model_name : str
+            The model name for the requested results
+            
+        model_config_name: str
+            The model config name for the requested results
+
+        Returns
+        -------
+        Dict of Measurements
+        """
+        if not self.contains_model(
+                model_name) or not self.contains_model_config(
+                    model_name, model_config_name):
+            logger.error(
+                f'No results found for model config: {model_config_name}')
+            return {}
+
+        return self._results[model_name][model_config_name][
+            Results.MEASUREMENTS_INDEX]
 
     def get_all_model_config_measurements(self, model_name, model_config_name):
         """
