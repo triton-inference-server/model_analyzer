@@ -34,7 +34,6 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         """
         super().__init__(config, model, client)
 
-        self._remote_mode = config.triton_launch_mode == 'remote'
         self._reload_model_disable = config.reload_model_disable
         self._num_retries = config.client_max_retries
         self._search_disabled = config.run_config_search_disable
@@ -57,8 +56,6 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         else:
             configs = self._generate_direct_modes_model_configs()
 
-        self._finalize_configs(configs)
-
         return configs
 
     def _generate_remote_mode_model_configs(self):
@@ -71,6 +68,8 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         param_combos = self._get_param_combinations()
         for param_combo in param_combos:
             model_config = self._make_direct_mode_model_config(param_combo)
+            model_config.set_cpu_only(self._cpu_only)
+
             model_configs.append(model_config)
 
         return model_configs
@@ -86,7 +85,7 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
                 model_config_params)
         else:
             if self._search_disabled:
-                param_combos = self._generate_search_disabled_configs()
+                param_combos = self._generate_search_disabled_param_combos()
             else:
                 raise TritonModelAnalyzerException(
                     f"Automatic search not supported in ManualModelConfigGenerator"
@@ -105,10 +104,6 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         #
         param_combos.insert(0, self.DEFAULT_PARAM_COMBO)
 
-    def _finalize_configs(self, configs):
-        for config in configs:
-            config.set_cpu_only(self._cpu_only)
-
-    def _generate_search_disabled_configs(self):
+    def _generate_search_disabled_param_combos(self):
         """ Return the configs when we want to search but searching is disabled """
         return [self.DEFAULT_PARAM_COMBO]

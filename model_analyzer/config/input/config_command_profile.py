@@ -485,7 +485,7 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE,
                 description=
-                "Max value for the model's max_batch_size that run config search should not go beyond."
+                "Value for the model's max_batch_size that run config search will not go beyond."
             ))
         self._add_config(
             ConfigField(
@@ -494,7 +494,7 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE,
                 description=
-                "Min value for the model's max_batch_size that run config search should start from."
+                "Value for the model's max_batch_size that run config search will start from."
             ))
         self._add_config(
             ConfigField('run_config_search_disable',

@@ -750,8 +750,7 @@ class TestModelManager(trc.TestResultCollector):
                 1, 2, 4,     # 1 Instance, Batch size 8, concurency 1,2,4
                 8, 4, 2,     # 1 Instance, Batch size 16, concurrency 1,2,4
                 4, 8, 16,    # 1 Instance, Batch size 32, concurrency 1,2,4
-                4, 8, 16,    # 1 Instance, Batch size 64, concurrency 1,2,4
-                0,0,0,0,0,0,0,0,0,0,0,0 # Extra in case the test messes up
+                4, 8, 16     # 1 Instance, Batch size 64, concurrency 1,2,4
             ]
             #yapf: enable
 

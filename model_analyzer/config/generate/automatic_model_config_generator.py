@@ -32,9 +32,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         self._max_model_batch_size = config.run_config_search_max_model_batch_size
         self._min_model_batch_size = config.run_config_search_min_model_batch_size
 
-        self._instance_kind = "KIND_GPU"
-        if self._cpu_only:
-            self._instance_kind = "KIND_CPU"
+        self._instance_kind = "KIND_CPU" if self._cpu_only else "KIND_GPU"
 
         # State machine counters
         # (will be properly initialized in start_state_machine())
@@ -91,10 +89,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             or not self._last_results_increased_throughput()
 
     def _done_walking_instance_count(self):
-        return self._curr_instance_count >= self._max_instance_count
+        return self._curr_instance_count == self._max_instance_count
 
     def _max_batch_size_limit_reached(self):
-        return self._curr_max_batch_size * 2 > self._max_model_batch_size
+        return (self._curr_max_batch_size * 2) > self._max_model_batch_size
 
     def _last_results_erroneous(self):
         for measurement in self._last_results:
@@ -118,7 +116,6 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         self._curr_max_batch_size_throughputs = []
 
     def _get_last_results_max_throughput(self):
-
         throughputs = [
             m.get_metric_value('perf_throughput')
             for m in self._last_results
@@ -135,7 +132,6 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         return model_config
 
     def _get_curr_param_combo(self):
-
         if not self._state_machine_started:
             return self.DEFAULT_PARAM_COMBO
 
@@ -153,8 +149,8 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         return config
 
     def _determine_sweep_max_batch_size_disabled(self):
-        max_batch_size_disabled = False
         config = self._get_base_model_config_dict()
+        max_batch_size_disabled = False
         if "max_batch_size" not in config or config['max_batch_size'] == 0:
             max_batch_size_disabled = True
         return max_batch_size_disabled

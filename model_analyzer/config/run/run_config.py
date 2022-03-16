@@ -79,14 +79,12 @@ class RunConfig:
         """
         Returns true if the run_config is valid and should be run. Else false
         """
-        max_batch_size = 1
         model_config = self._model_config.get_config()
-        if "max_batch_size" in model_config:
-            max_batch_size = model_config['max_batch_size']
 
-        perf_batch_size = 1
-        if 'batch-size' in self._perf_config:
-            perf_batch_size = self._perf_config['batch-size']
+        max_batch_size = model_config[
+            'max_batch_size'] if 'max_batch_size' in model_config else 1
+        perf_batch_size = self._perf_config[
+            'batch-size'] if 'batch-size' in self._perf_config else 1
 
         return max_batch_size >= perf_batch_size
 
