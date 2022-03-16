@@ -53,14 +53,15 @@ class ModelManager:
         self._result_manager = result_manager
         self._state_manager = state_manager
 
-    def run_models(self, models):
+    def run_model(self, model):
         """
         Generates configs, runs inferences, gets
-        measurements for a list of models
+        measurements for a model
+        
         Parameters
         ----------
-        models : List of ConfigModelProfileSpec
-            The list of models being run
+        model : ConfigModelProfileSpec
+            The model to run
         """
 
         self._metrics_manager.start_new_model()
@@ -69,16 +70,20 @@ class ModelManager:
         server_config_copy = self._server.config().copy()
 
         # MM-PHASE 1: Assuming all models are identical
-        self._server.update_config(params=models[0].triton_server_flags())
+        self._server.update_config(params=model.triton_server_flags())
 
         rcg = RunConfigGenerator(config=self._config,
-                                 models=models,
+                                 model=model,
                                  client=self._client)
 
         run_config_generator = rcg.next_config()
         while not rcg.is_done() and not self._state_manager.exiting():
-            measurement = self._metrics_manager.execute_run_config(
-                next(run_config_generator))
+            run_config = next(run_config_generator)
+            if run_config.is_legal_combination():
+                measurement = self._metrics_manager.execute_run_config(
+                    run_config)
+            else:
+                measurement = None
             rcg.set_last_results([measurement])
 
         # Reset the server args to global config

@@ -121,7 +121,7 @@ class PlotManager:
 
         for measurement in measurements:
             self._simple_plots[plots_key][plot_config.name()].add_measurement(
-                model_config_label=measurement.perf_config()['model-names'],
+                model_config_label=measurement.perf_config()['model-name'],
                 measurement=measurement)
 
         # In case this plot already had lines, we want to clear and replot

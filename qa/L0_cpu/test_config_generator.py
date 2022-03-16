@@ -51,6 +51,7 @@ class TestConfigGenerator:
         self.config = {}
         self.config['run_config_search_max_concurrency'] = 4
         self.config['run_config_search_max_instance_count'] = 2
+        self.config['run_config_search_max_model_batch_size'] = 1
         self.config['profile_models'] = {
             model_name: {
                 'cpu_only': True

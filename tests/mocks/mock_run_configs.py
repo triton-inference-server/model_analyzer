@@ -23,8 +23,7 @@ class MockRunConfig():
 
     def load_from_run_config(self, run_config):
         """ Populate from a RunConfig object """
-        # MM-PHASE 1: Assuming that all models are identical, so using first model's config
-        model_config = run_config.model_configs()[0].get_config()
+        model_config = run_config.model_config().get_config()
         perf_config = run_config.perf_config()
         self._load_from_model_and_perf_config(model_config, perf_config)
 

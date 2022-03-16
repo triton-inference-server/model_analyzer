@@ -75,6 +75,7 @@ class TestConfigGenerator:
         instance_count = 2
         model_config = {
             "run_config_search_max_concurrency": concurrency_count,
+            "run_config_search_max_model_batch_size": 1,
             "run_config_search_max_instance_count": instance_count,
             "profile_models": {
                 model: {
@@ -97,6 +98,7 @@ class TestConfigGenerator:
         model_config = {
             "run_config_search_max_concurrency": concurrency_count,
             "run_config_search_max_instance_count": instance_count,
+            "run_config_search_max_model_batch_size": 1,
             "profile_models": self.profile_models,
         }
         total_param_count = self._calculate_total_params(
@@ -109,6 +111,7 @@ class TestConfigGenerator:
         model_config = {
             "run_config_search_max_concurrency": 2,
             "run_config_search_max_instance_count": 2,
+            "run_config_search_max_model_batch_size": 1,
             "profile_models": {
                 model: {
                     "parameters": {
@@ -127,6 +130,7 @@ class TestConfigGenerator:
         model_config = {
             "run_config_search_max_concurrency": 2,
             "run_config_search_max_instance_count": 2,
+            "run_config_search_max_model_batch_size": 1,
             "profile_models": {
                 model: {
                     "parameters": {
@@ -151,6 +155,7 @@ class TestConfigGenerator:
         model_config = {
             "run_config_search_max_concurrency": concurrency_count,
             "run_config_search_max_instance_count": instance_count,
+            "run_config_search_max_model_batch_size": 1,
             "profile_models": self.profile_models,
         }
         total_param_count = self._calculate_total_params(

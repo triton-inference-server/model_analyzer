@@ -262,9 +262,9 @@ class ResultManager:
             the measurement to be added
         """
 
-        # FIXME: TODO-MM: Assuming single model
         model_name = run_config.model_name()
-        model_config = run_config.model_configs()[0]
+        model_config = run_config.model_config()
+
         model_config_name = model_config.get_field('name')
 
         # Get reference to results state and modify it
@@ -452,7 +452,7 @@ class ResultManager:
         """
 
         perf_config = measurement.perf_config()
-        tmp_model_name = perf_config['model-names']
+        tmp_model_name = perf_config['model-name']
         batch_size = perf_config['batch-size']
         concurrency = perf_config['concurrency-range']
         satisfies = "Yes" if passes else "No"
