@@ -32,7 +32,6 @@ class Results:
         """          
         """
         self._results = {}
-        self._done = {}
 
     @classmethod
     def from_dict(cls, results_dict):
@@ -70,18 +69,6 @@ class Results:
         self._add_measurement(model_name, model_config, model_config_name, key,
                               measurement)
 
-    def _add_measurement(self, model_name, model_config, model_config_name, key,
-                         measurement):
-        if model_name not in self._results:
-            self._results[model_name] = {}
-            self._done[model_name] = False
-
-        if model_config_name not in self._results[model_name]:
-            self._results[model_name][model_config_name] = (model_config, {})
-
-        self._results[model_name][model_config_name][
-            Results.MEASUREMENTS_INDEX][key] = measurement
-
     def contains_model(self, model_name):
         """
         Checks if the model name exists
@@ -116,41 +103,6 @@ class Results:
         bool
         """
         return model_config_name in self._results[model_name]
-
-    def is_done(self, model_name):
-        return self._done[model_name]
-
-    def next_result(self, model_name):
-        """
-        Given a model name, create a generator that returns
-        model configs with their corresponding measurements
-        
-        Parameters
-        ----------
-        model_name : str
-            The model name for the requested results
-
-        Returns
-        -------
-        Tuple - (model_config_name, dict of measurements)
-            Tuple consisting of the model_config_name and 
-            it's corresponding measurements
-        """
-        if model_name not in self._results:
-            logger.warning(
-                f"Model {model_name} requested for analysis but no results were found. "
-                "Ensure that this model was actually profiled.")
-            return None
-
-        results_list = list(self._results[model_name].values())
-
-        self._done[model_name] = False
-        for result in results_list:
-            if result == results_list[-1]:
-                self._done[model_name] = True
-
-            yield result[Results.MODEL_CONFIG_INDEX], result[
-                Results.MEASUREMENTS_INDEX]
 
     def get_list_of_models(self):
         """
@@ -275,6 +227,17 @@ class Results:
 
         return model_config_data[Results.MODEL_CONFIG_INDEX], list(
             model_config_data[Results.MEASUREMENTS_INDEX].values())
+
+    def _add_measurement(self, model_name, model_config, model_config_name, key,
+                         measurement):
+        if model_name not in self._results:
+            self._results[model_name] = {}
+
+        if model_config_name not in self._results[model_name]:
+            self._results[model_name][model_config_name] = (model_config, {})
+
+        self._results[model_name][model_config_name][
+            Results.MEASUREMENTS_INDEX][key] = measurement
 
     def _extract_run_config_fields(self, run_config):
         return (run_config.model_name(), run_config.model_configs()[0],

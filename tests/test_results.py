@@ -46,32 +46,6 @@ class TestResults(trc.TestResultCollector):
         self.assertFalse(
             self._result.contains_model_config('modelA', 'model_config_3'))
 
-    def test_is_done(self):
-        resultA = self._result.next_result('modelA')
-        resultB = self._result.next_result('modelB')
-
-        modelA_config_cnt = 0
-        while not self._result.is_done('modelA'):
-            next(resultA)
-            modelA_config_cnt = modelA_config_cnt + 1
-
-        modelB_config_cnt = 0
-        while not self._result.is_done('modelB'):
-            next(resultB)
-            modelB_config_cnt = modelB_config_cnt + 1
-
-        self.assertEqual(modelA_config_cnt, 3)
-        self.assertEqual(modelB_config_cnt, 2)
-
-    def test_next_result(self):
-        result = self._result.next_result('modelA')
-
-        for index, run_config in enumerate(self._run_config):
-            model_config, measurements = next(result)
-
-            self.assertEqual(model_config, run_config.model_configs()[0])
-            self.assertEqual(measurements, self._measurements[index])
-
     def test_get_list_of_models(self):
         model_list = self._result.get_list_of_models()
 
