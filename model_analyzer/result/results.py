@@ -41,7 +41,7 @@ class Results:
 
     def add_measurement(self, run_config, key, measurement):
         """
-        Given a RunConfig and a key store a measurement
+        Given a RunConfig and a key, store a measurement
         
         Parameters
         ----------
@@ -102,7 +102,7 @@ class Results:
 
     def next_result(self, model_name):
         """
-        Given a model name creates a generator that returns
+        Given a model name, create a generator that returns
         model configs with their corresponding measurements
         
         Parameters
@@ -132,9 +132,31 @@ class Results:
             yield result[Results.MODEL_CONFIG_INDEX], result[
                 Results.MEASUREMENTS_INDEX]
 
+    def get_all_model_measurements(self, model_name):
+        """
+        Given a model name, return a dict of tuples of model configs and 
+        a dict of all associated measurement values
+        
+        Parameters
+        ----------
+        model_name : str
+            The model name for the requested results
+            
+        Returns
+        -------
+        Dict of tuples - {(ModelConfig, list of Measurements)}
+            Dict of tuples consisting of the model's ModelConfig 
+            and a list of all associated measurement values
+        """
+        if not self.contains_model(model_name):
+            logger.error(f'No results found for model: {model_name}')
+            return {(None, [])}
+
+        return self._results[model_name]
+
     def get_all_model_config_measurements(self, model_name, model_config_name):
         """
-        Given a model name and model config name returns the model config and 
+        Given a model name and model config name, return the model config and 
         a list of all associated measurement values
         
         Parameters
@@ -151,8 +173,9 @@ class Results:
             Tuple consisting of the model_config and a list of
             all associated measurement values
         """
-        if model_name not in self._results or model_config_name not in self._results[
-                model_name]:
+        if not self.contains_model(
+                model_name) or not self.contains_model_config(
+                    model_name, model_config_name):
             logger.error(
                 f'No results found for model config: {model_config_name}')
             return (None, [])

@@ -70,6 +70,17 @@ class TestResults(trc.TestResultCollector):
             self.assertEqual(model_config, run_config.model_configs()[0])
             self.assertEqual(measurements, self._measurements[index])
 
+    def test_get_all_model_measurements(self):
+        model_config_measurements = self._result.get_all_model_measurements(
+            'modelA')
+
+        for (index,
+             (model_config,
+              measurements)) in enumerate(model_config_measurements.values()):
+            self.assertEqual(model_config,
+                             self._run_config[index].model_configs()[0])
+            self.assertEqual(measurements, self._measurements[index])
+
     def test_get_all_model_config_measurements(self):
         model_config, measurements = self._result.get_all_model_config_measurements(
             'modelA', 'model_config_1')

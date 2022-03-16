@@ -306,11 +306,9 @@ class ResultManager:
             model.model_name() for model in self._config.analysis_models
         ]
         for model_name in analysis_model_names:
-            result = results.next_result(model_name)
+            model_measurements = results.get_all_model_measurements(model_name)
 
-            while not results.is_done(model_name):
-                model_config, measurements = next(result)
-
+            for (model_config, measurements) in model_measurements.values():
                 model_result = ModelResult(model_name=model_name,
                                            model_config=model_config,
                                            comparator=comparators[model_name],
@@ -320,11 +318,31 @@ class ResultManager:
                     measurement.set_result_comparator(
                         comparator=comparators[model_name])
 
-                    model_result.add_measurement(measurement)
+                model_result.add_measurement(measurement)
 
                 self._per_model_sorted_results[model_name].add_result(
                     model_result)
                 self._across_model_sorted_results.add_result(model_result)
+
+            # result = results.next_result(model_name)
+
+            # while not results.is_done(model_name):
+            #     model_config, measurements = next(result)
+
+            #     model_result = ModelResult(model_name=model_name,
+            #                                model_config=model_config,
+            #                                comparator=comparators[model_name],
+            #                                constraints=constraints[model_name])
+
+            #     for measurement in measurements.values():
+            #         measurement.set_result_comparator(
+            #             comparator=comparators[model_name])
+
+            #         model_result.add_measurement(measurement)
+
+            #     self._per_model_sorted_results[model_name].add_result(
+            #         model_result)
+            #     self._across_model_sorted_results.add_result(model_result)
 
     def get_model_config_measurements(self, model_config_name):
         """
