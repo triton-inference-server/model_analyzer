@@ -401,16 +401,16 @@ class ReportManager:
 
         if not cpu_only:
             summary_table = ResultTable(headers=[
-                'Model Config Name', 'Dynamic Batching', 'Instance Count',
-                'p99 Latency (ms)', 'Throughput (infer/sec)',
+                'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
+                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
                 'Max CPU Memory Usage (MB)', 'Max GPU Memory Usage (MB)',
                 'Average GPU Utilization (%)'
             ],
                                         title="Report Table")
         else:
             summary_table = ResultTable(headers=[
-                'Model Config Name', 'Dynamic Batching', 'Instance Count',
-                'p99 Latency (ms)', 'Throughput (infer/sec)',
+                'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
+                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
                 'Max CPU Memory Usage (MB)'
             ],
                                         title="Report Table")
@@ -440,8 +440,10 @@ class ReportManager:
         if not cpu_only:
             for model_config, measurement in sorted_measurements:
                 instance_group_str = model_config.instance_group_string()
+                max_batch_size = model_config.get_config().get(
+                    'max_batch_size', 0)
                 row = [
-                    model_config.get_field('name'),
+                    model_config.get_field('name'), max_batch_size,
                     model_config.dynamic_batching_string(), instance_group_str,
                     measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_throughput'),
@@ -453,8 +455,10 @@ class ReportManager:
         else:
             for model_config, measurement in sorted_measurements:
                 instance_group_str = model_config.instance_group_string()
+                max_batch_size = model_config.get_config().get(
+                    'max_batch_size', 0)
                 row = [
-                    model_config.get_field('name'),
+                    model_config.get_field('name'), max_batch_size,
                     model_config.dynamic_batching_string(), instance_group_str,
                     measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_throughput'),
