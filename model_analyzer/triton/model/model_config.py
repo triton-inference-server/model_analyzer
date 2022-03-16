@@ -255,6 +255,14 @@ class ModelConfig:
         model_config = self._model_config
         return getattr(model_config, name)
 
+    def max_batch_size(self):
+        """
+        Returns the max batch size (int)
+        """
+
+        model_config = self.get_config()
+        return model_config.get('max_batch_size', 0)
+
     def dynamic_batching_string(self):
         """
         Returns

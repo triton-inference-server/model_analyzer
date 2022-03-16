@@ -424,7 +424,7 @@ class ReportManager:
         platform = model_config_dict['backend'] if \
             'backend' in model_config_dict \
             else model_config_dict['platform']
-        max_batch_size_phrase = f"max batch size of {model_config_dict.get('max_batch_size', 0)}"
+        max_batch_size_phrase = f"max batch size of {best_config.max_batch_size()}"
         dynamic_batch_phrase = self._get_dynamic_batching_phrase(best_config)
 
         summary_sentence = (
@@ -440,8 +440,7 @@ class ReportManager:
         if not cpu_only:
             for model_config, measurement in sorted_measurements:
                 instance_group_str = model_config.instance_group_string()
-                max_batch_size = model_config.get_config().get(
-                    'max_batch_size', 0)
+                max_batch_size = model_config.max_batch_size()
                 row = [
                     model_config.get_field('name'), max_batch_size,
                     model_config.dynamic_batching_string(), instance_group_str,
@@ -455,8 +454,7 @@ class ReportManager:
         else:
             for model_config, measurement in sorted_measurements:
                 instance_group_str = model_config.instance_group_string()
-                max_batch_size = model_config.get_config().get(
-                    'max_batch_size', 0)
+                max_batch_size = model_config.max_batch_size()
                 row = [
                     model_config.get_field('name'), max_batch_size,
                     model_config.dynamic_batching_string(), instance_group_str,
@@ -541,7 +539,7 @@ class ReportManager:
             model_config_name]
         instance_group_string = model_config.instance_group_string()
         dynamic_batching = model_config.dynamic_batching_string()
-        max_batch_size = model_config.get_config().get("max_batch_size", 0)
+        max_batch_size = model_config.max_batch_size()
         platform = model_config.get_field('platform')
 
         max_batch_size_string = f"a max batch size of {max_batch_size}"
