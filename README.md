@@ -35,7 +35,8 @@ Triton Inference Server.
 
 * [Automatic and manual configuration search](docs/config_search.md). Model Analyzer can
 help you automatically find the optimal settings for
-[Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#dynamic-batcher) and
+[Max Batch Size](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#maximum-batch-size),
+[Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#dynamic-batcher), and
 [Instance Group](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#instance-groups)
 parameters of your model configuration and utilizes 
 [Performance Analyzer](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md) 

@@ -22,11 +22,13 @@ sweeping through different configurations for Triton models.
 ## Automatic Configuration Search
 
 Automatic configuration search is the default behavior when running Model
-Analyzer. This mode is enabled when there is not any parameter specified for the
-`model_config_parameters` section of the Model Analyzer Config. The parameter
-that is automatically searched is
-[`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups)
-and 
+Analyzer. This mode is enabled when there is not any parameters specified for the
+`model_config_parameters` section of the Model Analyzer Config. The parameters
+that are automatically searched are
+[`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#maximum-batch-size)
+and
+[`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups).
+Additionally,  
 [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)
  will be enabled.
 
@@ -42,16 +44,18 @@ profile_models:
   - model_2
 ```
 
-In the default mode, automatic config search will try values 1 until 1024 for
-[concurrency](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md#request-concurrency)
-increased exponentially (i.e. 1, 2, 4, 8, ...). Maximum value can be configured
-using the `run_config_search_max_concurrency` key in the Model Analyzer Config.
-For
-[`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups),
-Model Analyzer tries values from 1 to 5. This value can be changed using the
-`run_config_search_max_instance_count` key in the Model Analyzer Config. For
+In the default mode, automatic config search will try values 1 through 5 for
+[`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups).
+The maximum value be changed using the `run_config_search_max_instance_count` key in the Model Analyzer Config.
+For each instance_group, Model Analyzer will sweep values 1 through 128 increasing exponentially (i.e. 1, 2, 4, 8, ...) for
+[`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#maximum-batch-size). The start and end values can be changed using `run_config_search_min_model_batch_size` and `run_config_search_max_model_batch_size`.
 [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)
-settings, Model Analyzer always enables dynamic batching during automatic configuration search.
+will be enabled for all model configs generated using automatic search.
+
+For each model config that is generated in automatic search, Model Analyzer will gather data for 
+[concurrency](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md#request-concurrency)
+values 1 through 1024 increased exponentially (i.e. 1, 2, 4, 8, ...). The maximum value can be configured
+using the `run_config_search_max_concurrency` key in the Model Analyzer Config.
 
 An example config that limits the search space used by Model Analyzer is
 described below:
@@ -66,8 +70,11 @@ profile_models:
   - model_2
 ```
 
-If either `concurrency` or `model_config_parameters` is specified for one of the
-models, it will disable the automatic config search for the parameter provided.
+If any `model_config_parameters` are specified for a model, it will disable 
+automatic searching of model configs and will only search within the values specified.
+If `concurrency` is specified then only those values will be tried instead of the default concurrency sweep.
+If both `concurrency` and `model_config_parameters` are specified, automatic
+config search will be disabled.
 
 For example, the config specified below will only automatically sweep through
 the `model_config_parameters` that was described above:
@@ -95,9 +102,6 @@ profile_models:
             count: [1, 2]
 ```
 
-If both `concurrency` and `model_config_parameters` are specified, automatic
-config search will be disabled.
-
 ### Important Note about Remote Mode
 
 In the remote mode, `model_config_parameters` are always ignored because Model
@@ -114,7 +118,7 @@ Analyzer Config.
 In this mode, values for both `concurrency` and `model_config_parameters` needs
 to be specified. If no value for `concurrency` is specified, the default value,
 1, will be used. This mode in comparison to the automatic mode, is not limited
-to `dynamic_batching` and `instance_count` config parameters. Using manual
+to `max_batch_size`, `dynamic_batching`, and `instance_count` config parameters. Using manual
 config search, you can create custom sweeps for every parameter that can be
 specified in the model configuration. Model Analyzer only checks the syntax
 of the `model_config_parameters` that is specified and cannot guarantee that
