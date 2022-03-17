@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021-2022, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,9 @@
 # limitations under the License.
 
 
-class RunConfig:
+class ModelRunConfig:
     """
-    A class that encapsulates all the information
-    needed to complete a single run of the Model
-    Analyzer. One run corresponds to
-    one ModelConfig and produces one ModelResult.
+    A class that encapsulates all the information needed to run a model in Perf Analyzer
     """
 
     def __init__(self, model_name, model_config, perf_config, triton_env):
@@ -32,6 +29,7 @@ class RunConfig:
         perf_config : PerfAnalyzerConfig
             List of possible run parameters to pass
             to Perf Analyzer
+        FIXME triton_env goes away
         triton_env : dict
             A dictionary of environment variables to set
             when launching tritonserver
@@ -94,7 +92,7 @@ class RunConfig:
         -------
         dict
             The environment that tritonserver
-            was run with for this runconfig
+            was run with for this ModelRunConfig
         """
 
         return self._triton_env

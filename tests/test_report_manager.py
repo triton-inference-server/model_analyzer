@@ -17,7 +17,7 @@ from model_analyzer.config.input.config_command_analyze \
     import ConfigCommandAnalyze
 from model_analyzer.config.input.config_command_report \
     import ConfigCommandReport
-from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.config.run.model_run_config import ModelRunConfig
 
 from model_analyzer.reports.report_manager import ReportManager
 from model_analyzer.result.result_comparator import ResultComparator
@@ -113,8 +113,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
         measurement = construct_measurement(model_name, avg_gpu_metrics,
                                             avg_non_gpu_metrics,
                                             result_comparator)
-        run_config = RunConfig(model_name, model_config,
-                               measurement.perf_config(), None)
+        run_config = ModelRunConfig(model_name, model_config,
+                                    measurement.perf_config(), None)
         self.result_manager.add_measurement(run_config, measurement)
 
     def setUp(self):

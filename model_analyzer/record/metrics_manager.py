@@ -165,28 +165,29 @@ class MetricsManager:
             self._result_manager.add_server_data(data=server_gpu_metrics)
         self._destroy_monitors(cpu_only=cpu_only)
 
-    def execute_run_config(self, run_config):
+    def execute_model_run_config(self, model_run_config):
         """
-        Executes the run config. Returns obtained measurement. Also sends 
+        Executes the ModelRunConfig. Returns obtained measurement. Also sends 
         measurement to the result manager
         """
 
         # Create model variants
-        self._create_model_variants(run_config)
+        self._create_model_variants(model_run_config)
 
         # If this run config was already run, do not run again, just get the measurement
-        measurement = self._get_measurement_if_config_duplicate(run_config)
+        measurement = self._get_measurement_if_config_duplicate(
+            model_run_config)
         if measurement:
             return measurement
 
         # Start server, and load model variants
-        self._server.start(env=run_config.triton_environment())
-        if not self._load_model_variants(run_config):
+        self._server.start(env=model_run_config.triton_environment())
+        if not self._load_model_variants(model_run_config):
             self._server.stop()
             return
 
         # Profile various batch size and concurrency values.
-        measurement = self.profile_model(run_config=run_config)
+        measurement = self.profile_model(model_run_config=model_run_config)
 
         self._server.stop()
 
@@ -307,15 +308,15 @@ class MetricsManager:
                 return True
         return False
 
-    def profile_model(self, run_config):
+    def profile_model(self, model_run_config):
         """
         Runs monitors while running perf_analyzer with a specific set of
         arguments. This will profile model inferencing.
 
         Parameters
         ----------
-        run_config : RunConfig
-            run_config object corresponding to the model being profiled.
+        model_run_config : ModelRunConfig
+            ModelRunConfig object corresponding to the model being profiled.
 
         Returns
         -------
@@ -327,11 +328,11 @@ class MetricsManager:
         # for correct measurment of the GPU memory metrics.
         perf_output_writer = None if \
             not self._config.perf_output else FileWriter(self._config.perf_output_path)
-        perf_config = run_config.perf_config()
+        perf_config = model_run_config.perf_config()
         logger.info(f"Profiling model {perf_config['model-name']}...")
 
-        cpu_only = run_config.model_config().cpu_only()
-        perf_config = run_config.perf_config()
+        cpu_only = model_run_config.model_config().cpu_only()
+        perf_config = model_run_config.perf_config()
 
         # Inform user CPU metric(s) are not being collected under CPU mode
         collect_cpu_metrics_expect = cpu_only or len(self._gpus) == 0
@@ -352,7 +353,7 @@ class MetricsManager:
         perf_analyzer_metrics_or_status = self._get_perf_analyzer_metrics(
             perf_config,
             perf_output_writer,
-            perf_analyzer_env=run_config.triton_environment())
+            perf_analyzer_env=model_run_config.triton_environment())
 
         # Failed Status
         if perf_analyzer_metrics_or_status == 1:
@@ -378,7 +379,7 @@ class MetricsManager:
             measurement = Measurement(gpu_data=model_gpu_metrics,
                                       non_gpu_data=model_non_gpu_metrics,
                                       perf_config=perf_config)
-            self._result_manager.add_measurement(run_config, measurement)
+            self._result_manager.add_measurement(model_run_config, measurement)
         return measurement
 
     def _start_monitors(self, cpu_only=False):

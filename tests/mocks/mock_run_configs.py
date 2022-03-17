@@ -18,13 +18,13 @@ import itertools
 class MockRunConfig():
     """ 
     Mock class that only contains the important values from the model_config and
-    perf_config from a RunConfig object
+    perf_config from a ModelRunConfig object
     """
 
-    def load_from_run_config(self, run_config):
-        """ Populate from a RunConfig object """
-        model_config = run_config.model_config().get_config()
-        perf_config = run_config.perf_config()
+    def load_from_model_run_config(self, model_run_config):
+        """ Populate from a ModelRunConfig object """
+        model_config = model_run_config.model_config().get_config()
+        perf_config = model_run_config.perf_config()
         self._load_from_model_and_perf_config(model_config, perf_config)
 
     def load_from_dict(self, dict):
@@ -92,10 +92,10 @@ class MockRunConfigs():
         return configs_set
 
     def add_from_run_config(self, config):
-        """ Add a single config from a RunConfig """
+        """ Add a single config from a ModelRunConfig """
 
         mock_run_config = MockRunConfig()
-        mock_run_config.load_from_run_config(config)
+        mock_run_config.load_from_model_run_config(config)
         self._configs.append(mock_run_config)
 
     def add_from_dict(self, config):
@@ -107,7 +107,7 @@ class MockRunConfigs():
 
     def populate_from_ranges(self, ranges):
         """
-        Given a dict of key-to-list, create the set of run_configs based on 
+        Given a dict of key-to-list, create the set of ModelRunConfigs based on 
         the full cartesian product of each dict in the list
 
         For example, passing in

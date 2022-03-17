@@ -65,6 +65,7 @@ class Analyzer:
         """
         Subcommand: PROFILE
 
+        FIXME
         Configures RunConfigGenerator, then
         profiles for each run_config
 

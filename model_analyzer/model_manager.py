@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
+from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 
 import os
 import logging
@@ -72,15 +72,15 @@ class ModelManager:
         # MM-PHASE 1: Assuming all models are identical
         self._server.update_config(params=model.triton_server_flags())
 
-        rcg = RunConfigGenerator(config=self._config,
-                                 model=model,
-                                 client=self._client)
+        rcg = ModelRunConfigGenerator(config=self._config,
+                                      model=model,
+                                      client=self._client)
 
         run_config_generator = rcg.next_config()
         while not rcg.is_done() and not self._state_manager.exiting():
             run_config = next(run_config_generator)
             if run_config.is_legal_combination():
-                measurement = self._metrics_manager.execute_run_config(
+                measurement = self._metrics_manager.execute_model_run_config(
                     run_config)
             else:
                 measurement = None
