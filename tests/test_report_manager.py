@@ -15,6 +15,8 @@
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_analyze \
     import ConfigCommandAnalyze
+from model_analyzer.config.input.config_command_report \
+    import ConfigCommandReport
 from model_analyzer.config.run.run_config import RunConfig
 
 from model_analyzer.reports.report_manager import ReportManager
@@ -44,25 +46,34 @@ class TestReportManagerMethods(trc.TestResultCollector):
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
-        config = ConfigCommandAnalyze()
+        config_analyze = ConfigCommandAnalyze()
+        config_report = ConfigCommandReport()
         cli = CLI()
         cli.add_subcommand(
             cmd="analyze",
             help=
             "Collect and sort profiling results and generate data and summaries.",
-            config=config)
+            config=config_analyze)
+        cli.add_subcommand(cmd='report',
+                           help='Generate detailed reports for a single config',
+                           config=config_report)
         cli.parse()
         mock_config.stop()
-        return config
+
+        ret = config_analyze if config_analyze.export_path else config_report
+        return ret
 
     def _init_managers(self,
-                       analysis_models="test_model",
+                       models="test_model",
                        num_configs_per_model=10,
-                       mode='online'):
-        args = [
-            "model-analyzer", "analyze", "-f", "path-to-config-file",
-            "--analysis-models", analysis_models
-        ]
+                       mode='online',
+                       subcommand='analyze'):
+        args = ["model-analyzer", subcommand, "-f", "path-to-config-file"]
+        if subcommand == 'analyze':
+            args.extend(["--analysis-models", models])
+        else:
+            args.extend(["--report-model-configs", models])
+
         yaml_content = convert_to_bytes("""
             num_configs_per_model: """ + str(num_configs_per_model) + """
             client_protocol: grpc
@@ -73,7 +84,12 @@ class TestReportManagerMethods(trc.TestResultCollector):
         """)
         config = self._evaluate_config(args, yaml_content)
         state_manager = AnalyzerStateManager(config=config, server=None)
-        gpu_info = {'gpu_uuid': {'name': 'gpu_name', 'total_memory': 10}}
+        gpu_info = {
+            'gpu_uuid': {
+                'name': 'fake_gpu_name',
+                'total_memory': 1024000000
+            }
+        }
         self.result_manager = ResultManager(config=config,
                                             state_manager=state_manager)
         self.report_manager = ReportManager(mode=mode,
@@ -108,6 +124,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 "count": 1,
                 "kind": "KIND_GPU"
             }],
+            "max_batch_size": 8,
             "dynamic_batching": {}
         }
 
@@ -212,7 +229,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         expected_summary_sentence = (
             "In 10 measurement(s), config test_model_config_10 (1/GPU model instance(s)"
-            " with dynamic batching enabled) on"
+            " with max batch size of 8 and dynamic batching enabled) on"
             " platform tensorflow_graphdef delivers maximum"
             " throughput under the given constraints")
         if not cpu_only:
@@ -231,6 +248,56 @@ class TestReportManagerMethods(trc.TestResultCollector):
                              f"test_model_config_{10-i}")
             self.assertGreaterEqual(current_row[throughput_index],
                                     next_row[throughput_index])
+
+    def test_build_detailed_info(self):
+        for cpu_only in [True, False]:
+            self._subtest_build_detailed_info(cpu_only)
+
+    def _subtest_build_detailed_info(self, cpu_only):
+        self._init_managers(models="test_model_config_10", subcommand="report")
+
+        result_comparator = ResultComparator(
+            metric_objectives={"perf_throughput": 10})
+
+        avg_gpu_metrics = {
+            "gpu_uuid": {
+                "gpu_used_memory": 6000,
+                "gpu_utilization": 60
+            }
+        }
+
+        for i in range(10, 0, -1):
+            avg_non_gpu_metrics = {
+                "perf_throughput": 100 + 10 * i,
+                "perf_latency_p99": 4000,
+                "cpu_used_ram": 1000
+            }
+            self._add_result_measurement(f"test_model_config_{i}",
+                                         "test_model",
+                                         avg_gpu_metrics,
+                                         avg_non_gpu_metrics,
+                                         result_comparator,
+                                         cpu_only=cpu_only)
+
+        self.report_manager._add_detailed_report_data()
+        self.report_manager._build_detailed_table("test_model_config_10")
+        sentence = self.report_manager._build_detailed_info(
+            "test_model_config_10")
+
+        if cpu_only:
+            expected_sentence = (
+                f"The model config \"test_model_config_10\" uses 1 GPU instance(s) with "
+                f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
+                f"were obtained for the model config on CPU. "
+                f"This model uses the platform tensorflow_graphdef.")
+        else:
+            expected_sentence = (
+                f"The model config \"test_model_config_10\" uses 1 GPU instance(s) with "
+                f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
+                f"were obtained for the model config on GPU(s) fake_gpu_name with memory limit(s) 1.0 GB. "
+                f"This model uses the platform tensorflow_graphdef.")
+
+        self.assertEqual(expected_sentence, sentence)
 
     @patch(
         'model_analyzer.plots.plot_manager.PlotManager._create_update_simple_plot'

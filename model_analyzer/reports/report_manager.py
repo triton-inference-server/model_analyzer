@@ -401,16 +401,16 @@ class ReportManager:
 
         if not cpu_only:
             summary_table = ResultTable(headers=[
-                'Model Config Name', 'Dynamic Batching', 'Instance Count',
-                'p99 Latency (ms)', 'Throughput (infer/sec)',
+                'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
+                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
                 'Max CPU Memory Usage (MB)', 'Max GPU Memory Usage (MB)',
                 'Average GPU Utilization (%)'
             ],
                                         title="Report Table")
         else:
             summary_table = ResultTable(headers=[
-                'Model Config Name', 'Dynamic Batching', 'Instance Count',
-                'p99 Latency (ms)', 'Throughput (infer/sec)',
+                'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
+                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
                 'Max CPU Memory Usage (MB)'
             ],
                                         title="Report Table")
@@ -424,13 +424,14 @@ class ReportManager:
         platform = model_config_dict['backend'] if \
             'backend' in model_config_dict \
             else model_config_dict['platform']
+        max_batch_size_phrase = f"max batch size of {best_config.max_batch_size()}"
         dynamic_batch_phrase = self._get_dynamic_batching_phrase(best_config)
 
         summary_sentence = (
             f"In {num_measurements} measurement(s), "
             f"config {best_config.get_field('name')} ("
             f"{best_config.instance_group_string()} model instance(s) "
-            f"with {dynamic_batch_phrase}) "
+            f"with {max_batch_size_phrase} and {dynamic_batch_phrase}) "
             f"on platform {platform} delivers maximum throughput under "
             f"the given constraints{' on GPU(s) '+gpu_name if not best_config.cpu_only() else ''}."
         )
@@ -439,8 +440,9 @@ class ReportManager:
         if not cpu_only:
             for model_config, measurement in sorted_measurements:
                 instance_group_str = model_config.instance_group_string()
+                max_batch_size = model_config.max_batch_size()
                 row = [
-                    model_config.get_field('name'),
+                    model_config.get_field('name'), max_batch_size,
                     model_config.dynamic_batching_string(), instance_group_str,
                     measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_throughput'),
@@ -452,8 +454,9 @@ class ReportManager:
         else:
             for model_config, measurement in sorted_measurements:
                 instance_group_str = model_config.instance_group_string()
+                max_batch_size = model_config.max_batch_size()
                 row = [
-                    model_config.get_field('name'),
+                    model_config.get_field('name'), max_batch_size,
                     model_config.dynamic_batching_string(), instance_group_str,
                     measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_throughput'),
@@ -535,32 +538,30 @@ class ReportManager:
         model_config, measurements = self._detailed_report_data[
             model_config_name]
         instance_group_string = model_config.instance_group_string()
-        dynamic_batching_string = model_config.dynamic_batching_string()
+        dynamic_batching = model_config.dynamic_batching_string()
+        max_batch_size = model_config.max_batch_size()
         platform = model_config.get_field('platform')
 
-        # Measurements and GPU info
-        if model_config.cpu_only():
-            sentence = (
-                f"The model config {model_config_name} uses {instance_group_string.replace('/', ' ')} "
-                f"instances. {len(measurements)} measurements were obtained for the model config "
-                f"on CPU. ")
+        max_batch_size_string = f"a max batch size of {max_batch_size}"
+
+        if dynamic_batching == 'Disabled':
+            dynamic_batching_string = "dynamic batching disabled"
         else:
+            dynamic_batching_string = "dynamic batching enabled"
+
+        gpu_cpu_string = "CPU"
+
+        if not model_config.cpu_only():
             gpu_dict = self._get_gpu_stats(measurements=measurements)
             gpu_names = ','.join(list(gpu_dict.keys()))
             max_memories = ','.join([str(x) + ' GB' for x in gpu_dict.values()])
-            sentence = (
-                f"The model config \"{model_config_name}\" uses {instance_group_string.replace('/', ' ')} "
-                f"instances. {len(measurements)} measurements were obtained for the model config "
-                f"on GPU(s) {gpu_names} with memory limit(s) {max_memories}. This model "
-                f"uses the platform {platform}. ")
-
-        # Dynamic batching
-        if dynamic_batching_string == 'N/A':
-            sentence += "This model does not support batching. "
-        elif dynamic_batching_string == 'Disabled':
-            sentence += "This model config has dynamic batching disabled. "
-        else:
-            sentence += ("This model config has dynamic batching enabled. ")
+            gpu_cpu_string = f"GPU(s) {gpu_names} with memory limit(s) {max_memories}"
+        sentence = (
+            f"The model config \"{model_config_name}\" uses {instance_group_string.replace('/', ' ')} "
+            f"instance(s) with {max_batch_size_string} and has {dynamic_batching_string}. "
+            f"{len(measurements)} measurement(s) were obtained for the model config on "
+            f"{gpu_cpu_string}. "
+            f"This model uses the platform {platform}.")
 
         return sentence
 
