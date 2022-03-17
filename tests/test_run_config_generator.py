@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
+from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
 from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
 from model_analyzer.cli.cli import CLI
+from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.result.measurement import Measurement
 from .common import test_result_collector as trc
@@ -41,7 +42,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         super().__init__(methodname)
         self._fake_throughput = 1
 
-    # FIXME this is a place that should change?
     def test_default_config_single_model(self):
         """
         Test Default Single Model:  
@@ -93,25 +93,20 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.mock_model_config.start()
         config = self._evaluate_config(args, yaml_content)
 
-        rcg = ModelRunConfigGenerator(config, config.profile_models[0],
-                                      MagicMock())
+        rcg = RunConfigGenerator(config, config.profile_models, MagicMock())
 
-        model_run_configs = []
+        run_configs = []
         rcg_config_generator = rcg.next_config()
         while not rcg.is_done():
-            model_run_configs.append(next(rcg_config_generator))
+            run_configs.append(next(rcg_config_generator))
             rcg.set_last_results(self._get_next_fake_results())
 
-        self.assertEqual(expected_config_count, len(set(model_run_configs)))
+        self.assertEqual(expected_config_count, len(set(run_configs)))
 
         # Checks that each ModelRunConfig contains the expected number of model_configs
-        model_configs = [
-            model_run_config.model_config()
-            for model_run_config in model_run_configs
-        ]
-
-        (self.assertEqual(len(config.profile_models),
-                          len(set(model_configs[c]))) for c in model_configs)
+        for run_config in run_configs:
+            self.assertEqual(len(run_config.model_run_configs()),
+                             len(config.profile_models))
 
         self.mock_model_config.stop()
 
