@@ -33,22 +33,21 @@ Triton Inference Server.
 
 ## Features
 
-* [Automatic and manual configuration search](docs/config_search.md). Model Analyzer can
+* [Automatic and manual configuration search](docs/config_search.md): Model Analyzer can
 help you automatically find the optimal settings for
 [Max Batch Size](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#maximum-batch-size),
 [Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#dynamic-batcher), and
 [Instance Group](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#instance-groups)
-parameters of your model configuration and utilizes 
+parameters of your model configuration. Model Analyzer utilizes 
 [Performance Analyzer](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md) 
 to test the model with different concurrency and batch sizes of requests. Using
-[Manual Config Search](docs/config_search.md#manual-configuration-search), you can create manual sweeps
-for every parameter that can be specified in the model configuration.
+[Manual Config Search](docs/config_search.md#manual-configuration-search), you can create manual sweeps for every parameter that can be specified in the model configuration.
 
-* [Detailed and summary reports](docs/report.md). Model Analyzer is able to generate
+* [Detailed and summary reports](docs/report.md): Model Analyzer is able to generate
 summarized and detailed reports that can help you better understand the trade-offs
 between different model configurations that can be used for your model.
 
-* [QoS Constraints](docs/config.md#constraint). Constraints can help you
+* [QoS Constraints](docs/config.md#constraint): Constraints can help you
 filter out the Model Analyzer results based on your QoS requirements. For
 example, you can specify a latency budget to filter out model configurations
 that do not satisfy the specified latency threshold.
