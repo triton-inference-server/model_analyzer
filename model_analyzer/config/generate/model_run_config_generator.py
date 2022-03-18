@@ -98,7 +98,6 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
 
     def _generate_model_run_config(self, model_config, perf_analyzer_config):
         run_config = ModelRunConfig(self._model_name, model_config,
-                                    perf_analyzer_config,
-                                    self._triton_server_env)
+                                    perf_analyzer_config)
 
         return run_config

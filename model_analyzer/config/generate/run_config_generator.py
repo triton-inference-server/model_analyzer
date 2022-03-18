@@ -37,7 +37,6 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._models = models
         self._client = client
 
-        # FIXME
         self._triton_env = models[0].triton_server_environment()
 
         self._num_models = len(models)

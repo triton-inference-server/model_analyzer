@@ -18,7 +18,7 @@ class ModelRunConfig:
     A class that encapsulates all the information needed to run a model in Perf Analyzer
     """
 
-    def __init__(self, model_name, model_config, perf_config, triton_env):
+    def __init__(self, model_name, model_config, perf_config):
         """
         Parameters
         ----------
@@ -29,16 +29,11 @@ class ModelRunConfig:
         perf_config : PerfAnalyzerConfig
             List of possible run parameters to pass
             to Perf Analyzer
-        FIXME triton_env goes away
-        triton_env : dict
-            A dictionary of environment variables to set
-            when launching tritonserver
         """
 
         self._model_name = model_name
         self._model_config = model_config
         self._perf_config = perf_config
-        self._triton_env = triton_env
 
     def model_name(self):
         """
@@ -85,14 +80,3 @@ class ModelRunConfig:
             'batch-size'] if 'batch-size' in self._perf_config else 1
 
         return max_batch_size >= perf_batch_size
-
-    def triton_environment(self):
-        """
-        Returns
-        -------
-        dict
-            The environment that tritonserver
-            was run with for this ModelRunConfig
-        """
-
-        return self._triton_env

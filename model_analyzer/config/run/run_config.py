@@ -58,7 +58,7 @@ class RunConfig:
         -------
         dict
             The environment that tritonserver
-            was run with for this ModelRunConfig
+            was run with for this RunConfig
         """
 
         return self._triton_env

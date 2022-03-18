@@ -53,8 +53,8 @@ class MetricsManagerSubclass(MetricsManager):
         """ Return the list of configs that would have been 'executed' """
         return self._configs
 
-    def execute_model_run_config(self, config):
-        self._configs.add_from_run_config(config)
+    def execute_run_config(self, config):
+        self._configs.add_from_model_run_config(config.model_run_configs()[0])
         return self._get_next_measurements()
 
     def _get_next_measurements(self):

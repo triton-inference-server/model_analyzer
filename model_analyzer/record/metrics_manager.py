@@ -165,11 +165,13 @@ class MetricsManager:
             self._result_manager.add_server_data(data=server_gpu_metrics)
         self._destroy_monitors(cpu_only=cpu_only)
 
-    def execute_model_run_config(self, model_run_config):
+    def execute_run_config(self, run_config):
         """
-        Executes the ModelRunConfig. Returns obtained measurement. Also sends 
+        Executes the RunConfig. Returns obtained measurement. Also sends 
         measurement to the result manager
         """
+
+        model_run_config = run_config.model_run_configs()[0]
 
         # Create model variants
         self._create_model_variants(model_run_config)
@@ -181,13 +183,13 @@ class MetricsManager:
             return measurement
 
         # Start server, and load model variants
-        self._server.start(env=model_run_config.triton_environment())
+        self._server.start(env=run_config.triton_environment())
         if not self._load_model_variants(model_run_config):
             self._server.stop()
             return
 
         # Profile various batch size and concurrency values.
-        measurement = self.profile_model(model_run_config=model_run_config)
+        measurement = self.profile_model(run_config)
 
         self._server.stop()
 
@@ -308,21 +310,23 @@ class MetricsManager:
                 return True
         return False
 
-    def profile_model(self, model_run_config):
+    def profile_model(self, run_config):
         """
         Runs monitors while running perf_analyzer with a specific set of
         arguments. This will profile model inferencing.
 
         Parameters
         ----------
-        model_run_config : ModelRunConfig
-            ModelRunConfig object corresponding to the model being profiled.
+        run_config : RunConfig
+            RunConfig object corresponding to the models being profiled.
 
         Returns
         -------
         (dict of lists, list)
             The gpu specific and non gpu metrics
         """
+
+        model_run_config = run_config.model_run_configs()[0]
 
         # TODO: Need to sort the values for batch size and concurrency
         # for correct measurment of the GPU memory metrics.
@@ -353,7 +357,7 @@ class MetricsManager:
         perf_analyzer_metrics_or_status = self._get_perf_analyzer_metrics(
             perf_config,
             perf_output_writer,
-            perf_analyzer_env=model_run_config.triton_environment())
+            perf_analyzer_env=run_config.triton_environment())
 
         # Failed Status
         if perf_analyzer_metrics_or_status == 1:

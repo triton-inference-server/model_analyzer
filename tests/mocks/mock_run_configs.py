@@ -91,7 +91,7 @@ class MockRunConfigs():
         configs_set = {config.get_config_tuple() for config in self._configs}
         return configs_set
 
-    def add_from_run_config(self, config):
+    def add_from_model_run_config(self, config):
         """ Add a single config from a ModelRunConfig """
 
         mock_run_config = MockRunConfig()
