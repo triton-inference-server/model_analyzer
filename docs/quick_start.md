@@ -63,7 +63,7 @@ configuration:
 
 `--run-config-search-max-concurrency` sets the max concurrency value that run
 config search will not go beyond. `--run-config-search-max-model-batch-size` sets the highest max_batch_size that run config search will not go beyond.  `--run-config-search-max-instance-count`
-sets the max instance count value that run config search will not go beyond. With these options, model analyzer will test 5 configs (4 new configs as well as the unmodified default add_sub config), and each config will have 2 experiments run on Perf Analyzer (concurrency=1 and concurrency=2. This significantly reduces the search space, and therefore, model analyzer's runtime.
+sets the max instance count value that run config search will not go beyond. With these options, model analyzer will test 5 configs (4 new configs as well as the unmodified default add_sub config), and each config will have 2 experiments run on Perf Analyzer (concurrency=1 and concurrency=2). This significantly reduces the search space, and therefore, model analyzer's runtime.
 
 **Note**: The checkpoint directory should be removed between consecutive runs of
 the `model-analyzer profile` command.

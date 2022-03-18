@@ -28,9 +28,7 @@ that are automatically searched are
 [`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#maximum-batch-size)
 and
 [`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups).
-Additionally,  
-[`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)
- will be enabled.
+Additionally, [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher) will be enabled.
 
 
 An example model analyzer config that performs automatic config search looks
@@ -46,14 +44,14 @@ profile_models:
 
 In the default mode, automatic config search will try values 1 through 5 for
 [`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups).
-The maximum value be changed using the `run_config_search_max_instance_count` key in the Model Analyzer Config.
-For each instance_group, Model Analyzer will sweep values 1 through 128 increasing exponentially (i.e. 1, 2, 4, 8, ...) for
+The maximum value can be changed using the `run_config_search_max_instance_count` key in the Model Analyzer Config.
+For each `instance_group`, Model Analyzer will sweep values 1 through 128 increasing exponentially (i.e. 1, 2, 4, 8, ...) for
 [`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#maximum-batch-size). The start and end values can be changed using `run_config_search_min_model_batch_size` and `run_config_search_max_model_batch_size`.
-[`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)
+[`Dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)
 will be enabled for all model configs generated using automatic search.
 
 For each model config that is generated in automatic search, Model Analyzer will gather data for 
-[concurrency](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md#request-concurrency)
+[`concurrency`](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md#request-concurrency)
 values 1 through 1024 increased exponentially (i.e. 1, 2, 4, 8, ...). The maximum value can be configured
 using the `run_config_search_max_concurrency` key in the Model Analyzer Config.
 
