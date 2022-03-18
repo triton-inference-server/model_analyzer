@@ -39,16 +39,20 @@ class RunConfigGenerator(ConfigGeneratorInterface):
 
         # FIXME
         self._triton_env = models[0].triton_server_environment()
-        self._curr_model_run_configs = [None for x in models]
-        self._curr_generators = [None for x in models]
+
+        self._num_models = len(models)
+
+        self._curr_model_run_configs = [None] * self._num_models
+        self._curr_results = [[] for x in models]  # FIXME
+        self._curr_generators = [None] * self._num_models
 
     def is_done(self):
         return    self._curr_generators[0] is not None \
               and all([gen.is_done() for gen in self._curr_generators])
 
     def set_last_results(self, measurements):
-        for gen in self._curr_generators:
-            gen.set_last_results(measurements)
+        self._update_results_for_all_generators(measurements)
+        self._send_results_to_appropriate_generators()
 
     def next_config(self):
         """
@@ -81,3 +85,18 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         for i in range(len(self._models)):
             run_config.add_model_run_config(self._curr_model_run_configs[i])
         return run_config
+
+    def _update_results_for_all_generators(self, measurements):
+        for index in range(self._num_models):
+            self._curr_results[index].extend(measurements)
+
+    def _send_results_to_appropriate_generators(self):
+        # Starting from the leaf generator, pass in the results and check to see if
+        # that generator is done. If it is, continue and pass the next generator their
+        # queued up results, etc
+        for index in reversed(range(self._num_models)):
+            self._curr_generators[index].set_last_results(
+                self._curr_results[index])
+            self._curr_results[index] = []
+            if not self._curr_generators[index].is_done():
+                break

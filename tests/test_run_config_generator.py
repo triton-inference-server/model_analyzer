@@ -24,7 +24,7 @@ from .common.test_utils import convert_to_bytes
 from .mocks.mock_config import MockConfig
 from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
 
@@ -189,6 +189,147 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self._run_and_test_run_config_generator(
             yaml_content, expected_config_count=expected_num_of_configs)
 
+    def test_early_backoff_leaf_model(self):
+        """
+        Test the case where there are two models, and the 'leaf' model has early backoff
+        
+        Both models are auto search:
+            num_PAC = 2
+            num_MC = (4 * 2) + 1 = 9
+            model_total = (2 * 5) = 18
+
+        total = model1_total * model2_total = 324
+
+        However, the test will set up the throughput values such that Model2 will see a lack 
+        of throughput the first time that it is walking max_batch_size. 
+        Normally it would walk values 1,2,4,8, but for this ONE case it will only walk 1,2.
+        This will reduce the total count by 4, as there are two concurrencies that would be 
+        tried for Model2 for each of the two removed max_batch_sizes
+
+        Thus, actual expected_count = 320
+
+
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_model_batch_size: 8
+            run_config_search_max_instance_count: 2
+            run_config_search_max_concurrency: 2
+            profile_models:
+                - my-model
+                - my-model2
+            """)
+        # yapf: enable
+
+        expected_num_of_configs = 320
+
+        perf_throughput_values = [2**i for i in range(expected_num_of_configs)]
+        perf_throughput_values[4] = perf_throughput_values[3]
+        perf_throughput_values[5] = perf_throughput_values[3]
+
+        with patch.object(TestRunConfigGenerator,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = perf_throughput_values
+            self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
+
+    def test_early_backoff_root_model(self):
+        """
+        Test the case where there are two models, and the 'root' model has early backoff
+        
+        Both models are auto search:
+            num_PAC = 2
+            num_MC = (4 * 2) + 1 = 9
+            model_total = (2 * 5) = 18
+
+        total = model1_total * model2_total = 324
+
+        However, the test will set up the throughput values such that Model1 will see a lack 
+        of throughput the first time that it is walking max_batch_size. 
+        Normally it would walk values 1,2,4,8, but for this case it will only walk 1,2.
+        This will reduce the total count by 72: (2 max_batch_sizes * 2 concurrencies * 18 model2 cases)
+
+        Thus, actual expected_count = 252
+
+
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_model_batch_size: 8
+            run_config_search_max_instance_count: 2
+            run_config_search_max_concurrency: 2
+            profile_models:
+                - my-model
+                - my-model2
+            """)
+        # yapf: enable
+
+        expected_num_of_configs = 252
+
+        perf_throughput_values = [2**i for i in range(expected_num_of_configs)]
+        # First 36 is model1=default, model2=all 18 cases
+        # Next 36 is model1 max_batch_size=1, model2=all 18 cases
+        # Next 36 is model1 max_batch_size=2, model2=all 18 cases. We want to change these to show no increase
+        for i in range(72, 108):
+            perf_throughput_values[i] = perf_throughput_values[i - 36]
+
+        with patch.object(TestRunConfigGenerator,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = perf_throughput_values
+            self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
+
+    def test_measurement_list(self):
+        """
+        Test that the root model gets a list of all measurements since the last time it took a step,
+        and makes a decision based on the maximum throughput observed, not just the last measurement
+        
+        Both models are auto search:
+            num_PAC = 2
+            num_MC = (4 * 2) + 1 = 9
+            model_total = (2 * 5) = 18
+
+        total = model1_total * model2_total = 324
+
+        The test will set up the throughput values such that there is an increase to the maximum throughput
+        between each step of the root model, but that those results aren't strictly increasing every time.
+
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_model_batch_size: 8
+            run_config_search_max_instance_count: 2
+            run_config_search_max_concurrency: 2
+            profile_models:
+                - my-model
+                - my-model2
+            """)
+        # yapf: enable
+
+        expected_num_of_configs = 324
+
+        # The first 36 results (0-35) are model1=default concurrency=1 and 2, model2 all 18 combinations
+        # The next 36 results (36-71) are model1 max_batch_size=1 concurrency=1 and 2, model2 all 18 combinations
+        # The next 36 results (72-107) are model1 max_batch_size=2 concurrency=1 and 2, model2 all 18 combinations
+        #
+        # Result 107 is the one to change to a smaller result for this test to work. If model1 was incorrectly
+        # only looking at 107 instead of all results 72-107, then it would incorrectly cut off the max_batch_size
+        # search and would not end up returning a full 324 configs
+        perf_throughput_values = []
+        for i in range(18):
+            new_values = [(j * 10) + i for j in range(1, 19)]
+            perf_throughput_values.extend(new_values)
+        perf_throughput_values[107] = 1
+
+        with patch.object(TestRunConfigGenerator,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = perf_throughput_values
+            self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
+
     def _run_and_test_run_config_generator(self, yaml_content,
                                            expected_config_count):
         args = [
@@ -217,6 +358,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         while not rcg.is_done():
             run_configs.append(next(rcg_config_generator))
             rcg.set_last_results(self._get_next_fake_results())
+
+        DEBUG = 0
+        if DEBUG:
+            for rc in run_configs:
+                print(f"RunConfig:")
+                for mrc in rc.model_run_configs():
+                    print(f"   {mrc.model_config().get_config()}")
 
         self.assertEqual(expected_config_count, len(set(run_configs)))
 
@@ -251,9 +399,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.mock_os.stop()
 
     def _get_next_fake_results(self):
-        self._fake_throughput *= 2
-        perf_throughput = PerfThroughput(self._fake_throughput)
+        throughput_value = self._get_next_perf_throughput_value()
+        perf_throughput = PerfThroughput(throughput_value)
         measurement = Measurement(gpu_data=MagicMock(),
                                   non_gpu_data=[perf_throughput],
                                   perf_config=MagicMock())
         return [measurement]
+
+    def _get_next_perf_throughput_value(self):
+        self._fake_throughput *= 2
+        return self._fake_throughput
