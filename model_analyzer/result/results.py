@@ -251,5 +251,5 @@ class Results:
             Results.MEASUREMENTS_INDEX][key] = measurement
 
     def _extract_run_config_fields(self, run_config):
-        return (run_config.model_name(), run_config.model_configs()[0],
-                run_config.model_configs()[0].get_field('name'))
+        return (run_config.model_name(), run_config.model_config(),
+                run_config.model_config().get_field('name'))

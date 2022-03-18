@@ -90,7 +90,7 @@ class TestResults(trc.TestResultCollector):
         for (index, (model_config,
                      measurements)) in enumerate(model_measurements.values()):
             self.assertEqual(model_config,
-                             self._run_config[index].model_configs()[0])
+                             self._run_config[index].model_config())
             self.assertEqual(measurements, self._measurements[index])
 
     def test_get_model_config_measurements_dict(self):
@@ -110,7 +110,7 @@ class TestResults(trc.TestResultCollector):
         model_config, measurements = self._result.get_all_model_config_measurements(
             'modelA', 'model_config_1')
 
-        self.assertEqual(model_config, self._run_config[1].model_configs()[0])
+        self.assertEqual(model_config, self._run_config[1].model_config())
         self.assertEqual(measurements, list(self._measurements[1].values()))
 
     def _construct_results(self):
@@ -168,7 +168,7 @@ class TestResults(trc.TestResultCollector):
         self._model_config = ModelConfig.create_from_dictionary(
             model_config_dict)
 
-        return RunConfig(model_name, [self._model_config], None, None)
+        return RunConfig(model_name, self._model_config, None, None)
 
 
 if __name__ == '__main__':
