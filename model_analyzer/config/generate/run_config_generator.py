@@ -43,7 +43,7 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._num_models = len(models)
 
         self._curr_model_run_configs = [None] * self._num_models
-        self._curr_results = [[] for x in models]  # FIXME
+        self._curr_results = [[]] * self._num_models
         self._curr_generators = [None] * self._num_models
 
     def is_done(self):

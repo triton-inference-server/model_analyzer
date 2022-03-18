@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
 from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
@@ -96,8 +97,18 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         expected_num_of_configs = 100
 
-        self._run_and_test_run_config_generator(
-            yaml_content, expected_config_count=expected_num_of_configs)
+        # Expect 110 calls to ModelRunConfigGenerator.set_last_results
+        # All 100 experiments will be passed to the leaf generator
+        # All 10 times that the leaf generator is done will also pass results to root generator
+        expected_num_calls_to_set_last_results = 110
+
+        with patch.object(ModelRunConfigGenerator,
+                          "set_last_results") as mock_method:
+            self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
+
+            self.assertEqual(mock_method.call_count,
+                             expected_num_calls_to_set_last_results)
 
     def test_two_uneven_models(self):
         """
@@ -186,8 +197,19 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         expected_num_of_configs = 9750
 
-        self._run_and_test_run_config_generator(
-            yaml_content, expected_config_count=expected_num_of_configs)
+        # Expect 110 calls to ModelRunConfigGenerator.set_last_results
+        # All 9750 experiments will be passed to the leaf generator
+        # All 250 times that the leaf generator is done will pass results to the middle generator
+        # All 10 times that the middle generator is done will pass results to the root generator
+        expected_num_calls_to_set_last_results = 10010
+
+        with patch.object(ModelRunConfigGenerator,
+                          "set_last_results") as mock_method:
+            self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
+
+            self.assertEqual(mock_method.call_count,
+                             expected_num_calls_to_set_last_results)
 
     def test_early_backoff_leaf_model(self):
         """
