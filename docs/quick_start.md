@@ -57,35 +57,13 @@ configuration:
 
 ```
 --run-config-search-max-concurrency 2 \
+--run-config-search-max-model-batch-size 2 \
 --run-config-search-max-instance-count 2
 ```
 
 `--run-config-search-max-concurrency` sets the max concurrency value that run
-config search should not go beyond. `--run-config-search-max-instance-count`
-sets the max instance count value that run config search should not go beyond. With these options, model analyzer will test six configs. This
-significantly reduces the search space, and therefore, model analyzer's runtime.
-
-Here is some sample output:
-
-```
-...
-2021-11-11 19:57:22.638 INFO[run_search.py:292] [Search Step] Concurrency set to 1. Instance count set to 1, and dynamic batching is disabled.
-2021-11-11 19:57:22.662 INFO[server_local.py:99] Triton Server started.
-2021-11-11 19:57:24.821 INFO[client.py:83] Model add_sub_config_default loaded.
-2021-11-11 19:57:24.822 INFO[model_manager.py:221] Profiling model add_sub_config_default...
-2021-11-11 19:57:39.862 INFO[server_local.py:120] Stopped Triton Server.
-2021-11-11 19:57:39.863 INFO[run_search.py:292] [Search Step] Concurrency set to 2. Instance count set to 1, and dynamic batching is disabled.
-2021-11-11 19:57:39.883 INFO[server_local.py:99] Triton Server started.
-2021-11-11 19:57:42.25 INFO[client.py:83] Model add_sub_config_default loaded.
-2021-11-11 19:57:42.26 INFO[model_manager.py:221] Profiling model add_sub_config_default...
-2021-11-11 19:57:53.100 INFO[server_local.py:120] Stopped Triton Server.
-2021-11-11 19:57:53.101 INFO[run_search.py:292] [Search Step] Concurrency set to 4. Instance count set to 1, and dynamic batching is disabled.
-2021-11-11 19:57:53.121 INFO[server_local.py:99] Triton Server started.
-2021-11-11 19:57:55.261 INFO[client.py:83] Model add_sub_config_default loaded.
-2021-11-11 19:57:55.262 INFO[model_manager.py:221] Profiling model add_sub_config_default...
-2021-11-11 19:58:06.337 INFO[server_local.py:120] Stopped Triton Server.
-...
-```
+config search will not go beyond. `--run-config-search-max-model-batch-size` sets the highest max_batch_size that run config search will not go beyond.  `--run-config-search-max-instance-count`
+sets the max instance count value that run config search will not go beyond. With these options, model analyzer will test 5 configs (4 new configs as well as the unmodified default add_sub config), and each config will have 2 experiments run on Perf Analyzer (concurrency=1 and concurrency=2). This significantly reduces the search space, and therefore, model analyzer's runtime.
 
 **Note**: The checkpoint directory should be removed between consecutive runs of
 the `model-analyzer profile` command.

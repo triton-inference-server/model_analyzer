@@ -161,6 +161,12 @@ profile_models: <comma-delimited-string-list>
 # Maximum concurrency used for the automatic config search.
 [ run_config_search_max_concurrency: <int> | default: 1024 ]
 
+# Minimum max_batch_size used for the automatic config search.
+[ run_config_search_min_model_batch_size: <int> | default: 1 ]
+
+# Maximum max_batch_size used for the automatic config search.
+[ run_config_search_max_model_batch_size: <int> | default: 128 ]
+
 # Maximum instance count used for the automatic config search.
 [ run_config_search_max_instance_count: <int> | default: 5 ]
 

@@ -77,8 +77,7 @@ subcommand will either perform a
 [manual](./config_search.md#Manual-Configuration-Search) or [automatic
 search](./config_search.md#Automatic-Configuration-Search) over perf analyzer
 and model config file parameters. For each combination of [model config
-parameters](./config.md#model-config-parameters) (e.g. *instance count* and
-*dynamic batch size*), it will run tritonserver and perf analyzer instances with
+parameters](./config.md#model-config-parameters) (e.g. *max batch size*, *dynamic batching*, and *instance count*), it will run tritonserver and perf analyzer instances with
 all the specified run parameters (client request concurrency and static batch
 size). It will also save the protobuf (.pbtxt) model config files corresponding
 to each combination in the [*output model
