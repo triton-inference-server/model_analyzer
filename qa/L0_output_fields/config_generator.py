@@ -30,7 +30,7 @@ def _get_sweep_configs():
         'inference_output_fields': [
             'model_name', 'batch_size', 'concurrency', 'model_config_path',
             'perf_throughput', 'perf_latency_avg', 'perf_latency_p90',
-            'perf_latency_p95', 'perf_latency_p99', 'cpu_used_ram'
+            'perf_latency_p95', 'perf_latency_p99'
         ]
     }
 
