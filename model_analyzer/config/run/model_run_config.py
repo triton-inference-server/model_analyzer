@@ -15,8 +15,11 @@
 
 class ModelRunConfig:
     """
-    A class that encapsulates all the information needed to run a model in Perf Analyzer
+    Encapsulates all the information (ModelConfig + PerfConfig) needed to run
+    a model in Perf Analyzer
     """
+    DEFAULT_MAX_BATCH_SIZE = 1
+    DEFAULT_PERF_BATCH_SIZE = 1
 
     def __init__(self, model_name, model_config, perf_config):
         """
@@ -75,8 +78,8 @@ class ModelRunConfig:
         model_config = self._model_config.get_config()
 
         max_batch_size = model_config[
-            'max_batch_size'] if 'max_batch_size' in model_config else 1
+            'max_batch_size'] if 'max_batch_size' in model_config else self.DEFAULT_MAX_BATCH_SIZE
         perf_batch_size = self._perf_config[
-            'batch-size'] if 'batch-size' in self._perf_config else 1
+            'batch-size'] if 'batch-size' in self._perf_config else self.DEFAULT_PERF_BATCH_SIZE
 
         return max_batch_size >= perf_batch_size

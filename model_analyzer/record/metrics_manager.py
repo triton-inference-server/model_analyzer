@@ -171,6 +171,7 @@ class MetricsManager:
         measurement to the result manager
         """
 
+        # TODO TMA-518
         model_run_config = run_config.model_run_configs()[0]
 
         # Create model variants
@@ -326,6 +327,7 @@ class MetricsManager:
             The gpu specific and non gpu metrics
         """
 
+        # TODO TMA-518
         model_run_config = run_config.model_run_configs()[0]
 
         # TODO: Need to sort the values for batch size and concurrency

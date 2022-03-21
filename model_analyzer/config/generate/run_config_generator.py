@@ -81,8 +81,8 @@ class RunConfigGenerator(ConfigGeneratorInterface):
 
     def _make_run_config(self):
         run_config = RunConfig(self._triton_env)
-        for i in range(len(self._models)):
-            run_config.add_model_run_config(self._curr_model_run_configs[i])
+        for index in range(len(self._models)):
+            run_config.add_model_run_config(self._curr_model_run_configs[index])
         return run_config
 
     def _update_results_for_all_generators(self, measurements):

@@ -21,7 +21,8 @@ from model_analyzer.config.run.model_run_config import ModelRunConfig
 
 class ModelRunConfigGenerator(ConfigGeneratorInterface):
     """
-    Generates all ModelRunConfigs to execute given a model
+    Given a model, generates all ModelRunConfigs (combination of 
+    ModelConfig and PerfConfig)
     """
 
     def __init__(self, config, model, client):

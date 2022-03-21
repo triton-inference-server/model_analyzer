@@ -15,8 +15,8 @@
 
 class RunConfig:
     """
-    A class that encapsulates all the information needed to run one or more
-    models at the same time in Perf Analyzer
+    Encapsulates all the information needed to run one or more models 
+    at the same time in Perf Analyzer
     """
 
     def __init__(self, triton_env):

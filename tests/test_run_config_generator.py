@@ -213,7 +213,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
     def test_early_backoff_leaf_model(self):
         """
-        Test the case where there are two models, and the 'leaf' model has early backoff
+        Test the case where there are two models, and the 'leaf' model (the last generator called
+        in the recursive generator stack) has early backoff
         
         Both models are auto search:
             num_PAC = 2
@@ -258,7 +259,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
     def test_early_backoff_root_model(self):
         """
-        Test the case where there are two models, and the 'root' model has early backoff
+        Test the case where there are two models, and the 'root' model (the first one
+        called in the recursive generator stack) has early backoff
         
         Both models are auto search:
             num_PAC = 2
@@ -305,8 +307,9 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
     def test_measurement_list(self):
         """
-        Test that the root model gets a list of all measurements since the last time it took a step,
-        and makes a decision based on the maximum throughput observed, not just the last measurement
+        Test that the root model (the first one called in the recursive generator stack) gets a list
+        of all measurements since the last time it took a step, and makes a decision based on the 
+        maximum throughput observed, not just the last measurement
         
         Both models are auto search:
             num_PAC = 2
@@ -380,13 +383,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         while not rcg.is_done():
             run_configs.append(next(rcg_config_generator))
             rcg.set_last_results(self._get_next_fake_results())
-
-        DEBUG = 0
-        if DEBUG:
-            for rc in run_configs:
-                print(f"RunConfig:")
-                for mrc in rc.model_run_configs():
-                    print(f"   {mrc.model_config().get_config()}")
 
         self.assertEqual(expected_config_count, len(set(run_configs)))
 
