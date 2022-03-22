@@ -316,7 +316,7 @@ class ResultManager:
                     measurement.set_result_comparator(
                         comparator=comparators[model_name])
 
-                model_result.add_measurement(measurement)
+                    model_result.add_measurement(measurement)
 
                 self._per_model_sorted_results[model_name].add_result(
                     model_result)
