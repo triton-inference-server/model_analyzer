@@ -18,6 +18,7 @@ from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.result.measurement import Measurement
 from .common import test_result_collector as trc
@@ -352,6 +353,63 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         with patch.object(TestRunConfigGenerator,
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.side_effect = perf_throughput_values
+            self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
+
+    def test_matching_triton_server_env(self):
+        """
+        Test that we don't assert if triton server environments match:
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_model_batch_size: 2
+            run_config_search_max_instance_count: 2
+            run_config_search_max_concurrency: 2
+            profile_models:
+                - 
+                  my-model:
+                    triton_server_environment:
+                        'LD_PRELOAD': fake_preload_1,
+                        'LD_LIBRARY_PATH': fake_library_path_1
+                -
+                  my-model2:
+                    triton_server_environment:
+                        'LD_PRELOAD': fake_preload_1,
+                        'LD_LIBRARY_PATH': fake_library_path_1
+            """)
+        # yapf: enable
+
+        expected_num_of_configs = 100
+        self._run_and_test_run_config_generator(
+            yaml_content, expected_config_count=expected_num_of_configs)
+
+    def test_mismatching_triton_server_env(self):
+        """
+        Test that we assert if triton server environments don't match:
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_model_batch_size: 2
+            run_config_search_max_instance_count: 2
+            run_config_search_max_concurrency: 2
+            profile_models:
+                - 
+                  my-model:
+                    triton_server_environment:
+                        'LD_PRELOAD': fake_preload_1,
+                        'LD_LIBRARY_PATH': fake_library_path_1
+                -
+                  my-model2:
+                    triton_server_environment:
+                        'LD_PRELOAD': fake_preload_2,
+                        'LD_LIBRARY_PATH': fake_library_path_2
+            """)
+        # yapf: enable
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            expected_num_of_configs = 100
             self._run_and_test_run_config_generator(
                 yaml_content, expected_config_count=expected_num_of_configs)
 

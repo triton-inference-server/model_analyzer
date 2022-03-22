@@ -15,6 +15,7 @@
 from .config_generator_interface import ConfigGeneratorInterface
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class RunConfigGenerator(ConfigGeneratorInterface):
@@ -37,7 +38,7 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._models = models
         self._client = client
 
-        self._triton_env = models[0].triton_server_environment()
+        self._triton_env = self._determine_triton_server_env(models)
 
         self._num_models = len(models)
 
@@ -99,3 +100,15 @@ class RunConfigGenerator(ConfigGeneratorInterface):
             self._curr_results[index] = []
             if not self._curr_generators[index].is_done():
                 break
+
+    def _determine_triton_server_env(self, models):
+
+        triton_env = models[0].triton_server_environment()
+
+        for model in models:
+            if model.triton_server_environment() != triton_env:
+                raise TritonModelAnalyzerException(
+                    f"Mismatching triton server environments. The triton server environment must be the same for all models when run concurrently"
+                )
+
+        return triton_env
