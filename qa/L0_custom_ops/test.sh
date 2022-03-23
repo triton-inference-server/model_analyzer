@@ -52,6 +52,9 @@ MODEL_ANALYZER_SUBCOMMAND="profile"
 
 RET=0
 
+# Login to the GitLab CI. Required for pulling the Triton container.
+docker login -u gitlab-ci-token -p "${CI_JOB_TOKEN}" "${CI_REGISTRY}"
+
 set +e
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     # Loop 

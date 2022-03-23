@@ -71,6 +71,9 @@ function convert_gpu_array_to_flag() {
 }
 
 function run_server_launch_modes() {
+    # Login to the GitLab CI. Required for pulling the Triton container.
+    docker login -u gitlab-ci-token -p "${CI_JOB_TOKEN}" "${CI_REGISTRY}"
+
     gpus=($@)
     for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         # e.g. config-docker-http.yaml -> config-docker-http
