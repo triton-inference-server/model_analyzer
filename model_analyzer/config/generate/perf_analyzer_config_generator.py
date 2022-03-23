@@ -135,6 +135,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _create_non_concurrency_perf_config_params(self):
         perf_config_params = {
             'model-name': [self._model_name],
+            'latency-report-file': [self._model_name],
             'batch-size': self._batch_sizes,
             'measurement-mode': [DEFAULT_MEASUREMENT_MODE]
         }

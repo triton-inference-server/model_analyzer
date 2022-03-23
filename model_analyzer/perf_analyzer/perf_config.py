@@ -189,6 +189,7 @@ class PerfAnalyzerConfig:
         args.extend(self._parse_short_options())
         args.extend(self._parse_verbose_options())
         args.extend(self._parse_long_options())
+        args.append("--verbose-csv")
 
         return ' '.join(args)
 

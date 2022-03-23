@@ -44,6 +44,7 @@ import re
 import logging
 import signal
 import os
+import csv
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -55,6 +56,7 @@ class PerfAnalyzer:
     """
 
     # The metrics that PerfAnalyzer can collect
+
     perf_metrics = {
         PerfLatencyAvg: "_parse_perf_latency_avg",
         PerfLatencyP90: "_parse_perf_latency_p90",
@@ -69,6 +71,24 @@ class PerfAnalyzer:
         PerfServerComputeInput: "_parse_perf_server_compute_input",
         PerfServerComputeOutput: "_parse_perf_server_compute_output"
     }
+
+    # PerfRecord name: [CSV string, Record class, reduction factor]
+    CSV_STRING, RECORD_CLASS, REDUCTION_FACTOR = 0, 1, 2
+    new_perf_metrics = [["Avg latency", PerfLatencyAvg, 1000],
+                        ["p90 latency", PerfLatencyP90, 1000],
+                        ["p95 latency", PerfLatencyP95, 1000],
+                        ["p99 latency", PerfLatencyP99, 1000],
+                        ["Inferences/Second", PerfThroughput, 1],
+                        ["request/response", PerfClientSendRecv, 1000],
+                        ["send/recv", PerfClientSendRecv, 1000],
+                        ["response wait", PerfClientResponseWait, 1000],
+                        ["Server Queue", PerfServerQueue, 1000],
+                        ["Server Compute Infer", PerfServerComputeInfer, 1000],
+                        ["Server Compute Input", PerfServerComputeInput, 1000],
+                        [
+                            "Server Compute Output", PerfServerComputeOutput,
+                            1000
+                        ]]
 
     def __init__(self, path, config, max_retries, timeout, max_cpu_util):
         """
@@ -282,7 +302,7 @@ class PerfAnalyzer:
         if self._perf_records:
             return self._perf_records
         raise TritonModelAnalyzerException(
-            "Attempted to get perf_analyzer resultss"
+            "Attempted to get perf_analyzer results"
             "without calling run first.")
 
     def _parse_output(self, metrics):
@@ -291,35 +311,69 @@ class PerfAnalyzer:
         the perf_analyzer
         """
 
-        self._perf_records = []
-        client_section_start = self._output.find('Client:')
-        server_section_start = self._output.find('Server:',
-                                                 client_section_start)
-        server_section_end = self._output.find('Inferences/Second vs. Client',
-                                               server_section_start)
+        with open(self._config['model-name'], mode='r') as f:
+            csv_reader = csv.DictReader(f, delimiter=',')
 
-        client_section = self._output[
-            client_section_start:server_section_start].strip()
-        server_section = self._output[
-            server_section_start:server_section_end].strip()
+            for row in csv_reader:
+                self._perf_records = self._extract_metrics_from_csv(row)
 
-        server_perf_metrics = {
-            PerfServerQueue, PerfServerComputeInput, PerfServerComputeInfer,
-            PerfServerComputeOutput
-        }
+        os.remove(self._config['model-name'])
 
-        # Parse client values
-        for metric in metrics:
-            if metric not in self.perf_metrics:
-                raise TritonModelAnalyzerException(
-                    f"Perf metric : {metric} not found or supported.")
-            parse_func = getattr(self, self.perf_metrics[metric])
-            if metric in server_perf_metrics:
-                output = parse_func(server_section)
-            else:
-                output = parse_func(client_section)
-            if output is not None:
-                self._perf_records.append(output)
+        # self._perf_records = []
+        # client_section_start = self._output.find('Client:')
+        # server_section_start = self._output.find('Server:',
+        #                                          client_section_start)
+        # server_section_end = self._output.find('Inferences/Second vs. Client',
+        #                                        server_section_start)
+
+        # client_section = self._output[
+        #     client_section_start:server_section_start].strip()
+        # server_section = self._output[
+        #     server_section_start:server_section_end].strip()
+
+        # server_perf_metrics = {
+        #     PerfServerQueue, PerfServerComputeInput, PerfServerComputeInfer,
+        #     PerfServerComputeOutput
+        # }
+
+        # # Parse client values
+        # for metric in metrics:
+        #     if metric not in self.perf_metrics:
+        #         raise TritonModelAnalyzerException(
+        #             f"Perf metric : {metric} not found or supported.")
+        #     parse_func = getattr(self, self.perf_metrics[metric])
+        #     if metric in server_perf_metrics:
+        #         output = parse_func(server_section)
+        #     else:
+        #         output = parse_func(client_section)
+        #     if output is not None:
+        #         self._perf_records.append(output)
+
+    def _extract_metrics_from_csv(self, csv_metrics):
+        """ 
+        Extracts the metrics from the CSV and creates a list of Records
+        """
+        perf_records = []
+        for record_info in PerfAnalyzer.new_perf_metrics:
+            if record_info[PerfAnalyzer.CSV_STRING] in csv_metrics:
+                value = float(csv_metrics[record_info[PerfAnalyzer.CSV_STRING]]
+                             ) / record_info[PerfAnalyzer.REDUCTION_FACTOR]
+
+                perf_records.append(
+                    record_info[PerfAnalyzer.RECORD_CLASS](value))
+
+        return perf_records
+
+        # for perf_metric, csv_string in PerfAnalyzer.new_perf_metrics.items(
+        #         ):
+        #             self._perf_records.append({perf_metric: row[csv_string]})
+
+        #         if self._config['protocol'] == 'http':
+        #             self._perf_records.append(
+        #                 {PerfClientSendRecv: row['send/receive']})
+        #         else:
+        #             self._perf_records.append(
+        #                 {PerfClientSendRecv: row['request/response']})
 
     def _parse_perf_client_send_recv(self, section):
         """
