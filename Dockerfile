@@ -61,7 +61,14 @@ RUN \
     mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 && \
     apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/7fa2af80.pub && \
     add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/ /" && \
-    apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION}
+    apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION}; \
+    
+    # Install Docker
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+    echo \
+  "deb [arch=${TARGETARCH} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+   apt-get update && apt-get install -y docker-ce-cli
 
 # Install tritonclient
 COPY --from=sdk /workspace/install/python /tmp/tritonclient
