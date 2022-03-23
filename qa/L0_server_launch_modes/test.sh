@@ -21,6 +21,7 @@ rm -rf $OUTPUT_MODEL_REPOSITORY
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
+TRITON_DOCKER_IMAGE=${TRITONSERVER_BASE_IMAGE_NAME}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2022_02_23"}
 MODEL_NAMES="vgg19_libtorch"
@@ -156,6 +157,8 @@ function _run_single_config() {
         # c_api does not get server only metrics, so for GPUs to appear in log, we must profile (delete checkpoint)
         rm -f $CHECKPOINT_DIRECTORY/*
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
+    elif [ "$LAUNCH_MODE" == "docker" ]; then
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --triton-docker-image=${TRITON_DOCKER_IMAGE}"
     else
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
     fi

@@ -20,6 +20,7 @@ rm -f *.log
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
+TRITON_DOCKER_IMAGE=${TRITONSERVER_BASE_IMAGE_NAME}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/${REPO_VERSION}/qa_custom_ops/libtorch_custom_ops"}
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
@@ -64,9 +65,12 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     ANALYZER_LOG=${LOG_PREFIX}.${ANALYZER_LOG_BASE}
     touch $TRITON_LOG
     MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
+
     # Run analyzer
     if [[ "$LOG_PREFIX" == "c_api" ]]; then    
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --perf-output-path=$TRITON_LOG"
+    elif [[ "$LOG_PREFIX" == "docker" ]]; then
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --triton-docker-image $TRITONSERVER_BASE_IMAGE_NAME --triton-output-path=$TRITON_LOG"
     else
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --triton-output-path=$TRITON_LOG"
     fi           
