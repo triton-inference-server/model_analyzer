@@ -248,22 +248,22 @@ class ResultManager:
         self._state_manager.set_state_variable('ResultManager.server_only_data',
                                                data)
 
-    def add_measurement(self, run_config, measurement):
+    def add_measurement(self, model_run_config, measurement):
         """
         This function adds model inference
         measurements to the required result
 
         Parameters
         ----------
-        run_config : RunConfig
+        model_run_config : ModelRunConfig
             Contains the parameters used to generate the measurment
             like the model name, model_config_name
         measurement: Measurement
             the measurement to be added
         """
 
-        model_name = run_config.model_name()
-        model_config = run_config.model_config()
+        model_name = model_run_config.model_name()
+        model_config = model_run_config.model_config()
 
         model_config_name = model_config.get_field('name')
 

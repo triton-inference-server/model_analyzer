@@ -38,7 +38,7 @@ from .common.test_utils import convert_to_bytes
 
 class MetricsManagerSubclass(MetricsManager):
     """ 
-    Overrides execute_run_config() to gather a list of MockRunConfigs that
+    Overrides execute_model_run_config() to gather a list of MockRunConfigs that
     contain the configured values of each would-be 'executed' run_config
     """
 
@@ -54,7 +54,7 @@ class MetricsManagerSubclass(MetricsManager):
         return self._configs
 
     def execute_run_config(self, config):
-        self._configs.add_from_run_config(config)
+        self._configs.add_from_model_run_config(config.model_run_configs()[0])
         return self._get_next_measurements()
 
     def _get_next_measurements(self):

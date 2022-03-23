@@ -167,26 +167,30 @@ class MetricsManager:
 
     def execute_run_config(self, run_config):
         """
-        Executes the run config. Returns obtained measurement. Also sends 
+        Executes the RunConfig. Returns obtained measurement. Also sends 
         measurement to the result manager
         """
 
+        # TODO TMA-518
+        model_run_config = run_config.model_run_configs()[0]
+
         # Create model variants
-        self._create_model_variants(run_config)
+        self._create_model_variants(model_run_config)
 
         # If this run config was already run, do not run again, just get the measurement
-        measurement = self._get_measurement_if_config_duplicate(run_config)
+        measurement = self._get_measurement_if_config_duplicate(
+            model_run_config)
         if measurement:
             return measurement
 
         # Start server, and load model variants
         self._server.start(env=run_config.triton_environment())
-        if not self._load_model_variants(run_config):
+        if not self._load_model_variants(model_run_config):
             self._server.stop()
             return
 
         # Profile various batch size and concurrency values.
-        measurement = self.profile_model(run_config=run_config)
+        measurement = self.profile_model(run_config)
 
         self._server.stop()
 
@@ -315,7 +319,7 @@ class MetricsManager:
         Parameters
         ----------
         run_config : RunConfig
-            run_config object corresponding to the model being profiled.
+            RunConfig object corresponding to the models being profiled.
 
         Returns
         -------
@@ -323,15 +327,18 @@ class MetricsManager:
             The gpu specific and non gpu metrics
         """
 
+        # TODO TMA-518
+        model_run_config = run_config.model_run_configs()[0]
+
         # TODO: Need to sort the values for batch size and concurrency
         # for correct measurment of the GPU memory metrics.
         perf_output_writer = None if \
             not self._config.perf_output else FileWriter(self._config.perf_output_path)
-        perf_config = run_config.perf_config()
+        perf_config = model_run_config.perf_config()
         logger.info(f"Profiling model {perf_config['model-name']}...")
 
-        cpu_only = run_config.model_config().cpu_only()
-        perf_config = run_config.perf_config()
+        cpu_only = model_run_config.model_config().cpu_only()
+        perf_config = model_run_config.perf_config()
 
         # Inform user CPU metric(s) are not being collected under CPU mode
         collect_cpu_metrics_expect = cpu_only or len(self._gpus) == 0
@@ -378,7 +385,7 @@ class MetricsManager:
             measurement = Measurement(gpu_data=model_gpu_metrics,
                                       non_gpu_data=model_non_gpu_metrics,
                                       perf_config=perf_config)
-            self._result_manager.add_measurement(run_config, measurement)
+            self._result_manager.add_measurement(model_run_config, measurement)
         return measurement
 
     def _start_monitors(self, cpu_only=False):

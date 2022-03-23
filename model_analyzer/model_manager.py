@@ -73,7 +73,7 @@ class ModelManager:
         self._server.update_config(params=model.triton_server_flags())
 
         rcg = RunConfigGenerator(config=self._config,
-                                 model=model,
+                                 models=[model],
                                  client=self._client)
 
         run_config_generator = rcg.next_config()

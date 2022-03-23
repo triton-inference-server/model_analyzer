@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,78 +15,42 @@
 
 class RunConfig:
     """
-    A class that encapsulates all the information
-    needed to complete a single run of the Model
-    Analyzer. One run corresponds to
-    one ModelConfig and produces one ModelResult.
+    Encapsulates all the information needed to run one or more models 
+    at the same time in Perf Analyzer
     """
 
-    def __init__(self, model_name, model_config, perf_config, triton_env):
+    def __init__(self, triton_env):
         """
         Parameters
         ----------
-        model_name: str
-            The name of the model
-        model_config : ModelConfig
-            model config corresponding to this run
-        perf_config : PerfAnalyzerConfig
-            List of possible run parameters to pass
-            to Perf Analyzer
         triton_env : dict
             A dictionary of environment variables to set
             when launching tritonserver
         """
 
-        self._model_name = model_name
-        self._model_config = model_config
-        self._perf_config = perf_config
         self._triton_env = triton_env
+        self._model_run_configs = []
 
-    def model_name(self):
+    def add_model_run_config(self, model_run_config):
         """
-        Get the original model name for this run config.
-
-        Returns
-        -------
-        str
-            Original model name
+        Add a ModelRunConfig to this RunConfig
         """
+        self._model_run_configs.append(model_run_config)
 
-        return self._model_name
-
-    def model_config(self):
+    def model_run_configs(self):
         """
-        Returns
-        -------
-        List of ModelConfig
-            The list of ModelConfigs corresponding to this run.
+        Returns the list of ModelRunConfigs to run concurrently
         """
-
-        return self._model_config
-
-    def perf_config(self):
-        """
-        Returns
-        -------
-        PerfAnalyzerConfig
-            run parameters corresponding to this run of 
-            the perf analyzer
-        """
-
-        return self._perf_config
+        return self._model_run_configs
 
     def is_legal_combination(self):
         """
-        Returns true if the run_config is valid and should be run. Else false
+        Returns true if all model_run_configs are valid
         """
-        model_config = self._model_config.get_config()
-
-        max_batch_size = model_config[
-            'max_batch_size'] if 'max_batch_size' in model_config else 1
-        perf_batch_size = self._perf_config[
-            'batch-size'] if 'batch-size' in self._perf_config else 1
-
-        return max_batch_size >= perf_batch_size
+        return all([
+            model_run_config.is_legal_combination()
+            for model_run_config in self._model_run_configs
+        ])
 
     def triton_environment(self):
         """
@@ -94,7 +58,7 @@ class RunConfig:
         -------
         dict
             The environment that tritonserver
-            was run with for this runconfig
+            was run with for this RunConfig
         """
 
         return self._triton_env
