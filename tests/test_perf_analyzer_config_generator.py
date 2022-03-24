@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.config.generate.perf_analyzer_config_generator import PerfAnalyzerConfigGenerator
 from model_analyzer.config.input.config_command_profile \
@@ -368,6 +369,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                                 perf_analyzer_flags=None):
         expected_config = PerfAnalyzerConfig()
         expected_config._options['-m'] = 'my-model'
+        expected_config._options['-f'] = 'my-model'
         expected_config._options['-b'] = batch_size
         expected_config._args['concurrency-range'] = concurrency
         expected_config._args['measurement-mode'] = DEFAULT_MEASUREMENT_MODE
@@ -469,3 +471,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
     def tearDown(self):
         self.mock_os.stop()
+
+
+if __name__ == '__main__':
+    unittest.main()
