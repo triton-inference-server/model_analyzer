@@ -36,24 +36,6 @@ class AnalyzerState:
         state = AnalyzerState()
         state._state_dict['ResultManager.results'] = Results.from_dict(
             state_dict['ResultManager.results'])
-        # state._state_dict['ResultManager.results'] = {}
-        # for model_name in state_dict['ResultManager.results']:
-        #     state._state_dict['ResultManager.results'][model_name] = {}
-        #     for model_config_name in state_dict['ResultManager.results'][
-        #             model_name]:
-        #         model_config_dict, measurements = state_dict[
-        #             'ResultManager.results'][model_name][model_config_name]
-
-        #         # Deserialize model config
-        #         model_config = ModelConfig.from_dict(model_config_dict)
-
-        #         # Deserialize measurements
-        #         measurements_dict = {}
-        #         for measurement_key, measurement_dict in measurements.items():
-        #             measurement = Measurement.from_dict(measurement_dict)
-        #             measurements_dict[measurement_key] = measurement
-        #         state._state_dict['ResultManager.results'][model_name][
-        #             model_config_name] = (model_config, measurements_dict)
 
         # Server data
         state._state_dict['ResultManager.server_only_data'] = {}

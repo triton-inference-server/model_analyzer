@@ -284,9 +284,6 @@ class MetricsManager:
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        if not results.contains_model(model_name):
-            return False
-
         if not results.contains_model_config(model_name, model_config_name):
             return False
 

@@ -113,6 +113,9 @@ class Results:
         -------
         bool
         """
+        if not self.contains_model(model_name):
+            return False
+
         return model_config_name in self._results[model_name]
 
     def get_list_of_models(self):

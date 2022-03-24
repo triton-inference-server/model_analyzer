@@ -51,6 +51,8 @@ class TestResults(trc.TestResultCollector):
             self._result.contains_model_config('modelA', 'model_config_2'))
         self.assertFalse(
             self._result.contains_model_config('modelA', 'model_config_3'))
+        self.assertFalse(
+            self._result.contains_model_config('modelC', 'model_config_0'))
 
     def test_get_list_of_models(self):
         """
