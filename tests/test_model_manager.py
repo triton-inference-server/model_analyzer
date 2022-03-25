@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
 from .common import test_result_collector as trc
 
 from .mocks.mock_config import MockConfig
@@ -962,3 +963,7 @@ class TestModelManager(trc.TestResultCollector):
         self.assertEqual(
             metrics_manager._is_config_in_results(model_config, model_results),
             False)
+
+
+if __name__ == '__main__':
+    unittest.main()
