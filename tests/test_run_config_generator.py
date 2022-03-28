@@ -65,10 +65,10 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         expected_pa_configs = len(
-            utils.generate_log2_list(DEFAULT_RUN_CONFIG_MAX_CONCURRENCY))
+            utils.generate_log2_list(1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY))
 
         expected_model_configs = DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT \
-                               * len(utils.generate_log2_list(DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE)) \
+                               * len(utils.generate_log2_list(1,DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE)) \
                                + 1
         expected_num_of_configs = expected_pa_configs * expected_model_configs
 

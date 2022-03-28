@@ -54,7 +54,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         concurrencies = utils.generate_log2_list(
-            DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
@@ -100,7 +100,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         concurrencies = utils.generate_log2_list(
-            DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(concurrency=c, launch_mode='c_api')
             for c in concurrencies
@@ -126,7 +126,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         concurrencies = utils.generate_log2_list(
-            DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(concurrency=c,
                                            client_protocol='http')
@@ -182,7 +182,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         batch_sizes = [1, 2, 4]
         concurrencies = utils.generate_log2_list(
-            DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(batch_size=b, concurrency=c)
             for b in batch_sizes
@@ -278,12 +278,40 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrencies = utils.generate_log2_list(16)
+        concurrencies = utils.generate_log2_list(1, 16)
         expected_configs = [
             construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
 
         pa_cli_args = ['--run-config-search-max-concurrency', '16']
+        self._run_and_test_perf_analyzer_config_generator(
+            yaml_content, expected_configs, pa_cli_args)
+
+    def test_min_concurrency(self):
+        """ 
+        Test Min Concurrency: 
+            - Change min concurrency to non-default value
+        
+        Min Concurrency: 5
+        3 configs [5, 8, 16] will be generated 
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        concurrencies = utils.generate_log2_list(5, 16)
+        expected_configs = [
+            self._create_expected_config(concurrency=c) for c in concurrencies
+        ]
+
+        pa_cli_args = [
+            '--run-config-search-min-concurrency', '5',
+            '--run-config-search-max-concurrency', '16'
+        ]
         self._run_and_test_perf_analyzer_config_generator(
             yaml_content, expected_configs, pa_cli_args)
 
@@ -308,7 +336,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         concurrencies = utils.generate_log2_list(
-            DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(
                 concurrency=c, perf_analyzer_flags={'percentile': '96'})
@@ -343,7 +371,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         concurrencies = utils.generate_log2_list(
-            DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(
                 concurrency=c,

@@ -92,15 +92,21 @@ class GeneratorUtils:
         param_combinations = list(product(*tuple(params.values())))
         return [dict(zip(params.keys(), vals)) for vals in param_combinations]
 
-    def generate_log2_list(value):
+    def generate_log2_list(min_value, max_value):
         """
-        Generates a list of all 2^n numbers, where 2^n does not exceed value 
+        Generates a list of all min_value -> 2^n numbers, where 2^n does not 
+        exceed max_value 
         
         Parameters
         ----------
-        value : int
+        min_value: int
+            The minimum value for the generated list
+        max_value : int
             The value that the generated list will not exceed
         """
-
-        log_value = int(log2(value))
-        return [2**c for c in range(0, log_value + 1)]
+        # min_log_value = 0 if min_value == 0 else int(log2(min_value))
+        min_log_value = int(log2(min_value))
+        max_log_value = int(log2(max_value))
+        log2_list = [2**c for c in range(min_log_value + 1, max_log_value + 1)]
+        log2_list.insert(0, min_value)
+        return log2_list
