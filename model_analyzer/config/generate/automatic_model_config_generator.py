@@ -29,6 +29,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         super().__init__(config, model, client)
 
         self._max_instance_count = config.run_config_search_max_instance_count
+        self._min_instance_count = config.run_config_search_min_instance_count
         self._max_model_batch_size = config.run_config_search_max_model_batch_size
         self._min_model_batch_size = config.run_config_search_min_model_batch_size
 
@@ -65,7 +66,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
     def _start_state_machine(self):
         self._state_machine_started = True
-        self._curr_instance_count = 1
+        self._curr_instance_count = self._min_instance_count
         self._reset_max_batch_size()
 
     def _step_state_machine(self):
