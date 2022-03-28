@@ -117,7 +117,7 @@ class TestTritonClientMethods(trc.TestResultCollector):
             self.tritonclient_mock.set_model_not_ready()
             self.assertTrue(
                 client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
-                                            num_retries=5), -1)
+                                            num_retries=2), -1)
             self.tritonclient_mock.reset()
             client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
                                         num_retries=1)
