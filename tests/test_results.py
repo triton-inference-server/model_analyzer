@@ -15,7 +15,7 @@
 from model_analyzer.result.results import Results
 from model_analyzer.result.measurement import Measurement
 from model_analyzer.triton.model.model_config import ModelConfig
-from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 import unittest
@@ -92,7 +92,7 @@ class TestResults(trc.TestResultCollector):
         for (index, (model_config,
                      measurements)) in enumerate(model_measurements.values()):
             self.assertEqual(model_config,
-                             self._run_config[index].model_config())
+                             self._model_run_config[index].model_config())
             self.assertEqual(measurements, self._measurements[index])
 
     def test_get_model_config_measurements_dict(self):
@@ -112,7 +112,7 @@ class TestResults(trc.TestResultCollector):
         model_config, measurements = self._result.get_all_model_config_measurements(
             'modelA', 'model_config_1')
 
-        self.assertEqual(model_config, self._run_config[1].model_config())
+        self.assertEqual(model_config, self._model_run_config[1].model_config())
         self.assertEqual(measurements, list(self._measurements[1].values()))
 
     def _construct_results(self):
@@ -123,54 +123,56 @@ class TestResults(trc.TestResultCollector):
         """
         self._result = Results()
 
-        self._run_config = []
-        self._run_config.append(
-            self._create_run_config('modelA', 'model_config_0'))
+        self._model_run_config = []
+        self._model_run_config.append(
+            self._create_model_run_config('modelA', 'model_config_0'))
 
-        self._run_config.append(
-            self._create_run_config('modelA', 'model_config_1'))
+        self._model_run_config.append(
+            self._create_model_run_config('modelA', 'model_config_1'))
 
-        self._run_config.append(
-            self._create_run_config('modelA', 'model_config_2'))
+        self._model_run_config.append(
+            self._create_model_run_config('modelA', 'model_config_2'))
 
         self._measurements = []
         self._measurements.append({"key_A": "1", "key_B": "2", "key_C": "3"})
         self._measurements.append({"key_D": "4", "key_E": "5", "key_F": "6"})
         self._measurements.append({"key_G": "7", "key_H": "8", "key_I": "9"})
 
-        self._result.add_measurement(self._run_config[0], "key_A", "1")
-        self._result.add_measurement(self._run_config[0], "key_B", "2")
-        self._result.add_measurement(self._run_config[0], "key_C", "3")
+        self._result.add_measurement(self._model_run_config[0], "key_A", "1")
+        self._result.add_measurement(self._model_run_config[0], "key_B", "2")
+        self._result.add_measurement(self._model_run_config[0], "key_C", "3")
 
-        self._result.add_measurement(self._run_config[1], "key_D", "4")
-        self._result.add_measurement(self._run_config[1], "key_E", "5")
-        self._result.add_measurement(self._run_config[1], "key_F", "6")
+        self._result.add_measurement(self._model_run_config[1], "key_D", "4")
+        self._result.add_measurement(self._model_run_config[1], "key_E", "5")
+        self._result.add_measurement(self._model_run_config[1], "key_F", "6")
 
-        self._result.add_measurement(self._run_config[2], "key_G", "7")
-        self._result.add_measurement(self._run_config[2], "key_H", "8")
-        self._result.add_measurement(self._run_config[2], "key_I", "9")
+        self._result.add_measurement(self._model_run_config[2], "key_G", "7")
+        self._result.add_measurement(self._model_run_config[2], "key_H", "8")
+        self._result.add_measurement(self._model_run_config[2], "key_I", "9")
 
-        run_config_0 = self._create_run_config('modelB', 'model_config_0')
-        self._result.add_measurement(run_config_0, "key_F", "6")
-        self._result.add_measurement(run_config_0, "key_E", "5")
-        self._result.add_measurement(run_config_0, "key_D", "4")
+        model_run_config_0 = self._create_model_run_config(
+            'modelB', 'model_config_0')
+        self._result.add_measurement(model_run_config_0, "key_F", "6")
+        self._result.add_measurement(model_run_config_0, "key_E", "5")
+        self._result.add_measurement(model_run_config_0, "key_D", "4")
 
-        run_config_1 = self._create_run_config('modelB', 'model_config_1')
-        self._result.add_measurement(run_config_1, "key_C", "3")
-        self._result.add_measurement(run_config_1, "key_B", "2")
-        self._result.add_measurement(run_config_1, "key_A", "1")
+        model_run_config_1 = self._create_model_run_config(
+            'modelB', 'model_config_1')
+        self._result.add_measurement(model_run_config_1, "key_C", "3")
+        self._result.add_measurement(model_run_config_1, "key_B", "2")
+        self._result.add_measurement(model_run_config_1, "key_A", "1")
 
         self._measurements_added = [
             '1', '2', '3', '4', '5', '6', '7', '8', '9', '6', '5', '4', '3',
             '2', '1'
         ]
 
-    def _create_run_config(self, model_name, model_config_name):
+    def _create_model_run_config(self, model_name, model_config_name):
         model_config_dict = {'name': model_config_name}
         self._model_config = ModelConfig.create_from_dictionary(
             model_config_dict)
 
-        return RunConfig(model_name, self._model_config, None, None)
+        return ModelRunConfig(model_name, self._model_config, None)
 
 
 if __name__ == '__main__':

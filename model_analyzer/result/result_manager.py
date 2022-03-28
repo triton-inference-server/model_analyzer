@@ -271,7 +271,7 @@ class ResultManager:
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        results.add_measurement(run_config,
+        results.add_measurement(model_run_config,
                                 measurement.perf_config().representation(),
                                 measurement)
 

@@ -64,18 +64,18 @@ class Results:
 
         return results
 
-    def add_measurement(self, run_config, key, measurement):
+    def add_measurement(self, model_run_config, key, measurement):
         """
         Given a RunConfig and a key, store a measurement
         
         Parameters
         ----------
-        run_config: RunConfig
+        model_run_config: ModelRunConfig
         key: str
         measurement: Measurement
         """
-        model_name, model_config, model_config_name = self._extract_run_config_fields(
-            run_config)
+        model_name, model_config, model_config_name = self._extract_model_run_config_fields(
+            model_run_config)
 
         self._add_measurement(model_name, model_config, model_config_name, key,
                               measurement)
@@ -253,6 +253,6 @@ class Results:
         self._results[model_name][model_config_name][
             Results.MEASUREMENTS_INDEX][key] = measurement
 
-    def _extract_run_config_fields(self, run_config):
-        return (run_config.model_name(), run_config.model_config(),
-                run_config.model_config().get_field('name'))
+    def _extract_model_run_config_fields(self, model_run_config):
+        return (model_run_config.model_name(), model_run_config.model_config(),
+                model_run_config.model_config().get_field('name'))
