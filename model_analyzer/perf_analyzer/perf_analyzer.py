@@ -55,35 +55,26 @@ class PerfAnalyzer:
     with perf_analyzer.
     """
 
-    METRIC_TAG, CSV_STRING, RECORD_CLASS, REDUCTION_FACTOR = 0, 1, 2, 3
+    #yapf: disable
+    METRIC_TAG,                        CSV_STRING,             RECORD_CLASS,             REDUCTION_FACTOR = 0, 1, 2, 3
     perf_metric_table = [
-        ["perf_latency_avg", "Avg latency", PerfLatencyAvg, 1000],
-        ["perf_latency_p90", "p90 latency", PerfLatencyP90, 1000],
-        ["perf_latency_p95", "p95 latency", PerfLatencyP95, 1000],
-        ["perf_latency_p99", "p99 latency", PerfLatencyP99, 1000],
-        ["perf_throughput", "Inferences/Second", PerfThroughput, 1],
-        ["perf_client_send_recv", "request/response", PerfClientSendRecv, 1000],
-        ["perf_client_send_recv", "send/recv", PerfClientSendRecv, 1000],
-        [
-            "perf_client_response_wait", "response wait",
-            PerfClientResponseWait, 1000
-        ], ["perf_server_queue", "Server Queue", PerfServerQueue, 1000],
-        [
-            "perf_server_compute_infer", "Server Compute Infer",
-            PerfServerComputeInfer, 1000
-        ],
-        [
-            "perf_server_compute_input", "Server Compute Input",
-            PerfServerComputeInput, 1000
-        ],
-        [
-            "perf_server_compute_output", "Server Compute Output",
-            PerfServerComputeOutput, 1000
-        ]
+        ["perf_latency_avg",           "Avg latency",           PerfLatencyAvg,          1000],
+        ["perf_latency_p90",           "p90 latency",           PerfLatencyP90,          1000],
+        ["perf_latency_p95",           "p95 latency",           PerfLatencyP95,          1000],
+        ["perf_latency_p99",           "p99 latency",           PerfLatencyP99,          1000],
+        ["perf_throughput",            "Inferences/Second",     PerfThroughput,             1],
+        ["perf_client_send_recv",      "request/response",      PerfClientSendRecv,      1000],
+        ["perf_client_send_recv",      "send/recv",             PerfClientSendRecv,      1000],
+        ["perf_client_response_wait",  "response wait",         PerfClientResponseWait,  1000],
+        ["perf_server_queue",          "Server Queue",          PerfServerQueue,         1000],
+        ["perf_server_compute_infer",  "Server Compute Infer",  PerfServerComputeInfer,  1000],
+        ["perf_server_compute_input",  "Server Compute Input",  PerfServerComputeInput,  1000],
+        ["perf_server_compute_output", "Server Compute Output", PerfServerComputeOutput, 1000]
     ]
+    #yapf: enable
 
-    # FIXME: This should be RECORD_CLASS, but I can't get the syntax to work
-    perf_metrics = [perf_metric[2] for perf_metric in perf_metric_table]
+    perf_metrics = (lambda x=RECORD_CLASS, y=perf_metric_table:
+                    [perf_metric[x] for perf_metric in y])()
 
     def __init__(self, path, config, max_retries, timeout, max_cpu_util):
         """
@@ -306,24 +297,24 @@ class PerfAnalyzer:
         the perf_analyzer
         """
 
-        with open(self._config['model-name'], mode='r') as f:
+        with open(self._config['latency-report-file'], mode='r') as f:
             csv_reader = csv.DictReader(f, delimiter=',')
 
             for row in csv_reader:
-                self._perf_records = self._extract_metrics_from_csv(
+                self._perf_records = self._extract_metrics_from_row(
                     metrics, row)
 
-        os.remove(self._config['model-name'])
+        os.remove(self._config['latency-report-file'])
 
-    def _extract_metrics_from_csv(self, requested_metrics, csv_metrics):
+    def _extract_metrics_from_row(self, requested_metrics, row_metrics):
         """ 
-        Extracts the requested metrics from the CSV and creates a list of Records
+        Extracts the requested metrics from the CSV's row and creates a list of Records
         """
         perf_records = []
         for perf_metric in PerfAnalyzer.perf_metric_table:
-            if self._is_perf_metric_requested_and_in_csv(
-                    perf_metric, requested_metrics, csv_metrics):
-                value = float(csv_metrics[perf_metric[PerfAnalyzer.CSV_STRING]]
+            if self._is_perf_metric_requested_and_in_row(
+                    perf_metric, requested_metrics, row_metrics):
+                value = float(row_metrics[perf_metric[PerfAnalyzer.CSV_STRING]]
                              ) / perf_metric[PerfAnalyzer.REDUCTION_FACTOR]
 
                 perf_records.append(
@@ -331,10 +322,10 @@ class PerfAnalyzer:
 
         return perf_records
 
-    def _is_perf_metric_requested_and_in_csv(self, perf_metric,
-                                             requested_metrics, csv_metrics):
+    def _is_perf_metric_requested_and_in_row(self, perf_metric,
+                                             requested_metrics, row_metrics):
         tag_match = any(
             perf_metric[PerfAnalyzer.METRIC_TAG] in requested_metric.tag
             for requested_metric in requested_metrics)
 
-        return tag_match and perf_metric[PerfAnalyzer.CSV_STRING] in csv_metrics
+        return tag_match and perf_metric[PerfAnalyzer.CSV_STRING] in row_metrics

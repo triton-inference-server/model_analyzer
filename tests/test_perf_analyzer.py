@@ -198,8 +198,6 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(self.config['ssl-https-private-key-file'],
                          ssl_https_private_key_file)
 
-        foo = self.config.to_cli_string()
-
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
         # Set ssl-grpc-use-ssl to False should remove it from the cli string
