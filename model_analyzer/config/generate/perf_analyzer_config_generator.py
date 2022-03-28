@@ -137,7 +137,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             'model-name': [self._model_name],
             'latency-report-file': [self._model_name],
             'batch-size': self._batch_sizes,
-            'measurement-mode': [DEFAULT_MEASUREMENT_MODE]
+            'measurement-mode': [DEFAULT_MEASUREMENT_MODE],
+            'verbose-csv': ['--verbose-csv'],
         }
 
         if self._launch_mode_is_c_api:

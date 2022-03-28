@@ -119,7 +119,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
     def test_perf_analyzer_additive_args(self):
         shape = ['name1:1,2,3', 'name2:4,5,6']
-        expected_cli_str = '-m test_model --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50 --verbose-csv'
+        expected_cli_str = '-m test_model --measurement-interval=1000 --shape=name1:1,2,3 --shape=name2:4,5,6 --measurement-request-count=50'
 
         self.config['shape'] = shape[:]
 
@@ -127,7 +127,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
         shape = 'name1:1,2,3'
-        expected_cli_str = '-m test_model --measurement-interval=1000 --shape=name1:1,2,3 --measurement-request-count=50 --verbose-csv'
+        expected_cli_str = '-m test_model --measurement-interval=1000 --shape=name1:1,2,3 --measurement-request-count=50'
         self.config['shape'] = shape
 
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
@@ -157,7 +157,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         expected_cli_str = f'-m test_model --measurement-interval=1000 --measurement-request-count=50 --ssl-grpc-use-ssl '\
             f'--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c '\
             f'--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e '\
-            f'--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h --verbose-csv'
+            f'--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h'
 
         self.config['ssl-grpc-use-ssl'] = ssl_grpc_use_ssl
         self.config[
@@ -198,6 +198,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(self.config['ssl-https-private-key-file'],
                          ssl_https_private_key_file)
 
+        foo = self.config.to_cli_string()
+
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
         # Set ssl-grpc-use-ssl to False should remove it from the cli string
@@ -207,7 +209,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         expected_cli_str = f'-m test_model --measurement-interval=1000 --measurement-request-count=50 '\
             f'--ssl-grpc-root-certifications-file=a --ssl-grpc-private-key-file=b --ssl-grpc-certificate-chain-file=c '\
             f'--ssl-https-verify-peer=1 --ssl-https-verify-host=2 --ssl-https-ca-certificates-file=d --ssl-https-client-certificate-type=e '\
-            f'--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h --verbose-csv'
+            f'--ssl-https-client-certificate-file=f --ssl-https-private-key-type=g --ssl-https-private-key-file=h'
         self.assertEqual(self.config.to_cli_string(), expected_cli_str)
 
     def test_run(self):

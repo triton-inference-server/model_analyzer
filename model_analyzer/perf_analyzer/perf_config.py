@@ -46,7 +46,7 @@ class PerfAnalyzerConfig:
         'latency-report-file', 'http-header'
     ]
 
-    input_to_verbose = ['verbose', 'extra-verbose']
+    input_to_verbose = ['verbose', 'extra-verbose', 'verbose-csv']
 
     additive_args = ['input-data', 'shape', 'streaming']
 
@@ -68,7 +68,7 @@ class PerfAnalyzerConfig:
             '-f': None,
             '-H': None
         }
-        self._verbose = {'-v': None, '-v -v': None}
+        self._verbose = {'-v': None, '-v -v': None, '--verbose-csv': None}
 
         self._input_to_options = {
             'model-name': '-m',
@@ -80,7 +80,11 @@ class PerfAnalyzerConfig:
             'http-header': '-H'
         }
 
-        self._input_to_verbose = {'verbose': '-v', 'extra-verbose': '-v -v'}
+        self._input_to_verbose = {
+            'verbose': '-v',
+            'extra-verbose': '-v -v',
+            'verbose-csv': '--verbose-csv'
+        }
 
         self._additive_args = {
             (self._input_to_options[k] if k in self._input_to_options else k):
@@ -189,7 +193,6 @@ class PerfAnalyzerConfig:
         args.extend(self._parse_short_options())
         args.extend(self._parse_verbose_options())
         args.extend(self._parse_long_options())
-        args.append("--verbose-csv")
 
         return ' '.join(args)
 
