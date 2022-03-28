@@ -71,6 +71,13 @@ class ModelRunConfig:
 
         return self._perf_config
 
+    def representation(self):
+        """
+        Returns a representation string for the ModelRunConfig that can be used
+        as a key to uniquely identify it
+        """
+        return self.perf_config().representation()
+
     def is_legal_combination(self):
         """
         Returns true if the run_config is valid and should be run. Else false

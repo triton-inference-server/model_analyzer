@@ -43,6 +43,14 @@ class RunConfig:
         """
         return self._model_run_configs
 
+    def representation(self):
+        """
+        Returns a representation string for the RunConfig that can be used
+        as a key to uniquely identify it
+        """
+        return ''.join(
+            [mrc.representation() for mrc in self.model_run_configs()])
+
     def is_legal_combination(self):
         """
         Returns true if all model_run_configs are valid

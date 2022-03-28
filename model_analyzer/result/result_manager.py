@@ -262,18 +262,11 @@ class ResultManager:
             the measurement to be added
         """
 
-        model_name = model_run_config.model_name()
-        model_config = model_run_config.model_config()
-
-        model_config_name = model_config.get_field('name')
-
         # Get reference to results state and modify it
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        results.add_measurement(model_run_config,
-                                measurement.perf_config().representation(),
-                                measurement)
+        results.add_measurement(model_run_config, measurement)
 
         # Use set_state_variable to record that state may have been changed
         self._state_manager.set_state_variable(name='ResultManager.results',

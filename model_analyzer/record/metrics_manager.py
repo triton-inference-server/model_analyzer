@@ -279,7 +279,7 @@ class MetricsManager:
 
         model_name = run_config.model_name()
         model_config_name = run_config.model_config().get_field('name')
-        perf_config_str = run_config.perf_config().representation()
+        key = run_config.representation()
 
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
@@ -290,15 +290,7 @@ class MetricsManager:
         measurements = results.get_model_config_measurements_dict(
             model_name, model_config_name)
 
-        # For backward compatibility with keys that still have -u,
-        # we will remove -u from all keys, convert to set and check
-        # perf_config_str is present
-        if perf_config_str in set(
-                map(PerfAnalyzerConfig.remove_url_from_cli_string,
-                    measurements.keys())):
-            return measurements[perf_config_str]
-        else:
-            return None
+        return measurements.get(key, None)
 
     def profile_model(self, run_config):
         """
