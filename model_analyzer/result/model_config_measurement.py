@@ -26,7 +26,7 @@ logger = logging.getLogger(LOGGER_NAME)
 @total_ordering
 class ModelConfigMeasurement:
     """
-    Encapsulates the set of metrics obtained from a single model config's
+    Encapsulates the set of non-gpu metrics obtained from a single model config's
     RunConfig run
     """
 

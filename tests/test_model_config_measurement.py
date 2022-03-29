@@ -51,6 +51,9 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         NotImplemented
 
     def test_init(self):
+        """
+        Test that values are properly initialized
+        """
         self.assertEqual(self.mcmA.model_config_name(), self.model_config_name)
         self.assertEqual(self.mcmA.model_specific_pa_params(),
                          self.model_specific_pa_params)
@@ -59,6 +62,9 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
             convert_non_gpu_metrics_to_data(self.non_gpu_metric_values))
 
     def test_get_metric_found(self):
+        """
+        Test that non-gpu metrics can be correctly returned
+        """
         non_gpu_data = convert_non_gpu_metrics_to_data(
             self.non_gpu_metric_values)
 
@@ -69,9 +75,15 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(self.mcmA.get_metric("cpu_used_ram"), non_gpu_data[2])
 
     def test_get_metric_not_found(self):
+        """
+        Test that an incorrect metric search returns None
+        """
         self.assertEqual(self.mcmA.get_metric("XXXXX"), None)
 
     def test_get_metric_value_found(self):
+        """
+        Test that non-gpu metric values can be correctly returned
+        """
         self.assertEqual(self.mcmA.get_metric_value("perf_throughput"),
                          self.non_gpu_metric_values["perf_throughput"])
         self.assertEqual(self.mcmA.get_metric_value("perf_latency_p99"),
@@ -80,10 +92,16 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
                          self.non_gpu_metric_values["cpu_used_ram"])
 
     def test_get_metric_value_not_found(self):
+        """
+        Test that an incorrect metric value search returns the correct value
+        """
         self.assertEqual(self.mcmA.get_metric_value("XXXXX"), 0)
         self.assertEqual(self.mcmA.get_metric_value("XXXXX", 100), 100)
 
     def test_is_better_than(self):
+        """
+        Test that individual metric comparison works as expected
+        """
         self.mcmA.set_metric_weighting({"perf_throughput": 1})
 
         # throughput: 1000 is not better than 2000
@@ -97,6 +115,9 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         self.assertTrue(self.mcmA < self.mcmB)
 
     def test_is_better_than_combo(self):
+        """
+        Test that combination metric comparison works as expected
+        """
         # throuhput: 1000 vs. 2000 (worse), latency: 20 vs. 40 (better)
         # with latency bias mcmA is better
         self.mcmA.set_metric_weighting({
@@ -107,11 +128,17 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         self.assertTrue(self.mcmA.is_better_than(self.mcmB))
 
     def test__eq__(self):
+        """
+        Test that individual metric equality works as expected
+        """
         self.mcmA.set_metric_weighting({"cpu_used_ram": 10})
 
         self.assertTrue(self.mcmA == self.mcmB)
 
     def test__eq__combo(self):
+        """
+        Test that combination metric equality works as expected
+        """
         # throuhput: 1000 vs. 2000 (worse), latency: 20 vs. 40 (better)
         # with no bias they are equal
         self.mcmA.set_metric_weighting({
@@ -122,6 +149,9 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         self.assertTrue(self.mcmA == self.mcmB)
 
     def test_from_dict(self):
+        """
+        Test to ensure class can be correctly restored from a dictionary
+        """
         mcmA_dict = self.mcmA.__dict__
         mcmA_from_dict = ModelConfigMeasurement.from_dict(mcmA_dict)
 

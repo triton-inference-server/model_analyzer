@@ -29,6 +29,10 @@ def convert_to_bytes(string):
     """
     Converts string into bytes and ensures minimum length requirement 
     for compatibility with unpack function called in usr/lib/python3.8/gettext.py
+    
+    Parameters
+    ----------
+    string: str
     """
     if (len(string) > 4):
         return bytes(string, 'utf-8')
@@ -40,6 +44,10 @@ def convert_non_gpu_metrics_to_data(non_gpu_metric_values):
     """ 
     Non GPU data will be a dict whose keys and values are
     a list of Records
+    
+    Parameters
+    ----------
+    non_gpu_metric_values: dict of non-gpu metrics
     """
 
     non_gpu_data = []
@@ -57,6 +65,10 @@ def convert_gpu_metrics_to_data(gpu_metric_values):
     """
     GPU data will be a dict whose keys are gpu_ids and values
     are lists of Records
+    
+    Parameters
+    ----------
+    gpu_metric_values: dict of gpu metrics
     """
     gpu_data = {}
     for gpu_uuid, metrics_values in gpu_metric_values.items():
@@ -71,6 +83,7 @@ def convert_gpu_metrics_to_data(gpu_metric_values):
 
 
 def construct_perf_analyzer_config(model_name='my-model',
+                                   output_file_name='my-model',
                                    batch_size=DEFAULT_BATCH_SIZES,
                                    concurrency=1,
                                    launch_mode=DEFAULT_TRITON_LAUNCH_MODE,
@@ -79,17 +92,32 @@ def construct_perf_analyzer_config(model_name='my-model',
     """
     Constructs a Perf Analyzer Config
     
+    Parameters
+    ----------
     model_name: str
+        The name of the model
+    output_file_name: str
+        The name of the output file
     batch_size: int
+        The batch size for this PA configuration
     concurrency: int
+        The concurrency value for this PA configuration
     launch_mode: str
+        The launch mode for this PA configuration
     client_protocol: str
-    perf_analyzer_flags: str
+        The client protocol for this PA configuration
+    perf_analyzer_flags: dict
+        A dict of any additional PA flags to be set
+    
+    Returns
+    -------
+    PerfAnalyzerConfig
+        constructed with all of the above data.
     """
 
     pa_config = PerfAnalyzerConfig()
     pa_config._options['-m'] = model_name
-    pa_config._options['-f'] = model_name
+    pa_config._options['-f'] = output_file_name
     pa_config._options['-b'] = batch_size
     pa_config._args['concurrency-range'] = concurrency
     pa_config._args['measurement-mode'] = DEFAULT_MEASUREMENT_MODE
