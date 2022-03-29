@@ -53,7 +53,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrencies = utils.generate_log2_list(
+        concurrencies = utils.generate_doubled_list(
             1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(concurrency=c) for c in concurrencies
@@ -99,7 +99,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrencies = utils.generate_log2_list(
+        concurrencies = utils.generate_doubled_list(
             1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(concurrency=c, launch_mode='c_api')
@@ -125,7 +125,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrencies = utils.generate_log2_list(
+        concurrencies = utils.generate_doubled_list(
             1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(concurrency=c,
@@ -181,7 +181,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         batch_sizes = [1, 2, 4]
-        concurrencies = utils.generate_log2_list(
+        concurrencies = utils.generate_doubled_list(
             1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(batch_size=b, concurrency=c)
@@ -278,7 +278,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrencies = utils.generate_log2_list(1, 16)
+        concurrencies = utils.generate_doubled_list(1, 16)
         expected_configs = [
             construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
@@ -303,7 +303,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrencies = utils.generate_log2_list(5, 16)
+        concurrencies = utils.generate_doubled_list(5, 16)
         expected_configs = [
             self._create_expected_config(concurrency=c) for c in concurrencies
         ]
@@ -335,7 +335,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrencies = utils.generate_log2_list(
+        concurrencies = utils.generate_doubled_list(
             1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(
@@ -370,7 +370,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrencies = utils.generate_log2_list(
+        concurrencies = utils.generate_doubled_list(
             1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
         expected_configs = [
             construct_perf_analyzer_config(

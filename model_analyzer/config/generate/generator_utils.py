@@ -104,9 +104,28 @@ class GeneratorUtils:
         max_value : int
             The value that the generated list will not exceed
         """
-        # min_log_value = 0 if min_value == 0 else int(log2(min_value))
         min_log_value = int(log2(min_value))
         max_log_value = int(log2(max_value))
         log2_list = [2**c for c in range(min_log_value + 1, max_log_value + 1)]
         log2_list.insert(0, min_value)
         return log2_list
+
+    def generate_doubled_list(min_value, max_value):
+        """
+        Generates a list of values from min_value -> max_value doubling 
+        min_value for each entry
+
+        Parameters
+        ----------
+        min_value: int
+            The minimum value for the generated list
+        max_value : int
+            The value that the generated list will not exceed
+        """
+
+        list = []
+        val = 1 if min_value == 0 else min_value
+        while val <= max_value:
+            list.append(val)
+            val *= 2
+        return list

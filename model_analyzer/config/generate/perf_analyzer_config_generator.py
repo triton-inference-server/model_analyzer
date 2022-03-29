@@ -111,7 +111,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         elif cli_config.run_config_search_disable:
             return [1]
         else:
-            return utils.generate_log2_list(
+            return utils.generate_doubled_list(
                 cli_config.run_config_search_min_concurrency,
                 cli_config.run_config_search_max_concurrency)
 
