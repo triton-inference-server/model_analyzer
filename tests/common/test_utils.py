@@ -14,7 +14,6 @@
 
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
-from model_analyzer.result.measurement import Measurement
 from model_analyzer.result.model_result import ModelResult
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
@@ -190,60 +189,6 @@ def construct_run_config_measurement(model_name, model_config_names,
     rc_measurement.set_metric_weightings(metric_objectives)
 
     return rc_measurement
-
-
-def construct_measurement(model_name, gpu_metric_values, non_gpu_metric_values,
-                          comparator):
-    """
-    Construct a measurement from the given data
-
-    Parameters
-    ----------
-    model_name: str
-        The name of the model that generated this result
-    gpu_metric_values: dict
-        Keys are gpu id, values are dict
-        The dict where keys are gpu based metric tags, values are the data
-    non_gpu_metric_values: dict
-        Keys are non gpu perf metrics, values are their values
-    comparator: ResultComparator
-        The comparator used to compare measurements/results
-    
-    Returns
-    -------
-    Measurement
-        constructed with all of the above data.
-    """
-
-    # gpu_data will be a dict whose keys are gpu_ids and values
-    # are lists of Records
-    gpu_data = {}
-    for gpu_uuid, metrics_values in gpu_metric_values.items():
-        gpu_data[gpu_uuid] = []
-        gpu_metric_tags = list(metrics_values.keys())
-        for i, gpu_metric in enumerate(
-                MetricsManager.get_metric_types(gpu_metric_tags)):
-            gpu_data[gpu_uuid].append(
-                gpu_metric(value=metrics_values[gpu_metric_tags[i]]))
-
-    # Non gpu data will be a list of records
-    non_gpu_data = []
-    non_gpu_metric_tags = list(non_gpu_metric_values.keys())
-    for i, metric in enumerate(
-            MetricsManager.get_metric_types(non_gpu_metric_tags)):
-        non_gpu_data.append(
-            metric(value=non_gpu_metric_values[non_gpu_metric_tags[i]]))
-
-    # Perf Config needs a protocol
-    perf_config = PerfAnalyzerConfig()
-    perf_config['model-name'] = model_name
-    perf_config['protocol'] = 'http'
-
-    measurement = Measurement(gpu_data=gpu_data,
-                              non_gpu_data=non_gpu_data,
-                              perf_config=perf_config)
-    measurement.set_result_comparator(comparator=comparator)
-    return measurement
 
 
 def construct_result(avg_gpu_metric_values,

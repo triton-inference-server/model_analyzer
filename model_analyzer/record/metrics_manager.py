@@ -24,7 +24,7 @@ from model_analyzer.monitor.remote_monitor import RemoteMonitor
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
-from model_analyzer.result.measurement import Measurement
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.results import Results
 
 from collections import defaultdict
