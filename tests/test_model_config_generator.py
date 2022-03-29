@@ -16,13 +16,15 @@ from model_analyzer.config.generate.generator_factory import ConfigGeneratorFact
 from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
 from model_analyzer.record.types.perf_throughput import PerfThroughput
-from model_analyzer.result.measurement import Measurement
 from model_analyzer.cli.cli import CLI
 from .common import test_result_collector as trc
 from .common.test_utils import convert_to_bytes
+from .common.test_utils import construct_run_config_measurement
 from .mocks.mock_config import MockConfig
 from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
+
+import unittest
 from unittest.mock import MagicMock
 
 
@@ -447,10 +449,18 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
     def _get_next_fake_results(self):
         self._fake_throughput += 1
-        perf_throughput = PerfThroughput(self._fake_throughput)
-        measurement = Measurement(gpu_data=MagicMock(),
-                                  non_gpu_data=[perf_throughput],
-                                  perf_config=MagicMock())
+
+        measurement = construct_run_config_measurement(
+            model_name=MagicMock(),
+            model_config_names=[MagicMock()],
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values=MagicMock(),
+            non_gpu_metric_values=[{
+                "perf_throughput": self._fake_throughput
+            }],
+            metric_objectives=MagicMock(),
+            model_config_weights=MagicMock())
+
         return [measurement]
 
     def _evaluate_config(self, args, yaml_content):
@@ -475,3 +485,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
     def tearDown(self):
         self.mock_os.stop()
+
+
+if __name__ == '__main__':
+    unittest.main()
