@@ -80,7 +80,7 @@ class ResultComparator:
             first set of (gpu_measurements, non_gpu_measurements) to
             be compared
         measurement2 : Measurement
-            first set of (gpu_measurements, non_gpu_measurements) to
+            second set of (gpu_measurements, non_gpu_measurements) to
             be compared
 
         Returns

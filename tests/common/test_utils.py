@@ -12,21 +12,184 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.result.measurement import Measurement
 from model_analyzer.result.model_result import ModelResult
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+
+from model_analyzer.config.input.config_defaults import \
+    DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_CLIENT_PROTOCOL, \
+    DEFAULT_MEASUREMENT_MODE, DEFAULT_TRITON_GRPC_ENDPOINT, DEFAULT_TRITON_HTTP_ENDPOINT, \
+    DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY
 
 
 def convert_to_bytes(string):
     """
     Converts string into bytes and ensures minimum length requirement 
     for compatibility with unpack function called in usr/lib/python3.8/gettext.py
+    
+    Parameters
+    ----------
+    string: str
     """
     if (len(string) > 4):
         return bytes(string, 'utf-8')
     else:
         return bytes(string + "    ", 'utf-8')
+
+
+def convert_non_gpu_metrics_to_data(non_gpu_metric_values):
+    """ 
+    Non GPU data will be a dict whose keys and values are
+    a list of Records
+    
+    Parameters
+    ----------
+    non_gpu_metric_values: dict of non-gpu metrics
+    """
+
+    non_gpu_data = []
+    non_gpu_metric_tags = list(non_gpu_metric_values.keys())
+
+    for i, metric in enumerate(
+            MetricsManager.get_metric_types(non_gpu_metric_tags)):
+        non_gpu_data.append(
+            metric(value=non_gpu_metric_values[non_gpu_metric_tags[i]]))
+
+    return non_gpu_data
+
+
+def convert_gpu_metrics_to_data(gpu_metric_values):
+    """
+    GPU data will be a dict whose keys are gpu_ids and values
+    are lists of Records
+    
+    Parameters
+    ----------
+    gpu_metric_values: dict of gpu metrics
+    """
+    gpu_data = {}
+    for gpu_uuid, metrics_values in gpu_metric_values.items():
+        gpu_data[gpu_uuid] = []
+        gpu_metric_tags = list(metrics_values.keys())
+        for i, gpu_metric in enumerate(
+                MetricsManager.get_metric_types(gpu_metric_tags)):
+            gpu_data[gpu_uuid].append(
+                gpu_metric(value=metrics_values[gpu_metric_tags[i]]))
+
+    return gpu_data
+
+
+def construct_perf_analyzer_config(model_name='my-model',
+                                   output_file_name='my-model',
+                                   batch_size=DEFAULT_BATCH_SIZES,
+                                   concurrency=1,
+                                   launch_mode=DEFAULT_TRITON_LAUNCH_MODE,
+                                   client_protocol=DEFAULT_CLIENT_PROTOCOL,
+                                   perf_analyzer_flags=None):
+    """
+    Constructs a Perf Analyzer Config
+    
+    Parameters
+    ----------
+    model_name: str
+        The name of the model
+    output_file_name: str
+        The name of the output file
+    batch_size: int
+        The batch size for this PA configuration
+    concurrency: int
+        The concurrency value for this PA configuration
+    launch_mode: str
+        The launch mode for this PA configuration
+    client_protocol: str
+        The client protocol for this PA configuration
+    perf_analyzer_flags: dict
+        A dict of any additional PA flags to be set
+    
+    Returns
+    -------
+    PerfAnalyzerConfig
+        constructed with all of the above data.
+    """
+
+    pa_config = PerfAnalyzerConfig()
+    pa_config._options['-m'] = model_name
+    pa_config._options['-f'] = output_file_name
+    pa_config._options['-b'] = batch_size
+    pa_config._args['concurrency-range'] = concurrency
+    pa_config._args['measurement-mode'] = DEFAULT_MEASUREMENT_MODE
+
+    pa_config.update_config(perf_analyzer_flags)
+
+    if launch_mode == 'c_api':
+        pa_config._args['service-kind'] = 'triton_c_api'
+        pa_config._args['triton-server-directory'] = DEFAULT_TRITON_INSTALL_PATH
+        pa_config._args['model-repository'] = DEFAULT_OUTPUT_MODEL_REPOSITORY
+    else:
+        pa_config._options['-i'] = client_protocol
+        if client_protocol == 'http':
+            pa_config._options['-u'] = DEFAULT_TRITON_HTTP_ENDPOINT
+        else:
+            pa_config._options['-u'] = DEFAULT_TRITON_GRPC_ENDPOINT
+
+    return pa_config
+
+
+def construct_run_config_measurement(model_name, model_config_names,
+                                     model_specific_pa_params,
+                                     gpu_metric_values, non_gpu_metric_values,
+                                     metric_objectives, model_config_weights):
+    """
+    Construct a RunConfig measurement from the given data
+
+    Parameters
+    ----------
+    model_name: str
+        The name of the model that generated this result
+    model_config_names: list of str
+        A list of Model Config names that generated this result
+    model_specific_pa_params: list of dict
+        A list (one per model config) of dict's of PA parameters that change
+        between models in a multi-model run
+    gpu_metric_values: dict
+        Keys are gpu id, values are dict
+        The dict where keys are gpu based metric tags, values are the data
+    non_gpu_metric_values: list of dict
+        List of (one per model config) dict's where keys are non gpu perf metrics, values are the data
+    metric_objectives: list of RecordTypes
+        A list of metric objectives (one per model config) used to compare measurements
+    model_config_weights: list of ints
+        A list of weights (one per model config) used to bias measurement results between models
+
+    Returns
+    -------
+    RunConfigMeasurement
+        constructed with all of the above data.
+    """
+
+    gpu_data = convert_gpu_metrics_to_data(gpu_metric_values)
+    pa_config = construct_perf_analyzer_config(model_name=model_name)
+
+    rc_measurement = RunConfigMeasurement(pa_config.representation(), gpu_data)
+
+    non_gpu_data = [
+        convert_non_gpu_metrics_to_data(non_gpu_metric_value)
+        for non_gpu_metric_value in non_gpu_metric_values
+    ]
+
+    for index, model_config_name in enumerate(model_config_names):
+        rc_measurement.add_model_config_measurement(
+            model_config_name=model_config_name,
+            model_specific_pa_params=model_specific_pa_params[index],
+            non_gpu_data=non_gpu_data[index])
+
+    rc_measurement.set_model_config_weighting(model_config_weights)
+    rc_measurement.set_metric_weightings(metric_objectives)
+
+    return rc_measurement
 
 
 def construct_measurement(model_name, gpu_metric_values, non_gpu_metric_values,
