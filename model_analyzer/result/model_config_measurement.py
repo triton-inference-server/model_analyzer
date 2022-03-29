@@ -51,6 +51,8 @@ class ModelConfigMeasurement:
             type(metric).tag: metric for metric in self._non_gpu_data
         }
 
+        self._metric_weights = {}
+
     @classmethod
     def from_dict(cls, model_config_measurement_dict):
         model_config_measurement = ModelConfigMeasurement(None, {}, [])
@@ -234,6 +236,9 @@ class ModelConfigMeasurement:
             -1
                 if self < other (is worse than)
         """
+
+        if not self._metric_weights:
+            return 0
 
         weighted_score = self._calculate_weighted_score(other)
 

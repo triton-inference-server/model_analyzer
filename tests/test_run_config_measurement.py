@@ -112,8 +112,6 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
             self.rcm0_weighted_non_gpu_metric_values
         ]
 
-        foo = self.rcm0.get_weighted_metric("perf_throughput")
-
         self.assertEqual(self.rcm0.get_weighted_metric("perf_throughput"),
                          [non_gpu_data[0][0], non_gpu_data[1][0]])
         self.assertEqual(self.rcm0.get_weighted_metric("perf_latency_p99"),
