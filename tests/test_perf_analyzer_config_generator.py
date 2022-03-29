@@ -305,7 +305,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         concurrencies = utils.generate_doubled_list(5, 16)
         expected_configs = [
-            self._create_expected_config(concurrency=c) for c in concurrencies
+            construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
 
         pa_cli_args = [
