@@ -272,8 +272,6 @@ class ModelConfigMeasurement:
             other_metric = other.get_metric(tag=objective)
 
             # Handle the case where objective GPU metric is queried on CPU only
-            # TODO: I left this code here, but I'm not 100% sure that it is
-            # still relevant at this level - and I don't know how to test it
             if self_metric and other_metric is None:
                 return 1
             elif other_metric and self_metric is None:

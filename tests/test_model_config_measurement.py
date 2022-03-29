@@ -47,6 +47,12 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         self.mcmB = self._construct_model_config_measurement(
             "modelB", self.model_specific_pa_params, mcmB_non_gpu_metric_values)
 
+        self.mcmC = self._construct_model_config_measurement(
+            "modelC", self.model_specific_pa_params, {})
+
+        self.mcmD = self._construct_model_config_measurement(
+            "modelD", self.model_specific_pa_params, {})
+
     def tearDown(self):
         NotImplemented
 
@@ -126,6 +132,17 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         })
 
         self.assertTrue(self.mcmA.is_better_than(self.mcmB))
+
+    def test_is_better_than_empty(self):
+        """
+        Test for correct return values when comparing for/against an empty set
+        """
+        self.mcmA.set_metric_weighting({"perf_throughput": 1})
+        self.mcmC.set_metric_weighting({"perf_throughput": 1})
+
+        self.assertTrue(self.mcmA.is_better_than(self.mcmC))
+        self.assertFalse(self.mcmC.is_better_than(self.mcmA))
+        self.assertTrue(self.mcmC == self.mcmD)
 
     def test_no_metric_set(self):
         """
