@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.triton.model.model_config import ModelConfig
-from model_analyzer.result.measurement import Measurement
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.constants import LOGGER_NAME
 
 import logging
@@ -40,11 +40,11 @@ class Results:
         (stored in the checkpoint)
         
         The checkpoint format is:
-        {model_name: { [model_config: (key, {measurements} ) ] } }
+        {model_name: { [model_config: (key, {run_config_measurements} ) ] } }
         ---results_dict-------------------------------------------
                      ---model_dict------------------------------
                        ---model_config_tuple_list-------------
-                                      -key, measurement_dict-
+                                      -key, run_config_measurement_dict-
         """
         results = Results()
 
@@ -56,30 +56,34 @@ class Results:
 
                 for key, measurement_dict in model_config_tuple_list[
                         Results.MEASUREMENTS_INDEX].items():
-                    measurement = Measurement.from_dict(measurement_dict)
+                    run_config_measurement = RunConfigMeasurement.from_dict(
+                        measurement_dict)
 
-                    results._add_measurement(model_name, model_config,
-                                             model_config_name, key,
-                                             measurement)
+                    results._add_run_config_measurement(model_name,
+                                                        model_config,
+                                                        model_config_name, key,
+                                                        run_config_measurement)
 
         return results
 
-    def add_measurement(self, model_run_config, measurement):
+    def add_run_config_measurement(self, model_run_config,
+                                   run_config_measurement):
         """
-        Given a ModelRunConfig and a measurement, add the measurement to the
+        Given a ModelRunConfig and a RunConfigMeasurement, add the measurement to the
         ModelRunConfig's measurements
         
         Parameters
         ----------
         model_run_config: ModelRunConfig
         key: str
-        measurement: Measurement
+        run_config_measurement: RunConfigMeasurement
         """
         model_name, model_config, model_config_name, key = self._extract_model_run_config_fields(
             model_run_config)
 
-        self._add_measurement(model_name, model_config, model_config_name, key,
-                              measurement)
+        self._add_run_config_measurement(model_name, model_config,
+                                         model_config_name, key,
+                                         run_config_measurement)
 
     def contains_model(self, model_name):
         """
@@ -136,7 +140,7 @@ class Results:
         
         Returns
         -------
-        list of tuples - [(ModelConfig, list of Measurements)]
+        list of tuples - [(ModelConfig, list of RunConfigMeasurements)]
             List of model configs and a dict of all associated
             measurement values
         """
@@ -175,7 +179,7 @@ class Results:
             
         Returns
         -------
-        Dict of tuples - {(ModelConfig, list of Measurements)}
+        Dict of tuples - {(ModelConfig, list of RunConfigMeasurements)}
             Dict of tuples consisting of the model's ModelConfig 
             and a list of all associated measurement values
         """
@@ -200,7 +204,7 @@ class Results:
 
         Returns
         -------
-        Dict of Measurements
+        Dict of RunConfigMeasurements
         """
         if not self.contains_model(
                 model_name) or not self.contains_model_config(
@@ -227,7 +231,7 @@ class Results:
 
         Returns
         -------
-        Tuple - (ModelConfig, list of Measurements)
+        Tuple - (ModelConfig, list of RunConfigMeasurements)
             Tuple consisting of the model_config and a list of
             all associated measurement values
         """
@@ -243,8 +247,9 @@ class Results:
         return model_config_data[Results.MODEL_CONFIG_INDEX], list(
             model_config_data[Results.MEASUREMENTS_INDEX].values())
 
-    def _add_measurement(self, model_name, model_config, model_config_name, key,
-                         measurement):
+    def _add_run_config_measurement(self, model_name, model_config,
+                                    model_config_name, key,
+                                    run_config_measurement):
         if model_name not in self._results:
             self._results[model_name] = {}
 
@@ -252,7 +257,7 @@ class Results:
             self._results[model_name][model_config_name] = (model_config, {})
 
         self._results[model_name][model_config_name][
-            Results.MEASUREMENTS_INDEX][key] = measurement
+            Results.MEASUREMENTS_INDEX][key] = run_config_measurement
 
     def _extract_model_run_config_fields(self, model_run_config):
         return (model_run_config.model_name(), model_run_config.model_config(),
