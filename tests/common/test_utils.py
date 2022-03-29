@@ -89,6 +89,7 @@ def construct_perf_analyzer_config(model_name='my-model',
 
     pa_config = PerfAnalyzerConfig()
     pa_config._options['-m'] = model_name
+    pa_config._options['-f'] = model_name
     pa_config._options['-b'] = batch_size
     pa_config._args['concurrency-range'] = concurrency
     pa_config._args['measurement-mode'] = DEFAULT_MEASUREMENT_MODE
