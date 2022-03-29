@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
+
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
 from model_analyzer.config.input.config_command_profile \
@@ -161,15 +163,15 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             model1_total = (2 * 5) = 10
 
         Model 2 is auto search with fixed concurrency:
-            num_PAC = 5
+            num_PAC = 3
             num_MC = (2 * 2) + 1 = 5
-            model1_total = (5 * 5) = 25
+            model2_total = (5 * 5) = 15
 
         Model 3 is manual search:
-            num_PAC = 3
-            num_MC = (3 * 4) + 1 = 13
-            model2_total = (3 * 13) = 39
-        total = model1_total * model2_total * model3_total = 9750
+            num_PAC = 2
+            num_MC = (3 * 2) + 1 = 7
+            model3_total = (2 * 7) = 14
+        total = model1_total * model2_total * model3_total = 2100
         """
 
         # yapf: disable
@@ -182,13 +184,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 - 
                   my-model2:
                     parameters:
-                        concurrency: [1,3,5,7,9]  
+                        concurrency: [1,5,9]  
                 -
                   my-model3:
                     parameters:
-                        concurrency: [10, 20, 30]
+                        concurrency: [10, 20]
                     model_config_parameters:
-                        max_batch_size: [1,4,16,64]
+                        max_batch_size: [1,64]
                         instance_group:
                         -
                             kind: KIND_GPU
@@ -196,13 +198,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        expected_num_of_configs = 9750
+        expected_num_of_configs = 2100
 
-        # Expect 110 calls to ModelRunConfigGenerator.set_last_results
-        # All 9750 experiments will be passed to the leaf generator
-        # All 250 times that the leaf generator is done will pass results to the middle generator
+        # Expect 2260 calls to ModelRunConfigGenerator.set_last_results
+        # All 2100 experiments will be passed to the leaf generator
+        # All 150 times that the leaf generator is done will pass results to the middle generator
         # All 10 times that the middle generator is done will pass results to the root generator
-        expected_num_calls_to_set_last_results = 10010
+        expected_num_calls_to_set_last_results = 2260
 
         with patch.object(ModelRunConfigGenerator,
                           "set_last_results") as mock_method:
@@ -485,3 +487,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
     def _get_next_perf_throughput_value(self):
         self._fake_throughput *= 2
         return self._fake_throughput
+
+
+if __name__ == "__main__":
+    unittest.main()
