@@ -44,6 +44,7 @@ import re
 import logging
 import signal
 import os
+import csv
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -54,21 +55,26 @@ class PerfAnalyzer:
     with perf_analyzer.
     """
 
-    # The metrics that PerfAnalyzer can collect
-    perf_metrics = {
-        PerfLatencyAvg: "_parse_perf_latency_avg",
-        PerfLatencyP90: "_parse_perf_latency_p90",
-        PerfLatencyP95: "_parse_perf_latency_p95",
-        PerfLatencyP99: "_parse_perf_latency_p99",
-        PerfLatency: "_parse_perf_latency",
-        PerfThroughput: "_parse_perf_throughput",
-        PerfClientSendRecv: "_parse_perf_client_send_recv",
-        PerfClientResponseWait: "_parse_perf_client_response_wait",
-        PerfServerQueue: "_parse_perf_server_queue",
-        PerfServerComputeInfer: "_parse_perf_server_compute_infer",
-        PerfServerComputeInput: "_parse_perf_server_compute_input",
-        PerfServerComputeOutput: "_parse_perf_server_compute_output"
-    }
+    #yapf: disable
+    METRIC_TAG,                        CSV_STRING,             RECORD_CLASS,             REDUCTION_FACTOR = 0, 1, 2, 3
+    perf_metric_table = [
+        ["perf_latency_avg",           "Avg latency",           PerfLatencyAvg,          1000],
+        ["perf_latency_p90",           "p90 latency",           PerfLatencyP90,          1000],
+        ["perf_latency_p95",           "p95 latency",           PerfLatencyP95,          1000],
+        ["perf_latency_p99",           "p99 latency",           PerfLatencyP99,          1000],
+        ["perf_throughput",            "Inferences/Second",     PerfThroughput,             1],
+        ["perf_client_send_recv",      "request/response",      PerfClientSendRecv,      1000],
+        ["perf_client_send_recv",      "send/recv",             PerfClientSendRecv,      1000],
+        ["perf_client_response_wait",  "response wait",         PerfClientResponseWait,  1000],
+        ["perf_server_queue",          "Server Queue",          PerfServerQueue,         1000],
+        ["perf_server_compute_infer",  "Server Compute Infer",  PerfServerComputeInfer,  1000],
+        ["perf_server_compute_input",  "Server Compute Input",  PerfServerComputeInput,  1000],
+        ["perf_server_compute_output", "Server Compute Output", PerfServerComputeOutput, 1000]
+    ]
+    #yapf: enable
+
+    perf_metrics = (lambda x=RECORD_CLASS, y=perf_metric_table:
+                    [perf_metric[x] for perf_metric in y])()
 
     def __init__(self, path, config, max_retries, timeout, max_cpu_util):
         """
@@ -282,7 +288,7 @@ class PerfAnalyzer:
         if self._perf_records:
             return self._perf_records
         raise TritonModelAnalyzerException(
-            "Attempted to get perf_analyzer resultss"
+            "Attempted to get perf_analyzer results"
             "without calling run first.")
 
     def _parse_output(self, metrics):
@@ -291,163 +297,35 @@ class PerfAnalyzer:
         the perf_analyzer
         """
 
-        self._perf_records = []
-        client_section_start = self._output.find('Client:')
-        server_section_start = self._output.find('Server:',
-                                                 client_section_start)
-        server_section_end = self._output.find('Inferences/Second vs. Client',
-                                               server_section_start)
+        with open(self._config['latency-report-file'], mode='r') as f:
+            csv_reader = csv.DictReader(f, delimiter=',')
 
-        client_section = self._output[
-            client_section_start:server_section_start].strip()
-        server_section = self._output[
-            server_section_start:server_section_end].strip()
+            for row in csv_reader:
+                self._perf_records = self._extract_metrics_from_row(
+                    metrics, row)
 
-        server_perf_metrics = {
-            PerfServerQueue, PerfServerComputeInput, PerfServerComputeInfer,
-            PerfServerComputeOutput
-        }
+        os.remove(self._config['latency-report-file'])
 
-        # Parse client values
-        for metric in metrics:
-            if metric not in self.perf_metrics:
-                raise TritonModelAnalyzerException(
-                    f"Perf metric : {metric} not found or supported.")
-            parse_func = getattr(self, self.perf_metrics[metric])
-            if metric in server_perf_metrics:
-                output = parse_func(server_section)
-            else:
-                output = parse_func(client_section)
-            if output is not None:
-                self._perf_records.append(output)
+    def _extract_metrics_from_row(self, requested_metrics, row_metrics):
+        """ 
+        Extracts the requested metrics from the CSV's row and creates a list of Records
+        """
+        perf_records = []
+        for perf_metric in PerfAnalyzer.perf_metric_table:
+            if self._is_perf_metric_requested_and_in_row(
+                    perf_metric, requested_metrics, row_metrics):
+                value = float(row_metrics[perf_metric[PerfAnalyzer.CSV_STRING]]
+                             ) / perf_metric[PerfAnalyzer.REDUCTION_FACTOR]
 
-    def _parse_perf_client_send_recv(self, section):
-        """
-        Parses Client send/recv values from the perf output
-        """
+                perf_records.append(
+                    perf_metric[PerfAnalyzer.RECORD_CLASS](value))
 
-        client_send_recv = None
-        if self._config['protocol'] == 'http':
-            # Http terminology
-            client_send_recv = re.search('send/recv (\d+)', section)
-        elif self._config['protocol'] == 'grpc':
-            # Try gRPC related terminology
-            client_send_recv = re.search('request/response (\d+)', section)
-        if client_send_recv:
-            client_send_recv = float(client_send_recv.group(1)) / 1e3
-            return PerfClientSendRecv(value=client_send_recv)
-        logging.warning(
-            'perf_analyzer output did not contain client send/recv time.')
+        return perf_records
 
-    def _parse_perf_client_response_wait(self, section):
-        """
-        Parses Client response wait time (network + server send/recv)
-        values from the perf output
-        """
-        client_response_wait = re.search('response wait (\d+)', section)
-        if client_response_wait:
-            client_response_wait = float(client_response_wait.group(1)) / 1e3
-            return PerfClientResponseWait(value=client_response_wait)
-        logging.warning(
-            'perf_analyzer output did not contain client response wait time.')
+    def _is_perf_metric_requested_and_in_row(self, perf_metric,
+                                             requested_metrics, row_metrics):
+        tag_match = any(
+            perf_metric[PerfAnalyzer.METRIC_TAG] in requested_metric.tag
+            for requested_metric in requested_metrics)
 
-    def _parse_perf_throughput(self, section):
-        """
-        Parses throughput from the perf analyzer output
-        """
-
-        throughput = re.search('Throughput: (\d+\.\d+e\+\d+|\d+\.\d+|\d+)',
-                               section)
-        if throughput:
-            throughput = float(throughput.group(1))
-            return PerfThroughput(value=throughput)
-        logging.warning('perf_analyzer output did not contain throughput.')
-
-    def _parse_perf_latency_avg(self, section):
-        """
-        Parses avg latency from the perf output
-        """
-        return self._parse_perf_latency(section, "Avg latency", PerfLatencyAvg)
-
-    def _parse_perf_latency_p90(self, section):
-        """
-        Parses p90 latency from the perf output
-        """
-        return self._parse_perf_latency(section, "p90 latency", PerfLatencyP90)
-
-    def _parse_perf_latency_p95(self, section):
-        """
-        Parses p95 latency from the perf output
-        """
-        return self._parse_perf_latency(section, "p95 latency", PerfLatencyP95)
-
-    def _parse_perf_latency_p99(self, section):
-        """
-        Parses p99 latency from the perf output
-        """
-        return self._parse_perf_latency(section, "p99 latency", PerfLatencyP99)
-
-    def _parse_perf_latency(self, section, latency_name=None, parser_cls=None):
-        """
-        Parses latency from the perf output
-        """
-        if latency_name == None and parser_cls == None:
-            # Defaults to p99 latency
-            latency_name = "p99 latency"
-            # Different from PerfLatencyP99
-            parser_cls = PerfLatency
-
-        latency = re.search(latency_name + ": (\d+\.\d+|\d+)", section)
-        if latency:
-            latency = float(latency.group(1)) / 1e3
-            return parser_cls(value=latency)
-        logging.warning("perf_analyzer output did not contain " + latency_name +
-                        ".")
-
-    def _parse_perf_server_queue(self, section):
-        """
-        Parses serve queue time from the perf output
-        """
-
-        server_queue = re.search('queue (\d+) usec', section)
-        if server_queue:
-            server_queue = float(server_queue.group(1)) / 1e3
-            return PerfServerQueue(value=server_queue)
-        logging.warning(
-            'perf_analyzer output did not contain server queue time.')
-
-    def _parse_perf_server_compute_input(self, section):
-        """
-        Parses server compute input time from the perf output
-        """
-
-        server_compute_input = re.search('compute input (\d+) usec', section)
-        if server_compute_input:
-            server_compute_input = float(server_compute_input.group(1)) / 1e3
-            return PerfServerComputeInput(value=server_compute_input)
-        logging.warning(
-            'perf_analyzer output did not contain server compute input time.')
-
-    def _parse_perf_server_compute_infer(self, section):
-        """
-        Parses server compute infer time from the perf output
-        """
-
-        server_compute_infer = re.search('compute infer (\d+) usec', section)
-        if server_compute_infer:
-            server_compute_infer = float(server_compute_infer.group(1)) / 1e3
-            return PerfServerComputeInfer(value=server_compute_infer)
-        logging.warning(
-            'perf_analyzer output did not contain server compute infer time.')
-
-    def _parse_perf_server_compute_output(self, section):
-        """
-        Parses server compute output time from the perf output
-        """
-
-        server_compute_output = re.search('compute output (\d+) usec', section)
-        if server_compute_output:
-            server_compute_output = float(server_compute_output.group(1)) / 1e3
-            return PerfServerComputeOutput(value=server_compute_output)
-        logging.warning(
-            'perf_analyzer output did not contain server compute output time.')
+        return tag_match and perf_metric[PerfAnalyzer.CSV_STRING] in row_metrics

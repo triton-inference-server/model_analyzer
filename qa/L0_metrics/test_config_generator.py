@@ -120,7 +120,7 @@ class TestConfigGenerator:
                 "model_name", "batch_size", "concurrency", "model_config_path",
                 "instance_group", "satisfies_constraints", "perf_throughput",
                 "perf_latency_avg", "perf_latency_p90", "perf_latency_p95",
-                "perf_latency"
+                "perf_latency_p99"
             ]
         }
         self._write_file(5, 10, 11, model_config)

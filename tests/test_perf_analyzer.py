@@ -14,6 +14,7 @@
 
 from model_analyzer.device.gpu_device import GPUDevice
 import unittest
+from unittest.mock import patch, mock_open
 
 from .mocks.mock_server_local import MockServerLocalMethods
 from .mocks.mock_perf_analyzer import MockPerfAnalyzerMethods
@@ -226,109 +227,161 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.server.start()
         self.client.wait_for_server_ready(num_retries=1)
 
-        # Run perf analyzer with dummy metrics to check command parsing
-        perf_metrics = [id]
-        test_latency_output = "Client:\n  p99 latency: 5000 us\n\n\n\n"
-        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
-        with self.assertRaises(TritonModelAnalyzerException):
-            perf_analyzer.run(perf_metrics)
+        pa_csv_mock = """Concurrency,Inferences/Second,Client Send,Network+Server Send/Recv,Server Queue,Server Compute Input,Server Compute Infer,Server Compute Output,Client Recv,p50 latency,p90 latency,p95 latency,p99 latency,Avg latency,request/response,response wait\n1,46.8,2,187,18,34,65,16,1,4600,4700,4800,4900,5000,3,314"""
 
         # Test avg latency parsing
-        test_latency_output = "Client:\n  Avg latency: 5000 us\n\n\n\n"
-        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
         perf_metrics = [PerfLatencyAvg]
-        perf_analyzer.run(perf_metrics)
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(perf_metrics)
+
         records = perf_analyzer.get_records()
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].value(), 5)
 
         # Test p90 latency parsing
-        test_latency_output = "Client:\n  p90 latency: 5000 us\n\n\n\n"
-        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
         perf_metrics = [PerfLatencyP90]
-        perf_analyzer.run(perf_metrics)
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(perf_metrics)
+
         records = perf_analyzer.get_records()
         self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 5)
+        self.assertEqual(records[0].value(), 4.7)
 
         # Test p95 latency parsing
-        test_latency_output = "Client:\n  p95 latency: 5000 us\n\n\n\n"
-        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
         perf_metrics = [PerfLatencyP95]
-        perf_analyzer.run(perf_metrics)
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(perf_metrics)
+
         records = perf_analyzer.get_records()
         self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 5)
+        self.assertEqual(records[0].value(), 4.8)
 
         # Test p99 latency parsing
-        test_latency_output = "Client:\n  p99 latency: 5000 us\n\n\n\n"
-        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
         perf_metrics = [PerfLatencyP99]
-        perf_analyzer.run(perf_metrics)
-        records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 5)
 
-        # Test latency parsing
-        test_latency_output = "Client:\n  p99 latency: 5000 us\n\n\n\n"
-        self.perf_mock.set_perf_analyzer_result_string(test_latency_output)
-        perf_metrics = [PerfLatency]
-        perf_analyzer.run(perf_metrics)
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(perf_metrics)
+
         records = perf_analyzer.get_records()
         self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 5)
+        self.assertEqual(records[0].value(), 4.9)
 
         # Test throughput parsing
-        test_throughput_output = "Client:\n  Throughput: 46.8 infer/sec\n\n\n\n"
-        self.perf_mock.set_perf_analyzer_result_string(test_throughput_output)
         perf_metrics = [PerfThroughput]
-        perf_analyzer.run(perf_metrics)
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(perf_metrics)
+
         records = perf_analyzer.get_records()
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].value(), 46.8)
 
-        # Test throughput parsing
-        test_throughput_output = "Client:\n  Throughput: 5.88368e+07 infer/sec\n\n\n\n"
-        self.perf_mock.set_perf_analyzer_result_string(test_throughput_output)
-        perf_metrics = [PerfThroughput]
-        perf_analyzer.run(perf_metrics)
+        # Test client response wait
+        perf_metrics = [PerfClientResponseWait]
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(perf_metrics)
+
         records = perf_analyzer.get_records()
         self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 58836800)
+        self.assertEqual(records[0].value(), 0.314)
 
-        # Test parsing for both
-        test_both_output = "Client:\n  Throughput: 0.001 infer/sec\nAvg latency: 3600 us\np90 latency: 3700 us\np95 latency: 3800 us\np99 latency: 3900 us\n\n\n\n"
-        self.perf_mock.set_perf_analyzer_result_string(test_both_output)
+        # Test server queue
+        perf_metrics = [PerfServerQueue]
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(perf_metrics)
+
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].value(), 0.018)
+
+        # Test server compute infer
+        perf_metrics = [PerfServerComputeInfer]
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(perf_metrics)
+
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].value(), 0.065)
+
+        # Test server compute input
+        perf_metrics = [PerfServerComputeInput]
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(perf_metrics)
+
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].value(), 0.034)
+
+        # Test server compute infer
+        perf_metrics = [PerfServerComputeOutput]
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(perf_metrics)
+
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].value(), 0.016)
+
+        # # Test parsing for subset
         perf_metrics = [
             PerfThroughput, PerfLatencyAvg, PerfLatencyP90, PerfLatencyP95,
-            PerfLatencyP99, PerfLatency
+            PerfLatencyP99
         ]
-        perf_analyzer.run(perf_metrics)
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(perf_metrics)
+
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 6)
-        self.assertEqual(records[0].value(), 0.001)
-        self.assertEqual(records[1].value(), 3.6)
-        self.assertEqual(records[2].value(), 3.7)
-        self.assertEqual(records[3].value(), 3.8)
-        self.assertEqual(records[4].value(), 3.9)
-        self.assertEqual(records[5].value(), 3.9)
+        self.assertEqual(len(records), 5)
 
         # Test no exceptions are raised when nothing can be parsed
-        test_graceful_return = "?"
-        self.perf_mock.set_perf_analyzer_result_string(test_graceful_return)
+        pa_csv_empty = ""
         perf_metrics = [
-            PerfThroughput, PerfLatency, PerfClientSendRecv,
-            PerfClientResponseWait, PerfServerQueue, PerfServerComputeInfer,
-            PerfServerComputeInput, PerfServerComputeOutput
+            PerfThroughput, PerfClientSendRecv, PerfClientResponseWait,
+            PerfServerQueue, PerfServerComputeInfer, PerfServerComputeInput,
+            PerfServerComputeOutput
         ]
-        perf_analyzer.run(perf_metrics)
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            self.assertFalse(perf_analyzer.run(perf_metrics))
 
         # Test exception handling
         self.perf_mock.set_perf_analyzer_return_code(1)
-        self.assertTrue(perf_analyzer.run(perf_metrics), 1)
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            self.assertTrue(perf_analyzer.run(perf_metrics))
         self.server.stop()
-
-        # TODO: test perf_analyzer over utilization of resources.
 
     def test_measurement_interval_increase(self):
         server_config = TritonServerConfig()
