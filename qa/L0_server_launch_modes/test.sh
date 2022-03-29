@@ -23,7 +23,6 @@ MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 TRITON_DOCKER_IMAGE=${TRITONSERVER_BASE_IMAGE_NAME}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
-CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2022_02_23"}
 MODEL_NAMES="vgg19_libtorch"
 TRITON_LAUNCH_MODES="local docker remote c_api"
 CLIENT_PROTOCOLS="http grpc"
@@ -32,14 +31,10 @@ http_port="${PORTS[0]}"
 grpc_port="${PORTS[1]}"
 metrics_port="${PORTS[2]}"
 GPUS=(`get_all_gpus_uuids`)
-CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
 MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY --profile-models $MODEL_NAMES"
-MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:$http_port --triton-grpc-endpoint localhost:$grpc_port"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:$metrics_port/metrics"
-
-# mkdir $CHECKPOINT_DIRECTORY
-# cp $CHECKPOINT_REPOSITORY/server_launch_modes.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
 python3 test_config_generator.py --protocols "`echo $CLIENT_PROTOCOLS | sed 's/ /,/g'`" --launch-modes "`echo $TRITON_LAUNCH_MODES | sed 's/ /,/g'`"
 
@@ -157,8 +152,6 @@ function _run_single_config() {
         return
 
     elif [ "$LAUNCH_MODE" == "c_api" ]; then
-        # c_api does not get server only metrics, so for GPUs to appear in log, we must profile (delete checkpoint)
-        rm -f $CHECKPOINT_DIRECTORY/*
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
     elif [ "$LAUNCH_MODE" == "docker" ]; then
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --triton-docker-image=${TRITON_DOCKER_IMAGE}"
@@ -270,8 +263,6 @@ run_server_launch_modes "$CURRENT_GPUS"
 
 CURRENT_GPUS="1 2"
 run_server_launch_modes "$CURRENT_GPUS"
-
-rm -rf $CHECKPOINT_DIRECTORY
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

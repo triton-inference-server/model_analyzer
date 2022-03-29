@@ -47,7 +47,10 @@ class TestConfigGenerator:
                             help='The config file for this test')
 
         args = parser.parse_args()
-        self.config = {'batch_sizes': [1, 2], 'concurrency': [1, 2]}
+        self.config = {
+            'batch_sizes': [1, 2],
+            'concurrency': [1, 2],
+        }
         self.config['profile_models'] = sorted(args.profile_models.split(','))
         self.config['run_config_search_disable'] = True
 

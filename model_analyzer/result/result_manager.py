@@ -22,6 +22,7 @@ from .result_heap import ResultHeap
 from .result_table import ResultTable
 from .result_comparator import ResultComparator
 from .model_result import ModelResult
+from .results import Results
 
 import re
 import os
@@ -85,7 +86,8 @@ class ResultManager:
         state variables in AnalyerState
         """
 
-        self._state_manager.set_state_variable('ResultManager.results', {})
+        self._state_manager.set_state_variable('ResultManager.results',
+                                               Results())
         self._state_manager.set_state_variable('ResultManager.server_only_data',
                                                {})
 
@@ -192,19 +194,17 @@ class ResultManager:
             # Measurements
             results = self._state_manager.get_state_variable(
                 "ResultManager.results")
-            for model_name, value in results.items():
-                for model_config_name, value in value.items():
-                    for measurement_key, measurement in value[1].items():
-                        for gpu_uuid, gpu_metrics in measurement.gpu_data(
-                        ).items():
-                            for gpu_metric in gpu_metrics:
-                                if gpu_metric.tag not in gpu_specific_metrics_from_measurements:
-                                    gpu_specific_metrics_from_measurements[
-                                        gpu_metric.tag] = gpu_metric
-                        for non_gpu_metric in measurement.non_gpu_data():
-                            if non_gpu_metric.tag not in non_gpu_specific_metrics_from_measurements:
-                                non_gpu_specific_metrics_from_measurements[
-                                    non_gpu_metric.tag] = non_gpu_metric
+            for measurement in results.get_list_of_measurements():
+                for gpu_uuid, gpu_metrics in measurement.gpu_data().items():
+                    for gpu_metric in gpu_metrics:
+                        if gpu_metric.tag not in gpu_specific_metrics_from_measurements:
+                            gpu_specific_metrics_from_measurements[
+                                gpu_metric.tag] = gpu_metric
+
+                for non_gpu_metric in measurement.non_gpu_data():
+                    if non_gpu_metric.tag not in non_gpu_specific_metrics_from_measurements:
+                        non_gpu_specific_metrics_from_measurements[
+                            non_gpu_metric.tag] = non_gpu_metric
 
         # Update not provided metric(s)
         if gpu_specific_metrics == None:
@@ -262,22 +262,11 @@ class ResultManager:
             the measurement to be added
         """
 
-        model_name = model_run_config.model_name()
-        model_config = model_run_config.model_config()
-
-        model_config_name = model_config.get_field('name')
-
         # Get reference to results state and modify it
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        if model_name not in results:
-            results[model_name] = {}
-        if model_config_name not in results[model_name]:
-            results[model_name][model_config_name] = (model_config, {})
-
-        measurement_key = measurement.perf_config().representation()
-        results[model_name][model_config_name][1][measurement_key] = measurement
+        results.add_measurement(model_run_config, measurement)
 
         # Use set_state_variable to record that state may have been changed
         self._state_manager.set_state_variable(name='ResultManager.results',
@@ -303,29 +292,28 @@ class ResultManager:
         # Construct and add results to individual result heaps as well as global result heap
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
+
         analysis_model_names = [
             model.model_name() for model in self._config.analysis_models
         ]
         for model_name in analysis_model_names:
-            if model_name not in results:
-                raise TritonModelAnalyzerException(
-                    f"Model {model_name} requested for analysis but no results were found. "
-                    "Double check the name and ensure that this model was actually profiled."
-                )
-            else:
-                result_dict = results[model_name]
-                for (model_config, measurements) in result_dict.values():
-                    result = ModelResult(model_name=model_name,
-                                         model_config=model_config,
-                                         comparator=comparators[model_name],
-                                         constraints=constraints[model_name])
-                    for measurement in measurements.values():
-                        measurement.set_result_comparator(
-                            comparator=comparators[model_name])
-                        result.add_measurement(measurement)
-                    self._per_model_sorted_results[model_name].add_result(
-                        result)
-                    self._across_model_sorted_results.add_result(result)
+            model_measurements = results.get_model_measurements_dict(model_name)
+
+            for (model_config, measurements) in model_measurements.values():
+                model_result = ModelResult(model_name=model_name,
+                                           model_config=model_config,
+                                           comparator=comparators[model_name],
+                                           constraints=constraints[model_name])
+
+                for measurement in measurements.values():
+                    measurement.set_result_comparator(
+                        comparator=comparators[model_name])
+
+                    model_result.add_measurement(measurement)
+
+                self._per_model_sorted_results[model_name].add_result(
+                    model_result)
+                self._across_model_sorted_results.add_result(model_result)
 
     def get_model_config_measurements(self, model_config_name):
         """
@@ -352,18 +340,18 @@ class ResultManager:
 
         # Remote mode has model_name == model_config_name
         #
-        if model_name not in results:
+        if not results.contains_model(model_name):
             model_name = model_config_name
 
-        if model_name not in results or model_config_name not in results[
-                model_name]:
+        if results.contains_model(model_name) and results.contains_model_config(
+                model_name, model_config_name):
+            return results.get_all_model_config_measurements(
+                model_name, model_config_name)
+        else:
             raise TritonModelAnalyzerException(
                 f"Model Config {model_config_name} requested for report step but no results were found. "
                 "Double check the name and ensure that this model config was actually profiled."
             )
-        else:
-            model_config_data = results[model_name][model_config_name]
-            return model_config_data[0], list(model_config_data[1].values())
 
     def top_n_results(self, model_name=None, n=-1, include_default=False):
         """
