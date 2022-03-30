@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
+from unittest.mock import MagicMock, patch
+
 from .common import test_result_collector as trc
-from .common.test_utils import construct_measurement
+from .common.test_utils import construct_run_config_measurement
 
 from .mocks.mock_matplotlib import MockMatplotlibMethods
 from model_analyzer.plots.simple_plot import SimplePlot
@@ -42,12 +45,32 @@ class TestPlotMethods(trc.TestResultCollector):
                           x_axis='perf_throughput',
                           y_axis='perf_latency_p99')
 
-        gpu_data = {0: {'gpu_used_memory': 5000, 'gpu_utilization': 50}}
-        non_gpu_data = {'perf_throughput': 200, 'perf_latency_p99': 8000}
+        gpu_metric_values = {
+            0: {
+                'gpu_used_memory': 5000,
+                'gpu_utilization': 50
+            }
+        }
+
+        non_gpu_metric_values = {
+            'perf_throughput': 200,
+            'perf_latency_p99': 8000
+        }
+
         objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
-        measurement = construct_measurement(
-            'test_model', gpu_data, non_gpu_data,
-            ResultComparator(metric_objectives=objective_spec))
+
+        measurement = construct_run_config_measurement(
+            model_name='test_model',
+            model_config_names=['test_model_config0'],
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values=gpu_metric_values,
+            non_gpu_metric_values=[non_gpu_metric_values],
+            metric_objectives=[objective_spec],
+            model_config_weights=MagicMock())
+
+        # measurement = construct_measurement(
+        #     'test_model', gpu_data, non_gpu_data,
+        #     ResultComparator(metric_objectives=objective_spec))
 
         # Add above measurement
         plot.add_measurement('test_model_label1', measurement=measurement)
@@ -78,12 +101,29 @@ class TestPlotMethods(trc.TestResultCollector):
                           x_axis='perf_throughput',
                           y_axis='perf_latency_p99')
 
-        gpu_data = {0: {'gpu_used_memory': 5000, 'gpu_utilization': 50}}
-        non_gpu_data = {'perf_throughput': 200, 'perf_latency_p99': 8000}
+        gpu_metric_values = {
+            0: {
+                'gpu_used_memory': 5000,
+                'gpu_utilization': 50
+            }
+        }
+
+        non_gpu_metric_values = {
+            'perf_throughput': 200,
+            'perf_latency_p99': 8000
+        }
+
         objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
-        measurement = construct_measurement(
-            'test_model', gpu_data, non_gpu_data,
-            ResultComparator(metric_objectives=objective_spec))
+
+        measurement = construct_run_config_measurement(
+            model_name='test_model',
+            model_config_names=['test_model_config0'],
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values=gpu_metric_values,
+            non_gpu_metric_values=[non_gpu_metric_values],
+            metric_objectives=[objective_spec],
+            model_config_weights=MagicMock())
+
         plot.add_measurement('test_model_label', measurement=measurement)
 
         # Call plot and assert args
@@ -102,3 +142,7 @@ class TestPlotMethods(trc.TestResultCollector):
 
     def tearDown(self):
         self.matplotlib_mock.stop()
+
+
+if __name__ == '__main__':
+    unittest.main()

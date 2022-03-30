@@ -77,6 +77,7 @@ class SimplePlot:
             self._data[model_config_label] = defaultdict(list)
 
         if self._x_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
+            # FIXME: get_parameter no longer exists - need a new function that takes in the model config name/key + PA parameter and returns the value
             self._data[model_config_label]['x_data'].append(
                 measurement.get_parameter(tag=self._x_axis.replace('_', '-')))
         else:
@@ -84,6 +85,7 @@ class SimplePlot:
                 measurement.get_metric_value(tag=self._x_axis))
 
         if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
+            # FIXME: get_parameter no longer exists
             self._data[model_config_label]['y_data'].append(
                 measurement.get_parameter(tag=self._y_axis.replace('_', '-')))
         else:
@@ -129,9 +131,8 @@ class SimplePlot:
 
         for model_config_name, data in self._data.items():
             # Sort the data by x-axis
-            x_data, y_data = (
-                list(t)
-                for t in zip(*sorted(zip(data['x_data'], data['y_data']))))
+            x_data, y_data = (list(t) for t in zip(
+                *sorted(zip(data['x_data'], data['y_data']))))
 
             if self._monotonic:
                 filtered_x, filtered_y = [x_data[0]], [y_data[0]]
