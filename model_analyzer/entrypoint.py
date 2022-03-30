@@ -25,6 +25,7 @@ from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
 from .config.input.config_command_analyze import ConfigCommandAnalyze
 from .config.input.config_command_report import ConfigCommandReport
+from .log_formatter import setup_logging
 from model_analyzer.config.input.config_utils import \
         binary_path_validator, file_path_validator
 import sys
@@ -318,29 +319,6 @@ def get_cli_and_config_options():
         sys.exit(1)
 
 
-def setup_logging(args):
-    """
-    Setup logger format
-
-    Parameters
-    ----------
-    args : Namespace
-        Contains arguments for verbosity of Model Analyzer
-    """
-
-    if args.quiet:
-        log_level = logging.ERROR
-    elif args.verbose:
-        log_level = logging.DEBUG
-        logging.basicConfig(format="%(asctime)s.%(msecs)d %(levelname)-4s"
-                            "[%(filename)s:%(lineno)d] %(message)s",
-                            datefmt="%Y-%m-%d %H:%M:%S")
-    else:
-        log_level = logging.INFO
-    logger = logging.getLogger(LOGGER_NAME)
-    logger.setLevel(level=log_level)
-
-
 def create_output_model_repository(config):
     """
     Creates output model repository
@@ -372,11 +350,13 @@ def main():
     Main entrypoint of model_analyzer
     """
 
-    # Configs and logging
+    # Need to create a basic logging format for logs we print
+    # before we have enough information to create the full logger
     logging.basicConfig(format="[ModelAnalyzer] %(message)s")
 
     args, config = get_cli_and_config_options()
-    setup_logging(args)
+
+    setup_logging(quiet=args.quiet, verbose=args.verbose)
 
     logger.debug(config.get_all_config())
 

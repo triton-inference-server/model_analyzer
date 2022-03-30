@@ -128,6 +128,7 @@ class Analyzer:
                     self._state_manager.save_checkpoint()
 
         logger.info(self._get_profile_complete_string())
+        logger.info("")
         logger.info(self._get_analyze_command_help_string())
 
     def analyze(self, mode):
@@ -167,6 +168,7 @@ class Analyzer:
         self._result_manager.tabulate_results()
         self._result_manager.export_results()
 
+        logger.info("")
         logger.info(self._get_report_command_help_string())
 
     def report(self, mode):
