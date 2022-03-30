@@ -179,7 +179,7 @@ class AnalyzerStateManager:
         if self._exiting >= MAX_NUMBER_OF_INTERRUPTS:
             logger.info(
                 f'Received SIGINT maximum number of times. Saving state and exiting immediately. '
-                'perf_analyzer may still be running...')
+                'perf_analyzer may still be running')
             self.save_checkpoint()
 
             # Exit server

@@ -80,7 +80,7 @@ class TritonClient:
 
         try:
             self._client.load_model(model_name)
-            logger.info(f'Model {model_name} loaded.')
+            logger.debug(f'Model {model_name} loaded')
         except Exception as e:
             logger.info(f'Model {model_name} load failed: {e}')
             return -1
@@ -104,7 +104,7 @@ class TritonClient:
 
         try:
             self._client.unload_model(model_name)
-            logger.info(f'Model {model_name} unloaded.')
+            logger.debug(f'Model {model_name} unloaded')
         except Exception as e:
             logger.info(f'Model {model_name} unload failed: {e}')
             return -1

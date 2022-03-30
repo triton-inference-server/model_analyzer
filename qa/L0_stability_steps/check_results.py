@@ -45,7 +45,7 @@ class TestOutputValidator:
             log_contents = f.read()
 
         logs_for_iteration = log_contents.split(
-            'Profiling server only metrics...')[1:]
+            'Profiling server only metrics')[1:]
 
         logs_for_model = logs_for_iteration[0].split(
             "config search for model:")[1:]

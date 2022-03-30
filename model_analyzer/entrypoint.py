@@ -129,7 +129,7 @@ def get_server_handle(config, gpus):
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
         triton_config['model-repository'] = 'remote-model-repository'
-        logger.info('Using remote Triton Server...')
+        logger.info('Using remote Triton Server')
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config,
                                                          gpus=[],
@@ -158,7 +158,7 @@ def get_server_handle(config, gpus):
         if config.use_local_gpu_monitor:
             triton_config['metrics-interval-ms'] = int(
                 config.monitoring_interval * 1e3)
-        logger.info('Starting a local Triton Server...')
+        logger.info('Starting a local Triton Server')
         server = TritonServerFactory.create_server_local(
             path=config.triton_server_path,
             config=triton_config,
@@ -176,7 +176,7 @@ def get_server_handle(config, gpus):
         if config.use_local_gpu_monitor:
             triton_config['metrics-interval-ms'] = int(
                 config.monitoring_interval * 1e3)
-        logger.info('Starting a Triton Server using docker...')
+        logger.info('Starting a Triton Server using docker')
         server = TritonServerFactory.create_server_docker(
             image=config.triton_docker_image,
             config=triton_config,
@@ -191,7 +191,7 @@ def get_server_handle(config, gpus):
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = os.path.abspath(
             config.output_model_repository_path)
-        logger.info("Starting a Triton Server using perf_analyzer's C_API...")
+        logger.info("Starting a Triton Server using perf_analyzer's C_API")
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config,
                                                          gpus=[],
@@ -332,6 +332,9 @@ def setup_logging(args):
         log_level = logging.ERROR
     elif args.verbose:
         log_level = logging.DEBUG
+        logging.basicConfig(format="%(asctime)s.%(msecs)d %(levelname)-4s"
+                            "[%(filename)s:%(lineno)d] %(message)s",
+                            datefmt="%Y-%m-%d %H:%M:%S")
     else:
         log_level = logging.INFO
     logger = logging.getLogger(LOGGER_NAME)
@@ -360,7 +363,7 @@ def create_output_model_repository(config):
         else:
             shutil.rmtree(config.output_model_repository_path)
             logger.warning('Overriding the output model repo path '
-                           f'"{config.output_model_repository_path}"...')
+                           f'"{config.output_model_repository_path}"')
             os.mkdir(config.output_model_repository_path)
 
 
@@ -370,9 +373,7 @@ def main():
     """
 
     # Configs and logging
-    logging.basicConfig(format="%(asctime)s.%(msecs)d %(levelname)-4s"
-                        "[%(filename)s:%(lineno)d] %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
+    logging.basicConfig(format="[ModelAnalyzer] %(message)s")
 
     args, config = get_cli_and_config_options()
     setup_logging(args)
@@ -406,7 +407,7 @@ def main():
             analyzer = Analyzer(
                 config, server,
                 AnalyzerStateManager(config=config, server=server))
-            analyzer.analyze(mode=args.mode, quiet=bool(args.quiet))
+            analyzer.analyze(mode=args.mode)
         elif args.subcommand == 'report':
 
             analyzer = Analyzer(

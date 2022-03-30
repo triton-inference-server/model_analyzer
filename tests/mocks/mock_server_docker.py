@@ -153,7 +153,6 @@ class MockServerDockerMethods(MockServerMethods):
         """
         Stop raising exception on container run
         """
-        ...
         self.mock.from_env.return_value.containers.run.side_effect = None
         self.exception_on_run_patcher.stop()
 
