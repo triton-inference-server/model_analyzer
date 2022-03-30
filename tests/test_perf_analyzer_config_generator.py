@@ -293,7 +293,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             - Change min concurrency to non-default value
         
         Min Concurrency: 5
-        3 configs [5, 8, 16] will be generated 
+        2 configs [5, 10] will be generated 
         """
 
         # yapf: disable
@@ -303,7 +303,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        concurrencies = utils.generate_doubled_list(5, 16)
+        concurrencies = [5, 10]
         expected_configs = [
             construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
