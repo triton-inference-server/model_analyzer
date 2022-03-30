@@ -59,7 +59,8 @@ class SimplePlot:
 
         self._data = {}
 
-    def add_measurement(self, model_config_label, measurement):
+    def add_run_config_measurement(self, model_config_label,
+                                   run_config_measurement):
         """
         Adds a measurment to this plot
 
@@ -68,7 +69,7 @@ class SimplePlot:
         model_config_label : str
             The name of the model config this measurement
             is taken from. 
-        measurement : Measurement
+        run_config_measurement : RunConfigMeasurement
             The measurement containing the data to
             be plotted.
         """
@@ -79,18 +80,20 @@ class SimplePlot:
         if self._x_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
             # FIXME: get_parameter no longer exists - need a new function that takes in the model config name/key + PA parameter and returns the value
             self._data[model_config_label]['x_data'].append(
-                measurement.get_parameter(tag=self._x_axis.replace('_', '-')))
+                run_config_measurement.get_parameter(
+                    tag=self._x_axis.replace('_', '-')))
         else:
             self._data[model_config_label]['x_data'].append(
-                measurement.get_metric_value(tag=self._x_axis))
+                run_config_measurement.get_metric_value(tag=self._x_axis))
 
         if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
             # FIXME: get_parameter no longer exists
             self._data[model_config_label]['y_data'].append(
-                measurement.get_parameter(tag=self._y_axis.replace('_', '-')))
+                run_config_measurement.get_parameter(
+                    tag=self._y_axis.replace('_', '-')))
         else:
             self._data[model_config_label]['y_data'].append(
-                measurement.get_metric_value(tag=self._y_axis))
+                run_config_measurement.get_metric_value(tag=self._y_axis))
 
     def clear(self):
         """

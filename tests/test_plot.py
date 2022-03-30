@@ -68,12 +68,8 @@ class TestPlotMethods(trc.TestResultCollector):
             metric_objectives=[objective_spec],
             model_config_weights=MagicMock())
 
-        # measurement = construct_measurement(
-        #     'test_model', gpu_data, non_gpu_data,
-        #     ResultComparator(metric_objectives=objective_spec))
-
         # Add above measurement
-        plot.add_measurement('test_model_label1', measurement=measurement)
+        plot.add_run_config_measurement('test_model_label1', measurement)
         self.assertDictEqual(
             plot.data(),
             {'test_model_label1': {
@@ -82,7 +78,7 @@ class TestPlotMethods(trc.TestResultCollector):
             }})
 
         # Add measurment again with different label
-        plot.add_measurement('test_model_label2', measurement=measurement)
+        plot.add_run_config_measurement('test_model_label2', measurement)
         self.assertDictEqual(
             plot.data(), {
                 'test_model_label1': {
@@ -124,7 +120,7 @@ class TestPlotMethods(trc.TestResultCollector):
             metric_objectives=[objective_spec],
             model_config_weights=MagicMock())
 
-        plot.add_measurement('test_model_label', measurement=measurement)
+        plot.add_run_config_measurement('test_model_label', measurement)
 
         # Call plot and assert args
         plot.plot_data_and_constraints(constraints={})
