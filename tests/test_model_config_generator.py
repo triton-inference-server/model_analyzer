@@ -186,6 +186,35 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         self._run_and_test_model_config_generator(yaml_content,
                                                   expected_configs)
 
+    def test_run_config_search_min_instance_counts(self):
+        ''' 
+        Test that ModelConfigGenerator will honor run_config_search_min_instance_count
+        '''
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_min_instance_count: 2
+            run_config_search_max_instance_count: 3
+            run_config_search_min_model_batch_size: 2
+            run_config_search_max_model_batch_size: 8
+            profile_models:
+                - my-model
+            """)
+
+        expected_configs = [
+            {'dynamic_batching': {}, 'max_batch_size': 2, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 2, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 8}
+        ]
+        # yapf: enable
+
+        self._run_and_test_model_config_generator(yaml_content,
+                                                  expected_configs)
+
     def test_non_power_of_two_max_batch_size(self):
         ''' 
         Test that ModelConfigGenerator will correctly sweep max_batch_size with

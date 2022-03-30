@@ -33,9 +33,10 @@ from .config_defaults import \
     DEFAULT_MONITORING_INTERVAL, DEFAULT_COLLECT_CPU_METRICS, DEFAULT_OFFLINE_OBJECTIVES, \
     DEFAULT_OUTPUT_MODEL_REPOSITORY, DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG, \
     DEFAULT_PERF_ANALYZER_CPU_UTIL, DEFAULT_PERF_ANALYZER_PATH, DEFAULT_PERF_MAX_AUTO_ADJUSTS, \
-    DEFAULT_PERF_OUTPUT_FLAG, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, \
+    DEFAULT_PERF_OUTPUT_FLAG, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, DEFAULT_RUN_CONFIG_MIN_CONCURRENCY, \
     DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE, \
-    DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE, DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE, \
+    DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT, \
+    DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE, DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE, \
     DEFAULT_RUN_CONFIG_SEARCH_DISABLE, DEFAULT_TRITON_DOCKER_IMAGE, DEFAULT_TRITON_GRPC_ENDPOINT, \
     DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_TRITON_METRICS_URL, \
     DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT, DEFAULT_USE_LOCAL_GPU_MONITOR
@@ -471,12 +472,30 @@ class ConfigCommandProfile(ConfigCommand):
             ))
         self._add_config(
             ConfigField(
+                'run_config_search_min_concurrency',
+                flags=['--run-config-search-min-concurrency'],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
+                description=
+                "Min concurrency value that run config search should start with."
+            ))
+        self._add_config(
+            ConfigField(
                 'run_config_search_max_instance_count',
                 flags=['--run-config-search-max-instance-count'],
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT,
                 description=
                 "Max instance count value that run config search should not go beyond that."
+            ))
+        self._add_config(
+            ConfigField(
+                'run_config_search_min_instance_count',
+                flags=['--run-config-search-min-instance-count'],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT,
+                description=
+                "Min instance count value that run config search should start with."
             ))
         self._add_config(
             ConfigField(
