@@ -83,6 +83,7 @@ class ModelManager:
                 measurement = self._metrics_manager.execute_run_config(
                     run_config)
             else:
+                logger.info("Skipping illegal run configuration")
                 measurement = None
             rcg.set_last_results([measurement])
 

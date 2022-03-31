@@ -182,6 +182,8 @@ class MetricsManager:
         measurement = self._get_measurement_if_config_duplicate(
             model_run_config)
         if measurement:
+            logger.info(
+                "Existing measurement found for run config. Skipping profile")
             return measurement
 
         # Start server, and load model variants

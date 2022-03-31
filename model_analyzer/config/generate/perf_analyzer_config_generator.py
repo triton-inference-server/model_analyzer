@@ -19,6 +19,11 @@ from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
 from model_analyzer.constants import THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_TRIES
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
+from model_analyzer.constants import LOGGER_NAME
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
+
 
 class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     """ 
@@ -53,6 +58,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._curr_concurrency_index = 0
         self._curr_config_index = 0
         self._configs = []
+        self._concurrency_warning_printed = False
 
         # Flag to indicate we have started to return results
         #
@@ -167,6 +173,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _step_config(self):
         self._curr_config_index += 1
         self._curr_concurrency_index = 0
+        self._concurrency_warning_printed = False
         self._all_results = []
 
     def _step_concurrency(self):
@@ -181,8 +188,16 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return len(self._configs) == self._curr_config_index + 1
 
     def _done_walking_concurrencies(self):
-        return (len(self._concurrencies) == self._curr_concurrency_index +
-                1) or not self._throughput_gain_valid()
+        if len(self._concurrencies) == self._curr_concurrency_index + 1:
+            return True
+        if not self._throughput_gain_valid():
+            if not self._concurrency_warning_printed:
+                logger.info(
+                    "No longer increasing concurrency as throughput has plateaued"
+                )
+                self._concurrency_warning_printed = True
+            return True
+        return False
 
     def _last_results_erroneous(self):
         return self._last_results is None or self._last_results[0] is None
