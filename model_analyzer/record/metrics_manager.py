@@ -182,6 +182,8 @@ class MetricsManager:
         measurement = self._get_measurement_if_config_duplicate(
             model_run_config)
         if measurement:
+            logger.info(
+                "Existing measurement found for run config. Skipping profile")
             return measurement
 
         # Start server, and load model variants
@@ -316,7 +318,9 @@ class MetricsManager:
         perf_output_writer = None if \
             not self._config.perf_output else FileWriter(self._config.perf_output_path)
         perf_config = model_run_config.perf_config()
-        logger.info(f"Profiling model {perf_config['model-name']}...")
+        logger.info(
+            f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
+        )
 
         cpu_only = model_run_config.model_config().cpu_only()
         perf_config = model_run_config.perf_config()

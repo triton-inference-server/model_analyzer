@@ -17,6 +17,7 @@ import argparse
 import yaml
 import sys
 import os
+import re
 
 
 class TestOutputValidator:
@@ -56,8 +57,12 @@ class TestOutputValidator:
         with open(self._analyzer_log, 'r') as f:
             log_contents = f.read()
 
-        token = "Profiling model "
-        return log_contents.find(token) == -1
+        matches = re.findall('Profiling (\S+)', log_contents)
+        for match in matches:
+            # "Profiling server only metrics" is ok. No other "Profiling" lines should exist
+            if match != "server":
+                return False
+        return True
 
     def check_interrupt_handling(self):
         """
@@ -81,7 +86,7 @@ class TestOutputValidator:
             return False
 
         # check that 2nd model is profiled once
-        token = f"Profiling model {self._profile_models[1]}"
+        token = f"Profiling {self._profile_models[1]}"
         token_idx = 0
         found_count = 0
         while True:
@@ -124,15 +129,10 @@ class TestOutputValidator:
             log_contents = f.read()
 
         found_models_count = defaultdict(int)
-        token_idx = 0
-        while True:
-            token_idx = log_contents.find('Profiling model ', token_idx + 1)
-            if token_idx == -1:
-                break
-            end_of_model_name = log_contents.find('...', token_idx)
-            model_name = log_contents[token_idx +
-                                      len('Profiling model '):end_of_model_name]
-            found_models_count[model_name.rsplit('_', 2)[0]] += 1
+        matches = re.findall('Profiling (\S+)', log_contents)
+        for match in matches:
+            base_model_name = match.rsplit('_', 2)[0]
+            found_models_count[base_model_name] += 1
 
         # resnet50 libtorch normally has 4 runs:
         #   ([2 models, one of which is default] x [2 concurrencies])

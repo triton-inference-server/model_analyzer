@@ -36,7 +36,7 @@ def check_gpus(analyzer_log, gpus, check_visible):
         else:
             sys.exit(0)
 
-    token = "Initiliazing GPUDevice handles..."
+    token = "Initiliazing GPUDevice handles"
     gpus_start = log_contents.rfind(token)
     if gpus_start == -1:
         print(

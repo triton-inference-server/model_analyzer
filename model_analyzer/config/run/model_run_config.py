@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import LOGGER_NAME
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
+
 
 class ModelRunConfig:
     """
@@ -89,4 +94,9 @@ class ModelRunConfig:
         perf_batch_size = self._perf_config[
             'batch-size'] if 'batch-size' in self._perf_config else self.DEFAULT_PERF_BATCH_SIZE
 
-        return max_batch_size >= perf_batch_size
+        legal = max_batch_size >= perf_batch_size
+        if not legal:
+            logger.debug(
+                f"Illegal model run config because client batch size {perf_batch_size} is greater than model max batch size {max_batch_size}"
+            )
+        return legal

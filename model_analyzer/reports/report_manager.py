@@ -139,7 +139,7 @@ class ReportManager:
             output_filename = os.path.join(
                 model_report_dir,
                 f'result_summary.{summary.get_file_extension()}')
-            logger.info(f"Exporting Summary Report to {output_filename}...")
+            logger.info(f"Exporting Summary Report to {output_filename}")
             summary.write_report(filename=output_filename)
 
     def create_detailed_reports(self):
@@ -169,7 +169,7 @@ class ReportManager:
             output_filename = os.path.join(
                 model_report_dir,
                 f'detailed_report.{report.get_file_extension()}')
-            logger.info(f"Exporting Detailed Report to {output_filename}...")
+            logger.info(f"Exporting Detailed Report to {output_filename}")
             report.write_report(filename=output_filename)
 
     def _add_summary_data(self):

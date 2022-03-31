@@ -14,6 +14,11 @@
 
 from .base_model_config_generator import BaseModelConfigGenerator
 
+from model_analyzer.constants import LOGGER_NAME
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
+
 
 class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in automatic search mode """
@@ -86,8 +91,15 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         self._curr_instance_count += 1
 
     def _done_walking_max_batch_size(self):
-        return self._max_batch_size_limit_reached() \
-            or not self._last_results_increased_throughput()
+        if self._max_batch_size_limit_reached():
+            return True
+
+        if not self._last_results_increased_throughput():
+            logger.info(
+                "No longer increasing max_batch_size because throughput has plateaued"
+            )
+            return True
+        return False
 
     def _done_walking_instance_count(self):
         return self._curr_instance_count == self._max_instance_count

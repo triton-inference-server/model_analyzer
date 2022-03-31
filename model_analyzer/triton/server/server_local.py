@@ -97,7 +97,7 @@ class TritonServerLocal(TritonServer):
                                                    universal_newlines=True,
                                                    env=triton_env)
 
-                logger.info('Triton Server started.')
+                logger.debug('Triton Server started.')
             except Exception as e:
                 raise TritonModelAnalyzerException(e)
 
@@ -118,7 +118,7 @@ class TritonServerLocal(TritonServer):
             self._tritonserver_process = None
             if self._log_path:
                 self._log_file.close()
-            logger.info('Stopped Triton Server.')
+            logger.debug('Stopped Triton Server.')
 
     def cpu_stats(self):
         """

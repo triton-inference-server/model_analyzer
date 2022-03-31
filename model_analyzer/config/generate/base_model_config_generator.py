@@ -14,8 +14,12 @@
 
 from .config_generator_interface import ConfigGeneratorInterface
 
+from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
 import abc
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
@@ -109,14 +113,22 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         apply the changes on top of the base and return the new model config
         """
         model_config_dict = self._get_base_model_config_dict()
+        model_config_dict['name'] = self._get_model_variant_name(param_combo)
+        logger.info("")
+        logger.info(f"Creating model config: {model_config_dict['name']}")
+
         if param_combo is not None:
             for key, value in param_combo.items():
                 if value is not None:
                     model_config_dict[key] = value
-
-        model_config_dict['name'] = self._get_model_variant_name(param_combo)
+                    if value == {}:
+                        logger.info(f"  Enabling {key}")
+                    else:
+                        logger.info(f"  Setting {key} to {value}")
+        logger.info("")
 
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
+
         return model_config
 
     def _get_base_model_config_dict(self):

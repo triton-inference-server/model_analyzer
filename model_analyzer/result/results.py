@@ -181,7 +181,7 @@ class Results:
         """
         if not self.contains_model(model_name):
             logger.error(f'No results found for model: {model_name}')
-            return {(None, [])}
+            return {}
 
         return self._results[model_name]
 

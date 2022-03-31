@@ -616,8 +616,7 @@ class ResultManager:
         # Configure server only results path and export results
         server_metrics_path = os.path.join(results_export_directory,
                                            self._config.filename_server_only)
-        logger.info(
-            f"Exporting server only metrics to {server_metrics_path}...")
+        logger.info(f"Exporting server only metrics to {server_metrics_path}")
         self._export_server_only_csv(
             writer=FileWriter(filename=server_metrics_path),
             column_separator=',')
@@ -627,9 +626,8 @@ class ResultManager:
             results_export_directory, self._config.filename_model_inference)
         metrics_gpu_path = os.path.join(results_export_directory,
                                         self._config.filename_model_gpu)
-        logger.info(
-            f"Exporting inference metrics to {metrics_inference_path}...")
-        logger.info(f"Exporting GPU metrics to {metrics_gpu_path}...")
+        logger.info(f"Exporting inference metrics to {metrics_inference_path}")
+        logger.info(f"Exporting GPU metrics to {metrics_gpu_path}")
         self._export_model_csv(
             inference_writer=FileWriter(filename=metrics_inference_path),
             gpu_metrics_writer=FileWriter(filename=metrics_gpu_path),

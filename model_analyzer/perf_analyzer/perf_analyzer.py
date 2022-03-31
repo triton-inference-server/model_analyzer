@@ -207,7 +207,7 @@ class PerfAnalyzer:
             cpu_util = process_util.cpu_percent(INTERVAL_SLEEP_TIME)
             if cpu_util > self._max_cpu_util:
                 logger.info(
-                    f'perf_analyzer used significant amount of CPU resources ({cpu_util}%), killing perf_analyzer...'
+                    f'perf_analyzer used significant amount of CPU resources ({cpu_util}%), killing perf_analyzer'
                 )
                 self._output = process.stdout.read()
                 process.kill()
@@ -218,8 +218,7 @@ class PerfAnalyzer:
             current_timeout -= INTERVAL_SLEEP_TIME
         else:
             logger.info(
-                'perf_analyzer took very long to exit, killing perf_analyzer...'
-            )
+                'perf_analyzer took very long to exit, killing perf_analyzer')
             process.kill()
 
             # Failure

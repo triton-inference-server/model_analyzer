@@ -107,7 +107,7 @@ class Analyzer:
 
         # Get metrics for server only
         if self._config.triton_launch_mode != 'c_api':
-            logger.info('Profiling server only metrics...')
+            logger.info('Profiling server only metrics')
             self._server.start()
             client.wait_for_server_ready(self._config.client_max_retries)
             self._metrics_manager.profile_server()
@@ -128,6 +128,7 @@ class Analyzer:
                     self._state_manager.save_checkpoint()
 
         logger.info(self._get_profile_complete_string())
+        logger.info("")
         logger.info(self._get_analyze_command_help_string())
 
     def analyze(self, mode, quiet):
@@ -141,8 +142,6 @@ class Analyzer:
         ----------
         mode : str
             Global mode that the analyzer is running on
-        quiet: bool
-            Whether to mute writing table to console
         """
 
         if not isinstance(self._config, ConfigCommandAnalyze):
@@ -171,6 +170,7 @@ class Analyzer:
         if not quiet:
             self._result_manager.write_results()
 
+        logger.info("")
         logger.info(self._get_report_command_help_string())
 
     def report(self, mode):

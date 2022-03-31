@@ -25,6 +25,7 @@ from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
 from .config.input.config_command_analyze import ConfigCommandAnalyze
 from .config.input.config_command_report import ConfigCommandReport
+from .log_formatter import setup_logging
 from model_analyzer.config.input.config_utils import \
         binary_path_validator, file_path_validator
 import sys
@@ -129,7 +130,7 @@ def get_server_handle(config, gpus):
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
         triton_config['model-repository'] = 'remote-model-repository'
-        logger.info('Using remote Triton Server...')
+        logger.info('Using remote Triton Server')
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config,
                                                          gpus=[],
@@ -158,7 +159,7 @@ def get_server_handle(config, gpus):
         if config.use_local_gpu_monitor:
             triton_config['metrics-interval-ms'] = int(
                 config.monitoring_interval * 1e3)
-        logger.info('Starting a local Triton Server...')
+        logger.info('Starting a local Triton Server')
         server = TritonServerFactory.create_server_local(
             path=config.triton_server_path,
             config=triton_config,
@@ -176,7 +177,7 @@ def get_server_handle(config, gpus):
         if config.use_local_gpu_monitor:
             triton_config['metrics-interval-ms'] = int(
                 config.monitoring_interval * 1e3)
-        logger.info('Starting a Triton Server using docker...')
+        logger.info('Starting a Triton Server using docker')
         server = TritonServerFactory.create_server_docker(
             image=config.triton_docker_image,
             config=triton_config,
@@ -191,7 +192,7 @@ def get_server_handle(config, gpus):
         triton_config = TritonServerConfig()
         triton_config['model-repository'] = os.path.abspath(
             config.output_model_repository_path)
-        logger.info("Starting a Triton Server using perf_analyzer's C_API...")
+        logger.info("Starting a Triton Server using perf_analyzer's C_API")
         server = TritonServerFactory.create_server_local(path=None,
                                                          config=triton_config,
                                                          gpus=[],
@@ -318,26 +319,6 @@ def get_cli_and_config_options():
         sys.exit(1)
 
 
-def setup_logging(args):
-    """
-    Setup logger format
-
-    Parameters
-    ----------
-    args : Namespace
-        Contains arguments for verbosity of Model Analyzer
-    """
-
-    if args.quiet:
-        log_level = logging.ERROR
-    elif args.verbose:
-        log_level = logging.DEBUG
-    else:
-        log_level = logging.INFO
-    logger = logging.getLogger(LOGGER_NAME)
-    logger.setLevel(level=log_level)
-
-
 def create_output_model_repository(config):
     """
     Creates output model repository
@@ -360,7 +341,7 @@ def create_output_model_repository(config):
         else:
             shutil.rmtree(config.output_model_repository_path)
             logger.warning('Overriding the output model repo path '
-                           f'"{config.output_model_repository_path}"...')
+                           f'"{config.output_model_repository_path}"')
             os.mkdir(config.output_model_repository_path)
 
 
@@ -369,13 +350,13 @@ def main():
     Main entrypoint of model_analyzer
     """
 
-    # Configs and logging
-    logging.basicConfig(format="%(asctime)s.%(msecs)d %(levelname)-4s"
-                        "[%(filename)s:%(lineno)d] %(message)s",
-                        datefmt="%Y-%m-%d %H:%M:%S")
+    # Need to create a basic logging format for logs we print
+    # before we have enough information to configure the full logger
+    logging.basicConfig(format="[Model Analyzer] %(message)s")
 
     args, config = get_cli_and_config_options()
-    setup_logging(args)
+
+    setup_logging(quiet=args.quiet, verbose=args.verbose)
 
     logger.debug(config.get_all_config())
 
