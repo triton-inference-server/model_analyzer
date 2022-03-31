@@ -106,6 +106,15 @@ class TestResults(trc.TestResultCollector):
                                        2].model_config().get_config())
             self.assertEqual(measurements, self._measurements[index])
 
+    def test_bad_get_model_measurements_dict(self):
+        """
+        Test that we return an empty dict and don't assert if the model 
+        doesn't exist in the measurements
+        """
+        model_measurements = self._result.get_model_measurements_dict(
+            'bad_model_name')
+        self.assertEqual(model_measurements, {})
+
     def test_get_model_config_measurements_dict(self):
         """
         Test that the measurements were correctly added to the model config dictionaries
