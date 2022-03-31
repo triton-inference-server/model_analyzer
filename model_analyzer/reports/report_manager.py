@@ -189,8 +189,9 @@ class ReportManager:
                 n=self._config.num_configs_per_model,
                 include_default=True)
 
+            # FIXME-MM: This needs to be updated because there will be multiple model configs
             for result in top_results:
-                model_config = result.model_config()
+                model_config = result.model_configs()[0]
                 for measurement in result.top_n_measurements(n=1):
                     self._summary_data[model_name].append(
                         (model_config, measurement))

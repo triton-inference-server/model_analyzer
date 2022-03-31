@@ -374,8 +374,9 @@ class MetricsManager:
             # FIXME: TMA-518 - this needs to be added per model
             model_specific_pa_params = perf_config.extract_model_specific_parameters(
             )
+
             run_config_measurement.add_model_config_measurement(
-                model_run_config.model_name(), model_specific_pa_params,
+                perf_config['model-name'], model_specific_pa_params,
                 model_non_gpu_metrics)
 
             self._result_manager.add_run_config_measurement(
