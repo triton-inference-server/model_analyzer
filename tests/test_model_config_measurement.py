@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tests.common.test_utils import convert_non_gpu_metrics_to_data
+from tests.common.test_utils import convert_non_gpu_metrics_to_data, default_encode
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.result.result_comparator import ResultComparator
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
@@ -184,7 +184,7 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         """
         Test to ensure class can be correctly restored from a dictionary
         """
-        mcmA_json = json.dumps(self.mcmA.__dict__, default=self._default_encode)
+        mcmA_json = json.dumps(self.mcmA.__dict__, default=default_encode)
 
         mcmA_from_dict = ModelConfigMeasurement.from_dict(json.loads(mcmA_json))
 
@@ -195,6 +195,9 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(mcmA_from_dict.non_gpu_data(),
                          self.mcmA.non_gpu_data())
 
+        # Catchall in case something new is added
+        self.assertEqual(mcmA_from_dict, self.mcmA)
+
     def _construct_model_config_measurement(self, model_config_name,
                                             model_specific_pa_params,
                                             non_gpu_metric_values):
@@ -202,14 +205,6 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
 
         return ModelConfigMeasurement(model_config_name,
                                       model_specific_pa_params, non_gpu_data)
-
-    def _default_encode(self, obj):
-        if isinstance(obj, bytes):
-            return obj.decode('utf-8')
-        elif hasattr(obj, 'to_dict'):
-            return obj.to_dict()
-        else:
-            return obj.__dict__
 
 
 if __name__ == '__main__':

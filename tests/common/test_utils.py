@@ -264,3 +264,12 @@ def construct_result(avg_gpu_metric_values,
                                   comparator=comparator))
 
     return model_result
+
+
+def default_encode(obj):
+    if isinstance(obj, bytes):
+        return obj.decode('utf-8')
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    else:
+        return obj.__dict__

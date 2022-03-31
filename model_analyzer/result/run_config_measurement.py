@@ -56,12 +56,17 @@ class RunConfigMeasurement:
         run_config_measurement = RunConfigMeasurement(None, {})
 
         run_config_measurement._key = run_config_measurement_dict['_key']
-        run_config_measurement._gpu_data = run_config_measurement_dict[
-            '_gpu_data']
-        run_config_measurement._avg_gpu_data = run_config_measurement_dict[
-            '_avg_gpu_data']
-        run_config_measurement._model_config_measurements = run_config_measurement_dict[
-            '_model_config_measurements']
+
+        run_config_measurement._gpu_data = cls._deserialize_gpu_data(
+            run_config_measurement, run_config_measurement_dict['_gpu_data'])
+
+        run_config_measurement._avg_gpu_data = cls._average_list(
+            run_config_measurement,
+            list(run_config_measurement._gpu_data.values()))
+
+        run_config_measurement._model_config_measurements = cls._deserialize_model_config_measurements(
+            run_config_measurement,
+            run_config_measurement_dict['_model_config_measurements'])
 
         return run_config_measurement
 
@@ -371,3 +376,24 @@ class RunConfigMeasurement:
                 avg[i] = (sum([row_list[j][i] for j in range(1, N)],
                               start=row_list[0][i]) * 1.0) / N
             return avg
+
+    def _deserialize_gpu_data(self, serialized_gpu_data):
+        gpu_data = {}
+        for gpu_uuid, gpu_data_list in serialized_gpu_data.items():
+            metric_list = []
+            for [tag, record_dict] in gpu_data_list:
+                record_type = RecordType.get(tag)
+                record = record_type.from_dict(record_dict)
+                metric_list.append(record)
+            gpu_data[int(gpu_uuid)] = metric_list
+
+        return gpu_data
+
+    def _deserialize_model_config_measurements(
+            self, serialized_model_config_measurements):
+        model_config_measurements = []
+        for mcm_dict in serialized_model_config_measurements:
+            model_config_measurements.append(
+                ModelConfigMeasurement.from_dict(mcm_dict))
+
+        return model_config_measurements
