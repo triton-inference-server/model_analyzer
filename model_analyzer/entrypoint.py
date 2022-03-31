@@ -351,7 +351,7 @@ def main():
     """
 
     # Need to create a basic logging format for logs we print
-    # before we have enough information to create the full logger
+    # before we have enough information to configure the full logger
     logging.basicConfig(format="[ModelAnalyzer] %(message)s")
 
     args, config = get_cli_and_config_options()
@@ -387,7 +387,7 @@ def main():
             analyzer = Analyzer(
                 config, server,
                 AnalyzerStateManager(config=config, server=server))
-            analyzer.analyze(mode=args.mode)
+            analyzer.analyze(mode=args.mode, quiet=bool(args.quiet))
         elif args.subcommand == 'report':
 
             analyzer = Analyzer(

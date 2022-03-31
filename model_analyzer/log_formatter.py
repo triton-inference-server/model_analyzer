@@ -17,7 +17,8 @@ import sys
 from model_analyzer.constants import LOGGER_NAME
 
 
-class Formatter(logging.Formatter):
+class LogFormatter(logging.Formatter):
+    """ Class to handle formatting of the logger outputs """
 
     def __init__(self):
         logger = logging.getLogger(LOGGER_NAME)
@@ -55,7 +56,8 @@ def setup_logging(quiet, verbose):
 
     logger = logging.getLogger(LOGGER_NAME)
     logger.setLevel(level=log_level)
+
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(Formatter())
+    handler.setFormatter(LogFormatter())
     logger.addHandler(handler)
     logger.propagate = False
