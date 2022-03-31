@@ -121,8 +121,10 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             for key, value in param_combo.items():
                 if value is not None:
                     model_config_dict[key] = value
-                    value_str = "ON" if value == {} else value
-                    logger.info(f"  Setting {key} to {value_str}")
+                    if value == {}:
+                        logger.info(f"  Enabling {key}")
+                    else:
+                        logger.info(f"  Setting {key} to {value}")
         logger.info("")
 
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
