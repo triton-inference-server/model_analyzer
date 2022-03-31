@@ -51,7 +51,7 @@ class TestLogger(trc.TestResultCollector):
         with captured_output() as (out, err):
             setup_logging(verbose=False, quiet=False)
             logger.info("ABC")
-            expected_output = "[ModelAnalyzer] ABC"
+            expected_output = "[Model Analyzer] ABC"
             output = out.getvalue().strip()
             self.assertEqual(output, expected_output)
 
@@ -77,7 +77,7 @@ class TestLogger(trc.TestResultCollector):
             logger.info("ABC")
             output = out.getvalue().strip()
             self.assertTrue(
-                re.match("^\d\d:\d\d:\d\d \[ModelAnalyzer\] ABC$", output))
+                re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] ABC$", output))
 
     def test_debug_normal(self):
         """ 
@@ -113,7 +113,7 @@ class TestLogger(trc.TestResultCollector):
             logger.debug("ABC")
             output = out.getvalue().strip()
             self.assertTrue(
-                re.match("^\d\d:\d\d:\d\d \[ModelAnalyzer\] DEBUG: ABC$",
+                re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] DEBUG: ABC$",
                          output))
 
     def test_error_normal(self):
@@ -123,7 +123,7 @@ class TestLogger(trc.TestResultCollector):
         with captured_output() as (out, err):
             setup_logging(verbose=False, quiet=False)
             logger.error("ABC")
-            expected_output = "[ModelAnalyzer] ERROR: ABC"
+            expected_output = "[Model Analyzer] ERROR: ABC"
             output = out.getvalue().strip()
             self.assertEqual(output, expected_output)
 
@@ -135,7 +135,7 @@ class TestLogger(trc.TestResultCollector):
         with captured_output() as (out, err):
             setup_logging(verbose=False, quiet=True)
             logger.error("ABC")
-            expected_output = "[ModelAnalyzer] ERROR: ABC"
+            expected_output = "[Model Analyzer] ERROR: ABC"
             output = out.getvalue().strip()
             self.assertEqual(output, expected_output)
 
@@ -149,7 +149,7 @@ class TestLogger(trc.TestResultCollector):
             logger.error("ABC")
             output = out.getvalue().strip()
             self.assertTrue(
-                re.match("^\d\d:\d\d:\d\d \[ModelAnalyzer\] ERROR: ABC$",
+                re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] ERROR: ABC$",
                          output))
 
     def test_quiet_trumps_verbose(self):

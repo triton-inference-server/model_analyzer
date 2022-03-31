@@ -352,7 +352,7 @@ def main():
 
     # Need to create a basic logging format for logs we print
     # before we have enough information to configure the full logger
-    logging.basicConfig(format="[ModelAnalyzer] %(message)s")
+    logging.basicConfig(format="[Model Analyzer] %(message)s")
 
     args, config = get_cli_and_config_options()
 

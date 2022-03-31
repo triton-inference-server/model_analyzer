@@ -29,9 +29,9 @@ class LogFormatter(logging.Formatter):
     def format(self, record):
         front = "%(asctime)s " if self._log_level is logging.DEBUG else ""
         if record.levelno == logging.INFO:
-            self._style._fmt = f"{front}[ModelAnalyzer] %(message)s"
+            self._style._fmt = f"{front}[Model Analyzer] %(message)s"
         else:
-            self._style._fmt = f"{front}[ModelAnalyzer] %(levelname)s: %(message)s"
+            self._style._fmt = f"{front}[Model Analyzer] %(levelname)s: %(message)s"
         return super().format(record)
 
 
