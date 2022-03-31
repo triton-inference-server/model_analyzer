@@ -57,8 +57,12 @@ class TestOutputValidator:
         with open(self._analyzer_log, 'r') as f:
             log_contents = f.read()
 
-        token = "Profiling "
-        return log_contents.find(token) == -1
+        matches = re.findall('Profiling (\S+)', log_contents)
+        for match in matches:
+            # "Profiling server only metrics" is ok. No other "Profiling" lines should exist
+            if match != "server":
+                return False
+        return True
 
     def check_interrupt_handling(self):
         """
