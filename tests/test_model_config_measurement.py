@@ -21,6 +21,8 @@ import unittest
 from unittest.mock import MagicMock, patch
 from .common import test_result_collector as trc
 
+import json
+
 
 class TestModelConfigMeasurement(trc.TestResultCollector):
 
@@ -182,8 +184,9 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         """
         Test to ensure class can be correctly restored from a dictionary
         """
-        mcmA_dict = self.mcmA.__dict__
-        mcmA_from_dict = ModelConfigMeasurement.from_dict(mcmA_dict)
+        mcmA_json = json.dumps(self.mcmA.__dict__, default=self._default_encode)
+
+        mcmA_from_dict = ModelConfigMeasurement.from_dict(json.loads(mcmA_json))
 
         self.assertEqual(mcmA_from_dict.model_config_name(),
                          self.mcmA.model_config_name())
@@ -199,6 +202,14 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
 
         return ModelConfigMeasurement(model_config_name,
                                       model_specific_pa_params, non_gpu_data)
+
+    def _default_encode(self, obj):
+        if isinstance(obj, bytes):
+            return obj.decode('utf-8')
+        elif hasattr(obj, 'to_dict'):
+            return obj.to_dict()
+        else:
+            return obj.__dict__
 
 
 if __name__ == '__main__':
