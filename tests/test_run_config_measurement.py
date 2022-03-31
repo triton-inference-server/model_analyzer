@@ -86,7 +86,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         Test that the list of gpus used is correct
         """
-        self.assertEqual(self.rcm0.gpus_used(), [0, 1])
+        self.assertEqual(self.rcm0.gpus_used(), ['0', '1'])
 
     def test_get_metric(self):
         """
@@ -192,17 +192,17 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         }]
 
         self.gpu_metric_values = {
-            0: {
+            '0': {
                 "gpu_used_memory": 6000,
                 "gpu_utilization": 60
             },
-            1: {
+            '1': {
                 "gpu_used_memory": 10000,
                 "gpu_utilization": 20
             }
         }
         self.avg_gpu_metric_values = {
-            0: {
+            '0': {
                 "gpu_used_memory": 8000,
                 "gpu_utilization": 40
             }
@@ -257,11 +257,11 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         }]
 
         gpu_metric_values = {
-            0: {
+            '0': {
                 "gpu_used_memory": 7000,
                 "gpu_utilization": 40
             },
-            1: {
+            '1': {
                 "gpu_used_memory": 12000,
                 "gpu_utilization": 30
             }

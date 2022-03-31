@@ -385,7 +385,7 @@ class RunConfigMeasurement:
                 record_type = RecordType.get(tag)
                 record = record_type.from_dict(record_dict)
                 metric_list.append(record)
-            gpu_data[int(gpu_uuid)] = metric_list
+            gpu_data[gpu_uuid] = metric_list
 
         return gpu_data
 
