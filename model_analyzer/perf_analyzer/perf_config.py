@@ -151,6 +151,21 @@ class PerfAnalyzerConfig:
         return PerfAnalyzerConfig.remove_url_from_cli_string(
             self.to_cli_string())
 
+    def extract_model_specific_parameters(self):
+        """
+        Returns a dictionary of parameters (options+args) that can change
+        between models for a given RunConfig
+        Returns
+        -------
+        dict
+          A dictionary of parameters and their values
+        """
+
+        return {
+            'batch_size': self._options['-b'],
+            'concurrency': self._args['concurrency-range']
+        }
+
     @classmethod
     def remove_url_from_cli_string(cls, cli_string):
         """

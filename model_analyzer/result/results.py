@@ -134,9 +134,10 @@ class Results:
         """
         return list(self._results.keys())
 
-    def get_list_of_model_config_measurements(self):
+    def get_list_of_model_config_measurement_tuples(self):
         """
-        Returns a list of model config measurements
+        Returns a list of model configs with their 
+        corresponding RunConfigMeasurements
         
         Returns
         -------
@@ -146,9 +147,9 @@ class Results:
         """
         return list(self._results.values())
 
-    def get_list_of_measurements(self):
+    def get_list_of_run_config_measurements(self):
         """
-        Return a list of measurements from every model/model_config
+        Return a list of RunConfigMeasurements from every model/model_config
         
         Parameters
         ----------
@@ -156,7 +157,7 @@ class Results:
         
         Returns
         -------
-        List of Measurements
+        List of RunConfigMeasurements
         """
         measurements = []
         for model_result in self._results.values():

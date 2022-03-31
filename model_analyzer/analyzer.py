@@ -220,8 +220,8 @@ class Analyzer:
     def _get_num_profiled_configs(self):
         return sum([
             len(x) for x in self._state_manager.get_state_variable(
-                'ResultManager.results').get_list_of_model_config_measurements(
-                )
+                'ResultManager.results').
+            get_list_of_model_config_measurement_tuples()
         ])
 
     def _get_analyze_command_help_string(self):

@@ -194,12 +194,16 @@ class ResultManager:
             # Measurements
             results = self._state_manager.get_state_variable(
                 "ResultManager.results")
-            for measurement in results.get_list_of_measurements():
-                for gpu_uuid, gpu_metrics in measurement.gpu_data().items():
+
+            for run_config_measurement in results.get_list_of_run_config_measurements(
+            ):
+                for gpu_uuid, gpu_metrics in run_config_measurement.gpu_data(
+                ).items():
                     for gpu_metric in gpu_metrics:
-                        if gpu_metric.tag not in gpu_specific_metrics_from_measurements:
+                        if gpu_metric[
+                                0] not in gpu_specific_metrics_from_measurements:
                             gpu_specific_metrics_from_measurements[
-                                gpu_metric.tag] = gpu_metric
+                                gpu_metric[0]] = gpu_metric
 
                 for non_gpu_metric in measurement.non_gpu_data():
                     if non_gpu_metric.tag not in non_gpu_specific_metrics_from_measurements:
@@ -248,7 +252,8 @@ class ResultManager:
         self._state_manager.set_state_variable('ResultManager.server_only_data',
                                                data)
 
-    def add_measurement(self, model_run_config, measurement):
+    def add_run_config_measurement(self, model_run_config,
+                                   run_config_measurement):
         """
         This function adds model inference
         measurements to the required result
@@ -258,7 +263,7 @@ class ResultManager:
         model_run_config : ModelRunConfig
             Contains the parameters used to generate the measurment
             like the model name, model_config_name
-        measurement: Measurement
+        run_config_measurement: RunConfigMeasurement
             the measurement to be added
         """
 
@@ -266,7 +271,8 @@ class ResultManager:
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        results.add_measurement(model_run_config, measurement)
+        results.add_run_config_measurement(model_run_config,
+                                           run_config_measurement)
 
         # Use set_state_variable to record that state may have been changed
         self._state_manager.set_state_variable(name='ResultManager.results',
@@ -299,17 +305,19 @@ class ResultManager:
         for model_name in analysis_model_names:
             model_measurements = results.get_model_measurements_dict(model_name)
 
-            for (model_config, measurements) in model_measurements.values():
+            for (model_config,
+                 run_config_measurements) in model_measurements.values():
                 model_result = ModelResult(model_name=model_name,
                                            model_config=model_config,
                                            comparator=comparators[model_name],
                                            constraints=constraints[model_name])
 
-                for measurement in measurements.values():
-                    measurement.set_result_comparator(
-                        comparator=comparators[model_name])
+                for run_config_measurement in run_config_measurements.values():
+                    run_config_measurement.set_metric_weightings(
+                        [comparators[model_name]._metric_weights])
 
-                    model_result.add_measurement(measurement)
+                    model_result.add_run_config_measurement(
+                        run_config_measurement)
 
                 self._per_model_sorted_results[model_name].add_result(
                     model_result)
@@ -317,7 +325,7 @@ class ResultManager:
 
     def get_model_config_measurements(self, model_config_name):
         """
-        Unsorted list of measurements for a config
+        Unsorted list of RunConfigMeasurements for a config
 
         Parameters
         ----------
@@ -326,7 +334,7 @@ class ResultManager:
 
         Returns
         -------
-        (ModelConfig, list of Measurements)
+        (ModelConfig, list of RunConfigMeasurements)
             The measurements for a particular config, in the order
             they were obtained.
         """
