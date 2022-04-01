@@ -51,14 +51,8 @@ class RunConfigResultComparator:
 
         Returns
         -------
-        int
-            0
-                if the results are determined
-                to be the same within a threshold
-            1
-                if result1 > result2
-            -1
-                if result1 < result2
+        bool
+           True: if result1 is better than result2
         """
 
         ########## IMPORTANT measurment comparators return 1 on a < b (for min heap) ###########
