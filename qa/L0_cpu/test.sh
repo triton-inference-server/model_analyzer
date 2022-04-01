@@ -23,7 +23,7 @@ rm -f $ANALYZER_LOG
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/data/inferenceserver/$REPO_VERSION/tf_model_store"}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/tf_model_store"}
 EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
@@ -32,6 +32,7 @@ TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="grpc"
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
+MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
