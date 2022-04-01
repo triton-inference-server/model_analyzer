@@ -20,7 +20,7 @@ from model_analyzer.config.input.config_command_report \
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 
 from model_analyzer.reports.report_manager import ReportManager
-from model_analyzer.result.result_comparator import ResultComparator
+from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
 from model_analyzer.result.result_manager import ResultManager
 
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
@@ -32,7 +32,7 @@ from .mocks.mock_matplotlib import MockMatplotlibMethods
 from .mocks.mock_os import MockOSMethods
 from .mocks.mock_json import MockJSONMethods
 
-from .common.test_utils import construct_measurement
+from .common.test_utils import construct_run_config_measurement
 from .common import test_result_collector as trc
 
 import unittest
@@ -110,12 +110,18 @@ class TestReportManagerMethods(trc.TestResultCollector):
         model_config = ModelConfig.create_from_dictionary(config_pb)
         model_config._cpu_only = cpu_only
 
-        measurement = construct_measurement(model_name, avg_gpu_metrics,
-                                            avg_non_gpu_metrics,
-                                            result_comparator)
-        run_config = ModelRunConfig(model_name, model_config,
-                                    measurement.perf_config())
-        self.result_manager.add_measurement(run_config, measurement)
+        measurement = construct_run_config_measurement(
+            model_name=model_name,
+            model_config_names=[model_config_name],
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values=avg_gpu_metrics,
+            non_gpu_metric_values=[avg_non_gpu_metrics],
+            metric_objectives=result_comparator._metric_weights,
+            model_config_weights=[1])
+
+        run_config = ModelRunConfig(model_name, model_config, MagicMock())
+
+        self.result_manager.add_run_config_measurement(run_config, measurement)
 
     def setUp(self):
         self.model_config = {
@@ -153,8 +159,10 @@ class TestReportManagerMethods(trc.TestResultCollector):
     def test_add_results(self):
         for mode in ['online', 'offline']:
             self._init_managers("test_model1,test_model2", mode=mode)
-            result_comparator = ResultComparator(
-                metric_objectives={"perf_throughput": 10})
+            result_comparator = RunConfigResultComparator(
+                metric_objectives_list=[{
+                    "perf_throughput": 10
+                }])
 
             avg_gpu_metrics = {
                 0: {
@@ -203,8 +211,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
     def subtest_build_summary_table(self, mode, cpu_only):
         self._init_managers(mode=mode)
-        result_comparator = ResultComparator(
-            metric_objectives={"perf_throughput": 10})
+        result_comparator = RunConfigResultComparator(metric_objectives_list=[{
+            "perf_throughput": 10
+        }])
 
         avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
 
@@ -256,8 +265,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
     def _subtest_build_detailed_info(self, cpu_only):
         self._init_managers(models="test_model_config_10", subcommand="report")
 
-        result_comparator = ResultComparator(
-            metric_objectives={"perf_throughput": 10})
+        result_comparator = RunConfigResultComparator(metric_objectives_list=[{
+            "perf_throughput": 10
+        }])
 
         avg_gpu_metrics = {
             "gpu_uuid": {
@@ -347,8 +357,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
         expected_table_count = num_tables_in_summary_report * expected_config_count
 
         self._init_managers("test_model1", num_configs_per_model=top_n)
-        result_comparator = ResultComparator(
-            metric_objectives={"perf_throughput": 10})
+        result_comparator = RunConfigResultComparator(metric_objectives_list=[{
+            "perf_throughput": 10
+        }])
         avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
         for i in range(10):
             p99 = 20 + i

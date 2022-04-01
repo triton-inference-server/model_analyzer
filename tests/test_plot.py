@@ -20,7 +20,6 @@ from .common.test_utils import construct_run_config_measurement
 
 from .mocks.mock_matplotlib import MockMatplotlibMethods
 from model_analyzer.plots.simple_plot import SimplePlot
-from model_analyzer.result.result_comparator import ResultComparator
 
 
 class TestPlotMethods(trc.TestResultCollector):

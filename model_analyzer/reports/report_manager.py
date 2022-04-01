@@ -498,12 +498,13 @@ class ReportManager:
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
             ],
                                          title="Detailed Table")
-
         # Construct table
         if not cpu_only:
             for measurement in measurements:
                 row = [
-                    measurement.get_parameter(first_column_tag),
+                    # FIXME-MM: Need accessor function for PA Params
+                    measurement._model_config_measurements[0].
+                    _model_specific_pa_params[first_column_tag],
                     measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_client_response_wait'),
                     measurement.get_metric_value('perf_server_queue'),
@@ -518,7 +519,8 @@ class ReportManager:
         else:
             for measurement in measurements:
                 row = [
-                    measurement.get_parameter(first_column_tag),
+                    measurement._model_config_measurements[0].
+                    _model_specific_pa_params[first_column_tag],
                     measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_client_response_wait'),
                     measurement.get_metric_value('perf_server_queue'),

@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2021-2022, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+#FIME: This class has no unit testing
 class ConstraintManager:
     """
     Handles processing and applying
@@ -41,17 +42,17 @@ class ConstraintManager:
         return constraints
 
     @staticmethod
-    def check_constraints(constraints, measurement):
+    def check_constraints(constraints, run_config_measurement):
         """
-        Takes a measurement and
-        checks it against the constraints.
+        Checks that the measurements, for every model, satisfy 
+        the provided list of constraints
 
         Parameters
         ----------
         constraints: dict
             keys are metrics and values are 
             constraint_type:constraint_value pairs
-        measurement : list of metrics
+        run_config_measurement : RunConfigMeasurement
             The measurement to check against the constraints
 
         Return
@@ -61,13 +62,15 @@ class ConstraintManager:
         """
 
         if constraints:
-            for metric in measurement.data():
-                if type(metric).tag in constraints:
-                    constraint = constraints[type(metric).tag]
-                    if 'min' in constraint:
-                        if metric.value() < constraint['min']:
-                            return False
-                    if 'max' in constraint:
-                        if metric.value() > constraint['max']:
-                            return False
+            for model_metrics in run_config_measurement.non_gpu_data():
+                for metric in model_metrics:
+                    if type(metric).tag in constraints:
+                        constraint = constraints[type(metric).tag]
+                        if 'min' in constraint:
+                            if metric.value() < constraint['min']:
+                                return False
+                        if 'max' in constraint:
+                            if metric.value() > constraint['max']:
+                                return False
+
         return True

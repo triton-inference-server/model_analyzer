@@ -17,7 +17,6 @@ from tests.common.test_utils import convert_non_gpu_metrics_to_data, \
     construct_run_config_measurement, default_encode
 
 from model_analyzer.record.metrics_manager import MetricsManager
-from model_analyzer.result.result_comparator import ResultComparator
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from tests.test_model_config_generator import TestModelConfigGenerator
