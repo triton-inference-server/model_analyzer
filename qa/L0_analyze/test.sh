@@ -28,6 +28,7 @@ FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 CHECKPOINT_DIRECTORY="./checkpoints"
+MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
 # Create results/checkpoints directories
 mkdir $EXPORT_PATH
