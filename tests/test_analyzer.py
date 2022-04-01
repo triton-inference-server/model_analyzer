@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
 from unittest.mock import patch
 from model_analyzer.analyzer import Analyzer
 from model_analyzer.cli.cli import CLI
@@ -81,24 +82,21 @@ class TestAnalyzer(trc.TestResultCollector):
 
     def mock_top_n_results(self, model_name=None, n=-1):
         return [
-            RunConfigResult(
-                None,
+            RunConfigResult(None, [
                 ModelConfig(
                     json_format.ParseDict({'name': 'config1'},
-                                          model_config_pb2.ModelConfig())),
-                None),
-            RunConfigResult(
-                None,
+                                          model_config_pb2.ModelConfig()))
+            ], None),
+            RunConfigResult(None, [
                 ModelConfig(
                     json_format.ParseDict({'name': 'config3'},
-                                          model_config_pb2.ModelConfig())),
-                None),
-            RunConfigResult(
-                None,
+                                          model_config_pb2.ModelConfig()))
+            ], None),
+            RunConfigResult(None, [
                 ModelConfig(
                     json_format.ParseDict({'name': 'config4'},
-                                          model_config_pb2.ModelConfig())),
-                None)
+                                          model_config_pb2.ModelConfig()))
+            ], None)
         ]
 
     @patch(
@@ -158,3 +156,7 @@ class TestAnalyzer(trc.TestResultCollector):
         cli.parse()
         mock_config.stop()
         return config
+
+
+if __name__ == '__main__':
+    unittest.main()
