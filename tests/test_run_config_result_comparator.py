@@ -106,37 +106,9 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             model_name=MagicMock(),
             model_config=MagicMock())
 
-        self.assertEqual(result_comparator.compare(result1, result2),
+        self.assertEqual(result_comparator.is_better_than(result1, result2),
                          expected_result)
 
-
-# def _check_measurement_comparison(self, objective_spec, gpu_metric_values1,
-#                                   non_gpu_metric_values1, gpu_metric_values2,
-#                                   non_gpu_metric_values2, expected_result):
-#     """
-#         This function is a helper function that takes all
-#         the data needed to construct two RunConfigMeasurements,
-#         and constructs and runs a RunConfigResultComparator on
-#         them, and checks it against an expected result
-#         """
-
-#     result_comparator = RunConfigResultComparator(
-#         metric_objectives=objective_spec)
-
-#     measurement1 = construct_run_config_measurement(MagicMock(), MagicMock(),
-#                                                     MagicMock(),
-#                                                     gpu_metric_values1,
-#                                                     [non_gpu_metric_values1],
-#                                                     [objective_spec], [1])
-
-#     measurement2 = construct_run_config_measurement(MagicMock(), MagicMock(),
-#                                                     MagicMock(),
-#                                                     gpu_metric_values2,
-#                                                     [non_gpu_metric_values2],
-#                                                     [objective_spec], [1])
-
-#     self.assertEqual(result_comparator.compare(measurement1, measurement2),
-#                      expected_result)
 
 if __name__ == '__main__':
     unittest.main()

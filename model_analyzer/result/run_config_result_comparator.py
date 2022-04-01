@@ -38,7 +38,7 @@ class RunConfigResultComparator:
                 for key, val in metric_objectives.items()
             })
 
-    def compare(self, run_config_result1, run_config_result2):
+    def is_better_than(self, run_config_result1, run_config_result2):
         """
         Aggregates and compares the score for two RunConfigResults 
 

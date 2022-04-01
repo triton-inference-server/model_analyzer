@@ -177,14 +177,6 @@ class RunConfigResult:
         return heapq.nsmallest(min(n, len(self._passing_measurements)),
                                self._passing_measurements)
 
-    def __eq__(self, other):
-        """
-        Checks for the equality of this and
-        another RunConfigResult
-        """
-
-        return (self._comparator.compare(self, other) == 0)
-
     def __lt__(self, other):
         """
         Checks whether this RunConfigResult is better
@@ -194,5 +186,4 @@ class RunConfigResult:
         than the other.
         """
 
-        # Seems like this should be == -1 but we are using a min heap
-        return (self._comparator.compare(self, other) == 1)
+        return self._comparator.is_better_than(self, other)
