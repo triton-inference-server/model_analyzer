@@ -131,7 +131,7 @@ class Analyzer:
         logger.info("")
         logger.info(self._get_analyze_command_help_string())
 
-    def analyze(self, mode, quiet):
+    def analyze(self, mode, verbose):
         """
         subcommand: ANALYZE
 
@@ -167,7 +167,7 @@ class Analyzer:
         # Dump to tables and write to disk
         self._result_manager.tabulate_results()
         self._result_manager.export_results()
-        if not quiet:
+        if verbose:
             self._result_manager.write_results()
 
         logger.info("")

@@ -387,7 +387,7 @@ def main():
             analyzer = Analyzer(
                 config, server,
                 AnalyzerStateManager(config=config, server=server))
-            analyzer.analyze(mode=args.mode, quiet=bool(args.quiet))
+            analyzer.analyze(mode=args.mode, verbose=bool(args.verbose))
         elif args.subcommand == 'report':
 
             analyzer = Analyzer(
