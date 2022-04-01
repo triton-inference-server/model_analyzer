@@ -62,11 +62,11 @@ class TestResults(trc.TestResultCollector):
 
         self.assertEqual(model_list, ['modelA', 'modelB'])
 
-    def test_get_list_of_model_config_measurements(self):
+    def test_get_list_of_model_config_measurement_tuples(self):
         """
         Test that the correct number of measurements is returned per model config
         """
-        model_config_measurements_list = self._result.get_list_of_model_config_measurements(
+        model_config_measurements_list = self._result.get_list_of_model_config_measurement_tuples(
         )
         num_model_config_measurements = [
             len(mcm) for mcm in model_config_measurements_list
@@ -75,11 +75,11 @@ class TestResults(trc.TestResultCollector):
         self.assertEqual(num_model_config_measurements[0], 3)
         self.assertEqual(num_model_config_measurements[1], 2)
 
-    def test_get_measurements_dict(self):
+    def test_get_list_of_run_config_measurements(self):
         """
         Test that the measurements were correctly added to the dictionary
         """
-        measurements = self._result.get_list_of_measurements()
+        measurements = self._result.get_list_of_run_config_measurements()
 
         self.assertEqual(measurements, self._measurements_added)
 

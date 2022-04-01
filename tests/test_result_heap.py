@@ -13,9 +13,9 @@
 # limitations under the License.
 
 from model_analyzer.result.result_heap import ResultHeap
-from model_analyzer.result.result_comparator import ResultComparator
+from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
 from .common import test_result_collector as trc
-from .common.test_utils import construct_result
+from .common.test_utils import construct_run_config_result
 
 import unittest
 from random import sample
@@ -26,15 +26,18 @@ class TestResultHeapMethods(trc.TestResultCollector):
     def setUp(self):
         objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
         self.result_heap = ResultHeap()
-        self.result_comparator = ResultComparator(
-            metric_objectives=objective_spec)
+        self.result_comparator = RunConfigResultComparator(
+            metric_objectives_list=[objective_spec])
 
     def test_empty(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency_p99': 4000}
-        result = construct_result(avg_gpu_metric_values=avg_gpu_metrics,
-                                  avg_non_gpu_metric_values=avg_non_gpu_metrics,
-                                  comparator=self.result_comparator)
+
+        result = construct_run_config_result(
+            avg_gpu_metric_values=avg_gpu_metrics,
+            avg_non_gpu_metric_values=avg_non_gpu_metrics,
+            comparator=self.result_comparator)
+
         self.assertTrue(self.result_heap.empty())
         self.result_heap.add_result(result=result)
         self.assertFalse(self.result_heap.empty())
@@ -46,9 +49,10 @@ class TestResultHeapMethods(trc.TestResultCollector):
         avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency_p99': 4000}
         for _ in range(10):
             self.result_heap.add_result(
-                construct_result(avg_gpu_metric_values=avg_gpu_metrics,
-                                 avg_non_gpu_metric_values=avg_non_gpu_metrics,
-                                 comparator=self.result_comparator))
+                construct_run_config_result(
+                    avg_gpu_metric_values=avg_gpu_metrics,
+                    avg_non_gpu_metric_values=avg_non_gpu_metrics,
+                    comparator=self.result_comparator))
 
         results = self.result_heap.results()
         self.assertEqual(len(results), 10)
@@ -61,10 +65,11 @@ class TestResultHeapMethods(trc.TestResultCollector):
                 'perf_latency_p99': 4000
             }
             self.result_heap.add_result(
-                construct_result(avg_gpu_metric_values=avg_gpu_metrics,
-                                 avg_non_gpu_metric_values=avg_non_gpu_metrics,
-                                 comparator=self.result_comparator,
-                                 model_name=str(i)))
+                construct_run_config_result(
+                    avg_gpu_metric_values=avg_gpu_metrics,
+                    avg_non_gpu_metric_values=avg_non_gpu_metrics,
+                    comparator=self.result_comparator,
+                    model_name=str(i)))
         self.assertEqual(self.result_heap.next_best_result().model_name(), '10')
         self.assertEqual(self.result_heap.next_best_result().model_name(), '9')
         self.assertEqual(self.result_heap.next_best_result().model_name(), '8')
@@ -78,10 +83,11 @@ class TestResultHeapMethods(trc.TestResultCollector):
                 'perf_latency_p99': 4000
             }
             self.result_heap.add_result(
-                construct_result(avg_gpu_metric_values=avg_gpu_metrics,
-                                 avg_non_gpu_metric_values=avg_non_gpu_metrics,
-                                 comparator=self.result_comparator,
-                                 model_name=str(i)))
+                construct_run_config_result(
+                    avg_gpu_metric_values=avg_gpu_metrics,
+                    avg_non_gpu_metric_values=avg_non_gpu_metrics,
+                    comparator=self.result_comparator,
+                    model_name=str(i)))
 
         top_5_results = self.result_heap.top_n_results(n=5)
         self.assertEqual(top_5_results[0].model_name(), '9')
