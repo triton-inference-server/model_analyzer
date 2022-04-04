@@ -253,6 +253,8 @@ class ResultManager:
         self._state_manager.set_state_variable('ResultManager.server_only_data',
                                                data)
 
+    # FIXME: TMA-518 this should be taking the run_config
+    # and extracting the multiple model_run_config will be extracted
     def add_run_config_measurement(self, model_run_config,
                                    run_config_measurement):
         """

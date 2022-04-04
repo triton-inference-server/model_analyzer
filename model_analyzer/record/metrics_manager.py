@@ -379,6 +379,7 @@ class MetricsManager:
                 perf_config['model-name'], model_specific_pa_params,
                 model_non_gpu_metrics)
 
+            # FIXME: TMA-518 this should be taking the run_config (multiple model_run_configs will be extracted)
             self._result_manager.add_run_config_measurement(
                 model_run_config, run_config_measurement)
 

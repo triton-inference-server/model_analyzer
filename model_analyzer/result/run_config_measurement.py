@@ -177,6 +177,7 @@ class RunConfigMeasurement:
             the tag, in this measurement, None
             if tag not found.
         """
+        # FIXME: Should be checking for GPU metric first!
         return [
             model_config_measurement.get_metric(tag)
             for model_config_measurement in self._model_config_measurements
