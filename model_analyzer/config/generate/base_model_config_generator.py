@@ -120,7 +120,15 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         if param_combo is not None:
             for key, value in param_combo.items():
                 if value is not None:
-                    model_config_dict[key] = value
+
+                    # Only overwrite the specified subkeys, not the entire dict if it
+                    # already existed in the default config
+                    if type(model_config_dict.get(key, None)) is dict:
+                        for subkey, subvalue in value.items():
+                            model_config_dict[key][subkey] = subvalue
+                    else:
+                        model_config_dict[key] = value
+
                     if value == {}:
                         logger.info(f"  Enabling {key}")
                     else:
