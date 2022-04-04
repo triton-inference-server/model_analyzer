@@ -199,7 +199,7 @@ class ReportManager:
         if self._config.num_top_model_configs:
             for result in self._result_manager.top_n_results(
                     n=self._config.num_top_model_configs):
-                model_config = result.model_config()
+                model_config = result.model_configs()[0]
                 for measurement in result.top_n_measurements(n=1):
                     self._summary_data[TOP_MODELS_REPORT_KEY].append(
                         (model_config, measurement))
