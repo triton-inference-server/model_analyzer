@@ -153,8 +153,8 @@ class PerfAnalyzerConfig:
 
     def extract_model_specific_parameters(self):
         """
-        Returns a dictionary of parameters (options+args) that can change
-        between models for a given RunConfig
+        Returns a dictionary of the parameters (options+args) that can change
+        between the models (in a ModelRunConfig) within a RunConfig
         Returns
         -------
         dict

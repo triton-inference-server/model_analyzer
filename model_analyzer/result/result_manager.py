@@ -202,7 +202,7 @@ class ResultManager:
                     for gpu_metric in gpu_metrics:
                         if gpu_metric.tag not in gpu_specific_metrics_from_measurements:
                             gpu_specific_metrics_from_measurements[
-                                gpu_metric[0]] = gpu_metric
+                                gpu_metric.tag] = gpu_metric
 
                 for non_gpu_metric_list in run_config_measurement.non_gpu_data(
                 ):
