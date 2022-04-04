@@ -328,7 +328,7 @@ class ResultManager:
                     run_config_result)
                 self._across_model_sorted_results.add_result(run_config_result)
 
-    def get_model_config_measurements(self, model_config_name):
+    def get_model_configs_run_config_measurements(self, model_config_name):
         """
         Unsorted list of RunConfigMeasurements for a config
 
@@ -463,8 +463,8 @@ class ResultManager:
         # FIXME-MM: Need to add accessor function to extract the PA parameters
         model_specific_pa_params = run_config_measurement._model_config_measurements[
             0].model_specific_pa_params()
-        batch_size = model_specific_pa_params['batch_size']
-        concurrency = model_specific_pa_params['concurrency']
+        batch_size = model_specific_pa_params['batch-size']
+        concurrency = model_specific_pa_params['concurrency-range']
 
         satisfies = "Yes" if passes else "No"
 

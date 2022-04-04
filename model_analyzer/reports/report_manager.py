@@ -217,7 +217,7 @@ class ReportManager:
 
         for model_config_name in model_config_names:
             self._detailed_report_data[
-                model_config_name] = self._result_manager.get_model_config_measurements(
+                model_config_name] = self._result_manager.get_model_configs_run_config_measurements(
                     model_config_name)
 
     def _build_detailed_report(self, report_model_config):

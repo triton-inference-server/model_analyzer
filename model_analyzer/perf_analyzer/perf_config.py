@@ -162,8 +162,8 @@ class PerfAnalyzerConfig:
         """
 
         return {
-            'batch_size': self._options['-b'],
-            'concurrency': self._args['concurrency-range']
+            'batch-size': self._options['-b'],
+            'concurrency-range': self._args['concurrency-range']
         }
 
     @classmethod

@@ -27,7 +27,10 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
 
     def setUp(self):
         self.model_config_name = "modelA"
-        self.model_specific_pa_params = {"batch_size": 1, "concurrency": 1}
+        self.model_specific_pa_params = {
+            "batch_size": 1,
+            "concurrency-range": 1
+        }
 
         self.non_gpu_metric_values = {
             "perf_throughput": 1000,

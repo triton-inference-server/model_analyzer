@@ -143,14 +143,15 @@ class PlotManager:
             model_config_name = model.model_config_name()
             self._detailed_plots[model_config_name] = DetailedPlot(
                 f'latency_breakdown', 'Online Performance')
-            model_config, measurements = self._result_manager.get_model_config_measurements(
+            model_config, run_config_measurements = self._result_manager.get_model_configs_run_config_measurements(
                 model_config_name)
 
             # If model_config_name was present in results
-            if measurements:
-                for measurement in measurements:
-                    self._detailed_plots[model_config_name].add_measurement(
-                        measurement)
+            if run_config_measurements:
+                for run_config_measurement in run_config_measurements:
+                    self._detailed_plots[
+                        model_config_name].add_run_config_measurement(
+                            run_config_measurement)
                 self._detailed_plots[model_config_name].plot_data()
 
             # Create the simple plots for the detailed reports
@@ -159,10 +160,11 @@ class PlotManager:
                         plot_config.y_axis().startswith('gpu_') or
                         plot_config.x_axis().startswith('gpu_')):
                     continue
-                self._create_update_simple_plot(plots_key=model_config_name,
-                                                plot_config=plot_config,
-                                                measurements=measurements,
-                                                constraints=None)
+                self._create_update_simple_plot(
+                    plots_key=model_config_name,
+                    plot_config=plot_config,
+                    run_config_measurements=run_config_measurements,
+                    constraints=None)
 
     def export_summary_plots(self):
         """
