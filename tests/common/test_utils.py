@@ -81,6 +81,25 @@ def convert_gpu_metrics_to_data(gpu_metric_values):
     return gpu_data
 
 
+def convert_avg_gpu_metrics_to_data(avg_gpu_metric_values):
+    """
+    Avg GPU data will be a dict of Records
+    
+    Parameters
+    ----------
+    gpu_metric_values: dict of gpu metrics
+    """
+    avg_gpu_data = {}
+    avg_gpu_metric_tags = list(avg_gpu_metric_values.keys())
+
+    for i, avg_gpu_metric in enumerate(
+            MetricsManager.get_metric_types(avg_gpu_metric_tags)):
+        avg_gpu_data[avg_gpu_metric_tags[i]] = avg_gpu_metric(
+            value=avg_gpu_metric_values[avg_gpu_metric_tags[i]])
+
+    return avg_gpu_data
+
+
 def construct_perf_analyzer_config(model_name='my-model',
                                    output_file_name='my-model',
                                    batch_size=DEFAULT_BATCH_SIZES,

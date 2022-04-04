@@ -47,6 +47,7 @@ class RunConfigMeasurement:
 
         self._gpu_data = gpu_data
         self._avg_gpu_data = self._average_list(list(self._gpu_data.values()))
+        self._avg_gpu_data_from_tag = self._get_avg_gpu_data_from_tag()
 
         self._model_config_measurements = []
         self._model_config_weights = []
@@ -63,6 +64,9 @@ class RunConfigMeasurement:
         run_config_measurement._avg_gpu_data = cls._average_list(
             run_config_measurement,
             list(run_config_measurement._gpu_data.values()))
+
+        run_config_measurement._avg_gpu_data_from_tag = cls._get_avg_gpu_data_from_tag(
+            run_config_measurement)
 
         run_config_measurement._model_config_measurements = cls._deserialize_model_config_measurements(
             run_config_measurement,
@@ -162,8 +166,13 @@ class RunConfigMeasurement:
             for model_config_measurement in self._model_config_measurements
         ]
 
+    # FIXME-MM: We need to break this into GPU vs. non-GPU get metric calls
     def get_metric(self, tag):
         """
+        Returns the Records associated with this metric,
+        for GPU data this is a list of Records,
+        for non-GPU data there is one list per model
+        
         Parameters
         ----------
         tag : str
@@ -172,16 +181,21 @@ class RunConfigMeasurement:
 
         Returns
         -------
-        per model list of Records
+        GPU data:     list of   list of Records
+        non-GPU data: per model list of Records
             metric Record corresponding to
-            the tag, in this measurement, None
-            if tag not found.
+            the tag, in this measurement, 
+            None if tag not found.
         """
-        # FIXME: Should be checking for GPU metric first!
-        return [
-            model_config_measurement.get_metric(tag)
-            for model_config_measurement in self._model_config_measurements
-        ]
+
+        if tag in self._avg_gpu_data_from_tag:
+            return [self._avg_gpu_data_from_tag[tag]]
+        else:
+            # Non-GPU metrics
+            return [
+                model_config_measurement.get_metric(tag)
+                for model_config_measurement in self._model_config_measurements
+            ]
 
     def get_weighted_metric(self, tag):
         """
@@ -389,6 +403,9 @@ class RunConfigMeasurement:
             gpu_data[gpu_uuid] = metric_list
 
         return gpu_data
+
+    def _get_avg_gpu_data_from_tag(self):
+        return {type(metric).tag: metric for metric in self._avg_gpu_data}
 
     def _deserialize_model_config_measurements(
             self, serialized_model_config_measurements):
