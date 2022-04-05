@@ -24,6 +24,7 @@ from .mocks.mock_config import MockConfig
 from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
 from unittest.mock import MagicMock
+from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 
 
 class TestModelConfigGenerator(trc.TestResultCollector):
@@ -394,6 +395,191 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
         self._run_and_test_model_config_generator(yaml_content,
                                                   expected_configs)
+
+    def test_search_subparameter(self):
+        ''' 
+        Test that if a subparameter is swept, that it will not overwrite other subparameters
+
+        Param2 should exist in all results despite the fact that param1 is the one being swept.
+        Also, gpu_execution_accelerator (a nested subproperty) should still exist despite a 
+        sibling property (cpu_execution_accelerator) being overwritten
+        '''
+
+        # yapf: disable
+        protobuf = """
+            max_batch_size: 4
+            instance_group [
+            {
+                kind: KIND_GPU
+                count: 1
+            }
+            ]
+            parameters [
+                {
+                    key: "param1"
+                    value: { string_value: "param1_value" }
+                },
+                {
+                    key: "param2"
+                    value: { string_value: "param2_value" }
+                }
+            ]            
+            optimization { execution_accelerators {
+                cpu_execution_accelerator : [ {
+                    name : "fake_cpu_accelerator"
+                }]
+                gpu_execution_accelerator : [ {
+                    name : "fake_gpu_accelerator"
+                }]                
+            }}            
+            """
+
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                my-model:
+                    model_config_parameters:
+                        optimization:
+                            execution_accelerators:
+                                cpu_execution_accelerator:
+                                - name: "new_cpu_accelerator"
+                        parameters:
+                            param1: 
+                                string_value: ["foo", "bar"]
+            """)
+
+        expected_configs = [
+            {
+                'optimization':
+                {
+                    'execution_accelerators':
+                    {
+                        'cpu_execution_accelerator': [{'name': 'fake_cpu_accelerator'}],
+                        'gpu_execution_accelerator': [{'name': 'fake_gpu_accelerator'}]
+                    }
+                },
+                'parameters':
+                {
+                    'param1': {'string_value': 'param1_value'},
+                    'param2': {'string_value': 'param2_value'}
+                },
+                'max_batch_size': 4,
+                'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]
+            },
+            {
+                'optimization':
+                {
+                    'execution_accelerators':
+                    {
+                        'cpu_execution_accelerator': [{'name': 'new_cpu_accelerator'}],
+                        'gpu_execution_accelerator': [{'name': 'fake_gpu_accelerator'}]
+                    }
+                },
+                'parameters':
+                {
+                    'param1': {'string_value': 'foo'},
+                    'param2': {'string_value': 'param2_value'}
+                },
+                'max_batch_size': 4,
+                'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]
+            },
+            {
+                'optimization':
+                {
+                    'execution_accelerators':
+                    {
+                        'cpu_execution_accelerator': [{'name': 'new_cpu_accelerator'}],
+                        'gpu_execution_accelerator': [{'name': 'fake_gpu_accelerator'}]
+                    }
+                },
+                'parameters':
+                {
+                    'param1': {'string_value': 'bar'},
+                    'param2': {'string_value': 'param2_value'}
+                },
+                'max_batch_size': 4,
+                'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]
+            },
+        ]
+        # yapf: enable
+
+        self._run_and_test_model_config_generator(yaml_content,
+                                                  expected_configs, protobuf)
+
+    def test_search_dynamic_batching_subparameter(self):
+        ''' 
+        Test that if dynamic batching was already on with subparameters, they will not be overwritten in automatic search
+
+        Normally automatic search just turns on dynamic_batching, but in this case dynamic_batching is already
+        on in the user's default model config with a value for max_queue_delay_microseconds. That value should remain
+        unchanged in all model configs generated by the manual search
+        '''
+
+        # yapf: disable
+        protobuf = """
+            max_batch_size: 4
+            instance_group [
+            {
+                kind: KIND_GPU
+                count: 1
+            }
+            ]
+            dynamic_batching {
+                max_queue_delay_microseconds: 100
+            }
+            """
+
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_instance_count: 4
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
+            profile_models:
+                - my-model
+            """)
+
+        expected_configs = [
+            {'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': { 'max_queue_delay_microseconds': '100'}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}],'dynamic_batching': { 'max_queue_delay_microseconds': '100'}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': { 'max_queue_delay_microseconds': '100'}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}],'dynamic_batching': { 'max_queue_delay_microseconds': '100'}},
+            {'max_batch_size': 4, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': { 'max_queue_delay_microseconds': '100'}}
+        ]
+        # yapf: enable
+
+        self._run_and_test_model_config_generator(yaml_content,
+                                                  expected_configs, protobuf)
+
+    def test_apply_value_to_dict(self):
+        ''' 
+        Test different combinations of input and existing value types for apply_value_to_dict()
+        '''
+        # Both input and existing are scalar value in a dict
+        existing_dict = {'a': 1, 'b': 2}
+        expected_dict = {'a': 3, 'b': 2}
+        BaseModelConfigGenerator._apply_value_to_dict('a', 3, existing_dict)
+        self.assertEqual(existing_dict, expected_dict)
+
+        # Input is scalar, existing is dict
+        existing_dict = {'a': 1, 'b': {'c': 5, 'd': 6}}
+        expected_dict = {'a': 1, 'b': 2}
+        BaseModelConfigGenerator._apply_value_to_dict('b', 2, existing_dict)
+        self.assertEqual(existing_dict, expected_dict)
+
+        # Input is dict, existing is scalar
+        existing_dict = {'a': 1, 'b': 3}
+        expected_dict = {'a': 1, 'b': {'c': 7, 'd': 8}}
+        BaseModelConfigGenerator._apply_value_to_dict('b', {
+            'c': 7,
+            'd': 8
+        }, existing_dict)
+        self.assertEqual(existing_dict, expected_dict)
+
+        # Input and dict are both dicts
+        existing_dict = {'a': 1, 'b': {'c': {'e': 9, 'f': 10}, 'd': 6}}
+        expected_dict = {'a': 1, 'b': {'c': {'e': 11, 'f': 10}, 'd': 6}}
+        BaseModelConfigGenerator._apply_value_to_dict('b', {'c': {
+            'e': 11
+        }}, existing_dict)
+        self.assertEqual(existing_dict, expected_dict)
 
     def _run_and_test_model_config_generator(self,
                                              yaml_content,
