@@ -120,14 +120,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         if param_combo is not None:
             for key, value in param_combo.items():
                 if value is not None:
-
-                    # Only overwrite the specified subkeys, not the entire dict if it
-                    # already existed in the default config
-                    if type(model_config_dict.get(key, None)) is dict:
-                        for subkey, subvalue in value.items():
-                            model_config_dict[key][subkey] = subvalue
-                    else:
-                        model_config_dict[key] = value
+                    self._apply_value_to_dict(key, value, model_config_dict)
 
                     if value == {}:
                         logger.info(f"  Enabling {key}")
@@ -143,3 +136,20 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         config = ModelConfig.create_from_file(
             f'{self._model_repository}/{self._base_model_name}')
         return config.get_config()
+
+    @staticmethod
+    def _apply_value_to_dict(key, value, dict_in):
+        """
+        Apply the supplied value at the given key into the provided dict.
+        
+        If the key already exists in the dict and both the existing value as well
+        as the new input value are dicts, only overwrite the subkeys (recursively)
+        provided in the value
+        """
+
+        if type(dict_in.get(key, None)) is dict and type(value) is dict:
+            for subkey, subvalue in value.items():
+                BaseModelConfigGenerator._apply_value_to_dict(
+                    subkey, subvalue, dict_in.get(key, None))
+        else:
+            dict_in[key] = value
