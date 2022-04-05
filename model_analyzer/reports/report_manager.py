@@ -189,7 +189,7 @@ class ReportManager:
                 n=self._config.num_configs_per_model,
                 include_default=True)
 
-            # FIXME-MM: This needs to be updated because there will be multiple model configs
+            # TODO-TMA-568: This needs to be updated because there will be multiple model configs
             for result in top_results:
                 model_config = result.model_configs()[0]
                 for measurement in result.top_n_measurements(n=1):
@@ -502,7 +502,7 @@ class ReportManager:
         if not cpu_only:
             for measurement in measurements:
                 row = [
-                    # FIXME-MM: Need accessor function for PA Params
+                    # TODO-TMA-559: Need accessor function for PA Params
                     measurement._model_config_measurements[0].
                     _model_specific_pa_params[first_column_tag],
                     measurement.get_metric_value('perf_latency_p99'),

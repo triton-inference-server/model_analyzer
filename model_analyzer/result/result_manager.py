@@ -294,7 +294,7 @@ class ResultManager:
         comparators = {}
         constraints = {}
         for model in self._config.analysis_models:
-            # FIXME-MM: Making a list for now, but objectives() should return a list of objectives
+            # TODO-TMA-570: Making a list for now, but objectives() should return a list of objectives
             # (one per model)
             comparators[model.model_name()] = RunConfigResultComparator(
                 metric_objectives_list=[model.objectives()])
@@ -310,7 +310,7 @@ class ResultManager:
         for model_name in analysis_model_names:
             model_measurements = results.get_model_measurements_dict(model_name)
 
-            # FIXME-MM: Model config should be a list
+            # TODO-TMA-570: Model config should be a list
             for (model_config,
                  run_config_measurements) in model_measurements.values():
                 run_config_result = RunConfigResult(
@@ -424,7 +424,7 @@ class ResultManager:
         table
         """
 
-        # FIXME-MM: This needs to be updated because there will be multiple model configs
+        # TODO-TMA-570: This needs to be updated because there will be multiple model configs
         model_name = run_config_result.model_name()
         instance_group = run_config_result.model_configs(
         )[0].instance_group_string()
@@ -458,11 +458,11 @@ class ResultManager:
         table
         """
 
-        # FIXME-MM: This needs to be updated because there will be multiple model configs
+        # TODO-TMA-570: This needs to be updated because there will be multiple model configs
         model_config_name = run_config_measurement._model_config_measurements[
             0].model_config_name()
 
-        # FIXME-MM: Need to add accessor function to extract the PA parameters
+        # TODO-TMA-570: Need to add accessor function to extract the PA parameters
         model_specific_pa_params = run_config_measurement._model_config_measurements[
             0].model_specific_pa_params()
         batch_size = model_specific_pa_params['batch-size']
@@ -477,7 +477,7 @@ class ResultManager:
             model_config_name, dynamic_batching, instance_group,
             backend_parameters)
 
-        # FIXME-MM: This needs to be examined for correctness
+        # TODO-TMA-570: This needs to be examined for correctness
         for metric_list in run_config_measurement.non_gpu_data():
             for metric in metric_list:
                 metric_tag_index = self._find_index_for_field(
@@ -766,7 +766,7 @@ class ResultManager:
         if not model_name:
             return
 
-        # FIXME-MM: This logic needs to be changed for multi-model
+        # TODO-TMA-570: This logic needs to be changed for multi-model
         for run_config_result in results:
             if run_config_result.model_configs()[0].get_field(
                     'name') == f"{model_name}_config_default":

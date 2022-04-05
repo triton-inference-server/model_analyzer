@@ -87,7 +87,7 @@ class RunConfigResultComparator:
             aggregated_run_config_measurement = aggregation_func(
                 run_config_result.run_config_measurements())
 
-        # FIXME-MM: Placeholder - Need to add proper model weighting support
+        # TODO-TMA-571: Need to add proper model weighting support
         aggregated_run_config_measurement.set_model_config_weighting([1])
         aggregated_run_config_measurement.set_metric_weightings(
             self._metric_weights)

@@ -277,7 +277,7 @@ def construct_run_config_result(avg_gpu_metric_values,
             key: non_gpu_metric_values[key][i] for key in non_gpu_metric_values
         }
 
-        # FIXME-MM: Needs enhancement to support model_config_weights
+        # TODO-TMA-571: Needs enhancement to support model_config_weights
         run_config_result.add_run_config_measurement(
             construct_run_config_measurement(
                 model_name=model_name,

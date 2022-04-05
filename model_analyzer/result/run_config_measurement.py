@@ -166,7 +166,7 @@ class RunConfigMeasurement:
             for model_config_measurement in self._model_config_measurements
         ]
 
-    # FIXME-MM: We need to break this into GPU vs. non-GPU get metric calls
+    # TODO-TMA-560: We need to break this into GPU vs. non-GPU get metric calls
     def get_metric(self, tag):
         """
         Returns the Records associated with this metric,

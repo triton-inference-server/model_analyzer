@@ -22,7 +22,7 @@ from unittest.mock import MagicMock
 
 class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
 
-    #TODO-MM: Add unit testing for multi-model scenarios
+    #TODO-TMA-562: Add unit testing for multi-model scenarios
     def test_compare_run_config_results(self):
 
         # First test where throughput drives comparison

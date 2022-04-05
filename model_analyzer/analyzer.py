@@ -274,7 +274,7 @@ class Analyzer:
         return report_command_string
 
     def _get_top_n_model_config_names(self, n=-1):
-        # FIXME-MM: This needs to be updated because there will be multiple model configs
+        # TODO-TMA-572: This needs to be updated because there will be multiple model configs
         return [
             x.model_configs()[0].get_config()['name']
             for x in self._result_manager.top_n_results(n=n)

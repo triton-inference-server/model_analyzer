@@ -78,20 +78,22 @@ class SimplePlot:
             self._data[model_config_label] = defaultdict(list)
 
         if self._x_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
-            # FIXME: get_parameter no longer exists - need a new function that takes in the model config name/key + PA parameter and returns the value
+            # TODO-TMA-559: get_parameter no longer exists
             self._data[model_config_label]['x_data'].append(
                 run_config_measurement.get_parameter(
                     tag=self._x_axis.replace('_', '-')))
         else:
+            # TODO-TMA-566: replace with get_metric_gpu/non_gpu_value()
             self._data[model_config_label]['x_data'].append(
                 run_config_measurement.get_metric_value(tag=self._x_axis))
 
         if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
-            # FIXME: get_parameter no longer exists
+            # TODO-TMA-559: get_parameter no longer exists
             self._data[model_config_label]['y_data'].append(
                 run_config_measurement.get_parameter(
                     tag=self._y_axis.replace('_', '-')))
         else:
+            # TODO-TMA-566: replace with get_metric_gpu/non_gpu_value()
             self._data[model_config_label]['y_data'].append(
                 run_config_measurement.get_metric_value(tag=self._y_axis))
 
