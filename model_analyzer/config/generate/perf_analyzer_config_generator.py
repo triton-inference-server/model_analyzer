@@ -59,6 +59,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._curr_config_index = 0
         self._configs = []
         self._concurrency_warning_printed = False
+        self._auto_sweep_concurrencies = False
 
         # Flag to indicate we have started to return results
         #
@@ -73,7 +74,6 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._batch_sizes = model_parameters['batch_sizes']
         self._concurrencies = self._create_concurrency_list(
             cli_config, model_parameters)
-        self._auto_sweep_concurrencies = False
         self._client_protocol_is_http = (cli_config.client_protocol == 'http')
         self._launch_mode_is_c_api = (cli_config.triton_launch_mode == 'c_api')
         self._triton_install_path = cli_config.triton_install_path
