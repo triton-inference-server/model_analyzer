@@ -81,6 +81,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
             constraints:
               perf_latency_p99:
                 max: 100
+              gpu_used_memory:
+                max: 10000
         """)
         config = self._evaluate_config(args, yaml_content)
         state_manager = AnalyzerStateManager(config=config, server=None)
