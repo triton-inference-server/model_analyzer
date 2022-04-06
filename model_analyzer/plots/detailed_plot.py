@@ -115,7 +115,7 @@ class DetailedPlot:
             be plotted.
         """
 
-        # FIXME: get_parameter no longer exists - need a new function that takes in the model config name/key + PA parameter and returns the value
+        # TODO-TMA-559: Need accessor function for PA params
         self._data['concurrency'].append(
             run_config_measurement._model_config_measurements[0].
             _model_specific_pa_params['concurrency-range'])

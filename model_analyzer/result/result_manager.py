@@ -772,6 +772,7 @@ class ResultManager:
                     'name') == f"{model_name}_config_default":
                 return
 
+        # TODO-TMA-570: This logic needs to be changed for multi-model
         for result in result_heap.results():
             if result.model_configs()[0].get_field(
                     'name') == f"{model_name}_config_default":

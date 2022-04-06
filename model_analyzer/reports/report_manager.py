@@ -196,6 +196,7 @@ class ReportManager:
                     self._summary_data[model_name].append(
                         (model_config, measurement))
 
+        # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         if self._config.num_top_model_configs:
             for result in self._result_manager.top_n_results(
                     n=self._config.num_top_model_configs):
@@ -519,6 +520,7 @@ class ReportManager:
         else:
             for measurement in measurements:
                 row = [
+                    # TODO-TMA-559: Need accessor function for PA Params
                     measurement._model_config_measurements[0].
                     _model_specific_pa_params[first_column_tag],
                     measurement.get_metric_value('perf_latency_p99'),
