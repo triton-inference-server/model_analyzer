@@ -62,7 +62,7 @@ class ConstraintManager:
         """
 
         if constraints:
-            for model_metrics in run_config_measurement.non_gpu_data():
+            for model_metrics in run_config_measurement.data():
                 for metric in model_metrics:
                     if type(metric).tag in constraints:
                         constraint = constraints[type(metric).tag]
