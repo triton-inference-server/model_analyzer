@@ -73,7 +73,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._batch_sizes = model_parameters['batch_sizes']
         self._concurrencies = self._create_concurrency_list(
             cli_config, model_parameters)
-
+        self._auto_sweep_concurrencies = False
         self._client_protocol_is_http = (cli_config.client_protocol == 'http')
         self._launch_mode_is_c_api = (cli_config.triton_launch_mode == 'c_api')
         self._triton_install_path = cli_config.triton_install_path
@@ -117,6 +117,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         elif cli_config.run_config_search_disable:
             return [1]
         else:
+            self._auto_sweep_concurrencies = True
             return utils.generate_doubled_list(
                 cli_config.run_config_search_min_concurrency,
                 cli_config.run_config_search_max_concurrency)
@@ -191,7 +192,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _done_walking_concurrencies(self):
         if len(self._concurrencies) == self._curr_concurrency_index + 1:
             return True
-        if not self._throughput_gain_valid():
+        if self._auto_sweep_concurrencies and not self._throughput_gain_valid():
             if not self._concurrency_warning_printed:
                 logger.info(
                     "No longer increasing concurrency as throughput has plateaued"
