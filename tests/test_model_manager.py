@@ -604,6 +604,48 @@ class TestModelManager(trc.TestResultCollector):
             mock_method.return_value = 1
             self._test_model_manager(yaml_content, expected_ranges)
 
+    def test_no_early_exit_if_not_auto_search(self):
+        """
+        Test that there is NOT an early backoff when sweeping concurrency if not in auto sweep mode
+
+        This test hardcodes the 'throughput' to 1, so for all model
+        configs the gain will be invalid. However, it should still sweep
+        to concurrency of 128 due to the fact that it was manually specified instead 
+        of an auto-search
+        """
+
+        expected_ranges = [{
+            'instances': [1, 2],
+            'kind': ["KIND_GPU"],
+            'batching': [0],
+            'batch_sizes': [1, 2],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1, 2],
+            'max_batch_size': [8],
+            'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
+        }]
+
+        yaml_content = convert_to_bytes("""
+            profile_models: test_model
+            run_config_search_max_concurrency: 128
+            run_config_search_max_instance_count: 2
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
+            run_config_search_disable: False
+            batch_sizes: 1,2
+            concurrency: 1,2,4,8,16,32,64,128
+            """)
+
+        with patch.object(MetricsManagerSubclass,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.return_value = 1
+            self._test_model_manager(yaml_content, expected_ranges)
+
     def test_throughput_early_exit(self):
         """
         Test that there is an early backoff when sweeping concurrency
