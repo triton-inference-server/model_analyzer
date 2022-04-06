@@ -166,7 +166,45 @@ class RunConfigMeasurement:
             for model_config_measurement in self._model_config_measurements
         ]
 
-    # TODO-TMA-560: We need to break this into GPU vs. non-GPU get metric calls
+    def get_gpu_metric(self, tag):
+        """
+        Returns the Records associated with this GPU metric
+        
+        Parameters
+        ----------
+        tag : str
+            A human readable tag that corresponds
+            to a particular GPU metric
+
+        Returns
+        -------
+        list:
+            of GPU metric Records, or None if tag not found
+        """
+        return self._avg_gpu_data_from_tag[tag]
+
+    def get_non_gpu_metric(self, tag):
+        """
+        Returns the Records associated with this non-GPU metric
+        
+        Parameters
+        ----------
+        tag : str
+            A human readable tag that corresponds
+            to a particular metric
+
+        Returns
+        -------
+        list:
+            of per model list:
+                of non-GPU metric Records, or None if tag not found
+        """
+        return [
+            model_config_measurement.get_metric(tag)
+            for model_config_measurement in self._model_config_measurements
+        ]
+
+    #TODO-TMA-569: Remove this function
     def get_metric(self, tag):
         """
         Returns the Records associated with this metric,

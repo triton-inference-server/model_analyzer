@@ -82,6 +82,36 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         self.assertEqual(self.rcm0.gpus_used(), ['0', '1'])
 
+    def test_get_gpu_metric(self):
+        """
+        Test that the gpu metric data is correct
+        """
+        avg_gpu_data = convert_avg_gpu_metrics_to_data(
+            self.avg_gpu_metric_values)
+
+        self.assertEqual(self.rcm0.get_gpu_metric("gpu_used_memory"),
+                         avg_gpu_data["gpu_used_memory"])
+
+        self.assertEqual(self.rcm0.get_gpu_metric("gpu_utilization"),
+                         avg_gpu_data["gpu_utilization"])
+
+    def test_get_non_gpu_metric(self):
+        """
+        Test that the non-gpu metric data is correct
+        """
+        non_gpu_data = [
+            convert_non_gpu_metrics_to_data(non_gpu_metric_value)
+            for non_gpu_metric_value in self.rcm0_non_gpu_metric_values
+        ]
+
+        self.assertEqual(self.rcm0.get_non_gpu_metric("perf_throughput"),
+                         [non_gpu_data[0][0], non_gpu_data[1][0]])
+        self.assertEqual(self.rcm0.get_non_gpu_metric("perf_latency_p99"),
+                         [non_gpu_data[0][1], non_gpu_data[1][1]])
+        self.assertEqual(self.rcm0.get_non_gpu_metric("cpu_used_ram"),
+                         [non_gpu_data[0][2], non_gpu_data[1][2]])
+
+    #TODO-TMA-569: Remove this test
     def test_get_metric_non_gpu(self):
         """
         Test that the non-gpu metric data is correct
@@ -98,6 +128,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(self.rcm0.get_metric("cpu_used_ram"),
                          [non_gpu_data[0][2], non_gpu_data[1][2]])
 
+    #TODO-TMA-569: Remove this test
     def test_get_metric_gpu(self):
         """
         Test that the gpu metric data is correct
