@@ -24,7 +24,7 @@ from model_analyzer.monitor.remote_monitor import RemoteMonitor
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
-from model_analyzer.result.measurement import Measurement
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.results import Results
 
 from collections import defaultdict
@@ -365,13 +365,25 @@ class MetricsManager:
         model_non_gpu_metrics = list(perf_analyzer_metrics.values()) + list(
             model_cpu_metrics.values())
 
-        measurement = None
+        run_config_measurement = None
         if model_gpu_metrics is not None and model_non_gpu_metrics is not None:
-            measurement = Measurement(gpu_data=model_gpu_metrics,
-                                      non_gpu_data=model_non_gpu_metrics,
-                                      perf_config=perf_config)
-            self._result_manager.add_measurement(model_run_config, measurement)
-        return measurement
+
+            run_config_measurement = RunConfigMeasurement(
+                run_config.representation(), model_gpu_metrics)
+
+            # FIXME: TMA-518 - this needs to be added per model
+            model_specific_pa_params = perf_config.extract_model_specific_parameters(
+            )
+
+            run_config_measurement.add_model_config_measurement(
+                perf_config['model-name'], model_specific_pa_params,
+                model_non_gpu_metrics)
+
+            # FIXME: TMA-518 this should be taking the run_config (multiple model_run_configs will be extracted)
+            self._result_manager.add_run_config_measurement(
+                model_run_config, run_config_measurement)
+
+        return run_config_measurement
 
     def _start_monitors(self, cpu_only=False):
         """

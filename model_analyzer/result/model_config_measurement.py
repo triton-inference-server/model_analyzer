@@ -47,9 +47,7 @@ class ModelConfigMeasurement:
         self._model_specific_pa_params = model_specific_pa_params
         self._non_gpu_data = non_gpu_data
 
-        self._non_gpu_data_from_tag = {
-            type(metric).tag: metric for metric in self._non_gpu_data
-        }
+        self._non_gpu_data_from_tag = self._get_non_gpu_data_from_tag()
 
         self._metric_weights = {}
 
@@ -61,10 +59,13 @@ class ModelConfigMeasurement:
             '_model_config_name']
         model_config_measurement._model_specific_pa_params = model_config_measurement_dict[
             '_model_specific_pa_params']
-        model_config_measurement._non_gpu_data = model_config_measurement_dict[
-            '_non_gpu_data']
-        model_config_measurement._non_gpu_data_from_tag = model_config_measurement_dict[
-            '_non_gpu_data_from_tag']
+
+        model_config_measurement._non_gpu_data = cls._deserialize_non_gpu_data(
+            model_config_measurement,
+            model_config_measurement_dict['_non_gpu_data'])
+
+        model_config_measurement._non_gpu_data_from_tag = cls._get_non_gpu_data_from_tag(
+            model_config_measurement)
 
         return model_config_measurement
 
@@ -284,3 +285,16 @@ class ModelConfigMeasurement:
                                (metric_diff.value() / self_metric.value()))
 
         return weighted_score
+
+    def _get_non_gpu_data_from_tag(self):
+        return {type(metric).tag: metric for metric in self._non_gpu_data}
+
+    def _deserialize_non_gpu_data(self, serialized_non_gpu_data):
+        non_gpu_data = []
+
+        for [tag, record_dict] in serialized_non_gpu_data:
+            record_type = RecordType.get(tag)
+            record = record_type.from_dict(record_dict)
+            non_gpu_data.append(record)
+
+        return non_gpu_data

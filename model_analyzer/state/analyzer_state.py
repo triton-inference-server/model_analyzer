@@ -14,7 +14,6 @@
 
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.result.results import Results
-from model_analyzer.result.measurement import Measurement
 from model_analyzer.record.record import RecordType
 
 

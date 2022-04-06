@@ -20,8 +20,8 @@ from model_analyzer.model_analyzer_exceptions \
 
 from .result_heap import ResultHeap
 from .result_table import ResultTable
-from .result_comparator import ResultComparator
-from .model_result import ModelResult
+from .run_config_result_comparator import RunConfigResultComparator
+from .run_config_result import RunConfigResult
 from .results import Results
 
 import re
@@ -194,17 +194,22 @@ class ResultManager:
             # Measurements
             results = self._state_manager.get_state_variable(
                 "ResultManager.results")
-            for measurement in results.get_list_of_measurements():
-                for gpu_uuid, gpu_metrics in measurement.gpu_data().items():
+
+            for run_config_measurement in results.get_list_of_run_config_measurements(
+            ):
+                for gpu_uuid, gpu_metrics in run_config_measurement.gpu_data(
+                ).items():
                     for gpu_metric in gpu_metrics:
                         if gpu_metric.tag not in gpu_specific_metrics_from_measurements:
                             gpu_specific_metrics_from_measurements[
                                 gpu_metric.tag] = gpu_metric
 
-                for non_gpu_metric in measurement.non_gpu_data():
-                    if non_gpu_metric.tag not in non_gpu_specific_metrics_from_measurements:
-                        non_gpu_specific_metrics_from_measurements[
-                            non_gpu_metric.tag] = non_gpu_metric
+                for non_gpu_metric_list in run_config_measurement.non_gpu_data(
+                ):
+                    for non_gpu_metric in non_gpu_metric_list:
+                        if non_gpu_metric.tag not in non_gpu_specific_metrics_from_measurements:
+                            non_gpu_specific_metrics_from_measurements[
+                                non_gpu_metric.tag] = non_gpu_metric
 
         # Update not provided metric(s)
         if gpu_specific_metrics == None:
@@ -248,7 +253,10 @@ class ResultManager:
         self._state_manager.set_state_variable('ResultManager.server_only_data',
                                                data)
 
-    def add_measurement(self, model_run_config, measurement):
+    # FIXME: TMA-518 this should be taking the run_config
+    # and extracting the multiple model_run_config will be extracted
+    def add_run_config_measurement(self, model_run_config,
+                                   run_config_measurement):
         """
         This function adds model inference
         measurements to the required result
@@ -258,7 +266,7 @@ class ResultManager:
         model_run_config : ModelRunConfig
             Contains the parameters used to generate the measurment
             like the model name, model_config_name
-        measurement: Measurement
+        run_config_measurement: RunConfigMeasurement
             the measurement to be added
         """
 
@@ -266,7 +274,8 @@ class ResultManager:
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        results.add_measurement(model_run_config, measurement)
+        results.add_run_config_measurement(model_run_config,
+                                           run_config_measurement)
 
         # Use set_state_variable to record that state may have been changed
         self._state_manager.set_state_variable(name='ResultManager.results',
@@ -285,8 +294,10 @@ class ResultManager:
         comparators = {}
         constraints = {}
         for model in self._config.analysis_models:
-            comparators[model.model_name()] = ResultComparator(
-                metric_objectives=model.objectives())
+            # TODO-TMA-570: Making a list for now, but objectives() should return a list of objectives
+            # (one per model)
+            comparators[model.model_name()] = RunConfigResultComparator(
+                metric_objectives_list=[model.objectives()])
             constraints[model.model_name()] = model.constraints()
 
         # Construct and add results to individual result heaps as well as global result heap
@@ -299,25 +310,29 @@ class ResultManager:
         for model_name in analysis_model_names:
             model_measurements = results.get_model_measurements_dict(model_name)
 
-            for (model_config, measurements) in model_measurements.values():
-                model_result = ModelResult(model_name=model_name,
-                                           model_config=model_config,
-                                           comparator=comparators[model_name],
-                                           constraints=constraints[model_name])
+            # TODO-TMA-570: Model config should be a list
+            for (model_config,
+                 run_config_measurements) in model_measurements.values():
+                run_config_result = RunConfigResult(
+                    model_name=model_name,
+                    model_configs=[model_config],
+                    comparator=comparators[model_name],
+                    constraints=constraints[model_name])
 
-                for measurement in measurements.values():
-                    measurement.set_result_comparator(
-                        comparator=comparators[model_name])
+                for run_config_measurement in run_config_measurements.values():
+                    run_config_measurement.set_metric_weightings(
+                        comparators[model_name]._metric_weights)
 
-                    model_result.add_measurement(measurement)
+                    run_config_result.add_run_config_measurement(
+                        run_config_measurement)
 
                 self._per_model_sorted_results[model_name].add_result(
-                    model_result)
-                self._across_model_sorted_results.add_result(model_result)
+                    run_config_result)
+                self._across_model_sorted_results.add_result(run_config_result)
 
-    def get_model_config_measurements(self, model_config_name):
+    def get_model_configs_run_config_measurements(self, model_config_name):
         """
-        Unsorted list of measurements for a config
+        Unsorted list of RunConfigMeasurements for a config
 
         Parameters
         ----------
@@ -326,7 +341,7 @@ class ResultManager:
 
         Returns
         -------
-        (ModelConfig, list of Measurements)
+        (ModelConfig, list of RunConfigMeasurements)
             The measurements for a particular config, in the order
             they were obtained.
         """
@@ -372,7 +387,7 @@ class ResultManager:
             then n+1 results will be returned
         Returns
         -------
-        list of ModelResults
+        list of RunConfigResults
             The n best results for this model,
             must all be passing results
         """
@@ -402,21 +417,25 @@ class ResultManager:
             while not result_heap.empty():
                 self._tabulate_measurements(result_heap.next_best_result())
 
-    def _tabulate_measurements(self, result):
+    def _tabulate_measurements(self, run_config_result):
         """
-        checks measurement against constraints,
-        and puts it into the correct (passing or failing)
+        checks RunConfigMeasurements against constraints,
+        and puts them into the correct (passing or failing)
         table
         """
 
-        model_name = result.model_name()
-        instance_group = result.model_config().instance_group_string()
-        dynamic_batching = result.model_config().dynamic_batching_string()
-        cpu_only = result.model_config().cpu_only()
-        backend_parameters = result.model_config()._model_config.parameters
+        # TODO-TMA-570: This needs to be updated because there will be multiple model configs
+        model_name = run_config_result.model_name()
+        instance_group = run_config_result.model_configs(
+        )[0].instance_group_string()
+        dynamic_batching = run_config_result.model_configs(
+        )[0].dynamic_batching_string()
+        cpu_only = run_config_result.model_configs()[0].cpu_only()
+        backend_parameters = run_config_result.model_configs(
+        )[0]._model_config.parameters
 
-        passing_measurements = result.passing_measurements()
-        failing_measurements = result.failing_measurements()
+        passing_measurements = run_config_result.passing_measurements()
+        failing_measurements = run_config_result.failing_measurements()
 
         for (measurements, passes) in [(passing_measurements, True),
                                        (failing_measurements, False)]:
@@ -426,53 +445,57 @@ class ResultManager:
                     model_name=model_name,
                     instance_group=instance_group,
                     dynamic_batching=dynamic_batching,
-                    measurement=next_best_measurement,
+                    run_config_measurement=next_best_measurement,
                     passes=passes,
                     cpu_only=cpu_only,
                     backend_parameters=backend_parameters)
 
     def _tabulate_measurement(self, model_name, instance_group,
-                              dynamic_batching, measurement, passes, cpu_only,
-                              backend_parameters):
+                              dynamic_batching, run_config_measurement, passes,
+                              cpu_only, backend_parameters):
         """
-        Add a single measurement to the specified
+        Add a single RunConfigMeasurement to the specified
         table
         """
 
-        perf_config = measurement.perf_config()
-        tmp_model_name = perf_config['model-name']
-        batch_size = perf_config['batch-size']
-        concurrency = perf_config['concurrency-range']
+        # TODO-TMA-570: This needs to be updated because there will be multiple model configs
+        model_config_name = run_config_measurement._model_config_measurements[
+            0].model_config_name()
+
+        # TODO-TMA-570: Need to add accessor function to extract the PA parameters
+        model_specific_pa_params = run_config_measurement._model_config_measurements[
+            0].model_specific_pa_params()
+        batch_size = model_specific_pa_params['batch-size']
+        concurrency = model_specific_pa_params['concurrency-range']
+
         satisfies = "Yes" if passes else "No"
 
         # Non GPU specific data
         inference_fields = self._inference_output_fields
-        inference_row = self._get_common_row_items(inference_fields, batch_size,
-                                                   concurrency, satisfies,
-                                                   model_name, tmp_model_name,
-                                                   dynamic_batching,
-                                                   instance_group,
-                                                   backend_parameters)
+        inference_row = self._get_common_row_items(
+            inference_fields, batch_size, concurrency, satisfies, model_name,
+            model_config_name, dynamic_batching, instance_group,
+            backend_parameters)
 
-        for metric in measurement.non_gpu_data():
-            metric_tag_index = self._find_index_for_field(
-                inference_fields, metric.tag)
+        # TODO-TMA-570: This needs to be examined for correctness
+        for metric_list in run_config_measurement.non_gpu_data():
+            for metric in metric_list:
+                metric_tag_index = self._find_index_for_field(
+                    inference_fields, metric.tag)
 
-            if metric_tag_index is not None:
-                inference_row[metric_tag_index] = round(metric.value(), 1)
+                if metric_tag_index is not None:
+                    inference_row[metric_tag_index] = round(metric.value(), 1)
 
         self._result_tables[self.model_inference_table_key].insert_row_by_index(
             inference_row)
 
         # GPU specific data (only put measurement if not cpu only)
         if not cpu_only:
-            for gpu_uuid, metrics in measurement.gpu_data().items():
+            for gpu_uuid, metrics in run_config_measurement.gpu_data().items():
                 gpu_fields = self._gpu_output_fields
-                gpu_row = self._get_common_row_items(gpu_fields, batch_size,
-                                                     concurrency, satisfies,
-                                                     model_name, tmp_model_name,
-                                                     dynamic_batching,
-                                                     instance_group)
+                gpu_row = self._get_common_row_items(
+                    gpu_fields, batch_size, concurrency, satisfies, model_name,
+                    model_config_name, dynamic_batching, instance_group)
                 gpu_uuid_index = self._find_index_for_field(
                     gpu_fields, 'gpu_uuid')
                 if gpu_uuid_index is not None:
@@ -743,12 +766,15 @@ class ResultManager:
         if not model_name:
             return
 
-        for result in results:
-            if result.model_config().get_field(
+        # TODO-TMA-570: This logic needs to be changed for multi-model
+        for run_config_result in results:
+            if run_config_result.model_configs()[0].get_field(
                     'name') == f"{model_name}_config_default":
                 return
+
+        # TODO-TMA-570: This logic needs to be changed for multi-model
         for result in result_heap.results():
-            if result.model_config().get_field(
+            if result.model_configs()[0].get_field(
                     'name') == f"{model_name}_config_default":
                 results.append(result)
                 return

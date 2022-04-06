@@ -15,6 +15,7 @@
 import unittest
 from .common import test_result_collector as trc
 
+from .common.test_utils import construct_run_config_measurement
 from .mocks.mock_config import MockConfig
 from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_run_configs import MockRunConfigs
@@ -25,7 +26,6 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.model_manager import ModelManager
-from model_analyzer.result.measurement import Measurement
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
 from google.protobuf import json_format
@@ -65,11 +65,16 @@ class MetricsManagerSubclass(MetricsManager):
         if throughput_value is None:
             return None
         else:
-            perf_throughput = PerfThroughput(throughput_value)
-            non_gpu_data = [perf_throughput]
-            return Measurement(gpu_data=MagicMock(),
-                               non_gpu_data=non_gpu_data,
-                               perf_config=MagicMock())
+            return construct_run_config_measurement(
+                model_name=MagicMock(),
+                model_config_names=[MagicMock()],
+                model_specific_pa_params=MagicMock(),
+                gpu_metric_values=MagicMock(),
+                non_gpu_metric_values=[{
+                    "perf_throughput": throughput_value
+                }],
+                metric_objectives=MagicMock(),
+                model_config_weights=MagicMock())
 
     def _get_next_perf_throughput_value(self):
         self._perf_throughput *= 2

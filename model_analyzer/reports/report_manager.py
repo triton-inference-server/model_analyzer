@@ -189,16 +189,18 @@ class ReportManager:
                 n=self._config.num_configs_per_model,
                 include_default=True)
 
+            # TODO-TMA-568: This needs to be updated because there will be multiple model configs
             for result in top_results:
-                model_config = result.model_config()
+                model_config = result.model_configs()[0]
                 for measurement in result.top_n_measurements(n=1):
                     self._summary_data[model_name].append(
                         (model_config, measurement))
 
+        # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         if self._config.num_top_model_configs:
             for result in self._result_manager.top_n_results(
                     n=self._config.num_top_model_configs):
-                model_config = result.model_config()
+                model_config = result.model_configs()[0]
                 for measurement in result.top_n_measurements(n=1):
                     self._summary_data[TOP_MODELS_REPORT_KEY].append(
                         (model_config, measurement))
@@ -216,7 +218,7 @@ class ReportManager:
 
         for model_config_name in model_config_names:
             self._detailed_report_data[
-                model_config_name] = self._result_manager.get_model_config_measurements(
+                model_config_name] = self._result_manager.get_model_configs_run_config_measurements(
                     model_config_name)
 
     def _build_detailed_report(self, report_model_config):
@@ -497,12 +499,13 @@ class ReportManager:
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
             ],
                                          title="Detailed Table")
-
         # Construct table
         if not cpu_only:
             for measurement in measurements:
                 row = [
-                    measurement.get_parameter(first_column_tag),
+                    # TODO-TMA-559: Need accessor function for PA Params
+                    measurement._model_config_measurements[0].
+                    _model_specific_pa_params[first_column_tag],
                     measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_client_response_wait'),
                     measurement.get_metric_value('perf_server_queue'),
@@ -517,7 +520,9 @@ class ReportManager:
         else:
             for measurement in measurements:
                 row = [
-                    measurement.get_parameter(first_column_tag),
+                    # TODO-TMA-559: Need accessor function for PA Params
+                    measurement._model_config_measurements[0].
+                    _model_specific_pa_params[first_column_tag],
                     measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_client_response_wait'),
                     measurement.get_metric_value('perf_server_queue'),

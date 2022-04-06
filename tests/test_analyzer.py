@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
 from unittest.mock import patch
 from model_analyzer.analyzer import Analyzer
 from model_analyzer.cli.cli import CLI
@@ -20,7 +21,7 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.input.config_status import ConfigStatus
 from model_analyzer.constants import CONFIG_PARSER_SUCCESS
 from model_analyzer.result.results import Results
-from model_analyzer.result.model_result import ModelResult
+from model_analyzer.result.run_config_result import RunConfigResult
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
 
@@ -81,24 +82,21 @@ class TestAnalyzer(trc.TestResultCollector):
 
     def mock_top_n_results(self, model_name=None, n=-1):
         return [
-            ModelResult(
-                None,
+            RunConfigResult(None, [
                 ModelConfig(
                     json_format.ParseDict({'name': 'config1'},
-                                          model_config_pb2.ModelConfig())),
-                None),
-            ModelResult(
-                None,
+                                          model_config_pb2.ModelConfig()))
+            ], None),
+            RunConfigResult(None, [
                 ModelConfig(
                     json_format.ParseDict({'name': 'config3'},
-                                          model_config_pb2.ModelConfig())),
-                None),
-            ModelResult(
-                None,
+                                          model_config_pb2.ModelConfig()))
+            ], None),
+            RunConfigResult(None, [
                 ModelConfig(
                     json_format.ParseDict({'name': 'config4'},
-                                          model_config_pb2.ModelConfig())),
-                None)
+                                          model_config_pb2.ModelConfig()))
+            ], None)
         ]
 
     @patch(
@@ -158,3 +156,7 @@ class TestAnalyzer(trc.TestResultCollector):
         cli.parse()
         mock_config.stop()
         return config
+
+
+if __name__ == '__main__':
+    unittest.main()

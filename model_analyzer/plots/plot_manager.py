@@ -85,13 +85,14 @@ class PlotManager:
         for a given model
         """
 
+        # TODO-TMA-564: This needs to be updated because there will be multiple model configs
         for plot_config in self._config.plots:
             constraints = self._constraints['default']
             if plots_key in self._constraints:
                 constraints = self._constraints[plots_key]
-            for result in self._result_manager.top_n_results(
+            for run_config_result in self._result_manager.top_n_results(
                     model_name=model_name, n=num_results, include_default=True):
-                if result.model_config().cpu_only():
+                if run_config_result.model_configs()[0].cpu_only():
                     if plot_config.y_axis() == 'gpu_used_memory':
                         plot_name, plot_config_dict = list(
                             DEFAULT_CPU_MEM_PLOT.items())[0]
@@ -99,11 +100,12 @@ class PlotManager:
                 self._create_update_simple_plot(
                     plots_key=plots_key,
                     plot_config=plot_config,
-                    measurements=result.measurements(),
+                    run_config_measurements=run_config_result.
+                    run_config_measurements(),
                     constraints=constraints)
 
-    def _create_update_simple_plot(self, plots_key, plot_config, measurements,
-                                   constraints):
+    def _create_update_simple_plot(self, plots_key, plot_config,
+                                   run_config_measurements, constraints):
         """
         Creates or updates a single simple plot, given a config name, 
         some measurements, and a key to put the plot into the simple plots
@@ -119,10 +121,11 @@ class PlotManager:
                 y_axis=plot_config.y_axis(),
                 monotonic=plot_config.monotonic())
 
-        for measurement in measurements:
-            self._simple_plots[plots_key][plot_config.name()].add_measurement(
-                model_config_label=measurement.perf_config()['model-name'],
-                measurement=measurement)
+        for run_config_measurement in run_config_measurements:
+            self._simple_plots[plots_key][
+                plot_config.name()].add_run_config_measurement(
+                    model_config_label=run_config_measurement.key(),
+                    run_config_measurement=run_config_measurement)
 
         # In case this plot already had lines, we want to clear and replot
         self._simple_plots[plots_key][plot_config.name()].clear()
@@ -140,14 +143,15 @@ class PlotManager:
             model_config_name = model.model_config_name()
             self._detailed_plots[model_config_name] = DetailedPlot(
                 f'latency_breakdown', 'Online Performance')
-            model_config, measurements = self._result_manager.get_model_config_measurements(
+            model_config, run_config_measurements = self._result_manager.get_model_configs_run_config_measurements(
                 model_config_name)
 
             # If model_config_name was present in results
-            if measurements:
-                for measurement in measurements:
-                    self._detailed_plots[model_config_name].add_measurement(
-                        measurement)
+            if run_config_measurements:
+                for run_config_measurement in run_config_measurements:
+                    self._detailed_plots[
+                        model_config_name].add_run_config_measurement(
+                            run_config_measurement)
                 self._detailed_plots[model_config_name].plot_data()
 
             # Create the simple plots for the detailed reports
@@ -156,10 +160,11 @@ class PlotManager:
                         plot_config.y_axis().startswith('gpu_') or
                         plot_config.x_axis().startswith('gpu_')):
                     continue
-                self._create_update_simple_plot(plots_key=model_config_name,
-                                                plot_config=plot_config,
-                                                measurements=measurements,
-                                                constraints=None)
+                self._create_update_simple_plot(
+                    plots_key=model_config_name,
+                    plot_config=plot_config,
+                    run_config_measurements=run_config_measurements,
+                    constraints=None)
 
     def export_summary_plots(self):
         """

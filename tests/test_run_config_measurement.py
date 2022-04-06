@@ -13,20 +13,20 @@
 # limitations under the License.
 
 from tests.common.test_utils import convert_non_gpu_metrics_to_data, \
-    convert_gpu_metrics_to_data, construct_perf_analyzer_config, \
-    construct_run_config_measurement
+    convert_gpu_metrics_to_data, convert_avg_gpu_metrics_to_data, \
+    construct_perf_analyzer_config, construct_run_config_measurement, default_encode
 
 from model_analyzer.record.metrics_manager import MetricsManager
-from model_analyzer.result.result_comparator import ResultComparator
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from tests.test_model_config_generator import TestModelConfigGenerator
 
 from statistics import mean
 
 import unittest
 from unittest.mock import MagicMock, patch
 from .common import test_result_collector as trc
+
+import json
 
 
 class TestRunConfigMeasurement(trc.TestResultCollector):
@@ -66,17 +66,13 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         Test that the gpu + non-gpu data is correct
         """
-        avg_gpu_data = [
-            value for value in convert_gpu_metrics_to_data(
-                self.avg_gpu_metric_values).values()
-        ][0]
+        avg_gpu_data = convert_avg_gpu_metrics_to_data(
+            self.avg_gpu_metric_values)
 
         data = [
-            avg_gpu_data + convert_non_gpu_metrics_to_data(ngvm)
+            list(avg_gpu_data.values()) + convert_non_gpu_metrics_to_data(ngvm)
             for ngvm in self.rcm0_non_gpu_metric_values
         ]
-
-        rcm0_data = self.rcm0.data()
 
         self.assertEqual(self.rcm0.data(), data)
 
@@ -84,9 +80,9 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         Test that the list of gpus used is correct
         """
-        self.assertEqual(self.rcm0.gpus_used(), [0, 1])
+        self.assertEqual(self.rcm0.gpus_used(), ['0', '1'])
 
-    def test_get_metric(self):
+    def test_get_metric_non_gpu(self):
         """
         Test that the non-gpu metric data is correct
         """
@@ -101,6 +97,22 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
                          [non_gpu_data[0][1], non_gpu_data[1][1]])
         self.assertEqual(self.rcm0.get_metric("cpu_used_ram"),
                          [non_gpu_data[0][2], non_gpu_data[1][2]])
+
+    def test_get_metric_gpu(self):
+        """
+        Test that the gpu metric data is correct
+        
+        """
+        avg_gpu_data = convert_avg_gpu_metrics_to_data(
+            self.avg_gpu_metric_values)
+
+        self.assertEqual(
+            self.rcm0.get_metric("gpu_used_memory")[0],
+            avg_gpu_data["gpu_used_memory"])
+
+        self.assertEqual(
+            self.rcm0.get_metric("gpu_utilization")[0],
+            avg_gpu_data["gpu_utilization"])
 
     def test_get_weighted_metric(self):
         """
@@ -163,13 +175,20 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         Test to ensure class can be correctly restored from a dictionary
         """
-        rcm_dict = self.rcm0.__dict__
-        rcm_from_dict = RunConfigMeasurement.from_dict(rcm_dict)
+        rcm0_json = json.dumps(self.rcm0.__dict__, default=default_encode)
 
-        self.assertEqual(rcm_from_dict.key(), self.rcm0.key())
-        self.assertEqual(rcm_from_dict.gpu_data(), self.rcm0.gpu_data())
-        self.assertEqual(rcm_from_dict.non_gpu_data(), self.rcm0.non_gpu_data())
-        self.assertEqual(rcm_from_dict.data(), self.rcm0.data())
+        rcm0_from_dict = RunConfigMeasurement.from_dict(json.loads(rcm0_json))
+
+        self.assertEqual(rcm0_from_dict.key(), self.rcm0.key())
+        self.assertEqual(rcm0_from_dict.gpu_data(), self.rcm0.gpu_data())
+        self.assertEqual(rcm0_from_dict.non_gpu_data(),
+                         self.rcm0.non_gpu_data())
+        self.assertEqual(rcm0_from_dict.data(), self.rcm0.data())
+        self.assertEqual(rcm0_from_dict._model_config_measurements,
+                         self.rcm0._model_config_measurements)
+
+        # Catchall in case something new is added
+        self.assertEqual(rcm0_from_dict, self.rcm0)
 
     def _construct_rcm0(self):
         self.model_name = "modelA,modelB"
@@ -183,20 +202,18 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         }]
 
         self.gpu_metric_values = {
-            0: {
+            '0': {
                 "gpu_used_memory": 6000,
                 "gpu_utilization": 60
             },
-            1: {
+            '1': {
                 "gpu_used_memory": 10000,
                 "gpu_utilization": 20
             }
         }
         self.avg_gpu_metric_values = {
-            0: {
-                "gpu_used_memory": 8000,
-                "gpu_utilization": 40
-            }
+            "gpu_used_memory": 8000,
+            "gpu_utilization": 40
         }
 
         self.rcm0_non_gpu_metric_values = [
@@ -248,11 +265,11 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         }]
 
         gpu_metric_values = {
-            0: {
+            '0': {
                 "gpu_used_memory": 7000,
                 "gpu_utilization": 40
             },
-            1: {
+            '1': {
                 "gpu_used_memory": 12000,
                 "gpu_utilization": 30
             }

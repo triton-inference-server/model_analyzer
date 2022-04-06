@@ -22,9 +22,9 @@ from model_analyzer.cli.cli import CLI
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.record.types.perf_throughput import PerfThroughput
-from model_analyzer.result.measurement import Measurement
 from .common import test_result_collector as trc
 from .common.test_utils import convert_to_bytes
+from .common.test_utils import construct_run_config_measurement
 from .mocks.mock_config import MockConfig
 from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
@@ -478,10 +478,18 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
     def _get_next_fake_results(self):
         throughput_value = self._get_next_perf_throughput_value()
-        perf_throughput = PerfThroughput(throughput_value)
-        measurement = Measurement(gpu_data=MagicMock(),
-                                  non_gpu_data=[perf_throughput],
-                                  perf_config=MagicMock())
+
+        measurement = construct_run_config_measurement(
+            model_name=MagicMock(),
+            model_config_names=[MagicMock()],
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values=MagicMock(),
+            non_gpu_metric_values=[{
+                "perf_throughput": throughput_value
+            }],
+            metric_objectives=MagicMock(),
+            model_config_weights=MagicMock())
+
         return [measurement]
 
     def _get_next_perf_throughput_value(self):

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.result.results import Results
-from model_analyzer.result.measurement import Measurement
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
@@ -62,11 +62,11 @@ class TestResults(trc.TestResultCollector):
 
         self.assertEqual(model_list, ['modelA', 'modelB'])
 
-    def test_get_list_of_model_config_measurements(self):
+    def test_get_list_of_model_config_measurement_tuples(self):
         """
         Test that the correct number of measurements is returned per model config
         """
-        model_config_measurements_list = self._result.get_list_of_model_config_measurements(
+        model_config_measurements_list = self._result.get_list_of_model_config_measurement_tuples(
         )
         num_model_config_measurements = [
             len(mcm) for mcm in model_config_measurements_list
@@ -75,11 +75,11 @@ class TestResults(trc.TestResultCollector):
         self.assertEqual(num_model_config_measurements[0], 3)
         self.assertEqual(num_model_config_measurements[1], 2)
 
-    def test_get_measurements_dict(self):
+    def test_get_list_of_run_config_measurements(self):
         """
         Test that the measurements were correctly added to the dictionary
         """
-        measurements = self._result.get_list_of_measurements()
+        measurements = self._result.get_list_of_run_config_measurements()
 
         self.assertEqual(measurements, self._measurements_added)
 
@@ -172,17 +172,17 @@ class TestResults(trc.TestResultCollector):
             "-m key_I": "9"
         })
 
-        self._result.add_measurement(self._model_run_config[0], "1")
-        self._result.add_measurement(self._model_run_config[1], "2")
-        self._result.add_measurement(self._model_run_config[2], "3")
+        self._result.add_run_config_measurement(self._model_run_config[0], "1")
+        self._result.add_run_config_measurement(self._model_run_config[1], "2")
+        self._result.add_run_config_measurement(self._model_run_config[2], "3")
 
-        self._result.add_measurement(self._model_run_config[3], "4")
-        self._result.add_measurement(self._model_run_config[4], "5")
-        self._result.add_measurement(self._model_run_config[5], "6")
+        self._result.add_run_config_measurement(self._model_run_config[3], "4")
+        self._result.add_run_config_measurement(self._model_run_config[4], "5")
+        self._result.add_run_config_measurement(self._model_run_config[5], "6")
 
-        self._result.add_measurement(self._model_run_config[6], "7")
-        self._result.add_measurement(self._model_run_config[7], "8")
-        self._result.add_measurement(self._model_run_config[8], "9")
+        self._result.add_run_config_measurement(self._model_run_config[6], "7")
+        self._result.add_run_config_measurement(self._model_run_config[7], "8")
+        self._result.add_run_config_measurement(self._model_run_config[8], "9")
 
         model_run_config_0f = self._create_model_run_config(
             'modelB', 'model_config_0', "key_F")
@@ -190,9 +190,9 @@ class TestResults(trc.TestResultCollector):
             'modelB', 'model_config_0', "key_E")
         model_run_config_0d = self._create_model_run_config(
             'modelB', 'model_config_0', "key_D")
-        self._result.add_measurement(model_run_config_0f, "6")
-        self._result.add_measurement(model_run_config_0e, "5")
-        self._result.add_measurement(model_run_config_0d, "4")
+        self._result.add_run_config_measurement(model_run_config_0f, "6")
+        self._result.add_run_config_measurement(model_run_config_0e, "5")
+        self._result.add_run_config_measurement(model_run_config_0d, "4")
 
         model_run_config_1c = self._create_model_run_config(
             'modelB', 'model_config_1', "key_C")
@@ -200,9 +200,9 @@ class TestResults(trc.TestResultCollector):
             'modelB', 'model_config_1', "key_B")
         model_run_config_1a = self._create_model_run_config(
             'modelB', 'model_config_1', "key_A")
-        self._result.add_measurement(model_run_config_1c, "3")
-        self._result.add_measurement(model_run_config_1b, "2")
-        self._result.add_measurement(model_run_config_1a, "1")
+        self._result.add_run_config_measurement(model_run_config_1c, "3")
+        self._result.add_run_config_measurement(model_run_config_1b, "2")
+        self._result.add_run_config_measurement(model_run_config_1a, "1")
 
         self._measurements_added = [
             '1', '2', '3', '4', '5', '6', '7', '8', '9', '6', '5', '4', '3',

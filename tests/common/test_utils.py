@@ -14,8 +14,7 @@
 
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
-from model_analyzer.result.measurement import Measurement
-from model_analyzer.result.model_result import ModelResult
+from model_analyzer.result.run_config_result import RunConfigResult
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
@@ -80,6 +79,25 @@ def convert_gpu_metrics_to_data(gpu_metric_values):
                 gpu_metric(value=metrics_values[gpu_metric_tags[i]]))
 
     return gpu_data
+
+
+def convert_avg_gpu_metrics_to_data(avg_gpu_metric_values):
+    """
+    Avg GPU data will be a dict of Records
+    
+    Parameters
+    ----------
+    gpu_metric_values: dict of gpu metrics
+    """
+    avg_gpu_data = {}
+    avg_gpu_metric_tags = list(avg_gpu_metric_values.keys())
+
+    for i, avg_gpu_metric in enumerate(
+            MetricsManager.get_metric_types(avg_gpu_metric_tags)):
+        avg_gpu_data[avg_gpu_metric_tags[i]] = avg_gpu_metric(
+            value=avg_gpu_metric_values[avg_gpu_metric_tags[i]])
+
+    return avg_gpu_data
 
 
 def construct_perf_analyzer_config(model_name='my-model',
@@ -192,66 +210,12 @@ def construct_run_config_measurement(model_name, model_config_names,
     return rc_measurement
 
 
-def construct_measurement(model_name, gpu_metric_values, non_gpu_metric_values,
-                          comparator):
-    """
-    Construct a measurement from the given data
-
-    Parameters
-    ----------
-    model_name: str
-        The name of the model that generated this result
-    gpu_metric_values: dict
-        Keys are gpu id, values are dict
-        The dict where keys are gpu based metric tags, values are the data
-    non_gpu_metric_values: dict
-        Keys are non gpu perf metrics, values are their values
-    comparator: ResultComparator
-        The comparator used to compare measurements/results
-    
-    Returns
-    -------
-    Measurement
-        constructed with all of the above data.
-    """
-
-    # gpu_data will be a dict whose keys are gpu_ids and values
-    # are lists of Records
-    gpu_data = {}
-    for gpu_uuid, metrics_values in gpu_metric_values.items():
-        gpu_data[gpu_uuid] = []
-        gpu_metric_tags = list(metrics_values.keys())
-        for i, gpu_metric in enumerate(
-                MetricsManager.get_metric_types(gpu_metric_tags)):
-            gpu_data[gpu_uuid].append(
-                gpu_metric(value=metrics_values[gpu_metric_tags[i]]))
-
-    # Non gpu data will be a list of records
-    non_gpu_data = []
-    non_gpu_metric_tags = list(non_gpu_metric_values.keys())
-    for i, metric in enumerate(
-            MetricsManager.get_metric_types(non_gpu_metric_tags)):
-        non_gpu_data.append(
-            metric(value=non_gpu_metric_values[non_gpu_metric_tags[i]]))
-
-    # Perf Config needs a protocol
-    perf_config = PerfAnalyzerConfig()
-    perf_config['model-name'] = model_name
-    perf_config['protocol'] = 'http'
-
-    measurement = Measurement(gpu_data=gpu_data,
-                              non_gpu_data=non_gpu_data,
-                              perf_config=perf_config)
-    measurement.set_result_comparator(comparator=comparator)
-    return measurement
-
-
-def construct_result(avg_gpu_metric_values,
-                     avg_non_gpu_metric_values,
-                     comparator,
-                     value_step=1,
-                     model_name=None,
-                     model_config=None):
+def construct_run_config_result(avg_gpu_metric_values,
+                                avg_non_gpu_metric_values,
+                                comparator,
+                                value_step=1,
+                                model_name=None,
+                                model_config=None):
     """
     Takes a dictionary whose values are average
     metric values, constructs artificial data 
@@ -271,7 +235,7 @@ def construct_result(avg_gpu_metric_values,
         The step value between two adjacent data values.
         Can be used to control the max/min of the data
         distribution in the construction result
-    comparator: ResultComparator
+    comparator: RunConfigResultComparator
         The comparator used to compare measurements/results
     model_name: str
         The name of the model that generated this result
@@ -282,9 +246,9 @@ def construct_result(avg_gpu_metric_values,
     num_vals = 10
 
     # Construct a result
-    model_result = ModelResult(model_name=model_name,
-                               model_config=model_config,
-                               comparator=comparator)
+    run_config_result = RunConfigResult(model_name=model_name,
+                                        model_configs=[model_config],
+                                        comparator=comparator)
 
     # Get dict of list of metric values
     gpu_metric_values = {}
@@ -312,10 +276,28 @@ def construct_result(avg_gpu_metric_values,
         non_gpu_metrics = {
             key: non_gpu_metric_values[key][i] for key in non_gpu_metric_values
         }
-        model_result.add_measurement(
-            construct_measurement(model_name=model_name,
-                                  gpu_metric_values=gpu_metrics,
-                                  non_gpu_metric_values=non_gpu_metrics,
-                                  comparator=comparator))
 
-    return model_result
+        # TODO-TMA-571: Needs enhancement to support model_config_weights
+        run_config_result.add_run_config_measurement(
+            construct_run_config_measurement(
+                model_name=model_name,
+                model_config_names=[model_name],
+                model_specific_pa_params=[{
+                    'batch_size': 1,
+                    'concurrency': 1
+                }],
+                gpu_metric_values=gpu_metrics,
+                non_gpu_metric_values=[non_gpu_metrics],
+                metric_objectives=comparator._metric_weights,
+                model_config_weights=[1]))
+
+    return run_config_result
+
+
+def default_encode(obj):
+    if isinstance(obj, bytes):
+        return obj.decode('utf-8')
+    elif hasattr(obj, 'to_dict'):
+        return obj.to_dict()
+    else:
+        return obj.__dict__

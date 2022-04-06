@@ -104,7 +104,7 @@ class DetailedPlot:
 
         return self._data
 
-    def add_measurement(self, measurement):
+    def add_run_config_measurement(self, run_config_measurement):
         """
         Adds a measurment to this plot
 
@@ -115,12 +115,17 @@ class DetailedPlot:
             be plotted.
         """
 
+        # TODO-TMA-559: Need accessor function for PA params
         self._data['concurrency'].append(
-            measurement.get_parameter('concurrency-range'))
+            run_config_measurement._model_config_measurements[0].
+            _model_specific_pa_params['concurrency-range'])
+
         self._data['perf_throughput'].append(
-            measurement.get_metric_value(tag='perf_throughput'))
+            run_config_measurement.get_metric_value(tag='perf_throughput'))
+
         for metric in self.detailed_metrics:
-            self._data[metric].append(measurement.get_metric_value(tag=metric))
+            self._data[metric].append(
+                run_config_measurement.get_metric_value(tag=metric))
 
     def plot_data(self):
         """

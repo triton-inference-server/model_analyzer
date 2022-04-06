@@ -12,21 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tests.common.test_utils import convert_non_gpu_metrics_to_data
+from tests.common.test_utils import convert_non_gpu_metrics_to_data, default_encode
 from model_analyzer.record.metrics_manager import MetricsManager
-from model_analyzer.result.result_comparator import ResultComparator
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 
 import unittest
 from unittest.mock import MagicMock, patch
 from .common import test_result_collector as trc
 
+import json
+
 
 class TestModelConfigMeasurement(trc.TestResultCollector):
 
     def setUp(self):
         self.model_config_name = "modelA"
-        self.model_specific_pa_params = {"batch_size": 1, "concurrency": 1}
+        self.model_specific_pa_params = {
+            "batch_size": 1,
+            "concurrency-range": 1
+        }
 
         self.non_gpu_metric_values = {
             "perf_throughput": 1000,
@@ -182,8 +186,9 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         """
         Test to ensure class can be correctly restored from a dictionary
         """
-        mcmA_dict = self.mcmA.__dict__
-        mcmA_from_dict = ModelConfigMeasurement.from_dict(mcmA_dict)
+        mcmA_json = json.dumps(self.mcmA.__dict__, default=default_encode)
+
+        mcmA_from_dict = ModelConfigMeasurement.from_dict(json.loads(mcmA_json))
 
         self.assertEqual(mcmA_from_dict.model_config_name(),
                          self.mcmA.model_config_name())
@@ -191,6 +196,9 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
                          self.mcmA.model_specific_pa_params())
         self.assertEqual(mcmA_from_dict.non_gpu_data(),
                          self.mcmA.non_gpu_data())
+
+        # Catchall in case something new is added
+        self.assertEqual(mcmA_from_dict, self.mcmA)
 
     def _construct_model_config_measurement(self, model_config_name,
                                             model_specific_pa_params,
