@@ -356,6 +356,21 @@ class RunConfigMeasurement:
 
         return list(self._gpu_data.keys())
 
+    def model_specific_pa_params(self):
+        """
+        Returns
+        -------
+        list:
+            of dicts:
+                of model specific PA parameters
+                used in this measurement
+        """
+
+        return [
+            model_config_measurement.model_specific_pa_params()
+            for model_config_measurement in self._model_config_measurements
+        ]
+
     def is_better_than(self, other):
         """
         Checks whether a measurement is better than another

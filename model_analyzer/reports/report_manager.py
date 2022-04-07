@@ -503,9 +503,8 @@ class ReportManager:
         if not cpu_only:
             for measurement in measurements:
                 row = [
-                    # TODO-TMA-559: Need accessor function for PA Params
-                    measurement._model_config_measurements[0].
-                    _model_specific_pa_params[first_column_tag],
+                    # TODO-TMA-568: This needs to be updated because there will be multiple model configs
+                    measurement.model_specific_pa_params()[0][first_column_tag],
                     measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_client_response_wait'),
                     measurement.get_metric_value('perf_server_queue'),
@@ -520,9 +519,8 @@ class ReportManager:
         else:
             for measurement in measurements:
                 row = [
-                    # TODO-TMA-559: Need accessor function for PA Params
-                    measurement._model_config_measurements[0].
-                    _model_specific_pa_params[first_column_tag],
+                    # TODO-TMA-568: This needs to be updated because there will be multiple model configs
+                    measurement.model_specific_pa_params()[0][first_column_tag],
                     measurement.get_metric_value('perf_latency_p99'),
                     measurement.get_metric_value('perf_client_response_wait'),
                     measurement.get_metric_value('perf_server_queue'),

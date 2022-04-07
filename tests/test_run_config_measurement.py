@@ -208,6 +208,15 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
             self.rcm0.get_weighted_metric_value("perf_latency_p99"),
             weighted_metric_value)
 
+    def test_model_specific_pa_params(self):
+        """
+        Test that the model specific PA params are correct
+        """
+        foo = self.rcm0.model_specific_pa_params()
+
+        self.assertEqual(self.rcm0.model_specific_pa_params(),
+                         self.model_specific_pa_params)
+
     def test_is_better_than(self):
         """
         Test to ensure measurement comparison is working as intended
