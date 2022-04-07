@@ -46,6 +46,12 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
             self.rcm0.key(),
             construct_perf_analyzer_config(self.model_name).representation())
 
+    def test_model_name(self):
+        """
+        Test that the model name was initialized correctly
+        """
+        self.assertEqual(self.rcm0.model_name(), self.model_name)
+
     def test_gpu_data(self):
         """
         Test that the gpu data is correct
@@ -232,6 +238,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         rcm0_from_dict = RunConfigMeasurement.from_dict(json.loads(rcm0_json))
 
         self.assertEqual(rcm0_from_dict.key(), self.rcm0.key())
+        self.assertEqual(rcm0_from_dict.model_name(), self.rcm0.model_name())
         self.assertEqual(rcm0_from_dict.gpu_data(), self.rcm0.gpu_data())
         self.assertEqual(rcm0_from_dict.non_gpu_data(),
                          self.rcm0.non_gpu_data())

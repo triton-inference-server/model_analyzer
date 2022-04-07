@@ -33,7 +33,7 @@ class RunConfigMeasurement:
     in a single RunConfig
     """
 
-    def __init__(self, key, gpu_data):
+    def __init__(self, key, model_name, gpu_data):
         """
         key: str
         Unique string which can be used to differentiate this measurement 
@@ -44,6 +44,7 @@ class RunConfigMeasurement:
             associated with them            
         """
         self._key = key
+        self._model_name = model_name
 
         self._gpu_data = gpu_data
         self._avg_gpu_data = self._average_list(list(self._gpu_data.values()))
@@ -54,9 +55,11 @@ class RunConfigMeasurement:
 
     @classmethod
     def from_dict(cls, run_config_measurement_dict):
-        run_config_measurement = RunConfigMeasurement(None, {})
+        run_config_measurement = RunConfigMeasurement(None, None, {})
 
         run_config_measurement._key = run_config_measurement_dict['_key']
+        run_config_measurement._model_name = run_config_measurement_dict[
+            '_model_name']
 
         run_config_measurement._gpu_data = cls._deserialize_gpu_data(
             run_config_measurement, run_config_measurement_dict['_gpu_data'])
@@ -124,10 +127,19 @@ class RunConfigMeasurement:
         """
         Returns
         -------
-        Key used to uniquely identify the RunConfigMeasurement
+        str: Key used to uniquely identify the RunConfigMeasurement
         """
 
         return self._key
+
+    def model_name(self):
+        """
+        Returns
+        -------
+        str: Model name for this RunConfigMeasurement
+        """
+
+        return self._model_name
 
     def data(self):
         """

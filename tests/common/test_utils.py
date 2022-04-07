@@ -191,7 +191,8 @@ def construct_run_config_measurement(model_name, model_config_names,
     gpu_data = convert_gpu_metrics_to_data(gpu_metric_values)
     pa_config = construct_perf_analyzer_config(model_name=model_name)
 
-    rc_measurement = RunConfigMeasurement(pa_config.representation(), gpu_data)
+    rc_measurement = RunConfigMeasurement(pa_config.representation(),
+                                          model_name, gpu_data)
 
     non_gpu_data = [
         convert_non_gpu_metrics_to_data(non_gpu_metric_value)
