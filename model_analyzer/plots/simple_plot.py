@@ -77,21 +77,21 @@ class SimplePlot:
         if model_config_label not in self._data:
             self._data[model_config_label] = defaultdict(list)
 
+        # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         if self._x_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
-            # TODO-TMA-559: get_parameter no longer exists
             self._data[model_config_label]['x_data'].append(
-                run_config_measurement.get_parameter(
-                    tag=self._x_axis.replace('_', '-')))
+                run_config_measurement.model_specific_pa_params()[0][
+                    self._x_axis.replace('_', '-')])
         else:
             # TODO-TMA-566: replace with get_metric_gpu/non_gpu_value()
             self._data[model_config_label]['x_data'].append(
                 run_config_measurement.get_metric_value(tag=self._x_axis))
 
+        # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
-            # TODO-TMA-559: get_parameter no longer exists
             self._data[model_config_label]['y_data'].append(
-                run_config_measurement.get_parameter(
-                    tag=self._y_axis.replace('_', '-')))
+                run_config_measurement.model_specific_pa_params()[0][
+                    self._y_axis.replace('_', '-')])
         else:
             # TODO-TMA-566: replace with get_metric_gpu/non_gpu_value()
             self._data[model_config_label]['y_data'].append(

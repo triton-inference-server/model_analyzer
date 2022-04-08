@@ -115,10 +115,10 @@ class DetailedPlot:
             be plotted.
         """
 
-        # TODO-TMA-559: Need accessor function for PA params
+        # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         self._data['concurrency'].append(
-            run_config_measurement._model_config_measurements[0].
-            _model_specific_pa_params['concurrency-range'])
+            run_config_measurement.model_specific_pa_params()[0]
+            ['concurrency-range'])
 
         self._data['perf_throughput'].append(
             run_config_measurement.get_metric_value(tag='perf_throughput'))
