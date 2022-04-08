@@ -192,6 +192,74 @@ class MetricsManager:
 
         return measurement
 
+    def profile_models(self, run_config):
+        """
+        Runs monitors while running perf_analyzer with a specific set of
+        arguments. This will profile model inferencing.
+
+        Parameters
+        ----------
+        run_config : RunConfig
+            RunConfig object corresponding to the models being profiled.
+
+        Returns
+        -------
+        (dict of lists, list)
+            The gpu specific and non gpu metrics
+        """
+
+        perf_output_writer = None if \
+            not self._config.perf_output else FileWriter(self._config.perf_output_path)
+        cpu_only = run_config.cpu_only()
+
+        self._print_run_config_info(run_config)
+
+        self._start_monitors(cpu_only=cpu_only)
+
+        perf_analyzer_metrics = self._run_perf_analyzer(run_config,
+                                                        perf_output_writer)
+
+        if not perf_analyzer_metrics:
+            self._stop_monitors(cpu_only=cpu_only)
+            self._destroy_monitors(cpu_only=cpu_only)
+            return None
+
+        # Get metrics for model inference and combine metrics that do not have GPU UUID
+        model_gpu_metrics = {}
+        if not cpu_only:
+            model_gpu_metrics = self._get_gpu_inference_metrics()
+        model_cpu_metrics = self._get_cpu_inference_metrics()
+
+        self._destroy_monitors(cpu_only=cpu_only)
+
+        run_config_measurement = None
+        if model_gpu_metrics is not None and perf_analyzer_metrics is not None:
+
+            run_config_measurement = RunConfigMeasurement(
+                run_config.model_variants_name(), model_gpu_metrics)
+
+            # Combine all per-model measurements into the RunConfigMeasurement
+            #
+            for model_run_config in run_config.model_run_configs():
+                perf_config = model_run_config.perf_config()
+                model_name = perf_config['model-name']
+
+                model_non_gpu_metrics = \
+                      list(perf_analyzer_metrics[model_name].values()) \
+                    + list(model_cpu_metrics.values())
+
+                model_specific_pa_params = perf_config.extract_model_specific_parameters(
+                )
+
+                run_config_measurement.add_model_config_measurement(
+                    perf_config['model-name'], model_specific_pa_params,
+                    model_non_gpu_metrics)
+
+            self._result_manager.add_run_config_measurement(
+                run_config, run_config_measurement)
+
+        return run_config_measurement
+
     def _create_model_variants(self, run_config):
         """
         Creates and fills all model variant directories
@@ -285,74 +353,6 @@ class MetricsManager:
             models_name, model_variants_name)
 
         return measurements.get(key, None)
-
-    def profile_models(self, run_config):
-        """
-        Runs monitors while running perf_analyzer with a specific set of
-        arguments. This will profile model inferencing.
-
-        Parameters
-        ----------
-        run_config : RunConfig
-            RunConfig object corresponding to the models being profiled.
-
-        Returns
-        -------
-        (dict of lists, list)
-            The gpu specific and non gpu metrics
-        """
-
-        perf_output_writer = None if \
-            not self._config.perf_output else FileWriter(self._config.perf_output_path)
-        cpu_only = run_config.cpu_only()
-
-        self._print_run_config_info(run_config)
-
-        self._start_monitors(cpu_only=cpu_only)
-
-        perf_analyzer_metrics = self._run_perf_analyzer(run_config,
-                                                        perf_output_writer)
-
-        if not perf_analyzer_metrics:
-            self._stop_monitors(cpu_only=cpu_only)
-            self._destroy_monitors(cpu_only=cpu_only)
-            return None
-
-        # Get metrics for model inference and combine metrics that do not have GPU UUID
-        model_gpu_metrics = {}
-        if not cpu_only:
-            model_gpu_metrics = self._get_gpu_inference_metrics()
-        model_cpu_metrics = self._get_cpu_inference_metrics()
-
-        self._destroy_monitors(cpu_only=cpu_only)
-
-        run_config_measurement = None
-        if model_gpu_metrics is not None and perf_analyzer_metrics is not None:
-
-            run_config_measurement = RunConfigMeasurement(
-                run_config.model_variants_name(), model_gpu_metrics)
-
-            # Combine all per-model measurements into the RunConfigMeasurement
-            #
-            for model_run_config in run_config.model_run_configs():
-                perf_config = model_run_config.perf_config()
-                model_name = perf_config['model-name']
-
-                model_non_gpu_metrics = \
-                      list(perf_analyzer_metrics[model_name].values()) \
-                    + list(model_cpu_metrics.values())
-
-                model_specific_pa_params = perf_config.extract_model_specific_parameters(
-                )
-
-                run_config_measurement.add_model_config_measurement(
-                    perf_config['model-name'], model_specific_pa_params,
-                    model_non_gpu_metrics)
-
-            self._result_manager.add_run_config_measurement(
-                run_config, run_config_measurement)
-
-        return run_config_measurement
 
     def _start_monitors(self, cpu_only=False):
         """

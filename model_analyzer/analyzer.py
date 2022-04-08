@@ -89,7 +89,8 @@ class Analyzer:
                 f"Expected config of type {ConfigCommandProfile},"
                 " got {type(self._config)}.")
 
-        self._create_profile_managers(client, gpus)
+        self._create_metrics_manager(client, gpus)
+        self._create_model_manager(client)
         self._get_server_only_metrics(client)
 
         self._profile_models()
@@ -170,6 +171,32 @@ class Analyzer:
         self._report_manager.create_detailed_reports()
         self._report_manager.export_detailed_reports()
 
+    def _create_metrics_manager(self, client, gpus):
+        self._metrics_manager = MetricsManager(
+            config=self._config,
+            client=client,
+            server=self._server,
+            gpus=gpus,
+            result_manager=self._result_manager,
+            state_manager=self._state_manager)
+
+    def _create_model_manager(self, client):
+        self._model_manager = ModelManager(
+            config=self._config,
+            client=client,
+            server=self._server,
+            result_manager=self._result_manager,
+            metrics_manager=self._metrics_manager,
+            state_manager=self._state_manager)
+
+    def _get_server_only_metrics(self, client):
+        if self._config.triton_launch_mode != 'c_api':
+            logger.info('Profiling server only metrics...')
+            self._server.start()
+            client.wait_for_server_ready(self._config.client_max_retries)
+            self._metrics_manager.profile_server()
+            self._server.stop()
+
     def _profile_models(self):
 
         models = self._config.profile_models
@@ -190,36 +217,8 @@ class Analyzer:
                 finally:
                     self._state_manager.save_checkpoint()
 
-    def _create_profile_managers(self, client, gpus):
-        """
-        Create the managers needed for the profile step
-        """
-        self._metrics_manager = MetricsManager(
-            config=self._config,
-            client=client,
-            server=self._server,
-            gpus=gpus,
-            result_manager=self._result_manager,
-            state_manager=self._state_manager)
-
-        self._model_manager = ModelManager(
-            config=self._config,
-            client=client,
-            server=self._server,
-            result_manager=self._result_manager,
-            metrics_manager=self._metrics_manager,
-            state_manager=self._state_manager)
-
-    def _get_server_only_metrics(self, client):
-        if self._config.triton_launch_mode != 'c_api':
-            logger.info('Profiling server only metrics...')
-            self._server.start()
-            client.wait_for_server_ready(self._config.client_max_retries)
-            self._metrics_manager.profile_server()
-            self._server.stop()
-
     def _should_profile_multiple_models_concurrently(self):
-        # FIXME: TODO-MM: Disable until we support this feature
+        # TODO-TMA-518: Disable until we support this feature
         # return (self._config.run_config_profile_models_concurrently_enable and
         #         len(self._config.profile_models) > 1)
         return False

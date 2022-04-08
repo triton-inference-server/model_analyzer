@@ -202,7 +202,7 @@ class ResultManager:
                     for gpu_metric in gpu_metrics:
                         if gpu_metric.tag not in gpu_specific_metrics_from_measurements:
                             gpu_specific_metrics_from_measurements[
-                                gpu_metric[0]] = gpu_metric
+                                gpu_metric.tag] = gpu_metric
 
                 for non_gpu_metric_list in run_config_measurement.non_gpu_data(
                 ):
@@ -253,8 +253,6 @@ class ResultManager:
         self._state_manager.set_state_variable('ResultManager.server_only_data',
                                                data)
 
-    # FIXME: TMA-518 this should be taking the run_config
-    # and extracting the multiple model_run_config will be extracted
     def add_run_config_measurement(self, run_config, run_config_measurement):
         """
         This function adds model inference
@@ -264,7 +262,6 @@ class ResultManager:
         ----------
         run_config : RunConfig
             Contains the parameters used to generate the measurment
-            like the model name, model_config_name
         run_config_measurement: RunConfigMeasurement
             the measurement to be added
         """

@@ -68,13 +68,12 @@ class Results:
 
     def add_run_config_measurement(self, run_config, run_config_measurement):
         """
-        Given a ModelRunConfig and a RunConfigMeasurement, add the measurement to the
-        ModelRunConfig's measurements
+        Given a RunConfig and a RunConfigMeasurement, add the measurement to the
+        RunConfig's measurements
         
         Parameters
         ----------
         run_config: RunConfig
-        key: str
         run_config_measurement: RunConfigMeasurement
         """
 
@@ -166,35 +165,49 @@ class Results:
 
         return measurements
 
-    def get_model_measurements_dict(self, model_name):
+    def get_model_measurements_dict(self, models_name):
         """
-        # FIXME is this description correct?
-        Given a model name, return a dict of tuples of model configs and 
-        a dict of all associated measurement values
+        Given a model name, return a dict with all measurements for that model.
         
         Parameters
         ----------
-        model_name : str
+        models_name : str
             The model name for the requested results
             
         Returns
         -------
-        Dict of tuples - {(ModelConfig, list of RunConfigMeasurements)}
-            Dict of tuples consisting of the model's ModelConfig 
-            and a list of all associated measurement values
+        Dict (keyed by model_variants_name) of tuples containing a RunConfig and 
+        a dict of Keys:RunConfigMeasurements
+            {
+                model_variants_name_1: 
+                (
+                    RunConfig1, 
+                    {
+                        Key1: RunConfigMeasurement1
+                        Key2: RunConfigMeasurement2
+                    }
+                ),
+                model_variants_name_2: 
+                (
+                    RunConfig2, 
+                    {
+                        Key3: RunConfigMeasurement3
+                        Key4: RunConfigMeasurement4
+                    }
+                )
+            }
         """
-        if not self.contains_model(model_name):
-            logger.error(f'No results found for model: {model_name}')
+        if not self.contains_model(models_name):
+            logger.error(f'No results found for model: {models_name}')
             return {}
 
-        return self._results[model_name]
+        return self._results[models_name]
 
     def get_model_variants_measurements_dict(self, models_name,
                                              model_variants_name):
         """
-        FIXME: is this description correct?
-        Given a models name and model variants name, return a dict where the
-        key is run_config and the values are list of all associated measurements
+        Given a models name and model variants name, return a dict of all 
+        associated RunConfigMeasurements
         
         Parameters
         ----------
@@ -203,7 +216,7 @@ class Results:
 
         Returns
         -------
-        Dict of RunConfigMeasurements
+        Dict of {Key:RunConfigMeasurement}
         """
         if not self.contains_model(
                 models_name) or not self.contains_model_variant(
@@ -214,32 +227,29 @@ class Results:
         return self._results[models_name][model_variants_name][
             Results.MEASUREMENTS_INDEX]
 
-    def get_all_model_variant_measurements(self, model_name,
-                                           model_variant_name):
+    def get_all_model_variant_measurements(self, models_name,
+                                           model_variants_name):
         """
         Given a model name and model variant name, return the RunConfig and 
         a list of all associated measurement values
         
         Parameters
         ----------
-        model_name : str
-        model_variant_name: str
+        models_name : str
+        model_variants_name: str
 
         Returns
         -------
         Tuple - (RunConfig, list of RunConfigMeasurements)
-            Tuple consisting of the model_config and a list of
-            all associated measurement values
         """
-        # FIXME -- run config or model config here?
         if not self.contains_model(
-                model_name) or not self.contains_model_variant(
-                    model_name, model_variant_name):
+                models_name) or not self.contains_model_variant(
+                    models_name, model_variants_name):
             logger.error(
-                f'No results found for model config: {model_variant_name}')
+                f'No results found for model variant: {model_variants_name}')
             return (None, [])
 
-        model_config_data = self._results[model_name][model_variant_name]
+        model_config_data = self._results[models_name][model_variants_name]
 
         return model_config_data[Results.RUN_CONFIG_INDEX], list(
             model_config_data[Results.MEASUREMENTS_INDEX].values())

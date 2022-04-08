@@ -522,7 +522,7 @@ class ConfigCommandProfile(ConfigCommand):
                         parser_args={'action': 'store_true'},
                         default_value=DEFAULT_RUN_CONFIG_SEARCH_DISABLE,
                         description="Disable run config search."))
-        # FIXME: TODO-MM:  Disable until we support this feature
+        # TODO-TMA-518:  Disable until we support this feature
         # self._add_config(
         #     ConfigField(
         #         'run_config_profile_models_concurrently_enable',

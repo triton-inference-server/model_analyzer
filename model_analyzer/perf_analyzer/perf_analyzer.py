@@ -137,6 +137,7 @@ class PerfAnalyzer:
             # Synchronously start and finish run
             for _ in range(self._max_retries):
                 status = self._execute_pa(env)
+
                 if status == self.PA_FAIL:
                     return status
                 elif status == self.PA_SUCCESS:
@@ -167,11 +168,22 @@ class PerfAnalyzer:
         return self.PA_SUCCESS
 
     def _execute_pa(self, env):
+
+        cmd = self._get_cmd()
+        logger.debug(f"Running {cmd}")
+        perf_analyzer_env = self._create_env(env)
+
+        process = self._create_process(cmd, perf_analyzer_env)
+        status = self._resolve_process(process)
+
+        return status
+
+    def _get_cmd(self):
         cmd = [self.bin_path]
         cmd += self._get_pa_cli_command().replace('=', ' ').split()
+        return cmd
 
-        logger.debug(f"Running perf_analyzer: {self._get_pa_cli_command()}")
-
+    def _create_env(self, env):
         perf_analyzer_env = os.environ.copy()
 
         if env:
@@ -183,6 +195,9 @@ class PerfAnalyzer:
                     # Collect the ones that need lookups to give to the shell
                     perf_analyzer_env[variable] = os.path.expandvars(value)
 
+        return perf_analyzer_env
+
+    def _create_process(self, cmd, perf_analyzer_env):
         try:
             process = Popen(cmd,
                             start_new_session=True,
@@ -193,12 +208,14 @@ class PerfAnalyzer:
         except FileNotFoundError as e:
             raise TritonModelAnalyzerException(
                 f"perf_analyzer binary not found : {e}")
+        return process
 
+    def _resolve_process(self, process):
         if self._poll_perf_analyzer(process) == 1:
             return self.PA_FAIL
 
         if process.returncode > 0:
-            if self._auto_adjust_parameters(cmd, process) == self.PA_FAIL:
+            if self._auto_adjust_parameters(process) == self.PA_FAIL:
                 return self.PA_FAIL
             else:
                 return self.PA_RETRY
@@ -244,7 +261,7 @@ class PerfAnalyzer:
 
         return self.PA_SUCCESS
 
-    def _auto_adjust_parameters(self, cmd, process):
+    def _auto_adjust_parameters(self, process):
         """
         Use of the perf analyzer process
         """
@@ -280,7 +297,7 @@ class PerfAnalyzer:
                 )
             return self.PA_SUCCESS
         else:
-            logger.info(f"Running perf_analyzer {cmd} failed with"
+            logger.info(f"Running perf_analyzer failed with"
                         f" exit status {process.returncode} : {self._output}")
             return self.PA_FAIL
 
