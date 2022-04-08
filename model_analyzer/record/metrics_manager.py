@@ -369,7 +369,8 @@ class MetricsManager:
         if model_gpu_metrics is not None and model_non_gpu_metrics is not None:
 
             run_config_measurement = RunConfigMeasurement(
-                run_config.representation(), model_gpu_metrics)
+                run_config.representation(), perf_config['model-name'],
+                model_gpu_metrics)
 
             # FIXME: TMA-518 - this needs to be added per model
             model_specific_pa_params = perf_config.extract_model_specific_parameters(
