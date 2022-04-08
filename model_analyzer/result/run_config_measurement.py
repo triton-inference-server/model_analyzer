@@ -33,18 +33,16 @@ class RunConfigMeasurement:
     in a single RunConfig
     """
 
-    def __init__(self, key, model_name, gpu_data):
+    def __init__(self, model_variants_name, gpu_data):
         """
-        key: str
-        Unique string which can be used to differentiate this measurement 
-        from all others in the model
+        model_variants_name: str
+            Name of the model variants this measurement was collected for
         
         gpu_data : dict of list of Records
             Metrics from the monitors that have a GPU UUID
             associated with them            
         """
-        self._key = key
-        self._model_name = model_name
+        self._model_variants_name = model_variants_name
 
         self._gpu_data = gpu_data
         self._avg_gpu_data = self._average_list(list(self._gpu_data.values()))
@@ -55,11 +53,10 @@ class RunConfigMeasurement:
 
     @classmethod
     def from_dict(cls, run_config_measurement_dict):
-        run_config_measurement = RunConfigMeasurement(None, None, {})
+        run_config_measurement = RunConfigMeasurement(None, {})
 
-        run_config_measurement._key = run_config_measurement_dict['_key']
-        run_config_measurement._model_name = run_config_measurement_dict[
-            '_model_name']
+        run_config_measurement._model_variants_name = run_config_measurement_dict[
+            '_model_variants_name']
 
         run_config_measurement._gpu_data = cls._deserialize_gpu_data(
             run_config_measurement, run_config_measurement_dict['_gpu_data'])
@@ -123,14 +120,13 @@ class RunConfigMeasurement:
         for index, measurement in enumerate(self._model_config_measurements):
             measurement.set_metric_weighting(metric_objectives[index])
 
-    def key(self):
+    def model_variants_name(self):
         """
-        Returns
-        -------
-        str: Key used to uniquely identify the RunConfigMeasurement
+        Returns: str
+            The name of the model variants this measurement was collected for
         """
 
-        return self._key
+        return self._model_variants_name
 
     def model_name(self):
         """

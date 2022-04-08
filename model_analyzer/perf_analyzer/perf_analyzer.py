@@ -56,6 +56,8 @@ class PerfAnalyzer:
     """
 
     #yapf: disable
+    PA_SUCCESS, PA_FAIL, PA_RETRY = 0, 1, 2
+
     METRIC_TAG,                        CSV_STRING,             RECORD_CLASS,             REDUCTION_FACTOR = 0, 1, 2, 3
     perf_metric_table = [
         ["perf_latency_avg",           "Avg latency",           PerfLatencyAvg,          1000],
@@ -82,9 +84,8 @@ class PerfAnalyzer:
         ----------
         path : full path to the perf_analyzer
                 executable
-        config : PerfAnalyzerConfig
-            keys are names of arguments to perf_analyzer,
-            values are their values.
+        config : RunConfig
+            The RunConfig with information on what to execute
         max_retries: int
             Maximum number of times perf_analyzer adjusts parameters 
             in an attempt to profile a model. 
@@ -100,8 +101,12 @@ class PerfAnalyzer:
         self._max_retries = max_retries
         self._timeout = timeout
         self._output = None
-        self._perf_records = None
+        self._perf_records = {}
         self._max_cpu_util = max_cpu_util
+
+        # TODO-TMA-518: Need to update for multi-model
+        self._base_perf_config = self._config.model_run_configs(
+        )[0].perf_config()
 
     def run(self, metrics, env=None):
         """
@@ -118,8 +123,8 @@ class PerfAnalyzer:
 
         Returns
         -------
-        List of Records
-            List of the metrics obtained from this
+        Dict
+            Dict of Model to List of Records obtained from this
             run of perf_analyzer
 
         Raises
@@ -131,63 +136,78 @@ class PerfAnalyzer:
         if metrics:
             # Synchronously start and finish run
             for _ in range(self._max_retries):
-                logger.debug(
-                    f"Running perf_analyzer with args: {self._config.to_cli_string()}"
-                )
-                cmd = [self.bin_path]
-                cmd += self._config.to_cli_string().replace('=', ' ').split()
-
-                perf_analyzer_env = os.environ.copy()
-
-                if env:
-                    # Filter env variables that use env lookups
-                    for variable, value in env.items():
-                        if value.find('$') == -1:
-                            perf_analyzer_env[variable] = value
-                        else:
-                            # Collect the ones that need lookups to give to the shell
-                            perf_analyzer_env[variable] = os.path.expandvars(
-                                value)
-                try:
-                    process = Popen(cmd,
-                                    start_new_session=True,
-                                    stdout=PIPE,
-                                    stderr=STDOUT,
-                                    encoding='utf-8',
-                                    env=perf_analyzer_env)
-                except FileNotFoundError as e:
-                    raise TritonModelAnalyzerException(
-                        f"perf_analyzer binary not found : {e}")
-
-                if self._poll_perf_analyzer(process) == 1:
-                    # failure
-                    return 1
-
-                if process.returncode > 0:
-                    if self._auto_adjust_parameters(cmd, process) == 1:
-                        return 1
-                elif process.returncode < 0:
-                    logger.error(
-                        'perf_analyzer was terminated by signal: '
-                        f'{signal.Signals(abs(process.returncode)).name}')
-                    return 1
-                else:
-                    self._parse_output(metrics)
+                status = self._execute_pa(env)
+                if status == self.PA_FAIL:
+                    return status
+                elif status == self.PA_SUCCESS:
+                    self._parse_outputs(metrics)
                     break
+                elif status == self.PA_RETRY:
+                    continue
+                else:
+                    raise TritonModelAnalyzerException(
+                        f"Unexpected PA return {status}")
+
             else:
-                if self._config['measurement-mode'] == 'time_windows':
+                if self._base_perf_config['measurement-mode'] == 'time_windows':
                     logger.info(
                         f"Ran perf_analyzer {self._max_retries} times, "
                         "but no valid requests recorded in max time interval"
-                        f" of {self._config['measurement-interval']} ")
-                elif self._config['measurement-mode'] == 'count_windows':
+                        f" of {self._base_perf_config['measurement-interval']} "
+                    )
+                elif self._base_perf_config[
+                        'measurement-mode'] == 'count_windows':
                     logger.info(
                         f"Ran perf_analyzer {self._max_retries} times, "
                         "but no valid requests recorded over max request count"
-                        f" of {self._config['measurement-request-count']} ")
-                return 1
+                        f" of {self._base_perf_config['measurement-request-count']} "
+                    )
+                return self.PA_FAIL
 
-        return 0
+        return self.PA_SUCCESS
+
+    def _execute_pa(self, env):
+        cmd = [self.bin_path]
+        cmd += self._get_pa_cli_command().replace('=', ' ').split()
+
+        logger.debug(f"Running perf_analyzer: {self._get_pa_cli_command()}")
+
+        perf_analyzer_env = os.environ.copy()
+
+        if env:
+            # Filter env variables that use env lookups
+            for variable, value in env.items():
+                if value.find('$') == -1:
+                    perf_analyzer_env[variable] = value
+                else:
+                    # Collect the ones that need lookups to give to the shell
+                    perf_analyzer_env[variable] = os.path.expandvars(value)
+
+        try:
+            process = Popen(cmd,
+                            start_new_session=True,
+                            stdout=PIPE,
+                            stderr=STDOUT,
+                            encoding='utf-8',
+                            env=perf_analyzer_env)
+        except FileNotFoundError as e:
+            raise TritonModelAnalyzerException(
+                f"perf_analyzer binary not found : {e}")
+
+        if self._poll_perf_analyzer(process) == 1:
+            return self.PA_FAIL
+
+        if process.returncode > 0:
+            if self._auto_adjust_parameters(cmd, process) == self.PA_FAIL:
+                return self.PA_FAIL
+            else:
+                return self.PA_RETRY
+        elif process.returncode < 0:
+            logger.error('perf_analyzer was terminated by signal: '
+                         f'{signal.Signals(abs(process.returncode)).name}')
+            return self.PA_FAIL
+
+        return self.PA_SUCCESS
 
     def _poll_perf_analyzer(self, process):
         """
@@ -212,8 +232,7 @@ class PerfAnalyzer:
                 self._output = process.stdout.read()
                 process.kill()
 
-                # Failure
-                return 1
+                return self.PA_FAIL
 
             current_timeout -= INTERVAL_SLEEP_TIME
         else:
@@ -221,10 +240,9 @@ class PerfAnalyzer:
                 'perf_analyzer took very long to exit, killing perf_analyzer')
             process.kill()
 
-            # Failure
-            return 1
+            return self.PA_FAIL
 
-        return 0
+        return self.PA_SUCCESS
 
     def _auto_adjust_parameters(self, cmd, process):
         """
@@ -234,35 +252,41 @@ class PerfAnalyzer:
         if self._output.find("Failed to obtain stable measurement"
                             ) != -1 or self._output.find(
                                 "Please use a larger time window") != -1:
-            if self._config['measurement-mode'] == 'time_windows':
-                if self._config['measurement-interval'] is None:
-                    self._config[
+            if self._base_perf_config['measurement-mode'] == 'time_windows':
+                if self._base_perf_config['measurement-interval'] is None:
+                    self._base_perf_config[
                         'measurement-interval'] = PERF_ANALYZER_MEASUREMENT_WINDOW + MEASUREMENT_WINDOW_STEP
                 else:
-                    self._config['measurement-interval'] = int(
-                        self._config['measurement-interval']
+                    self._base_perf_config['measurement-interval'] = int(
+                        self._base_perf_config['measurement-interval']
                     ) + MEASUREMENT_WINDOW_STEP
                 logger.info(
                     "perf_analyzer's measurement window is too small, "
-                    f"increased to {self._config['measurement-interval']} ms.")
-            elif self._config['measurement-mode'] is None or self._config[
-                    'measurement-mode'] == 'count_windows':
-                if self._config['measurement-request-count'] is None:
-                    self._config[
+                    f"increased to {self._base_perf_config['measurement-interval']} ms."
+                )
+            elif self._base_perf_config[
+                    'measurement-mode'] is None or self._base_perf_config[
+                        'measurement-mode'] == 'count_windows':
+                if self._base_perf_config['measurement-request-count'] is None:
+                    self._base_perf_config[
                         'measurement-request-count'] = PERF_ANALYZER_MINIMUM_REQUEST_COUNT + MEASUREMENT_REQUEST_COUNT_STEP
                 else:
-                    self._config['measurement-request-count'] = int(
-                        self._config['measurement-request-count']
+                    self._base_perf_config['measurement-request-count'] = int(
+                        self._base_perf_config['measurement-request-count']
                     ) + MEASUREMENT_REQUEST_COUNT_STEP
                 logger.info(
                     "perf_analyzer's request count is too small, "
-                    f"increased to {self._config['measurement-request-count']}."
+                    f"increased to {self._base_perf_config['measurement-request-count']}."
                 )
-            return 0
+            return self.PA_SUCCESS
         else:
             logger.info(f"Running perf_analyzer {cmd} failed with"
                         f" exit status {process.returncode} : {self._output}")
-            return 1
+            return self.PA_FAIL
+
+    def _get_pa_cli_command(self):
+        # TODO-TMA-518 - update for multi-model
+        return self._base_perf_config.to_cli_string()
 
     def output(self):
         """
@@ -280,8 +304,7 @@ class PerfAnalyzer:
         """
         Returns
         -------
-        The stdout output of the
-        last perf_analyzer run
+        The records from the last perf_analyzer run
         """
 
         if self._perf_records:
@@ -290,20 +313,26 @@ class PerfAnalyzer:
             "Attempted to get perf_analyzer results"
             "without calling run first.")
 
-    def _parse_output(self, metrics):
+    def _parse_outputs(self, metrics):
         """
-        Extract metrics from the output of
-        the perf_analyzer
+        Extract records from the Perf Analyzer run for each model
         """
 
-        with open(self._config['latency-report-file'], mode='r') as f:
-            csv_reader = csv.DictReader(f, delimiter=',')
+        for perf_config in [
+                mrc.perf_config() for mrc in self._config.model_run_configs()
+        ]:
+            with open(perf_config['latency-report-file'], mode='r') as f:
+                csv_reader = csv.DictReader(f, delimiter=',')
 
-            for row in csv_reader:
-                self._perf_records = self._extract_metrics_from_row(
-                    metrics, row)
+                for row in csv_reader:
+                    self._perf_records[perf_config[
+                        'model-name']] = self._extract_metrics_from_row(
+                            metrics, row)
 
-        os.remove(self._config['latency-report-file'])
+        for perf_config in [
+                mrc.perf_config() for mrc in self._config.model_run_configs()
+        ]:
+            os.remove(perf_config['latency-report-file'])
 
     def _extract_metrics_from_row(self, requested_metrics, row_metrics):
         """ 

@@ -38,19 +38,12 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
     def tearDown(self):
         NotImplemented
 
-    def test_key(self):
+    def test_model_variants_name(self):
         """
-        Test that the key was initialized correctly
+        Test that the model_variants_name was initialized correctly
         """
-        self.assertEqual(
-            self.rcm0.key(),
-            construct_perf_analyzer_config(self.model_name).representation())
-
-    def test_model_name(self):
-        """
-        Test that the model name was initialized correctly
-        """
-        self.assertEqual(self.rcm0.model_name(), self.model_name)
+        self.assertEqual(self.rcm0.model_variants_name(),
+                         self.model_variants_name)
 
     def test_gpu_data(self):
         """
@@ -246,8 +239,8 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
 
         rcm0_from_dict = RunConfigMeasurement.from_dict(json.loads(rcm0_json))
 
-        self.assertEqual(rcm0_from_dict.key(), self.rcm0.key())
-        self.assertEqual(rcm0_from_dict.model_name(), self.rcm0.model_name())
+        self.assertEqual(rcm0_from_dict.model_variants_name(),
+                         self.rcm0.model_variants_name())
         self.assertEqual(rcm0_from_dict.gpu_data(), self.rcm0.gpu_data())
         self.assertEqual(rcm0_from_dict.non_gpu_data(),
                          self.rcm0.non_gpu_data())
@@ -261,6 +254,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
     def _construct_rcm0(self):
         self.model_name = "modelA,modelB"
         self.model_config_name = ["modelA_config_0", "modelB_config_1"]
+        self.model_variants_name = "".join(self.model_config_name)
         self.model_specific_pa_params = [{
             "batch_size": 1,
             "concurrency": 1
@@ -324,6 +318,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
     def _construct_rcm1(self):
         model_name = "modelA,modelB"
         model_config_name = ["modelA_config_2", "modelB_config_3"]
+        model_variants_name = "".join(model_config_name)
         model_specific_pa_params = [{
             "batch_size": 3,
             "concurrency": 3

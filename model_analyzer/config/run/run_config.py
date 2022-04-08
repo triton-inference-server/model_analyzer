@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.run.model_run_config import ModelRunConfig
+
 
 class RunConfig:
     """
@@ -60,6 +62,15 @@ class RunConfig:
             for model_run_config in self._model_run_configs
         ])
 
+    def cpu_only(self):
+        """
+        Returns true if all model_run_configs only operate on the CPU
+        """
+        return all([
+            model_run_config.model_config().cpu_only()
+            for model_run_config in self._model_run_configs
+        ])
+
     def triton_environment(self):
         """
         Returns
@@ -70,3 +81,23 @@ class RunConfig:
         """
 
         return self._triton_env
+
+    def models_name(self):
+        """ Returns a single comma-joined name of the original model names """
+        return ','.join([mrc.model_name() for mrc in self.model_run_configs()])
+
+    def model_variants_name(self):
+        """ Returns a single comma-joined name of the model variant names """
+        return ','.join(
+            [mrc.model_variant_name() for mrc in self.model_run_configs()])
+
+    @classmethod
+    def from_dict(cls, run_config_dict):
+        run_config = RunConfig({})
+
+        run_config._triton_env = run_config_dict['_triton_env']
+        for mrc_dict in run_config_dict['_model_run_configs']:
+            run_config._model_run_configs.append(
+                ModelRunConfig.from_dict(mrc_dict))
+
+        return run_config

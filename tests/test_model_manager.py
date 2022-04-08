@@ -67,7 +67,7 @@ class MetricsManagerSubclass(MetricsManager):
         else:
             return construct_run_config_measurement(
                 model_name=MagicMock(),
-                model_config_names=[MagicMock()],
+                model_config_names=["test_model_config_name"],
                 model_specific_pa_params=MagicMock(),
                 gpu_metric_values=MagicMock(),
                 non_gpu_metric_values=[{
@@ -914,7 +914,7 @@ class TestModelManager(trc.TestResultCollector):
                                      MagicMock(), MagicMock(), metrics_manager,
                                      MagicMock(), state_manager)
 
-        model_manager.run_model(config.profile_models[0])
+        model_manager.run_models([config.profile_models[0]])
         self.mock_model_config.stop()
 
         self._check_results(model_manager, expected_ranges)

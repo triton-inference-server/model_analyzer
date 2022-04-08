@@ -191,7 +191,8 @@ class ReportManager:
 
             # TODO-TMA-568: This needs to be updated because there will be multiple model configs
             for result in top_results:
-                model_config = result.model_configs()[0]
+                model_config = result.run_config().model_run_configs(
+                )[0].model_config()
                 for measurement in result.top_n_measurements(n=1):
                     self._summary_data[model_name].append(
                         (model_config, measurement))
@@ -200,7 +201,8 @@ class ReportManager:
         if self._config.num_top_model_configs:
             for result in self._result_manager.top_n_results(
                     n=self._config.num_top_model_configs):
-                model_config = result.model_configs()[0]
+                model_config = result.run_config().model_run_configs(
+                )[0].model_config()
                 for measurement in result.top_n_measurements(n=1):
                     self._summary_data[TOP_MODELS_REPORT_KEY].append(
                         (model_config, measurement))
@@ -216,6 +218,7 @@ class ReportManager:
             for model in self._config.report_model_configs
         ]
 
+        # TODO-TMA-568 - this likely needs to be updated for multi-model
         for model_config_name in model_config_names:
             self._detailed_report_data[
                 model_config_name] = self._result_manager.get_model_configs_run_config_measurements(
@@ -538,8 +541,10 @@ class ReportManager:
         specified
         """
 
-        model_config, measurements = self._detailed_report_data[
-            model_config_name]
+        run_config, measurements = self._detailed_report_data[model_config_name]
+
+        # TODO-TMA-568 - add support for multi-model
+        model_config = run_config.model_run_configs()[0].model_config()
         instance_group_string = model_config.instance_group_string()
         dynamic_batching = model_config.dynamic_batching_string()
         max_batch_size = model_config.max_batch_size()
@@ -554,7 +559,7 @@ class ReportManager:
 
         gpu_cpu_string = "CPU"
 
-        if not model_config.cpu_only():
+        if not run_config.cpu_only():
             gpu_dict = self._get_gpu_stats(measurements=measurements)
             gpu_names = ','.join(list(gpu_dict.keys()))
             max_memories = ','.join([str(x) + ' GB' for x in gpu_dict.values()])

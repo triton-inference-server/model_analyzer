@@ -202,7 +202,7 @@ class ResultManager:
                     for gpu_metric in gpu_metrics:
                         if gpu_metric.tag not in gpu_specific_metrics_from_measurements:
                             gpu_specific_metrics_from_measurements[
-                                gpu_metric.tag] = gpu_metric
+                                gpu_metric[0]] = gpu_metric
 
                 for non_gpu_metric_list in run_config_measurement.non_gpu_data(
                 ):
@@ -255,15 +255,14 @@ class ResultManager:
 
     # FIXME: TMA-518 this should be taking the run_config
     # and extracting the multiple model_run_config will be extracted
-    def add_run_config_measurement(self, model_run_config,
-                                   run_config_measurement):
+    def add_run_config_measurement(self, run_config, run_config_measurement):
         """
         This function adds model inference
         measurements to the required result
 
         Parameters
         ----------
-        model_run_config : ModelRunConfig
+        run_config : RunConfig
             Contains the parameters used to generate the measurment
             like the model name, model_config_name
         run_config_measurement: RunConfigMeasurement
@@ -274,8 +273,7 @@ class ResultManager:
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        results.add_run_config_measurement(model_run_config,
-                                           run_config_measurement)
+        results.add_run_config_measurement(run_config, run_config_measurement)
 
         # Use set_state_variable to record that state may have been changed
         self._state_manager.set_state_variable(name='ResultManager.results',
@@ -311,11 +309,11 @@ class ResultManager:
             model_measurements = results.get_model_measurements_dict(model_name)
 
             # TODO-TMA-570: Model config should be a list
-            for (model_config,
+            for (run_config,
                  run_config_measurements) in model_measurements.values():
                 run_config_result = RunConfigResult(
                     model_name=model_name,
-                    model_configs=[model_config],
+                    run_config=run_config,
                     comparator=comparators[model_name],
                     constraints=constraints[model_name])
 
@@ -330,18 +328,17 @@ class ResultManager:
                     run_config_result)
                 self._across_model_sorted_results.add_result(run_config_result)
 
-    def get_model_configs_run_config_measurements(self, model_config_name):
+    def get_model_configs_run_config_measurements(self, model_variants_name):
         """
         Unsorted list of RunConfigMeasurements for a config
 
         Parameters
         ----------
-        model_config_name: str
-            The name of the model config
+        model_variants_name: str
 
         Returns
         -------
-        (ModelConfig, list of RunConfigMeasurements)
+        (RunConfig, list of RunConfigMeasurements)
             The measurements for a particular config, in the order
             they were obtained.
         """
@@ -351,20 +348,21 @@ class ResultManager:
 
         # Name format is <base_model_name>_config_<number_or_default>
         #
-        model_name = model_config_name.rsplit('_', 2)[0]
+        model_name = model_variants_name.rsplit('_', 2)[0]
 
         # Remote mode has model_name == model_config_name
         #
         if not results.contains_model(model_name):
-            model_name = model_config_name
+            model_name = model_variants_name
 
-        if results.contains_model(model_name) and results.contains_model_config(
-                model_name, model_config_name):
-            return results.get_all_model_config_measurements(
-                model_name, model_config_name)
+        if results.contains_model(
+                model_name) and results.contains_model_variant(
+                    model_name, model_variants_name):
+            return results.get_all_model_variant_measurements(
+                model_name, model_variants_name)
         else:
             raise TritonModelAnalyzerException(
-                f"Model Config {model_config_name} requested for report step but no results were found. "
+                f"RunConfig {model_variants_name} requested for report step but no results were found. "
                 "Double check the name and ensure that this model config was actually profiled."
             )
 
@@ -426,13 +424,13 @@ class ResultManager:
 
         # TODO-TMA-570: This needs to be updated because there will be multiple model configs
         model_name = run_config_result.model_name()
-        instance_group = run_config_result.model_configs(
-        )[0].instance_group_string()
-        dynamic_batching = run_config_result.model_configs(
-        )[0].dynamic_batching_string()
-        cpu_only = run_config_result.model_configs()[0].cpu_only()
-        backend_parameters = run_config_result.model_configs(
-        )[0]._model_config.parameters
+        model_config = run_config_result.run_config().model_run_configs(
+        )[0].model_config()
+
+        instance_group = model_config.instance_group_string()
+        dynamic_batching = model_config.dynamic_batching_string()
+        cpu_only = run_config_result.run_config().cpu_only()
+        backend_parameters = model_config._model_config.parameters
 
         passing_measurements = run_config_result.passing_measurements()
         failing_measurements = run_config_result.failing_measurements()
@@ -768,15 +766,15 @@ class ResultManager:
 
         # TODO-TMA-570: This logic needs to be changed for multi-model
         for run_config_result in results:
-            if run_config_result.model_configs()[0].get_field(
-                    'name') == f"{model_name}_config_default":
+            if run_config_result.run_config().model_variants_name(
+            ) == f"{model_name}_config_default":
                 return
 
         # TODO-TMA-570: This logic needs to be changed for multi-model
-        for result in result_heap.results():
-            if result.model_configs()[0].get_field(
-                    'name') == f"{model_name}_config_default":
-                results.append(result)
+        for run_config_result in result_heap.results():
+            if run_config_result.run_config().model_variants_name(
+            ) == f"{model_name}_config_default":
+                results.append(run_config_result)
                 return
 
     def get_result_statistics(self):

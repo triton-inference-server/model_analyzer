@@ -18,6 +18,8 @@ from model_analyzer.config.input.config_command_analyze \
 from model_analyzer.config.input.config_command_report \
     import ConfigCommandReport
 from model_analyzer.config.run.model_run_config import ModelRunConfig
+from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 from model_analyzer.reports.report_manager import ReportManager
 from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
@@ -121,7 +123,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
             metric_objectives=result_comparator._metric_weights,
             model_config_weights=[1])
 
-        run_config = ModelRunConfig(model_name, model_config, MagicMock())
+        perf_config = PerfAnalyzerConfig()
+        perf_config.update_config({'model-name': model_config_name})
+        mrc = ModelRunConfig(model_name, model_config, perf_config)
+        run_config = RunConfig({})
+        run_config.add_model_run_config(mrc)
 
         self.result_manager.add_run_config_measurement(run_config, measurement)
 

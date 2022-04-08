@@ -189,10 +189,9 @@ def construct_run_config_measurement(model_name, model_config_names,
     """
 
     gpu_data = convert_gpu_metrics_to_data(gpu_metric_values)
-    pa_config = construct_perf_analyzer_config(model_name=model_name)
 
-    rc_measurement = RunConfigMeasurement(pa_config.representation(),
-                                          model_name, gpu_data)
+    model_variants_name = ''.join(model_config_names)
+    rc_measurement = RunConfigMeasurement(model_variants_name, gpu_data)
 
     non_gpu_data = [
         convert_non_gpu_metrics_to_data(non_gpu_metric_value)
@@ -215,8 +214,8 @@ def construct_run_config_result(avg_gpu_metric_values,
                                 avg_non_gpu_metric_values,
                                 comparator,
                                 value_step=1,
-                                model_name=None,
-                                model_config=None):
+                                model_name="fake_model_name",
+                                run_config=None):
     """
     Takes a dictionary whose values are average
     metric values, constructs artificial data 
@@ -248,7 +247,7 @@ def construct_run_config_result(avg_gpu_metric_values,
 
     # Construct a result
     run_config_result = RunConfigResult(model_name=model_name,
-                                        model_configs=[model_config],
+                                        run_config=run_config,
                                         comparator=comparator)
 
     # Get dict of list of metric values

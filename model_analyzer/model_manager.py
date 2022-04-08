@@ -14,8 +14,8 @@
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
+from .model_analyzer_exceptions import TritonModelAnalyzerException
 
-import os
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -53,15 +53,15 @@ class ModelManager:
         self._result_manager = result_manager
         self._state_manager = state_manager
 
-    def run_model(self, model):
+    def run_models(self, models):
         """
         Generates configs, runs inferences, gets
-        measurements for a model
+        measurements for a list of models
         
         Parameters
         ----------
-        model : ConfigModelProfileSpec
-            The model to run
+        models : List of ConfigModelProfileSpec
+            The models to run
         """
 
         self._metrics_manager.start_new_model()
@@ -69,11 +69,11 @@ class ModelManager:
         # Save the global server config and update the server's config for this model run
         server_config_copy = self._server.config().copy()
 
-        # MM-PHASE 1: Assuming all models are identical
-        self._server.update_config(params=model.triton_server_flags())
+        triton_server_flags = self._get_triton_server_flags(models)
+        self._server.update_config(params=triton_server_flags)
 
         rcg = RunConfigGenerator(config=self._config,
-                                 models=[model],
+                                 models=models,
                                  client=self._client)
 
         run_config_generator = rcg.next_config()
@@ -89,3 +89,12 @@ class ModelManager:
 
         # Reset the server args to global config
         self._server.update_config(params=server_config_copy.server_args())
+
+    def _get_triton_server_flags(self, models):
+        triton_server_flags = models[0].triton_server_flags()
+
+        for model in models:
+            if model.triton_server_flags() != triton_server_flags:
+                raise TritonModelAnalyzerException(
+                    f"Triton server flags must be the same for all models to run concurrently"
+                )

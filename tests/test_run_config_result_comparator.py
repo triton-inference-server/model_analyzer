@@ -95,16 +95,14 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metric_values=avg_non_gpu_metrics1,
             comparator=result_comparator,
             value_step=value_step1,
-            model_name=MagicMock(),
-            model_config=MagicMock())
+            run_config=MagicMock())
 
         result2 = construct_run_config_result(
             avg_gpu_metric_values=avg_gpu_metrics2,
             avg_non_gpu_metric_values=avg_non_gpu_metrics2,
             comparator=result_comparator,
             value_step=value_step2,
-            model_name=MagicMock(),
-            model_config=MagicMock())
+            run_config=MagicMock())
 
         self.assertEqual(result_comparator.is_better_than(result1, result2),
                          expected_result)
