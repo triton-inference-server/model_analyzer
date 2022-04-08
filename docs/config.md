@@ -1006,12 +1006,12 @@ model object can contain `<plots>` objects. An example looks like:
 ```yaml
 report_model_configs:
   model_config_0:
-      plots:
-        throughput_v_latency:
-          title: Title
-          x_axis: perf_latency_p99
-          y_axis: perf_throughput
-          monotonic: True
+    plots:
+      throughput_v_latency:
+        title: Title
+        x_axis: perf_latency_p99
+        y_axis: perf_throughput
+        monotonic: True
 ```
 
 Multiple models can be specified under the `analysis_models` key as well.
@@ -1019,19 +1019,19 @@ Multiple models can be specified under the `analysis_models` key as well.
 ```yaml
 report_model_configs:
   model_config_default:
-      plots:
-        throughput_v_latency:
-            title: Title
-            x_axis: perf_latency_p99
-            y_axis: perf_throughput
-            monotonic: True
+    plots:
+      throughput_v_latency:
+        title: Title
+        x_axis: perf_latency_p99
+        y_axis: perf_throughput
+        monotonic: True
   model_config_0:
     plots:
-        gpu_mem_v_latency:
-            title: Title
-            x_axis: perf_latency_p99
-            y_axis: gpu_used_memory
-            monotonic: False
+      gpu_mem_v_latency:
+        title: Title
+        x_axis: perf_latency_p99
+        y_axis: gpu_used_memory
+        monotonic: False
 ```
 
 ## Config Defaults
