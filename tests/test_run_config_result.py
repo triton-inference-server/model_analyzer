@@ -12,16 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# from tests.common.test_utils import convert_non_gpu_metrics_to_data, \
-#     convert_gpu_metrics_to_data, convert_avg_gpu_metrics_to_data, \
-#     construct_perf_analyzer_config, construct_run_config_measurement, default_encode
-
-# from model_analyzer.record.metrics_manager import MetricsManager
-# from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
-# from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-
-# from statistics import mean
-
 import unittest
 from unittest.mock import MagicMock, patch
 from .common import test_result_collector as trc
