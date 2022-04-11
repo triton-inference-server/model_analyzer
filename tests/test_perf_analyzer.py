@@ -448,6 +448,33 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(
             self.perf_mock.get_perf_analyzer_popen_read_call_count(), 10)
 
+    def test_is_multi_model(self):
+        """ 
+        Test the functionality of the _is_multi_model() function 
+        
+        If the provided run_config only has one ModelRunConfig, then is_multi_model is false. Any
+        more than one ModelRunConfig and it should return true
+        """
+        run_config = RunConfig({})
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), MagicMock()))
+
+        pa1 = PerfAnalyzer(path=PERF_BIN_PATH,
+                           config=run_config,
+                           max_retries=10,
+                           timeout=100,
+                           max_cpu_util=50)
+        self.assertFalse(pa1._is_multi_model())
+
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), MagicMock()))
+        pa2 = PerfAnalyzer(path=PERF_BIN_PATH,
+                           config=run_config,
+                           max_retries=10,
+                           timeout=100,
+                           max_cpu_util=50)
+        self.assertTrue(pa2._is_multi_model())
+
     def tearDown(self):
         # In case test raises exception
         if self.server is not None:

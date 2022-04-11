@@ -167,6 +167,31 @@ class PerfAnalyzer:
 
         return self.PA_SUCCESS
 
+    def get_records(self):
+        """
+        Returns
+        -------
+        The records from the last perf_analyzer run
+        """
+
+        if self._perf_records:
+            return self._perf_records
+        raise TritonModelAnalyzerException(
+            "Attempted to get perf_analyzer results"
+            "without calling run first.")
+
+    def output(self):
+        """
+        Returns
+        -------
+        The stdout output of the
+        last perf_analyzer run
+        """
+
+        if self._output:
+            return self._output
+        logger.info('perf_analyzer did not produce any output.')
+
     def _execute_pa(self, env):
 
         cmd = self._get_cmd()
@@ -265,7 +290,7 @@ class PerfAnalyzer:
         """
         Use of the perf analyzer process
         """
-
+        # TODO-TMA-518 - how to handle?
         if self._output.find("Failed to obtain stable measurement"
                             ) != -1 or self._output.find(
                                 "Please use a larger time window") != -1:
@@ -305,30 +330,11 @@ class PerfAnalyzer:
         # TODO-TMA-518 - update for multi-model
         return self._base_perf_config.to_cli_string()
 
-    def output(self):
+    def _is_multi_model(self):
         """
-        Returns
-        -------
-        The stdout output of the
-        last perf_analyzer run
+        Returns true if the RunConfig provided to this class contains multiple perf_configs. Else False
         """
-
-        if self._output:
-            return self._output
-        logger.info('perf_analyzer did not produce any output.')
-
-    def get_records(self):
-        """
-        Returns
-        -------
-        The records from the last perf_analyzer run
-        """
-
-        if self._perf_records:
-            return self._perf_records
-        raise TritonModelAnalyzerException(
-            "Attempted to get perf_analyzer results"
-            "without calling run first.")
+        return len(self._config.model_run_configs()) > 1
 
     def _parse_outputs(self, metrics):
         """
@@ -338,6 +344,8 @@ class PerfAnalyzer:
         for perf_config in [
                 mrc.perf_config() for mrc in self._config.model_run_configs()
         ]:
+            logger.debug(
+                f"Reading PA results from {perf_config['latency-report-file']}")
             with open(perf_config['latency-report-file'], mode='r') as f:
                 csv_reader = csv.DictReader(f, delimiter=',')
 
