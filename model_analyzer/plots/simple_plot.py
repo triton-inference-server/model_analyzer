@@ -59,42 +59,41 @@ class SimplePlot:
 
         self._data = {}
 
-    def add_run_config_measurement(self, model_config_label,
-                                   run_config_measurement):
+    def add_run_config_measurement(self, label, run_config_measurement):
         """
         Adds a measurment to this plot
 
         Parameters
         ----------
-        model_config_label : str
-            The name of the model config this measurement
+        label : str
+            The name of the config(s) this measurement
             is taken from. 
         run_config_measurement : RunConfigMeasurement
             The measurement containing the data to
             be plotted.
         """
 
-        if model_config_label not in self._data:
-            self._data[model_config_label] = defaultdict(list)
+        if label not in self._data:
+            self._data[label] = defaultdict(list)
 
         # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         if self._x_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
-            self._data[model_config_label]['x_data'].append(
+            self._data[label]['x_data'].append(
                 run_config_measurement.model_specific_pa_params()[0][
                     self._x_axis.replace('_', '-')])
         else:
             # TODO-TMA-566: replace with get_metric_gpu/non_gpu_value()
-            self._data[model_config_label]['x_data'].append(
+            self._data[label]['x_data'].append(
                 run_config_measurement.get_metric_value(tag=self._x_axis))
 
         # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
-            self._data[model_config_label]['y_data'].append(
+            self._data[label]['y_data'].append(
                 run_config_measurement.model_specific_pa_params()[0][
                     self._y_axis.replace('_', '-')])
         else:
             # TODO-TMA-566: replace with get_metric_gpu/non_gpu_value()
-            self._data[model_config_label]['y_data'].append(
+            self._data[label]['y_data'].append(
                 run_config_measurement.get_metric_value(tag=self._y_axis))
 
     def clear(self):
@@ -136,8 +135,9 @@ class SimplePlot:
 
         for model_config_name, data in self._data.items():
             # Sort the data by x-axis
-            x_data, y_data = (list(t) for t in zip(
-                *sorted(zip(data['x_data'], data['y_data']))))
+            x_data, y_data = (
+                list(t)
+                for t in zip(*sorted(zip(data['x_data'], data['y_data']))))
 
             if self._monotonic:
                 filtered_x, filtered_y = [x_data[0]], [y_data[0]]

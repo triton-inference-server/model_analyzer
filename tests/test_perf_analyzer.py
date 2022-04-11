@@ -12,15 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.device.gpu_device import GPUDevice
 import unittest
-from unittest.mock import patch, mock_open
+from unittest.mock import MagicMock, patch, mock_open
+
+from model_analyzer.triton.model.model_config import ModelConfig
 
 from .mocks.mock_server_local import MockServerLocalMethods
 from .mocks.mock_perf_analyzer import MockPerfAnalyzerMethods
 from .mocks.mock_client import MockTritonClientMethods
 from .mocks.mock_psutil import MockPSUtil
 
+from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.triton.server.server_config import TritonServerConfig
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from model_analyzer.triton.client.client_factory import TritonClientFactory
@@ -77,6 +81,10 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.config['model-name'] = TEST_MODEL_NAME
         self.config['measurement-interval'] = 1000
         self.config['measurement-request-count'] = 50
+
+        self.run_config = RunConfig({})
+        self.run_config.add_model_run_config(
+            ModelRunConfig("fake_name", MagicMock(), self.config))
 
         self.gpus = [
             GPUDevice('TEST_DEVICE_NAME', 0, "TEST_PCI_BUS_ID", "TEST_UUID")
@@ -217,8 +225,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         # Create server, client, PerfAnalyzer, and wait for server ready
         self.server = TritonServerFactory.create_server_local(
             path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=self.gpus)
+
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
-                                     config=self.config,
+                                     config=self.run_config,
                                      max_retries=10,
                                      timeout=100,
                                      max_cpu_util=50)
@@ -238,8 +247,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 5)
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 5)
 
         # Test p90 latency parsing
         perf_metrics = [PerfLatencyP90]
@@ -250,8 +259,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 4.7)
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.7)
 
         # Test p95 latency parsing
         perf_metrics = [PerfLatencyP95]
@@ -262,8 +271,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 4.8)
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.8)
 
         # Test p99 latency parsing
         perf_metrics = [PerfLatencyP99]
@@ -274,8 +283,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 4.9)
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.9)
 
         # Test throughput parsing
         perf_metrics = [PerfThroughput]
@@ -286,8 +295,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 46.8)
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 46.8)
 
         # Test client response wait
         perf_metrics = [PerfClientResponseWait]
@@ -298,8 +307,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 0.314)
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.314)
 
         # Test server queue
         perf_metrics = [PerfServerQueue]
@@ -310,8 +319,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 0.018)
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.018)
 
         # Test server compute infer
         perf_metrics = [PerfServerComputeInfer]
@@ -322,8 +331,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 0.065)
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.065)
 
         # Test server compute input
         perf_metrics = [PerfServerComputeInput]
@@ -334,8 +343,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 0.034)
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.034)
 
         # Test server compute infer
         perf_metrics = [PerfServerComputeOutput]
@@ -346,8 +355,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].value(), 0.016)
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.016)
 
         # # Test parsing for subset
         perf_metrics = [
@@ -361,7 +370,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records), 5)
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 5)
 
         # Test no exceptions are raised when nothing can be parsed
         pa_csv_empty = ""
@@ -395,7 +404,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         perf_analyzer_config['concurrency-range'] = TEST_CONCURRENCY_RANGE
         perf_analyzer_config['measurement-mode'] = 'time_windows'
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
-                                     config=self.config,
+                                     config=self.run_config,
                                      max_retries=10,
                                      timeout=100,
                                      max_cpu_util=50)
@@ -421,7 +430,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.server = TritonServerFactory.create_server_local(
             path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=self.gpus)
         perf_analyzer = PerfAnalyzer(path=PERF_BIN_PATH,
-                                     config=self.config,
+                                     config=self.run_config,
                                      max_retries=10,
                                      timeout=100,
                                      max_cpu_util=50)

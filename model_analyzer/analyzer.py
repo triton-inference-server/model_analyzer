@@ -89,43 +89,11 @@ class Analyzer:
                 f"Expected config of type {ConfigCommandProfile},"
                 " got {type(self._config)}.")
 
-        self._metrics_manager = MetricsManager(
-            config=self._config,
-            client=client,
-            server=self._server,
-            gpus=gpus,
-            result_manager=self._result_manager,
-            state_manager=self._state_manager)
+        self._create_metrics_manager(client, gpus)
+        self._create_model_manager(client)
+        self._get_server_only_metrics(client)
 
-        self._model_manager = ModelManager(
-            config=self._config,
-            client=client,
-            server=self._server,
-            result_manager=self._result_manager,
-            metrics_manager=self._metrics_manager,
-            state_manager=self._state_manager)
-
-        # Get metrics for server only
-        if self._config.triton_launch_mode != 'c_api':
-            logger.info('Profiling server only metrics')
-            self._server.start()
-            client.wait_for_server_ready(self._config.client_max_retries)
-            self._metrics_manager.profile_server()
-            self._server.stop()
-
-        # Profile all models concurrently
-        if self._should_profile_multiple_models_concurrently():
-            raise TritonModelAnalyzerException(
-                f"Concurrent models not yet implemented")
-        else:
-            # Profile each model, save state after each
-            for model in self._config.profile_models:
-                if self._state_manager.exiting():
-                    break
-                try:
-                    self._model_manager.run_model(model=model)
-                finally:
-                    self._state_manager.save_checkpoint()
+        self._profile_models()
 
         logger.info(self._get_profile_complete_string())
         logger.info("")
@@ -203,8 +171,54 @@ class Analyzer:
         self._report_manager.create_detailed_reports()
         self._report_manager.export_detailed_reports()
 
+    def _create_metrics_manager(self, client, gpus):
+        self._metrics_manager = MetricsManager(
+            config=self._config,
+            client=client,
+            server=self._server,
+            gpus=gpus,
+            result_manager=self._result_manager,
+            state_manager=self._state_manager)
+
+    def _create_model_manager(self, client):
+        self._model_manager = ModelManager(
+            config=self._config,
+            client=client,
+            server=self._server,
+            result_manager=self._result_manager,
+            metrics_manager=self._metrics_manager,
+            state_manager=self._state_manager)
+
+    def _get_server_only_metrics(self, client):
+        if self._config.triton_launch_mode != 'c_api':
+            logger.info('Profiling server only metrics...')
+            self._server.start()
+            client.wait_for_server_ready(self._config.client_max_retries)
+            self._metrics_manager.profile_server()
+            self._server.stop()
+
+    def _profile_models(self):
+
+        models = self._config.profile_models
+
+        if self._should_profile_multiple_models_concurrently():
+            # Profile all models concurrently
+            try:
+                self._model_manager.run_models(models=models)
+            finally:
+                self._state_manager.save_checkpoint()
+        else:
+            # Profile each model, save state after each
+            for model in models:
+                if self._state_manager.exiting():
+                    break
+                try:
+                    self._model_manager.run_models(models=[model])
+                finally:
+                    self._state_manager.save_checkpoint()
+
     def _should_profile_multiple_models_concurrently(self):
-        # FIXME: TODO-MM: Disable until we support this feature
+        # TODO-TMA-518: Disable until we support this feature
         # return (self._config.run_config_profile_models_concurrently_enable and
         #         len(self._config.profile_models) > 1)
         return False
@@ -215,7 +229,7 @@ class Analyzer:
         num_profiled_configs = self._get_num_profiled_configs()
 
         return (f'Profile complete. Profiled {num_profiled_configs} '
-                f'configurations for models: {profiled_model_list}.')
+                f'configurations for models: {profiled_model_list}')
 
     def _get_num_profiled_configs(self):
         return sum([
@@ -274,8 +288,7 @@ class Analyzer:
         return report_command_string
 
     def _get_top_n_model_config_names(self, n=-1):
-        # TODO-TMA-572: This needs to be updated because there will be multiple model configs
         return [
-            x.model_configs()[0].get_config()['name']
+            x.run_config().model_variants_name()
             for x in self._result_manager.top_n_results(n=n)
         ]

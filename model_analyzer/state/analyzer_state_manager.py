@@ -155,7 +155,7 @@ class AnalyzerStateManager:
         if self._state_changed:
             with open(ckpt_filename, 'w') as f:
                 json.dump(self._current_state, f, default=self.default_encode)
-            logger.info(f"Saved checkpoint to {ckpt_filename}.")
+            logger.info(f"Saved checkpoint to {ckpt_filename}")
 
             self._checkpoint_index += 1
             self._state_changed = False

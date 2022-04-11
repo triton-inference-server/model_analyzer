@@ -15,6 +15,9 @@
 from model_analyzer.constants import LOGGER_NAME
 import logging
 
+from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+
 logger = logging.getLogger(LOGGER_NAME)
 
 
@@ -54,6 +57,18 @@ class ModelRunConfig:
         """
 
         return self._model_name
+
+    def model_variant_name(self):
+        """
+        Get the model config variant name for this config.
+
+        Returns
+        -------
+        str
+            Model variant name
+        """
+
+        return self.model_config().get_field('name')
 
     def model_config(self):
         """
@@ -100,3 +115,13 @@ class ModelRunConfig:
                 f"Illegal model run config because client batch size {perf_batch_size} is greater than model max batch size {max_batch_size}"
             )
         return legal
+
+    @classmethod
+    def from_dict(cls, model_run_config_dict):
+        model_run_config = ModelRunConfig(None, None, None)
+        model_run_config._model_name = model_run_config_dict['_model_name']
+        model_run_config._model_config = ModelConfig.from_dict(
+            model_run_config_dict['_model_config'])
+        model_run_config._perf_config = PerfAnalyzerConfig.from_dict(
+            model_run_config_dict['_perf_config'])
+        return model_run_config

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from model_analyzer.analyzer import Analyzer
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
@@ -23,7 +23,9 @@ from model_analyzer.constants import CONFIG_PARSER_SUCCESS
 from model_analyzer.result.results import Results
 from model_analyzer.result.run_config_result import RunConfigResult
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.config.run.model_run_config import ModelRunConfig
 
 from google.protobuf import json_format
 from tritonclient.grpc import model_config_pb2
@@ -81,22 +83,30 @@ class TestAnalyzer(trc.TestResultCollector):
             '/tmp/my_checkpoints`')
 
     def mock_top_n_results(self, model_name=None, n=-1):
+
+        rc1 = RunConfig({})
+        rc1.add_model_run_config(
+            ModelRunConfig(
+                "fake_model_name",
+                ModelConfig.create_from_dictionary({"name": "config1"}),
+                MagicMock()))
+        rc2 = RunConfig({})
+        rc2.add_model_run_config(
+            ModelRunConfig(
+                "fake_model_name",
+                ModelConfig.create_from_dictionary({"name": "config3"}),
+                MagicMock()))
+        rc3 = RunConfig({})
+        rc3.add_model_run_config(
+            ModelRunConfig(
+                "fake_model_name",
+                ModelConfig.create_from_dictionary({"name": "config4"}),
+                MagicMock()))
+
         return [
-            RunConfigResult(None, [
-                ModelConfig(
-                    json_format.ParseDict({'name': 'config1'},
-                                          model_config_pb2.ModelConfig()))
-            ], None),
-            RunConfigResult(None, [
-                ModelConfig(
-                    json_format.ParseDict({'name': 'config3'},
-                                          model_config_pb2.ModelConfig()))
-            ], None),
-            RunConfigResult(None, [
-                ModelConfig(
-                    json_format.ParseDict({'name': 'config4'},
-                                          model_config_pb2.ModelConfig()))
-            ], None)
+            RunConfigResult("fake_model_name", rc1, MagicMock()),
+            RunConfigResult("fake_model_name", rc2, MagicMock()),
+            RunConfigResult("fake_model_name", rc3, MagicMock())
         ]
 
     @patch(

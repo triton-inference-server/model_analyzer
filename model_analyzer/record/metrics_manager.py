@@ -172,40 +172,101 @@ class MetricsManager:
         measurement to the result manager
         """
 
-        # TODO TMA-518
-        model_run_config = run_config.model_run_configs()[0]
-
-        # Create model variants
-        self._create_model_variants(model_run_config)
+        self._create_model_variants(run_config)
 
         # If this run config was already run, do not run again, just get the measurement
-        measurement = self._get_measurement_if_config_duplicate(
-            model_run_config)
+        measurement = self._get_measurement_if_config_duplicate(run_config)
         if measurement:
             logger.info(
                 "Existing measurement found for run config. Skipping profile")
             return measurement
 
-        # Start server, and load model variants
         self._server.start(env=run_config.triton_environment())
-        if not self._load_model_variants(model_run_config):
+        if not self._load_model_variants(run_config):
             self._server.stop()
             return
 
-        # Profile various batch size and concurrency values.
-        measurement = self.profile_model(run_config)
+        measurement = self.profile_models(run_config)
 
         self._server.stop()
 
         return measurement
 
+    def profile_models(self, run_config):
+        """
+        Runs monitors while running perf_analyzer with a specific set of
+        arguments. This will profile model inferencing.
+
+        Parameters
+        ----------
+        run_config : RunConfig
+            RunConfig object corresponding to the models being profiled.
+
+        Returns
+        -------
+        (dict of lists, list)
+            The gpu specific and non gpu metrics
+        """
+
+        perf_output_writer = None if \
+            not self._config.perf_output else FileWriter(self._config.perf_output_path)
+        cpu_only = run_config.cpu_only()
+
+        self._print_run_config_info(run_config)
+
+        self._start_monitors(cpu_only=cpu_only)
+
+        perf_analyzer_metrics = self._run_perf_analyzer(run_config,
+                                                        perf_output_writer)
+
+        if not perf_analyzer_metrics:
+            self._stop_monitors(cpu_only=cpu_only)
+            self._destroy_monitors(cpu_only=cpu_only)
+            return None
+
+        # Get metrics for model inference and combine metrics that do not have GPU UUID
+        model_gpu_metrics = {}
+        if not cpu_only:
+            model_gpu_metrics = self._get_gpu_inference_metrics()
+        model_cpu_metrics = self._get_cpu_inference_metrics()
+
+        self._destroy_monitors(cpu_only=cpu_only)
+
+        run_config_measurement = None
+        if model_gpu_metrics is not None and perf_analyzer_metrics is not None:
+
+            run_config_measurement = RunConfigMeasurement(
+                run_config.model_variants_name(), model_gpu_metrics)
+
+            # Combine all per-model measurements into the RunConfigMeasurement
+            #
+            for model_run_config in run_config.model_run_configs():
+                perf_config = model_run_config.perf_config()
+                model_name = perf_config['model-name']
+
+                model_non_gpu_metrics = \
+                      list(perf_analyzer_metrics[model_name].values()) \
+                    + list(model_cpu_metrics.values())
+
+                model_specific_pa_params = perf_config.extract_model_specific_parameters(
+                )
+
+                run_config_measurement.add_model_config_measurement(
+                    perf_config['model-name'], model_specific_pa_params,
+                    model_non_gpu_metrics)
+
+            self._result_manager.add_run_config_measurement(
+                run_config, run_config_measurement)
+
+        return run_config_measurement
+
     def _create_model_variants(self, run_config):
         """
         Creates and fills all model variant directories
         """
-
-        self._create_model_variant(original_name=run_config.model_name(),
-                                   variant_config=run_config.model_config())
+        for mrc in run_config.model_run_configs():
+            self._create_model_variant(original_name=mrc.model_name(),
+                                       variant_config=mrc.model_config())
 
     def _create_model_variant(self, original_name, variant_config):
         """
@@ -237,10 +298,9 @@ class MetricsManager:
         """
         Loads all model variants in the client
         """
-
-        if not self._load_model_variant(
-                variant_config=run_config.model_config()):
-            return False
+        for mrc in run_config.model_run_configs():
+            if not self._load_model_variant(variant_config=mrc.model_config()):
+                return False
         return True
 
     def _load_model_variant(self, variant_config):
@@ -279,112 +339,20 @@ class MetricsManager:
         in the state manager's results object
         """
 
-        model_name = run_config.model_name()
-        model_config_name = run_config.model_config().get_field('name')
+        models_name = run_config.models_name()
+        model_variants_name = run_config.model_variants_name()
         key = run_config.representation()
 
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        if not results.contains_model_config(model_name, model_config_name):
+        if not results.contains_model_variant(models_name, model_variants_name):
             return False
 
-        measurements = results.get_model_config_measurements_dict(
-            model_name, model_config_name)
+        measurements = results.get_model_variants_measurements_dict(
+            models_name, model_variants_name)
 
         return measurements.get(key, None)
-
-    def profile_model(self, run_config):
-        """
-        Runs monitors while running perf_analyzer with a specific set of
-        arguments. This will profile model inferencing.
-
-        Parameters
-        ----------
-        run_config : RunConfig
-            RunConfig object corresponding to the models being profiled.
-
-        Returns
-        -------
-        (dict of lists, list)
-            The gpu specific and non gpu metrics
-        """
-
-        # TODO TMA-518
-        model_run_config = run_config.model_run_configs()[0]
-
-        # TODO: Need to sort the values for batch size and concurrency
-        # for correct measurment of the GPU memory metrics.
-        perf_output_writer = None if \
-            not self._config.perf_output else FileWriter(self._config.perf_output_path)
-        perf_config = model_run_config.perf_config()
-        logger.info(
-            f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
-        )
-
-        cpu_only = model_run_config.model_config().cpu_only()
-        perf_config = model_run_config.perf_config()
-
-        # Inform user CPU metric(s) are not being collected under CPU mode
-        collect_cpu_metrics_expect = cpu_only or len(self._gpus) == 0
-        collect_cpu_metrics_actual = len(self._cpu_metrics) > 0
-        if collect_cpu_metrics_expect and not collect_cpu_metrics_actual:
-            logger.info(
-                "CPU metric(s) are not being collected, while this profiling will run on CPU(s)."
-            )
-        # Warn user about CPU monitor performance issue
-        if collect_cpu_metrics_actual:
-            logger.warning("CPU metric(s) are being collected.")
-            logger.warning(
-                "Collecting CPU metric(s) can affect the latency or throughput numbers reported by perf analyzer."
-            )
-
-        # Start monitors and run perf_analyzer
-        self._start_monitors(cpu_only=cpu_only)
-        perf_analyzer_metrics_or_status = self._get_perf_analyzer_metrics(
-            perf_config,
-            perf_output_writer,
-            perf_analyzer_env=run_config.triton_environment())
-
-        # Failed Status
-        if perf_analyzer_metrics_or_status == 1:
-            self._stop_monitors(cpu_only=cpu_only)
-            self._destroy_monitors(cpu_only=cpu_only)
-            return None
-        else:
-            perf_analyzer_metrics = perf_analyzer_metrics_or_status
-
-        # Get metrics for model inference and combine metrics that do not have GPU UUID
-        model_gpu_metrics = {}
-        if not cpu_only:
-            model_gpu_metrics = self._get_gpu_inference_metrics()
-        model_cpu_metrics = self._get_cpu_inference_metrics()
-
-        self._destroy_monitors(cpu_only=cpu_only)
-
-        model_non_gpu_metrics = list(perf_analyzer_metrics.values()) + list(
-            model_cpu_metrics.values())
-
-        run_config_measurement = None
-        if model_gpu_metrics is not None and model_non_gpu_metrics is not None:
-
-            run_config_measurement = RunConfigMeasurement(
-                run_config.representation(), perf_config['model-name'],
-                model_gpu_metrics)
-
-            # FIXME: TMA-518 - this needs to be added per model
-            model_specific_pa_params = perf_config.extract_model_specific_parameters(
-            )
-
-            run_config_measurement.add_model_config_measurement(
-                perf_config['model-name'], model_specific_pa_params,
-                model_non_gpu_metrics)
-
-            # FIXME: TMA-518 this should be taking the run_config (multiple model_run_configs will be extracted)
-            self._result_manager.add_run_config_measurement(
-                model_run_config, run_config_measurement)
-
-        return run_config_measurement
 
     def _start_monitors(self, cpu_only=False):
         """
@@ -436,47 +404,45 @@ class MetricsManager:
         self._gpu_monitor = None
         self._cpu_monitor = None
 
-    def _get_perf_analyzer_metrics(self,
-                                   perf_config,
-                                   perf_output_writer=None,
-                                   perf_analyzer_env=None):
+    def _run_perf_analyzer(self, run_config, perf_output_writer):
         """
-        Gets the aggregated metrics from the perf_analyzer
+        Runs perf_analyzer and returns the aggregated metrics
+
         Parameters
         ----------
-        perf_config : dict
-            The keys are arguments to perf_analyzer The values are their
-            values
+        run_config : RunConfig
+            The RunConfig to execute on perf analyzer
+
         perf_output_writer : OutputWriter
             Writer that writes the output from perf_analyzer to the output
             stream/file. If None, the output is not written
-        perf_analyzer_env : dict
-            a dict of name:value pairs for the environment variables with which
-            perf_analyzer should be run.
 
         Raises
         ------
         TritonModelAnalyzerException
         """
 
-        perf_analyzer = PerfAnalyzer(
-            path=self._config.perf_analyzer_path,
-            config=perf_config,
-            max_retries=self._config.perf_analyzer_max_auto_adjusts,
-            timeout=self._config.perf_analyzer_timeout,
-            max_cpu_util=self._config.perf_analyzer_cpu_util)
+        perf_analyzer_env = run_config.triton_environment()
 
         # IF running with C_API, need to set CUDA_VISIBLE_DEVICES here
         if self._config.triton_launch_mode == 'c_api':
             perf_analyzer_env['CUDA_VISIBLE_DEVICES'] = ','.join(
                 [gpu.device_uuid() for gpu in self._gpus])
 
+        perf_analyzer = PerfAnalyzer(
+            path=self._config.perf_analyzer_path,
+            config=run_config,
+            max_retries=self._config.perf_analyzer_max_auto_adjusts,
+            timeout=self._config.perf_analyzer_timeout,
+            max_cpu_util=self._config.perf_analyzer_cpu_util)
+
         status = perf_analyzer.run(self._perf_metrics, env=perf_analyzer_env)
 
         if perf_output_writer:
+            # TODO-TMA-518: MPI command
             perf_output_writer.write(
                 '============== Perf Analyzer Launched ==============\n '
-                f'Command: perf_analyzer {perf_config.to_cli_string()} \n\n',
+                f'Command: perf_analyzer {run_config.model_run_configs()[0].perf_config().to_cli_string()} \n\n',
                 append=True)
             if perf_analyzer.output():
                 perf_output_writer.write(perf_analyzer.output() + '\n',
@@ -484,13 +450,17 @@ class MetricsManager:
 
         # PerfAnalyzer run was not succesful
         if status == 1:
-            return 1
+            return None
 
-        perf_records = perf_analyzer.get_records()
-        perf_record_aggregator = RecordAggregator()
-        perf_record_aggregator.insert_all(perf_records)
+        per_model_perf_records = perf_analyzer.get_records()
 
-        return perf_record_aggregator.aggregate()
+        for (model, perf_records) in per_model_perf_records.items():
+            perf_record_aggregator = RecordAggregator()
+            perf_record_aggregator.insert_all(perf_records)
+
+            per_model_perf_records[model] = perf_record_aggregator.aggregate()
+
+        return per_model_perf_records
 
     def _get_gpu_inference_metrics(self):
         """
@@ -574,6 +544,30 @@ class MetricsManager:
                     triton_gpus.append(sample.labels['gpu_uuid'])
 
         return triton_gpus
+
+    def _print_run_config_info(self, run_config):
+        for perf_config in [
+                mrc.perf_config() for mrc in run_config.model_run_configs()
+        ]:
+            logger.info(
+                f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
+            )
+
+        cpu_only = run_config.cpu_only()
+
+        # Inform user CPU metric(s) are not being collected under CPU mode
+        collect_cpu_metrics_expect = cpu_only or len(self._gpus) == 0
+        collect_cpu_metrics_actual = len(self._cpu_metrics) > 0
+        if collect_cpu_metrics_expect and not collect_cpu_metrics_actual:
+            logger.info(
+                "CPU metric(s) are not being collected, while this profiling will run on CPU(s)."
+            )
+        # Warn user about CPU monitor performance issue
+        if collect_cpu_metrics_actual:
+            logger.warning("CPU metric(s) are being collected.")
+            logger.warning(
+                "Collecting CPU metric(s) can affect the latency or throughput numbers reported by perf analyzer."
+            )
 
     @staticmethod
     def get_metric_types(tags):

@@ -30,14 +30,13 @@ class RunConfigResult:
     to a particular ResultTable
     """
 
-    def __init__(self, model_name, model_configs, comparator, constraints=None):
+    def __init__(self, model_name, run_config, comparator, constraints=None):
         """
         Parameters
         ----------
         model_name: str
             The name of the model
-        model_configs : list of ModelConfigs
-            The list of model configs corresponding to this RunConfig
+        run_config : RunConfig
         comparator : RunConfigResultComparator
             An object whose compare function receives two
             RunConfigResults and returns 1 if the first is better than
@@ -49,7 +48,7 @@ class RunConfigResult:
         """
 
         self._model_name = model_name
-        self._model_configs = model_configs
+        self._run_config = run_config
         self._comparator = comparator
         self._constraints = constraints
 
@@ -68,15 +67,9 @@ class RunConfigResult:
 
         return self._model_name
 
-    def model_configs(self):
-        """
-        Returns
-        -------
-        List of ModelConfigs
-            Returns the list model_configs associated with this RunConfigResult
-        """
-
-        return self._model_configs
+    def run_config(self):
+        """ Returns the RunConfig associated with this result """
+        return self._run_config
 
     def failing(self):
         """

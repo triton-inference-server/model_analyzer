@@ -638,7 +638,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
         measurement = construct_run_config_measurement(
             model_name=MagicMock(),
-            model_config_names=[MagicMock()],
+            model_config_names=["test_model_config_name"],
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=MagicMock(),
             non_gpu_metric_values=[{
