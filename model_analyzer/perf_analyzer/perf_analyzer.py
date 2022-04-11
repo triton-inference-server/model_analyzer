@@ -104,7 +104,7 @@ class PerfAnalyzer:
         self._perf_records = {}
         self._max_cpu_util = max_cpu_util
 
-        # TODO-TMA-518: Need to update for multi-model
+        # TODO-TMA-518: Need to update for multi-model - still need to fix
         self._base_perf_config = self._config.model_run_configs(
         )[0].perf_config()
 
@@ -204,9 +204,25 @@ class PerfAnalyzer:
         return status
 
     def _get_cmd(self):
-        cmd = [self.bin_path]
-        cmd += self._get_pa_cli_command().replace('=', ' ').split()
+        if self._is_multi_model():
+            cmd = ["mpiexec", "--allow-run-as-root"]
+            for index in range(len(self._config.model_run_configs())):
+                if index:
+                    cmd += [":"]
+                cmd += ["-n", '1']
+                cmd += self._get_single_model_cmd(index)
+        else:
+            cmd = self._get_single_model_cmd(0)
         return cmd
+
+    def _get_single_model_cmd(self, index):
+        cmd = [self.bin_path]
+        cmd += self._get_pa_cli_command(index).replace('=', ' ').split()
+        return cmd
+
+    def _get_pa_cli_command(self, index):
+        return self._config.model_run_configs()[index].perf_config(
+        ).to_cli_string()
 
     def _create_env(self, env):
         perf_analyzer_env = os.environ.copy()
@@ -288,9 +304,12 @@ class PerfAnalyzer:
 
     def _auto_adjust_parameters(self, process):
         """
-        Use of the perf analyzer process
+        Attempt to update PA parameters based on the output
         """
         # TODO-TMA-518 - how to handle?
+        if self._is_multi_model():
+            return self.PA_FAIL
+
         if self._output.find("Failed to obtain stable measurement"
                             ) != -1 or self._output.find(
                                 "Please use a larger time window") != -1:
@@ -325,10 +344,6 @@ class PerfAnalyzer:
             logger.info(f"Running perf_analyzer failed with"
                         f" exit status {process.returncode} : {self._output}")
             return self.PA_FAIL
-
-    def _get_pa_cli_command(self):
-        # TODO-TMA-518 - update for multi-model
-        return self._base_perf_config.to_cli_string()
 
     def _is_multi_model(self):
         """

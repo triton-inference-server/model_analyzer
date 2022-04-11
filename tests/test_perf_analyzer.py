@@ -475,6 +475,64 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                            max_cpu_util=50)
         self.assertTrue(pa2._is_multi_model())
 
+    def test_get_cmd_single_model(self):
+        """
+        Test the functionality of _get_cmd() for single model
+        """
+        pa = PerfAnalyzer(path=PERF_BIN_PATH,
+                          config=self.run_config,
+                          max_retries=10,
+                          timeout=100,
+                          max_cpu_util=50)
+
+        expected_cmd = [
+            'perf_analyzer', '-m', 'test_model', '--measurement-interval',
+            '1000', '--measurement-request-count', '50'
+        ]
+        self.assertEqual(pa._get_cmd(), expected_cmd)
+
+    def test_get_cmd_multi_model(self):
+        """
+        Test the functionality of _get_cmd() for single model
+        """
+        pac1 = PerfAnalyzerConfig()
+        pac1['model-name'] = "MultiModel1"
+        pac1['measurement-interval'] = 1000
+        pac1['measurement-request-count'] = 50
+
+        pac2 = PerfAnalyzerConfig()
+        pac2['model-name'] = "MultiModel2"
+        pac2['batch-size'] = 16
+        pac2['concurrency-range'] = 1024
+
+        run_config = RunConfig({})
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), pac1))
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), pac2))
+
+        pa = PerfAnalyzer(path=PERF_BIN_PATH,
+                          config=run_config,
+                          max_retries=10,
+                          timeout=100,
+                          max_cpu_util=50)
+
+        #yapf: disable
+        expected_cmd = [
+            'mpiexec', '--allow-run-as-root',
+            '-n', '1', 'perf_analyzer',
+                '-m', 'MultiModel1',
+                '--measurement-interval', '1000',
+                '--measurement-request-count', '50',
+            ':', '-n', '1', 'perf_analyzer',
+                '-m', 'MultiModel2',
+                '-b', '16',
+                '--concurrency-range', '1024'
+        ]
+        #yapf: enable
+
+        self.assertEqual(pa._get_cmd(), expected_cmd)
+
     def tearDown(self):
         # In case test raises exception
         if self.server is not None:
