@@ -47,12 +47,12 @@ class TestRunConfigResult(trc.TestResultCollector):
         self.assertEqual(self.rcr_empty.model_name(),
                          self.rcr_empty._model_name)
 
-    def test_configs(self):
+    def test_run_config(self):
         """
-        Test that model_configs is correctly returned
+        Test that run_config is correctly returned
         """
-        self.assertEqual(self.rcr_empty.model_configs(),
-                         self.rcr_empty._model_configs)
+        self.assertEqual(self.rcr_empty.run_config(),
+                         self.rcr_empty._run_config)
 
     def test_failing_measurements_empty(self):
         """
@@ -245,27 +245,27 @@ class TestRunConfigResult(trc.TestResultCollector):
 
     def _construct_empty_rcr(self):
         self.rcr_empty = RunConfigResult(model_name=MagicMock(),
-                                         model_configs=MagicMock(),
+                                         run_config=MagicMock(),
                                          comparator=MagicMock(),
                                          constraints=MagicMock())
 
     def _construct_throughput_with_latency_constraint_rcr(self):
         self._rcr_throughput_with_latency_constraint = \
             RunConfigResult(model_name=MagicMock(),
-                            model_configs=MagicMock(),
+                            run_config=MagicMock(),
                             comparator=[{'perf_throughput': 1}],
                             constraints={'perf_latency_p99': {'max': 100}})
 
     def _construct_empty_rcr(self):
         self.rcr_empty = RunConfigResult(model_name=MagicMock(),
-                                         model_configs=MagicMock(),
+                                         run_config=MagicMock(),
                                          comparator=MagicMock(),
                                          constraints=MagicMock())
 
     def _construct_throughput_with_latency_constraint_rcr(self):
         self._rcr_throughput_with_latency_constraint = \
             RunConfigResult(model_name=MagicMock(),
-                            model_configs=MagicMock(),
+                            run_config=MagicMock(),
                             comparator=[{'perf_throughput': 1}],
                             constraints={'perf_latency_p99': {'max': 100}})
 
