@@ -101,7 +101,7 @@ def convert_avg_gpu_metrics_to_data(avg_gpu_metric_values):
 
 
 def construct_perf_analyzer_config(model_name='my-model',
-                                   output_file_name='my-model',
+                                   output_file_name='my-model-results.csv',
                                    batch_size=DEFAULT_BATCH_SIZES,
                                    concurrency=1,
                                    launch_mode=DEFAULT_TRITON_LAUNCH_MODE,
