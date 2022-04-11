@@ -44,13 +44,13 @@ class TestRunConfigResult(trc.TestResultCollector):
         self.assertEqual(self.rcr_empty.run_config(),
                          self.rcr_empty._run_config)
 
-    def test_failing_measurements_empty(self):
+    def test_failing_empty(self):
         """
         Test that failing returns true if no measurements are added
         """
         self.assertTrue(self.rcr_empty.failing())
 
-    def test_failing_measurements_true(self):
+    def test_failing_true(self):
         """
         Test that failing returns true if only failing measurements are present
         """
@@ -63,7 +63,7 @@ class TestRunConfigResult(trc.TestResultCollector):
 
         self.assertTrue(rcr.failing())
 
-    def test_failing_measurements_true_multi_model(self):
+    def test_failing_true_multi_model(self):
         """
         Test that failing returns true if only failing measurements are present
         in a multi-model configuration
@@ -79,7 +79,7 @@ class TestRunConfigResult(trc.TestResultCollector):
 
         self.assertTrue(rcr.failing())
 
-    def test_failing_measurements_false(self):
+    def test_failing_false(self):
         """
         Test that failing returns false if any passing measurements are present
         """
@@ -93,7 +93,7 @@ class TestRunConfigResult(trc.TestResultCollector):
 
         self.assertFalse(rcr.failing())
 
-    def test_failing_measurements_false_multi_model(self):
+    def test_failing_false_multi_model(self):
         """
         Test that failing returns false if any passing measurements are present
         in a multi-model configuration
@@ -106,6 +106,40 @@ class TestRunConfigResult(trc.TestResultCollector):
                                              latency_values=[30 * i, 40 * i])
 
         self.assertFalse(rcr.failing())
+
+    def test_passing_failing_measurements(self):
+        """
+        Test that passing/failing measurements have the correct number
+        of entries
+        """
+        rcr = self._rcr_throughput_with_latency_constraint
+
+        # 4 passing, 6 failing
+        for i in range(1, 11):
+            self._add_rcm_to_rcr(rcr,
+                                 throughput_value=10 * i,
+                                 latency_value=25 * i)
+
+        # The heap is unordered so just checking for correct count
+        self.assertEqual(len(rcr.passing_measurements()), 4)
+        self.assertEqual(len(rcr.failing_measurements()), 6)
+
+    def test_passing_failing_measurements_multi_model(self):
+        """
+        Test that passing/failing measurements have the correct number
+        of entries
+        """
+        rcr = self._rcr_throughput_with_latency_constraint
+
+        # 5 passing, 7 failing
+        for i in range(1, 13):
+            self._add_multi_model_rcm_to_rcr(rcr,
+                                             throughput_values=[10 * i, 15 * i],
+                                             latency_values=[15 * i, 20 * i])
+
+        # The heap is unordered so just checking for correct count
+        self.assertEqual(len(rcr.passing_measurements()), 5)
+        self.assertEqual(len(rcr.failing_measurements()), 7)
 
     def test_top_n_failing(self):
         """
@@ -173,37 +207,27 @@ class TestRunConfigResult(trc.TestResultCollector):
         """
         Test that the top N passing measurements are returned 
         """
-
         rcr = self._rcr_throughput_with_latency_constraint
 
-        # 5 passing, 5 failing
+        # 4 passing, 6 failing
         for i in range(1, 11):
-            self._add_multi_model_rcm_to_rcr(rcr,
-                                             throughput_values=[10 * i, 15 * i],
-                                             latency_values=[15 * i, 20 * i])
+            self._add_rcm_to_rcr(rcr,
+                                 throughput_value=10 * i,
+                                 latency_value=25 * i)
 
         # Passing measurements are returned most to least throughput
-        passing_non_gpu_data = []
-        passing_non_gpu_data.append([
+        passing_non_gpu_data = [
             convert_non_gpu_metrics_to_data({
                 'perf_throughput': 10 * i,
-                'perf_latency_p99': 15 * i
-            }) for i in range(5, 0, -1)
-        ])
-
-        passing_non_gpu_data.append([
-            convert_non_gpu_metrics_to_data({
-                'perf_throughput': 15 * i,
-                'perf_latency_p99': 20 * i
-            }) for i in range(5, 0, -1)
-        ])
+                'perf_latency_p99': 25 * i
+            }) for i in range(4, 0, -1)
+        ]
 
         top_n_measurements = rcr.top_n_measurements(3)
 
         for i in range(3):
-            self.assertEqual(
-                top_n_measurements[i].non_gpu_data(),
-                [passing_non_gpu_data[0][i], passing_non_gpu_data[1][i]])
+            self.assertEqual(top_n_measurements[i].non_gpu_data(),
+                             [passing_non_gpu_data[i]])
 
     def test_top_n_passing_multi_model(self):
         """
