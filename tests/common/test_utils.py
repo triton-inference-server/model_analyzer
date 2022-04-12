@@ -288,7 +288,7 @@ def construct_run_config_result(avg_gpu_metric_values,
                 }],
                 gpu_metric_values=gpu_metrics,
                 non_gpu_metric_values=[non_gpu_metrics],
-                metric_objectives=comparator._metric_weights,
+                metric_objectives=[comparator._metric_weights],
                 model_config_weights=[1]))
 
     return run_config_result

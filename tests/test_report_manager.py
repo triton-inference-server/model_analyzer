@@ -120,7 +120,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=avg_gpu_metrics,
             non_gpu_metric_values=[avg_non_gpu_metrics],
-            metric_objectives=result_comparator._metric_weights,
+            metric_objectives=[result_comparator._metric_weights],
             model_config_weights=[1])
 
         perf_config = PerfAnalyzerConfig()

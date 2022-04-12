@@ -80,6 +80,10 @@ class ResultManager:
         self._non_gpu_metrics_to_headers = {}
         self._result_tables = {}
 
+        # Used in compile_and_sort
+        self._comparators, self._constraints = {}, {}
+        self._run_comparators, self._run_constraints = {}, {}
+
     def _init_state(self):
         """
         Sets ResultManager object managed
@@ -285,38 +289,36 @@ class ResultManager:
         and objectives.
         """
 
-        # Collect objectives and constraints
-        comparators = {}
-        constraints = {}
-        for model in self._config.analysis_models:
-            # TODO-TMA-570: Making a list for now, but objectives() should return a list of objectives
-            # (one per model)
-            comparators[model.model_name()] = RunConfigResultComparator(
-                metric_objectives_list=[model.objectives()])
-            constraints[model.model_name()] = model.constraints()
+        self._create_concurrent_analysis_model_name()
+
+        if self._analyzing_models_concurrently():
+            self._setup_for_concurrent_analysis()
+        else:
+            self._setup_for_sequential_analysis()
 
         # Construct and add results to individual result heaps as well as global result heap
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        analysis_model_names = [
-            model.model_name() for model in self._config.analysis_models
-        ]
-        for model_name in analysis_model_names:
+        for model_name in self._analysis_model_names:
             model_measurements = results.get_model_measurements_dict(model_name)
 
-            # TODO-TMA-570: Model config should be a list
             for (run_config,
                  run_config_measurements) in model_measurements.values():
                 run_config_result = RunConfigResult(
                     model_name=model_name,
                     run_config=run_config,
-                    comparator=comparators[model_name],
-                    constraints=constraints[model_name])
+                    comparator=self._run_comparators[model_name],
+                    constraints=self._run_constraints[model_name])
 
                 for run_config_measurement in run_config_measurements.values():
+                    metric_weights_list = [
+                        comparator._metric_weights
+                        for comparator in self._comparators[model_name]
+                    ]
+
                     run_config_measurement.set_metric_weightings(
-                        comparators[model_name]._metric_weights)
+                        metric_weights_list)
 
                     run_config_result.add_run_config_measurement(
                         run_config_measurement)
@@ -324,6 +326,69 @@ class ResultManager:
                 self._per_model_sorted_results[model_name].add_result(
                     run_config_result)
                 self._across_model_sorted_results.add_result(run_config_result)
+
+    def _create_concurrent_analysis_model_name(self):
+        analysis_model_names = [
+            model.model_name() for model in self._config.analysis_models
+        ]
+
+        self._concurrent_analysis_model_name = ','.join(analysis_model_names)
+
+    def _analyzing_models_concurrently(self):
+        """
+        Returns
+        -------
+        bool: True if we are doing concurrent model analysis
+        """
+        return bool(
+            self._state_manager.get_state_variable(
+                'ResultManager.results').get_model_measurements_dict(
+                    self._concurrent_analysis_model_name))
+
+    def _setup_for_concurrent_analysis(self):
+        self._analysis_model_names = [self._concurrent_analysis_model_name]
+
+        comparators, constraints = {}, {}
+        for model in self._config.analysis_models:
+            comparators[model.model_name()] = RunConfigResultComparator(
+                metric_objectives_list=[model.objectives()])
+            constraints[model.model_name()] = model.constraints()
+
+        self._comparators[self._concurrent_analysis_model_name] = list(
+            comparators.values())
+        self._constraints[self._concurrent_analysis_model_name] = list(
+            constraints.values())
+
+        # FIXME: What do we do if the models have different comparators/constraints?
+        # Should we just add an assert for this?
+        model = self._config.analysis_models[0]
+
+        self._run_comparators[
+            self._concurrent_analysis_model_name] = RunConfigResultComparator(
+                metric_objectives_list=[model.objectives()])
+        self._run_constraints[
+            self._concurrent_analysis_model_name] = model.constraints()
+
+    def _setup_for_sequential_analysis(self):
+        self._analysis_model_names = [
+            model.model_name() for model in self._config.analysis_models
+        ]
+
+        self._comparators, self._constraints = {}, {}
+        for model in self._config.analysis_models:
+            # TODO-TMA-570: Making a list for now, but objectives() should return a list of objectives
+            # (one per model)
+            self._run_comparators[
+                model.model_name()] = RunConfigResultComparator(
+                    metric_objectives_list=[model.objectives()])
+            self._comparators[model.model_name()] = [
+                RunConfigResultComparator(
+                    metric_objectives_list=[model.objectives()])
+            ]
+
+            self._constraints[model.model_name()] = model.constraints()
+
+        self._run_constraints = self._constraints
 
     def get_model_configs_run_config_measurements(self, model_variants_name):
         """

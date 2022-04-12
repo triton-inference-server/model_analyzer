@@ -56,7 +56,7 @@ class TestPlotMethods(trc.TestResultCollector):
             'perf_latency_p99': 8000
         }
 
-        objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
+        objective_spec = [{'perf_throughput': 10, 'perf_latency_p99': 5}]
 
         measurement = construct_run_config_measurement(
             model_name='test_model',
@@ -108,7 +108,7 @@ class TestPlotMethods(trc.TestResultCollector):
             'perf_latency_p99': 8000
         }
 
-        objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
+        objective_spec = [{'perf_throughput': 10, 'perf_latency_p99': 5}]
 
         measurement = construct_run_config_measurement(
             model_name='test_model',

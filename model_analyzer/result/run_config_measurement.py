@@ -118,7 +118,8 @@ class RunConfigMeasurement:
             One entry per ModelConfig
         """
         for index, measurement in enumerate(self._model_config_measurements):
-            measurement.set_metric_weighting(metric_objectives[index])
+            foo = metric_objectives[index]
+            measurement.set_metric_weighting(metric_objectives[index][0])
 
     def model_variants_name(self):
         """

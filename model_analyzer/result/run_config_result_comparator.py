@@ -90,6 +90,6 @@ class RunConfigResultComparator:
         # TODO-TMA-571: Need to add proper model weighting support
         aggregated_run_config_measurement.set_model_config_weighting([1])
         aggregated_run_config_measurement.set_metric_weightings(
-            self._metric_weights)
+            [self._metric_weights])
 
         return aggregated_run_config_measurement

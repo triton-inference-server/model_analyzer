@@ -1,4 +1,4 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+5  # Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -293,11 +293,11 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
             }
         ]
 
-        self.metric_objectives = [{
+        self.metric_objectives = [[{
             "perf_throughput": 1
-        }, {
+        }], [{
             "perf_latency_p99": 1
-        }]
+        }]]
 
         self.weights = [1, 3]
 
@@ -353,7 +353,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
             }
         ]
 
-        metric_objectives = [{"perf_throughput": 1}, {"perf_throughput": 1}]
+        metric_objectives = [[{"perf_throughput": 1}], [{"perf_throughput": 1}]]
 
         weights = [1, 3]
 
