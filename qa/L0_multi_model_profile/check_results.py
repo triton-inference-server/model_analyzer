@@ -42,12 +42,12 @@ class TestOutputValidator:
         Check that each model was profiled the number of times
         corresponding with batch size and concurrency combinations
 
-        For multi-model with 2 models, the expected number of measurements
+        For multi-model with 2 models (A and B), the expected number of measurements
         is X*Y, where:
         - X is the number of measurements that we would expected 
-        for model 1 in a single-model case
+        for model A in a single-model case
         - Y is the number of measurements that we would expected 
-        for model 1 in a single-model case
+        for model B in a single-model case
 
         Since we know that X == Y for this test (since they both have the same
         parameters), then the expected total is just X*X
