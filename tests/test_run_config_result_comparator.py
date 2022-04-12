@@ -20,53 +20,17 @@ import unittest
 from unittest.mock import MagicMock
 
 
+# TODO-TMA-571: Need to add testing for model weighting
 class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
 
     def setUp(self):
-        self.avg_gpu_metrics1 = {
-            0: {
-                'gpu_used_memory': 5000,
-                'gpu_utilization': 50
-            }
-        }
-        self.avg_gpu_metrics2 = {
-            0: {
-                'gpu_used_memory': 6000,
-                'gpu_utilization': 60
-            }
-        }
-
-        self.avg_non_gpu_metrics1 = [{
-            'perf_throughput': 100,
-            'perf_latency_p99': 4000
-        }]
-
-        self.avg_non_gpu_metrics2 = [{
-            'perf_throughput': 200,
-            'perf_latency_p99': 8000
-        }]
-
-        self.avg_non_gpu_metrics_multi1 = [{
-            'perf_throughput': 100,
-            'perf_latency_p99': 4000
-        }, {
-            'perf_throughput': 200,
-            'perf_latency_p99': 5000
-        }]
-
-        self.avg_non_gpu_metrics_multi2 = [{
-            'perf_throughput': 300,
-            'perf_latency_p99': 6000
-        }, {
-            'perf_throughput': 400,
-            'perf_latency_p99': 7000
-        }]
+        self._initialize_metrics()
 
     def tearDown(self):
         NotImplemented
 
     def test_throughput_driven(self):
-        objective_spec = [{'perf_throughput': 10, 'perf_latency_p99': 5}]
+        objective_spec = [{'perf_throughput': 2, 'perf_latency_p99': 1}]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
@@ -76,12 +40,30 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metrics2=self.avg_non_gpu_metrics2,
             expected_result=False)
 
-    # def test_throughput_driven_multi_model(self):
-    #     objective_spec = [{'perf_throughput': 10, 'perf_latency_p99': 5},
-    #                       {'perf_throughput': 10, 'perf_latency_p99': 5}]
+    def test_throughput_driven_multi_model(self):
+        objective_spec = [{
+            'perf_throughput': 2,
+            'perf_latency_p99': 1
+        }, {
+            'perf_throughput': 2,
+            'perf_latency_p99': 1
+        }]
+
+        self._check_run_config_result_comparison(
+            objective_spec=objective_spec,
+            avg_gpu_metrics1=self.avg_gpu_metrics1,
+            avg_non_gpu_metrics1=self.avg_non_gpu_metrics_multi1,
+            avg_gpu_metrics2=self.avg_gpu_metrics2,
+            avg_non_gpu_metrics2=self.avg_non_gpu_metrics_multi2,
+            expected_result=False)
 
     def test_latency_driven(self):
-        objective_spec = [{'perf_throughput': 5, 'perf_latency_p99': 10}]
+        objective_spec = [
+            {
+                'perf_throughput': 1,
+                'perf_latency_p99': 2
+            },
+        ]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
@@ -91,8 +73,25 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metrics2=self.avg_non_gpu_metrics2,
             expected_result=True)
 
+    def test_latency_driven_multi(self):
+        objective_spec = [{
+            'perf_throughput': 1,
+            'perf_latency_p99': 2
+        }, {
+            'perf_throughput': 1,
+            'perf_latency_p99': 2
+        }]
+
+        self._check_run_config_result_comparison(
+            objective_spec=objective_spec,
+            avg_gpu_metrics1=self.avg_gpu_metrics1,
+            avg_non_gpu_metrics1=self.avg_non_gpu_metrics_multi1,
+            avg_gpu_metrics2=self.avg_gpu_metrics2,
+            avg_non_gpu_metrics2=self.avg_non_gpu_metrics_multi2,
+            expected_result=True)
+
     def test_equal_weight(self):
-        objective_spec = [{'perf_throughput': 5, 'perf_latency_p99': 5}]
+        objective_spec = [{'perf_throughput': 1, 'perf_latency_p99': 1}]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
@@ -100,6 +99,24 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metrics1=self.avg_non_gpu_metrics1,
             avg_gpu_metrics2=self.avg_gpu_metrics2,
             avg_non_gpu_metrics2=self.avg_non_gpu_metrics2,
+            value_step2=2,
+            expected_result=False)
+
+    def test_equal_weight_multi(self):
+        objective_spec = [{
+            'perf_throughput': 1,
+            'perf_latency_p99': 1
+        }, {
+            'perf_throughput': 1,
+            'perf_latency_p99': 1
+        }]
+
+        self._check_run_config_result_comparison(
+            objective_spec=objective_spec,
+            avg_gpu_metrics1=self.avg_gpu_metrics1,
+            avg_non_gpu_metrics1=self.avg_non_gpu_metrics_multi1,
+            avg_gpu_metrics2=self.avg_gpu_metrics2,
+            avg_non_gpu_metrics2=self.avg_non_gpu_metrics_multi2,
             value_step2=2,
             expected_result=False)
 
@@ -138,6 +155,46 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
 
         self.assertEqual(result_comparator.is_better_than(result1, result2),
                          expected_result)
+
+    def _initialize_metrics(self):
+        self.avg_gpu_metrics1 = {
+            0: {
+                'gpu_used_memory': 5000,
+                'gpu_utilization': 50
+            }
+        }
+        self.avg_gpu_metrics2 = {
+            0: {
+                'gpu_used_memory': 6000,
+                'gpu_utilization': 60
+            }
+        }
+
+        self.avg_non_gpu_metrics1 = [{
+            'perf_throughput': 100,
+            'perf_latency_p99': 4000
+        }]
+
+        self.avg_non_gpu_metrics2 = [{
+            'perf_throughput': 200,
+            'perf_latency_p99': 8000
+        }]
+
+        self.avg_non_gpu_metrics_multi1 = [{
+            'perf_throughput': 100,
+            'perf_latency_p99': 4000
+        }, {
+            'perf_throughput': 150,
+            'perf_latency_p99': 6000
+        }]
+
+        self.avg_non_gpu_metrics_multi2 = [{
+            'perf_throughput': 200,
+            'perf_latency_p99': 8000
+        }, {
+            'perf_throughput': 250,
+            'perf_latency_p99': 10000
+        }]
 
 
 if __name__ == '__main__':
