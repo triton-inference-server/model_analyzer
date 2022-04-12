@@ -439,10 +439,9 @@ class MetricsManager:
         status = perf_analyzer.run(self._perf_metrics, env=perf_analyzer_env)
 
         if perf_output_writer:
-            # TODO-TMA-518: MPI command - still need to fix
             perf_output_writer.write(
-                '============== Perf Analyzer Launched ==============\n '
-                f'Command: perf_analyzer {run_config.model_run_configs()[0].perf_config().to_cli_string()} \n\n',
+                '============== Perf Analyzer Launched ==============\n'
+                f'Command: {perf_analyzer.get_cmd()}\n\n',
                 append=True)
             if perf_analyzer.output():
                 perf_output_writer.write(perf_analyzer.output() + '\n',

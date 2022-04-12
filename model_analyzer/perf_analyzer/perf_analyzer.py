@@ -177,6 +177,12 @@ class PerfAnalyzer:
             return self._output
         logger.info('perf_analyzer did not produce any output.')
 
+    def get_cmd(self):
+        """ 
+        Returns a string of the command to run
+        """
+        return " ".join(self._get_cmd())
+
     def _execute_pa(self, env):
 
         cmd = self._get_cmd()
