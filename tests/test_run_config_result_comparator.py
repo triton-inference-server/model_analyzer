@@ -36,22 +36,37 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             }
         }
 
-        self.avg_non_gpu_metrics1 = {
+        self.avg_non_gpu_metrics1 = [{
             'perf_throughput': 100,
             'perf_latency_p99': 4000
-        }
+        }]
 
-        self.avg_non_gpu_metrics2 = {
+        self.avg_non_gpu_metrics2 = [{
             'perf_throughput': 200,
             'perf_latency_p99': 8000
-        }
+        }]
+
+        self.avg_non_gpu_metrics_multi1 = [{
+            'perf_throughput': 100,
+            'perf_latency_p99': 4000
+        }, {
+            'perf_throughput': 200,
+            'perf_latency_p99': 5000
+        }]
+
+        self.avg_non_gpu_metrics_multi2 = [{
+            'perf_throughput': 300,
+            'perf_latency_p99': 6000
+        }, {
+            'perf_throughput': 400,
+            'perf_latency_p99': 7000
+        }]
 
     def tearDown(self):
         NotImplemented
 
-    #TODO-TMA-562: Add unit testing for multi-model scenarios
     def test_throughput_driven(self):
-        objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
+        objective_spec = [{'perf_throughput': 10, 'perf_latency_p99': 5}]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
@@ -61,8 +76,12 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metrics2=self.avg_non_gpu_metrics2,
             expected_result=False)
 
+    # def test_throughput_driven_multi_model(self):
+    #     objective_spec = [{'perf_throughput': 10, 'perf_latency_p99': 5},
+    #                       {'perf_throughput': 10, 'perf_latency_p99': 5}]
+
     def test_latency_driven(self):
-        objective_spec = {'perf_throughput': 5, 'perf_latency_p99': 10}
+        objective_spec = [{'perf_throughput': 5, 'perf_latency_p99': 10}]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
@@ -73,7 +92,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             expected_result=True)
 
     def test_equal_weight(self):
-        objective_spec = {'perf_throughput': 5, 'perf_latency_p99': 5}
+        objective_spec = [{'perf_throughput': 5, 'perf_latency_p99': 5}]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
@@ -101,18 +120,18 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
         """
 
         result_comparator = RunConfigResultComparator(
-            metric_objectives_list=[objective_spec])
+            metric_objectives_list=objective_spec)
 
         result1 = construct_run_config_result(
             avg_gpu_metric_values=avg_gpu_metrics1,
-            avg_non_gpu_metric_values=avg_non_gpu_metrics1,
+            avg_non_gpu_metric_values_list=avg_non_gpu_metrics1,
             comparator=result_comparator,
             value_step=value_step1,
             run_config=MagicMock())
 
         result2 = construct_run_config_result(
             avg_gpu_metric_values=avg_gpu_metrics2,
-            avg_non_gpu_metric_values=avg_non_gpu_metrics2,
+            avg_non_gpu_metric_values_list=avg_non_gpu_metrics2,
             comparator=result_comparator,
             value_step=value_step2,
             run_config=MagicMock())
