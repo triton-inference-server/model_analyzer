@@ -270,19 +270,6 @@ class TestRunConfigResult(trc.TestResultCollector):
                             comparator=[{'perf_throughput': 1}],
                             constraints={'perf_latency_p99': {'max': 100}})
 
-    def _construct_empty_rcr(self):
-        self.rcr_empty = RunConfigResult(model_name=MagicMock(),
-                                         run_config=MagicMock(),
-                                         comparator=MagicMock(),
-                                         constraints=MagicMock())
-
-    def _construct_throughput_with_latency_constraint_rcr(self):
-        self._rcr_throughput_with_latency_constraint = \
-            RunConfigResult(model_name=MagicMock(),
-                            run_config=MagicMock(),
-                            comparator=[{'perf_throughput': 1}],
-                            constraints={'perf_latency_p99': {'max': 100}})
-
     def _add_rcm_to_rcr(self, rcr, throughput_value, latency_value):
         rcr.add_run_config_measurement(
             self._construct_single_model_rcm(throughput_value, latency_value))
