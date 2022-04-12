@@ -35,7 +35,7 @@ class TestResultHeapMethods(trc.TestResultCollector):
 
         result = construct_run_config_result(
             avg_gpu_metric_values=avg_gpu_metrics,
-            avg_non_gpu_metric_values=avg_non_gpu_metrics,
+            avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
             comparator=self.result_comparator)
 
         self.assertTrue(self.result_heap.empty())
@@ -51,7 +51,7 @@ class TestResultHeapMethods(trc.TestResultCollector):
             self.result_heap.add_result(
                 construct_run_config_result(
                     avg_gpu_metric_values=avg_gpu_metrics,
-                    avg_non_gpu_metric_values=avg_non_gpu_metrics,
+                    avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator))
 
         results = self.result_heap.results()
@@ -67,7 +67,7 @@ class TestResultHeapMethods(trc.TestResultCollector):
             self.result_heap.add_result(
                 construct_run_config_result(
                     avg_gpu_metric_values=avg_gpu_metrics,
-                    avg_non_gpu_metric_values=avg_non_gpu_metrics,
+                    avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
                     model_name=str(i)))
         self.assertEqual(self.result_heap.next_best_result().model_name(), '10')
@@ -85,7 +85,7 @@ class TestResultHeapMethods(trc.TestResultCollector):
             self.result_heap.add_result(
                 construct_run_config_result(
                     avg_gpu_metric_values=avg_gpu_metrics,
-                    avg_non_gpu_metric_values=avg_non_gpu_metrics,
+                    avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
                     model_name=str(i)))
 
