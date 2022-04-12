@@ -22,52 +22,65 @@ from unittest.mock import MagicMock
 
 class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
 
-    #TODO-TMA-562: Add unit testing for multi-model scenarios
-    def test_compare_run_config_results(self):
+    def setUp(self):
+        self.avg_gpu_metrics1 = {
+            0: {
+                'gpu_used_memory': 5000,
+                'gpu_utilization': 50
+            }
+        }
+        self.avg_gpu_metrics2 = {
+            0: {
+                'gpu_used_memory': 6000,
+                'gpu_utilization': 60
+            }
+        }
 
-        # First test where throughput drives comparison
-        objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
-
-        avg_gpu_metrics1 = {0: {'gpu_used_memory': 5000, 'gpu_utilization': 50}}
-        avg_gpu_metrics2 = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
-
-        avg_non_gpu_metrics1 = {
+        self.avg_non_gpu_metrics1 = {
             'perf_throughput': 100,
             'perf_latency_p99': 4000
         }
-        avg_non_gpu_metrics2 = {
+
+        self.avg_non_gpu_metrics2 = {
             'perf_throughput': 200,
             'perf_latency_p99': 8000
         }
 
+    def tearDown(self):
+        NotImplemented
+
+    #TODO-TMA-562: Add unit testing for multi-model scenarios
+    def test_throughput_driven(self):
+        objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
+
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
-            avg_gpu_metrics1=avg_gpu_metrics1,
-            avg_non_gpu_metrics1=avg_non_gpu_metrics1,
-            avg_gpu_metrics2=avg_gpu_metrics2,
-            avg_non_gpu_metrics2=avg_non_gpu_metrics2,
+            avg_gpu_metrics1=self.avg_gpu_metrics1,
+            avg_non_gpu_metrics1=self.avg_non_gpu_metrics1,
+            avg_gpu_metrics2=self.avg_gpu_metrics2,
+            avg_non_gpu_metrics2=self.avg_non_gpu_metrics2,
             expected_result=False)
 
-        # Latency driven
+    def test_latency_driven(self):
         objective_spec = {'perf_throughput': 5, 'perf_latency_p99': 10}
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
-            avg_gpu_metrics1=avg_gpu_metrics1,
-            avg_non_gpu_metrics1=avg_non_gpu_metrics1,
-            avg_gpu_metrics2=avg_gpu_metrics2,
-            avg_non_gpu_metrics2=avg_non_gpu_metrics2,
+            avg_gpu_metrics1=self.avg_gpu_metrics1,
+            avg_non_gpu_metrics1=self.avg_non_gpu_metrics1,
+            avg_gpu_metrics2=self.avg_gpu_metrics2,
+            avg_non_gpu_metrics2=self.avg_non_gpu_metrics2,
             expected_result=True)
 
-        # Equal weightage
+    def test_equal_weight(self):
         objective_spec = {'perf_throughput': 5, 'perf_latency_p99': 5}
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
-            avg_gpu_metrics1=avg_gpu_metrics1,
-            avg_non_gpu_metrics1=avg_non_gpu_metrics1,
-            avg_gpu_metrics2=avg_gpu_metrics2,
-            avg_non_gpu_metrics2=avg_non_gpu_metrics2,
+            avg_gpu_metrics1=self.avg_gpu_metrics1,
+            avg_non_gpu_metrics1=self.avg_non_gpu_metrics1,
+            avg_gpu_metrics2=self.avg_gpu_metrics2,
+            avg_non_gpu_metrics2=self.avg_non_gpu_metrics2,
             value_step2=2,
             expected_result=False)
 
