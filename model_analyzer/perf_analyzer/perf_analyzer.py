@@ -104,10 +104,6 @@ class PerfAnalyzer:
         self._perf_records = {}
         self._max_cpu_util = max_cpu_util
 
-        # TODO-TMA-518: Need to update for multi-model - still need to fix
-        self._base_perf_config = self._config.model_run_configs(
-        )[0].perf_config()
-
     def run(self, metrics, env=None):
         """
         Runs the perf analyzer with the
@@ -150,19 +146,8 @@ class PerfAnalyzer:
                         f"Unexpected PA return {status}")
 
             else:
-                if self._base_perf_config['measurement-mode'] == 'time_windows':
-                    logger.info(
-                        f"Ran perf_analyzer {self._max_retries} times, "
-                        "but no valid requests recorded in max time interval"
-                        f" of {self._base_perf_config['measurement-interval']} "
-                    )
-                elif self._base_perf_config[
-                        'measurement-mode'] == 'count_windows':
-                    logger.info(
-                        f"Ran perf_analyzer {self._max_retries} times, "
-                        "but no valid requests recorded over max request count"
-                        f" of {self._base_perf_config['measurement-request-count']} "
-                    )
+                logger.info(f"Ran perf_analyzer {self._max_retries} times, "
+                            "but no valid requests recorded")
                 return self.PA_FAIL
 
         return self.PA_SUCCESS
@@ -205,7 +190,7 @@ class PerfAnalyzer:
 
     def _get_cmd(self):
         if self._is_multi_model():
-            cmd = ["mpiexec", "--allow-run-as-root"]
+            cmd = ["mpiexec", "--allow-run-as-root", "--tag-output"]
             for index in range(len(self._config.model_run_configs())):
                 if index:
                     cmd += [":"]
@@ -306,44 +291,65 @@ class PerfAnalyzer:
         """
         Attempt to update PA parameters based on the output
         """
-        # TODO-TMA-518 - how to handle?
-        if self._is_multi_model():
-            return self.PA_FAIL
-
         if self._output.find("Failed to obtain stable measurement"
                             ) != -1 or self._output.find(
                                 "Please use a larger time window") != -1:
-            if self._base_perf_config['measurement-mode'] == 'time_windows':
-                if self._base_perf_config['measurement-interval'] is None:
-                    self._base_perf_config[
-                        'measurement-interval'] = PERF_ANALYZER_MEASUREMENT_WINDOW + MEASUREMENT_WINDOW_STEP
-                else:
-                    self._base_perf_config['measurement-interval'] = int(
-                        self._base_perf_config['measurement-interval']
-                    ) + MEASUREMENT_WINDOW_STEP
-                logger.info(
-                    "perf_analyzer's measurement window is too small, "
-                    f"increased to {self._base_perf_config['measurement-interval']} ms."
-                )
-            elif self._base_perf_config[
-                    'measurement-mode'] is None or self._base_perf_config[
-                        'measurement-mode'] == 'count_windows':
-                if self._base_perf_config['measurement-request-count'] is None:
-                    self._base_perf_config[
-                        'measurement-request-count'] = PERF_ANALYZER_MINIMUM_REQUEST_COUNT + MEASUREMENT_REQUEST_COUNT_STEP
-                else:
-                    self._base_perf_config['measurement-request-count'] = int(
-                        self._base_perf_config['measurement-request-count']
-                    ) + MEASUREMENT_REQUEST_COUNT_STEP
-                logger.info(
-                    "perf_analyzer's request count is too small, "
-                    f"increased to {self._base_perf_config['measurement-request-count']}."
-                )
+            per_rank_logs = self._split_output_per_rank()
+
+            for index, log in enumerate(per_rank_logs):
+                perf_config = self._config.model_run_configs(
+                )[index].perf_config()
+                self._auto_adjust_parameters_for_perf_config(perf_config, log)
+
             return self.PA_SUCCESS
         else:
             logger.info(f"Running perf_analyzer failed with"
                         f" exit status {process.returncode} : {self._output}")
             return self.PA_FAIL
+
+    def _auto_adjust_parameters_for_perf_config(self, perf_config, log):
+        if   log.find("Failed to obtain stable measurement") != -1 \
+          or log.find("Please use a larger time window") != -1:
+
+            if perf_config['measurement-mode'] == 'time_windows':
+                if perf_config['measurement-interval'] is None:
+                    perf_config[
+                        'measurement-interval'] = PERF_ANALYZER_MEASUREMENT_WINDOW + MEASUREMENT_WINDOW_STEP
+                else:
+                    perf_config['measurement-interval'] = int(
+                        perf_config['measurement-interval']
+                    ) + MEASUREMENT_WINDOW_STEP
+
+                logger.info(
+                    "perf_analyzer's measurement window is too small, "
+                    f"increased to {perf_config['measurement-interval']} ms.")
+            elif perf_config['measurement-mode'] is None or perf_config[
+                    'measurement-mode'] == 'count_windows':
+                if perf_config['measurement-request-count'] is None:
+                    perf_config[
+                        'measurement-request-count'] = PERF_ANALYZER_MINIMUM_REQUEST_COUNT + MEASUREMENT_REQUEST_COUNT_STEP
+                else:
+                    perf_config['measurement-request-count'] = int(
+                        perf_config['measurement-request-count']
+                    ) + MEASUREMENT_REQUEST_COUNT_STEP
+
+                logger.info(
+                    "perf_analyzer's request count is too small, "
+                    f"increased to {perf_config['measurement-request-count']}.")
+
+    def _split_output_per_rank(self):
+        if self._is_multi_model():
+            outputs = ["" for mrc in self._config.model_run_configs()]
+            for line in self._output.splitlines():
+                # Example would find the '2': [1,2]<stdout>: fake output ***
+                rank = re.search('^\[\d+,(\d+)\]', line)
+
+                if rank:
+                    index = int(rank.group(1))
+                    outputs[index] += line + "\n"
+            return outputs
+        else:
+            return [self._output]
 
     def _is_multi_model(self):
         """
