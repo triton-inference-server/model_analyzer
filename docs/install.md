@@ -67,13 +67,13 @@ $ docker run -it --gpus all --net=host nvcr.io/nvidia/tritonserver:22.03-py3-sdk
 ```
 
 You will need to build and install the Triton server binary inside the SDK
-container. See the Triton [Installation
+container if you want to use the local mode. See the Triton [Installation
 docs](https://github.com/triton-inference-server/server/blob/main/docs/build.md)
 for more details. 
 
 If you intend to use `--triton-launch-mode=docker`, which is recommended with 
-this method of using Model Analyzer, you will need to mount the
-following: 
+this method of using Model Analyzer when using the SDK container,
+you will need to mount the following: 
    * `-v /var/run/docker.sock:/var/run/docker.sock` allows running docker
       containers as sibling containers from inside the Triton SDK container.
       Model Analyzer will require this if run  with
