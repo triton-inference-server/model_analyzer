@@ -34,15 +34,13 @@ class TestRunConfigResult(trc.TestResultCollector):
         """
         Test that model_name is correctly returned
         """
-        self.assertEqual(self.rcr_empty.model_name(),
-                         self.rcr_empty._model_name)
+        self.assertEqual(self.rcr_empty.model_name(), self.model_name)
 
     def test_run_config(self):
         """
         Test that run_config is correctly returned
         """
-        self.assertEqual(self.rcr_empty.run_config(),
-                         self.rcr_empty._run_config)
+        self.assertEqual(self.rcr_empty.run_config(), self.run_config)
 
     def test_failing_empty(self):
         """
@@ -258,8 +256,11 @@ class TestRunConfigResult(trc.TestResultCollector):
                              [passing_non_gpu_data[i]])
 
     def _construct_empty_rcr(self):
-        self.rcr_empty = RunConfigResult(model_name=MagicMock(),
-                                         run_config=MagicMock(),
+        self.model_name = MagicMock()
+        self.run_config = MagicMock()
+
+        self.rcr_empty = RunConfigResult(model_name=self.model_name,
+                                         run_config=self.run_config,
                                          comparator=MagicMock(),
                                          constraints=MagicMock())
 
