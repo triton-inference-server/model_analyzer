@@ -71,7 +71,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._model_name = model_name
         self._perf_analyzer_flags = model_perf_analyzer_flags
 
-        self._batch_sizes = model_parameters['batch_sizes']
+        self._batch_sizes = sorted(model_parameters['batch_sizes'])
         self._concurrencies = self._create_concurrency_list(
             cli_config, model_parameters)
         self._client_protocol_is_http = (cli_config.client_protocol == 'http')
