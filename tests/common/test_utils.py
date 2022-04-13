@@ -211,7 +211,7 @@ def construct_run_config_measurement(model_name, model_config_names,
 
 
 def construct_run_config_result(avg_gpu_metric_values,
-                                avg_non_gpu_metric_values,
+                                avg_non_gpu_metric_values_list,
                                 comparator,
                                 value_step=1,
                                 model_name="fake_model_name",
@@ -228,9 +228,10 @@ def construct_run_config_result(avg_gpu_metric_values,
         The dict where keys are gpu based metric tags
         and values are the average values around which 
         we want data
-    avg_non_gpu_metric_values: dict
-        Keys are non gpu perf metrics, values are their 
-        average values.
+    avg_non_gpu_metric_values: list of dict
+        Per model list of: 
+            keys are non gpu perf metrics, values are their 
+            average values.
     value_step: int 
         The step value between two adjacent data values.
         Can be used to control the max/min of the data
@@ -259,12 +260,14 @@ def construct_run_config_result(avg_gpu_metric_values,
                       value_step)) for key, val in metric_values.items()
         }
 
-    non_gpu_metric_values = {
-        key: list(
-            range(val - value_step * num_vals, val + value_step * num_vals,
-                  value_step))
-        for key, val in avg_non_gpu_metric_values.items()
-    }
+    non_gpu_metric_values_list = []
+    for avg_non_gpu_metric_values in avg_non_gpu_metric_values_list:
+        non_gpu_metric_values_list.append({
+            key: list(
+                range(val - value_step * num_vals, val + value_step * num_vals,
+                      value_step))
+            for key, val in avg_non_gpu_metric_values.items()
+        })
 
     # Construct measurements and add them to the result
     for i in range(2 * num_vals):
@@ -273,9 +276,14 @@ def construct_run_config_result(avg_gpu_metric_values,
             gpu_metrics[gpu_uuid] = {
                 key: metric_values[key][i] for key in metric_values
             }
-        non_gpu_metrics = {
-            key: non_gpu_metric_values[key][i] for key in non_gpu_metric_values
-        }
+
+    non_gpu_metrics = []
+    for non_gpu_metric_values in non_gpu_metric_values_list:
+        for i in range(2 * num_vals):
+            non_gpu_metrics.append({
+                key: non_gpu_metric_values[key][i]
+                for key in non_gpu_metric_values
+            })
 
         # TODO-TMA-571: Needs enhancement to support model_config_weights
         run_config_result.add_run_config_measurement(
@@ -287,7 +295,7 @@ def construct_run_config_result(avg_gpu_metric_values,
                     'concurrency': 1
                 }],
                 gpu_metric_values=gpu_metrics,
-                non_gpu_metric_values=[non_gpu_metrics],
+                non_gpu_metric_values=non_gpu_metrics,
                 metric_objectives=comparator._metric_weights,
                 model_config_weights=[1]))
 
