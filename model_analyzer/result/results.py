@@ -165,7 +165,7 @@ class Results:
 
         return measurements
 
-    def get_model_measurements_dict(self, models_name):
+    def get_model_measurements_dict(self, models_name, suppress_warning=False):
         """
         Given a model name, return a dict with all measurements for that model.
         
@@ -198,7 +198,9 @@ class Results:
             }
         """
         if not self.contains_model(models_name):
-            logger.error(f'No results found for model: {models_name}')
+            if not suppress_warning:
+                logger.error(f'No results found for model: {models_name}')
+
             return {}
 
         return self._results[models_name]
