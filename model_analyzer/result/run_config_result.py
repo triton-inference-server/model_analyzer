@@ -25,7 +25,7 @@ logger = logging.getLogger(LOGGER_NAME)
 @total_ordering
 class RunConfigResult:
     """
-    A class that represents the group of measurements from
+    A class that represents the group of measurements (result) from
     a single RunConfig. This RunConfigResult belongs
     to a particular ResultTable
     """
@@ -68,7 +68,12 @@ class RunConfigResult:
         return self._model_name
 
     def run_config(self):
-        """ Returns the RunConfig associated with this result """
+        """ 
+        Returns
+        -------
+        RunConfig
+            associated with this result 
+        """
         return self._run_config
 
     def failing(self):
