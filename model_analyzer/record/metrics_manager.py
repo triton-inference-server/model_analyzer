@@ -238,6 +238,11 @@ class MetricsManager:
             run_config_measurement = RunConfigMeasurement(
                 run_config.model_variants_name(), model_gpu_metrics)
 
+            # Add default metric weighting to all measurements for easy sorting
+            run_config_measurement.set_metric_weightings([{
+                "perf_throughput": 1
+            } for x in run_config.model_run_configs()])
+
             # Combine all per-model measurements into the RunConfigMeasurement
             #
             for model_run_config in run_config.model_run_configs():
@@ -439,10 +444,9 @@ class MetricsManager:
         status = perf_analyzer.run(self._perf_metrics, env=perf_analyzer_env)
 
         if perf_output_writer:
-            # TODO-TMA-518: MPI command
             perf_output_writer.write(
-                '============== Perf Analyzer Launched ==============\n '
-                f'Command: perf_analyzer {run_config.model_run_configs()[0].perf_config().to_cli_string()} \n\n',
+                '============== Perf Analyzer Launched ==============\n'
+                f'Command: {perf_analyzer.get_cmd()}\n\n',
                 append=True)
             if perf_analyzer.output():
                 perf_output_writer.write(perf_analyzer.output() + '\n',

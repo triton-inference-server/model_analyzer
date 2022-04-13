@@ -56,6 +56,7 @@ def get_test_options():
         OptionStruct("bool", "profile","--collect-cpu-metrics"),
         OptionStruct("bool", "profile","--perf-output"),
         OptionStruct("bool", "profile","--run-config-search-disable"),
+        OptionStruct("bool", "profile","--run-config-profile-models-concurrently-enable"),
         OptionStruct("bool", "profile","--reload-model-disable"),
         #Int/Float options
         # Options format:

@@ -51,6 +51,7 @@ from model_analyzer.record.types.perf_server_compute_infer \
 from model_analyzer.record.types.perf_server_compute_output \
     import PerfServerComputeOutput
 from .common import test_result_collector as trc
+from model_analyzer.constants import PERF_ANALYZER_MEASUREMENT_WINDOW, MEASUREMENT_WINDOW_STEP, PERF_ANALYZER_MINIMUM_REQUEST_COUNT, MEASUREMENT_REQUEST_COUNT_STEP
 
 # Test Parameters
 MODEL_LOCAL_PATH = '/model_analyzer/models'
@@ -447,6 +448,230 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         perf_analyzer.run(perf_metrics)
         self.assertEqual(
             self.perf_mock.get_perf_analyzer_popen_read_call_count(), 10)
+
+    def test_is_multi_model(self):
+        """ 
+        Test the functionality of the _is_multi_model() function 
+        
+        If the provided run_config only has one ModelRunConfig, then is_multi_model is false. Any
+        more than one ModelRunConfig and it should return true
+        """
+        run_config = RunConfig({})
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), MagicMock()))
+
+        pa1 = PerfAnalyzer(path=PERF_BIN_PATH,
+                           config=run_config,
+                           max_retries=10,
+                           timeout=100,
+                           max_cpu_util=50)
+        self.assertFalse(pa1._is_multi_model())
+
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), MagicMock()))
+        pa2 = PerfAnalyzer(path=PERF_BIN_PATH,
+                           config=run_config,
+                           max_retries=10,
+                           timeout=100,
+                           max_cpu_util=50)
+        self.assertTrue(pa2._is_multi_model())
+
+    def test_get_cmd_single_model(self):
+        """
+        Test the functionality of _get_cmd() for single model
+        """
+        pa = PerfAnalyzer(path=PERF_BIN_PATH,
+                          config=self.run_config,
+                          max_retries=10,
+                          timeout=100,
+                          max_cpu_util=50)
+
+        expected_cmd = [
+            'perf_analyzer', '-m', 'test_model', '--measurement-interval',
+            '1000', '--measurement-request-count', '50'
+        ]
+        self.assertEqual(pa._get_cmd(), expected_cmd)
+
+    def test_get_cmd_multi_model(self):
+        """
+        Test the functionality of _get_cmd() for multi model
+        """
+        pac1 = PerfAnalyzerConfig()
+        pac1['model-name'] = "MultiModel1"
+        pac1['measurement-interval'] = 1000
+        pac1['measurement-request-count'] = 50
+
+        pac2 = PerfAnalyzerConfig()
+        pac2['model-name'] = "MultiModel2"
+        pac2['batch-size'] = 16
+        pac2['concurrency-range'] = 1024
+
+        run_config = RunConfig({})
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), pac1))
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), pac2))
+
+        pa = PerfAnalyzer(path=PERF_BIN_PATH,
+                          config=run_config,
+                          max_retries=10,
+                          timeout=100,
+                          max_cpu_util=50)
+
+        #yapf: disable
+        expected_cmd = [
+            'mpiexec', '--allow-run-as-root', '--tag-output',
+            '-n', '1', 'perf_analyzer',
+                '-m', 'MultiModel1',
+                '--measurement-interval', '1000',
+                '--measurement-request-count', '50',
+            ':', '-n', '1', 'perf_analyzer',
+                '-m', 'MultiModel2',
+                '-b', '16',
+                '--concurrency-range', '1024'
+        ]
+        #yapf: enable
+
+        self.assertEqual(pa._get_cmd(), expected_cmd)
+
+    def test_split_output_per_rank_for_single_model(self):
+        """
+        Test functionality of _get_output_per_rank() for single-model
+        """
+
+        output = """
+[1,0]<stdout>:*** Measurement Settings ***
+[1,1]<stdout>:*** Measurement Settings ***
+[1,1]<stdout>:Request concurrency: 2
+[1,0]<stdout>:Request concurrency: 1
+"""
+
+        # Expect no change for single-model
+        expected_result = [output]
+
+        run_config = RunConfig({})
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), MagicMock()))
+
+        pa = PerfAnalyzer(path=PERF_BIN_PATH,
+                          config=run_config,
+                          max_retries=10,
+                          timeout=100,
+                          max_cpu_util=50)
+
+        pa._output = output
+        result = pa._split_output_per_rank()
+        self.assertEqual(result, expected_result)
+
+    def test_split_output_per_rank_for_multi_model(self):
+        """
+        Test functionality of _get_output_per_rank() for multi-model
+        """
+
+        output = """
+[1,0]<stdout>:*** Measurement Settings ***
+[1,1]<stdout>:*** Measurement Settings ***
+[1,1]<stdout>:Request concurrency: 2
+[1,0]<stdout>:Request concurrency: 1
+"""
+
+        expected_result = [
+            """[1,0]<stdout>:*** Measurement Settings ***
+[1,0]<stdout>:Request concurrency: 1
+""", """[1,1]<stdout>:*** Measurement Settings ***
+[1,1]<stdout>:Request concurrency: 2
+"""
+        ]
+
+        run_config = RunConfig({})
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), MagicMock()))
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), MagicMock()))
+
+        pa = PerfAnalyzer(path=PERF_BIN_PATH,
+                          config=run_config,
+                          max_retries=10,
+                          timeout=100,
+                          max_cpu_util=50)
+
+        pa._output = output
+        result = pa._split_output_per_rank()
+        self.assertEqual(result, expected_result)
+
+    def test_auto_adjust_parameters(self):
+        """ 
+        Test function _auto_adjust_parameters()
+        
+        In the case below:
+            - Model0 fails to be stable in time_windows and should have measurement-interval increased
+            - Model1 is fine and should have no changes
+            - Model2 fails to be stable in count_windows and should have measurement-request-count increased
+        """
+        pac0 = PerfAnalyzerConfig()
+        pac0['model-name'] = "MultiModel0"
+        pac0['measurement-mode'] = "time_windows"
+
+        pac1 = PerfAnalyzerConfig()
+        pac1['model-name'] = "MultiModel1"
+        pac1['measurement-mode'] = "time_windows"
+
+        pac2 = PerfAnalyzerConfig()
+        pac2['model-name'] = "MultiModel2"
+        pac2['measurement-mode'] = "count_windows"
+
+        run_config = RunConfig({})
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), pac0))
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), pac1))
+        run_config.add_model_run_config(
+            ModelRunConfig(MagicMock(), MagicMock(), pac2))
+
+        pa = PerfAnalyzer(path=PERF_BIN_PATH,
+                          config=run_config,
+                          max_retries=10,
+                          timeout=100,
+                          max_cpu_util=50)
+
+        pa._output = """
+[1,0]<stdout>:*** Measurement Settings ***
+[1,1]<stdout>:*** Measurement Settings ***
+[1,2]<stdout>:*** Measurement Settings ***
+[1,2]<stdout>:Failed to obtain stable measurement
+[1,0]<stdout>:Failed to obtain stable measurement
+[1,1]<stdout>:Success
+        """
+
+        pa._auto_adjust_parameters(MagicMock())
+
+        expected_measurement_interval = PERF_ANALYZER_MEASUREMENT_WINDOW + MEASUREMENT_WINDOW_STEP
+        expected_request_count = PERF_ANALYZER_MINIMUM_REQUEST_COUNT + MEASUREMENT_REQUEST_COUNT_STEP
+
+        self.assertEqual(
+            expected_measurement_interval,
+            pa._config.model_run_configs()[0].perf_config()
+            ['measurement-interval'])
+        self.assertEqual(
+            None,
+            pa._config.model_run_configs()[0].perf_config()
+            ['measurement-request-count'])
+        self.assertEqual(
+            None,
+            pa._config.model_run_configs()[1].perf_config()
+            ['measurement-interval'])
+        self.assertEqual(
+            None,
+            pa._config.model_run_configs()[1].perf_config()
+            ['measurement-request-count'])
+        self.assertEqual(
+            None,
+            pa._config.model_run_configs()[2].perf_config()
+            ['measurement-interval'])
+        self.assertEqual(
+            expected_request_count,
+            pa._config.model_run_configs()[2].perf_config()
+            ['measurement-request-count'])
 
     def tearDown(self):
         # In case test raises exception

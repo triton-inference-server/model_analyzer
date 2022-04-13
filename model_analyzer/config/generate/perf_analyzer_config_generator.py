@@ -71,7 +71,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._model_name = model_name
         self._perf_analyzer_flags = model_perf_analyzer_flags
 
-        self._batch_sizes = model_parameters['batch_sizes']
+        self._batch_sizes = sorted(model_parameters['batch_sizes'])
         self._concurrencies = self._create_concurrency_list(
             cli_config, model_parameters)
         self._client_protocol_is_http = (cli_config.client_protocol == 'http')
@@ -108,8 +108,13 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         ----------
         measurements: List of Measurements from the last run(s)
         """
-        self._last_results = measurements
-        self._all_results.extend(measurements)
+
+        # Remove 'NONE' cases, and find single max measurement from the list
+        measurements = [m for m in measurements if m]
+        measurement = [max(measurements)] if measurements else [None]
+
+        self._last_results = measurement
+        self._all_results.extend(measurement)
 
     def _create_concurrency_list(self, cli_config, model_parameters):
         if model_parameters['concurrency']:
@@ -143,7 +148,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _create_non_concurrency_perf_config_params(self):
         perf_config_params = {
             'model-name': [self._model_name],
-            'latency-report-file': [self._model_name],
+            'latency-report-file': [self._model_name + "-results.csv"],
             'batch-size': self._batch_sizes,
             'measurement-mode': [DEFAULT_MEASUREMENT_MODE],
             'verbose-csv': ['--verbose-csv'],

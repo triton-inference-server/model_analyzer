@@ -42,9 +42,9 @@ class RunConfigGenerator(ConfigGeneratorInterface):
 
         self._num_models = len(models)
 
-        self._curr_model_run_configs = [None] * self._num_models
-        self._curr_results = [[]] * self._num_models
-        self._curr_generators = [None] * self._num_models
+        self._curr_model_run_configs = [None for n in range(self._num_models)]
+        self._curr_results = [[] for n in range(self._num_models)]
+        self._curr_generators = [None for n in range(self._num_models)]
 
     def is_done(self):
         return    self._curr_generators[0] is not None \

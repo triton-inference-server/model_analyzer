@@ -104,10 +104,6 @@ class PerfAnalyzer:
         self._perf_records = {}
         self._max_cpu_util = max_cpu_util
 
-        # TODO-TMA-518: Need to update for multi-model
-        self._base_perf_config = self._config.model_run_configs(
-        )[0].perf_config()
-
     def run(self, metrics, env=None):
         """
         Runs the perf analyzer with the
@@ -150,22 +146,42 @@ class PerfAnalyzer:
                         f"Unexpected PA return {status}")
 
             else:
-                if self._base_perf_config['measurement-mode'] == 'time_windows':
-                    logger.info(
-                        f"Ran perf_analyzer {self._max_retries} times, "
-                        "but no valid requests recorded in max time interval"
-                        f" of {self._base_perf_config['measurement-interval']} "
-                    )
-                elif self._base_perf_config[
-                        'measurement-mode'] == 'count_windows':
-                    logger.info(
-                        f"Ran perf_analyzer {self._max_retries} times, "
-                        "but no valid requests recorded over max request count"
-                        f" of {self._base_perf_config['measurement-request-count']} "
-                    )
+                logger.info(f"Ran perf_analyzer {self._max_retries} times, "
+                            "but no valid requests recorded")
                 return self.PA_FAIL
 
         return self.PA_SUCCESS
+
+    def get_records(self):
+        """
+        Returns
+        -------
+        The records from the last perf_analyzer run
+        """
+
+        if self._perf_records:
+            return self._perf_records
+        raise TritonModelAnalyzerException(
+            "Attempted to get perf_analyzer results"
+            "without calling run first.")
+
+    def output(self):
+        """
+        Returns
+        -------
+        The stdout output of the
+        last perf_analyzer run
+        """
+
+        if self._output:
+            return self._output
+        logger.info('perf_analyzer did not produce any output.')
+
+    def get_cmd(self):
+        """ 
+        Returns a string of the command to run
+        """
+        return " ".join(self._get_cmd())
 
     def _execute_pa(self, env):
 
@@ -179,9 +195,25 @@ class PerfAnalyzer:
         return status
 
     def _get_cmd(self):
-        cmd = [self.bin_path]
-        cmd += self._get_pa_cli_command().replace('=', ' ').split()
+        if self._is_multi_model():
+            cmd = ["mpiexec", "--allow-run-as-root", "--tag-output"]
+            for index in range(len(self._config.model_run_configs())):
+                if index:
+                    cmd += [":"]
+                cmd += ["-n", '1']
+                cmd += self._get_single_model_cmd(index)
+        else:
+            cmd = self._get_single_model_cmd(0)
         return cmd
+
+    def _get_single_model_cmd(self, index):
+        cmd = [self.bin_path]
+        cmd += self._get_pa_cli_command(index).replace('=', ' ').split()
+        return cmd
+
+    def _get_pa_cli_command(self, index):
+        return self._config.model_run_configs()[index].perf_config(
+        ).to_cli_string()
 
     def _create_env(self, env):
         perf_analyzer_env = os.environ.copy()
@@ -263,72 +295,73 @@ class PerfAnalyzer:
 
     def _auto_adjust_parameters(self, process):
         """
-        Use of the perf analyzer process
+        Attempt to update PA parameters based on the output
         """
-
         if self._output.find("Failed to obtain stable measurement"
                             ) != -1 or self._output.find(
                                 "Please use a larger time window") != -1:
-            if self._base_perf_config['measurement-mode'] == 'time_windows':
-                if self._base_perf_config['measurement-interval'] is None:
-                    self._base_perf_config[
-                        'measurement-interval'] = PERF_ANALYZER_MEASUREMENT_WINDOW + MEASUREMENT_WINDOW_STEP
-                else:
-                    self._base_perf_config['measurement-interval'] = int(
-                        self._base_perf_config['measurement-interval']
-                    ) + MEASUREMENT_WINDOW_STEP
-                logger.info(
-                    "perf_analyzer's measurement window is too small, "
-                    f"increased to {self._base_perf_config['measurement-interval']} ms."
-                )
-            elif self._base_perf_config[
-                    'measurement-mode'] is None or self._base_perf_config[
-                        'measurement-mode'] == 'count_windows':
-                if self._base_perf_config['measurement-request-count'] is None:
-                    self._base_perf_config[
-                        'measurement-request-count'] = PERF_ANALYZER_MINIMUM_REQUEST_COUNT + MEASUREMENT_REQUEST_COUNT_STEP
-                else:
-                    self._base_perf_config['measurement-request-count'] = int(
-                        self._base_perf_config['measurement-request-count']
-                    ) + MEASUREMENT_REQUEST_COUNT_STEP
-                logger.info(
-                    "perf_analyzer's request count is too small, "
-                    f"increased to {self._base_perf_config['measurement-request-count']}."
-                )
+            per_rank_logs = self._split_output_per_rank()
+
+            for index, log in enumerate(per_rank_logs):
+                perf_config = self._config.model_run_configs(
+                )[index].perf_config()
+                self._auto_adjust_parameters_for_perf_config(perf_config, log)
+
             return self.PA_SUCCESS
         else:
             logger.info(f"Running perf_analyzer failed with"
                         f" exit status {process.returncode} : {self._output}")
             return self.PA_FAIL
 
-    def _get_pa_cli_command(self):
-        # TODO-TMA-518 - update for multi-model
-        return self._base_perf_config.to_cli_string()
+    def _auto_adjust_parameters_for_perf_config(self, perf_config, log):
+        if   log.find("Failed to obtain stable measurement") != -1 \
+          or log.find("Please use a larger time window") != -1:
 
-    def output(self):
-        """
-        Returns
-        -------
-        The stdout output of the
-        last perf_analyzer run
-        """
+            if perf_config['measurement-mode'] == 'time_windows':
+                if perf_config['measurement-interval'] is None:
+                    perf_config[
+                        'measurement-interval'] = PERF_ANALYZER_MEASUREMENT_WINDOW + MEASUREMENT_WINDOW_STEP
+                else:
+                    perf_config['measurement-interval'] = int(
+                        perf_config['measurement-interval']
+                    ) + MEASUREMENT_WINDOW_STEP
 
-        if self._output:
-            return self._output
-        logger.info('perf_analyzer did not produce any output.')
+                logger.info(
+                    "perf_analyzer's measurement window is too small, "
+                    f"increased to {perf_config['measurement-interval']} ms.")
+            elif perf_config['measurement-mode'] is None or perf_config[
+                    'measurement-mode'] == 'count_windows':
+                if perf_config['measurement-request-count'] is None:
+                    perf_config[
+                        'measurement-request-count'] = PERF_ANALYZER_MINIMUM_REQUEST_COUNT + MEASUREMENT_REQUEST_COUNT_STEP
+                else:
+                    perf_config['measurement-request-count'] = int(
+                        perf_config['measurement-request-count']
+                    ) + MEASUREMENT_REQUEST_COUNT_STEP
 
-    def get_records(self):
-        """
-        Returns
-        -------
-        The records from the last perf_analyzer run
-        """
+                logger.info(
+                    "perf_analyzer's request count is too small, "
+                    f"increased to {perf_config['measurement-request-count']}.")
 
-        if self._perf_records:
-            return self._perf_records
-        raise TritonModelAnalyzerException(
-            "Attempted to get perf_analyzer results"
-            "without calling run first.")
+    def _split_output_per_rank(self):
+        if self._is_multi_model():
+            outputs = ["" for mrc in self._config.model_run_configs()]
+            for line in self._output.splitlines():
+                # Example would find the '2': [1,2]<stdout>: fake output ***
+                rank = re.search('^\[\d+,(\d+)\]', line)
+
+                if rank:
+                    index = int(rank.group(1))
+                    outputs[index] += line + "\n"
+            return outputs
+        else:
+            return [self._output]
+
+    def _is_multi_model(self):
+        """
+        Returns true if the RunConfig provided to this class contains multiple perf_configs. Else False
+        """
+        return len(self._config.model_run_configs()) > 1
 
     def _parse_outputs(self, metrics):
         """
@@ -338,6 +371,8 @@ class PerfAnalyzer:
         for perf_config in [
                 mrc.perf_config() for mrc in self._config.model_run_configs()
         ]:
+            logger.debug(
+                f"Reading PA results from {perf_config['latency-report-file']}")
             with open(perf_config['latency-report-file'], mode='r') as f:
                 csv_reader = csv.DictReader(f, delimiter=',')
 

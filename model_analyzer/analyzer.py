@@ -218,10 +218,8 @@ class Analyzer:
                     self._state_manager.save_checkpoint()
 
     def _should_profile_multiple_models_concurrently(self):
-        # TODO-TMA-518: Disable until we support this feature
-        # return (self._config.run_config_profile_models_concurrently_enable and
-        #         len(self._config.profile_models) > 1)
-        return False
+        return (self._config.run_config_profile_models_concurrently_enable and
+                len(self._config.profile_models) > 1)
 
     def _get_profile_complete_string(self):
         profiled_model_list = self._state_manager.get_state_variable(
