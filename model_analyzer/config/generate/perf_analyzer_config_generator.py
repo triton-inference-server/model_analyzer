@@ -108,8 +108,13 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         ----------
         measurements: List of Measurements from the last run(s)
         """
-        self._last_results = measurements
-        self._all_results.extend(measurements)
+
+        # Remove 'NONE' cases, and find single max measurement from the list
+        measurements = [m for m in measurements if m]
+        measurement = [max(measurements)] if measurements else [None]
+
+        self._last_results = measurement
+        self._all_results.extend(measurement)
 
     def _create_concurrency_list(self, cli_config, model_parameters):
         if model_parameters['concurrency']:
