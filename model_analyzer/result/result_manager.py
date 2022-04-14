@@ -285,38 +285,94 @@ class ResultManager:
         and objectives.
         """
 
-        # Collect objectives and constraints
-        comparators = {}
-        constraints = {}
-        for model in self._config.analysis_models:
-            # TODO-TMA-570: Making a list for now, but objectives() should return a list of objectives
-            # (one per model)
-            comparators[model.model_name()] = RunConfigResultComparator(
-                metric_objectives_list=[model.objectives()])
-            constraints[model.model_name()] = model.constraints()
+        self._create_concurrent_analysis_model_name()
 
-        # Construct and add results to individual result heaps as well as global result heap
-        results = self._state_manager.get_state_variable(
-            'ResultManager.results')
+        if self._analyzing_models_concurrently():
+            self._setup_for_concurrent_analysis()
+        else:
+            self._setup_for_sequential_analysis()
 
+        self._add_results_to_heaps()
+
+    def _create_concurrent_analysis_model_name(self):
         analysis_model_names = [
             model.model_name() for model in self._config.analysis_models
         ]
-        for model_name in analysis_model_names:
+
+        self._concurrent_analysis_model_name = ','.join(analysis_model_names)
+
+    def _analyzing_models_concurrently(self):
+        """
+        Returns
+        -------
+        bool: True if we are doing concurrent model analysis
+        """
+        results = self._state_manager.get_state_variable(
+            'ResultManager.results')
+
+        return bool(
+            results.get_model_measurements_dict(
+                models_name=self._concurrent_analysis_model_name,
+                suppress_warning=True))
+
+    def _setup_for_concurrent_analysis(self):
+        self._analysis_model_names = [self._concurrent_analysis_model_name]
+
+        model_objectives_list = [
+            model.objectives() for model in self._config.analysis_models
+        ]
+        model_constraints_list = [
+            model.constraints() for model in self._config.analysis_models
+        ]
+
+        self._run_comparators = {
+            self._concurrent_analysis_model_name:
+                RunConfigResultComparator(
+                    metric_objectives_list=model_objectives_list)
+        }
+
+        self._run_constraints = {
+            self._concurrent_analysis_model_name: model_constraints_list
+        }
+
+    def _setup_for_sequential_analysis(self):
+        self._analysis_model_names = [
+            model.model_name() for model in self._config.analysis_models
+        ]
+
+        self._run_comparators = {
+            model.model_name(): RunConfigResultComparator(
+                metric_objectives_list=[model.objectives()])
+            for model in self._config.analysis_models
+        }
+
+        self._run_constraints = {
+            model.model_name(): model.constraints()
+            for model in self._config.analysis_models
+        }
+
+    def _add_results_to_heaps(self):
+        """
+        Construct and add results to individual result heaps 
+        as well as global result heap
+        """
+        results = self._state_manager.get_state_variable(
+            'ResultManager.results')
+
+        for model_name in self._analysis_model_names:
             model_measurements = results.get_model_measurements_dict(model_name)
 
-            # TODO-TMA-570: Model config should be a list
             for (run_config,
                  run_config_measurements) in model_measurements.values():
                 run_config_result = RunConfigResult(
                     model_name=model_name,
                     run_config=run_config,
-                    comparator=comparators[model_name],
-                    constraints=constraints[model_name])
+                    comparator=self._run_comparators[model_name],
+                    constraints=self._run_constraints[model_name])
 
                 for run_config_measurement in run_config_measurements.values():
                     run_config_measurement.set_metric_weightings(
-                        comparators[model_name]._metric_weights)
+                        self._run_comparators[model_name]._metric_weights)
 
                     run_config_result.add_run_config_measurement(
                         run_config_measurement)
