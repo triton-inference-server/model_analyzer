@@ -307,10 +307,13 @@ class ResultManager:
         -------
         bool: True if we are doing concurrent model analysis
         """
+        results = self._state_manager.get_state_variable(
+            'ResultManager.results')
+
         return bool(
-            self._state_manager.get_state_variable(
-                'ResultManager.results').get_model_measurements_dict(
-                    self._concurrent_analysis_model_name, True))
+            results.get_model_measurements_dict(
+                models_name=self._concurrent_analysis_model_name,
+                suppress_warning=True))
 
     def _setup_for_concurrent_analysis(self):
         self._analysis_model_names = [self._concurrent_analysis_model_name]
