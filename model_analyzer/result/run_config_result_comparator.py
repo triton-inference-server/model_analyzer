@@ -32,11 +32,15 @@ class RunConfigResultComparator:
 
         # Normalize metric weights
         self._metric_weights = []
+        self._model_weights = []
         for metric_objectives in metric_objectives_list:
             self._metric_weights.append({
                 key: (val / sum(metric_objectives.values()))
                 for key, val in metric_objectives.items()
             })
+
+            # TODO-TMA-571: Need to add support for model weighting
+            self._model_weights.append(1)
 
     def is_better_than(self, run_config_result1, run_config_result2):
         """
@@ -87,8 +91,8 @@ class RunConfigResultComparator:
             aggregated_run_config_measurement = aggregation_func(
                 run_config_result.run_config_measurements())
 
-        # TODO-TMA-571: Need to add proper model weighting support
-        aggregated_run_config_measurement.set_model_config_weighting([1])
+        aggregated_run_config_measurement.set_model_config_weighting(
+            self._model_weights)
         aggregated_run_config_measurement.set_metric_weightings(
             self._metric_weights)
 
