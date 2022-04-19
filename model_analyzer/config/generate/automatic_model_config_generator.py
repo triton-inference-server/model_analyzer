@@ -23,15 +23,18 @@ logger = logging.getLogger(LOGGER_NAME)
 class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in automatic search mode """
 
-    def __init__(self, config, model, client):
+    def __init__(self, config, model, client, default_only):
         """
         Parameters
         ----------
         config: ModelAnalyzerConfig
         model: The model to generate ModelConfigs for
         client: TritonClient
+        default_only: Bool 
+            If true, only the default config will be generated
+            If false, the default config will NOT be generated
         """
-        super().__init__(config, model, client)
+        super().__init__(config, model, client, default_only)
 
         self._max_instance_count = config.run_config_search_max_instance_count
         self._min_instance_count = config.run_config_search_min_instance_count
@@ -40,10 +43,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
         self._instance_kind = "KIND_CPU" if self._cpu_only else "KIND_GPU"
 
-        # State machine counters
-        # (will be properly initialized in start_state_machine())
-        #
-        self._curr_instance_count = 0
+        self._curr_instance_count = self._min_instance_count
         self._curr_max_batch_size = 0
 
         self._sweep_max_batch_size_disabled = self._determine_sweep_max_batch_size_disabled(
@@ -55,27 +55,13 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         #
         self._curr_max_batch_size_throughputs = []
 
-        # We return the default combo first before starting the state machine.
-        # This flag tracks if we have done that and thus are in the state machine
-        #
-        self._state_machine_started = False
+        self._reset_max_batch_size()
 
     def _done_walking(self):
         return self._done_walking_max_batch_size() \
            and self._done_walking_instance_count()
 
     def _step(self):
-        if not self._state_machine_started:
-            self._start_state_machine()
-        else:
-            self._step_state_machine()
-
-    def _start_state_machine(self):
-        self._state_machine_started = True
-        self._curr_instance_count = self._min_instance_count
-        self._reset_max_batch_size()
-
-    def _step_state_machine(self):
         if self._done_walking_max_batch_size():
             self._reset_max_batch_size()
             self._step_instance_count()
@@ -149,7 +135,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         return model_config
 
     def _get_curr_param_combo(self):
-        if not self._state_machine_started:
+        if self._default_only:
             return self.DEFAULT_PARAM_COMBO
 
         config = {

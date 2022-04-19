@@ -89,9 +89,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
-            {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]},
-            {'max_batch_size': 8}
-
+            {'dynamic_batching': {}, 'max_batch_size': 128, 'instance_group': [{'count': 5, 'kind': 'KIND_GPU'}]}
         ]
         # yapf: enable
 
@@ -145,9 +143,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}], 'max_batch_size': 16},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 1},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 4},
-            {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 16},
-            {'max_batch_size': 8}
-
+            {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 16}
         ]
         # yapf: enable
 
@@ -181,8 +177,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
-            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
-            {'max_batch_size': 8}
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]}
         ]
         # yapf: enable
 
@@ -210,8 +205,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 4, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
-            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
-            {'max_batch_size': 8}
+            {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]}
         ]
         # yapf: enable
 
@@ -239,8 +233,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'dynamic_batching': {}, 'max_batch_size': 6, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 6, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 12, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
-            {'dynamic_batching': {}, 'max_batch_size': 12, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
-            {'max_batch_size': 8}
+            {'dynamic_batching': {}, 'max_batch_size': 12, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]}
         ]
         # yapf: enable
 
@@ -275,8 +268,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}], 'max_batch_size': 16},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 1},
             {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 4},
-            {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 16},
-            {'max_batch_size': 8}
+            {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 16}
         ]
         # yapf: enable
 
@@ -302,8 +294,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_CPU'}]},
             {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]},
-            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 2, 'kind': 'KIND_CPU'}]},
-            {'max_batch_size': 8}
+            {'dynamic_batching': {}, 'max_batch_size': 16, 'instance_group': [{'count': 2, 'kind': 'KIND_CPU'}]}
         ]
         # yapf: enable
 
@@ -342,8 +333,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'platform': "fake_platform", 'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
             {'platform': "fake_platform", 'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
             {'platform': "fake_platform", 'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
-            {'platform': "fake_platform", 'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
-            {'platform': "fake_platform", 'max_batch_size': 4, 'instance_group': [{'count': 1, 'kind': 'KIND_CPU'}]}
+            {'platform': "fake_platform", 'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}],'dynamic_batching': {}}
         ]
         # yapf: enable
 
@@ -455,23 +445,6 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                 {
                     'execution_accelerators':
                     {
-                        'cpu_execution_accelerator': [{'name': 'fake_cpu_accelerator'}],
-                        'gpu_execution_accelerator': [{'name': 'fake_gpu_accelerator'}]
-                    }
-                },
-                'parameters':
-                {
-                    'param1': {'string_value': 'param1_value'},
-                    'param2': {'string_value': 'param2_value'}
-                },
-                'max_batch_size': 4,
-                'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]
-            },
-            {
-                'optimization':
-                {
-                    'execution_accelerators':
-                    {
                         'cpu_execution_accelerator': [{'name': 'new_cpu_accelerator'}],
                         'gpu_execution_accelerator': [{'name': 'fake_gpu_accelerator'}]
                     }
@@ -542,8 +515,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': { 'max_queue_delay_microseconds': '100'}},
             {'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}],'dynamic_batching': { 'max_queue_delay_microseconds': '100'}},
             {'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': { 'max_queue_delay_microseconds': '100'}},
-            {'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}],'dynamic_batching': { 'max_queue_delay_microseconds': '100'}},
-            {'max_batch_size': 4, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': { 'max_queue_delay_microseconds': '100'}}
+            {'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}],'dynamic_batching': { 'max_queue_delay_microseconds': '100'}}
         ]
         # yapf: enable
 

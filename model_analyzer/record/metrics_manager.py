@@ -557,6 +557,10 @@ class MetricsManager:
                 f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
             )
 
+        # Vertical spacing when running multiple models at a time
+        if len(run_config.model_run_configs()) > 1:
+            logger.info("")
+
         cpu_only = run_config.cpu_only()
 
         # Inform user CPU metric(s) are not being collected under CPU mode
