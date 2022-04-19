@@ -24,7 +24,7 @@ from model_analyzer.model_analyzer_exceptions \
 class ManualModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in manual search mode """
 
-    def __init__(self, config, model, client):
+    def __init__(self, config, model, client, default_only):
         """
         Parameters
         ----------
@@ -32,7 +32,7 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         model: The model to generate ModelConfigs for
         client: TritonClient
         """
-        super().__init__(config, model, client)
+        super().__init__(config, model, client, default_only)
 
         self._reload_model_disable = config.reload_model_disable
         self._num_retries = config.client_max_retries
@@ -79,30 +79,23 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         Calculate all parameter combinations to apply on top of the
         base model config for manual search 
         """
-        model_config_params = self._base_model.model_config_parameters()
-        if model_config_params:
-            param_combos = GeneratorUtils.generate_combinations(
-                model_config_params)
-        else:
-            if self._search_disabled:
-                param_combos = self._generate_search_disabled_param_combos()
-            else:
-                raise TritonModelAnalyzerException(
-                    f"Automatic search not supported in ManualModelConfigGenerator"
-                )
 
-        if not self._is_default_combo_in_param_combos(param_combos):
-            self._add_default_combo(param_combos)
+        if self._default_only:
+            param_combos = [self.DEFAULT_PARAM_COMBO]
+        else:
+            model_config_params = self._base_model.model_config_parameters()
+            if model_config_params:
+                param_combos = GeneratorUtils.generate_combinations(
+                    model_config_params)
+            else:
+                if self._search_disabled:
+                    param_combos = self._generate_search_disabled_param_combos()
+                else:
+                    raise TritonModelAnalyzerException(
+                        f"Automatic search not supported in ManualModelConfigGenerator"
+                    )
 
         return param_combos
-
-    def _is_default_combo_in_param_combos(self, param_combos):
-        return self.DEFAULT_PARAM_COMBO in param_combos
-
-    def _add_default_combo(self, param_combos):
-        # Add in an empty combo at the start of the list, which will just apply the default values
-        #
-        param_combos.insert(0, self.DEFAULT_PARAM_COMBO)
 
     def _generate_search_disabled_param_combos(self):
         """ Return the configs when we want to search but searching is disabled """

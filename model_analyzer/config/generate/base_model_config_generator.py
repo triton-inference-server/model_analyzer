@@ -30,13 +30,16 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     #
     DEFAULT_PARAM_COMBO = {}
 
-    def __init__(self, config, model, client):
+    def __init__(self, config, model, client, default_only):
         """
         Parameters
         ----------
         config: ModelAnalyzerConfig
         model: The model to generate ModelConfigs for
         client: TritonClient
+        default_only: Bool 
+            If true, only the default config will be generated
+            If false, the default config will NOT be generated
         """
         self._client = client
         self._model_repository = config.model_repository
@@ -44,13 +47,15 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._base_model_name = model.model_name()
         self._remote_mode = config.triton_launch_mode == 'remote'
         self._cpu_only = model.cpu_only()
+        self._default_only = default_only
         self._model_name_index = 0
         self._generator_started = False
         self._last_results = []
 
     def is_done(self):
         """ Returns true if this generator is done generating configs """
-        return self._generator_started and self._done_walking()
+        return self._generator_started and (self._default_only or
+                                            self._done_walking())
 
     def next_config(self):
         """
