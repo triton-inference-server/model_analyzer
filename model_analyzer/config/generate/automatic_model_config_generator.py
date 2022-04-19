@@ -30,6 +30,9 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         config: ModelAnalyzerConfig
         model: The model to generate ModelConfigs for
         client: TritonClient
+        default_only: Bool 
+            If true, only the default config will be generated
+            If false, the default config will NOT be generated
         """
         super().__init__(config, model, client, default_only)
 
