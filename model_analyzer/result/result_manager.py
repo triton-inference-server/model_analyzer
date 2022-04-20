@@ -24,6 +24,10 @@ from .run_config_result_comparator import RunConfigResultComparator
 from .run_config_result import RunConfigResult
 from .results import Results
 
+from statistics import mean
+
+from tests.common.test_utils import format_for_csv
+
 import re
 import os
 from collections import defaultdict
@@ -379,6 +383,9 @@ class ResultManager:
                     run_config_measurement.set_metric_weightings(
                         self._run_comparators[model_name]._metric_weights)
 
+                    run_config_measurement.set_model_config_weighting(
+                        self._run_comparators[model_name]._model_weights)
+
                     run_config_result.add_run_config_measurement(
                         run_config_measurement)
 
@@ -480,15 +487,28 @@ class ResultManager:
         table
         """
 
-        # TODO-TMA-570: This needs to be updated because there will be multiple model configs
         model_name = run_config_result.model_name()
-        model_config = run_config_result.run_config().model_run_configs(
-        )[0].model_config()
+        model_configs = [
+            model_run_configs.model_config() for model_run_configs in
+            run_config_result.run_config().model_run_configs()
+        ]
 
-        instance_group = model_config.instance_group_string()
-        dynamic_batching = model_config.dynamic_batching_string()
-        cpu_only = run_config_result.run_config().cpu_only()
-        backend_parameters = model_config._model_config.parameters
+        instance_groups = [
+            model_config.instance_group_string()
+            for model_config in model_configs
+        ]
+        dynamic_batchings = [
+            model_config.dynamic_batching_string()
+            for model_config in model_configs
+        ]
+        cpu_onlys = [
+            run_config_result.run_config().cpu_only()
+            for model_config in model_configs
+        ]
+        backend_parameters = [
+            model_config._model_config.parameters
+            for model_config in model_configs
+        ]
 
         passing_measurements = run_config_result.passing_measurements()
         failing_measurements = run_config_result.failing_measurements()
@@ -498,59 +518,86 @@ class ResultManager:
             for measurement in measurements:
                 self._tabulate_measurement(
                     model_name=model_name,
-                    instance_group=instance_group,
-                    dynamic_batching=dynamic_batching,
-                    run_config_measurement=measurement,
+                    instance_groups=instance_groups,
+                    dynamic_batchings=dynamic_batchings,
+                    run_config_measurement=next_best_measurement,
                     passes=passes,
-                    cpu_only=cpu_only,
+                    cpu_onlys=cpu_onlys,
                     backend_parameters=backend_parameters)
 
-    def _tabulate_measurement(self, model_name, instance_group,
-                              dynamic_batching, run_config_measurement, passes,
-                              cpu_only, backend_parameters):
+    def _tabulate_measurement(self, model_name, instance_groups,
+                              dynamic_batchings, run_config_measurement, passes,
+                              cpu_onlys, backend_parameters):
         """
         Add a single RunConfigMeasurement to the specified
         table
         """
 
-        # TODO-TMA-570: This needs to be updated because there will be multiple model configs
-        model_config_name = run_config_measurement._model_config_measurements[
-            0].model_config_name()
+        model_config_name = run_config_measurement.model_variants_name()
 
         # TODO-TMA-570: Need to add accessor function to extract the PA parameters
-        model_specific_pa_params = run_config_measurement._model_config_measurements[
-            0].model_specific_pa_params()
-        batch_size = model_specific_pa_params['batch-size']
-        concurrency = model_specific_pa_params['concurrency-range']
+        model_specific_pa_params = run_config_measurement.model_specific_pa_params(
+        )
+        batch_sizes = [
+            pa_params['batch-size'] for pa_params in model_specific_pa_params
+        ]
+        concurrencies = [
+            pa_params['concurrency-range']
+            for pa_params in model_specific_pa_params
+        ]
 
         satisfies = "Yes" if passes else "No"
 
         # Non GPU specific data
         inference_fields = self._inference_output_fields
         inference_row = self._get_common_row_items(
-            inference_fields, batch_size, concurrency, satisfies, model_name,
-            model_config_name, dynamic_batching, instance_group,
+            inference_fields, batch_sizes, concurrencies, satisfies, model_name,
+            model_config_name, dynamic_batchings, instance_groups,
             backend_parameters)
 
-        # TODO-TMA-570: This needs to be examined for correctness
-        for metric_list in run_config_measurement.non_gpu_data():
-            for metric in metric_list:
-                metric_tag_index = self._find_index_for_field(
-                    inference_fields, metric.tag)
+        # Just using this to get a list of tags, so only need to reference the first model
+        for metric in run_config_measurement.non_gpu_data()[0]:
+            metric_tag_index = self._find_index_for_field(
+                inference_fields, metric.tag)
 
-                if metric_tag_index is not None:
-                    inference_row[metric_tag_index] = round(metric.value(), 1)
+            if metric_tag_index is not None:
+                aggregation_func = sum if (
+                    metric.tag) == 'perf_throughput' else mean
+
+                # TODO-TMA-566: replace with get_metric_gpu/non_gpu_value()
+                metric_value = run_config_measurement.get_metric_value(
+                    tag=metric.tag, aggregation_func=aggregation_func)
+
+                if metric.tag == 'perf_throughput':
+                    inference_row[metric_tag_index] = format_for_csv([
+                        round(metric_value),
+                        [
+                            round(metric.value()) for metric in
+                            run_config_measurement.get_metric(metric.tag)
+                        ]
+                    ])
+                else:
+                    inference_row[metric_tag_index] = format_for_csv([
+                        round(metric_value, 1),
+                        [
+                            round(metric.value(), 1) for metric in
+                            run_config_measurement.get_metric(metric.tag)
+                        ]
+                    ])
 
         self._result_tables[self.model_inference_table_key].insert_row_by_index(
             inference_row)
 
         # GPU specific data (only put measurement if not cpu only)
-        if not cpu_only:
+        if not any(cpu_onlys):
             for gpu_uuid, metrics in run_config_measurement.gpu_data().items():
                 gpu_fields = self._gpu_output_fields
-                gpu_row = self._get_common_row_items(
-                    gpu_fields, batch_size, concurrency, satisfies, model_name,
-                    model_config_name, dynamic_batching, instance_group)
+                gpu_row = self._get_common_row_items(gpu_fields, batch_sizes,
+                                                     concurrencies, satisfies,
+                                                     model_name,
+                                                     model_config_name,
+                                                     dynamic_batchings,
+                                                     instance_groups)
                 gpu_uuid_index = self._find_index_for_field(
                     gpu_fields, 'gpu_uuid')
                 if gpu_uuid_index is not None:
@@ -565,48 +612,48 @@ class ResultManager:
 
     def _get_common_row_items(self,
                               fields,
-                              batch_size,
-                              concurrency,
+                              batch_sizes,
+                              concurrencies,
                               satisfies,
                               model_name,
                               model_config_path,
-                              dynamic_batching,
-                              instance_group,
+                              dynamic_batchings,
+                              instance_groups,
                               backend_parameters=None):
         row = [None] * len(fields)
 
         # Model Name
         model_name_index = self._find_index_for_field(fields, 'model_name')
         if model_name_index is not None:
-            row[model_name_index] = model_name
+            row[model_name_index] = format_for_csv(model_name)
 
         # Batch Size
         batch_size_index = self._find_index_for_field(fields, 'batch_size')
         if batch_size_index is not None:
-            row[batch_size_index] = batch_size
+            row[batch_size_index] = format_for_csv(batch_sizes)
 
         # Concurrency
         concurrency_index = self._find_index_for_field(fields, 'concurrency')
         if concurrency_index is not None:
-            row[concurrency_index] = concurrency
+            row[concurrency_index] = format_for_csv(concurrencies)
 
         # Satisfies
         satisfies_constraints_index = self._find_index_for_field(
             fields, 'satisfies_constraints')
         if satisfies_constraints_index is not None:
-            row[satisfies_constraints_index] = satisfies
+            row[satisfies_constraints_index] = format_for_csv(satisfies)
 
         # Model Config Path
         model_config_path_idx = self._find_index_for_field(
             fields, 'model_config_path')
         if model_config_path_idx is not None:
-            row[model_config_path_idx] = model_config_path
+            row[model_config_path_idx] = format_for_csv(model_config_path)
 
         # Instance Group
         instance_group_idx = self._find_index_for_field(fields,
                                                         'instance_group')
         if instance_group_idx is not None:
-            row[instance_group_idx] = instance_group
+            row[instance_group_idx] = format_for_csv(instance_groups)
 
         # Backend parameters
         if backend_parameters is not None:

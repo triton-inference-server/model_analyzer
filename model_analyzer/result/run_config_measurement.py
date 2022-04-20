@@ -293,7 +293,29 @@ class RunConfigMeasurement:
         return default_value if self.get_gpu_metric(
             tag) is None else self.get_gpu_metric(tag).value()
 
-    def get_weighted_non_gpu_metric_value(self, tag, default_value=0):
+    #TODO-TMA-569: Remove this function
+    def get_metric_value(self, tag, default_value=0, aggregation_func=mean):
+        """
+        Parameters
+        ----------
+        tag : str
+            A human readable tag that corresponds
+            to a particular metric
+        default_value : any
+            Value to return if tag is not found
+
+        Returns
+        -------
+        list of Records
+            Values (based on aggregation function) of the metric Record 
+            corresponding to the tag, default_value if tag not found.
+        """
+        return aggregation_func([
+            default_value if m is None else m.value()
+            for m in self.get_metric(tag)
+        ])
+
+    def get_weighted_metric_value(self, tag, default_value=0):
         """
         Parameters
         ----------

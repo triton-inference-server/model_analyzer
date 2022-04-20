@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
+
 from .common import test_result_collector as trc
 from .common.test_utils import convert_to_bytes
 from .mocks.mock_config import MockConfig
@@ -142,3 +144,7 @@ class TestResultManager(trc.TestResultCollector):
         cli.parse()
         mock_config.stop()
         return config
+
+
+if __name__ == "__main__":
+    unittest.main()
