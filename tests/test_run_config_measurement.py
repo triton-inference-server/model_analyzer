@@ -248,6 +248,9 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(rcm0_from_dict._model_config_measurements,
                          self.rcm0._model_config_measurements)
 
+        # Catchall in case something new is added
+        self.assertEqual(rcm0_from_dict, self.rcm0)
+
     def _construct_rcm0(self):
         self.model_name = "modelA,modelB"
         self.model_config_name = ["modelA_config_0", "modelB_config_1"]

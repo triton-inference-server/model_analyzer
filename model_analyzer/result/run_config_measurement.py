@@ -531,4 +531,6 @@ class RunConfigMeasurement:
             model_config_measurements.append(
                 ModelConfigMeasurement.from_dict(mcm_dict))
 
+            self._model_config_weights.append(1)
+
         return model_config_measurements
