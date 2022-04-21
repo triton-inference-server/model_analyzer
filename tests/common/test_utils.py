@@ -156,10 +156,13 @@ def construct_perf_analyzer_config(model_name='my-model',
     return pa_config
 
 
-def construct_run_config_measurement(model_name, model_config_names,
+def construct_run_config_measurement(model_name,
+                                     model_config_names,
                                      model_specific_pa_params,
-                                     gpu_metric_values, non_gpu_metric_values,
-                                     metric_objectives, model_config_weights):
+                                     gpu_metric_values,
+                                     non_gpu_metric_values,
+                                     metric_objectives=None,
+                                     model_config_weights=None):
     """
     Construct a RunConfig measurement from the given data
 
@@ -204,8 +207,11 @@ def construct_run_config_measurement(model_name, model_config_names,
             model_specific_pa_params=model_specific_pa_params[index],
             non_gpu_data=non_gpu_data[index])
 
-    rc_measurement.set_model_config_weighting(model_config_weights)
-    rc_measurement.set_metric_weightings(metric_objectives)
+    if model_config_weights:
+        rc_measurement.set_model_config_weighting(model_config_weights)
+
+    if metric_objectives:
+        rc_measurement.set_metric_weightings(metric_objectives)
 
     return rc_measurement
 
@@ -214,7 +220,8 @@ def construct_run_config_result(avg_gpu_metric_values,
                                 avg_non_gpu_metric_values_list,
                                 comparator,
                                 value_step=1,
-                                model_name="fake_model_name",
+                                model_name="test_model",
+                                model_config_names=["test_model"],
                                 run_config=None):
     """
     Takes a dictionary whose values are average
@@ -277,9 +284,8 @@ def construct_run_config_result(avg_gpu_metric_values,
                 key: metric_values[key][i] for key in metric_values
             }
 
-    non_gpu_metrics = []
-    for non_gpu_metric_values in non_gpu_metric_values_list:
-        for i in range(2 * num_vals):
+        non_gpu_metrics = []
+        for non_gpu_metric_values in non_gpu_metric_values_list:
             non_gpu_metrics.append({
                 key: non_gpu_metric_values[key][i]
                 for key in non_gpu_metric_values
@@ -289,15 +295,14 @@ def construct_run_config_result(avg_gpu_metric_values,
         run_config_result.add_run_config_measurement(
             construct_run_config_measurement(
                 model_name=model_name,
-                model_config_names=[model_name],
+                model_config_names=model_config_names,
                 model_specific_pa_params=[{
                     'batch_size': 1,
                     'concurrency': 1
-                }],
+                } for model_config_name in model_config_names],
                 gpu_metric_values=gpu_metrics,
                 non_gpu_metric_values=non_gpu_metrics,
-                metric_objectives=comparator._metric_weights,
-                model_config_weights=[1]))
+                metric_objectives=comparator._metric_weights))
 
     return run_config_result
 

@@ -615,9 +615,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             gpu_metric_values=MagicMock(),
             non_gpu_metric_values=[{
                 "perf_throughput": self._fake_throughput
-            }],
-            metric_objectives=MagicMock(),
-            model_config_weights=MagicMock())
+            }])
 
         return [measurement]
 

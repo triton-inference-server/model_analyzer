@@ -49,7 +49,8 @@ class ModelConfigMeasurement:
 
         self._non_gpu_data_from_tag = self._get_non_gpu_data_from_tag()
 
-        self._metric_weights = {}
+        # Set a default metric weighting
+        self._metric_weights = {"perf_throughput": 1}
 
     @classmethod
     def from_dict(cls, model_config_measurement_dict):
@@ -66,6 +67,8 @@ class ModelConfigMeasurement:
 
         model_config_measurement._non_gpu_data_from_tag = cls._get_non_gpu_data_from_tag(
             model_config_measurement)
+
+        model_config_measurement._metric_weights = {"perf_throughput": 1}
 
         return model_config_measurement
 
@@ -237,10 +240,6 @@ class ModelConfigMeasurement:
             -1
                 if self < other (is worse than)
         """
-
-        if not self._metric_weights:
-            return 0
-
         weighted_score = self._calculate_weighted_score(other)
 
         if weighted_score > COMPARISON_SCORE_THRESHOLD:
