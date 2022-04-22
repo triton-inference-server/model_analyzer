@@ -68,7 +68,8 @@ class ModelConfigMeasurement:
         model_config_measurement._non_gpu_data_from_tag = cls._get_non_gpu_data_from_tag(
             model_config_measurement)
 
-        model_config_measurement._metric_weights = {"perf_throughput": 1}
+        model_config_measurement._metric_weights = model_config_measurement_dict[
+            '_metric_weights']
 
         return model_config_measurement
 
