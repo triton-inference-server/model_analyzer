@@ -484,8 +484,7 @@ class RunConfigMeasurement:
             The weighted score. A positive value indicates this 
             RunConfig measurement is better than the other
         """
-        if len(self._model_config_weights) != len(weighted_mcm_scores):
-            assert len(self._model_config_weights) == len(weighted_mcm_scores)
+        assert len(self._model_config_weights) == len(weighted_mcm_scores)
 
         return sum([
             weighted_mcm_score * model_config_weight
