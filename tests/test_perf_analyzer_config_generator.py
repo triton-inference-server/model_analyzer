@@ -21,10 +21,11 @@ from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
 from model_analyzer.cli.cli import CLI
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes
+from .common.test_utils import convert_to_bytes, construct_run_config_measurement
 from .mocks.mock_config import MockConfig
 from .mocks.mock_os import MockOSMethods
 from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
+from unittest.mock import MagicMock
 
 from model_analyzer.config.input.config_defaults import \
     DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, \
@@ -35,6 +36,40 @@ from model_analyzer.config.input.config_defaults import \
 
 
 class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
+
+    def test_set_last_results(self):
+        """
+        Test set_last_results() with multi model
+        
+        Confirm that set_last_results will properly choose the measurement with
+        the highest total throughput 
+        """
+        measurement1 = self.make_multi_model_measurement(
+            ["modelA", "modelB"], [{
+                "perf_throughput": 1
+            }, {
+                "perf_throughput": 2
+            }])
+
+        measurement2 = self.make_multi_model_measurement(
+            ["modelA", "modelB"], [{
+                "perf_throughput": 7
+            }, {
+                "perf_throughput": 7
+            }])
+
+        measurement3 = self.make_multi_model_measurement(
+            ["modelA", "modelB"], [{
+                "perf_throughput": 10
+            }, {
+                "perf_throughput": 2
+            }])
+
+        pacg = PerfAnalyzerConfigGenerator(MagicMock(), MagicMock(),
+                                           MagicMock(), MagicMock())
+
+        pacg.set_last_results([measurement1, measurement2, measurement3])
+        self.assertEqual(pacg._last_results[0], measurement2)
 
     def test_default(self):
         """
@@ -472,6 +507,14 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
     def tearDown(self):
         self.mock_os.stop()
+
+    def make_multi_model_measurement(self, model_names, non_gpu_metric_values):
+        return construct_run_config_measurement(
+            model_name=MagicMock(),
+            model_config_names=model_names,
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values=MagicMock(),
+            non_gpu_metric_values=non_gpu_metric_values)
 
 
 if __name__ == '__main__':
