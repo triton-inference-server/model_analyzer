@@ -72,9 +72,7 @@ class MetricsManagerSubclass(MetricsManager):
                 gpu_metric_values=MagicMock(),
                 non_gpu_metric_values=[{
                     "perf_throughput": throughput_value
-                }],
-                metric_objectives=MagicMock(),
-                model_config_weights=MagicMock())
+                }])
 
     def _get_next_perf_throughput_value(self):
         self._perf_throughput *= 2

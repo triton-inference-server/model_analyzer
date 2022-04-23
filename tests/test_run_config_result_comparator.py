@@ -55,7 +55,9 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metrics1=self.avg_non_gpu_metrics_multi1,
             avg_gpu_metrics2=self.avg_gpu_metrics2,
             avg_non_gpu_metrics2=self.avg_non_gpu_metrics_multi2,
-            expected_result=False)
+            expected_result=False,
+            model_name="test_model",
+            model_config_names=["test_model_config0", "test_model_config1"])
 
     def test_latency_driven(self):
         objective_spec = [
@@ -88,7 +90,9 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metrics1=self.avg_non_gpu_metrics_multi1,
             avg_gpu_metrics2=self.avg_gpu_metrics2,
             avg_non_gpu_metrics2=self.avg_non_gpu_metrics_multi2,
-            expected_result=True)
+            expected_result=True,
+            model_name="test_model",
+            model_config_names=["test_model_config0", "test_model_config1"])
 
     def test_equal_weight(self):
         objective_spec = [{'perf_throughput': 1, 'perf_latency_p99': 1}]
@@ -118,7 +122,9 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             avg_gpu_metrics2=self.avg_gpu_metrics2,
             avg_non_gpu_metrics2=self.avg_non_gpu_metrics_multi2,
             value_step2=2,
-            expected_result=False)
+            expected_result=False,
+            model_name="test_model",
+            model_config_names=["test_model_config0", "test_model_config1"])
 
     def _check_run_config_result_comparison(self,
                                             objective_spec,
@@ -128,7 +134,9 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
                                             avg_non_gpu_metrics2,
                                             value_step1=1,
                                             value_step2=1,
-                                            expected_result=0):
+                                            expected_result=0,
+                                            model_name="test_model",
+                                            model_config_names=["test_model"]):
         """
         Helper function that takes all the data needed to
         construct two RunConfigResults, constructs and runs a
@@ -144,14 +152,18 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metric_values_list=avg_non_gpu_metrics1,
             comparator=result_comparator,
             value_step=value_step1,
-            run_config=MagicMock())
+            run_config=MagicMock(),
+            model_name=model_name,
+            model_config_names=model_config_names)
 
         result2 = construct_run_config_result(
             avg_gpu_metric_values=avg_gpu_metrics2,
             avg_non_gpu_metric_values_list=avg_non_gpu_metrics2,
             comparator=result_comparator,
             value_step=value_step2,
-            run_config=MagicMock())
+            run_config=MagicMock(),
+            model_name=model_name,
+            model_config_names=model_config_names)
 
         self.assertEqual(result_comparator.is_better_than(result1, result2),
                          expected_result)

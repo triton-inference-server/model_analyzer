@@ -72,6 +72,9 @@ class RunConfigMeasurement:
             run_config_measurement,
             run_config_measurement_dict['_model_config_measurements'])
 
+        run_config_measurement._model_config_weights = run_config_measurement_dict[
+            '_model_config_weights']
+
         return run_config_measurement
 
     def set_model_config_weighting(self, model_config_weights):
@@ -107,6 +110,9 @@ class RunConfigMeasurement:
         self._model_config_measurements.append(
             ModelConfigMeasurement(model_config_name, model_specific_pa_params,
                                    non_gpu_data))
+
+        # By default setting all models to have equal weighting
+        self._model_config_weights.append(1)
 
     def set_metric_weightings(self, metric_objectives):
         """
@@ -260,6 +266,9 @@ class RunConfigMeasurement:
                 or None if tag not found
         
         """
+        assert len(self._model_config_weights) == len(
+            self._model_config_measurements)
+
         return [
             model_config_measurement.get_metric(tag) *
             self._model_config_weights[index]
@@ -347,6 +356,9 @@ class RunConfigMeasurement:
             Weighted average of the values of the metric Record corresponding 
             to the tag, default_value if tag not found.
         """
+        assert len(self._model_config_weights) == len(
+            self._model_config_measurements)
+
         weighted_sum = 0
         for index, metric in enumerate(self.get_metric(tag)):
             weighted_sum += default_value if metric is None else metric.value(
@@ -456,7 +468,6 @@ class RunConfigMeasurement:
         list of floats
             A weighted score for each ModelConfig measurement in the RunConfig
         """
-
         return [
             self_mcm.get_weighted_score(other_mcm)
             for self_mcm, other_mcm in zip(self._model_config_measurements,
@@ -476,6 +487,8 @@ class RunConfigMeasurement:
             The weighted score. A positive value indicates this 
             RunConfig measurement is better than the other
         """
+        assert len(self._model_config_weights) == len(weighted_mcm_scores)
+
         return sum([
             weighted_mcm_score * model_config_weight
             for weighted_mcm_score, model_config_weight in zip(

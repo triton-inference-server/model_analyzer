@@ -64,8 +64,7 @@ class TestPlotMethods(trc.TestResultCollector):
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=gpu_metric_values,
             non_gpu_metric_values=[non_gpu_metric_values],
-            metric_objectives=[objective_spec],
-            model_config_weights=MagicMock())
+            metric_objectives=[objective_spec])
 
         # Add above measurement
         plot.add_run_config_measurement('test_model_label1', measurement)
@@ -116,8 +115,7 @@ class TestPlotMethods(trc.TestResultCollector):
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=gpu_metric_values,
             non_gpu_metric_values=[non_gpu_metric_values],
-            metric_objectives=[objective_spec],
-            model_config_weights=MagicMock())
+            metric_objectives=[objective_spec])
 
         plot.add_run_config_measurement('test_model_label', measurement)
 

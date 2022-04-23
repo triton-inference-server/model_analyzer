@@ -289,11 +289,7 @@ class TestRunConfigResult(trc.TestResultCollector):
             non_gpu_metric_values=[{
                 'perf_throughput': throughput_value,
                 'perf_latency_p99': latency_value
-            }],
-            metric_objectives=[{
-                'perf_throughput': 1
-            }],
-            model_config_weights=[1])
+            }])
 
     def _construct_multi_model_rcm(self, throughput_values, latency_values):
         return construct_run_config_measurement(
@@ -307,13 +303,7 @@ class TestRunConfigResult(trc.TestResultCollector):
             }, {
                 'perf_throughput': throughput_values[1],
                 'perf_latency_p99': latency_values[1]
-            }],
-            metric_objectives=[{
-                'perf_throughput': 1
-            }, {
-                'perf_throughput': 1
-            }],
-            model_config_weights=[1])
+            }])
 
 
 if __name__ == '__main__':
