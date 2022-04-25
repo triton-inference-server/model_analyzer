@@ -20,6 +20,7 @@ from model_analyzer.record.record import RecordType
 
 from statistics import mean
 
+from copy import deepcopy
 from functools import total_ordering
 import logging
 
@@ -76,6 +77,37 @@ class RunConfigMeasurement:
             '_model_config_weights']
 
         return run_config_measurement
+
+    @classmethod
+    def invert_values(cls, run_config_measurement):
+        """
+        Inverts all GPU and non-GPU data values
+        
+        Parameters
+        ----------
+        run_config_measurement : RunConfigMeasurement
+        
+        Returns
+        -------
+        RunConfigMeasurment with all GPU and non-GPU data values inverted
+        """
+
+        inverted_gpu_data = deepcopy(run_config_measurement._gpu_data)
+        for gpu in inverted_gpu_data.values():
+            for entry in gpu:
+                entry._value = -entry._value
+
+        inverted_rcm = RunConfigMeasurement(
+            model_variants_name=run_config_measurement._model_variants_name,
+            gpu_data=inverted_gpu_data)
+
+        for mcm in run_config_measurement._model_config_measurements:
+            inverted_rcm._model_config_measurements.append(
+                ModelConfigMeasurement.invert_values(mcm))
+
+        inverted_rcm._model_config_weights = run_config_measurement._model_config_weights
+
+        return inverted_rcm
 
     def set_model_config_weighting(self, model_config_weights):
         """
@@ -417,9 +449,14 @@ class RunConfigMeasurement:
         RunConfig
         
         This is used when sorting
+        
+        Returns
+        -------
+        bool:
+            True if other is better than or equal to self
         """
 
-        return self.is_better_than(other)
+        return not self.is_better_than(other)
 
     def _compare_measurements(self, other):
         """

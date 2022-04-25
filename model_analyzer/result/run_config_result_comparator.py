@@ -59,12 +59,10 @@ class RunConfigResultComparator:
            True: if result1 is better than result2
         """
 
-        ########## IMPORTANT measurment comparators return 1 on a < b (for min heap) ###########
-        ########## Here we want the max measurement, we must pass in min() ###########
         agg_run_config_measurement1 = self._aggregate_run_config_measurements(
-            run_config_result1, aggregation_func=min)
+            run_config_result1, aggregation_func=max)
         agg_run_config_measurement2 = self._aggregate_run_config_measurements(
-            run_config_result2, aggregation_func=min)
+            run_config_result2, aggregation_func=max)
 
         return agg_run_config_measurement1.is_better_than(
             agg_run_config_measurement2)

@@ -421,7 +421,8 @@ class ReportManager:
                                         title="Report Table")
 
         sorted_measurements = sorted(self._summary_data[report_key],
-                                     key=lambda x: x[1])
+                                     key=lambda x: x[1],
+                                     reverse=True)
 
         # Construct summary sentence using best config
         best_config = sorted_measurements[0][0]

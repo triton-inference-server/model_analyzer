@@ -17,6 +17,7 @@ from model_analyzer.constants import LOGGER_NAME
 
 from model_analyzer.record.record import RecordType
 
+from copy import deepcopy
 from functools import total_ordering
 import logging
 
@@ -72,6 +73,34 @@ class ModelConfigMeasurement:
             '_metric_weights']
 
         return model_config_measurement
+
+    @classmethod
+    def invert_values(cls, model_config_measurement):
+        """
+        Inverts the non-gpu data values
+        
+        Parameters
+        ----------
+        model_config_measurement : ModelConfigMeasurement
+        
+        Returns
+        -------
+        ModelConfigMeasurment with all non-gpu data values inverted
+        """
+
+        inverted_non_gpu_data = deepcopy(model_config_measurement._non_gpu_data)
+        for entry in inverted_non_gpu_data:
+            entry._value = -entry._value
+
+        inverted_mcm = ModelConfigMeasurement(
+            model_config_name=model_config_measurement._model_config_name,
+            model_specific_pa_params=model_config_measurement.
+            _model_specific_pa_params,
+            non_gpu_data=inverted_non_gpu_data)
+
+        inverted_mcm._metric_weights = model_config_measurement._metric_weights
+
+        return inverted_mcm
 
     def set_metric_weighting(self, metric_objectives):
         """
@@ -190,7 +219,6 @@ class ModelConfigMeasurement:
             set of (non_gpu) metrics to be compared against
         """
 
-        # seems like this should be == -1 but we're using a min heap
         return self._compare_measurements(other) == 1
 
     def __eq__(self, other):
@@ -216,9 +244,14 @@ class ModelConfigMeasurement:
         ----------
         other: ModelConfigMeasurement
             set of (non_gpu) metrics to be compared against
+            
+        Returns
+        -------
+        bool:
+            True if other is better than or equal to self
         """
 
-        return self.is_better_than(other)
+        return not self.is_better_than(other)
 
     def _compare_measurements(self, other):
         """

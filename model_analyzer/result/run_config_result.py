@@ -14,6 +14,7 @@
 
 from model_analyzer.constants import LOGGER_NAME
 from .constraint_manager import ConstraintManager
+from .run_config_measurement import RunConfigMeasurement
 
 import heapq
 from functools import total_ordering
@@ -100,12 +101,15 @@ class RunConfigResult:
             The profiled RunConfigMeasurement
         """
 
-        heapq.heappush(self._measurements, run_config_measurement)
+        inverted_rcm = RunConfigMeasurement.invert_values(
+            run_config_measurement)
+
+        heapq.heappush(self._measurements, inverted_rcm)
         if ConstraintManager.check_constraints(self._constraints,
                                                run_config_measurement):
-            heapq.heappush(self._passing_measurements, run_config_measurement)
+            heapq.heappush(self._passing_measurements, inverted_rcm)
         else:
-            heapq.heappush(self._failing_measurements, run_config_measurement)
+            heapq.heappush(self._failing_measurements, inverted_rcm)
 
     def run_config_measurements(self):
         """
@@ -163,8 +167,14 @@ class RunConfigResult:
                     f"but found only {len(self._failing_measurements)}. "
                     "Showing all available constraint failing measurements for this config."
                 )
-            return heapq.nsmallest(min(n, len(self._failing_measurements)),
-                                   self._failing_measurements)
+            rcms = heapq.nlargest(min(n, len(self._failing_measurements)),
+                                  self._failing_measurements)
+
+            inverted_rcms = [
+                RunConfigMeasurement.invert_values(rcm) for rcm in rcms
+            ]
+
+            return inverted_rcms
 
         if n > len(self._passing_measurements):
             logger.warning(
@@ -172,8 +182,14 @@ class RunConfigResult:
                 f"found only {len(self._passing_measurements)}. "
                 "Showing all available measurements for this config.")
 
-        return heapq.nsmallest(min(n, len(self._passing_measurements)),
-                               self._passing_measurements)
+        rcms = heapq.nlargest(min(n, len(self._passing_measurements)),
+                              self._passing_measurements)
+
+        inverted_rcms = [
+            RunConfigMeasurement.invert_values(rcm) for rcm in rcms
+        ]
+
+        return inverted_rcms
 
     def __lt__(self, other):
         """
