@@ -208,6 +208,8 @@ class PerfAnalyzer:
 
     def _get_single_model_cmd(self, index):
         cmd = [self.bin_path]
+        if self._is_multi_model():
+            cmd += ["--enable-mpi"]
         cmd += self._get_pa_cli_command(index).replace('=', ' ').split()
         return cmd
 

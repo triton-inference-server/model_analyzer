@@ -521,11 +521,11 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         #yapf: disable
         expected_cmd = [
             'mpiexec', '--allow-run-as-root', '--tag-output',
-            '-n', '1', 'perf_analyzer',
+            '-n', '1', 'perf_analyzer', '--enable-mpi',
                 '-m', 'MultiModel1',
                 '--measurement-interval', '1000',
                 '--measurement-request-count', '50',
-            ':', '-n', '1', 'perf_analyzer',
+            ':', '-n', '1', 'perf_analyzer', '--enable-mpi',
                 '-m', 'MultiModel2',
                 '-b', '16',
                 '--concurrency-range', '1024'
