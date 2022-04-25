@@ -119,7 +119,10 @@ class RunConfigResult:
             of RunConfigMeasurements in this RunConfigResult
         """
 
-        return self._measurements
+        return [
+            RunConfigMeasurement.invert_values(measurement)
+            for measurement in self._measurements
+        ]
 
     def passing_measurements(self):
         """
@@ -129,7 +132,10 @@ class RunConfigResult:
             of passing measurements in this RunConfigResult
         """
 
-        return self._passing_measurements
+        return [
+            RunConfigMeasurement.invert_values(passing_measurement)
+            for passing_measurement in self._passing_measurements
+        ]
 
     def failing_measurements(self):
         """
@@ -139,7 +145,10 @@ class RunConfigResult:
             of failing measurements in this RunConfigResult
         """
 
-        return self._failing_measurements
+        return [
+            RunConfigMeasurement.invert_values(failing_measurements)
+            for failing_measurements in self._failing_measurements
+        ]
 
     def top_n_measurements(self, n):
         """
