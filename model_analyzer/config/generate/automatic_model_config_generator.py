@@ -96,16 +96,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     def _max_batch_size_limit_reached(self):
         return (self._curr_max_batch_size * 2) > self._max_model_batch_size
 
-    def _last_results_erroneous(self):
-        for measurement in self._last_results:
-            if measurement is None:
-                return True
-        return False
-
     def _last_results_increased_throughput(self):
         max_throughput = self._get_last_results_max_throughput()
         max_throughput_increased = all(
-            max_throughput is not None and max_throughput > t
+            max_throughput is not None and t is not None and max_throughput > t
             for t in self._curr_max_batch_size_throughputs)
 
         return max_throughput_increased
