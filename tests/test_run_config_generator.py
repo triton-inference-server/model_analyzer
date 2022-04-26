@@ -428,6 +428,45 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             self._run_and_test_run_config_generator(
                 yaml_content, expected_config_count=expected_num_of_configs)
 
+    def test_none_result_in_max_batch_size(self):
+        """
+        Test that if we get None results for an entire set of MaxBatch experiments that
+        we properly stop stepping max batch size and do not assert
+
+        When the test steps to 2 instances with max_batch_size of 2, it will return None as the results.
+        This should stop the entire max_batch_size walk for 2 instances, and should step to 3 instances
+        """
+
+        expected_num_of_configs = 17
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_model_batch_size: 4
+            run_config_search_max_instance_count: 3
+            run_config_search_max_concurrency: 2
+            profile_models:
+                - my-model
+            """)
+
+        perf_throughput_values = [
+            1, 2,  # Default, Concurrency 1 and 2
+            1, 2,  # Instances=1, MaxBatch=1, Concurrency 1 and 2
+            3, 4,  # Instances=1, MaxBatch=2, Concurrency 1 and 2
+            5, 6,  # Instances=1, MaxBatch=4, Concurrency 1 and 2
+            7, 8,  # Instances=2, MaxBatch=1, Concurrency 1 and 2
+            None,  # Instances=2, MaxBatch=2, Concurrency 1.
+            9,10,  # Instances=3, MaxBatch=1, Concurrency 1 and 2
+            11,12, # Instances=3, MaxBatch=2, Concurrency 1 and 2
+            13,14  # Instances=3, MaxBatch=4, Concurrency 1 and 2
+        ]
+        # yapf: enable
+
+        with patch.object(TestRunConfigGenerator,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = perf_throughput_values
+            self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
+
     def test_none_result_before_threshold(self):
         """
         Test that a 'none' result (from PA erroring) before the minimum number
