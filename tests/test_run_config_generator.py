@@ -466,7 +466,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
                 yaml_content, expected_config_count=expected_num_of_configs)
-            
+
     def test_none_result_before_threshold(self):
         """
         Test that a 'none' result (from PA erroring) before the minimum number
@@ -526,7 +526,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             1,2,4,8,16,32,64,128,256,512,1024,2048, # Default config
             1,2,4,8,16,32,64,128,256,512,None,      # Batch size 1
             1,2,4,8,16,32,64,128,256,512,1024,2048  # Batch size 2
-       ]
+        ]
         # yapf: enable
 
         with patch.object(TestRunConfigGenerator,
