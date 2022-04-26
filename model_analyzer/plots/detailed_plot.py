@@ -125,7 +125,7 @@ class DetailedPlot:
                 tag='perf_throughput'))
 
         for metric in self.detailed_metrics:
-            if MetricsManager.is_gpu_metric(tag):
+            if MetricsManager.is_gpu_metric(tag=metric):
                 self._data[metric].append(
                     run_config_measurement.get_gpu_metric_value(tag=metric))
             else:
