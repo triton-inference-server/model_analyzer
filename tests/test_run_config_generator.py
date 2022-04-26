@@ -466,6 +466,74 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
                 yaml_content, expected_config_count=expected_num_of_configs)
+            
+    def test_none_result_before_threshold(self):
+        """
+        Test that a 'none' result (from PA erroring) before the minimum number
+        of throughput runs (4) will properly early exit and not assert
+        """
+
+        # Full sweep is 3 model configs * 12 concurrencies = 36.
+        # However, we will early exit and skip 9 of the concurrencies
+        # Thus, expect 27
+        #
+        expected_num_of_configs = 27
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_model_batch_size: 2
+            run_config_search_max_instance_count: 1
+            run_config_search_max_concurrency: 2048
+            profile_models:
+                - my-model
+            """)
+
+        perf_throughput_values = [
+            1,2,4,8,16,32,64,128,256,512,1024,2048, # Default config
+            1,2,None,                               # Batch size 1
+            1,2,4,8,16,32,64,128,256,512,1024,2048  # Batch size 2
+        ]
+        # yapf: enable
+
+        with patch.object(TestRunConfigGenerator,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = perf_throughput_values
+            self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
+
+    def test_none_result_after_threshold(self):
+        """
+        Test that a 'none' result (from PA erroring) after the minimum number
+        of throughput runs (4) will properly early exit and not assert
+        """
+
+        # Full sweep is 3 model configs * 12 concurrencies = 36.
+        # However, we will early exit and skip 1 of the concurrencies
+        # Thus, expect 35
+        #
+        expected_num_of_configs = 35
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_model_batch_size: 2
+            run_config_search_max_instance_count: 1
+            run_config_search_max_concurrency: 2048
+            profile_models:
+                - my-model
+            """)
+
+        perf_throughput_values = [
+            1,2,4,8,16,32,64,128,256,512,1024,2048, # Default config
+            1,2,4,8,16,32,64,128,256,512,None,      # Batch size 1
+            1,2,4,8,16,32,64,128,256,512,1024,2048  # Batch size 2
+       ]
+        # yapf: enable
+
+        with patch.object(TestRunConfigGenerator,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = perf_throughput_values
+            self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
 
     def _run_and_test_run_config_generator(self, yaml_content,
                                            expected_config_count):
