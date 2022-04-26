@@ -125,8 +125,12 @@ class DetailedPlot:
                 tag='perf_throughput'))
 
         for metric in self.detailed_metrics:
-            self._data[metric].append(
-                run_config_measurement.get_metric_value(tag=metric))
+            if MetricsManager.is_gpu_metric(tag):
+                self._data[metric].append(
+                    run_config_measurement.get_gpu_metric_value(tag=metric))
+            else:
+                self._data[metric].append(
+                    run_config_measurement.get_non_gpu_metric_value(tag=metric))
 
     def plot_data(self):
         """
