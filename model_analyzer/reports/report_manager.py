@@ -450,11 +450,12 @@ class ReportManager:
                 row = [
                     model_config.get_field('name'), max_batch_size,
                     model_config.dynamic_batching_string(), instance_group_str,
-                    measurement.get_metric_value('perf_latency_p99'),
-                    measurement.get_metric_value('perf_throughput'),
-                    measurement.get_metric_value('cpu_used_ram'),
-                    measurement.get_metric_value('gpu_used_memory'),
-                    round(measurement.get_metric_value('gpu_utilization'), 1)
+                    measurement.get_non_gpu_metric_value('perf_latency_p99'),
+                    measurement.get_non_gpu_metric_value('perf_throughput'),
+                    measurement.get_non_gpu_metric_value('cpu_used_ram'),
+                    measurement.get_gpu_metric_value('gpu_used_memory'),
+                    round(measurement.get_gpu_metric_value('gpu_utilization'),
+                          1)
                 ]
                 summary_table.insert_row_by_index(row)
         else:
@@ -464,9 +465,9 @@ class ReportManager:
                 row = [
                     model_config.get_field('name'), max_batch_size,
                     model_config.dynamic_batching_string(), instance_group_str,
-                    measurement.get_metric_value('perf_latency_p99'),
-                    measurement.get_metric_value('perf_throughput'),
-                    measurement.get_metric_value('cpu_used_ram')
+                    measurement.get_non_gpu_metric_value('perf_latency_p99'),
+                    measurement.get_non_gpu_metric_value('perf_throughput'),
+                    measurement.get_non_gpu_metric_value('cpu_used_ram')
                 ]
                 summary_table.insert_row_by_index(row)
         return summary_table, summary_sentence
@@ -479,9 +480,10 @@ class ReportManager:
         model_config, measurements = self._detailed_report_data[
             model_config_name]
         sort_by_tag = 'perf_latency_p99' if self._mode == 'online' else 'perf_throughput'
-        measurements = sorted(measurements,
-                              key=lambda x: x.get_metric_value(sort_by_tag),
-                              reverse=True)
+        measurements = sorted(
+            measurements,
+            key=lambda x: x.get_non_gpu_metric_value(sort_by_tag),
+            reverse=True)
         cpu_only = model_config.cpu_only()
 
         first_column_header = 'Request Concurrency' if self._mode == 'online' else 'Client Batch Size'
@@ -509,15 +511,19 @@ class ReportManager:
                 row = [
                     # TODO-TMA-568: This needs to be updated because there will be multiple model configs
                     measurement.model_specific_pa_params()[0][first_column_tag],
-                    measurement.get_metric_value('perf_latency_p99'),
-                    measurement.get_metric_value('perf_client_response_wait'),
-                    measurement.get_metric_value('perf_server_queue'),
-                    measurement.get_metric_value('perf_server_compute_input'),
-                    measurement.get_metric_value('perf_server_compute_infer'),
-                    measurement.get_metric_value('perf_throughput'),
-                    measurement.get_metric_value('cpu_used_ram'),
-                    measurement.get_metric_value('gpu_used_memory'),
-                    round(measurement.get_metric_value('gpu_utilization'), 1)
+                    measurement.get_non_gpu_metric_value('perf_latency_p99'),
+                    measurement.get_non_gpu_metric_value(
+                        'perf_client_response_wait'),
+                    measurement.get_non_gpu_metric_value('perf_server_queue'),
+                    measurement.get_non_gpu_metric_value(
+                        'perf_server_compute_input'),
+                    measurement.get_non_gpu_metric_value(
+                        'perf_server_compute_infer'),
+                    measurement.get_non_gpu_metric_value('perf_throughput'),
+                    measurement.get_non_gpu_metric_value('cpu_used_ram'),
+                    measurement.get_gpu_metric_value('gpu_used_memory'),
+                    round(measurement.get_gpu_metric_value('gpu_utilization'),
+                          1)
                 ]
                 detailed_table.insert_row_by_index(row)
         else:
@@ -525,13 +531,16 @@ class ReportManager:
                 row = [
                     # TODO-TMA-568: This needs to be updated because there will be multiple model configs
                     measurement.model_specific_pa_params()[0][first_column_tag],
-                    measurement.get_metric_value('perf_latency_p99'),
-                    measurement.get_metric_value('perf_client_response_wait'),
-                    measurement.get_metric_value('perf_server_queue'),
-                    measurement.get_metric_value('perf_server_compute_input'),
-                    measurement.get_metric_value('perf_server_compute_infer'),
-                    measurement.get_metric_value('perf_throughput'),
-                    measurement.get_metric_value('cpu_used_ram')
+                    measurement.get_non_gpu_metric_value('perf_latency_p99'),
+                    measurement.get_non_gpu_metric_value(
+                        'perf_client_response_wait'),
+                    measurement.get_non_gpu_metric_value('perf_server_queue'),
+                    measurement.get_non_gpu_metric_value(
+                        'perf_server_compute_input'),
+                    measurement.get_non_gpu_metric_value(
+                        'perf_server_compute_infer'),
+                    measurement.get_non_gpu_metric_value('perf_throughput'),
+                    measurement.get_non_gpu_metric_value('cpu_used_ram')
                 ]
                 detailed_table.insert_row_by_index(row)
         return detailed_table

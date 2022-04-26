@@ -114,7 +114,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
     def _get_last_results_max_throughput(self):
         throughputs = [
-            m.get_metric_value('perf_throughput')
+            m.get_non_gpu_metric_value('perf_throughput')
             for m in self._last_results
             if m is not None
         ]

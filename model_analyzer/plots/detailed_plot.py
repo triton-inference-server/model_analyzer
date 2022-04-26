@@ -121,7 +121,8 @@ class DetailedPlot:
             ['concurrency-range'])
 
         self._data['perf_throughput'].append(
-            run_config_measurement.get_metric_value(tag='perf_throughput'))
+            run_config_measurement.get_non_gpu_metric_value(
+                tag='perf_throughput'))
 
         for metric in self.detailed_metrics:
             self._data[metric].append(

@@ -242,4 +242,4 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return gain
 
     def _get_throughput(self, measurement):
-        return measurement.get_metric_value('perf_throughput')
+        return measurement.get_non_gpu_metric_value('perf_throughput')
