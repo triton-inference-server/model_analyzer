@@ -26,7 +26,6 @@ from .results import Results
 
 import re
 import os
-import heapq
 from collections import defaultdict
 import logging
 
@@ -490,13 +489,12 @@ class ResultManager:
 
         for (measurements, passes) in [(passing_measurements, True),
                                        (failing_measurements, False)]:
-            while measurements:
-                next_best_measurement = heapq.heappop(measurements)
+            for measurement in measurements:
                 self._tabulate_measurement(
                     model_name=model_name,
                     instance_group=instance_group,
                     dynamic_batching=dynamic_batching,
-                    run_config_measurement=next_best_measurement,
+                    run_config_measurement=measurement,
                     passes=passes,
                     cpu_only=cpu_only,
                     backend_parameters=backend_parameters)

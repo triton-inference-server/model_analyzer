@@ -16,7 +16,7 @@ from model_analyzer.constants import LOGGER_NAME
 from .constraint_manager import ConstraintManager
 from .run_config_measurement import RunConfigMeasurement
 
-import heapq
+from bisect import insort
 from functools import total_ordering
 import logging
 
@@ -101,15 +101,13 @@ class RunConfigResult:
             The profiled RunConfigMeasurement
         """
 
-        inverted_rcm = RunConfigMeasurement.invert_values(
-            run_config_measurement)
+        insort(self._measurements, run_config_measurement)
 
-        heapq.heappush(self._measurements, inverted_rcm)
         if ConstraintManager.check_constraints(self._constraints,
                                                run_config_measurement):
-            heapq.heappush(self._passing_measurements, inverted_rcm)
+            insort(self._passing_measurements, run_config_measurement)
         else:
-            heapq.heappush(self._failing_measurements, inverted_rcm)
+            insort(self._failing_measurements, run_config_measurement)
 
     def run_config_measurements(self):
         """
@@ -118,11 +116,7 @@ class RunConfigResult:
         list
             of RunConfigMeasurements in this RunConfigResult
         """
-
-        return [
-            RunConfigMeasurement.invert_values(measurement)
-            for measurement in self._measurements
-        ]
+        return [measurement for measurement in reversed(self._measurements)]
 
     def passing_measurements(self):
         """
@@ -133,8 +127,8 @@ class RunConfigResult:
         """
 
         return [
-            RunConfigMeasurement.invert_values(passing_measurement)
-            for passing_measurement in self._passing_measurements
+            passing_measurement
+            for passing_measurement in reversed(self._passing_measurements)
         ]
 
     def failing_measurements(self):
@@ -146,8 +140,8 @@ class RunConfigResult:
         """
 
         return [
-            RunConfigMeasurement.invert_values(failing_measurements)
-            for failing_measurements in self._failing_measurements
+            failing_measurement
+            for failing_measurement in reversed(self._failing_measurements)
         ]
 
     def top_n_measurements(self, n):
@@ -176,14 +170,11 @@ class RunConfigResult:
                     f"but found only {len(self._failing_measurements)}. "
                     "Showing all available constraint failing measurements for this config."
                 )
-            rcms = heapq.nlargest(min(n, len(self._failing_measurements)),
-                                  self._failing_measurements)
 
-            inverted_rcms = [
-                RunConfigMeasurement.invert_values(rcm) for rcm in rcms
+            return [
+                failing_measurement for failing_measurement in reversed(
+                    self._failing_measurements[-n:])
             ]
-
-            return inverted_rcms
 
         if n > len(self._passing_measurements):
             logger.warning(
@@ -191,14 +182,10 @@ class RunConfigResult:
                 f"found only {len(self._passing_measurements)}. "
                 "Showing all available measurements for this config.")
 
-        rcms = heapq.nlargest(min(n, len(self._passing_measurements)),
-                              self._passing_measurements)
-
-        inverted_rcms = [
-            RunConfigMeasurement.invert_values(rcm) for rcm in rcms
+        return [
+            passing_measurement
+            for passing_measurement in reversed(self._passing_measurements[-n:])
         ]
-
-        return inverted_rcms
 
     def __lt__(self, other):
         """

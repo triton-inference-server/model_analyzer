@@ -78,37 +78,6 @@ class RunConfigMeasurement:
 
         return run_config_measurement
 
-    @classmethod
-    def invert_values(cls, run_config_measurement):
-        """
-        Inverts all GPU and non-GPU data values
-        
-        Parameters
-        ----------
-        run_config_measurement : RunConfigMeasurement
-        
-        Returns
-        -------
-        RunConfigMeasurment with all GPU and non-GPU data values inverted
-        """
-
-        inverted_gpu_data = deepcopy(run_config_measurement._gpu_data)
-        for gpu in inverted_gpu_data.values():
-            for entry in gpu:
-                entry._value = -entry._value
-
-        inverted_rcm = RunConfigMeasurement(
-            model_variants_name=run_config_measurement._model_variants_name,
-            gpu_data=inverted_gpu_data)
-
-        for mcm in run_config_measurement._model_config_measurements:
-            inverted_rcm._model_config_measurements.append(
-                ModelConfigMeasurement.invert_values(mcm))
-
-        inverted_rcm._model_config_weights = run_config_measurement._model_config_weights
-
-        return inverted_rcm
-
     def set_model_config_weighting(self, model_config_weights):
         """
         Sets the model config weightings used when calculating 

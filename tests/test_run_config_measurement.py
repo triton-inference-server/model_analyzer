@@ -252,20 +252,6 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         # Catchall in case something new is added
         self.assertEqual(rcm0_from_dict, self.rcm0)
 
-    def test_invert_values(self):
-        """
-        Test that GPU and non-GPU values are properly inverted
-        """
-        inverted_rcm0 = RunConfigMeasurement.invert_values(self.rcm0)
-
-        inverted_rcm0_gpu_data = inverted_rcm0.gpu_data()
-        rcm0_gpu_data = self.rcm0.gpu_data()
-
-        for tag, value in rcm0_gpu_data.items():
-            for index, gpu_data in enumerate(value):
-                self.assertEqual(inverted_rcm0_gpu_data[tag][index]._value,
-                                 -gpu_data._value)
-
     def _construct_rcm0(self):
         self.model_name = "modelA,modelB"
         self.model_config_name = ["modelA_config_0", "modelB_config_1"]

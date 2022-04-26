@@ -187,19 +187,6 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         # Catchall in case something new is added
         self.assertEqual(mcmA_from_dict, self.mcmA)
 
-    def test_invert_values(self):
-        """
-        Test that non-gpu values are properly inverted
-        """
-        inverted_mcmA = ModelConfigMeasurement.invert_values(self.mcmA)
-
-        inverted_mcmA_non_gpu_data = inverted_mcmA.non_gpu_data()
-        mcmA_non_gpu_data = self.mcmA.non_gpu_data()
-
-        for index, non_gpu_data in enumerate(mcmA_non_gpu_data):
-            self.assertEqual(inverted_mcmA_non_gpu_data[index]._value,
-                             -non_gpu_data._value)
-
     def _construct_model_config_measurement(self, model_config_name,
                                             model_specific_pa_params,
                                             non_gpu_metric_values):
