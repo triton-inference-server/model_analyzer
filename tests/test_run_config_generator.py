@@ -428,6 +428,74 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             self._run_and_test_run_config_generator(
                 yaml_content, expected_config_count=expected_num_of_configs)
 
+    def test_none_result_before_threshold(self):
+        """
+        Test that a 'none' result (from PA erroring) before the minimum number
+        of throughput runs (4) will properly early exit and not assert
+        """
+
+        # Full sweep is 3 model configs * 12 concurrencies = 36.
+        # However, we will early exit and skip 9 of the concurrencies
+        # Thus, expect 27
+        #
+        expected_num_of_configs = 27
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_model_batch_size: 2
+            run_config_search_max_instance_count: 1
+            run_config_search_max_concurrency: 2048
+            profile_models:
+                - my-model
+            """)
+
+        perf_throughput_values = [
+            1,2,4,8,16,32,64,128,256,512,1024,2048, # Default config
+            1,2,None,                               # Batch size 1
+            1,2,4,8,16,32,64,128,256,512,1024,2048  # Batch size 2
+        ]
+        # yapf: enable
+
+        with patch.object(TestRunConfigGenerator,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = perf_throughput_values
+            self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
+
+    def test_none_result_after_threshold(self):
+        """
+        Test that a 'none' result (from PA erroring) after the minimum number
+        of throughput runs (4) will properly early exit and not assert
+        """
+
+        # Full sweep is 3 model configs * 12 concurrencies = 36.
+        # However, we will early exit and skip 1 of the concurrencies
+        # Thus, expect 35
+        #
+        expected_num_of_configs = 35
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_model_batch_size: 2
+            run_config_search_max_instance_count: 1
+            run_config_search_max_concurrency: 2048
+            profile_models:
+                - my-model
+            """)
+
+        perf_throughput_values = [
+            1,2,4,8,16,32,64,128,256,512,1024,2048, # Default config
+            1,2,4,8,16,32,64,128,256,512,None,      # Batch size 1
+            1,2,4,8,16,32,64,128,256,512,1024,2048  # Batch size 2
+        ]
+        # yapf: enable
+
+        with patch.object(TestRunConfigGenerator,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = perf_throughput_values
+            self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
+
     def _run_and_test_run_config_generator(self, yaml_content,
                                            expected_config_count):
         args = [
@@ -492,14 +560,17 @@ class TestRunConfigGenerator(trc.TestResultCollector):
     def _get_next_fake_results(self):
         throughput_value = self._get_next_perf_throughput_value()
 
-        measurement = construct_run_config_measurement(
-            model_name=MagicMock(),
-            model_config_names=["test_config_name"],
-            model_specific_pa_params=MagicMock(),
-            gpu_metric_values=MagicMock(),
-            non_gpu_metric_values=[{
-                "perf_throughput": throughput_value
-            }])
+        measurement = None
+
+        if throughput_value is not None:
+            measurement = construct_run_config_measurement(
+                model_name=MagicMock(),
+                model_config_names=["test_config_name"],
+                model_specific_pa_params=MagicMock(),
+                gpu_metric_values=MagicMock(),
+                non_gpu_metric_values=[{
+                    "perf_throughput": throughput_value
+                }])
 
         return [measurement]
 

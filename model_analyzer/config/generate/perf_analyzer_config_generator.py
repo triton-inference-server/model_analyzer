@@ -87,7 +87,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def is_done(self):
         """ Returns true if this generator is done generating configs """
-        return self._done_walking() or self._last_results_erroneous()
+        return self._last_results_erroneous() or self._done_walking()
 
     def next_config(self):
         """ Returns the next generated config """
@@ -209,7 +209,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return False
 
     def _last_results_erroneous(self):
-        return self._last_results is None or self._last_results[0] is None
+        return self._last_results is None or self._last_results[-1] is None
 
     def _throughput_gain_valid(self):
         """ Check if any of the last X results resulted in valid gain """
