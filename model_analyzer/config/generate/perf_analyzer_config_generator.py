@@ -87,7 +87,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def is_done(self):
         """ Returns true if this generator is done generating configs """
-        return self._last_results_erroneous() or self._done_walking()
+        if self._last_results_erroneous():
+            return True
+
+        return self._done_walking()
 
     def next_config(self):
         """ Returns the next generated config """
