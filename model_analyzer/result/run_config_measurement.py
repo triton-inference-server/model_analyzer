@@ -20,7 +20,6 @@ from model_analyzer.record.record import RecordType
 
 from statistics import mean
 
-from copy import deepcopy
 from functools import total_ordering
 import logging
 

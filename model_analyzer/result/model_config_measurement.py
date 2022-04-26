@@ -17,7 +17,6 @@ from model_analyzer.constants import LOGGER_NAME
 
 from model_analyzer.record.record import RecordType
 
-from copy import deepcopy
 from functools import total_ordering
 import logging
 
