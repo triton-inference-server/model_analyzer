@@ -27,6 +27,7 @@ from .mocks.mock_os import MockOSMethods
 import unittest
 from unittest.mock import MagicMock
 from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 
 
 class TestModelConfigGenerator(trc.TestResultCollector):
@@ -580,7 +581,8 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         fake_client.get_model_config = lambda name, retry_count: {'name': name}
 
         mcg = ConfigGeneratorFactory.create_model_config_generator(
-            config, config.profile_models[0], fake_client)
+            config, config.profile_models[0], fake_client,
+            ModelVariantNameManager())
         mcg_generator = mcg.next_config()
         model_configs = []
         while not mcg.is_done():

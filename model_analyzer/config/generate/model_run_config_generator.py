@@ -25,7 +25,8 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
     ModelConfig and PerfConfig)
     """
 
-    def __init__(self, config, model, client, default_only):
+    def __init__(self, config, model, client, variant_name_manager,
+                 default_only):
         """
         Parameters
         ----------
@@ -36,11 +37,14 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
             
         client: TritonClient
 
+        variant_name_manager: ModelVariantNameManager
+        
         default_only: Bool
         """
         self._config = config
         self._model = model
         self._client = client
+        self._variant_name_manger = variant_name_manager
 
         self._model_name = model.model_name()
 
@@ -54,7 +58,8 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
                                                  self._model_parameters)
 
         self._mcg = ConfigGeneratorFactory.create_model_config_generator(
-            self._config, model, self._client, default_only)
+            self._config, model, self._client, self._variant_name_manger,
+            default_only)
 
         self._curr_mc_measurements = []
 

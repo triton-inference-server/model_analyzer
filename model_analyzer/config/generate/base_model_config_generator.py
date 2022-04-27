@@ -30,18 +30,21 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     #
     DEFAULT_PARAM_COMBO = {}
 
-    def __init__(self, config, model, client, default_only):
+    def __init__(self, config, model, client, variant_name_manager,
+                 default_only):
         """
         Parameters
         ----------
         config: ModelAnalyzerConfig
         model: The model to generate ModelConfigs for
         client: TritonClient
+        variant_name_manager: ModelVariantNameManager
         default_only: Bool 
             If true, only the default config will be generated
             If false, the default config will NOT be generated
         """
         self._client = client
+        self._variant_name_manager = variant_name_manager
         self._model_repository = config.model_repository
         self._base_model = model
         self._base_model_name = model.model_name()
@@ -94,12 +97,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         raise NotImplementedError
 
     def _get_model_variant_name(self, param_combo):
-        if param_combo is self.DEFAULT_PARAM_COMBO:
-            variant_name = f'{self._base_model_name}_config_default'
-        else:
-            variant_name = f'{self._base_model_name}_config_{self._model_name_index}'
-            self._model_name_index += 1
-        return variant_name
+        return self._variant_name_manager.get_model_variant_name(
+            self._base_model_name, param_combo)
 
     def _make_remote_model_config(self):
         if not self._reload_model_disable:

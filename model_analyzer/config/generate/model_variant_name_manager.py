@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections
+import collections.abc
+from copy import deepcopy
 
 
 class ModelVariantNameManager:
@@ -96,18 +97,23 @@ class ModelVariantNameManager:
         return self._model_name_index[base_model_name]
 
     def _get_hashable_key(self, obj):
+        obj_copy = deepcopy(obj)
+
+        return self._get_hashable_key_helper(obj_copy)
+
+    def _get_hashable_key_helper(self, obj):
         """
         Given a list or dict which may have nested dicts/lists, return a key that 
         is hashable 
         """
 
-        if isinstance(obj, collections.Hashable):
+        if isinstance(obj, collections.abc.Hashable):
             key = obj
-        elif isinstance(obj, collections.Mapping):
+        elif isinstance(obj, collections.abc.Mapping):
             key = frozenset(
-                (k, self._get_hashable_key(v)) for k, v in obj.items())
-        elif isinstance(obj, collections.Iterable):
-            key = tuple(self._get_hashable_key(item) for item in obj)
+                (k, self._get_hashable_key_helper(v)) for k, v in obj.items())
+        elif isinstance(obj, collections.abc.Iterable):
+            key = tuple(self._get_hashable_key_helper(item) for item in obj)
         else:
             raise TypeError(type(obj))
 

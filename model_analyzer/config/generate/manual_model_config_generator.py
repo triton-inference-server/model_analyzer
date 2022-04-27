@@ -24,18 +24,21 @@ from model_analyzer.model_analyzer_exceptions \
 class ManualModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in manual search mode """
 
-    def __init__(self, config, model, client, default_only):
+    def __init__(self, config, model, client, variant_name_manager,
+                 default_only):
         """
         Parameters
         ----------
         config: ModelAnalyzerConfig
         model: The model to generate ModelConfigs for
         client: TritonClient
+        variant_name_manager: ModelVariantNameManager
         default_only: Bool 
             If true, only the default config will be generated
             If false, the default config will NOT be generated                
         """
-        super().__init__(config, model, client, default_only)
+        super().__init__(config, model, client, variant_name_manager,
+                         default_only)
 
         self._reload_model_disable = config.reload_model_disable
         self._num_retries = config.client_max_retries
