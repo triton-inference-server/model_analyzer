@@ -25,11 +25,6 @@ logger = logging.getLogger(LOGGER_NAME)
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
     """ Base class for generating model configs """
 
-    # Dict of parameters to apply on top of the default config to result
-    # in the default config (none)
-    #
-    DEFAULT_PARAM_COMBO = {}
-
     def __init__(self, config, model, client, variant_name_manager,
                  default_only):
         """

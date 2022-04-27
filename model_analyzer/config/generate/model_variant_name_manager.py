@@ -14,15 +14,10 @@
 
 import collections.abc
 from copy import deepcopy
+from model_analyzer.constants import DEFAULT_CONFIG_PARAMS
 
 
 class ModelVariantNameManager:
-
-    # FIXME
-    # Dict of parameters to apply on top of the default config to result
-    # in the default config (none)
-    #
-    DEFAULT_PARAM_COMBO = {}
 
     def __init__(self):
 
@@ -65,7 +60,7 @@ class ModelVariantNameManager:
         """
         Create and save a new model variant for this base model
         """
-        if param_combo == self.DEFAULT_PARAM_COMBO:
+        if param_combo == DEFAULT_CONFIG_PARAMS:
             variant_name = f'{base_model_name}_config_default'
         else:
             model_name_index = self._get_next_model_name_index(base_model_name)

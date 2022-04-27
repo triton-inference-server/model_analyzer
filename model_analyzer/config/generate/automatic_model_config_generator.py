@@ -14,7 +14,7 @@
 
 from .base_model_config_generator import BaseModelConfigGenerator
 
-from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.constants import LOGGER_NAME, DEFAULT_CONFIG_PARAMS
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -133,7 +133,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
     def _get_curr_param_combo(self):
         if self._default_only:
-            return self.DEFAULT_PARAM_COMBO
+            return DEFAULT_CONFIG_PARAMS
 
         config = {
             'dynamic_batching': {},

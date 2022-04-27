@@ -22,6 +22,10 @@ RESULT_TABLE_COLUMN_PADDING = 2
 # Result Comparator Constants
 COMPARISON_SCORE_THRESHOLD = 0.005
 
+# Dict of parameters to apply on top of the default
+# config to result in the default config (empty dict)
+DEFAULT_CONFIG_PARAMS = {}
+
 # Run Search
 THROUGHPUT_MINIMUM_GAIN = 0.05
 THROUGHPUT_MINIMUM_CONSECUTIVE_TRIES = 4

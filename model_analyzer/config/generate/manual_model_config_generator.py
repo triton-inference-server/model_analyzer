@@ -14,6 +14,7 @@
 
 from .base_model_config_generator import BaseModelConfigGenerator
 from .generator_utils import GeneratorUtils
+from model_analyzer.constants import DEFAULT_CONFIG_PARAMS
 
 from model_analyzer.triton.model.model_config import ModelConfig
 
@@ -87,7 +88,7 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         """
 
         if self._default_only:
-            param_combos = [self.DEFAULT_PARAM_COMBO]
+            param_combos = [DEFAULT_CONFIG_PARAMS]
         else:
             model_config_params = self._base_model.model_config_parameters()
             if model_config_params:
@@ -105,4 +106,4 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
 
     def _generate_search_disabled_param_combos(self):
         """ Return the configs when we want to search but searching is disabled """
-        return [self.DEFAULT_PARAM_COMBO]
+        return [DEFAULT_CONFIG_PARAMS]
