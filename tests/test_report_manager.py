@@ -242,7 +242,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
             self.report_manager._build_summary_table(
                 report_key="test_model",
                 num_measurements=10,
-                gpu_name="TITAN RTX")
+                gpu_name="TITAN RTX",
+                cpu_only=cpu_only)
 
         expected_summary_sentence = (
             "In 10 measurement(s), config test_model_config_10 (1/GPU model instance(s)"
