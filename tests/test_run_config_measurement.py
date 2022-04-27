@@ -158,7 +158,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
              self.weights[1])) / sum(self.weights)
 
         self.assertEqual(
-            self.rcm0.get_weighted_metric_value("perf_latency_p99"),
+            self.rcm0.get_weighted_non_gpu_metric_value("perf_latency_p99"),
             weighted_metric_value)
 
     def test_model_specific_pa_params(self):
