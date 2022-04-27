@@ -289,8 +289,6 @@ class RunConfigMeasurement:
             Average of the values of the GPU metric Records 
             corresponding to the tag, default_value if tag not found.
         """
-        foo = self.get_gpu_metric(tag)
-
         return default_value if self.get_gpu_metric(
             tag) is None else self.get_gpu_metric(tag).value()
 

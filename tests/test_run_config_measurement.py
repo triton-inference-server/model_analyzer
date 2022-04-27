@@ -171,8 +171,6 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         Test that the model specific PA params are correct
         """
-        foo = self.rcm0.model_specific_pa_params()
-
         self.assertEqual(self.rcm0.model_specific_pa_params(),
                          self.model_specific_pa_params)
 
