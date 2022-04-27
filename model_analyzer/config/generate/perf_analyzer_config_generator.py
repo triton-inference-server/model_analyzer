@@ -115,8 +115,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         # Remove 'NONE' cases, and find single max measurement from the list
         measurements = [m for m in measurements if m]
 
-        # TMA-634 - convert to max
-        measurement = [min(measurements)] if measurements else [None]
+        measurement = [max(measurements)] if measurements else [None]
 
         self._last_results = measurement
         self._all_results.extend(measurement)

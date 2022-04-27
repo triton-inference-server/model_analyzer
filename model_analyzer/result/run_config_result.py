@@ -14,8 +14,9 @@
 
 from model_analyzer.constants import LOGGER_NAME
 from .constraint_manager import ConstraintManager
+from .run_config_measurement import RunConfigMeasurement
 
-import heapq
+from bisect import insort
 from functools import total_ordering
 import logging
 
@@ -100,12 +101,13 @@ class RunConfigResult:
             The profiled RunConfigMeasurement
         """
 
-        heapq.heappush(self._measurements, run_config_measurement)
+        insort(self._measurements, run_config_measurement)
+
         if ConstraintManager.check_constraints(self._constraints,
                                                run_config_measurement):
-            heapq.heappush(self._passing_measurements, run_config_measurement)
+            insort(self._passing_measurements, run_config_measurement)
         else:
-            heapq.heappush(self._failing_measurements, run_config_measurement)
+            insort(self._failing_measurements, run_config_measurement)
 
     def run_config_measurements(self):
         """
@@ -114,8 +116,7 @@ class RunConfigResult:
         list
             of RunConfigMeasurements in this RunConfigResult
         """
-
-        return self._measurements
+        return [measurement for measurement in reversed(self._measurements)]
 
     def passing_measurements(self):
         """
@@ -125,7 +126,10 @@ class RunConfigResult:
             of passing measurements in this RunConfigResult
         """
 
-        return self._passing_measurements
+        return [
+            passing_measurement
+            for passing_measurement in reversed(self._passing_measurements)
+        ]
 
     def failing_measurements(self):
         """
@@ -135,7 +139,10 @@ class RunConfigResult:
             of failing measurements in this RunConfigResult
         """
 
-        return self._failing_measurements
+        return [
+            failing_measurement
+            for failing_measurement in reversed(self._failing_measurements)
+        ]
 
     def top_n_measurements(self, n):
         """
@@ -163,8 +170,11 @@ class RunConfigResult:
                     f"but found only {len(self._failing_measurements)}. "
                     "Showing all available constraint failing measurements for this config."
                 )
-            return heapq.nsmallest(min(n, len(self._failing_measurements)),
-                                   self._failing_measurements)
+
+            return [
+                failing_measurement for failing_measurement in reversed(
+                    self._failing_measurements[-n:])
+            ]
 
         if n > len(self._passing_measurements):
             logger.warning(
@@ -172,8 +182,10 @@ class RunConfigResult:
                 f"found only {len(self._passing_measurements)}. "
                 "Showing all available measurements for this config.")
 
-        return heapq.nsmallest(min(n, len(self._passing_measurements)),
-                               self._passing_measurements)
+        return [
+            passing_measurement
+            for passing_measurement in reversed(self._passing_measurements[-n:])
+        ]
 
     def __lt__(self, other):
         """

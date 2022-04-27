@@ -190,7 +190,6 @@ class ModelConfigMeasurement:
             set of (non_gpu) metrics to be compared against
         """
 
-        # seems like this should be == -1 but we're using a min heap
         return self._compare_measurements(other) == 1
 
     def __eq__(self, other):
@@ -216,9 +215,14 @@ class ModelConfigMeasurement:
         ----------
         other: ModelConfigMeasurement
             set of (non_gpu) metrics to be compared against
+            
+        Returns
+        -------
+        bool:
+            True if other is better than or equal to self
         """
 
-        return self.is_better_than(other)
+        return not self.is_better_than(other)
 
     def _compare_measurements(self, other):
         """

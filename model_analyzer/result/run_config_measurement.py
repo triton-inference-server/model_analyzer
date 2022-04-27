@@ -417,9 +417,14 @@ class RunConfigMeasurement:
         RunConfig
         
         This is used when sorting
+        
+        Returns
+        -------
+        bool:
+            True if other is better than or equal to self
         """
 
-        return self.is_better_than(other)
+        return not self.is_better_than(other)
 
     def _compare_measurements(self, other):
         """

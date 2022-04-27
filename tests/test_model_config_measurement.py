@@ -116,13 +116,13 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
 
         # throughput: 1000 is not better than 2000
         self.assertFalse(self.mcmA.is_better_than(self.mcmB))
-        self.assertFalse(self.mcmA < self.mcmB)
+        self.assertTrue(self.mcmA < self.mcmB)
 
         self.mcmA.set_metric_weighting({"perf_latency_p99": 1})
 
         # latency: 20 is better than 40
         self.assertTrue(self.mcmA.is_better_than(self.mcmB))
-        self.assertTrue(self.mcmA < self.mcmB)
+        self.assertFalse(self.mcmA < self.mcmB)
 
     def test_is_better_than_combo(self):
         """

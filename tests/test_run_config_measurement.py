@@ -230,6 +230,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         # This tips the scale in the favor of RCM0 (0.2, -0.15)
         self.rcm0.set_model_config_weighting([2, 3])
         self.assertTrue(self.rcm0.is_better_than(self.rcm1))
+        self.assertFalse(self.rcm0 < self.rcm1)
 
     def test_from_dict(self):
         """
