@@ -196,7 +196,14 @@ class RunConfigMeasurement:
             of average GPU metric Records corresponding to this tag,
             or None if tag not found
         """
-        return self._avg_gpu_data_from_tag[tag]
+        if tag in self._avg_gpu_data_from_tag:
+            return self._avg_gpu_data_from_tag[tag]
+        else:
+            logger.warning(
+                f"No GPU metric corresponding to tag '{tag}' "
+                "found in the model's measurement. Possibly comparing "
+                "measurements across devices.")
+            return None
 
     def get_non_gpu_metric(self, tag):
         """

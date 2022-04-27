@@ -94,6 +94,12 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(self.rcm0.get_gpu_metric("gpu_utilization"),
                          avg_gpu_data["gpu_utilization"])
 
+    def test_gpu_gpu_metric_not_found(self):
+        """
+        Test that an incorrect metric search returns None
+        """
+        self.assertEqual(self.rcm0.get_gpu_metric("XXXXX"), None)
+
     def test_get_non_gpu_metric(self):
         """
         Test that the non-gpu metric data is correct
