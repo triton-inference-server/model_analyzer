@@ -20,6 +20,7 @@ from model_analyzer.result.result_table import ResultTable
 from .report_factory import ReportFactory
 
 import os
+from statistics import mean
 from collections import defaultdict
 import logging
 
@@ -402,76 +403,10 @@ class ReportManager:
             num_measurements, best_configs, model_config_dicts, gpu_name,
             cpu_only)
 
-        summary_table = self._create_summary_result_table(cpu_only)
+        summary_table = self._construct_summary_result_table_cpu_only(sorted_measurements) if cpu_only else \
+                        self._construct_summary_result_table(sorted_measurements)
 
-        # Construct table
-        if not cpu_only:
-            for model_configs, measurement in sorted_measurements:
-                instance_group_strs = ','.join([
-                    model_config.instance_group_string()
-                    for model_config in model_configs
-                ])
-                max_batch_sizes = ','.join([
-                    str(model_config.max_batch_size())
-                    for model_config in model_configs
-                ])
-                model_config_names = ','.join([
-                    model_config.get_field('name')
-                    for model_config in model_configs
-                ])
-                row = [
-                    model_config_names, max_batch_sizes,
-                    model_configs[0].dynamic_batching_string(),
-                    instance_group_strs,
-                    measurement.get_non_gpu_metric_value('perf_latency_p99'),
-                    measurement.get_non_gpu_metric_value('perf_throughput'),
-                    measurement.get_non_gpu_metric_value('cpu_used_ram'),
-                    measurement.get_gpu_metric_value('gpu_used_memory'),
-                    round(measurement.get_gpu_metric_value('gpu_utilization'),
-                          1)
-                ]
-                summary_table.insert_row_by_index(row)
-        else:
-            for model_configs, measurement in sorted_measurements:
-                instance_group_strs = ','.join([
-                    model_config.instance_group_string()
-                    for model_config in model_configs
-                ])
-                max_batch_sizes = ','.join([
-                    str(model_config.max_batch_size())
-                    for model_config in model_configs
-                ])
-                model_config_names = ','.join([
-                    model_config.get_field('name')
-                    for model_config in model_configs
-                ])
-                row = [
-                    model_config_names, max_batch_sizes,
-                    model_configs[0].dynamic_batching_string(),
-                    instance_group_strs,
-                    measurement.get_non_gpu_metric_value('perf_latency_p99'),
-                    measurement.get_non_gpu_metric_value('perf_throughput'),
-                    measurement.get_non_gpu_metric_value('cpu_used_ram')
-                ]
-                summary_table.insert_row_by_index(row)
         return summary_table, summary_sentence
-
-    def _create_summary_result_table(self, cpu_only):
-        if cpu_only:
-            return ResultTable(headers=[
-                'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
-                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
-                'Max CPU Memory Usage (MB)'
-            ],
-                               title="Report Table")
-        else:
-            return ResultTable(headers=[
-                'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
-                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
-                'Max CPU Memory Usage (MB)', 'Max GPU Memory Usage (MB)',
-                'Average GPU Utilization (%)'
-            ],
-                               title="Report Table")
 
     def _find_best_configs(self, report_key):
         sorted_measurements = sorted(self._summary_data[report_key],
@@ -499,29 +434,153 @@ class ReportManager:
             best_configs)
         instance_group_phrase = self._create_summary_instance_group_phrase(
             best_configs)
+        gpu_name_phrase = self._create_summary_gpu_name_phrase(
+            gpu_name, cpu_only)
 
         summary_sentence = (
             f"In {measurement_phrase}, {config_phrase} ("
             f"{instance_group_phrase} "
             f"with {max_batch_size_phrase} and {dynamic_batching_phrase}) "
             f"on {platform_phrase} delivers maximum throughput under "
-            f"the given constraints{' on GPU(s) '+gpu_name if not cpu_only else ''}."
-        )
+            f"the given constraints{gpu_name_phrase}.")
 
         return summary_sentence
+
+    def _construct_summary_result_table_cpu_only(self, sorted_measurements):
+        summary_table = self._create_summary_result_table_header_cpu_only()
+
+        for model_configs, run_config_measurement in sorted_measurements:
+            row = self._create_summary_row_cpu_only(model_configs,
+                                                    run_config_measurement)
+            summary_table.insert_row_by_index(row)
+
+        return summary_table
+
+    def _construct_summary_result_table(self, sorted_measurements):
+        summary_table = self._create_summary_result_table_header()
+
+        for model_configs, run_config_measurement in sorted_measurements:
+            row = self._create_summary_row(model_configs,
+                                           run_config_measurement)
+            summary_table.insert_row_by_index(row)
+
+        return summary_table
+
+    def _create_summary_result_table_header_cpu_only(self):
+        return ResultTable(headers=[
+            'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
+            'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
+            'Max CPU Memory Usage (MB)'
+        ],
+                           title="Report Table")
+
+    def _create_summary_result_table_header(self):
+        return ResultTable(headers=[
+            'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
+            'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
+            'Max CPU Memory Usage (MB)', 'Max GPU Memory Usage (MB)',
+            'Average GPU Utilization (%)'
+        ],
+                           title="Report Table")
+
+    def _create_summary_row_cpu_only(self, model_configs,
+                                     run_config_measurement):
+        model_config_names = ','.join(
+            [model_config.get_field('name') for model_config in model_configs])
+        max_batch_sizes = ','.join([
+            str(model_config.max_batch_size()) for model_config in model_configs
+        ])
+        instance_group_strings = ','.join([
+            model_config.instance_group_string()
+            for model_config in model_configs
+        ])
+        perf_latency_string = self._create_non_gpu_metric_string(
+            run_config_measurement=run_config_measurement,
+            non_gpu_metric='perf_latency_p99',
+            aggregation_func=mean)
+        perf_throughput_string = self._create_non_gpu_metric_string(
+            run_config_measurement=run_config_measurement,
+            non_gpu_metric='perf_throughput',
+            aggregation_func=sum)
+        cpu_used_ram_string = self._create_non_gpu_metric_string(
+            run_config_measurement=run_config_measurement,
+            non_gpu_metric='cpu_used_ram',
+            aggregation_func=sum)
+
+        row = [
+            model_config_names, max_batch_sizes,
+            model_configs[0].dynamic_batching_string(), instance_group_strings,
+            perf_latency_string, perf_throughput_string, cpu_used_ram_string
+        ]
+
+        return row
+
+    def _create_summary_row(self, model_configs, run_config_measurement):
+        instance_group_strs = ','.join([
+            model_config.instance_group_string()
+            for model_config in model_configs
+        ])
+        max_batch_sizes = ','.join([
+            str(model_config.max_batch_size()) for model_config in model_configs
+        ])
+        model_config_names = ','.join(
+            [model_config.get_field('name') for model_config in model_configs])
+        perf_latency_string = self._create_non_gpu_metric_string(
+            run_config_measurement=run_config_measurement,
+            non_gpu_metric='perf_latency_p99',
+            aggregation_func=mean)
+        perf_throughput_string = self._create_non_gpu_metric_string(
+            run_config_measurement=run_config_measurement,
+            non_gpu_metric='perf_throughput',
+            aggregation_func=sum)
+        cpu_used_ram_string = self._create_non_gpu_metric_string(
+            run_config_measurement=run_config_measurement,
+            non_gpu_metric='cpu_used_ram',
+            aggregation_func=sum)
+        row = [
+            model_config_names, max_batch_sizes,
+            model_configs[0].dynamic_batching_string(), instance_group_strs,
+            perf_latency_string, perf_throughput_string, cpu_used_ram_string,
+            int(run_config_measurement.get_gpu_metric_value('gpu_used_memory')),
+            round(
+                run_config_measurement.get_gpu_metric_value('gpu_utilization'),
+                1)
+        ]
+
+        return row
+
+    def _create_non_gpu_metric_string(self, run_config_measurement,
+                                      non_gpu_metric, aggregation_func):
+        non_gpu_metrics = run_config_measurement.get_non_gpu_metric(
+            non_gpu_metric)
+
+        if non_gpu_metrics[0] is None:
+            return "0"
+        elif len(non_gpu_metrics) > 1:
+            non_gpu_metric_config_string = ",".join([
+                str(round(non_gpu_metric.value(), 1))
+                for non_gpu_metric in non_gpu_metrics
+            ])
+
+            return (
+                f"{round(run_config_measurement.get_non_gpu_metric_value(non_gpu_metric, aggregation_func=aggregation_func), 1)}\n"
+                f"({non_gpu_metric_config_string})")
+        else:
+            return f"{non_gpu_metrics[0].value()}"
 
     def _create_summary_measurement_phrase(self, num_measurements):
         assert num_measurements > 0, "Number of measurements must be greater than 0"
 
-        return f"{num_measurements} measurements" if num_measurements > 1 else "1 measurement"
+        return f"{num_measurements} measurements" if num_measurements > 1 else \
+                "1 measurement"
 
     def _create_summary_config_phrase(self, best_configs):
         config_names = [
             best_config.get_field('name') for best_config in best_configs
         ]
 
-        return f"configs {','.join(config_names)}" if len(
-            config_names) > 1 else f"config {config_names[0]}"
+        return f"config \"{','.join(config_names)}\"" if len(config_names) > 1 else \
+               f"config {config_names[0]}"
 
     def _create_summary_platform_phrase(self, model_config_dicts):
         platforms = [
@@ -530,32 +589,36 @@ class ReportManager:
             for model_config_dict in model_config_dicts
         ]
 
-        return f"platforms {','.join(platforms)}" if len(
-            platforms) > 1 else f"platform {platforms[0]}"
+        return f"platforms \"{','.join(platforms)}\"" if len(platforms) > 1 else \
+               f"platform {platforms[0]}"
 
     def _create_summary_max_batch_size_phrase(self, best_configs):
         max_batch_sizes = [
             str(best_config.max_batch_size()) for best_config in best_configs
         ]
 
-        return f"max batch sizes of {','.join(best_max_batch_sizes)}" if len(
-            max_batch_sizes) > 1 else f"max batch size of {max_batch_sizes[0]}"
+        return f"max batch sizes of \"{','.join(max_batch_sizes)}\"" if len(max_batch_sizes) > 1 \
+          else f"max batch size of {max_batch_sizes[0]}"
 
     def _create_summary_dynamic_batching_phrase(self, best_configs):
         # Dynamic batching is either on/off for all model configs in a run config
         dynamic_batching_str = best_configs[0].dynamic_batching_string()
         assert dynamic_batching_str == "Disabled" or dynamic_batching_str == "Enabled", "dynamic batching unknown"
 
-        return "dynamic batching disabled" if dynamic_batching_str == "Disabled" else "dynamic batching enabled"
+        return "dynamic batching disabled" if dynamic_batching_str == "Disabled" \
+        else "dynamic batching enabled"
 
     def _create_summary_instance_group_phrase(self, best_configs):
         instance_group_strings = [
             best_config.instance_group_string() for best_config in best_configs
         ]
 
-        return f"{','.join(instance_group_strings)} model instances" if len(
+        return f"\"{','.join(instance_group_strings)}\" model instances" if len(
             instance_group_strings
         ) > 1 else f"{instance_group_strings[0]} model instance"
+
+    def _create_summary_gpu_name_phrase(self, gpu_name, cpu_only):
+        return f" on GPU(s) {gpu_name}" if not cpu_only else ""
 
     def _build_detailed_table(self, model_config_name):
         """
