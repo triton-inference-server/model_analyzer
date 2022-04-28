@@ -481,11 +481,12 @@ class ReportManager:
                     model_config_names, max_batch_sizes,
                     model_configs[0].dynamic_batching_string(),
                     instance_group_strs,
-                    measurement.get_metric_value('perf_latency_p99'),
-                    measurement.get_metric_value('perf_throughput'),
-                    measurement.get_metric_value('cpu_used_ram'),
-                    measurement.get_metric_value('gpu_used_memory'),
-                    round(measurement.get_metric_value('gpu_utilization'), 1)
+                    measurement.get_non_gpu_metric_value('perf_latency_p99'),
+                    measurement.get_non_gpu_metric_value('perf_throughput'),
+                    measurement.get_non_gpu_metric_value('cpu_used_ram'),
+                    measurement.get_gpu_metric_value('gpu_used_memory'),
+                    round(measurement.get_gpu_metric_value('gpu_utilization'),
+                          1)
                 ]
                 summary_table.insert_row_by_index(row)
         else:
@@ -506,9 +507,9 @@ class ReportManager:
                     model_config_names, max_batch_sizes,
                     model_configs[0].dynamic_batching_string(),
                     instance_group_strs,
-                    measurement.get_metric_value('perf_latency_p99'),
-                    measurement.get_metric_value('perf_throughput'),
-                    measurement.get_metric_value('cpu_used_ram')
+                    measurement.get_non_gpu_metric_value('perf_latency_p99'),
+                    measurement.get_non_gpu_metric_value('perf_throughput'),
+                    measurement.get_non_gpu_metric_value('cpu_used_ram')
                 ]
                 summary_table.insert_row_by_index(row)
         return summary_table, summary_sentence
