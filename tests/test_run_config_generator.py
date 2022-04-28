@@ -535,6 +535,76 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             self._run_and_test_run_config_generator(
                 yaml_content, expected_config_count=expected_num_of_configs)
 
+    def test_variant_naming(self):
+        """ 
+        Confirm that model variant names are consistent
+
+        The test is set up such that on the first pass, we will skip
+        model B's case of 1 instance, batch size=4. On the second pass
+        (when the root model max_batch_size of 2), no cases will be skipped.
+        As a result, the naming will be this for model B:
+            modelB_config_0: 1 instance, max_batch_size=1
+            modelB_config_1: 1 instance, max_batch_size=2
+            modelB_config_5: 1 instance, max_batch_size=4
+            modelB_config_2: 2 instance, max_batch_size=1
+            modelB_config_3: 2 instance, max_batch_size=2
+            modelB_config_4: 2 instance, max_batch_size=4          
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_model_batch_size: 4
+            run_config_search_max_instance_count: 2
+            run_config_search_max_concurrency: 1
+            
+            profile_models:
+                - 
+                  modelA:
+                    model_config_parameters:
+                        max_batch_size: [1,2]
+                        instance_group:
+                        -
+                            kind: KIND_GPU
+                            count: [1]
+                - modelB
+            """)
+
+        expected_modelB_name_order = [
+            "modelB_config_default",
+            "modelB_config_0",
+            "modelB_config_1",
+            "modelB_config_2",
+            "modelB_config_3",
+            "modelB_config_4",
+            "modelB_config_0",
+            "modelB_config_1",
+            "modelB_config_5", # This was skipped, and needs to be created on second pass
+            "modelB_config_2",
+            "modelB_config_3",
+            "modelB_config_4",
+        ]
+
+        perf_throughput_values = [
+            1,      # Default config
+            1,None, # A: 1 Instance, BS=1  B: 1 Instance, BS=1,2
+            2,3,4,  # A: 1 Instance, BS=1  B: 2 Instance, BS=1,2,4
+            5,6,7,  # A: 1 Instance, BS=2  B: 1 Instance, BS=1,2,4
+            8,9,10  # A: 1 Instance, BS=2  B: 2 Instance, BS=1,2,4
+        ]
+        # yapf: enable
+
+        expected_num_of_configs = 12
+
+        with patch.object(TestRunConfigGenerator,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = perf_throughput_values
+            run_configs = self._run_and_test_run_config_generator(
+                yaml_content, expected_config_count=expected_num_of_configs)
+
+        for i, rc in enumerate(run_configs):
+            self.assertEqual(expected_modelB_name_order[i],
+                             rc.model_run_configs()[1].model_variant_name())
+
     def _run_and_test_run_config_generator(self, yaml_content,
                                            expected_config_count):
         args = [
@@ -572,6 +642,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                              len(config.profile_models))
 
         self.mock_model_config.stop()
+
+        return run_configs
 
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)

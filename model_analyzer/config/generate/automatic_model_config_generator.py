@@ -14,7 +14,7 @@
 
 from .base_model_config_generator import BaseModelConfigGenerator
 
-from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.constants import LOGGER_NAME, DEFAULT_CONFIG_PARAMS
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -23,18 +23,21 @@ logger = logging.getLogger(LOGGER_NAME)
 class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in automatic search mode """
 
-    def __init__(self, config, model, client, default_only):
+    def __init__(self, config, model, client, variant_name_manager,
+                 default_only):
         """
         Parameters
         ----------
         config: ModelAnalyzerConfig
         model: The model to generate ModelConfigs for
         client: TritonClient
+        variant_name_manager: ModelVariantNameManager
         default_only: Bool 
             If true, only the default config will be generated
             If false, the default config will NOT be generated
         """
-        super().__init__(config, model, client, default_only)
+        super().__init__(config, model, client, variant_name_manager,
+                         default_only)
 
         self._max_instance_count = config.run_config_search_max_instance_count
         self._min_instance_count = config.run_config_search_min_instance_count
@@ -130,7 +133,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
     def _get_curr_param_combo(self):
         if self._default_only:
-            return self.DEFAULT_PARAM_COMBO
+            return DEFAULT_CONFIG_PARAMS
 
         config = {
             'dynamic_batching': {},

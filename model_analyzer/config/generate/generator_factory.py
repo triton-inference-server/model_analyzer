@@ -25,6 +25,7 @@ class ConfigGeneratorFactory:
     def create_model_config_generator(config,
                                       model,
                                       client,
+                                      variant_name_manager,
                                       default_only=False):
         remote_mode = config.triton_launch_mode == 'remote'
         search_disabled = config.run_config_search_disable
@@ -32,7 +33,9 @@ class ConfigGeneratorFactory:
 
         if (remote_mode or search_disabled or model_config_params):
             return ManualModelConfigGenerator(config, model, client,
+                                              variant_name_manager,
                                               default_only)
         else:
             return AutomaticModelConfigGenerator(config, model, client,
+                                                 variant_name_manager,
                                                  default_only)

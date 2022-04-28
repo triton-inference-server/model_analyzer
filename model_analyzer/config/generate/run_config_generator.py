@@ -14,8 +14,9 @@
 
 from .config_generator_interface import ConfigGeneratorInterface
 from model_analyzer.config.run.run_config import RunConfig
-from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 
 
 class RunConfigGenerator(ConfigGeneratorInterface):
@@ -47,6 +48,8 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._curr_generators = [None for n in range(self._num_models)]
         self._default_returned = False
 
+        self._model_variant_name_manager = ModelVariantNameManager()
+
     def is_done(self):
         return    self._default_returned \
               and self._curr_generators[0] is not None \
@@ -73,7 +76,9 @@ class RunConfigGenerator(ConfigGeneratorInterface):
 
     def _generate_subset(self, index, default_only):
         mrcg = ModelRunConfigGenerator(self._config, self._models[index],
-                                       self._client, default_only)
+                                       self._client,
+                                       self._model_variant_name_manager,
+                                       default_only)
         model_run_config_generator = mrcg.next_config()
 
         self._curr_generators[index] = mrcg
