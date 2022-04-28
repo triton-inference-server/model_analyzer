@@ -33,7 +33,7 @@ class ModelVariantNameManager:
         to the base model config, return the name of the model variant
 
         If the same input values are provided to this function multiple times, 
-        the same value should be returned
+        the same value will be returned
         """
         if self._model_variant_exists(base_model_name, param_combo):
             return self._get_model_variant_name(base_model_name, param_combo)
