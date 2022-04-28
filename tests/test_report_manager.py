@@ -246,7 +246,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 cpu_only=cpu_only)
 
         expected_summary_sentence = (
-            "In 10 measurement(s), config test_model_config_10 (1/GPU model instance(s)"
+            "In 10 measurements, config test_model_config_10 (1/GPU model instance"
             " with max batch size of 8 and dynamic batching enabled) on"
             " platform tensorflow_graphdef delivers maximum"
             " throughput under the given constraints")

@@ -384,15 +384,6 @@ class ReportManager:
         summary.add_table(table=table)
         return summary
 
-    def _get_dynamic_batching_phrase(self, config):
-        dynamic_batching_str = config.dynamic_batching_string()
-        assert dynamic_batching_str == "Disabled" or dynamic_batching_str == "Enabled", f"dynamic batching unknown"
-        if dynamic_batching_str == "Disabled":
-            dynamic_batch_phrase = "dynamic batching disabled"
-        else:
-            dynamic_batch_phrase = "dynamic batching enabled"
-        return dynamic_batch_phrase
-
     def _build_summary_table(self,
                              report_key,
                              num_measurements,
@@ -404,63 +395,14 @@ class ReportManager:
         model
         """
 
-        if not cpu_only:
-            summary_table = ResultTable(headers=[
-                'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
-                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
-                'Max CPU Memory Usage (MB)', 'Max GPU Memory Usage (MB)',
-                'Average GPU Utilization (%)'
-            ],
-                                        title="Report Table")
-        else:
-            summary_table = ResultTable(headers=[
-                'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
-                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
-                'Max CPU Memory Usage (MB)'
-            ],
-                                        title="Report Table")
+        best_configs, sorted_measurements, model_config_dicts = self._find_best_configs(
+            report_key)
 
-        sorted_measurements = sorted(self._summary_data[report_key],
-                                     key=lambda x: x[1],
-                                     reverse=True)
+        summary_sentence = self._create_summary_sentence(
+            num_measurements, best_configs, model_config_dicts, gpu_name,
+            cpu_only)
 
-        # Construct summary sentence using best config
-        best_configs = sorted_measurements[0][0]
-
-        model_config_dicts = [
-            best_config.get_config() for best_config in best_configs
-        ]
-
-        platforms = []
-        for model_config_dict in model_config_dicts:
-            platforms.append(
-                model_config_dict['backend'] if 'backend' in
-                model_config_dict else model_config_dict['platform'])
-
-        best_max_batch_sizes = [
-            str(best_config.max_batch_size()) for best_config in best_configs
-        ]
-        max_batch_size_phrase = f"max batch size of {','.join(best_max_batch_sizes)}"
-
-        dynamic_batch_phrase = self._get_dynamic_batching_phrase(
-            best_configs[0])
-
-        config_names = [
-            best_config.get_field('name') for best_config in best_configs
-        ]
-
-        instance_group_strings = [
-            best_config.instance_group_string() for best_config in best_configs
-        ]
-
-        summary_sentence = (
-            f"In {num_measurements} measurement(s), "
-            f"config {','.join(config_names)} ("
-            f"{','.join(instance_group_strings)} model instance(s) "
-            f"with {max_batch_size_phrase} and {dynamic_batch_phrase}) "
-            f"on platform {','.join(platforms)} delivers maximum throughput under "
-            f"the given constraints{' on GPU(s) '+gpu_name if not cpu_only else ''}."
-        )
+        summary_table = self._create_summary_result_table(cpu_only)
 
         # Construct table
         if not cpu_only:
@@ -513,6 +455,107 @@ class ReportManager:
                 ]
                 summary_table.insert_row_by_index(row)
         return summary_table, summary_sentence
+
+    def _create_summary_result_table(self, cpu_only):
+        if cpu_only:
+            return ResultTable(headers=[
+                'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
+                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
+                'Max CPU Memory Usage (MB)'
+            ],
+                               title="Report Table")
+        else:
+            return ResultTable(headers=[
+                'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
+                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
+                'Max CPU Memory Usage (MB)', 'Max GPU Memory Usage (MB)',
+                'Average GPU Utilization (%)'
+            ],
+                               title="Report Table")
+
+    def _find_best_configs(self, report_key):
+        sorted_measurements = sorted(self._summary_data[report_key],
+                                     key=lambda x: x[1],
+                                     reverse=True)
+
+        best_configs = sorted_measurements[0][0]
+
+        model_config_dicts = [
+            best_config.get_config() for best_config in best_configs
+        ]
+
+        return best_configs, sorted_measurements, model_config_dicts
+
+    def _create_summary_sentence(self, num_measurements, best_configs,
+                                 model_config_dicts, gpu_name, cpu_only):
+        measurement_phrase = self._create_summary_measurement_phrase(
+            num_measurements)
+        config_phrase = self._create_summary_config_phrase(best_configs)
+        platform_phrase = self._create_summary_platform_phrase(
+            model_config_dicts)
+        max_batch_size_phrase = self._create_summary_max_batch_size_phrase(
+            best_configs)
+        dynamic_batching_phrase = self._create_summary_dynamic_batching_phrase(
+            best_configs)
+        instance_group_phrase = self._create_summary_instance_group_phrase(
+            best_configs)
+
+        summary_sentence = (
+            f"In {measurement_phrase}, {config_phrase} ("
+            f"{instance_group_phrase} "
+            f"with {max_batch_size_phrase} and {dynamic_batching_phrase}) "
+            f"on {platform_phrase} delivers maximum throughput under "
+            f"the given constraints{' on GPU(s) '+gpu_name if not cpu_only else ''}."
+        )
+
+        return summary_sentence
+
+    def _create_summary_measurement_phrase(self, num_measurements):
+        assert num_measurements > 0, "Number of measurements must be greater than 0"
+
+        return f"{num_measurements} measurements" if num_measurements > 1 else "1 measurement"
+
+    def _create_summary_config_phrase(self, best_configs):
+        config_names = [
+            best_config.get_field('name') for best_config in best_configs
+        ]
+
+        return f"configs {','.join(config_names)}" if len(
+            config_names) > 1 else f"config {config_names[0]}"
+
+    def _create_summary_platform_phrase(self, model_config_dicts):
+        platforms = [
+            model_config_dict['backend']
+            if 'backend' in model_config_dict else model_config_dict['platform']
+            for model_config_dict in model_config_dicts
+        ]
+
+        return f"platforms {','.join(platforms)}" if len(
+            platforms) > 1 else f"platform {platforms[0]}"
+
+    def _create_summary_max_batch_size_phrase(self, best_configs):
+        max_batch_sizes = [
+            str(best_config.max_batch_size()) for best_config in best_configs
+        ]
+
+        return f"max batch sizes of {','.join(best_max_batch_sizes)}" if len(
+            max_batch_sizes) > 1 else f"max batch size of {max_batch_sizes[0]}"
+
+    def _create_summary_dynamic_batching_phrase(self, best_configs):
+        # Dynamic batching is either on/off for all model configs in a run config
+        dynamic_batching_str = best_configs[0].dynamic_batching_string()
+        assert dynamic_batching_str == "Disabled" or dynamic_batching_str == "Enabled", "dynamic batching unknown"
+
+        return "dynamic batching disabled" if dynamic_batching_str == "Disabled" else "dynamic batching enabled"
+
+    def _create_summary_instance_group_phrase(self, best_configs):
+        instance_group_strings = [
+            best_config.instance_group_string() for best_config in best_configs
+        ]
+
+        return f"{','.join(instance_group_strings)} model instances" if len(
+            instance_group_strings
+        ) > 1 else f"{instance_group_strings[0]} model instance"
 
     def _build_detailed_table(self, model_config_name):
         """
