@@ -37,7 +37,6 @@ class DetailedPlot:
     """
 
     detailed_metrics = [
-        'perf_client_send_recv', 'perf_client_response_wait',
         'perf_server_queue', 'perf_server_compute_input',
         'perf_server_compute_infer', 'perf_server_compute_output'
     ]
@@ -65,13 +64,11 @@ class DetailedPlot:
         latency_axis_label, throughput_axis_label = [
             metric.header(aggregation_tag='')
             for metric in MetricsManager.get_metric_types(
-                ['perf_latency_p99', 'perf_throughput'])
+                ['perf_latency_avg', 'perf_throughput'])
         ]
 
         self._bar_colors = {
-            'perf_client_send_recv': '#ffc372',
-            'perf_client_response_wait': '#9daecc',
-            'perf_server_queue': '#addc91',
+            'perf_server_queue': '#9daecc',
             'perf_server_compute_input': '#7eb7e8',
             'perf_server_compute_infer': '#0072ce',
             'perf_server_compute_output': '#254b87',
@@ -79,7 +76,7 @@ class DetailedPlot:
         }
 
         self._bar_width = bar_width
-        self._legend_x = 1.05
+        self._legend_x = 0.92
         self._legend_y = 1.15
         self._legend_font_size = 10
         self._fig.set_figheight(8)
