@@ -82,9 +82,14 @@ class SimplePlot:
                 run_config_measurement.model_specific_pa_params()[0][
                     self._x_axis.replace('_', '-')])
         else:
-            # TODO-TMA-566: replace with get_metric_gpu/non_gpu_value()
-            self._data[label]['x_data'].append(
-                run_config_measurement.get_metric_value(tag=self._x_axis))
+            if MetricsManager.is_gpu_metric(tag=self._x_axis):
+                self._data[label]['x_data'].append(
+                    run_config_measurement.get_gpu_metric_value(
+                        tag=self._x_axis))
+            else:
+                self._data[label]['x_data'].append(
+                    run_config_measurement.get_non_gpu_metric_value(
+                        tag=self._x_axis))
 
         # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
@@ -92,9 +97,14 @@ class SimplePlot:
                 run_config_measurement.model_specific_pa_params()[0][
                     self._y_axis.replace('_', '-')])
         else:
-            # TODO-TMA-566: replace with get_metric_gpu/non_gpu_value()
-            self._data[label]['y_data'].append(
-                run_config_measurement.get_metric_value(tag=self._y_axis))
+            if MetricsManager.is_gpu_metric(tag=self._y_axis):
+                self._data[label]['y_data'].append(
+                    run_config_measurement.get_gpu_metric_value(
+                        tag=self._y_axis))
+            else:
+                self._data[label]['y_data'].append(
+                    run_config_measurement.get_non_gpu_metric_value(
+                        tag=self._y_axis))
 
     def clear(self):
         """
@@ -135,9 +145,8 @@ class SimplePlot:
 
         for model_config_name, data in self._data.items():
             # Sort the data by x-axis
-            x_data, y_data = (
-                list(t)
-                for t in zip(*sorted(zip(data['x_data'], data['y_data']))))
+            x_data, y_data = (list(t) for t in zip(
+                *sorted(zip(data['x_data'], data['y_data']))))
 
             if self._monotonic:
                 filtered_x, filtered_y = [x_data[0]], [y_data[0]]

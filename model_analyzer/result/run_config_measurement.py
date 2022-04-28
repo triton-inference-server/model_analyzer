@@ -196,7 +196,14 @@ class RunConfigMeasurement:
             of average GPU metric Records corresponding to this tag,
             or None if tag not found
         """
-        return self._avg_gpu_data_from_tag[tag]
+        if tag in self._avg_gpu_data_from_tag:
+            return self._avg_gpu_data_from_tag[tag]
+        else:
+            logger.warning(
+                f"No GPU metric corresponding to tag '{tag}' "
+                "found in the model's measurement. Possibly comparing "
+                "measurements across devices.")
+            return None
 
     def get_non_gpu_metric(self, tag):
         """
@@ -218,37 +225,6 @@ class RunConfigMeasurement:
             model_config_measurement.get_metric(tag)
             for model_config_measurement in self._model_config_measurements
         ]
-
-    #TODO-TMA-569: Remove this function
-    def get_metric(self, tag):
-        """
-        Returns the Records associated with this metric,
-        for GPU data this is a list of Records,
-        for non-GPU data there is one list per model
-        
-        Parameters
-        ----------
-        tag : str
-            A human readable tag that corresponds
-            to a particular metric
-
-        Returns
-        -------
-        GPU data:     list of   list of Records
-        non-GPU data: per model list of Records
-            metric Record corresponding to
-            the tag, in this measurement, 
-            None if tag not found.
-        """
-
-        if tag in self._avg_gpu_data_from_tag:
-            return [self._avg_gpu_data_from_tag[tag]]
-        else:
-            # Non-GPU metrics
-            return [
-                model_config_measurement.get_metric(tag)
-                for model_config_measurement in self._model_config_measurements
-            ]
 
     def get_weighted_non_gpu_metric(self, tag):
         """
@@ -313,34 +289,10 @@ class RunConfigMeasurement:
             Average of the values of the GPU metric Records 
             corresponding to the tag, default_value if tag not found.
         """
-        foo = self.get_gpu_metric(tag)
-
         return default_value if self.get_gpu_metric(
             tag) is None else self.get_gpu_metric(tag).value()
 
-    #TODO-TMA-569: Remove this function
-    def get_metric_value(self, tag, default_value=0):
-        """
-        Parameters
-        ----------
-        tag : str
-            A human readable tag that corresponds
-            to a particular metric
-        default_value : any
-            Value to return if tag is not found
-
-        Returns
-        -------
-        list of Records
-            Average of the values of the metric Record corresponding 
-            to the tag, default_value if tag not found.
-        """
-        return mean([
-            default_value if m is None else m.value()
-            for m in self.get_metric(tag)
-        ])
-
-    def get_weighted_metric_value(self, tag, default_value=0):
+    def get_weighted_non_gpu_metric_value(self, tag, default_value=0):
         """
         Parameters
         ----------
@@ -360,7 +312,7 @@ class RunConfigMeasurement:
             self._model_config_measurements)
 
         weighted_sum = 0
-        for index, metric in enumerate(self.get_metric(tag)):
+        for index, metric in enumerate(self.get_non_gpu_metric(tag)):
             weighted_sum += default_value if metric is None else metric.value(
             ) * self._model_config_weights[index]
 
