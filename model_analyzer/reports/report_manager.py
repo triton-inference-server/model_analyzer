@@ -442,11 +442,15 @@ class ReportManager:
             gpu_name, cpu_only)
 
         summary_sentence = (
-            f"In {measurement_phrase}, {config_phrase} ("
-            f"{instance_group_phrase} "
-            f"with {max_batch_size_phrase} and {dynamic_batching_phrase}) "
-            f"on {platform_phrase} delivers maximum throughput under "
-            f"the given constraints{gpu_name_phrase}.")
+            f"In {measurement_phrase}, config <strong>{config_phrase}</strong> delivers "
+            f"maximum throughput under the given constraints{gpu_name_phrase}: <UL>"
+        )
+
+        for index, best_config in enumerate(best_configs):
+            summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
+                best_config, model_config_dicts[index]) + ' </LI>'
+
+        summary_sentence = summary_sentence + ' </UL>'
 
         return summary_sentence
 
@@ -539,13 +543,6 @@ class ReportManager:
         return row
 
     def _create_summary_row(self, model_configs, run_config_measurement):
-        # instance_group_strs = ','.join([
-        #     model_config.instance_group_string()
-        #     for model_config in model_configs
-        # ])
-        # max_batch_sizes = ','.join([
-        #     str(model_config.max_batch_size()) for model_config in model_configs
-        # ])
         instance_group_string = self._create_summary_string([
             model_config.instance_group_string()
             for model_config in model_configs
@@ -617,8 +614,8 @@ class ReportManager:
             best_config.get_field('name') for best_config in best_configs
         ]
 
-        return f"config \"{','.join(config_names)}\"" if len(config_names) > 1 else \
-               f"config {config_names[0]}"
+        return f"{','.join(config_names)}" if len(config_names) > 1 else \
+               f"{config_names[0]}"
 
     def _create_summary_platform_phrase(self, model_config_dicts):
         platforms = [
@@ -653,10 +650,18 @@ class ReportManager:
 
         return f"\"{','.join(instance_group_strings)}\" model instances" if len(
             instance_group_strings
-        ) > 1 else f"{instance_group_strings[0]} model instance"
+        ) > 1 else f"{instance_group_strings[0]} model instances"
 
     def _create_summary_gpu_name_phrase(self, gpu_name, cpu_only):
         return f" on GPU(s) {gpu_name}" if not cpu_only else ""
+
+    def _create_summary_config_info(self, config, model_config_dict):
+        config_info = f"<strong>{config.get_field('name')}</strong>: "
+        config_info = config_info + f"{self._create_summary_instance_group_phrase([config])} and a "
+        config_info = config_info + f"{self._create_summary_max_batch_size_phrase([config])} on "
+        config_info = config_info + f"{self._create_summary_platform_phrase([model_config_dict])}"
+
+        return config_info
 
     def _build_detailed_table(self, model_config_name):
         """
