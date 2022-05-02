@@ -30,6 +30,7 @@ ENV DCGM_VERSION=2.2.9
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN apt-key del 7fa2af80 && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/$(uname -m)/3bf863cc.pub
 RUN apt-get update && \
     apt-get install -y python3-dev
 
@@ -57,10 +58,6 @@ RUN \
 
     # Install DCGM
     apt-get update && apt-get install -y --no-install-recommends software-properties-common && \
-    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/cuda-ubuntu2004.pin && \
-    mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600 && \
-    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/3bf863cc.pub && \
-    add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/${ARCH_DIR}/ /" && \
     apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION}; \
     
     # Install Docker
