@@ -325,17 +325,19 @@ class ReportManager:
         if not cpu_only:
             table, summary_sentence = self._build_summary_table(
                 report_key=report_key,
+                num_configurations=total_configurations,
                 num_measurements=total_measurements,
                 gpu_name=gpu_names)
         else:
             table, summary_sentence = self._build_summary_table(
                 report_key=report_key,
+                num_configurations=total_configurations,
                 num_measurements=total_measurements,
                 cpu_only=True)
 
         # Add summary sections
         summary.add_title(title=f"{self._mode.title()} Result Summary")
-        summary.add_subheading(f"Model: {report_key}")
+        summary.add_subheading(f"Model: {' and '.join(report_key.split(','))}")
         if not cpu_only:
             summary.add_paragraph(f"GPU(s): {gpu_names}")
             summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
@@ -388,6 +390,7 @@ class ReportManager:
 
     def _build_summary_table(self,
                              report_key,
+                             num_configurations,
                              num_measurements,
                              gpu_name=None,
                              cpu_only=False):
@@ -397,14 +400,15 @@ class ReportManager:
         model
         """
 
-        best_configs, sorted_measurements, model_config_dicts = self._find_best_configs(
+        best_configs, best_run_config_measurement, sorted_measurements, model_config_dicts = self._find_best_configs(
             report_key)
 
         multi_model = len(best_configs) > 1
 
         summary_sentence = self._create_summary_sentence(
-            num_measurements, best_configs, model_config_dicts, gpu_name,
-            cpu_only, multi_model)
+            report_key, num_configurations, num_measurements, best_configs,
+            best_run_config_measurement, model_config_dicts, gpu_name, cpu_only,
+            multi_model)
 
         summary_table = self._construct_summary_result_table_cpu_only(sorted_measurements, multi_model) if cpu_only else \
                         self._construct_summary_result_table(sorted_measurements, multi_model)
@@ -417,19 +421,25 @@ class ReportManager:
                                      reverse=True)
 
         best_configs = sorted_measurements[0][0]
+        best_run_config_measurement = sorted_measurements[0][1]
 
         model_config_dicts = [
             best_config.get_config() for best_config in best_configs
         ]
 
-        return best_configs, sorted_measurements, model_config_dicts
+        return best_configs, best_run_config_measurement, sorted_measurements, model_config_dicts
 
-    def _create_summary_sentence(self, num_measurements, best_configs,
+    def _create_summary_sentence(self, report_key, num_configurations,
+                                 num_measurements, best_configs,
+                                 best_run_config_measurement,
                                  model_config_dicts, gpu_name, cpu_only,
                                  multi_model):
         measurement_phrase = self._create_summary_measurement_phrase(
             num_measurements)
-        config_phrase = self._create_summary_config_phrase(best_configs)
+        config_phrase = self._create_summary_config_phrase(
+            best_configs, num_configurations)
+        throughput_phrase = self._create_summary_throughput_phrase(
+            report_key, best_configs, best_run_config_measurement, multi_model)
         platform_phrase = self._create_summary_platform_phrase(
             model_config_dicts)
         max_batch_size_phrase = self._create_summary_max_batch_size_phrase(
@@ -442,8 +452,8 @@ class ReportManager:
             gpu_name, cpu_only)
 
         summary_sentence = (
-            f"In {measurement_phrase}, config <strong>{config_phrase}</strong> delivers "
-            f"maximum throughput under the given constraints{gpu_name_phrase}: <UL>"
+            f"In {measurement_phrase} across {config_phrase} provides the best "
+            f"{throughput_phrase}, under the given constraints{gpu_name_phrase}.<UL>"
         )
 
         for index, best_config in enumerate(best_configs):
@@ -453,6 +463,90 @@ class ReportManager:
         summary_sentence = summary_sentence + ' </UL>'
 
         return summary_sentence
+
+    def _create_summary_measurement_phrase(self, num_measurements):
+        assert num_measurements > 0, "Number of measurements must be greater than 0"
+
+        return f"{num_measurements} measurements" if num_measurements > 1 else \
+                "1 measurement"
+
+    def _create_summary_config_phrase(self, best_configs, num_configurations):
+        config_names = [
+            best_config.get_field('name') for best_config in best_configs
+        ]
+
+        config_names_str = f"{' and '.join(config_names)}" if len(config_names) > 1 else \
+                           f"{config_names[0]}"
+
+        if len(config_names) > 1:
+            return f"{num_configurations} configurations, the combination of <strong>{config_names_str}</strong>"
+        else:
+            return f"{num_configurations} configurations, <strong>{config_names_str}</strong>"
+
+    def _create_summary_throughput_phrase(self, report_key, best_configs,
+                                          best_run_config_measurement,
+                                          multi_model):
+        default_throughput = round(
+            self._find_default_configs_throughput(report_key))
+        best_throughput = round(
+            best_run_config_measurement.get_non_gpu_metric_value(
+                'perf_throughput', aggregation_func=sum))
+        throughput_gain = round(best_throughput / default_throughput * 100)
+
+        throughput_phrase = "total " if multi_model else ""
+        throughput_phrase = (
+            throughput_phrase +
+            f"throughput: <strong>{best_throughput} infer/sec</strong>.<br><br>"
+            f"That is a <strong>{throughput_gain}% gain</strong> over the "
+            f"default configuration: {default_throughput} infer/sec")
+
+        return throughput_phrase
+
+    def _find_default_configs_throughput(self, report_key):
+        for run_config_result in self._result_manager._per_model_sorted_results[
+                report_key]._sorted_results:
+            for run_config_measurement in run_config_result._measurements:
+                if 'default' in run_config_measurement.model_variants_name():
+                    return run_config_measurement.get_non_gpu_metric_value(
+                        'perf_throughput', aggregation_func=sum)
+
+    def _create_summary_platform_phrase(self, model_config_dicts):
+        platforms = [
+            model_config_dict['backend']
+            if 'backend' in model_config_dict else model_config_dict['platform']
+            for model_config_dict in model_config_dicts
+        ]
+
+        return f"platforms \"{' / '.join(platforms)}\"" if len(platforms) > 1 else \
+               f"platform {platforms[0]}"
+
+    def _create_summary_max_batch_size_phrase(self, best_configs):
+        max_batch_sizes = [
+            str(best_config.max_batch_size()) for best_config in best_configs
+        ]
+
+        return f"max batch sizes of \"{', '.join(max_batch_sizes)}\"" if len(max_batch_sizes) > 1 \
+          else f"max batch size of {max_batch_sizes[0]}"
+
+    def _create_summary_dynamic_batching_phrase(self, best_configs):
+        # Dynamic batching is either on/off for all model configs in a run config
+        dynamic_batching_str = best_configs[0].dynamic_batching_string()
+        assert dynamic_batching_str == "Disabled" or dynamic_batching_str == "Enabled", "dynamic batching unknown"
+
+        return "dynamic batching disabled" if dynamic_batching_str == "Disabled" \
+        else "dynamic batching enabled"
+
+    def _create_summary_instance_group_phrase(self, best_configs):
+        instance_group_strings = [
+            best_config.instance_group_string() for best_config in best_configs
+        ]
+
+        return f"\"{', '.join(instance_group_strings)}\" model instances" if len(
+            instance_group_strings
+        ) > 1 else f"{instance_group_strings[0]} model instances"
+
+    def _create_summary_gpu_name_phrase(self, gpu_name, cpu_only):
+        return f" on GPU(s) {gpu_name}" if not cpu_only else ""
 
     def _construct_summary_result_table_cpu_only(self, sorted_measurements,
                                                  multi_model):
@@ -512,12 +606,12 @@ class ReportManager:
 
     def _create_summary_row_cpu_only(self, model_configs,
                                      run_config_measurement):
-        model_config_names = ','.join(
+        model_config_names = ', '.join(
             [model_config.get_field('name') for model_config in model_configs])
-        max_batch_sizes = ','.join([
+        max_batch_sizes = ', '.join([
             str(model_config.max_batch_size()) for model_config in model_configs
         ])
-        instance_group_strings = ','.join([
+        instance_group_strings = ', '.join([
             model_config.instance_group_string()
             for model_config in model_configs
         ])
@@ -552,7 +646,7 @@ class ReportManager:
             str(model_config.max_batch_size()) for model_config in model_configs
         ])
 
-        model_config_names = ','.join(
+        model_config_names = '<br>'.join(
             [model_config.get_field('name') for model_config in model_configs])
         perf_latency_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
@@ -580,7 +674,7 @@ class ReportManager:
 
     def _create_summary_string(self, values):
         if len(values) > 1:
-            return f"({','.join(values)})"
+            return f"({', '.join(values)})"
         else:
             return f"{values[0]}"
 
@@ -592,72 +686,20 @@ class ReportManager:
         if non_gpu_metrics[0] is None:
             return "0"
         elif len(non_gpu_metrics) > 1:
-            non_gpu_metric_config_string = ",".join([
+            non_gpu_metric_config_string = ', '.join([
                 str(round(non_gpu_metric.value(), 1))
                 for non_gpu_metric in non_gpu_metrics
             ])
 
             return (
-                f"{round(run_config_measurement.get_non_gpu_metric_value(non_gpu_metric, aggregation_func=aggregation_func), 1)}\n"
+                f"<strong>{round(run_config_measurement.get_non_gpu_metric_value(non_gpu_metric, aggregation_func=aggregation_func), 1)}</strong> "
                 f"({non_gpu_metric_config_string})")
         else:
             return f"{non_gpu_metrics[0].value()}"
 
-    def _create_summary_measurement_phrase(self, num_measurements):
-        assert num_measurements > 0, "Number of measurements must be greater than 0"
-
-        return f"{num_measurements} measurements" if num_measurements > 1 else \
-                "1 measurement"
-
-    def _create_summary_config_phrase(self, best_configs):
-        config_names = [
-            best_config.get_field('name') for best_config in best_configs
-        ]
-
-        return f"{','.join(config_names)}" if len(config_names) > 1 else \
-               f"{config_names[0]}"
-
-    def _create_summary_platform_phrase(self, model_config_dicts):
-        platforms = [
-            model_config_dict['backend']
-            if 'backend' in model_config_dict else model_config_dict['platform']
-            for model_config_dict in model_config_dicts
-        ]
-
-        return f"platforms \"{','.join(platforms)}\"" if len(platforms) > 1 else \
-               f"platform {platforms[0]}"
-
-    def _create_summary_max_batch_size_phrase(self, best_configs):
-        max_batch_sizes = [
-            str(best_config.max_batch_size()) for best_config in best_configs
-        ]
-
-        return f"max batch sizes of \"{','.join(max_batch_sizes)}\"" if len(max_batch_sizes) > 1 \
-          else f"max batch size of {max_batch_sizes[0]}"
-
-    def _create_summary_dynamic_batching_phrase(self, best_configs):
-        # Dynamic batching is either on/off for all model configs in a run config
-        dynamic_batching_str = best_configs[0].dynamic_batching_string()
-        assert dynamic_batching_str == "Disabled" or dynamic_batching_str == "Enabled", "dynamic batching unknown"
-
-        return "dynamic batching disabled" if dynamic_batching_str == "Disabled" \
-        else "dynamic batching enabled"
-
-    def _create_summary_instance_group_phrase(self, best_configs):
-        instance_group_strings = [
-            best_config.instance_group_string() for best_config in best_configs
-        ]
-
-        return f"\"{','.join(instance_group_strings)}\" model instances" if len(
-            instance_group_strings
-        ) > 1 else f"{instance_group_strings[0]} model instances"
-
-    def _create_summary_gpu_name_phrase(self, gpu_name, cpu_only):
-        return f" on GPU(s) {gpu_name}" if not cpu_only else ""
-
     def _create_summary_config_info(self, config, model_config_dict):
         config_info = f"<strong>{config.get_field('name')}</strong>: "
-        config_info = config_info + f"{self._create_summary_instance_group_phrase([config])} and a "
+        config_info = config_info + f"{self._create_summary_instance_group_phrase([config])} with a "
         config_info = config_info + f"{self._create_summary_max_batch_size_phrase([config])} on "
         config_info = config_info + f"{self._create_summary_platform_phrase([model_config_dict])}"
 

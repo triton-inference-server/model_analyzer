@@ -14,6 +14,7 @@
 
 import os
 import matplotlib.pyplot as plt
+from statistics import mean
 from collections import defaultdict
 
 from model_analyzer.record.metrics_manager import MetricsManager
@@ -76,7 +77,6 @@ class SimplePlot:
         if label not in self._data:
             self._data[label] = defaultdict(list)
 
-        # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         if self._x_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
             self._data[label]['x_data'].append(
                 run_config_measurement.model_specific_pa_params()[0][
@@ -87,11 +87,11 @@ class SimplePlot:
                     run_config_measurement.get_gpu_metric_value(
                         tag=self._x_axis))
             else:
+                aggregation_func = sum if self._x_axis == 'perf_throughput' else mean
                 self._data[label]['x_data'].append(
                     run_config_measurement.get_non_gpu_metric_value(
-                        tag=self._x_axis))
+                        tag=self._x_axis, aggregation_func=aggregation_func))
 
-        # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
             self._data[label]['y_data'].append(
                 run_config_measurement.model_specific_pa_params()[0][
@@ -102,9 +102,10 @@ class SimplePlot:
                     run_config_measurement.get_gpu_metric_value(
                         tag=self._y_axis))
             else:
+                aggregation_func = sum if self._y_axis == 'perf_throughput' else mean
                 self._data[label]['y_data'].append(
                     run_config_measurement.get_non_gpu_metric_value(
-                        tag=self._y_axis))
+                        tag=self._y_axis, aggregation_func=aggregation_func))
 
     def clear(self):
         """

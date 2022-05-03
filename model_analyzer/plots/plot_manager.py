@@ -62,9 +62,7 @@ class PlotManager:
         self._constraints = ConstraintManager.get_constraints_for_all_models(
             self._config)
 
-        model_names = [
-            model.model_name() for model in self._config.analysis_models
-        ]
+        model_names = self._result_manager._analysis_model_names
 
         for plots_key in model_names:
             self._create_summary_plot_for_model(
