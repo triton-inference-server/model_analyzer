@@ -382,6 +382,7 @@ class ReportManager:
                                    image_width=66)
 
         summary.add_paragraph(
+            "<div style = \"display:block; clear:both; page-break-after:always;\"></div>"
             "The following table summarizes each configuration at the measurement"
             " that optimizes the desired metrics under the given constraints."
             " Per model values are parenthetical.")
