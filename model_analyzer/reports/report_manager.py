@@ -485,14 +485,20 @@ class ReportManager:
         best_throughput = round(
             best_run_config_measurement.get_non_gpu_metric_value(
                 'perf_throughput', aggregation_func=sum))
-        throughput_gain = round(best_throughput / default_throughput * 100)
+        throughput_gain = round(best_throughput / default_throughput *
+                                100) if default_throughput else None
 
         throughput_phrase = "total " if multi_model else ""
         throughput_phrase = (
             throughput_phrase +
             f"throughput: <strong>{best_throughput} infer/sec</strong>.<br><br>"
-            f"This is a <strong>{throughput_gain}% gain</strong> over the "
-            f"default configuration ({default_throughput} infer/sec)")
+        )
+
+        if throughput_gain:
+            throughput_phrase = (
+                throughput_phrase +
+                f"This is a <strong>{throughput_gain}% gain</strong> over the "
+                f"default configuration ({default_throughput} infer/sec)")
 
         return throughput_phrase
 
@@ -504,7 +510,7 @@ class ReportManager:
                     return run_config_measurement.get_non_gpu_metric_value(
                         'perf_throughput', aggregation_func=sum)
 
-        assert False, "No default configuration exists in Results"
+        return 0
 
     def _create_summary_platform_phrase(self, model_config_dicts):
         platforms = [
