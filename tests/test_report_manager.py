@@ -164,7 +164,10 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.json_mock = MockJSONMethods()
         self.json_mock.start()
 
-    def test_add_results(self):
+    @patch(
+        'model_analyzer.reports.report_manager.ReportManager._find_default_configs_throughput',
+        return_value=100)
+    def test_add_results(self, *args):
         for mode in ['online', 'offline']:
             self._init_managers("test_model1,test_model2", mode=mode)
             result_comparator = RunConfigResultComparator(
@@ -212,7 +215,10 @@ class TestReportManagerMethods(trc.TestResultCollector):
             self.assertEqual(len(report1_data), 10)
             self.assertEqual(len(report2_data), 5)
 
-    def test_build_summary_table(self):
+    @patch(
+        'model_analyzer.reports.report_manager.ReportManager._find_default_configs_throughput',
+        return_value=100)
+    def test_build_summary_table(self, *args):
         for mode in ['offline', 'online']:
             for cpu_only in [True, False]:
                 self.subtest_build_summary_table(mode, cpu_only)
@@ -242,17 +248,27 @@ class TestReportManagerMethods(trc.TestResultCollector):
             self.report_manager._build_summary_table(
                 report_key="test_model",
                 num_measurements=10,
+                num_configurations=3,
                 gpu_name="TITAN RTX",
                 cpu_only=cpu_only)
 
-        expected_summary_sentence = (
-            "In 10 measurements, config test_model_config_10 (1/GPU model instance"
-            " with max batch size of 8 and dynamic batching enabled) on"
-            " platform tensorflow_graphdef delivers maximum"
-            " throughput under the given constraints")
-        if not cpu_only:
-            expected_summary_sentence += " on GPU(s) TITAN RTX"
-        expected_summary_sentence += "."
+        if cpu_only:
+            expected_summary_sentence = (
+                "In 10 measurements across 3 configurations, "
+                "<strong>test_model_config_10</strong> provides the best throughput: <strong>200 infer/sec</strong>.<br><br>"
+                "That is a <strong>200% gain</strong> over the default configuration: "
+                "100 infer/sec, under the given constraints.<UL><LI> "
+                "<strong>test_model_config_10</strong>: 1/GPU model instances with a max batch size of 8 on platform tensorflow_graphdef "
+                "</LI> </UL>")
+        else:
+            expected_summary_sentence = (
+                "In 10 measurements across 3 configurations, "
+                "<strong>test_model_config_10</strong> provides the best throughput: <strong>200 infer/sec</strong>.<br><br>"
+                "That is a <strong>200% gain</strong> over the default configuration: "
+                "100 infer/sec, under the given constraints on GPU(s) TITAN RTX.<UL><LI> "
+                "<strong>test_model_config_10</strong>: 1/GPU model instances with a max batch size of 8 on platform tensorflow_graphdef "
+                "</LI> </UL>")
+
         self.assertEqual(expected_summary_sentence, summary_sentence)
 
         # Get throughput index and make sure results are sorted

@@ -510,6 +510,8 @@ class ReportManager:
                     return run_config_measurement.get_non_gpu_metric_value(
                         'perf_throughput', aggregation_func=sum)
 
+        assert False, "No default configuration exists in Results"
+
     def _create_summary_platform_phrase(self, model_config_dicts):
         platforms = [
             model_config_dict['backend']
