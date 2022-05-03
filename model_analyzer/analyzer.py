@@ -41,7 +41,7 @@ class Analyzer:
     result writing methods.
     """
 
-    def __init__(self, config, server, state_manager):
+    def __init__(self, config, server, state_manager, run_without_checkpoint):
         """
         Parameters
         ----------
@@ -56,7 +56,7 @@ class Analyzer:
         self._config = config
         self._server = server
         self._state_manager = state_manager
-        state_manager.load_checkpoint()
+        state_manager.load_checkpoint(run_without_checkpoint)
 
         self._result_manager = ResultManager(config=config,
                                              state_manager=self._state_manager)

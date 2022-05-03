@@ -107,7 +107,7 @@ class AnalyzerStateManager:
         self._state_changed = True
         self._current_state.set(name, value)
 
-    def load_checkpoint(self):
+    def load_checkpoint(self, run_without_checkpoint):
         """
         Load the state of the Model Analyzer from
         most recent checkpoint file, also 
@@ -129,7 +129,10 @@ class AnalyzerStateManager:
                         ' directory.')
             self._starting_fresh_run = False
         else:
-            logger.info("No checkpoint file found, starting a fresh run.")
+            if run_without_checkpoint:
+                logger.info("No checkpoint file found, starting a fresh run.")
+            else:
+                raise TritonModelAnalyzerException(f'No checkpoint file found')
 
     def default_encode(self, obj):
         if isinstance(obj, bytes):
