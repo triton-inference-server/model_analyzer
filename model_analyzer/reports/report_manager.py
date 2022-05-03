@@ -441,14 +441,6 @@ class ReportManager:
             best_configs, num_configurations)
         throughput_phrase = self._create_summary_throughput_phrase(
             report_key, best_configs, best_run_config_measurement, multi_model)
-        platform_phrase = self._create_summary_platform_phrase(
-            model_config_dicts)
-        max_batch_size_phrase = self._create_summary_max_batch_size_phrase(
-            best_configs)
-        dynamic_batching_phrase = self._create_summary_dynamic_batching_phrase(
-            best_configs)
-        instance_group_phrase = self._create_summary_instance_group_phrase(
-            best_configs)
         gpu_name_phrase = self._create_summary_gpu_name_phrase(
             gpu_name, cpu_only)
 
@@ -473,16 +465,17 @@ class ReportManager:
 
     def _create_summary_config_phrase(self, best_configs, num_configurations):
         config_names = [
-            best_config.get_field('name') for best_config in best_configs
+            f"<strong>{best_config.get_field('name')}</strong>"
+            for best_config in best_configs
         ]
 
         config_names_str = f"{' and '.join(config_names)}" if len(config_names) > 1 else \
                            f"{config_names[0]}"
 
         if len(config_names) > 1:
-            return f"{num_configurations} configurations, the combination of <strong>{config_names_str}</strong>"
+            return f"{num_configurations} configurations, the combination of {config_names_str}"
         else:
-            return f"{num_configurations} configurations, <strong>{config_names_str}</strong>"
+            return f"{num_configurations} configurations, {config_names_str}"
 
     def _create_summary_throughput_phrase(self, report_key, best_configs,
                                           best_run_config_measurement,
@@ -498,8 +491,8 @@ class ReportManager:
         throughput_phrase = (
             throughput_phrase +
             f"throughput: <strong>{best_throughput} infer/sec</strong>.<br><br>"
-            f"That is a <strong>{throughput_gain}% gain</strong> over the "
-            f"default configuration: {default_throughput} infer/sec")
+            f"This is a <strong>{throughput_gain}% gain</strong> over the "
+            f"default configuration ({default_throughput} infer/sec)")
 
         return throughput_phrase
 
