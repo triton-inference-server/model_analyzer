@@ -41,7 +41,7 @@ class Analyzer:
     result writing methods.
     """
 
-    def __init__(self, config, server, state_manager, run_without_checkpoint):
+    def __init__(self, config, server, state_manager, checkpoint_required):
         """
         Parameters
         ----------
@@ -51,12 +51,14 @@ class Analyzer:
             Server handle
         state_manager: AnalyzerStateManager
             The object that maintains Model Analyzer State
+        checkpoint_required : bool
+            If true, an existing checkpoint is required to run MA
         """
 
         self._config = config
         self._server = server
         self._state_manager = state_manager
-        state_manager.load_checkpoint(run_without_checkpoint)
+        state_manager.load_checkpoint(checkpoint_required)
 
         self._result_manager = ResultManager(config=config,
                                              state_manager=self._state_manager)

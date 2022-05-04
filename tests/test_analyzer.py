@@ -77,7 +77,7 @@ class TestAnalyzer(trc.TestResultCollector):
         analyzer = Analyzer(config,
                             None,
                             state_manager,
-                            run_without_checkpoint=True)
+                            checkpoint_required=True)
         self.assertEqual(
             analyzer._get_analyze_command_help_string(),
             'To analyze the profile results and find the best configurations, '
@@ -136,7 +136,7 @@ class TestAnalyzer(trc.TestResultCollector):
         analyzer = Analyzer(config,
                             None,
                             state_manager,
-                            run_without_checkpoint=True)
+                            checkpoint_required=True)
         self.assertEqual(
             analyzer._get_report_command_help_string(),
             'To generate detailed reports for the 3 best configurations, run '

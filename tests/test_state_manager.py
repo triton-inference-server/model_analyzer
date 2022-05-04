@@ -79,7 +79,7 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
 
     def test_set_get_state_variables(self):
         self.mock_os.set_os_path_exists_return_value(False)
-        self.state_manager.load_checkpoint(run_without_checkpoint=True)
+        self.state_manager.load_checkpoint(checkpoint_required=True)
 
         vars = [f"test_var{j}" for j in range(10)]
         for i, name in enumerate(vars):
@@ -97,13 +97,13 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
     def test_load_checkpoint(self):
         # Load checkpoint without ckpt files
         self.mock_os.set_os_path_exists_return_value(False)
-        self.state_manager.load_checkpoint(run_without_checkpoint=True)
+        self.state_manager.load_checkpoint(checkpoint_required=True)
         self.assertTrue(self.state_manager.starting_fresh_run())
 
         # Load checkpoint files with ckpt files
         self.mock_os.set_os_path_exists_return_value(True)
         self.mock_os.set_os_path_join_return_value('0.ckpt')
-        self.state_manager.load_checkpoint(run_without_checkpoint=True)
+        self.state_manager.load_checkpoint(checkpoint_required=True)
         self.assertFalse(self.state_manager.starting_fresh_run())
 
         # Load checkpoint throws error
@@ -114,7 +114,7 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
                                ' directory.'):
             self.mock_os.set_os_path_exists_return_value(True)
             self.mock_os.set_os_path_join_return_value('0.ckpt')
-            self.state_manager.load_checkpoint(run_without_checkpoint=True)
+            self.state_manager.load_checkpoint(checkpoint_required=True)
             self.assertFalse(self.state_manager.starting_fresh_run())
 
     def test_latest_checkpoint(self):
