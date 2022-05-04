@@ -361,6 +361,11 @@ class ResultManager:
         for model_name in self._analysis_model_names:
             model_measurements = results.get_model_measurements_dict(model_name)
 
+            if not model_measurements:
+                raise TritonModelAnalyzerException(
+                    f"The model {model_name} was not found in the loaded checkpoint."
+                )
+
             for (run_config,
                  run_config_measurements) in model_measurements.values():
                 run_config_result = RunConfigResult(

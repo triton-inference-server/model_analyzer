@@ -379,20 +379,26 @@ def main():
             if state_manager.exiting():
                 return
 
-            analyzer = Analyzer(config, server, state_manager)
+            analyzer = Analyzer(config,
+                                server,
+                                state_manager,
+                                checkpoint_required=False)
             analyzer.profile(client=client, gpus=gpus)
 
         elif args.subcommand == 'analyze':
-
-            analyzer = Analyzer(
-                config, server,
-                AnalyzerStateManager(config=config, server=server))
+            analyzer = Analyzer(config,
+                                server,
+                                AnalyzerStateManager(config=config,
+                                                     server=server),
+                                checkpoint_required=True)
             analyzer.analyze(mode=args.mode, verbose=bool(args.verbose))
         elif args.subcommand == 'report':
 
-            analyzer = Analyzer(
-                config, server,
-                AnalyzerStateManager(config=config, server=server))
+            analyzer = Analyzer(config,
+                                server,
+                                AnalyzerStateManager(config=config,
+                                                     server=server),
+                                checkpoint_required=True)
             analyzer.report(mode=args.mode)
     finally:
         if server is not None:

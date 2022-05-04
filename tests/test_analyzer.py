@@ -74,7 +74,10 @@ class TestAnalyzer(trc.TestResultCollector):
         ]
         config = self._evaluate_profile_config(args, '')
         state_manager = AnalyzerStateManager(config, None)
-        analyzer = Analyzer(config, None, state_manager)
+        analyzer = Analyzer(config,
+                            None,
+                            state_manager,
+                            checkpoint_required=False)
         self.assertEqual(
             analyzer._get_analyze_command_help_string(),
             'To analyze the profile results and find the best configurations, '
@@ -130,7 +133,10 @@ class TestAnalyzer(trc.TestResultCollector):
         ]
         config = self._evaluate_analyze_config(args, '')
         state_manager = AnalyzerStateManager(config, None)
-        analyzer = Analyzer(config, None, state_manager)
+        analyzer = Analyzer(config,
+                            None,
+                            state_manager,
+                            checkpoint_required=False)
         self.assertEqual(
             analyzer._get_report_command_help_string(),
             'To generate detailed reports for the 3 best configurations, run '
