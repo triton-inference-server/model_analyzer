@@ -135,9 +135,9 @@ class AnalyzerStateManager:
             self._starting_fresh_run = False
         else:
             if checkpoint_required:
-                logger.info("No checkpoint file found, starting a fresh run.")
-            else:
                 raise TritonModelAnalyzerException(f'No checkpoint file found')
+            else:
+                logger.info("No checkpoint file found, starting a fresh run.")
 
     def default_encode(self, obj):
         if isinstance(obj, bytes):

@@ -382,7 +382,7 @@ def main():
             analyzer = Analyzer(config,
                                 server,
                                 state_manager,
-                                checkpoint_required=True)
+                                checkpoint_required=False)
             analyzer.profile(client=client, gpus=gpus)
 
         elif args.subcommand == 'analyze':
@@ -390,7 +390,7 @@ def main():
                                 server,
                                 AnalyzerStateManager(config=config,
                                                      server=server),
-                                checkpoint_required=False)
+                                checkpoint_required=True)
             analyzer.analyze(mode=args.mode, verbose=bool(args.verbose))
         elif args.subcommand == 'report':
 
@@ -398,7 +398,7 @@ def main():
                                 server,
                                 AnalyzerStateManager(config=config,
                                                      server=server),
-                                checkpoint_required=False)
+                                checkpoint_required=True)
             analyzer.report(mode=args.mode)
     finally:
         if server is not None:
