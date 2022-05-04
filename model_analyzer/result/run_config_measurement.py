@@ -72,6 +72,9 @@ class RunConfigMeasurement:
             run_config_measurement,
             run_config_measurement_dict['_model_config_measurements'])
 
+        run_config_measurement._model_config_weights = run_config_measurement_dict[
+            '_model_config_weights']
+
         return run_config_measurement
 
     def set_model_config_weighting(self, model_config_weights):
@@ -107,6 +110,9 @@ class RunConfigMeasurement:
         self._model_config_measurements.append(
             ModelConfigMeasurement(model_config_name, model_specific_pa_params,
                                    non_gpu_data))
+
+        # By default setting all models to have equal weighting
+        self._model_config_weights.append(1)
 
     def set_metric_weightings(self, metric_objectives):
         """
