@@ -34,7 +34,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     """
 
     def __init__(self, cli_config, model_name, model_perf_analyzer_flags,
-                 model_parameters):
+                 model_parameters, early_exit):
         """
         Parameters
         ----------
@@ -49,7 +49,12 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         model_parameters: Dict
             model constraints for batch_sizes and/or concurrency
+
+        early_exit: Bool
+            If true, this class can early exit during search of concurrency
         """
+
+        self._early_exit = early_exit
 
         # All configs are pregenerated in _configs[][]
         # Indexed as follows:
@@ -59,7 +64,6 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._curr_config_index = 0
         self._configs = []
         self._concurrency_warning_printed = False
-        self._auto_sweep_concurrencies = False
 
         # Flag to indicate we have started to return results
         #
@@ -126,7 +130,6 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         elif cli_config.run_config_search_disable:
             return [1]
         else:
-            self._auto_sweep_concurrencies = True
             return utils.generate_doubled_list(
                 cli_config.run_config_search_min_concurrency,
                 cli_config.run_config_search_max_concurrency)
@@ -201,7 +204,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _done_walking_concurrencies(self):
         if len(self._concurrencies) == self._curr_concurrency_index + 1:
             return True
-        if self._auto_sweep_concurrencies and not self._throughput_gain_valid():
+        if self._early_exit and not self._throughput_gain_valid():
             if not self._concurrency_warning_printed:
                 logger.info(
                     "No longer increasing concurrency as throughput has plateaued"
