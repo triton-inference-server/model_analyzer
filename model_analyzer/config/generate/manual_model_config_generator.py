@@ -14,19 +14,21 @@
 
 from .base_model_config_generator import BaseModelConfigGenerator
 from .generator_utils import GeneratorUtils
-from model_analyzer.constants import DEFAULT_CONFIG_PARAMS
+from model_analyzer.constants import LOGGER_NAME, DEFAULT_CONFIG_PARAMS
 
 from model_analyzer.triton.model.model_config import ModelConfig
+import logging
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
+logger = logging.getLogger(LOGGER_NAME)
+from copy import copy
 
 
 class ManualModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in manual search mode """
 
     def __init__(self, config, model, client, variant_name_manager,
-                 default_only):
+                 default_only, early_exit_enable):
         """
         Parameters
         ----------
@@ -37,24 +39,96 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         default_only: Bool 
             If true, only the default config will be generated
             If false, the default config will NOT be generated                
+        early_exit_enable: Bool
+            If true, the generator can early exit if throughput plateaus
         """
         super().__init__(config, model, client, variant_name_manager,
-                         default_only)
+                         default_only, early_exit_enable)
 
         self._reload_model_disable = config.reload_model_disable
         self._num_retries = config.client_max_retries
         self._search_disabled = config.run_config_search_disable
         self._curr_config_index = 0
+        self._curr_max_batch_size_index = 0
+        self._max_batch_size_warning_printed = False
+
+        self._max_batch_sizes = None
+        self._non_max_batch_size_param_combos = []
+        self._determine_max_batch_sizes_and_param_combos()
+
         self._configs = self._generate_model_configs()
 
+        # Contains the max throughput from each provided list of measurements
+        # since the last time we stepped max_batch_size
+        #
+        self._curr_max_batch_size_throughputs = []
+
     def _done_walking(self):
+        return self._done_walking_configs() \
+           and self._done_walking_max_batch_size()
+
+    def _done_walking_configs(self):
         return len(self._configs) == self._curr_config_index + 1
 
+    def _done_walking_max_batch_size(self):
+        if (self._max_batch_sizes is None or len(self._max_batch_sizes)
+                == self._curr_max_batch_size_index + 1):
+            return True
+
+        if self._early_exit_enable and not self._last_results_increased_throughput(
+        ):
+            if not self._max_batch_size_warning_printed:
+                logger.info(
+                    "No longer increasing max_batch_size because throughput has plateaued"
+                )
+                self._max_batch_size_warning_printed = True
+            return True
+        return False
+
     def _step(self):
+        if self._done_walking_max_batch_size():
+            self._reset_max_batch_size()
+            self._step_config()
+        else:
+            self._step_max_batch_size()
+
+    def _reset_max_batch_size(self):
+        self._curr_max_batch_size_index = 0
+        self._max_batch_size_warning_printed = False
+        self._curr_max_batch_size_throughputs = []
+
+    def _step_config(self):
         self._curr_config_index += 1
 
+    def _step_max_batch_size(self):
+        self._curr_max_batch_size_index += 1
+
+        last_max_throughput = self._get_last_results_max_throughput()
+        self._curr_max_batch_size_throughputs.append(last_max_throughput)
+
+    def _last_results_increased_throughput(self):
+        max_throughput = self._get_last_results_max_throughput()
+        max_throughput_increased = all(
+            max_throughput is not None and t is not None and max_throughput > t
+            for t in self._curr_max_batch_size_throughputs)
+
+        return max_throughput_increased
+
+    # FIXME refactor
+    def _get_last_results_max_throughput(self):
+        throughputs = [
+            m.get_non_gpu_metric_value('perf_throughput')
+            for m in self._last_results
+            if m is not None
+        ]
+        if not throughputs:
+            return None
+        else:
+            return max(throughputs)
+
     def _get_next_model_config(self):
-        return self._configs[self._curr_config_index]
+        return self._configs[self._curr_config_index][
+            self._curr_max_batch_size_index]
 
     def _generate_model_configs(self):
         """ Generate all model config combinations """
@@ -67,42 +141,54 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
 
     def _generate_remote_mode_model_configs(self):
         """ Generate model configs for remote mode """
-        return [self._make_remote_model_config()]
+        return [[self._make_remote_model_config()]]
 
     def _generate_direct_modes_model_configs(self):
         """ Generate model configs for direct (non-remote) modes """
         model_configs = []
-        param_combos = self._get_param_combinations()
-        for param_combo in param_combos:
-            model_config = self._make_direct_mode_model_config(param_combo)
-            model_config.set_cpu_only(self._cpu_only)
+        for param_combo in self._non_max_batch_size_param_combos:
+            configs_with_max_batch_size = []
+            if self._max_batch_sizes:
+                for mbs in self._max_batch_sizes:
+                    param_combo['max_batch_size'] = mbs
+                    model_config = self._make_direct_mode_model_config(
+                        param_combo)
+                    model_config.set_cpu_only(self._cpu_only)
+                    configs_with_max_batch_size.append(model_config)
+            else:
+                model_config = self._make_direct_mode_model_config(param_combo)
+                model_config.set_cpu_only(self._cpu_only)
+                configs_with_max_batch_size.append(model_config)
 
-            model_configs.append(model_config)
+            model_configs.append(configs_with_max_batch_size)
 
         return model_configs
 
-    def _get_param_combinations(self):
+    def _determine_max_batch_sizes_and_param_combos(self):
         """
-        Calculate all parameter combinations to apply on top of the
-        base model config for manual search 
+        Determine self._max_batch_sizes and self._non_max_batch_size_param_combos 
         """
+        if self._remote_mode:
+            return
 
         if self._default_only:
-            param_combos = [DEFAULT_CONFIG_PARAMS]
+            self._non_max_batch_size_param_combos = [DEFAULT_CONFIG_PARAMS]
         else:
-            model_config_params = self._base_model.model_config_parameters()
+            model_config_params = copy(
+                self._base_model.model_config_parameters())
             if model_config_params:
-                param_combos = GeneratorUtils.generate_combinations(
+                self._max_batch_sizes = model_config_params.pop(
+                    "max_batch_size", None)
+                self._non_max_batch_size_param_combos = GeneratorUtils.generate_combinations(
                     model_config_params)
             else:
                 if self._search_disabled:
-                    param_combos = self._generate_search_disabled_param_combos()
+                    self._non_max_batch_size_param_combos = self._generate_search_disabled_param_combos(
+                    )
                 else:
                     raise TritonModelAnalyzerException(
                         f"Automatic search not supported in ManualModelConfigGenerator"
                     )
-
-        return param_combos
 
     def _generate_search_disabled_param_combos(self):
         """ Return the configs when we want to search but searching is disabled """

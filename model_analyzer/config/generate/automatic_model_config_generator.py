@@ -16,6 +16,7 @@ from .base_model_config_generator import BaseModelConfigGenerator
 
 from model_analyzer.constants import LOGGER_NAME, DEFAULT_CONFIG_PARAMS
 import logging
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -24,7 +25,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in automatic search mode """
 
     def __init__(self, config, model, client, variant_name_manager,
-                 default_only):
+                 default_only, early_exit_enable):
         """
         Parameters
         ----------
@@ -35,9 +36,11 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         default_only: Bool 
             If true, only the default config will be generated
             If false, the default config will NOT be generated
+        early_exit_enable: Bool
+            If true, the generator can early exit if throughput plateaus
         """
         super().__init__(config, model, client, variant_name_manager,
-                         default_only)
+                         default_only, early_exit_enable)
 
         self._max_instance_count = config.run_config_search_max_instance_count
         self._min_instance_count = config.run_config_search_min_instance_count
@@ -59,6 +62,11 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         self._curr_max_batch_size_throughputs = []
 
         self._reset_max_batch_size()
+
+        if not self._early_exit_enable:
+            raise TritonModelAnalyzerException(
+                "Early exit disable not supported in automatic model config generator"
+            )
 
     def _done_walking(self):
         return self._done_walking_max_batch_size() \

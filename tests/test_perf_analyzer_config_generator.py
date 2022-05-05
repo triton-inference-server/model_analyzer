@@ -75,7 +75,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                                            MagicMock(),
                                            MagicMock(),
                                            MagicMock(),
-                                           early_exit=False)
+                                           early_exit_enable=False)
 
         pacg.set_last_results([measurement1, measurement2, measurement3])
         self.assertEqual(pacg._last_results[0], measurement2)

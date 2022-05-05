@@ -26,7 +26,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     """ Base class for generating model configs """
 
     def __init__(self, config, model, client, variant_name_manager,
-                 default_only):
+                 default_only, early_exit_enable):
         """
         Parameters
         ----------
@@ -37,6 +37,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         default_only: Bool 
             If true, only the default config will be generated
             If false, the default config will NOT be generated
+        early_exit_enable: Bool
+            If true, the generator can early exit if throughput plateaus
         """
         self._client = client
         self._variant_name_manager = variant_name_manager
@@ -46,6 +48,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._remote_mode = config.triton_launch_mode == 'remote'
         self._cpu_only = model.cpu_only()
         self._default_only = default_only
+        self._early_exit_enable = early_exit_enable
         self._model_name_index = 0
         self._generator_started = False
         self._last_results = []

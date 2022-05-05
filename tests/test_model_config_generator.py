@@ -15,6 +15,7 @@
 from model_analyzer.config.generate.generator_factory import ConfigGeneratorFactory
 from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.cli.cli import CLI
 from .common import test_result_collector as trc
@@ -25,7 +26,7 @@ from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
 
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 
@@ -556,10 +557,146 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         }}, existing_dict)
         self.assertEqual(existing_dict, expected_dict)
 
+    def test_early_exit_off_automatic_asserts(self):
+        """
+        Test that passing early_exit=False for automatic search raises an assert
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                - my-model
+            """)
+
+        expected_configs = []
+        # yapf: enable
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._run_and_test_model_config_generator(yaml_content,
+                                                      expected_configs,
+                                                      early_exit_enable=False)
+
+    def test_early_exit_on_automatic(self):
+        """
+        Test that automatic mode will early exit max_batch_size when throughput plateaus
+        """
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                - my-model
+            run_config_search_max_instance_count: 3
+            run_config_search_max_model_batch_size: 8
+            """)
+
+        expected_configs = [
+            {'max_batch_size': 1, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 2, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 4, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 1, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 2, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 1, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 2, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 4, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+        ]
+
+        with patch.object(TestModelConfigGenerator,
+                          "_get_next_fake_throughput") as mock_method:
+            mock_method.side_effect = [
+                1, 2, 4, 8,  # 1 instance
+                1, 1,        # 2 instances. Yes backoff
+                1, 2, 4, 8   # 3 instances
+            ]
+            self._run_and_test_model_config_generator(yaml_content,
+                                                      expected_configs,
+                                                      early_exit_enable=True)
+        # yapf: enable
+
+    def test_early_exit_off_manual(self):
+        """
+        Test that manual mode will not early exit despite throughput plateauing despite because early_exit_enable=False
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                test_model:
+                    model_config_parameters:
+                        max_batch_size: [1,2,4,8]
+                        instance_group:
+                        -
+                            kind: KIND_GPU
+                            count: [1,2]                        
+            """)
+
+        expected_configs = [
+            {'max_batch_size': 1, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 2, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 4, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 1, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 2, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 4, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+        ]
+        # yapf: enable
+
+        with patch.object(TestModelConfigGenerator,
+                          "_get_next_fake_throughput") as mock_method:
+            mock_method.return_value = 1
+            self._run_and_test_model_config_generator(yaml_content,
+                                                      expected_configs,
+                                                      early_exit_enable=False)
+
+    def test_early_exit_on_manual(self):
+        """
+        Test that manual mode will early exit when throughput plateaus when early_exit_enable=True
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                test_model:
+                    model_config_parameters:
+                        max_batch_size: [1,2,3,4]
+                        instance_group:
+                        -
+                            kind: KIND_GPU
+                            count: [1,2,3]                        
+            """)
+
+        expected_configs = [
+            {'max_batch_size': 1, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 2, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 3, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 4, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 1, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 2, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 1, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 2, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 3, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'max_batch_size': 4, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+        ]
+
+        with patch.object(TestModelConfigGenerator,
+                          "_get_next_fake_throughput") as mock_method:
+            mock_method.side_effect = [
+                1, 2, 4, 8,  # 1 instance
+                1, 1,        # 2 instances. Yes backoff
+                1, 2, 4, 8   # 3 instances
+            ]
+            self._run_and_test_model_config_generator(yaml_content,
+                                                      expected_configs,
+                                                      early_exit_enable=True)
+        # yapf: enable
+
     def _run_and_test_model_config_generator(self,
                                              yaml_content,
                                              expected_configs,
-                                             protobuf="max_batch_size: 8"):
+                                             protobuf="max_batch_size: 8",
+                                             default_only=False,
+                                             early_exit_enable=True):
         ''' 
         Main function that creates a config from the yaml_content, runs it through
         ModelConfigGenerator, and compares the resulting model_configs vs the expected_configs
@@ -581,8 +718,12 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         fake_client.get_model_config = lambda name, retry_count: {'name': name}
 
         mcg = ConfigGeneratorFactory.create_model_config_generator(
-            config, config.profile_models[0], fake_client,
-            ModelVariantNameManager())
+            config,
+            config.profile_models[0],
+            fake_client,
+            ModelVariantNameManager(),
+            default_only=default_only,
+            early_exit_enable=early_exit_enable)
         mcg_generator = mcg.next_config()
         model_configs = []
         while not mcg.is_done():
@@ -608,7 +749,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         self.mock_model_config.stop()
 
     def _get_next_fake_results(self):
-        self._fake_throughput += 1
+        throughput = self._get_next_fake_throughput()
 
         measurement = construct_run_config_measurement(
             model_name=MagicMock(),
@@ -616,10 +757,14 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=MagicMock(),
             non_gpu_metric_values=[{
-                "perf_throughput": self._fake_throughput
+                "perf_throughput": throughput
             }])
 
         return [measurement]
+
+    def _get_next_fake_throughput(self):
+        self._fake_throughput += 1
+        return self._fake_throughput
 
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
