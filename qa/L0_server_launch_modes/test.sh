@@ -154,7 +154,7 @@ function _run_single_config() {
     elif [ "$LAUNCH_MODE" == "c_api" ]; then
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
     elif [ "$LAUNCH_MODE" == "docker" ]; then
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --triton-docker-image=${TRITON_DOCKER_IMAGE}"
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_SERVER_CONTAINER_IMAGE_NAME"
     else
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
     fi
