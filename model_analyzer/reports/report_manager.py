@@ -381,12 +381,17 @@ class ReportManager:
                                    [caption_memory_latency],
                                    image_width=66)
 
-        summary.add_paragraph(
+        caption_results_table = (
             "<div style = \"display:block; clear:both; page-break-after:always;\"></div>"
             "The following table summarizes each configuration at the measurement"
-            " that optimizes the desired metrics under the given constraints."
-            " Per model values are parenthetical.")
+            " that optimizes the desired metrics under the given constraints.")
+
+        if self._result_manager._analyzing_models_concurrently():
+            caption_results_table = caption_results_table + " Per model values are parenthetical."
+
+        summary.add_paragraph(caption_results_table)
         summary.add_table(table=table)
+
         return summary
 
     def _build_summary_table(self,
@@ -469,8 +474,7 @@ class ReportManager:
             for best_config in best_configs
         ]
 
-        config_names_str = f"{' and '.join(config_names)}" if len(config_names) > 1 else \
-                           f"{config_names[0]}"
+        config_names_str = f"{' and '.join(config_names)}"
 
         if len(config_names) > 1:
             return f"{num_configurations} configurations, the combination of {config_names_str}"
