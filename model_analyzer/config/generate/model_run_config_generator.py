@@ -52,9 +52,7 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
         self._model_parameters = model.parameters()
         self._triton_server_env = model.triton_server_environment()
 
-        # FIXME
-        self._pacg_early_exit_enable = True
-        self._mcg_early_exit_enable = True
+        self._determine_early_exit_enables(config, model)
 
         # This prevents an error when is_done() is checked befored the first next_config() call
         self._pacg = PerfAnalyzerConfigGenerator(self._config, self._model_name,
@@ -115,3 +113,11 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
                                     perf_analyzer_config)
 
         return run_config
+
+    def _determine_early_exit_enables(self, config, model):
+        early_exit_enable = config.early_exit_enable
+        concurrency_specified = model.parameters()['concurrency']
+        config_parameters_exist = model.model_config_parameters()
+
+        self._pacg_early_exit_enable = early_exit_enable or not concurrency_specified
+        self._mcg_early_exit_enable = early_exit_enable or not config_parameters_exist
