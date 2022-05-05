@@ -484,7 +484,7 @@ class ReportManager:
             self._find_default_configs_throughput(report_key))
         best_throughput = round(
             best_run_config_measurement.get_non_gpu_metric_value(
-                'perf_throughput', aggregation_func=sum))
+                'perf_throughput'))
         throughput_gain = round(best_throughput / default_throughput *
                                 100) if default_throughput else None
 
@@ -508,7 +508,7 @@ class ReportManager:
             for run_config_measurement in run_config_result._measurements:
                 if 'default' in run_config_measurement.model_variants_name():
                     return run_config_measurement.get_non_gpu_metric_value(
-                        'perf_throughput', aggregation_func=sum)
+                        'perf_throughput')
 
         return 0
 
@@ -619,16 +619,13 @@ class ReportManager:
         ])
         perf_latency_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
-            non_gpu_metric='perf_latency_p99',
-            aggregation_func=mean)
+            non_gpu_metric='perf_latency_p99')
         perf_throughput_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
-            non_gpu_metric='perf_throughput',
-            aggregation_func=sum)
+            non_gpu_metric='perf_throughput')
         cpu_used_ram_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
-            non_gpu_metric='cpu_used_ram',
-            aggregation_func=sum)
+            non_gpu_metric='cpu_used_ram')
 
         row = [
             model_config_names, max_batch_sizes,
@@ -652,16 +649,13 @@ class ReportManager:
             [model_config.get_field('name') for model_config in model_configs])
         perf_latency_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
-            non_gpu_metric='perf_latency_p99',
-            aggregation_func=mean)
+            non_gpu_metric='perf_latency_p99')
         perf_throughput_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
-            non_gpu_metric='perf_throughput',
-            aggregation_func=sum)
+            non_gpu_metric='perf_throughput')
         cpu_used_ram_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
-            non_gpu_metric='cpu_used_ram',
-            aggregation_func=sum)
+            non_gpu_metric='cpu_used_ram')
         row = [
             model_config_names, max_batch_sizes_string,
             model_configs[0].dynamic_batching_string(), instance_group_string,
@@ -681,7 +675,7 @@ class ReportManager:
             return f"{values[0]}"
 
     def _create_non_gpu_metric_string(self, run_config_measurement,
-                                      non_gpu_metric, aggregation_func):
+                                      non_gpu_metric):
         non_gpu_metrics = run_config_measurement.get_non_gpu_metric(
             non_gpu_metric)
 
@@ -694,7 +688,7 @@ class ReportManager:
             ])
 
             return (
-                f"<strong>{round(run_config_measurement.get_non_gpu_metric_value(non_gpu_metric, aggregation_func=aggregation_func), 1)}</strong> "
+                f"<strong>{round(run_config_measurement.get_non_gpu_metric_value(non_gpu_metric), 1)}</strong> "
                 f"({non_gpu_metric_config_string})")
         else:
             return f"{non_gpu_metrics[0].value()}"

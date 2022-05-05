@@ -87,10 +87,9 @@ class SimplePlot:
                     run_config_measurement.get_gpu_metric_value(
                         tag=self._x_axis))
             else:
-                aggregation_func = sum if self._x_axis == 'perf_throughput' else mean
                 self._data[label]['x_data'].append(
                     run_config_measurement.get_non_gpu_metric_value(
-                        tag=self._x_axis, aggregation_func=aggregation_func))
+                        tag=self._x_axis))
 
         if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
             self._data[label]['y_data'].append(
@@ -102,10 +101,9 @@ class SimplePlot:
                     run_config_measurement.get_gpu_metric_value(
                         tag=self._y_axis))
             else:
-                aggregation_func = sum if self._y_axis == 'perf_throughput' else mean
                 self._data[label]['y_data'].append(
                     run_config_measurement.get_non_gpu_metric_value(
-                        tag=self._y_axis, aggregation_func=aggregation_func))
+                        tag=self._y_axis))
 
     def clear(self):
         """

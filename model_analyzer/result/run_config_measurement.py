@@ -252,10 +252,7 @@ class RunConfigMeasurement:
                 self._model_config_measurements)
         ]
 
-    def get_non_gpu_metric_value(self,
-                                 tag,
-                                 default_value=0,
-                                 aggregation_func=mean):
+    def get_non_gpu_metric_value(self, tag, default_value=0):
         """
         Parameters
         ----------
@@ -264,8 +261,6 @@ class RunConfigMeasurement:
             to a particular non-GPU metric
         default_value : any
             Value to return if tag is not found
-        aggregation_func : function
-            Function to apply to the list
 
         Returns
         -------
@@ -274,7 +269,7 @@ class RunConfigMeasurement:
             corresponding to the tag, default_value if tag not found,
             based on the supplied aggregation function (usually mean or sum).
         """
-        return aggregation_func([
+        return RecordType.get_all_record_types()[tag].value_function()([
             default_value if m is None else m.value()
             for m in self.get_non_gpu_metric(tag)
         ])
@@ -298,10 +293,7 @@ class RunConfigMeasurement:
         return default_value if self.get_gpu_metric(
             tag) is None else self.get_gpu_metric(tag).value()
 
-    def get_weighted_non_gpu_metric_value(self,
-                                          tag,
-                                          default_value=0,
-                                          aggregation_func=mean):
+    def get_weighted_non_gpu_metric_value(self, tag, default_value=0):
         """
         Parameters
         ----------
@@ -325,7 +317,8 @@ class RunConfigMeasurement:
             for index, metric in enumerate(self.get_non_gpu_metric(tag))
         ]
 
-        return aggregation_func(weighted_non_gpu_metrics)
+        return RecordType.get_all_record_types()[tag].value_function()(
+            weighted_non_gpu_metrics)
 
     def gpus_used(self):
         """

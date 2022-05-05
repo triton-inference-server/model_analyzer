@@ -39,6 +39,18 @@ class PerfThroughput(Record):
         super().__init__(value, timestamp)
 
     @staticmethod
+    def value_function():
+        """
+        The function that is used to combine records from multiple
+        models
+
+        Returns
+        -------
+        function that is used to combine records
+        """
+        return sum
+
+    @staticmethod
     def header(aggregation_tag=False):
         """
         Parameters

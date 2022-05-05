@@ -14,6 +14,7 @@
 
 import os
 from abc import ABCMeta, abstractmethod
+from statistics import mean
 import importlib
 
 from model_analyzer.model_analyzer_exceptions \
@@ -120,6 +121,18 @@ class Record(metaclass=RecordType):
         """
 
         return (lambda records: max(records, key=lambda r: r.value()))
+
+    @staticmethod
+    def value_function():
+        """
+        The function that is used to combine records from multiple
+        models
+
+        Returns
+        -------
+        function that is used to combine records
+        """
+        return mean
 
     @staticmethod
     @abstractmethod
