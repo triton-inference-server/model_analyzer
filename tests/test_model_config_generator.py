@@ -717,36 +717,38 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         fake_client = MagicMock()
         fake_client.get_model_config = lambda name, retry_count: {'name': name}
 
-        mcg = ConfigGeneratorFactory.create_model_config_generator(
-            config,
-            config.profile_models[0],
-            fake_client,
-            ModelVariantNameManager(),
-            default_only=default_only,
-            early_exit_enable=early_exit_enable)
-        mcg_generator = mcg.next_config()
-        model_configs = []
-        while not mcg.is_done():
-            model_config = next(mcg_generator)
-            mcg.set_last_results(self._get_next_fake_results())
-            model_config_dict = model_config.get_config()
-            model_configs.append(model_config_dict)
+        try:
+            mcg = ConfigGeneratorFactory.create_model_config_generator(
+                config,
+                config.profile_models[0],
+                fake_client,
+                ModelVariantNameManager(),
+                default_only=default_only,
+                early_exit_enable=early_exit_enable)
+            mcg_generator = mcg.next_config()
+            model_configs = []
+            while not mcg.is_done():
+                model_config = next(mcg_generator)
+                mcg.set_last_results(self._get_next_fake_results())
+                model_config_dict = model_config.get_config()
+                model_configs.append(model_config_dict)
 
-        self.assertEqual(len(expected_configs), len(model_configs))
+            self.assertEqual(len(expected_configs), len(model_configs))
 
-        # Rip out the model name (so the order doesn't have to exactly match),
-        # but verify that it exists and is not none
-        #
-        for config in model_configs:
-            name = config.pop('name', None)
-            self.assertIsNotNone(name)
+            # Rip out the model name (so the order doesn't have to exactly match),
+            # but verify that it exists and is not none
+            #
+            for config in model_configs:
+                name = config.pop('name', None)
+                self.assertIsNotNone(name)
 
-        # Confirm the configs match
-        #
-        for config in expected_configs:
-            self.assertIn(config, model_configs)
+            # Confirm the configs match
+            #
+            for config in expected_configs:
+                self.assertIn(config, model_configs)
 
-        self.mock_model_config.stop()
+        finally:
+            self.mock_model_config.stop()
 
     def _get_next_fake_results(self):
         throughput = self._get_next_fake_throughput()
