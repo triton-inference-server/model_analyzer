@@ -269,6 +269,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 "<strong>test_model_config_10</strong>: 1/GPU model instances with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>")
 
+        self.assertEqual(len(expected_summary_sentence), len(summary_sentence))
         self.assertEqual(expected_summary_sentence, summary_sentence)
 
         # Get throughput index and make sure results are sorted
