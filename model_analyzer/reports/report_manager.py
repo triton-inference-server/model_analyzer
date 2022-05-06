@@ -20,7 +20,6 @@ from model_analyzer.result.result_table import ResultTable
 from .report_factory import ReportFactory
 
 import os
-from statistics import mean
 from collections import defaultdict
 import logging
 
@@ -512,14 +511,6 @@ class ReportManager:
 
     def _create_summary_max_batch_size_phrase(self, model_config):
         return f"max batch size of {model_config.max_batch_size()}"
-
-    def _create_summary_dynamic_batching_phrase(self, best_run_config):
-        # Dynamic batching is either on/off for all model configs in a run config
-        dynamic_batching_str = best_run_config[0].dynamic_batching_string()
-        assert dynamic_batching_str == "Disabled" or dynamic_batching_str == "Enabled", "dynamic batching unknown"
-
-        return "dynamic batching disabled" if dynamic_batching_str == "Disabled" \
-        else "dynamic batching enabled"
 
     def _create_summary_instance_group_phrase(self, model_config):
         return f"{model_config.instance_group_string()} model instances"
