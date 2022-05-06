@@ -125,14 +125,13 @@ class Record(metaclass=RecordType):
     @staticmethod
     def value_function():
         """
-        The function that is used to combine records from multiple
-        models
+        Returns the average value of the records
 
         Returns
         -------
-        function that is used to combine records
+        Average value of the records
         """
-        return mean
+        return (lambda records: mean(records))
 
     @staticmethod
     @abstractmethod

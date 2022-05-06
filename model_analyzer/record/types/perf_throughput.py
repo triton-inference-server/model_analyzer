@@ -41,14 +41,13 @@ class PerfThroughput(Record):
     @staticmethod
     def value_function():
         """
-        The function that is used to combine records from multiple
-        models
+        Returns the total value of all the records
 
         Returns
         -------
-        function that is used to combine records
+        Total value of all the records
         """
-        return sum
+        return (lambda records: sum(records))
 
     @staticmethod
     def header(aggregation_tag=False):
