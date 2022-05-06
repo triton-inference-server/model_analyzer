@@ -38,9 +38,8 @@ from model_analyzer.config.input.config_defaults import \
 
 class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
-    _perf_throughput = 1
-
-    def setUp(self):
+    def __init__(self, methodname):
+        super().__init__(methodname)
         self._perf_throughput = 1
 
     def test_set_last_results(self):
