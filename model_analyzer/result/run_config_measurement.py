@@ -264,11 +264,12 @@ class RunConfigMeasurement:
 
         Returns
         -------
-        list of Records
-            Average of the values of the non-GPU metric Records 
-            corresponding to the tag, default_value if tag not found.
+        Float
+            Compuation of the values of the non-GPU metric Records 
+            corresponding to the tag, default_value if tag not found,
+            based on the supplied aggregation function (usually mean or sum).
         """
-        return mean([
+        return RecordType.get_all_record_types()[tag].value_function()([
             default_value if m is None else m.value()
             for m in self.get_non_gpu_metric(tag)
         ])
@@ -311,12 +312,13 @@ class RunConfigMeasurement:
         assert len(self._model_config_weights) == len(
             self._model_config_measurements)
 
-        weighted_sum = 0
-        for index, metric in enumerate(self.get_non_gpu_metric(tag)):
-            weighted_sum += default_value if metric is None else metric.value(
-            ) * self._model_config_weights[index]
+        weighted_non_gpu_metrics = [
+            metric.value() * self._model_config_weights[index]
+            for index, metric in enumerate(self.get_non_gpu_metric(tag))
+        ]
 
-        return weighted_sum
+        return RecordType.get_all_record_types()[tag].value_function()(
+            weighted_non_gpu_metrics)
 
     def gpus_used(self):
         """

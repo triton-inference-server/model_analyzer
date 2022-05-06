@@ -14,6 +14,7 @@
 
 import os
 from abc import ABCMeta, abstractmethod
+from statistics import mean
 import importlib
 
 from model_analyzer.model_analyzer_exceptions \
@@ -120,6 +121,17 @@ class Record(metaclass=RecordType):
         """
 
         return (lambda records: max(records, key=lambda r: r.value()))
+
+    @staticmethod
+    def value_function():
+        """
+        Returns the average value from a list
+
+        Returns
+        -------
+        Average value of the list
+        """
+        return (lambda values: mean(values))
 
     @staticmethod
     @abstractmethod

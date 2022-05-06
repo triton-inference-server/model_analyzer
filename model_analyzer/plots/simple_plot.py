@@ -76,7 +76,6 @@ class SimplePlot:
         if label not in self._data:
             self._data[label] = defaultdict(list)
 
-        # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         if self._x_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
             self._data[label]['x_data'].append(
                 run_config_measurement.model_specific_pa_params()[0][
@@ -91,7 +90,6 @@ class SimplePlot:
                     run_config_measurement.get_non_gpu_metric_value(
                         tag=self._x_axis))
 
-        # TODO-TMA-568: This needs to be updated because there will be multiple model configs
         if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
             self._data[label]['y_data'].append(
                 run_config_measurement.model_specific_pa_params()[0][

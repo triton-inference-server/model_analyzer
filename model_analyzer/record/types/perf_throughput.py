@@ -39,6 +39,17 @@ class PerfThroughput(Record):
         super().__init__(value, timestamp)
 
     @staticmethod
+    def value_function():
+        """
+        Returns the total value from a list
+
+        Returns
+        -------
+        Total value of the list
+        """
+        return (lambda values: sum(values))
+
+    @staticmethod
     def header(aggregation_tag=False):
         """
         Parameters

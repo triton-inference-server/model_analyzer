@@ -141,7 +141,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         self.assertEqual(
             self.rcm0.get_non_gpu_metric_value("perf_throughput"),
-            mean([
+            sum([
                 self.rcm0_non_gpu_metric_values[0]['perf_throughput'],
                 self.rcm0_non_gpu_metric_values[1]['perf_throughput']
             ]))
@@ -157,15 +157,18 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         Test that the non-gpu weighted metric value is correct
         """
-        weighted_metric_value = (
+        sum_weighted_metric_value = (
             (self.rcm0_non_gpu_metric_values[0]['perf_latency_p99'] *
              self.weights[0]) +
             (self.rcm0_non_gpu_metric_values[1]['perf_latency_p99'] *
              self.weights[1])) / sum(self.weights)
 
+        mean_weighted_metric_value = sum_weighted_metric_value / len(
+            self.rcm0_weighted_non_gpu_metric_values)
+
         self.assertEqual(
             self.rcm0.get_weighted_non_gpu_metric_value("perf_latency_p99"),
-            weighted_metric_value)
+            mean_weighted_metric_value)
 
     def test_model_specific_pa_params(self):
         """
