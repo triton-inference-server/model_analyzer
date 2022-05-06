@@ -41,13 +41,13 @@ class PerfThroughput(Record):
     @staticmethod
     def value_function():
         """
-        Returns the total value of all the records
+        Returns the total value from a list
 
         Returns
         -------
-        Total value of all the records
+        Total value of the list
         """
-        return (lambda records: sum(records))
+        return (lambda values: sum(values))
 
     @staticmethod
     def header(aggregation_tag=False):

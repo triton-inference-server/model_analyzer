@@ -151,6 +151,16 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
             metric2 = record_type(value=12)
             self.assertEqual(metric1, metric2)
 
+    def test_value_function(self):
+        avg_value = RecordType.get_all_record_types(
+        )['perf_latency_p99'].value_function()([10, 50, 100, 40])
+
+        total_value = RecordType.get_all_record_types(
+        )['perf_throughput'].value_function()([10, 50, 100, 40])
+
+        self.assertEqual(avg_value, 50)
+        self.assertEqual(total_value, 200)
+
 
 if __name__ == "__main__":
     unittest.main()

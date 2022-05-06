@@ -125,13 +125,13 @@ class Record(metaclass=RecordType):
     @staticmethod
     def value_function():
         """
-        Returns the average value of the records
+        Returns the average value from a list
 
         Returns
         -------
-        Average value of the records
+        Average value of the list
         """
-        return (lambda records: mean(records))
+        return (lambda values: mean(values))
 
     @staticmethod
     @abstractmethod
