@@ -588,14 +588,21 @@ class ReportManager:
             for model_run_config in run_config.model_run_configs()
         ])
 
+        dynamic_batching_string = self._create_summary_string([
+            model_run_config.model_config().dynamic_batching_string()
+            for model_run_config in run_config.model_run_configs()
+        ])
+
         max_batch_sizes = ', '.join([
             str(model_run_config.model_config().max_batch_size())
             for model_run_config in run_config.model_run_configs()
         ])
+
         instance_group_strings = ', '.join([
             model_run_config.model_config().instance_group_string()
             for model_run_config in run_config.model_run_configs()
         ])
+
         perf_latency_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
             non_gpu_metric='perf_latency_p99')
@@ -607,9 +614,7 @@ class ReportManager:
             non_gpu_metric='cpu_used_ram')
 
         row = [
-            model_config_names, max_batch_sizes,
-            run_config.model_run_configs()
-            [0].model_config().dynamic_batching_string(),
+            model_config_names, max_batch_sizes, dynamic_batching_string,
             instance_group_strings, perf_latency_string, perf_throughput_string,
             cpu_used_ram_string
         ]
@@ -617,6 +622,11 @@ class ReportManager:
         return row
 
     def _create_summary_row(self, run_config, run_config_measurement):
+        dynamic_batching_string = self._create_summary_string([
+            model_run_config.model_config().dynamic_batching_string()
+            for model_run_config in run_config.model_run_configs()
+        ])
+
         instance_group_string = self._create_summary_string([
             model_run_config.model_config().instance_group_string()
             for model_run_config in run_config.model_run_configs()
@@ -643,10 +653,9 @@ class ReportManager:
             non_gpu_metric='cpu_used_ram')
 
         row = [
-            model_config_names, max_batch_sizes_string,
-            run_config.model_run_configs()
-            [0].model_config().dynamic_batching_string(), instance_group_string,
-            perf_latency_string, perf_throughput_string, cpu_used_ram_string,
+            model_config_names, max_batch_sizes_string, dynamic_batching_string,
+            instance_group_string, perf_latency_string, perf_throughput_string,
+            cpu_used_ram_string,
             int(run_config_measurement.get_gpu_metric_value('gpu_used_memory')),
             round(
                 run_config_measurement.get_gpu_metric_value('gpu_utilization'),
