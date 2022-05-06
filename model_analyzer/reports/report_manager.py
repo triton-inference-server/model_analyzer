@@ -484,11 +484,15 @@ class ReportManager:
             f"throughput: <strong>{best_throughput} infer/sec</strong>.<br><br>"
         )
 
-        if throughput_gain is not None:
+        if throughput_gain is not None and throughput_gain != 0:
             throughput_phrase = (
                 throughput_phrase +
                 f"This is a <strong>{throughput_gain}% gain</strong> over the "
                 f"default configuration ({default_throughput} infer/sec)")
+        else:
+            throughput_phrase = (
+                throughput_phrase +
+                "Which provides no gain over the default configuration")
 
         return throughput_phrase
 
