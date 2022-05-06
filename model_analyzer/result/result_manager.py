@@ -312,7 +312,8 @@ class ResultManager:
         return bool(
             results.get_model_measurements_dict(
                 models_name=self._concurrent_analysis_model_name,
-                suppress_warning=True))
+                suppress_warning=True) and
+            len(self._config.analysis_models) > 1)
 
     def _setup_for_concurrent_analysis(self):
         self._analysis_model_names = [self._concurrent_analysis_model_name]

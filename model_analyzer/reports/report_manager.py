@@ -474,8 +474,9 @@ class ReportManager:
         best_throughput = round(
             best_run_config_measurement.get_non_gpu_metric_value(
                 'perf_throughput'))
-        throughput_gain = round(best_throughput / default_throughput *
-                                100) if default_throughput else None
+        throughput_gain = round(
+            (best_throughput - default_throughput) / default_throughput *
+            100) if default_throughput else None
 
         throughput_phrase = "total " if multi_model else ""
         throughput_phrase = (
@@ -483,7 +484,7 @@ class ReportManager:
             f"throughput: <strong>{best_throughput} infer/sec</strong>.<br><br>"
         )
 
-        if throughput_gain:
+        if throughput_gain is not None:
             throughput_phrase = (
                 throughput_phrase +
                 f"This is a <strong>{throughput_gain}% gain</strong> over the "
@@ -494,10 +495,13 @@ class ReportManager:
     def _find_default_configs_throughput(self, report_key):
         for run_config_result in self._result_manager._per_model_sorted_results[
                 report_key]._sorted_results:
-            for run_config_measurement in run_config_result._measurements:
-                if 'default' in run_config_measurement.model_variants_name():
-                    return run_config_measurement.get_non_gpu_metric_value(
-                        'perf_throughput')
+            run_config_measurements = run_config_result.passing_measurements()
+            if run_config_measurements and 'default' in run_config_measurements[
+                    0].model_variants_name():
+                return max([
+                    rcm.get_non_gpu_metric_value('perf_throughput')
+                    for rcm in run_config_measurements
+                ])
 
         return 0
 

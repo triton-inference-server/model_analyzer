@@ -256,7 +256,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             expected_summary_sentence = (
                 "In 10 measurements across 3 configurations, "
                 "<strong>test_model_config_10</strong> provides the best throughput: <strong>200 infer/sec</strong>.<br><br>"
-                "This is a <strong>200% gain</strong> over the default configuration "
+                "This is a <strong>100% gain</strong> over the default configuration "
                 "(100 infer/sec), under the given constraints.<UL><LI> "
                 "<strong>test_model_config_10</strong>: 1/GPU model instances with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>")
@@ -264,7 +264,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             expected_summary_sentence = (
                 "In 10 measurements across 3 configurations, "
                 "<strong>test_model_config_10</strong> provides the best throughput: <strong>200 infer/sec</strong>.<br><br>"
-                "This is a <strong>200% gain</strong> over the default configuration "
+                "This is a <strong>100% gain</strong> over the default configuration "
                 "(100 infer/sec), under the given constraints on GPU(s) TITAN RTX.<UL><LI> "
                 "<strong>test_model_config_10</strong>: 1/GPU model instances with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>")
