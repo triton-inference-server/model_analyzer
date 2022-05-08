@@ -26,7 +26,7 @@ default, as all the dependencies will be available. First, clone the Model
 Analyzer's git repository, then build the docker image.
 
 ```
-$ git clone https://github.com/triton-inference-server/model_analyzer.git
+$ git clone https://github.com/triton-inference-server/model_analyzer.git -b <rXX.YY>
 
 $ cd ./model_analyzer
 
@@ -45,6 +45,20 @@ $ docker run -it --rm --gpus all \
       --net=host model-analyzer
 
 root@hostname:/opt/triton-model-analyzer# 
+```
+
+If you want to build Model Analyzer on the `main` branch, you need to also build the Triton
+SDK container. To build the SDK container you can refer to the
+[Build SDK Image](https://github.com/triton-inference-server/server/blob/main/docs/test.md#build-sdk-image)
+instructions. After you have built the SDK container, you can build the Model
+Analyzer's Docker image with:
+
+```
+$ git clone https://github.com/triton-inference-server/model_analyzer.git -b main
+
+$ cd ./model_analyzer
+
+$ docker build -t model-analyzer --build-arg TRITONSDK_BASE_IMAGE=<name of the built SDK image> .
 ```
 
 ## Triton SDK Container

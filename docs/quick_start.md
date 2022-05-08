@@ -22,7 +22,7 @@ The steps below will guide you through using model analyzer to analyze a simple 
 
 1. Clone the repository and build the docker:
 ```
-$ git clone https://github.com/triton-inference-server/model_analyzer.git
+$ git clone https://github.com/triton-inference-server/model_analyzer.git -b r22.04
 
 $ cd ./model_analyzer
 
