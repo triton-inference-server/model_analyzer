@@ -54,12 +54,6 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
         self._sweep_max_batch_size_disabled = self._determine_sweep_max_batch_size_disabled(
         )
-        self._max_batch_size_warning_printed = False
-
-        # Contains the max throughput from each provided list of measurements
-        # since the last time we stepped max_batch_size
-        #
-        self._curr_max_batch_size_throughputs = []
 
         self._reset_max_batch_size()
 
@@ -93,12 +87,9 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             return True
 
         if not self._last_results_increased_throughput():
-            if not self._max_batch_size_warning_printed:
-                logger.info(
-                    "No longer increasing max_batch_size because throughput has plateaued"
-                )
-                self._max_batch_size_warning_printed = True
+            self._print_max_batch_size_plateau_warning()
             return True
+
         return False
 
     def _done_walking_instance_count(self):
@@ -107,32 +98,13 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     def _max_batch_size_limit_reached(self):
         return (self._curr_max_batch_size * 2) > self._max_model_batch_size
 
-    def _last_results_increased_throughput(self):
-        max_throughput = self._get_last_results_max_throughput()
-        max_throughput_increased = all(
-            max_throughput is not None and t is not None and max_throughput > t
-            for t in self._curr_max_batch_size_throughputs)
-
-        return max_throughput_increased
-
     def _reset_max_batch_size(self):
+        super()._reset_max_batch_size()
+
         if self._sweep_max_batch_size_disabled:
             self._curr_max_batch_size = self._max_model_batch_size
         else:
             self._curr_max_batch_size = self._min_model_batch_size
-        self._curr_max_batch_size_throughputs = []
-        self._max_batch_size_warning_printed = False
-
-    def _get_last_results_max_throughput(self):
-        throughputs = [
-            m.get_non_gpu_metric_value('perf_throughput')
-            for m in self._last_results
-            if m is not None
-        ]
-        if not throughputs:
-            return None
-        else:
-            return max(throughputs)
 
     def _get_next_model_config(self):
         param_combo = self._get_curr_param_combo()

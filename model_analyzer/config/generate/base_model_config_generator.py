@@ -51,7 +51,12 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._early_exit_enable = early_exit_enable
         self._model_name_index = 0
         self._generator_started = False
+        self._max_batch_size_warning_printed = False
         self._last_results = []
+        # Contains the max throughput from each provided list of measurements
+        # since the last time we stepped max_batch_size
+        #
+        self._curr_max_batch_size_throughputs = []
 
     def is_done(self):
         """ Returns true if this generator is done generating configs """
@@ -93,6 +98,25 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     @abc.abstractmethod
     def _get_next_model_config(self):
         raise NotImplementedError
+
+    def _last_results_increased_throughput(self):
+        max_throughput = self._get_last_results_max_throughput()
+        max_throughput_increased = all(
+            max_throughput is not None and t is not None and max_throughput > t
+            for t in self._curr_max_batch_size_throughputs)
+
+        return max_throughput_increased
+
+    def _get_last_results_max_throughput(self):
+        throughputs = [
+            m.get_non_gpu_metric_value('perf_throughput')
+            for m in self._last_results
+            if m is not None
+        ]
+        if not throughputs:
+            return None
+        else:
+            return max(throughputs)
 
     def _get_model_variant_name(self, param_combo):
         return self._variant_name_manager.get_model_variant_name(
@@ -138,6 +162,18 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         config = ModelConfig.create_from_file(
             f'{self._model_repository}/{self._base_model_name}')
         return config.get_config()
+
+    def _reset_max_batch_size(self):
+        self._max_batch_size_warning_printed = False
+        self._curr_max_batch_size_throughputs = []
+
+    def _print_max_batch_size_plateau_warning(self):
+        if not self._max_batch_size_warning_printed:
+            logger.info(
+                "No longer increasing max_batch_size because throughput has plateaued"
+            )
+            self._max_batch_size_warning_printed = True
+        return True
 
     @staticmethod
     def _apply_value_to_dict(key, value, dict_in):

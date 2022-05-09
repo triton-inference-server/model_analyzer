@@ -50,7 +50,6 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         self._search_disabled = config.run_config_search_disable
         self._curr_config_index = 0
         self._curr_max_batch_size_index = 0
-        self._max_batch_size_warning_printed = False
 
         self._max_batch_sizes = None
         self._non_max_batch_size_param_combos = []
@@ -61,11 +60,6 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         #    _configs[_curr_config_index][_curr_max_batch_size_index]
         #
         self._configs = self._generate_model_configs()
-
-        # Contains the max throughput from each provided list of measurements
-        # since the last time we stepped max_batch_size
-        #
-        self._curr_max_batch_size_throughputs = []
 
     def _done_walking(self):
         return self._done_walking_configs() \
@@ -81,11 +75,7 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
 
         if self._early_exit_enable and not self._last_results_increased_throughput(
         ):
-            if not self._max_batch_size_warning_printed:
-                logger.info(
-                    "No longer increasing max_batch_size because throughput has plateaued"
-                )
-                self._max_batch_size_warning_printed = True
+            self._print_max_batch_size_plateau_warning()
             return True
         return False
 
@@ -97,9 +87,8 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
             self._step_max_batch_size()
 
     def _reset_max_batch_size(self):
+        super()._reset_max_batch_size()
         self._curr_max_batch_size_index = 0
-        self._max_batch_size_warning_printed = False
-        self._curr_max_batch_size_throughputs = []
 
     def _step_config(self):
         self._curr_config_index += 1
@@ -109,26 +98,6 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
 
         last_max_throughput = self._get_last_results_max_throughput()
         self._curr_max_batch_size_throughputs.append(last_max_throughput)
-
-    def _last_results_increased_throughput(self):
-        max_throughput = self._get_last_results_max_throughput()
-        max_throughput_increased = all(
-            max_throughput is not None and t is not None and max_throughput > t
-            for t in self._curr_max_batch_size_throughputs)
-
-        return max_throughput_increased
-
-    # FIXME refactor
-    def _get_last_results_max_throughput(self):
-        throughputs = [
-            m.get_non_gpu_metric_value('perf_throughput')
-            for m in self._last_results
-            if m is not None
-        ]
-        if not throughputs:
-            return None
-        else:
-            return max(throughputs)
 
     def _get_next_model_config(self):
         return self._configs[self._curr_config_index][
