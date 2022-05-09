@@ -34,6 +34,8 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
     def setUp(self):
         self._construct_rcm0()
         self._construct_rcm1()
+        self._construct_rcm2()
+        self._construct_rcm3()
 
     def tearDown(self):
         NotImplemented
@@ -193,6 +195,19 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.assertTrue(self.rcm0.is_better_than(self.rcm1))
         self.assertFalse(self.rcm0 < self.rcm1)
 
+    def test_is_better_than_consistency(self):
+        """
+        Test to ensure measurement comparison is working correctly
+        when the percentage gain is very close
+        """
+        # Throughputs
+        #   RCM2{A/B}: {336,223}   RCM3{A/B}: {270,272}
+        #   RCM2-A is 21.8% better than RCM3-A
+        #   RMC2-B is 19.8% worse than RCM3-B
+        # Therefore, RCM2 is (very slightly) better than RCM3
+        self.assertTrue(self.rcm2.is_better_than(self.rcm3))
+        self.assertFalse(self.rcm3.is_better_than(self.rcm2))
+
     def test_from_dict(self):
         """
         Test to ensure class can be correctly restored from a dictionary
@@ -330,6 +345,116 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.rcm1 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
             gpu_metric_values, self.rcm1_non_gpu_metric_values,
+            metric_objectives, weights)
+
+    def _construct_rcm2(self):
+        model_name = "modelA,modelB"
+        model_config_name = ["modelA_config_1", "modelB_config_2"]
+        model_variants_name = "".join(model_config_name)
+        model_specific_pa_params = [{
+            "batch_size": 3,
+            "concurrency": 3
+        }, {
+            "batch_size": 4,
+            "concurrency": 4
+        }]
+
+        gpu_metric_values = {
+            '0': {
+                "gpu_used_memory": 7000,
+                "gpu_utilization": 40
+            },
+            '1': {
+                "gpu_used_memory": 12000,
+                "gpu_utilization": 30
+            }
+        }
+
+        self.rcm2_non_gpu_metric_values = [
+            {
+                # modelA_config_1
+                "perf_throughput": 336,
+                "perf_latency_p99": 20,
+                "cpu_used_ram": 1000
+            },
+            {
+                # modelB_config_2
+                "perf_throughput": 223,
+                "perf_latency_p99": 30,
+                "cpu_used_ram": 1500
+            }
+        ]
+
+        metric_objectives = [{"perf_throughput": 1}, {"perf_throughput": 1}]
+
+        weights = [1, 1]
+
+        self.rcm2_weighted_non_gpu_metric_values = []
+        for index, non_gpu_metric_values in enumerate(
+                self.rcm2_non_gpu_metric_values):
+            self.rcm2_weighted_non_gpu_metric_values.append({
+                objective: value * self.weights[index] / sum(weights)
+                for (objective, value) in non_gpu_metric_values.items()
+            })
+
+        self.rcm2 = construct_run_config_measurement(
+            model_name, model_config_name, model_specific_pa_params,
+            gpu_metric_values, self.rcm2_non_gpu_metric_values,
+            metric_objectives, weights)
+
+    def _construct_rcm3(self):
+        model_name = "modelA,modelB"
+        model_config_name = ["modelA_config_1", "modelB_config_2"]
+        model_variants_name = "".join(model_config_name)
+        model_specific_pa_params = [{
+            "batch_size": 3,
+            "concurrency": 3
+        }, {
+            "batch_size": 4,
+            "concurrency": 4
+        }]
+
+        gpu_metric_values = {
+            '0': {
+                "gpu_used_memory": 7000,
+                "gpu_utilization": 40
+            },
+            '1': {
+                "gpu_used_memory": 12000,
+                "gpu_utilization": 30
+            }
+        }
+
+        self.rcm3_non_gpu_metric_values = [
+            {
+                # modelA_config_1
+                "perf_throughput": 270,
+                "perf_latency_p99": 20,
+                "cpu_used_ram": 1000
+            },
+            {
+                # modelB_config_2
+                "perf_throughput": 272,
+                "perf_latency_p99": 30,
+                "cpu_used_ram": 1500
+            }
+        ]
+
+        metric_objectives = [{"perf_throughput": 1}, {"perf_throughput": 1}]
+
+        weights = [1, 1]
+
+        self.rcm3_weighted_non_gpu_metric_values = []
+        for index, non_gpu_metric_values in enumerate(
+                self.rcm3_non_gpu_metric_values):
+            self.rcm3_weighted_non_gpu_metric_values.append({
+                objective: value * self.weights[index] / sum(weights)
+                for (objective, value) in non_gpu_metric_values.items()
+            })
+
+        self.rcm3 = construct_run_config_measurement(
+            model_name, model_config_name, model_specific_pa_params,
+            gpu_metric_values, self.rcm3_non_gpu_metric_values,
             metric_objectives, weights)
 
 
