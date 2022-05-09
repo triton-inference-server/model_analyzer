@@ -84,12 +84,13 @@ class MetricsManager:
                 f"Duplicate model names detected: "
                 f"{[model._model_name for model in config.profile_models]}")
         self._first_config_variant = {}
-
         self._config = config
         self._client = client
         self._server = server
         self._result_manager = result_manager
         self._state_manager = state_manager
+
+        self._cpu_warning_printed = False
 
         self._gpu_metrics, self._perf_metrics, self._cpu_metrics = self._categorize_metrics(
             self.metrics, self._config.collect_cpu_metrics)
@@ -567,10 +568,12 @@ class MetricsManager:
             )
         # Warn user about CPU monitor performance issue
         if collect_cpu_metrics_actual:
-            logger.warning("CPU metric(s) are being collected.")
-            logger.warning(
-                "Collecting CPU metric(s) can affect the latency or throughput numbers reported by perf analyzer."
-            )
+            if not self._cpu_warning_printed:
+                self._cpu_warning_printed = True
+                logger.warning("CPU metric(s) are being collected.")
+                logger.warning(
+                    "Collecting CPU metric(s) can affect the latency or throughput numbers reported by perf analyzer."
+                )
 
     @staticmethod
     def get_metric_types(tags):

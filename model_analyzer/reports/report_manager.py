@@ -362,6 +362,7 @@ class ReportManager:
             summary.add_images([throughput_plot], [caption_throughput],
                                image_width=66)
             if self._mode == 'online':
+                # FIXME cpu
                 memory_latency_plot = os.path.join(self._config.export_path,
                                                    'plots', 'simple',
                                                    report_key,
@@ -647,6 +648,7 @@ class ReportManager:
         perf_throughput_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
             non_gpu_metric='perf_throughput')
+        # FIXME cpu case
         cpu_used_ram_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
             non_gpu_metric='cpu_used_ram')
@@ -744,6 +746,7 @@ class ReportManager:
                     measurement.get_non_gpu_metric_value(
                         'perf_server_compute_infer'),
                     measurement.get_non_gpu_metric_value('perf_throughput'),
+                    # FIXME cpu
                     measurement.get_non_gpu_metric_value('cpu_used_ram'),
                     measurement.get_gpu_metric_value('gpu_used_memory'),
                     round(measurement.get_gpu_metric_value('gpu_utilization'),
@@ -764,6 +767,7 @@ class ReportManager:
                     measurement.get_non_gpu_metric_value(
                         'perf_server_compute_infer'),
                     measurement.get_non_gpu_metric_value('perf_throughput'),
+                    # FIXME cpu
                     measurement.get_non_gpu_metric_value('cpu_used_ram')
                 ]
                 detailed_table.insert_row_by_index(row)
