@@ -463,6 +463,16 @@ class ConfigCommandProfile(ConfigCommand):
 
         self._add_config(
             ConfigField(
+                'early_exit_enable',
+                field_type=ConfigPrimitive(bool),
+                parser_args={'action': 'store_true'},
+                default_value=False,
+                flags=['--early-exit-enable'],
+                description=
+                'Flag to indicate if Model Analyzer can skip some configurations when manually searching concurrency or max_batch_size'
+            ))
+        self._add_config(
+            ConfigField(
                 'run_config_search_max_concurrency',
                 flags=['--run-config-search-max-concurrency'],
                 field_type=ConfigPrimitive(int),

@@ -26,6 +26,7 @@ from .mocks.mock_config import MockConfig
 from .mocks.mock_os import MockOSMethods
 from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
 from unittest.mock import MagicMock
+from unittest.mock import patch
 
 from model_analyzer.config.input.config_defaults import \
     DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, \
@@ -36,6 +37,10 @@ from model_analyzer.config.input.config_defaults import \
 
 
 class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
+
+    def __init__(self, methodname):
+        super().__init__(methodname)
+        self._perf_throughput = 1
 
     def test_set_last_results(self):
         """
@@ -65,8 +70,11 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                 "perf_throughput": 2
             }])
 
-        pacg = PerfAnalyzerConfigGenerator(MagicMock(), MagicMock(),
-                                           MagicMock(), MagicMock())
+        pacg = PerfAnalyzerConfigGenerator(MagicMock(),
+                                           MagicMock(),
+                                           MagicMock(),
+                                           MagicMock(),
+                                           early_exit_enable=False)
 
         pacg.set_last_results([measurement1, measurement2, measurement3])
         self.assertEqual(pacg._last_results[0], measurement2)
@@ -427,10 +435,105 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         self._run_and_test_perf_analyzer_config_generator(
             yaml_content, expected_configs)
 
+    def test_early_exit_on_no_plateau(self):
+        """ 
+        Test if early_exit is true but the throughput is still increasing, we 
+        do not early exit
+        """
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        concurrencies = utils.generate_doubled_list(1, 64)
+        expected_configs = [
+            construct_perf_analyzer_config(concurrency=c) for c in concurrencies
+        ]
+
+        pa_cli_args = ['--run-config-search-max-concurrency', '64']
+        self._run_and_test_perf_analyzer_config_generator(yaml_content,
+                                                          expected_configs,
+                                                          pa_cli_args,
+                                                          early_exit=True)
+
+    def test_early_exit_on_yes_plateau(self):
+        """ 
+        Test if early_exit is true and the throughput plateaus, we do early exit
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        concurrencies = utils.generate_doubled_list(1, 32)
+        expected_configs = [
+            construct_perf_analyzer_config(concurrency=c) for c in concurrencies
+        ]
+
+        pa_cli_args = ['--run-config-search-max-concurrency', '64']
+        with patch.object(TestPerfAnalyzerConfigGenerator,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = [1, 2, 4, 4, 4, 4, 4]
+            self._run_and_test_perf_analyzer_config_generator(yaml_content,
+                                                              expected_configs,
+                                                              pa_cli_args,
+                                                              early_exit=True)
+
+    def test_early_exit_off_yes_plateau(self):
+        """ 
+        Test if early_exit is off and the throughput plateaus, we do not early exit
+        """
+
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        concurrencies = utils.generate_doubled_list(1, 64)
+        expected_configs = [
+            construct_perf_analyzer_config(concurrency=c) for c in concurrencies
+        ]
+
+        pa_cli_args = ['--run-config-search-max-concurrency', '64']
+        with patch.object(TestPerfAnalyzerConfigGenerator,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.side_effect = [1, 2, 4, 4, 4, 4, 4]
+            self._run_and_test_perf_analyzer_config_generator(yaml_content,
+                                                              expected_configs,
+                                                              pa_cli_args,
+                                                              early_exit=False)
+
+    def _get_next_measurement(self):
+
+        throughput_value = self._get_next_perf_throughput_value()
+        if throughput_value is None:
+            return None
+        else:
+            return construct_run_config_measurement(
+                model_name=MagicMock(),
+                model_config_names=["test_model_config_name"],
+                model_specific_pa_params=MagicMock(),
+                gpu_metric_values=MagicMock(),
+                non_gpu_metric_values=[{
+                    "perf_throughput": throughput_value
+                }])
+
+    def _get_next_perf_throughput_value(self):
+        self._perf_throughput *= 2
+        return self._perf_throughput
+
     def _run_and_test_perf_analyzer_config_generator(self,
                                                      yaml_content,
                                                      expected_configs,
-                                                     pa_cli_args=None):
+                                                     pa_cli_args=None,
+                                                     early_exit=False):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file'
@@ -446,12 +549,13 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         pacg = PerfAnalyzerConfigGenerator(
             config, config.profile_models[0].model_name(),
             config.profile_models[0].perf_analyzer_flags(),
-            config.profile_models[0].parameters())
+            config.profile_models[0].parameters(), early_exit)
 
         perf_analyzer_configs = []
         pacg_generator = pacg.next_config()
         while not pacg.is_done():
             perf_analyzer_configs.append(next(pacg_generator))
+            pacg.set_last_results([self._get_next_measurement()])
 
         self.assertEqual(len(expected_configs), len(perf_analyzer_configs))
         for i in range(len(expected_configs)):
