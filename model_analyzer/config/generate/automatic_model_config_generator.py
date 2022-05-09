@@ -65,7 +65,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
         if not self._early_exit_enable:
             raise TritonModelAnalyzerException(
-                "Early exit disable not supported in automatic model config generator"
+                "Early exit disable is not supported in automatic model config generator"
             )
 
     def _done_walking(self):

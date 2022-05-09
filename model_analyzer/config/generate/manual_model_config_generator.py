@@ -21,7 +21,7 @@ import logging
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 logger = logging.getLogger(LOGGER_NAME)
-from copy import copy
+from copy import deepcopy
 
 
 class ManualModelConfigGenerator(BaseModelConfigGenerator):
@@ -56,6 +56,10 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         self._non_max_batch_size_param_combos = []
         self._determine_max_batch_sizes_and_param_combos()
 
+        # All configs are pregenerated in _configs[][]
+        # Indexed as follows:
+        #    _configs[_curr_config_index][_curr_max_batch_size_index]
+        #
         self._configs = self._generate_model_configs()
 
         # Contains the max throughput from each provided list of measurements
@@ -174,7 +178,7 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         if self._default_only:
             self._non_max_batch_size_param_combos = [DEFAULT_CONFIG_PARAMS]
         else:
-            model_config_params = copy(
+            model_config_params = deepcopy(
                 self._base_model.model_config_parameters())
             if model_config_params:
                 self._max_batch_sizes = model_config_params.pop(
