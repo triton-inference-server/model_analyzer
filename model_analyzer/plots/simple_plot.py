@@ -16,8 +16,6 @@ import os
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
-from statistics import mean
-
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
@@ -97,13 +95,14 @@ class SimplePlot:
                 run_config_measurement.model_specific_pa_params()[0][
                     self._y_axis.replace('_', '-')])
         else:
-            # TODO-TMA-566: replace with get_metric_gpu/non_gpu_value()
-            aggregation_func = sum if (
-                self._y_axis) == 'perf_throughput' else mean
-
-            self._data[label]['y_data'].append(
-                run_config_measurement.get_metric_value(
-                    tag=self._y_axis, aggregation_func=aggregation_func))
+            if MetricsManager.is_gpu_metric(tag=self._y_axis):
+                self._data[label]['y_data'].append(
+                    run_config_measurement.get_gpu_metric_value(
+                        tag=self._y_axis))
+            else:
+                self._data[label]['y_data'].append(
+                    run_config_measurement.get_non_gpu_metric_value(
+                        tag=self._y_axis))
 
     def clear(self):
         """

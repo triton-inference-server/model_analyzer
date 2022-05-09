@@ -118,13 +118,13 @@ class TestResultManager(trc.TestResultCollector):
                 'backend_parameter/model_1_key_2',
                 'backend_parameter/model_2_key_1'
             ],
-            batch_size='batch_size',
-            concurrency=None,
+            batch_sizes='batch_size',
+            concurrencies=None,
             satisfies=None,
             model_name='model_name',
             model_config_path=None,
-            dynamic_batching=None,
-            instance_group=None,
+            dynamic_batchings=None,
+            instance_groups=None,
             backend_parameters=backend_parameters)
         self.assertTrue(row == [
             'model_name', 'batch_size', 'model_1_value_1', 'model_1_value_2',
