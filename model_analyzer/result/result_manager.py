@@ -488,11 +488,11 @@ class ResultManager:
         """
 
         model_name = run_config_result.model_name()
+
         model_configs = [
             model_run_configs.model_config() for model_run_configs in
             run_config_result.run_config().model_run_configs()
         ]
-
         instance_groups = [
             model_config.instance_group_string()
             for model_config in model_configs
@@ -513,14 +513,15 @@ class ResultManager:
         passing_measurements = run_config_result.passing_measurements()
         failing_measurements = run_config_result.failing_measurements()
 
-        for (measurements, passes) in [(passing_measurements, True),
-                                       (failing_measurements, False)]:
-            for measurement in measurements:
+        for (run_config_measurements, passes) in [(passing_measurements, True),
+                                                  (failing_measurements, False)
+                                                 ]:
+            for run_config_measurement in run_config_measurements:
                 self._tabulate_measurement(
                     model_name=model_name,
                     instance_groups=instance_groups,
                     dynamic_batchings=dynamic_batchings,
-                    run_config_measurement=next_best_measurement,
+                    run_config_measurement=run_config_measurement,
                     passes=passes,
                     cpu_onlys=cpu_onlys,
                     backend_parameters=backend_parameters)
@@ -535,7 +536,6 @@ class ResultManager:
 
         model_config_name = run_config_measurement.model_variants_name()
 
-        # TODO-TMA-570: Need to add accessor function to extract the PA parameters
         model_specific_pa_params = run_config_measurement.model_specific_pa_params(
         )
         batch_sizes = [
@@ -561,29 +561,15 @@ class ResultManager:
                 inference_fields, metric.tag)
 
             if metric_tag_index is not None:
-                aggregation_func = sum if (
-                    metric.tag) == 'perf_throughput' else mean
-
-                # TODO-TMA-566: replace with get_metric_gpu/non_gpu_value()
-                metric_value = run_config_measurement.get_metric_value(
-                    tag=metric.tag, aggregation_func=aggregation_func)
-
-                if metric.tag == 'perf_throughput':
-                    inference_row[metric_tag_index] = format_for_csv([
-                        round(metric_value),
-                        [
-                            round(metric.value()) for metric in
-                            run_config_measurement.get_metric(metric.tag)
-                        ]
-                    ])
-                else:
-                    inference_row[metric_tag_index] = format_for_csv([
-                        round(metric_value, 1),
-                        [
-                            round(metric.value(), 1) for metric in
-                            run_config_measurement.get_metric(metric.tag)
-                        ]
-                    ])
+                metric_value = run_config_measurement.get_non_gpu_metric_value(
+                    metric.tag)
+                inference_row[metric_tag_index] = format_for_csv([
+                    round(metric_value, 1),
+                    [
+                        round(metric.value(), 1) for metric in
+                        run_config_measurement.get_non_gpu_metric(metric.tag)
+                    ]
+                ])
 
         self._result_tables[self.model_inference_table_key].insert_row_by_index(
             inference_row)
@@ -868,16 +854,20 @@ class ResultManager:
         if not model_name:
             return
 
-        # TODO-TMA-570: This logic needs to be changed for multi-model
+        model_names = model_name.split(",")
+        model_names = [
+            model_name + "_config_default" for model_name in model_names
+        ]
+        default_model_name = ','.join(model_names)
+
         for run_config_result in results:
             if run_config_result.run_config().model_variants_name(
-            ) == f"{model_name}_config_default":
+            ) == default_model_name:
                 return
 
-        # TODO-TMA-570: This logic needs to be changed for multi-model
         for run_config_result in result_heap.results():
             if run_config_result.run_config().model_variants_name(
-            ) == f"{model_name}_config_default":
+            ) == default_model_name:
                 results.append(run_config_result)
                 return
 
