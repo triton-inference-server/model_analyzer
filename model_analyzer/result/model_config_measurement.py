@@ -17,6 +17,7 @@ from model_analyzer.constants import LOGGER_NAME
 
 from model_analyzer.record.record import RecordType
 
+from statistics import mean
 from functools import total_ordering
 import logging
 
@@ -285,8 +286,8 @@ class ModelConfigMeasurement:
                 return 0
 
             metric_diff = self_metric - other_metric
-            weighted_score += (weight *
-                               (metric_diff.value() / self_metric.value()))
+            average = mean([self_metric.value(), other_metric.value()])
+            weighted_score += weight * (metric_diff.value() / average)
 
         return weighted_score
 
