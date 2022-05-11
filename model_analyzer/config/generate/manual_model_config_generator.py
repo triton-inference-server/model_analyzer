@@ -126,11 +126,9 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
                     param_combo['max_batch_size'] = mbs
                     model_config = self._make_direct_mode_model_config(
                         param_combo)
-                    model_config.set_cpu_only(self._cpu_only)
                     configs_with_max_batch_size.append(model_config)
             else:
                 model_config = self._make_direct_mode_model_config(param_combo)
-                model_config.set_cpu_only(self._cpu_only)
                 configs_with_max_batch_size.append(model_config)
 
             model_configs.append(configs_with_max_batch_size)

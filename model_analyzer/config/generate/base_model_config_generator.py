@@ -155,6 +155,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         logger.info("")
 
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
+        model_config.set_cpu_only(self._cpu_only)
 
         return model_config
 
