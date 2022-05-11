@@ -954,7 +954,7 @@ If this file is saved to the `config.yml`, Model Analyzer can be started using
 the `-f`, or `--config-file` flag.
 
 ```
-model-analyzer -f config.yml
+model-analyzer -f /path/to/config.yml
 ```
 
 It will run the model `vgg_19_graphdef` over combinations of batch sizes
