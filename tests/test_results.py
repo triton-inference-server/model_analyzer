@@ -30,7 +30,7 @@ class TestResults(trc.TestResultCollector):
         self._construct_results()
 
     def tearDown(self):
-        NotImplemented
+        patch.stopall()
 
     def test_contains_model(self):
         """

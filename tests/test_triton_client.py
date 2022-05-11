@@ -24,6 +24,7 @@ from .common import test_result_collector as trc
 
 import os
 import unittest
+from unittest.mock import patch
 
 # Test parameters
 MODEL_REPOSITORY_PATH = 'test_repo'
@@ -189,6 +190,7 @@ class TestTritonClientMethods(trc.TestResultCollector):
             self.server.stop()
         self.server_docker_mock.stop()
         self.tritonclient_mock.stop()
+        patch.stopall()
 
 
 if __name__ == '__main__':

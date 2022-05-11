@@ -28,7 +28,7 @@ class TestRunConfigResult(trc.TestResultCollector):
         self._construct_throughput_with_latency_constraint_rcr()
 
     def tearDown(self):
-        NotImplemented
+        patch.stopall()
 
     def test_model_name(self):
         """

@@ -19,6 +19,8 @@ from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from .common import test_result_collector as trc
 
+from unittest.mock import patch
+
 TEST_HEADERS = [f"Column {i}" for i in range(10)]
 TEST_COLUMN_WIDTH = 12
 TEST_WIDTHS = [TEST_COLUMN_WIDTH for i in range(10)]
@@ -52,6 +54,12 @@ TEST_CSV_STR = (
 
 
 class TestResultTableMethods(trc.TestResultCollector):
+
+    def setUp(self):
+        NotImplemented
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_create_headers(self):
         table = ResultTable(headers=["Column 0"])

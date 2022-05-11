@@ -667,6 +667,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
     def tearDown(self):
         self.mock_os.stop()
+        patch.stopall()
 
     def _get_next_fake_results(self):
         throughput_value = self._get_next_perf_throughput_value()

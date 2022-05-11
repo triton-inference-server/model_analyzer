@@ -20,6 +20,8 @@ from .common.test_utils import construct_run_config_result
 import unittest
 from random import sample
 
+from unittest.mock import patch
+
 
 class TestResultHeapMethods(trc.TestResultCollector):
 
@@ -28,6 +30,9 @@ class TestResultHeapMethods(trc.TestResultCollector):
         self.result_heap = ResultHeap()
         self.result_comparator = RunConfigResultComparator(
             metric_objectives_list=[objective_spec])
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_empty(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}

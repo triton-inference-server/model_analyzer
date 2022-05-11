@@ -17,7 +17,7 @@ from .common import test_result_collector as trc
 from .common.test_utils import construct_run_config_result
 
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 # TODO-TMA-571: Need to add testing for model weighting
@@ -27,7 +27,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
         self._initialize_metrics()
 
     def tearDown(self):
-        NotImplemented
+        patch.stopall()
 
     def test_throughput_driven(self):
         objective_spec = [{'perf_throughput': 2, 'perf_latency_p99': 1}]

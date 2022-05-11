@@ -28,6 +28,7 @@ from .mocks.mock_io import MockIOMethods
 from .common import test_result_collector as trc
 
 import unittest
+from unittest.mock import patch
 
 from .common.test_utils import convert_to_bytes
 
@@ -76,6 +77,9 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
 
         # state manager
         self.state_manager = AnalyzerStateManager(config=config, server=None)
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_set_get_state_variables(self):
         self.mock_os.set_os_path_exists_return_value(False)

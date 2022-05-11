@@ -26,6 +26,8 @@ from tests.mocks.mock_requests import MockRequests
 import unittest
 import time
 
+from unittest.mock import patch
+
 TEST_DEVICE_NAME = 'TEST_DEVICE_NAME'
 TEST_DEVICE_ID = 0
 TEST_METRICS_URL = 'localhost:8002'
@@ -71,6 +73,9 @@ class TestRemoteMonitor(trc.TestResultCollector):
             mock_paths=['model_analyzer.monitor.remote_monitor'])
         self.mock_requests.start()
         self.mock_requests.set_get_request_response(TEST_METRICS_RESPONSE)
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_record_memory(self):
         # One measurement every 0.1 seconds
