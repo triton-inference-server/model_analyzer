@@ -52,6 +52,9 @@ class TestResultManager(trc.TestResultCollector):
         self._multi_model_result_manager.create_tables()
         self._multi_model_result_manager.compile_and_sort_results()
 
+    def tearDown(self):
+        patch.stopall()
+
     def test_multi_model_row_count(self):
         """
         Check that a row was created for every measurement

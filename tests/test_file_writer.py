@@ -18,6 +18,7 @@ from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from .mocks.mock_io import MockIOMethods
 import unittest
+from unittest.mock import patch
 
 TEST_FILENAME = 'test_filename'
 
@@ -29,6 +30,9 @@ class TestFileWriterMethods(trc.TestResultCollector):
         self.io_mock = MockIOMethods(
             mock_paths=['model_analyzer.output.file_writer'])
         self.io_mock.start()
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_write(self):
         # Create and use writer

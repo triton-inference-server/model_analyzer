@@ -26,7 +26,7 @@ from .results import Results
 
 from statistics import mean
 
-from tests.common.test_utils import format_for_csv
+from .result_utils import format_for_csv
 
 import re
 import os

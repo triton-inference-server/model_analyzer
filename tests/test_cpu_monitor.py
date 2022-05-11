@@ -27,6 +27,8 @@ from model_analyzer.model_analyzer_exceptions \
 from .common import test_result_collector as trc
 from .mocks.mock_server_local import MockServerLocalMethods
 
+from unittest.mock import patch
+
 MODEL_REPOSITORY_PATH = 'test_repo'
 TRITON_LOCAL_BIN_PATH = 'test_bin_path/tritonserver'
 
@@ -36,6 +38,9 @@ class TestCPUMonitor(trc.TestResultCollector):
     def setUp(self):
         self.server_local_mock = MockServerLocalMethods()
         self.server_local_mock.start()
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_record_cpu_memory(self):
         server_config = TritonServerConfig()

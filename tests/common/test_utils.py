@@ -314,16 +314,3 @@ def default_encode(obj):
         return obj.to_dict()
     else:
         return obj.__dict__
-
-
-def format_for_csv(obj):
-    """
-    Takes an object, which could be a string, int, or list of either
-    and formats it so it will be parsable in a csv 
-    """
-    if type(obj) == list:
-        return "\"" + ",".join([str(o) for o in obj]) + "\""
-    elif "," in obj:
-        return "\"" + obj + "\""
-    else:
-        return str(obj)

@@ -38,8 +38,17 @@ from model_analyzer.constants import CONFIG_PARSER_SUCCESS
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 import psutil
+import unittest
 
 from unittest.mock import patch
+
+
+def setUp(self):
+    NotImplemented
+
+
+def tearDown(self):
+    patch.stopall()
 
 
 def get_test_options():
@@ -554,3 +563,7 @@ class TestCLI(trc.TestResultCollector):
         if len(ret_val) == 1:
             return ret_val[0]
         return ret_val
+
+
+if __name__ == '__main__':
+    unittest.main()

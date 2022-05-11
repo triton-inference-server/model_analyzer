@@ -44,6 +44,8 @@ from model_analyzer.config.input.objects.config_model_profile_spec \
 from model_analyzer.constants import \
     CONFIG_PARSER_FAILURE
 
+from unittest.mock import patch
+
 
 class TestConfig(trc.TestResultCollector):
 
@@ -223,6 +225,7 @@ class TestConfig(trc.TestResultCollector):
 
     def tearDown(self):
         self.mock_os.stop()
+        patch.stopall()
 
     def test_config(self):
         args = [

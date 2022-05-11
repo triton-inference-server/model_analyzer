@@ -30,6 +30,8 @@ from .mocks.mock_numba import MockNumba
 from .mocks.mock_dcgm_agent import TEST_PCI_BUS_ID, TEST_UUID
 from .mocks.mock_dcgm_field_group_watcher import TEST_RECORD_VALUE
 
+from unittest.mock import patch
+
 TEST_DEVICE_NAME = 'TEST_DEVICE_NAME'
 TEST_DEVICE_ID = 0
 
@@ -48,6 +50,9 @@ class TestDCGMMonitor(trc.TestResultCollector):
             GPUDevice(TEST_DEVICE_NAME, TEST_DEVICE_ID, TEST_PCI_BUS_ID,
                       TEST_UUID)
         ]
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_record_memory(self):
         # One measurement every 0.01 seconds
