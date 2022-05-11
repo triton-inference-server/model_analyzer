@@ -27,7 +27,7 @@ The most basic type of report is the *Summary Report* which the Model Analyzer's
 `analyze` subcommand generates by default for each model.
 
 ```
-$ model-analyzer analyze --analysis-models <list of model names> --checkpoint-directory <path to checkpoints directory> -e <path to export directory> -f <optional config file>
+$ model-analyzer analyze --analysis-models <list of model names> --checkpoint-directory <path to checkpoints directory> -e <path to export directory> -f <path to optional config file>
 ```
 
 The export directory will, by default, contain 3 subdirectories. The summary
@@ -44,7 +44,7 @@ The second type of report is the *Detailed Report* which can be generated using
 the Model Analyzer's `report` subcommand. 
 
 ```
-$ model-analyzer report --report-model-configs <list of model configs> --checkpoint-directory <path to checkpoints directory> -e <path to export directory> -f <optional config file>
+$ model-analyzer report --report-model-configs <list of model configs> --checkpoint-directory <path to checkpoints directory> -e <path to export directory> -f <path to optional config file>
 ```
 
 You will be able to locate the detailed report for a model config under

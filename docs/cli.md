@@ -115,7 +115,7 @@ Some example profile commands are shown here. For a full example see the
 4. Run profile over manually defined configurations for a models `classification_malaria_v1` and `classification_chestxray_v1` located in `/home/model_repo` using the YAML config file
 
   ```
-  $ model-analyzer profile -f config.yaml
+  $ model-analyzer profile /path/to/config.yaml
   ```
 
 The contents of `config.yaml` are shown below.
@@ -190,7 +190,7 @@ under different constraints.
 3. Apply objectives and constraints to sort and filter results in summary plots and tables using yaml config file.
 
   ```
-  $ model-analyzer analyze -f config.yaml
+  $ model-analyzer analyze -f /path/to/config.yaml
   ```
 
 The contents of `config.yaml` are shown below.
@@ -239,7 +239,7 @@ for more details).
 2. Generate detailed report for `resnet50_libtorch_config_2` with a custom plot using YAML config file
 
   ```
-  $ model-analyzer report -f config.yaml
+  $ model-analyzer report -f /path/to/config.yaml
   ```
 
 The contents of the `config.yaml` are shown below
