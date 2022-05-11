@@ -15,9 +15,16 @@
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from .common import test_result_collector as trc
 import unittest
+from unittest.mock import patch
 
 
 class TestModelVariantNameManager(trc.TestResultCollector):
+
+    def setUp(self):
+        NotImplemented
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_default(self):
         """

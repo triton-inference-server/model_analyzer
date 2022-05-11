@@ -790,6 +790,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
     def tearDown(self):
         self.mock_os.stop()
+        patch.stopall()
 
 
 if __name__ == '__main__':

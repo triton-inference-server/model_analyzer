@@ -683,6 +683,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.perf_mock.stop()
         self.client_mock.stop()
         self.mock_psutil.stop()
+        patch.stopall()
 
 
 if __name__ == '__main__':

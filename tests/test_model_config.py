@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
 import os
 from .common import test_result_collector as trc
 from .mocks.mock_model_config import MockModelConfig
@@ -75,6 +76,9 @@ instance_group [
   }
 ]
 """
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_create_from_file(self):
         test_protobuf = self._model_config_protobuf
@@ -157,3 +161,7 @@ instance_group [
         mock_os_symlink.assert_any_call(
             '../model_config_0/output0_labels.txt',
             './output_model_repository/model_config_1/output0_labels.txt')
+
+
+if __name__ == '__main__':
+    unittest.main()

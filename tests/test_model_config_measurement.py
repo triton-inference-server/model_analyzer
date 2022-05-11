@@ -58,7 +58,7 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
             "modelD", self.model_specific_pa_params, {})
 
     def tearDown(self):
-        NotImplemented
+        patch.stopall()
 
     def test_init(self):
         """

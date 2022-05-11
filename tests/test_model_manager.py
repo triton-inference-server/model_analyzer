@@ -81,6 +81,12 @@ class MetricsManagerSubclass(MetricsManager):
 
 class TestModelManager(trc.TestResultCollector):
 
+    def setUp(self):
+        NotImplemented
+
+    def tearDown(self):
+        patch.stopall()
+
     def __init__(self, methodname):
         super().__init__(methodname)
         self._args = [

@@ -611,6 +611,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
     def tearDown(self):
         self.mock_os.stop()
+        patch.stopall()
 
     def make_multi_model_measurement(self, model_names, non_gpu_metric_values):
         return construct_run_config_measurement(
