@@ -15,7 +15,7 @@
 import unittest
 
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes
+from .common.test_utils import convert_to_bytes, ROOT_DIR
 from .mocks.mock_config import MockConfig
 
 from google.protobuf import text_format
@@ -36,7 +36,7 @@ class TestResultManager(trc.TestResultCollector):
     def setUp(self):
         args = [
             'model-analyzer', 'analyze', '-f', 'config.yml',
-            '--checkpoint-directory', './tests/multi-model-ckpt/'
+            '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/'
         ]
         yaml_content = convert_to_bytes("""
             analysis_models: resnet50_libtorch,vgg19_libtorch

@@ -23,6 +23,10 @@ from model_analyzer.config.input.config_defaults import \
     DEFAULT_MEASUREMENT_MODE, DEFAULT_TRITON_GRPC_ENDPOINT, DEFAULT_TRITON_HTTP_ENDPOINT, \
     DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY
 
+import os
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 def convert_to_bytes(string):
     """
