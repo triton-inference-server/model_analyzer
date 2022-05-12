@@ -900,8 +900,6 @@ class ReportManager:
                 _, measurement = self._summary_data[key][0]
                 used_ram = measurement.get_non_gpu_metric_value('cpu_used_ram')
 
-            # FIXME I would like to use used_ram is not None, and pass None as
-            # 2nd option to get_non_gpu_metric_value, but it doesn't work
             self._cpu_metrics_gathered_sticky = used_ram != 0
 
         return self._cpu_metrics_gathered_sticky
