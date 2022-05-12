@@ -23,8 +23,11 @@ def format_for_csv(obj):
     and formats it so it will be parsable in a csv 
     """
     if type(obj) == list:
-        return "\"" + ",".join([str(o) for o in obj]) + "\""
-    elif "," in obj:
+        if len(obj) > 1:
+            return "\"" + ",".join([str(o) for o in obj]) + "\""
+        else:
+            return str(obj[0])
+    elif type(obj) == str and "," in obj:
         return "\"" + obj + "\""
     else:
         return str(obj)

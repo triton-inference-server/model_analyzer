@@ -561,15 +561,9 @@ class ResultManager:
                 inference_fields, metric.tag)
 
             if metric_tag_index is not None:
-                metric_value = run_config_measurement.get_non_gpu_metric_value(
-                    metric.tag)
-                inference_row[metric_tag_index] = format_for_csv([
-                    round(metric_value, 1),
-                    [
-                        round(metric.value(), 1) for metric in
-                        run_config_measurement.get_non_gpu_metric(metric.tag)
-                    ]
-                ])
+                inference_row[
+                    metric_tag_index] = self._create_non_gpu_metric_row_entry(
+                        run_config_measurement, metric)
 
         self._result_tables[self.model_inference_table_key].insert_row_by_index(
             inference_row)
@@ -595,6 +589,23 @@ class ResultManager:
                         gpu_row[metric_tag_index] = round(metric.value(), 1)
                 self._result_tables[
                     self.model_gpu_table_key].insert_row_by_index(row=gpu_row)
+
+    def _create_non_gpu_metric_row_entry(self, run_config_measurement, metric):
+        metric_value = run_config_measurement.get_non_gpu_metric_value(
+            metric.tag)
+        non_gpu_metrics = run_config_measurement.get_non_gpu_metric(metric.tag)
+
+        if len(non_gpu_metrics) > 1:
+            rounded_non_gpu_metrics = [
+                round(metric.value(), 1) for metric in
+                run_config_measurement.get_non_gpu_metric(metric.tag)
+            ]
+
+            return format_for_csv(
+                [round(metric_value, 1), rounded_non_gpu_metrics])
+
+        else:
+            return format_for_csv(round(metric_value, 1))
 
     def _get_common_row_items(self,
                               fields,
