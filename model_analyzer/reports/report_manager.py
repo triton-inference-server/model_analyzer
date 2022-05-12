@@ -245,6 +245,9 @@ class ReportManager:
         plot_path = os.path.join(self._config.export_path, 'plots', 'simple',
                                  report_key)
         for plot_config in report_model_config.plots():
+            if plot_config.title().startswith(
+                    "RAM") and not self._cpu_metrics_were_gathered():
+                continue
             if model_config.cpu_only() and (
                     plot_config.y_axis().startswith('gpu_') or
                     plot_config.x_axis().startswith('gpu_')):
@@ -551,19 +554,21 @@ class ReportManager:
 
     def _create_summary_result_table_header_cpu_only(self, multi_model):
         if multi_model:
-            return ResultTable(headers=[
+            header_values = [
                 'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
                 'Instance Count', 'Average p99 Latency (ms)',
                 'Total Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
-            ],
-                               title="Report Table")
+            ]
         else:
-            return ResultTable(headers=[
+            header_values = [
                 'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
                 'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
                 'Max CPU Memory Usage (MB)'
-            ],
-                               title="Report Table")
+            ]
+        if not self._cpu_metrics_were_gathered():
+            header_values.remove('Max CPU Memory Usage (MB)')
+
+        return ResultTable(headers=header_values, title="Report Table")
 
     def _create_summary_result_table_header(self, multi_model):
         if multi_model:
@@ -582,7 +587,7 @@ class ReportManager:
             ]
 
         if not self._cpu_metrics_were_gathered():
-            del header_values[6]
+            header_values.remove('Max CPU Memory Usage (MB)')
 
         return ResultTable(headers=header_values, title="Report Table")
 
@@ -613,15 +618,17 @@ class ReportManager:
         perf_throughput_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
             non_gpu_metric='perf_throughput')
-        cpu_used_ram_string = self._create_non_gpu_metric_string(
-            run_config_measurement=run_config_measurement,
-            non_gpu_metric='cpu_used_ram')
 
         row = [
             model_config_names, max_batch_sizes, dynamic_batching_string,
-            instance_group_strings, perf_latency_string, perf_throughput_string,
-            cpu_used_ram_string
+            instance_group_strings, perf_latency_string, perf_throughput_string
         ]
+
+        if self._cpu_metrics_were_gathered():
+            cpu_used_ram_string = self._create_non_gpu_metric_string(
+                run_config_measurement=run_config_measurement,
+                non_gpu_metric='cpu_used_ram')
+            row.append(cpu_used_ram_string)
 
         return row
 
@@ -735,22 +742,26 @@ class ReportManager:
         first_column_header = 'Request Concurrency' if self._mode == 'online' else 'Client Batch Size'
         first_column_tag = 'concurrency-range' if self._mode == 'online' else 'batch-size'
         if not cpu_only:
-            detailed_table = ResultTable(headers=[
+            headers = [
                 first_column_header, 'p99 Latency (ms)',
                 'Client Response Wait (ms)', 'Server Queue (ms)',
                 'Server Compute Input (ms)', 'Server Compute Infer (ms)',
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)',
                 'Max GPU Memory Usage (MB)', 'Average GPU Utilization (%)'
-            ],
-                                         title="Detailed Table")
+            ]
         else:
-            detailed_table = ResultTable(headers=[
+            headers = [
                 first_column_header, 'p99 Latency (ms)',
                 'Client Response Wait (ms)', 'Server Queue (ms)',
                 'Server Compute Input (ms)', 'Server Compute Infer (ms)',
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
-            ],
-                                         title="Detailed Table")
+            ]
+
+        if not self._cpu_metrics_were_gathered():
+            headers.remove('Max CPU Memory Usage (MB)')
+
+        detailed_table = ResultTable(headers, title="Detailed Table")
+
         # Construct table
         if not cpu_only:
             for measurement in measurements:
