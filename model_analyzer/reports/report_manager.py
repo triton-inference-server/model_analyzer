@@ -68,6 +68,8 @@ class ReportManager:
                                                       'reports')
         os.makedirs(self._reports_export_directory, exist_ok=True)
 
+        self._cpu_metrics_gathered_sticky = None
+
     def report_keys(self):
         """
         Returns
@@ -243,6 +245,9 @@ class ReportManager:
         plot_path = os.path.join(self._config.export_path, 'plots', 'simple',
                                  report_key)
         for plot_config in report_model_config.plots():
+            if plot_config.title().startswith(
+                    "RAM") and not self._cpu_metrics_were_gathered():
+                continue
             if model_config.cpu_only() and (
                     plot_config.y_axis().startswith('gpu_') or
                     plot_config.x_axis().startswith('gpu_')):
@@ -361,7 +366,7 @@ class ReportManager:
         else:
             summary.add_images([throughput_plot], [caption_throughput],
                                image_width=66)
-            if self._mode == 'online':
+            if self._mode == 'online' and self._cpu_metrics_were_gathered():
                 memory_latency_plot = os.path.join(self._config.export_path,
                                                    'plots', 'simple',
                                                    report_key,
@@ -549,37 +554,42 @@ class ReportManager:
 
     def _create_summary_result_table_header_cpu_only(self, multi_model):
         if multi_model:
-            return ResultTable(headers=[
+            header_values = [
                 'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
                 'Instance Count', 'Average p99 Latency (ms)',
                 'Total Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
-            ],
-                               title="Report Table")
+            ]
         else:
-            return ResultTable(headers=[
+            header_values = [
                 'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
                 'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
                 'Max CPU Memory Usage (MB)'
-            ],
-                               title="Report Table")
+            ]
+        if not self._cpu_metrics_were_gathered():
+            header_values.remove('Max CPU Memory Usage (MB)')
+
+        return ResultTable(headers=header_values, title="Report Table")
 
     def _create_summary_result_table_header(self, multi_model):
         if multi_model:
-            return ResultTable(headers=[
+            header_values = [
                 'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
                 'Instance Count', 'Average p99 Latency (ms)',
                 'Total Throughput (infer/sec)', 'Max CPU Memory Usage (MB)',
                 'Max GPU Memory Usage (MB)', 'Average GPU Utilization (%)'
-            ],
-                               title="Report Table")
+            ]
         else:
-            return ResultTable(headers=[
+            header_values = [
                 'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
                 'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
                 'Max CPU Memory Usage (MB)', 'Max GPU Memory Usage (MB)',
                 'Average GPU Utilization (%)'
-            ],
-                               title="Report Table")
+            ]
+
+        if not self._cpu_metrics_were_gathered():
+            header_values.remove('Max CPU Memory Usage (MB)')
+
+        return ResultTable(headers=header_values, title="Report Table")
 
     def _create_summary_row_cpu_only(self, run_config, run_config_measurement):
         model_config_names = ', '.join([
@@ -608,15 +618,17 @@ class ReportManager:
         perf_throughput_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
             non_gpu_metric='perf_throughput')
-        cpu_used_ram_string = self._create_non_gpu_metric_string(
-            run_config_measurement=run_config_measurement,
-            non_gpu_metric='cpu_used_ram')
 
         row = [
             model_config_names, max_batch_sizes, dynamic_batching_string,
-            instance_group_strings, perf_latency_string, perf_throughput_string,
-            cpu_used_ram_string
+            instance_group_strings, perf_latency_string, perf_throughput_string
         ]
+
+        if self._cpu_metrics_were_gathered():
+            cpu_used_ram_string = self._create_non_gpu_metric_string(
+                run_config_measurement=run_config_measurement,
+                non_gpu_metric='cpu_used_ram')
+            row.append(cpu_used_ram_string)
 
         return row
 
@@ -647,19 +659,36 @@ class ReportManager:
         perf_throughput_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
             non_gpu_metric='perf_throughput')
-        cpu_used_ram_string = self._create_non_gpu_metric_string(
-            run_config_measurement=run_config_measurement,
-            non_gpu_metric='cpu_used_ram')
 
-        row = [
-            model_config_names, max_batch_sizes_string, dynamic_batching_string,
-            instance_group_string, perf_latency_string, perf_throughput_string,
-            cpu_used_ram_string,
-            int(run_config_measurement.get_gpu_metric_value('gpu_used_memory')),
-            round(
-                run_config_measurement.get_gpu_metric_value('gpu_utilization'),
-                1)
-        ]
+        if self._cpu_metrics_were_gathered():
+            cpu_used_ram_string = self._create_non_gpu_metric_string(
+                run_config_measurement=run_config_measurement,
+                non_gpu_metric='cpu_used_ram')
+
+            row = [
+                model_config_names, max_batch_sizes_string,
+                dynamic_batching_string, instance_group_string,
+                perf_latency_string, perf_throughput_string,
+                cpu_used_ram_string,
+                int(
+                    run_config_measurement.get_gpu_metric_value(
+                        'gpu_used_memory')),
+                round(
+                    run_config_measurement.get_gpu_metric_value(
+                        'gpu_utilization'), 1)
+            ]
+        else:
+            row = [
+                model_config_names, max_batch_sizes_string,
+                dynamic_batching_string, instance_group_string,
+                perf_latency_string, perf_throughput_string,
+                int(
+                    run_config_measurement.get_gpu_metric_value(
+                        'gpu_used_memory')),
+                round(
+                    run_config_measurement.get_gpu_metric_value(
+                        'gpu_utilization'), 1)
+            ]
 
         return row
 
@@ -713,22 +742,26 @@ class ReportManager:
         first_column_header = 'Request Concurrency' if self._mode == 'online' else 'Client Batch Size'
         first_column_tag = 'concurrency-range' if self._mode == 'online' else 'batch-size'
         if not cpu_only:
-            detailed_table = ResultTable(headers=[
+            headers = [
                 first_column_header, 'p99 Latency (ms)',
                 'Client Response Wait (ms)', 'Server Queue (ms)',
                 'Server Compute Input (ms)', 'Server Compute Infer (ms)',
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)',
                 'Max GPU Memory Usage (MB)', 'Average GPU Utilization (%)'
-            ],
-                                         title="Detailed Table")
+            ]
         else:
-            detailed_table = ResultTable(headers=[
+            headers = [
                 first_column_header, 'p99 Latency (ms)',
                 'Client Response Wait (ms)', 'Server Queue (ms)',
                 'Server Compute Input (ms)', 'Server Compute Infer (ms)',
                 'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
-            ],
-                                         title="Detailed Table")
+            ]
+
+        if not self._cpu_metrics_were_gathered():
+            headers.remove('Max CPU Memory Usage (MB)')
+
+        detailed_table = ResultTable(headers, title="Detailed Table")
+
         # Construct table
         if not cpu_only:
             for measurement in measurements:
@@ -743,12 +776,17 @@ class ReportManager:
                         'perf_server_compute_input'),
                     measurement.get_non_gpu_metric_value(
                         'perf_server_compute_infer'),
-                    measurement.get_non_gpu_metric_value('perf_throughput'),
-                    measurement.get_non_gpu_metric_value('cpu_used_ram'),
-                    measurement.get_gpu_metric_value('gpu_used_memory'),
-                    round(measurement.get_gpu_metric_value('gpu_utilization'),
-                          1)
+                    measurement.get_non_gpu_metric_value('perf_throughput')
                 ]
+                if self._cpu_metrics_were_gathered():
+                    row.append(
+                        measurement.get_non_gpu_metric_value('cpu_used_ram'))
+
+                row.append(measurement.get_gpu_metric_value('gpu_used_memory'))
+                row.append(
+                    round(measurement.get_gpu_metric_value('gpu_utilization'),
+                          1))
+
                 detailed_table.insert_row_by_index(row)
         else:
             for measurement in measurements:
@@ -763,9 +801,12 @@ class ReportManager:
                         'perf_server_compute_input'),
                     measurement.get_non_gpu_metric_value(
                         'perf_server_compute_infer'),
-                    measurement.get_non_gpu_metric_value('perf_throughput'),
-                    measurement.get_non_gpu_metric_value('cpu_used_ram')
+                    measurement.get_non_gpu_metric_value('perf_throughput')
                 ]
+                if self._cpu_metrics_were_gathered():
+                    row.append(
+                        measurement.get_non_gpu_metric_value('cpu_used_ram'))
+
                 detailed_table.insert_row_by_index(row)
         return detailed_table
 
@@ -845,3 +886,20 @@ class ReportManager:
                         )
                 constraint_strs[model_name] = ', '.join(strs)
         return constraint_strs
+
+    def _cpu_metrics_were_gathered(self):
+        if self._cpu_metrics_gathered_sticky is None:
+            used_ram = None
+            if self._detailed_report_data:
+                key = list(self._detailed_report_data.keys())[0]
+                _, measurements = self._detailed_report_data[key]
+                used_ram = measurements[0].get_non_gpu_metric_value(
+                    'cpu_used_ram')
+            else:
+                key = list(self._summary_data.keys())[0]
+                _, measurement = self._summary_data[key][0]
+                used_ram = measurement.get_non_gpu_metric_value('cpu_used_ram')
+
+            self._cpu_metrics_gathered_sticky = used_ram != 0
+
+        return self._cpu_metrics_gathered_sticky
