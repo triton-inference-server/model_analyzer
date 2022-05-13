@@ -27,7 +27,8 @@ from model_analyzer.config.input.config_command_analyze \
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
-import unittest
+from filecmp import cmp
+from shutil import rmtree
 from unittest.mock import MagicMock, patch
 
 
@@ -36,7 +37,8 @@ class TestResultManager(trc.TestResultCollector):
     def setUp(self):
         args = [
             'model-analyzer', 'analyze', '-f', 'config.yml',
-            '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/'
+            '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/',
+            '--export-path', f'{ROOT_DIR}/multi-model-ckpt/'
         ]
         yaml_content = convert_to_bytes("""
             analysis_models: resnet50_libtorch,vgg19_libtorch
@@ -110,14 +112,38 @@ class TestResultManager(trc.TestResultCollector):
             '"resnet50_libtorch_config_2,vgg19_libtorch_config_0"',  # Model config path
             '"2/GPU,1/GPU"',  # Instances
             "Yes",  # Satisfies constraints
-            '"267.0,[105.0, 162.0]"',  # Throughput
-            '"12.6,[11.4, 13.7]"'  # P99 Latency
+            '"267.0, [105.0,162.0]"',  # Throughput
+            '"12.6, [11.4,13.7]"'  # P99 Latency
         ]
 
         self.assertEqual(
             self._multi_model_result_manager.
             _result_tables['model_inference_metrics']._rows[10],
             expected_row10_inference_metric_values)
+
+    def test_multi_model_csv_against_golden(self):
+        """
+        Match the csvs against the golden versions in
+        tests/common/multi-model-ckpt
+        """
+        self._multi_model_result_manager.tabulate_results()
+        self._multi_model_result_manager.export_results()
+
+        self.assertTrue(
+            cmp(f"{ROOT_DIR}/multi-model-ckpt/results/metrics-model-gpu.csv",
+                f"{ROOT_DIR}/multi-model-ckpt/golden-metrics-model-gpu.csv"))
+
+        self.assertTrue(
+            cmp(
+                f"{ROOT_DIR}/multi-model-ckpt/results/metrics-model-inference.csv",
+                f"{ROOT_DIR}/multi-model-ckpt/golden-metrics-model-inference.csv"
+            ))
+
+        self.assertTrue(
+            cmp(f"{ROOT_DIR}/multi-model-ckpt/results/metrics-server-only.csv",
+                f"{ROOT_DIR}/multi-model-ckpt/golden-metrics-server-only.csv"))
+
+        rmtree(f"{ROOT_DIR}/multi-model-ckpt/results/")
 
     def test_create_inference_table_with_backend_parameters(self):
         args = ['model-analyzer', 'analyze', '-f', 'config.yml']
