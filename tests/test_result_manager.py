@@ -35,91 +35,52 @@ from unittest.mock import MagicMock, patch
 class TestResultManager(trc.TestResultCollector):
 
     def setUp(self):
-        args = [
-            'model-analyzer', 'analyze', '-f', 'config.yml',
-            '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/',
-            '--export-path', f'{ROOT_DIR}/multi-model-ckpt/'
-        ]
-        yaml_content = convert_to_bytes("""
-            analysis_models: resnet50_libtorch,vgg19_libtorch
-        """)
-        config = self._evaluate_config(args, yaml_content)
-        state_manager = AnalyzerStateManager(config=config, server=None)
-        state_manager.load_checkpoint(checkpoint_required=True)
-
-        self._multi_model_result_manager = ResultManager(
-            config=config, state_manager=state_manager)
-
-        self._num_measurements = 68
-        self._multi_model_result_manager.create_tables()
-        self._multi_model_result_manager.compile_and_sort_results()
+        self._create_single_model_result_manager()
+        self._create_multi_model_result_manager()
 
     def tearDown(self):
         patch.stopall()
 
-    def test_multi_model_row_count(self):
+    def test_single_model_csv_against_golden(self):
         """
-        Check that a row was created for every measurement
+        Match the csvs against the golden versions in
+        tests/common/single-model-ckpt
         """
-        self._multi_model_result_manager.tabulate_results()
+        self._single_model_result_manager.tabulate_results()
+        self._single_model_result_manager.export_results()
 
-        self.assertEqual(
-            len(self._multi_model_result_manager.
-                _result_tables['model_inference_metrics']._rows),
-            self._num_measurements)
+        self.assertTrue(
+            cmp(f"{ROOT_DIR}/single-model-ckpt/results/metrics-model-gpu.csv",
+                f"{ROOT_DIR}/single-model-ckpt/golden-metrics-model-gpu.csv"))
 
-        self.assertEqual(
-            len(self._multi_model_result_manager.
-                _result_tables['model_gpu_metrics']._rows),
-            self._num_measurements)
+        self.assertTrue(
+            cmp(
+                f"{ROOT_DIR}/single-model-ckpt/results/metrics-model-inference.csv",
+                f"{ROOT_DIR}/single-model-ckpt/golden-metrics-model-inference.csv"
+            ))
 
-    def test_multi_model_gpu_metric_row_values(self):
-        """
-        Check that the values in a row are being outputted as expected
-        """
-        self._multi_model_result_manager.tabulate_results()
+        self.assertTrue(
+            cmp(f"{ROOT_DIR}/single-model-ckpt/results/metrics-server-only.csv",
+                f"{ROOT_DIR}/single-model-ckpt/golden-metrics-server-only.csv"))
 
-        # Values are extracted from checkpoint line 19012- 19460
-        expected_row10_gpu_metric_values = [
-            '"resnet50_libtorch,vgg19_libtorch"',  # Model
-            'GPU-8557549f-9c89-4384-8bd6-1fd823c342e0',  # GPU UUID
-            '"1,1"',  # Batch sizes
-            '"1,2"',  # Concurrencies
-            '"resnet50_libtorch_config_2,vgg19_libtorch_config_0"',  # Model config path
-            '"2/GPU,1/GPU"',  # Instances
-            "Yes",  # Satisfies constraints
-            2527.0,  # GPU Memory
-            70.6,  # GPU Utilization
-            216.0  # GPU Power usage
-        ]
+        rmtree(f"{ROOT_DIR}/single-model-ckpt/results/")
 
-        self.assertEqual(
-            self._multi_model_result_manager.
-            _result_tables['model_gpu_metrics']._rows[10],
-            expected_row10_gpu_metric_values)
+    def test_create_inference_table_with_backend_parameters(self):
+        args = ['model-analyzer', 'analyze', '-f', 'config.yml']
+        yaml_content = convert_to_bytes("""
+            analysis_models: analysis_models
+            inference_output_fields: model_name,batch_size,backend_parameter/parameter_1,backend_parameter/parameter_2
+        """)
+        config = self._evaluate_config(args, yaml_content)
+        state_manager = AnalyzerStateManager(config=config, server=None)
+        result_manager = ResultManager(config=config,
+                                       state_manager=state_manager)
 
-    def test_multi_model_inference_metric_row_values(self):
-        """
-        Check that the values in a row are being outputted as expected
-        """
-        self._multi_model_result_manager.tabulate_results()
-
-        # Values are extracted from checkpoint lines 19012- 19460
-        expected_row10_inference_metric_values = [
-            '"resnet50_libtorch,vgg19_libtorch"',  # Model
-            '"1,1"',  # Batch sizes
-            '"1,2"',  # Concurrencies
-            '"resnet50_libtorch_config_2,vgg19_libtorch_config_0"',  # Model config path
-            '"2/GPU,1/GPU"',  # Instances
-            "Yes",  # Satisfies constraints
-            '"267.0, [105.0,162.0]"',  # Throughput
-            '"12.6, [11.4,13.7]"'  # P99 Latency
-        ]
-
-        self.assertEqual(
-            self._multi_model_result_manager.
-            _result_tables['model_inference_metrics']._rows[10],
-            expected_row10_inference_metric_values)
+        result_manager._create_inference_table()
+        self.assertTrue(result_manager._inference_output_fields == [
+            'model_name', 'batch_size', 'backend_parameter/parameter_1',
+            'backend_parameter/parameter_2'
+        ])
 
     def test_multi_model_csv_against_golden(self):
         """
@@ -259,6 +220,44 @@ class TestResultManager(trc.TestResultCollector):
         cli.parse()
         mock_config.stop()
         return config
+
+    def _create_single_model_result_manager(self):
+        args = [
+            'model-analyzer', 'analyze', '-f', 'config.yml',
+            '--checkpoint-directory', f'{ROOT_DIR}/single-model-ckpt/',
+            '--export-path', f'{ROOT_DIR}/single-model-ckpt/'
+        ]
+        yaml_content = convert_to_bytes("""
+            analysis_models: add_sub
+        """)
+        config = self._evaluate_config(args, yaml_content)
+        state_manager = AnalyzerStateManager(config=config, server=None)
+        state_manager.load_checkpoint(checkpoint_required=True)
+
+        self._single_model_result_manager = ResultManager(
+            config=config, state_manager=state_manager)
+
+        self._single_model_result_manager.create_tables()
+        self._single_model_result_manager.compile_and_sort_results()
+
+    def _create_multi_model_result_manager(self):
+        args = [
+            'model-analyzer', 'analyze', '-f', 'config.yml',
+            '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/',
+            '--export-path', f'{ROOT_DIR}/multi-model-ckpt/'
+        ]
+        yaml_content = convert_to_bytes("""
+            analysis_models: resnet50_libtorch,vgg19_libtorch
+        """)
+        config = self._evaluate_config(args, yaml_content)
+        state_manager = AnalyzerStateManager(config=config, server=None)
+        state_manager.load_checkpoint(checkpoint_required=True)
+
+        self._multi_model_result_manager = ResultManager(
+            config=config, state_manager=state_manager)
+
+        self._multi_model_result_manager.create_tables()
+        self._multi_model_result_manager.compile_and_sort_results()
 
 
 if __name__ == "__main__":
