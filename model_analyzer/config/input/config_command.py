@@ -15,6 +15,7 @@
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 import yaml
+from .yaml_config_validator import YamlConfigValidator
 
 
 class ConfigCommand:
@@ -95,6 +96,11 @@ class ConfigCommand:
             yaml_config = self._load_config_file(args.config_file)
         else:
             yaml_config = None
+
+        validator = YamlConfigValidator()
+        if yaml_config:
+            for option in yaml_config.keys():
+                validator.is_valid_option(option)
 
         for key, value in self._fields.items():
             self._fields[key].set_name(key)
