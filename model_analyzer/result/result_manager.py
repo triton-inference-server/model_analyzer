@@ -571,12 +571,8 @@ class ResultManager:
                                                      instance_groups)
 
                 self._add_uuid_to_gpu_row(gpu_row, gpu_uuid, gpu_fields)
+                self._add_metrics_to_gpu_row(gpu_row, metrics, gpu_fields)
 
-                for metric in metrics:
-                    metric_tag_index = self._find_index_for_field(
-                        gpu_fields, metric.tag)
-                    if metric_tag_index is not None:
-                        gpu_row[metric_tag_index] = round(metric.value(), 1)
                 self._result_tables[
                     self.model_gpu_table_key].insert_row_by_index(row=gpu_row)
 
@@ -610,6 +606,14 @@ class ResultManager:
 
         if gpu_uuid_index is not None:
             gpu_row[gpu_uuid_index] = gpu_uuid
+
+    def _add_metrics_to_gpu_row(self, gpu_row, metrics, gpu_fields):
+        for metric in metrics:
+            metric_tag_index = self._find_index_for_field(
+                gpu_fields, metric.tag)
+
+            if metric_tag_index is not None:
+                gpu_row[metric_tag_index] = round(metric.value(), 1)
 
     def _create_non_gpu_metric_row_entry(self, run_config_measurement, metric):
         metric_value = run_config_measurement.get_non_gpu_metric_value(
