@@ -488,7 +488,26 @@ class ResultManager:
         """
 
         model_name = run_config_result.model_name()
+        instance_groups, dynamic_batchings, cpu_onlys, backend_parameters = self._tablulate_measurements_setup(
+            run_config_result)
 
+        passing_measurements = run_config_result.passing_measurements()
+        failing_measurements = run_config_result.failing_measurements()
+
+        for (run_config_measurements, passes) in [(passing_measurements, True),
+                                                  (failing_measurements, False)
+                                                 ]:
+            for run_config_measurement in run_config_measurements:
+                self._tabulate_measurement(
+                    model_name=model_name,
+                    instance_groups=instance_groups,
+                    dynamic_batchings=dynamic_batchings,
+                    run_config_measurement=run_config_measurement,
+                    passes=passes,
+                    cpu_onlys=cpu_onlys,
+                    backend_parameters=backend_parameters)
+
+    def _tablulate_measurements_setup(self, run_config_result):
         model_configs = [
             model_run_configs.model_config() for model_run_configs in
             run_config_result.run_config().model_run_configs()
@@ -510,21 +529,7 @@ class ResultManager:
             for model_config in model_configs
         ]
 
-        passing_measurements = run_config_result.passing_measurements()
-        failing_measurements = run_config_result.failing_measurements()
-
-        for (run_config_measurements, passes) in [(passing_measurements, True),
-                                                  (failing_measurements, False)
-                                                 ]:
-            for run_config_measurement in run_config_measurements:
-                self._tabulate_measurement(
-                    model_name=model_name,
-                    instance_groups=instance_groups,
-                    dynamic_batchings=dynamic_batchings,
-                    run_config_measurement=run_config_measurement,
-                    passes=passes,
-                    cpu_onlys=cpu_onlys,
-                    backend_parameters=backend_parameters)
+        return instance_groups, dynamic_batchings, cpu_onlys, backend_parameters
 
     def _tabulate_measurement(self, model_name, instance_groups,
                               dynamic_batchings, run_config_measurement, passes,
@@ -535,16 +540,8 @@ class ResultManager:
         """
 
         model_config_name = run_config_measurement.model_variants_name()
-
-        model_specific_pa_params = run_config_measurement.model_specific_pa_params(
-        )
-        batch_sizes = [
-            pa_params['batch-size'] for pa_params in model_specific_pa_params
-        ]
-        concurrencies = [
-            pa_params['concurrency-range']
-            for pa_params in model_specific_pa_params
-        ]
+        model_specific_pa_params, batch_sizes, concurrencies = self._tabulate_measurement_setup(
+            run_config_measurement)
 
         satisfies = "Yes" if passes else "No"
 
@@ -555,6 +552,49 @@ class ResultManager:
             model_config_name, dynamic_batchings, instance_groups,
             backend_parameters)
 
+        self._populate_inference_rows(run_config_measurement, inference_fields,
+                                      inference_row)
+
+        self._result_tables[self.model_inference_table_key].insert_row_by_index(
+            inference_row)
+
+        # GPU specific data (only put measurement if not cpu only)
+        if not any(cpu_onlys):
+            for gpu_uuid, metrics in run_config_measurement.gpu_data().items():
+                gpu_fields = self._gpu_output_fields
+
+                gpu_row = self._get_common_row_items(gpu_fields, batch_sizes,
+                                                     concurrencies, satisfies,
+                                                     model_name,
+                                                     model_config_name,
+                                                     dynamic_batchings,
+                                                     instance_groups)
+
+                self._add_uuid_to_gpu_row(gpu_row, gpu_uuid, gpu_fields)
+
+                for metric in metrics:
+                    metric_tag_index = self._find_index_for_field(
+                        gpu_fields, metric.tag)
+                    if metric_tag_index is not None:
+                        gpu_row[metric_tag_index] = round(metric.value(), 1)
+                self._result_tables[
+                    self.model_gpu_table_key].insert_row_by_index(row=gpu_row)
+
+    def _tabulate_measurement_setup(self, run_config_measurement):
+        model_specific_pa_params = run_config_measurement.model_specific_pa_params(
+        )
+        batch_sizes = [
+            pa_params['batch-size'] for pa_params in model_specific_pa_params
+        ]
+        concurrencies = [
+            pa_params['concurrency-range']
+            for pa_params in model_specific_pa_params
+        ]
+
+        return model_specific_pa_params, batch_sizes, concurrencies
+
+    def _populate_inference_rows(self, run_config_measurement, inference_fields,
+                                 inference_row):
         # Just using this to get a list of tags, so only need to reference the first model
         for metric in run_config_measurement.non_gpu_data()[0]:
             metric_tag_index = self._find_index_for_field(
@@ -565,30 +605,11 @@ class ResultManager:
                     metric_tag_index] = self._create_non_gpu_metric_row_entry(
                         run_config_measurement, metric)
 
-        self._result_tables[self.model_inference_table_key].insert_row_by_index(
-            inference_row)
+    def _add_uuid_to_gpu_row(self, gpu_row, gpu_uuid, gpu_fields):
+        gpu_uuid_index = self._find_index_for_field(gpu_fields, 'gpu_uuid')
 
-        # GPU specific data (only put measurement if not cpu only)
-        if not any(cpu_onlys):
-            for gpu_uuid, metrics in run_config_measurement.gpu_data().items():
-                gpu_fields = self._gpu_output_fields
-                gpu_row = self._get_common_row_items(gpu_fields, batch_sizes,
-                                                     concurrencies, satisfies,
-                                                     model_name,
-                                                     model_config_name,
-                                                     dynamic_batchings,
-                                                     instance_groups)
-                gpu_uuid_index = self._find_index_for_field(
-                    gpu_fields, 'gpu_uuid')
-                if gpu_uuid_index is not None:
-                    gpu_row[gpu_uuid_index] = gpu_uuid
-                for metric in metrics:
-                    metric_tag_index = self._find_index_for_field(
-                        gpu_fields, metric.tag)
-                    if metric_tag_index is not None:
-                        gpu_row[metric_tag_index] = round(metric.value(), 1)
-                self._result_tables[
-                    self.model_gpu_table_key].insert_row_by_index(row=gpu_row)
+        if gpu_uuid_index is not None:
+            gpu_row[gpu_uuid_index] = gpu_uuid
 
     def _create_non_gpu_metric_row_entry(self, run_config_measurement, metric):
         metric_value = run_config_measurement.get_non_gpu_metric_value(
