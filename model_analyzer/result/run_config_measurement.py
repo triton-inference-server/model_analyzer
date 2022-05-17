@@ -293,7 +293,7 @@ class RunConfigMeasurement:
         return default_value if self.get_gpu_metric(
             tag) is None else self.get_gpu_metric(tag).value()
 
-    def get_weighted_metric_value(self, tag, default_value=0):
+    def get_weighted_non_gpu_metric_value(self, tag, default_value=0):
         """
         Parameters
         ----------

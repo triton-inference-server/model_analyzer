@@ -24,8 +24,6 @@ from .run_config_result_comparator import RunConfigResultComparator
 from .run_config_result import RunConfigResult
 from .results import Results
 
-from statistics import mean
-
 from .result_utils import format_for_csv
 
 import re
@@ -591,7 +589,7 @@ class ResultManager:
 
     def _populate_inference_rows(self, run_config_measurement, inference_fields,
                                  inference_row):
-        # Just using this to get a list of tags, so only need to reference the first model
+        # FIXME: TMA-686 - Need to figure out what to do if models have different tags
         for metric in run_config_measurement.non_gpu_data()[0]:
             metric_tag_index = self._find_index_for_field(
                 inference_fields, metric.tag)
