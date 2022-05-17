@@ -28,31 +28,15 @@ class YamlConfigValidator:
         """
         Create set of valid yaml options
         """
-        self._valid_yaml_options = {
-            "profile_models",
-            "constraints",
-            "objectives",
-            "triton_server_flags",
-            "perf_analyzer_flags",
-            "triton_server_environment",
-            "triton_docker_labels",
-            "analysis_models",
-            "constraints",
-            "objectives",
-            "report_model_configs",
-            "plots",
-        }
-        self._add_config_valid_options()
-
-    def _add_config_valid_options(self):
         # Importing here to remove a circular dependency.
         # If these imports are moved to the top of the file, they are imported at file load.
         # This will cause a circular dependency between ConfigCommand, ConfigCommand*, and YamlConfigValidator
-        # However, importing here, only requires these files to be imported on class initialization.
+        # However, importing here, only requires these files to be imported on object initialization.
         from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
         from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
         from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
+        self._valid_yaml_options = set({})
         config_array = [
             ConfigCommandProfile(),
             ConfigCommandAnalyze(),
