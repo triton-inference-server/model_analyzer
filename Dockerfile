@@ -32,40 +32,25 @@ ENV DCGM_VERSION=2.2.9
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-key del 7fa2af80 && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/$(uname -m)/3bf863cc.pub
 RUN apt-get update && \
     apt-get install -y python3-dev
 
 RUN mkdir -p /opt/triton-model-analyzer
 
 # Install architecture-specific components
-ARG TARGETARCH
-RUN \
-    # Set TARGETARCH variable if in a non-docker buildx build
-    if [ "${TARGETARCH}" = "" ] ; then \
-      if [ `uname -m` = "x86_64" ] ; then TARGETARCH="amd64" ; \
-      elif [ `uname -m` = "aarch64" ] ; then TARGETARCH="arm64" ; \
-      fi ; \
-    fi ; \
-
-    # Exit if TARGETARCH variable is an invalid value
-    if [ "${TARGETARCH}" != "amd64" ] && [ "${TARGETARCH}" != "arm64" ] ; then \
-      echo "invalid architecture: $(uname -m)" ; exit 1 ; \
-    fi ; \
-
-    # Set ARCH_DIR variable for correct architecture-specific DCGM installation
-    if [ "${TARGETARCH}" = "amd64" ] ; then ARCH_DIR="x86_64" ; \
-    elif [ "${TARGETARCH}" = "arm64" ] ; then ARCH_DIR="sbsa" ; \
-    fi ; \
-
     # Install DCGM
+
+RUN [ "$(uname -m)" != "x86_64" ] && arch="sbsa" || arch="x86_64" && \
+    curl -o /tmp/cuda-keyring.deb \
+    https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/$arch/cuda-keyring_1.0-1_all.deb && \
+    apt-get install /tmp/cuda-keyring.deb && rm /tmp/cuda-keyring.deb && \
     apt-get update && apt-get install -y --no-install-recommends software-properties-common && \
-    apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION}; \
+    apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION}; 
     
     # Install Docker
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
     echo \
-  "deb [arch=${TARGETARCH} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
   $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
    apt-get update && apt-get install -y docker-ce-cli
 
