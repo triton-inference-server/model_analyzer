@@ -20,9 +20,6 @@ class TestYamlOptions(trc.TestResultCollector):
 
     @classmethod
     def setUpClass(cls):
-        cls.valid_yaml_args = {
-            "client_max_retries", "profile_model", "triton-server-flags"
-        }
         cls.yaml_arg_validator = YamlConfigValidator()
 
     def test_correct_option(self):
@@ -47,5 +44,5 @@ class TestYamlOptions(trc.TestResultCollector):
         for entry in options:
             if TestYamlOptions.yaml_arg_validator.is_valid_option(entry):
                 count += 1
-            self.assertEqual(count, 1,
-                             "Incorrect number of yaml options returned True")
+        self.assertEqual(count, 1,
+                         "Incorrect number of yaml options returned True")
