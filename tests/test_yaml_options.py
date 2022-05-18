@@ -23,15 +23,16 @@ class TestYamlOptions(trc.TestResultCollector):
 
     def test_correct_option(self):
         correct_option = "client_max_retries"
-        self.assertTrue(YamlConfigValidator.is_valid_option(correct_option))
+        self.assertTrue(YamlConfigValidator._is_valid_option(correct_option))
 
     def test_misspelled_option(self):
         misspelled_option = "profile_model"
-        self.assertFalse(YamlConfigValidator.is_valid_option(misspelled_option))
+        self.assertFalse(
+            YamlConfigValidator._is_valid_option(misspelled_option))
 
     def test_using_hyphens_not_underscores(self):
         hyphen_option = "triton-server-flags"
-        self.assertFalse(YamlConfigValidator.is_valid_option(hyphen_option))
+        self.assertFalse(YamlConfigValidator._is_valid_option(hyphen_option))
 
     def test_multiple_options(self):
         options = {
@@ -40,7 +41,7 @@ class TestYamlOptions(trc.TestResultCollector):
         }
         count = 0
         for entry in options:
-            if not YamlConfigValidator.is_valid_option(entry):
+            if not YamlConfigValidator._is_valid_option(entry):
                 count += 1
         self.assertEqual(
             count, 4,
@@ -64,9 +65,13 @@ class TestYamlOptions(trc.TestResultCollector):
         # yapf: enable
 
         yaml_config = self._load_config_file(yaml_content)
-        self.assertTrue(YamlConfigValidator.is_yaml_file_valid(yaml_config))
+        YamlConfigValidator.validate(yaml_config)
 
     def test_invalid_yaml_file(self):
+        """
+        Raises an exception because run-config-search-max-instance-count: 16 uses 
+        hyphens instead of the required underscores
+        """
         # yapf: disable
         yaml_content = convert_to_bytes("""
             run-config-search-max-instance-count: 16
@@ -84,7 +89,7 @@ class TestYamlOptions(trc.TestResultCollector):
 
         yaml_config = self._load_config_file(yaml_content)
         with self.assertRaises(TritonModelAnalyzerException):
-            YamlConfigValidator.is_yaml_file_valid(yaml_config)
+            YamlConfigValidator.validate(yaml_config)
 
     def _load_config_file(self, yaml_content):
         """

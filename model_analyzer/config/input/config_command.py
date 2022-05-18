@@ -94,11 +94,9 @@ class ConfigCommand:
         # Config file has been specified
         if 'config_file' in args:
             yaml_config = self._load_config_file(args.config_file)
+            YamlConfigValidator.validate(yaml_config)
         else:
             yaml_config = None
-
-        if yaml_config:
-            YamlConfigValidator.is_yaml_file_valid(yaml_config)
 
         for key, value in self._fields.items():
             self._fields[key].set_name(key)

@@ -26,28 +26,30 @@ class YamlConfigValidator:
     """
 
     _valid_yaml_options = set({})
-    _initialized = False
 
     @staticmethod
-    def is_yaml_file_valid(yaml_file):
-        if not YamlConfigValidator._initialized:
-            YamlConfigValidator._create_valid_option_set()
+    def validate(yaml_file):
+        """
+        Verifies the options present in the yaml config file.
+        If an error is found, the validator will throw an exception.    
+        """
+        if not yaml_file:
+            return
+
+        YamlConfigValidator._create_valid_option_set()
 
         valid = True
         for option in yaml_file.keys():
-            valid &= YamlConfigValidator.is_valid_option(option)
+            valid &= YamlConfigValidator._is_valid_option(option)
 
         if not valid:
             raise TritonModelAnalyzerException(
                 "The Yaml configuration file is incorrect. Please check the logged errors for the specific options that are causing the issue."
             )
-        else:
-            return True
 
     @staticmethod
-    def is_valid_option(option):
-        if not YamlConfigValidator._initialized:
-            YamlConfigValidator._create_valid_option_set()
+    def _is_valid_option(option):
+        YamlConfigValidator._create_valid_option_set()
 
         if option not in YamlConfigValidator._valid_yaml_options:
             logger.error(
@@ -77,5 +79,3 @@ class YamlConfigValidator:
         for config in config_array:
             for field in config.get_config():
                 YamlConfigValidator._valid_yaml_options.add(field)
-
-        YamlConfigValidator._initialized = True
