@@ -16,25 +16,22 @@ A module for various functions
 needed across the result module
 """
 
-from .measurement import Measurement
 
-
-def average_measurements(measurements):
+def format_for_csv(obj, interior=False):
     """
-    Averages measurements
+    Takes an object, which could be a string, int, or list of either
+    and formats it so it will be parsable in a csv 
     """
-
-    row_list = [measurement.data() for measurement in measurements]
-
-    if not row_list:
-        avg = row_list
+    if type(obj) == list:
+        if len(obj) > 1:
+            if interior:
+                return f" [{','.join([str(o) for o in obj])}]"
+            else:
+                return "\"" + ",".join(
+                    [format_for_csv(o, interior=True) for o in obj]) + "\""
+        else:
+            return str(obj[0])
+    elif type(obj) == str and "," in obj:
+        return "\"" + obj + "\""
     else:
-        N = len(row_list)
-        d = len(row_list[0])
-        avg = [0 for _ in range(d)]
-        for i in range(d):
-            avg[i] = (sum([row_list[j][i] for j in range(1, N)],
-                          start=row_list[0][i]) * 1.0) / N
-
-    # Data must be passed in as non-gpu-specific here.
-    return Measurement(gpu_data={}, non_gpu_data=avg, perf_config=None)
+        return str(obj)

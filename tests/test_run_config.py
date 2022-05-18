@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.triton.model.model_config import ModelConfig
@@ -25,6 +25,12 @@ from model_analyzer.config.run.run_config import RunConfig
 
 
 class TestRunConfig(trc.TestResultCollector):
+
+    def setUp(self):
+        NotImplemented
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_triton_env(self):
         """ 

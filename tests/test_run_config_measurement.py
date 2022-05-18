@@ -38,7 +38,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self._construct_rcm3()
 
     def tearDown(self):
-        NotImplemented
+        patch.stopall()
 
     def test_model_variants_name(self):
         """

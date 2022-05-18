@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
 from unittest.mock import MagicMock, patch, mock_open
 import base64
 
@@ -31,6 +32,9 @@ class TestPDFReportMethods(trc.TestResultCollector):
         self.maxDiff = None
         self.report = PDFReport()
 
+    def tearDown(self):
+        patch.stopall()
+
     def test_write_report(self):
         with patch('model_analyzer.reports.pdf_report.pdfkit',
                    MagicMock()) as pdfkit_mock:
@@ -48,3 +52,7 @@ class TestPDFReportMethods(trc.TestResultCollector):
             pdfkit_mock.from_string.assert_called_with(expected_report_body,
                                                        'test_report_filename',
                                                        options={'quiet': ''})
+
+
+if __name__ == '__main__':
+    unittest.main()

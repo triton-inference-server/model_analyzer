@@ -26,6 +26,8 @@ from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
+from unittest.mock import patch
+
 # Test parameters
 MODEL_REPOSITORY_PATH = 'test_repo'
 TRITON_LOCAL_BIN_PATH = 'test_bin_path/tritonserver'
@@ -313,6 +315,7 @@ class TestTritonServerMethods(trc.TestResultCollector):
         self.server_docker_mock.stop()
         self.server_local_mock.stop()
         self.os_mock.stop()
+        patch.stopall()
 
 
 if __name__ == '__main__':

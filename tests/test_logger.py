@@ -30,6 +30,8 @@ from contextlib import contextmanager
 from io import StringIO
 from model_analyzer.constants import LOGGER_NAME
 
+from unittest.mock import patch
+
 logger = logging.getLogger(LOGGER_NAME)
 
 
@@ -45,6 +47,12 @@ def captured_output():
 
 
 class TestLogger(trc.TestResultCollector):
+
+    def setUp(self):
+        NotImplemented
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_info_normal(self):
         """ Test expected format of logger.info """

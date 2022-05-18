@@ -135,6 +135,7 @@ class TestPlotMethods(trc.TestResultCollector):
 
     def tearDown(self):
         self.matplotlib_mock.stop()
+        patch.stopall()
 
 
 if __name__ == '__main__':

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from unittest.mock import patch
 
 from model_analyzer.record.record import RecordType
 from .common import test_result_collector as trc
@@ -54,6 +55,9 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
                 'cpu_available_ram', 'gpu_power_usage'
             ]
         }
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_counts(self):
         """

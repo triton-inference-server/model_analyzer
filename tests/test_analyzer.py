@@ -40,6 +40,12 @@ class TestAnalyzer(trc.TestResultCollector):
     Tests the methods of the Analyzer class
     """
 
+    def setUp(self):
+        NotImplemented
+
+    def tearDown(self):
+        patch.stopall()
+
     def mock_get_state_variable(self, name):
         if name == 'ResultManager.results':
             return Results()

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
 from unittest.mock import MagicMock, patch, mock_open
 import base64
 
@@ -30,6 +31,9 @@ class TestHTMLReportMethods(trc.TestResultCollector):
     def setUp(self):
         self.maxDiff = None
         self.report = HTMLReport()
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_add_title(self):
         self.report.add_title('Test HTML Report')
@@ -142,3 +146,7 @@ class TestHTMLReportMethods(trc.TestResultCollector):
             self.report.write_report('test_report_filename')
         mocked_file.assert_called_once_with(f"test_report_filename", "w")
         mocked_file().write.assert_called_once_with(f"{expected_report_body}")
+
+
+if __name__ == '__main__':
+    unittest.main()

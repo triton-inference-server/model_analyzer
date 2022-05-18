@@ -411,6 +411,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.io_mock.stop()
         self.os_mock.stop()
         self.json_mock.stop()
+        patch.stopall()
 
 
 if __name__ == '__main__':

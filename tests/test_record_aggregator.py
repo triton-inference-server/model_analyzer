@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from unittest.mock import patch
 
 from model_analyzer.record.record_aggregator import RecordAggregator
 from model_analyzer.record.types.perf_throughput import PerfThroughput
@@ -22,6 +23,12 @@ from .common import test_result_collector as trc
 
 
 class TestRecordAggregatorMethods(trc.TestResultCollector):
+
+    def setUp(self):
+        NotImplemented
+
+    def tearDown(self):
+        patch.stopall()
 
     def test_insert(self):
         record_aggregator = RecordAggregator()

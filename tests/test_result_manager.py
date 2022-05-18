@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
+
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes
+from .common.test_utils import convert_to_bytes, ROOT_DIR
 from .mocks.mock_config import MockConfig
 
 from google.protobuf import text_format
@@ -25,8 +27,84 @@ from model_analyzer.config.input.config_command_analyze \
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
+from filecmp import cmp
+from shutil import rmtree
+from unittest.mock import MagicMock, patch
+
 
 class TestResultManager(trc.TestResultCollector):
+
+    def setUp(self):
+        self._create_single_model_result_manager()
+        self._create_multi_model_result_manager()
+
+    def tearDown(self):
+        patch.stopall()
+
+    def test_single_model_csv_against_golden(self):
+        """
+        Match the csvs against the golden versions in
+        tests/common/single-model-ckpt
+        """
+        self._single_model_result_manager.tabulate_results()
+        self._single_model_result_manager.export_results()
+
+        self.assertTrue(
+            cmp(f"{ROOT_DIR}/single-model-ckpt/results/metrics-model-gpu.csv",
+                f"{ROOT_DIR}/single-model-ckpt/golden-metrics-model-gpu.csv"))
+
+        self.assertTrue(
+            cmp(
+                f"{ROOT_DIR}/single-model-ckpt/results/metrics-model-inference.csv",
+                f"{ROOT_DIR}/single-model-ckpt/golden-metrics-model-inference.csv"
+            ))
+
+        self.assertTrue(
+            cmp(f"{ROOT_DIR}/single-model-ckpt/results/metrics-server-only.csv",
+                f"{ROOT_DIR}/single-model-ckpt/golden-metrics-server-only.csv"))
+
+        rmtree(f"{ROOT_DIR}/single-model-ckpt/results/")
+
+    def test_create_inference_table_with_backend_parameters(self):
+        args = ['model-analyzer', 'analyze', '-f', 'config.yml']
+        yaml_content = convert_to_bytes("""
+            analysis_models: analysis_models
+            inference_output_fields: model_name,batch_size,backend_parameter/parameter_1,backend_parameter/parameter_2
+        """)
+        config = self._evaluate_config(args, yaml_content)
+        state_manager = AnalyzerStateManager(config=config, server=None)
+        result_manager = ResultManager(config=config,
+                                       state_manager=state_manager)
+
+        result_manager._create_inference_table()
+        self.assertTrue(result_manager._inference_output_fields == [
+            'model_name', 'batch_size', 'backend_parameter/parameter_1',
+            'backend_parameter/parameter_2'
+        ])
+
+    def test_multi_model_csv_against_golden(self):
+        """
+        Match the csvs against the golden versions in
+        tests/common/multi-model-ckpt
+        """
+        self._multi_model_result_manager.tabulate_results()
+        self._multi_model_result_manager.export_results()
+
+        self.assertTrue(
+            cmp(f"{ROOT_DIR}/multi-model-ckpt/results/metrics-model-gpu.csv",
+                f"{ROOT_DIR}/multi-model-ckpt/golden-metrics-model-gpu.csv"))
+
+        self.assertTrue(
+            cmp(
+                f"{ROOT_DIR}/multi-model-ckpt/results/metrics-model-inference.csv",
+                f"{ROOT_DIR}/multi-model-ckpt/golden-metrics-model-inference.csv"
+            ))
+
+        self.assertTrue(
+            cmp(f"{ROOT_DIR}/multi-model-ckpt/results/metrics-server-only.csv",
+                f"{ROOT_DIR}/multi-model-ckpt/golden-metrics-server-only.csv"))
+
+        rmtree(f"{ROOT_DIR}/multi-model-ckpt/results/")
 
     def test_create_inference_table_with_backend_parameters(self):
         args = ['model-analyzer', 'analyze', '-f', 'config.yml']
@@ -116,13 +194,13 @@ class TestResultManager(trc.TestResultCollector):
                 'backend_parameter/model_1_key_2',
                 'backend_parameter/model_2_key_1'
             ],
-            batch_size='batch_size',
-            concurrency=None,
+            batch_sizes='batch_size',
+            concurrencies=None,
             satisfies=None,
             model_name='model_name',
             model_config_path=None,
-            dynamic_batching=None,
-            instance_group=None,
+            dynamic_batchings=None,
+            instance_groups=None,
             backend_parameters=backend_parameters)
         self.assertTrue(row == [
             'model_name', 'batch_size', 'model_1_value_1', 'model_1_value_2',
@@ -142,3 +220,45 @@ class TestResultManager(trc.TestResultCollector):
         cli.parse()
         mock_config.stop()
         return config
+
+    def _create_single_model_result_manager(self):
+        args = [
+            'model-analyzer', 'analyze', '-f', 'config.yml',
+            '--checkpoint-directory', f'{ROOT_DIR}/single-model-ckpt/',
+            '--export-path', f'{ROOT_DIR}/single-model-ckpt/'
+        ]
+        yaml_content = convert_to_bytes("""
+            analysis_models: add_sub
+        """)
+        config = self._evaluate_config(args, yaml_content)
+        state_manager = AnalyzerStateManager(config=config, server=None)
+        state_manager.load_checkpoint(checkpoint_required=True)
+
+        self._single_model_result_manager = ResultManager(
+            config=config, state_manager=state_manager)
+
+        self._single_model_result_manager.create_tables()
+        self._single_model_result_manager.compile_and_sort_results()
+
+    def _create_multi_model_result_manager(self):
+        args = [
+            'model-analyzer', 'analyze', '-f', 'config.yml',
+            '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/',
+            '--export-path', f'{ROOT_DIR}/multi-model-ckpt/'
+        ]
+        yaml_content = convert_to_bytes("""
+            analysis_models: resnet50_libtorch,vgg19_libtorch
+        """)
+        config = self._evaluate_config(args, yaml_content)
+        state_manager = AnalyzerStateManager(config=config, server=None)
+        state_manager.load_checkpoint(checkpoint_required=True)
+
+        self._multi_model_result_manager = ResultManager(
+            config=config, state_manager=state_manager)
+
+        self._multi_model_result_manager.create_tables()
+        self._multi_model_result_manager.compile_and_sort_results()
+
+
+if __name__ == "__main__":
+    unittest.main()
