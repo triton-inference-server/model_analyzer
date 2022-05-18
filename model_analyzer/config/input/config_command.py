@@ -97,10 +97,8 @@ class ConfigCommand:
         else:
             yaml_config = None
 
-        validator = YamlConfigValidator()
         if yaml_config:
-            for option in yaml_config.keys():
-                validator.is_valid_option(option)
+            YamlConfigValidator.is_yaml_file_valid(yaml_config)
 
         for key, value in self._fields.items():
             self._fields[key].set_name(key)

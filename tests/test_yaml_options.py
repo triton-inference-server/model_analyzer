@@ -12,37 +12,84 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import yaml
 from .common import test_result_collector as trc
 from model_analyzer.config.input.yaml_config_validator import YamlConfigValidator
+from .common.test_utils import convert_to_bytes
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class TestYamlOptions(trc.TestResultCollector):
 
-    @classmethod
-    def setUpClass(cls):
-        cls.yaml_arg_validator = YamlConfigValidator()
-
     def test_correct_option(self):
         correct_option = "client_max_retries"
-        self.assertTrue(
-            TestYamlOptions.yaml_arg_validator.is_valid_option(correct_option))
+        self.assertTrue(YamlConfigValidator.is_valid_option(correct_option))
 
     def test_misspelled_option(self):
-        misspelled_option = "profile_model"  # should be "profile_models"
-        self.assertFalse(
-            TestYamlOptions.yaml_arg_validator.is_valid_option(
-                misspelled_option))
+        misspelled_option = "profile_model"
+        self.assertFalse(YamlConfigValidator.is_valid_option(misspelled_option))
 
     def test_using_hyphens_not_underscores(self):
         hyphen_option = "triton-server-flags"
-        self.assertFalse(
-            TestYamlOptions.yaml_arg_validator.is_valid_option(hyphen_option))
+        self.assertFalse(YamlConfigValidator.is_valid_option(hyphen_option))
 
     def test_multiple_options(self):
-        options = {"client_max_retries", "profile_model", "triton-server-flags"}
+        options = {
+            "client_max_retries", "profile_model", "triton-server-flags",
+            "DURATION_seconds", ""
+        }
         count = 0
         for entry in options:
-            if TestYamlOptions.yaml_arg_validator.is_valid_option(entry):
+            if not YamlConfigValidator.is_valid_option(entry):
                 count += 1
-        self.assertEqual(count, 1,
-                         "Incorrect number of yaml options returned True")
+        self.assertEqual(
+            count, 4,
+            f"{count} incorrect yaml options are present in the yaml configuration file"
+        )
+
+    def test_valid_yaml_file(self):
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_instance_count: 16
+            run_config_search_disable: True
+            profile_models:
+                test_model:
+                    model_config_parameters:
+                        max_batch_size: [1,4,16]
+                        instance_group:
+                        -
+                            kind: KIND_GPU
+                            count: [1,2]                        
+            """)
+        # yapf: enable
+
+        yaml_config = self._load_config_file(yaml_content)
+        self.assertTrue(YamlConfigValidator.is_yaml_file_valid(yaml_config))
+
+    def test_invalid_yaml_file(self):
+        # yapf: disable
+        yaml_content = convert_to_bytes("""
+            run-config-search-max-instance-count: 16
+            run_config_search_disable: True
+            profile_models:
+                test_model:
+                    model_config_parameters:
+                        max_batch_size: [1,4,16]
+                        instance_group:
+                        -
+                            kind: KIND_GPU
+                            count: [1,2]                        
+            """)
+        # yapf: enable
+
+        yaml_config = self._load_config_file(yaml_content)
+        with self.assertRaises(TritonModelAnalyzerException):
+            YamlConfigValidator.is_yaml_file_valid(yaml_config)
+
+    def _load_config_file(self, yaml_content):
+        """
+        Load YAML config
+        """
+
+        config = yaml.safe_load(yaml_content)
+        return config
