@@ -30,6 +30,9 @@ class ExperimentData:
         """
         Add a run_config_measurement for the given run_config
         """
+        if not run_config_measurement:
+            return
+
         keys = self._extract_run_config_keys(run_config)
         self._add_run_config_measurement_from_keys(keys, run_config,
                                                    run_config_measurement)
@@ -90,20 +93,23 @@ class ExperimentData:
         ma_key, pa_key = keys
 
         if ma_key not in self._data:
-            raise Exception(f"Model config {ma_key} not in results")
+            print(f"WARNING: Model config {ma_key} not in results")
+            return
         if pa_key not in self._data[ma_key]:
-            raise Exception(f"PA config {pa_key} not in results for {ma_key}")
+            return None
 
         return self._data[ma_key][pa_key]
 
     def _extract_run_config_keys(self, run_config):
 
-        # TODO: need to update the keys for multi-model
-        model_config = run_config.model_run_configs()[0].model_config()
-        perf_config = run_config.model_run_configs()[0].perf_config()
-
-        model_config_key = self._extract_model_config_key(model_config)
-        perf_analyzer_key = self._extract_perf_config_key(perf_config)
+        model_config_key = ";".join([
+            self._extract_model_config_key(x.model_config())
+            for x in run_config.model_run_configs()
+        ])
+        perf_analyzer_key = ";".join([
+            self._extract_perf_config_key(x.perf_config())
+            for x in run_config.model_run_configs()
+        ])
 
         return (model_config_key, perf_analyzer_key)
 
@@ -112,7 +118,7 @@ class ExperimentData:
         max_batch_size = model_config_dict.get('max_batch_size', 0)
         instance_group = model_config_dict.get('instance_group', [{}])
         instance_count = instance_group[0].get('count', 0)
-        key = f"max_batch_size={max_batch_size},instance_count={instance_count}"
+        key = f"instance_count={instance_count},max_batch_size={max_batch_size}"
         return key
 
     def _extract_perf_config_key(self, perf_config):
@@ -120,8 +126,6 @@ class ExperimentData:
         return self._make_pa_key_from_cli_string(pa_string)
 
     def _make_pa_key_from_cli_string(self, pa_cli_string):
-        concurrency_group = re.search('--concurrency-range=(\d+)',
-                                      pa_cli_string)
-        concurrency = int(concurrency_group.group(1))
-        key = f"concurrency={concurrency}"
+        concurrencies = re.findall('--concurrency-range=\d+', pa_cli_string)
+        key = ';'.join(concurrencies)
         return key

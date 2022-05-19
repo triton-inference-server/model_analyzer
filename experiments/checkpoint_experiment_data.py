@@ -31,8 +31,7 @@ class CheckpointExperimentData(ExperimentData):
         state_manager.load_checkpoint(checkpoint_required=True)
 
         results = state_manager.get_state_variable('ResultManager.results')
-        # TODO: Multi-model
-        model_name = config.profile_models[0].model_name()
+        model_name = ",".join([x.model_name() for x in config.profile_models])
         model_measurements = results.get_model_measurements_dict(model_name)
         for (run_config,
              run_config_measurements) in model_measurements.values():

@@ -59,6 +59,8 @@ class ExperimentEvaluator:
         print()
 
     def _run_config_to_string(self, run_config):
-        # TODO: Multi-model
-        mc = run_config.model_run_configs()[0].model_config()
-        return f"{mc.get_config()}"
+        str = "\n".join([
+            f"{x.model_config().get_config()}"
+            for x in run_config.model_run_configs()
+        ])
+        return str
