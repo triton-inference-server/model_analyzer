@@ -19,21 +19,22 @@ from unittest.mock import MagicMock, patch
 class GeneratorExperimentFactory:
 
     @staticmethod
-    def get_generator_and_patches(generator_name, profile_config):
+    def create_generator(generator_name, profile_config):
         """ 
-        Given a generator name, create that and return that generator along
-        with a list of patches to apply when using the generator
+        Given a generator name, create and return it
+
+        As a side-effect, some patching may occur to allow the generator
+        to run in an offline scenario.
         """
         if generator_name == "RunConfigGenerator":
             generator = RunConfigGenerator(profile_config,
                                            profile_config.profile_models,
                                            MagicMock())
-            patches = [
-                patch(
-                    'model_analyzer.config.generate.run_config_generator.RunConfigGenerator._determine_triton_server_env'
-                )
-            ]
+            p = patch(
+                'model_analyzer.config.generate.run_config_generator.RunConfigGenerator._determine_triton_server_env'
+            )
+            p.start()
 
-            return [generator, patches]
+            return generator
         else:
             raise Exception(f"Unknown generator {generator_name}")

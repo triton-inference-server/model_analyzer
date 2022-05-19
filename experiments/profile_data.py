@@ -31,7 +31,8 @@ class ProfileData:
         Add a run_config_measurement for the given run_config
         """
         keys = self._extract_run_config_keys(run_config)
-        self._add_run_config_measurement_from_keys(keys, run_config_measurement)
+        self._add_run_config_measurement_from_keys(keys, run_config,
+                                                   run_config_measurement)
 
     def get_run_config_measurement(self, run_config):
         """ 
@@ -40,14 +41,11 @@ class ProfileData:
         keys = self._extract_run_config_keys(run_config)
         return self._get_run_config_measurement_from_keys(keys)
 
-    def get_config_count(self):
+    def get_model_config_count(self):
         """ 
         Get the total number of model configs in the data
         """
-        count = 0
-        for ma_key in self._data.keys():
-            count += 1
-        return count
+        return len(self._data.keys())
 
     def get_run_config_measurement_count(self):
         """ 
@@ -55,8 +53,7 @@ class ProfileData:
         """
         count = 0
         for ma_key in self._data.keys():
-            for pa_key in self._data[ma_key].keys():
-                count += 1
+            count += len(self._data[ma_key].keys())
         return count
 
     def get_best_run_config_measurement(self):
@@ -72,37 +69,36 @@ class ProfileData:
         """
         return self._best_run_config
 
-    def _add_run_config_measurement_from_keys(self, keys,
+    def _add_run_config_measurement_from_keys(self, keys, run_config,
                                               run_config_measurement):
-        self._update_best_trackers(keys, run_config_measurement)
+        self._update_best_trackers(run_config, run_config_measurement)
 
         curr_dict = self._data
 
-        for i in range(len(keys) - 1):
-            if keys[i] not in curr_dict:
-                curr_dict[keys[i]] = {}
-            curr_dict = curr_dict[keys[i]]
-        curr_dict[keys[-1]] = run_config_measurement
+        ma_key, pa_key = keys
 
-    def _update_best_trackers(self, keys, run_config_measurement):
+        if ma_key not in curr_dict:
+            curr_dict[ma_key] = {}
+        curr_dict[ma_key][pa_key] = run_config_measurement
+
+    def _update_best_trackers(self, run_config, run_config_measurement):
         if not self._best_run_config_measurement or run_config_measurement > self._best_run_config_measurement:
             self._best_run_config_measurement = run_config_measurement
-            self._best_run_config = keys[0]
+            self._best_run_config = run_config
 
     def _get_run_config_measurement_from_keys(self, keys):
-        curr_dict = self._data
+        ma_key, pa_key = keys
 
-        for i in range(len(keys) - 1):
-            if keys[i] not in curr_dict:
-                raise Exception(f"keys {keys} not in results")
-            curr_dict = curr_dict[keys[i]]
+        if ma_key not in self._data:
+            raise Exception(f"Model config {ma_key} not in results")
+        if pa_key not in self._data[ma_key]:
+            raise Exception(f"PA config {pa_key} not in results for {ma_key}")
 
-        if keys[-1] not in curr_dict:
-            raise Exception(f"final key of keys {keys} not in results")
-        return curr_dict[keys[-1]]
+        return self._data[ma_key][pa_key]
 
     def _extract_run_config_keys(self, run_config):
 
+        # TODO: need to update the keys for multi-model
         model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
 

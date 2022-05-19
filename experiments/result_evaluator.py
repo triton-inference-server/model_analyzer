@@ -26,16 +26,20 @@ class ResultEvaluator:
     def print_results(self):
         overall_best_measurement = self._raw_data.get_best_run_config_measurement(
         )
+        overall_best_run_config = self._raw_data.get_best_run_config()
         generator_best_measurement = self._profile_data.get_best_run_config_measurement(
         )
+        generator_best_run_config = self._raw_data.get_best_run_config()
 
         print()
         print("====================================")
         print(
             f"Overall num measurements: {self._raw_data.get_run_config_measurement_count()}"
         )
-        print(f"Overall num configs: {self._raw_data.get_config_count()}")
-        print(f"Overall best config: {self._raw_data.get_best_run_config()}")
+        print(f"Overall num configs: {self._raw_data.get_model_config_count()}")
+        print(
+            f"Overall best config: {self._run_config_to_string(overall_best_run_config)}"
+        )
         print(
             f"Overall best throughput: {overall_best_measurement.get_non_gpu_metric_value('perf_throughput')}"
         )
@@ -43,11 +47,18 @@ class ResultEvaluator:
         print(
             f"Generator num measurements: {self._profile_data.get_run_config_measurement_count()}"
         )
-        print(f"Generator num configs: {self._profile_data.get_config_count()}")
         print(
-            f"Generator best config: {self._profile_data.get_best_run_config()}"
+            f"Generator num configs: {self._profile_data.get_model_config_count()}"
+        )
+        print(
+            f"Generator best config: {self._run_config_to_string(generator_best_run_config)}"
         )
         print(
             f"Generator best throughput: {generator_best_measurement.get_non_gpu_metric_value('perf_throughput')}"
         )
         print()
+
+    def _run_config_to_string(self, run_config):
+        # TODO: Multi-model
+        mc = run_config.model_run_configs()[0].model_config()
+        return f"{mc.get_config()}"

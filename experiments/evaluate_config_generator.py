@@ -34,16 +34,10 @@ class EvaluateConfigGenerator:
 
     def execute_generator(self, generator_name):
 
-        generator, patches = GeneratorExperimentFactory.get_generator_and_patches(
+        generator = GeneratorExperimentFactory.create_generator(
             generator_name, self._profile_config)
 
-        for patch in patches:
-            patch.start()
-
         self._run_generator(generator)
-
-        for patch in patches:
-            patch.stop()
 
     def print_results(self):
         result_evaluator = ResultEvaluator(self._checkpoint_data,
