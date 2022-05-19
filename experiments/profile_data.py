@@ -23,22 +23,22 @@ class ProfileData:
     def __init__(self):
         self._data = {}
 
-        self._best_config = None
-        self._best_measurement = None
+        self._best_run_config = None
+        self._best_run_config_measurement = None
 
-    def add_measurement(self, run_config, measurement):
+    def add_run_config_measurement(self, run_config, run_config_measurement):
         """
-        Add the measurement for the given run_config
+        Add a run_config_measurement for the given run_config
         """
         keys = self._extract_run_config_keys(run_config)
-        self._add_measurement_from_keys(keys, measurement)
+        self._add_run_config_measurement_from_keys(keys, run_config_measurement)
 
-    def get_measurement(self, run_config):
+    def get_run_config_measurement(self, run_config):
         """ 
-        Get the measurement belonging to a given run config
+        Get the run_config_measurement belonging to a given run_config
         """
         keys = self._extract_run_config_keys(run_config)
-        return self._get_measurement_from_keys(keys)
+        return self._get_run_config_measurement_from_keys(keys)
 
     def get_config_count(self):
         """ 
@@ -49,7 +49,7 @@ class ProfileData:
             count += 1
         return count
 
-    def get_measurement_count(self):
+    def get_run_config_measurement_count(self):
         """ 
         Get the total number of measurements in the data
         """
@@ -59,20 +59,22 @@ class ProfileData:
                 count += 1
         return count
 
-    def get_best_measurement(self):
+    def get_best_run_config_measurement(self):
         """
         Get the best overall measurement in the data
         """
-        return self._best_measurement
+        return self._best_run_config_measurement
 
-    def get_best_config(self):
+    def get_best_run_config(self):
         """
-        Get the config corresponding to the best overall measurement in the data
+        Get the run_config corresponding to the best overall 
+        run_config_measurement in the data
         """
-        return self._best_config
+        return self._best_run_config
 
-    def _add_measurement_from_keys(self, keys, measurement):
-        self._update_best_trackers(keys, measurement)
+    def _add_run_config_measurement_from_keys(self, keys,
+                                              run_config_measurement):
+        self._update_best_trackers(keys, run_config_measurement)
 
         curr_dict = self._data
 
@@ -80,14 +82,14 @@ class ProfileData:
             if keys[i] not in curr_dict:
                 curr_dict[keys[i]] = {}
             curr_dict = curr_dict[keys[i]]
-        curr_dict[keys[-1]] = measurement
+        curr_dict[keys[-1]] = run_config_measurement
 
-    def _update_best_trackers(self, keys, measurement):
-        if not self._best_measurement or measurement > self._best_measurement:
-            self._best_measurement = measurement
-            self._best_config = keys[0]
+    def _update_best_trackers(self, keys, run_config_measurement):
+        if not self._best_run_config_measurement or run_config_measurement > self._best_run_config_measurement:
+            self._best_run_config_measurement = run_config_measurement
+            self._best_run_config = keys[0]
 
-    def _get_measurement_from_keys(self, keys):
+    def _get_run_config_measurement_from_keys(self, keys):
         curr_dict = self._data
 
         for i in range(len(keys) - 1):

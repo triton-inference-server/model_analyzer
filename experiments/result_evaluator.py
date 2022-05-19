@@ -24,25 +24,29 @@ class ResultEvaluator:
         self._profile_data = profile_data
 
     def print_results(self):
-        overall_best_measurement = self._raw_data.get_best_measurement()
-        generator_best_measurement = self._profile_data.get_best_measurement()
+        overall_best_measurement = self._raw_data.get_best_run_config_measurement(
+        )
+        generator_best_measurement = self._profile_data.get_best_run_config_measurement(
+        )
 
         print()
         print("====================================")
         print(
-            f"Overall num measurements: {self._raw_data.get_measurement_count()}"
+            f"Overall num measurements: {self._raw_data.get_run_config_measurement_count()}"
         )
         print(f"Overall num configs: {self._raw_data.get_config_count()}")
-        print(f"Overall best config: {self._raw_data.get_best_config()}")
+        print(f"Overall best config: {self._raw_data.get_best_run_config()}")
         print(
             f"Overall best throughput: {overall_best_measurement.get_non_gpu_metric_value('perf_throughput')}"
         )
         print()
         print(
-            f"Generator num measurements: {self._profile_data.get_measurement_count()}"
+            f"Generator num measurements: {self._profile_data.get_run_config_measurement_count()}"
         )
         print(f"Generator num configs: {self._profile_data.get_config_count()}")
-        print(f"Generator best config: {self._profile_data.get_best_config()}")
+        print(
+            f"Generator best config: {self._profile_data.get_best_run_config()}"
+        )
         print(
             f"Generator best throughput: {generator_best_measurement.get_non_gpu_metric_value('perf_throughput')}"
         )

@@ -42,4 +42,5 @@ class CheckpointData(ProfileData):
             for (perf_analyzer_string,
                  measurement) in run_config_measurements.items():
                 pa_key = self._make_pa_key_from_cli_string(perf_analyzer_string)
-                self._add_measurement_from_keys([ma_key, pa_key], measurement)
+                self._add_run_config_measurement_from_keys([ma_key, pa_key],
+                                                           measurement)

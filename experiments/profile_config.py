@@ -43,11 +43,11 @@ class ProfileConfig:
         yaml_content = ""
 
         # Could overload yaml data here. May want to expose this
-        #yaml_content = convert_to_bytes("""
-        #    run_config_search_max_concurrency: 2
-        #    run_config_search_max_instance_count: 2
-        #    run_config_search_max_model_batch_size: 2
-        #    """)
+        yaml_content = convert_to_bytes("""
+            run_config_search_max_concurrency: 2
+            run_config_search_max_instance_count: 2
+            run_config_search_max_model_batch_size: 2
+            """)
         #yapf: enable
 
         mock_config = MockConfig(args, yaml_content)
