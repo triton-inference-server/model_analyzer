@@ -15,7 +15,7 @@
 import re
 
 
-class ProfileData:
+class ExperimentData:
     """ 
     Class to hold and organize measurements for run configs
     """

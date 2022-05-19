@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-class ResultEvaluator:
+class ExperimentEvaluator:
     """ 
     Class to compare the results of a config generator execution against
     a checkpoint of raw data

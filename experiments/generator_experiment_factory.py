@@ -19,7 +19,7 @@ from unittest.mock import MagicMock, patch
 class GeneratorExperimentFactory:
 
     @staticmethod
-    def create_generator(generator_name, profile_config):
+    def create_generator(generator_name, config_command):
         """ 
         Given a generator name, create and return it
 
@@ -27,8 +27,8 @@ class GeneratorExperimentFactory:
         to run in an offline scenario.
         """
         if generator_name == "RunConfigGenerator":
-            generator = RunConfigGenerator(profile_config,
-                                           profile_config.profile_models,
+            generator = RunConfigGenerator(config_command,
+                                           config_command.profile_models,
                                            MagicMock())
             p = patch(
                 'model_analyzer.config.generate.run_config_generator.RunConfigGenerator._determine_triton_server_env'

@@ -19,7 +19,7 @@ from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 
 
-class ProfileConfig:
+class ExperimentConfigCommandCreator:
     """
     Static class to fake out the CLI/YAML process and create a ConfigCommandProfile object
     """

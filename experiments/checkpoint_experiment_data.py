@@ -12,16 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from profile_data import ProfileData
-
+from experiments.experiment_data import ExperimentData
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from unittest.mock import MagicMock
-import re
 
 
-class CheckpointData(ProfileData):
+class CheckpointExperimentData(ExperimentData):
     """
-    Extends ProfileData to be able to preload data from a checkpoint
+    Extends ExperimentData to be able to preload data from a checkpoint
     """
 
     def __init__(self, config):

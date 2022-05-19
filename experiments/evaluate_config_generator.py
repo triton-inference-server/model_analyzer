@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from experiments.result_evaluator import ResultEvaluator
+from experiments.experiment_evaluator import ExperimentEvaluator
 from generator_experiment_factory import GeneratorExperimentFactory
-from profile_config import ProfileConfig
-from profile_data import ProfileData
-from checkpoint_data import CheckpointData
+from experiment_config_command_creator import ExperimentConfigCommandCreator
+from experiment_data import ExperimentData
+from checkpoint_experiment_data import CheckpointExperimentData
 
 
 class EvaluateConfigGenerator:
@@ -27,21 +27,22 @@ class EvaluateConfigGenerator:
 
     def __init__(self, model_name, data_path):
         self._model_name = model_name
-        self._profile_config = ProfileConfig.make_config(data_path, model_name)
+        self._config_command = ExperimentConfigCommandCreator.make_config(
+            data_path, model_name)
 
-        self._checkpoint_data = CheckpointData(self._profile_config)
-        self._profile_data = ProfileData()
+        self._checkpoint_data = CheckpointExperimentData(self._config_command)
+        self._profile_data = ExperimentData()
 
     def execute_generator(self, generator_name):
 
         generator = GeneratorExperimentFactory.create_generator(
-            generator_name, self._profile_config)
+            generator_name, self._config_command)
 
         self._run_generator(generator)
 
     def print_results(self):
-        result_evaluator = ResultEvaluator(self._checkpoint_data,
-                                           self._profile_data)
+        result_evaluator = ExperimentEvaluator(self._checkpoint_data,
+                                               self._profile_data)
         result_evaluator.print_results()
 
     def _run_generator(self, cg):
