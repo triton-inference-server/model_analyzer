@@ -83,17 +83,17 @@ class TestTritonClientMethods(trc.TestResultCollector):
                                    " wait for server ready"):
                 self.tritonclient_mock.raise_exception_on_wait_for_server_ready(
                 )
-                client.wait_for_server_ready(num_retries=1)
+                client.wait_for_server_ready(num_retries=1, sleep_time=0.1)
             self.tritonclient_mock.reset()
 
             with self.assertRaises(TritonModelAnalyzerException,
                                    msg="Expected Exception on"
                                    " server not ready"):
                 self.tritonclient_mock.set_server_not_ready()
-                client.wait_for_server_ready(num_retries=5)
+                client.wait_for_server_ready(num_retries=1, sleep_time=0.1)
 
             self.tritonclient_mock.reset()
-            client.wait_for_server_ready(num_retries=1)
+            client.wait_for_server_ready(num_retries=1, sleep_time=0.1)
 
         # HTTP client
         client = TritonClientFactory.create_http_client(server_url=HTTP_URL)
@@ -112,16 +112,19 @@ class TestTritonClientMethods(trc.TestResultCollector):
         # For reuse
         def _test_with_client(self, client):
             client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
-                                        num_retries=1)
+                                        num_retries=1,
+                                        sleep_time=0.1)
             self.tritonclient_mock.reset()
 
             self.tritonclient_mock.set_model_not_ready()
             self.assertTrue(
                 client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
-                                            num_retries=2), -1)
+                                            num_retries=2,
+                                            sleep_time=0.1), -1)
             self.tritonclient_mock.reset()
             client.wait_for_model_ready(model_name=TEST_MODEL_NAME,
-                                        num_retries=1)
+                                        num_retries=1,
+                                        sleep_time=0.1)
 
         # HTTP client
         client = TritonClientFactory.create_http_client(server_url=HTTP_URL)
@@ -145,7 +148,7 @@ class TestTritonClientMethods(trc.TestResultCollector):
 
         # Start the server and wait till it is ready
         self.server.start()
-        client.wait_for_server_ready(num_retries=1)
+        client.wait_for_server_ready(num_retries=1, sleep_time=0.1)
 
         # Try to load a dummy model and expect error
         self.tritonclient_mock.raise_exception_on_load()
@@ -155,7 +158,9 @@ class TestTritonClientMethods(trc.TestResultCollector):
 
         # Load the test model
         client.load_model(TEST_MODEL_NAME)
-        client.wait_for_model_ready(TEST_MODEL_NAME, num_retries=1)
+        client.wait_for_model_ready(TEST_MODEL_NAME,
+                                    num_retries=1,
+                                    sleep_time=0.1)
 
         # Try to unload a dummy model and expect error
         self.tritonclient_mock.raise_exception_on_unload()
@@ -175,7 +180,7 @@ class TestTritonClientMethods(trc.TestResultCollector):
 
         # Start the server and wait till it is ready
         self.server.start()
-        client.wait_for_server_ready(num_retries=1)
+        client.wait_for_server_ready(num_retries=1, sleep_time=0.1)
 
         # Set model config, and try to get it
         test_model_config_dict = {'config': 'test_config'}
