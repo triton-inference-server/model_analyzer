@@ -70,7 +70,7 @@ class TestConfigGenerator:
             f"{model}_config_0"
             for model in args.report_model_configs.split(',')
         ]
-        self.config['output_format'] = ['pdf']
+        self.config['output_formats'] = ['pdf']
         with open('config-detailed-reports.yml', 'w+') as f:
             yaml.dump(self.config, f)
 

@@ -15,6 +15,7 @@
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 import yaml
+from .yaml_config_validator import YamlConfigValidator
 
 
 class ConfigCommand:
@@ -93,6 +94,7 @@ class ConfigCommand:
         # Config file has been specified
         if 'config_file' in args:
             yaml_config = self._load_config_file(args.config_file)
+            YamlConfigValidator.validate(yaml_config)
         else:
             yaml_config = None
 
