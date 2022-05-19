@@ -38,6 +38,14 @@ class TestYamlOptions(trc.TestResultCollector):
         self.assertFalse(YamlConfigValidator._is_valid_option(hyphen_option))
 
     def test_multiple_options(self):
+        """
+        Tests multiple options.
+        The following are incorrect: 
+            "profile_model", 
+            "triton-server-flags",
+            "DURATION_seconds", 
+            ""
+        """
         options = {
             "client_max_retries", "profile_model", "triton-server-flags",
             "DURATION_seconds", ""
