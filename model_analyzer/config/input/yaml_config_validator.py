@@ -49,7 +49,6 @@ class YamlConfigValidator:
 
     @staticmethod
     def _is_valid_option(option):
-        YamlConfigValidator._create_valid_option_set()
 
         if option not in YamlConfigValidator._valid_yaml_options:
             logger.error(

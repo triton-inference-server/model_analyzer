@@ -23,15 +23,18 @@ class TestYamlOptions(trc.TestResultCollector):
 
     def test_correct_option(self):
         correct_option = "client_max_retries"
+        YamlConfigValidator._create_valid_option_set()
         self.assertTrue(YamlConfigValidator._is_valid_option(correct_option))
 
     def test_misspelled_option(self):
         misspelled_option = "profile_model"
+        YamlConfigValidator._create_valid_option_set()
         self.assertFalse(
             YamlConfigValidator._is_valid_option(misspelled_option))
 
     def test_using_hyphens_not_underscores(self):
         hyphen_option = "triton-server-flags"
+        YamlConfigValidator._create_valid_option_set()
         self.assertFalse(YamlConfigValidator._is_valid_option(hyphen_option))
 
     def test_multiple_options(self):
@@ -40,6 +43,7 @@ class TestYamlOptions(trc.TestResultCollector):
             "DURATION_seconds", ""
         }
         count = 0
+        YamlConfigValidator._create_valid_option_set()
         for entry in options:
             if not YamlConfigValidator._is_valid_option(entry):
                 count += 1
