@@ -35,6 +35,7 @@ class TestPlotManager(trc.TestResultCollector):
 
     def setUp(self):
         self._create_single_model_result_manager()
+        self._create_multi_model_result_manager()
 
     def tearDown(self):
         patch.stopall()
@@ -63,6 +64,30 @@ class TestPlotManager(trc.TestResultCollector):
         )
 
         rmtree(f"{ROOT_DIR}/single-model-ckpt/plots/")
+
+    def test_multi_model_summary_plots_against_golden(self):
+        """
+        Match the summary plots against the golden versions in
+        tests/common/multi-model-ckpt
+        """
+        plot_manager = PlotManager(
+            config=self._multi_model_config,
+            result_manager=self._multi_model_result_manager)
+
+        plot_manager.create_summary_plots()
+        plot_manager.export_summary_plots()
+
+        self.assertTrue(
+            cmp(
+                f"{ROOT_DIR}/multi-model-ckpt/plots/simple/resnet50_libtorch,vgg19_libtorch/gpu_mem_v_latency.png",
+                f"{ROOT_DIR}/multi-model-ckpt/golden_gpu_mem_v_latency.png"))
+
+        self.assertTrue(
+            cmp(
+                f"{ROOT_DIR}/multi-model-ckpt/plots/simple/resnet50_libtorch,vgg19_libtorch/throughput_v_latency.png",
+                f"{ROOT_DIR}/multi-model-ckpt/golden_throughput_v_latency.png"))
+
+        rmtree(f"{ROOT_DIR}/multi-model-ckpt/plots/")
 
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
@@ -98,6 +123,27 @@ class TestPlotManager(trc.TestResultCollector):
 
         self._single_model_result_manager.create_tables()
         self._single_model_result_manager.compile_and_sort_results()
+
+    def _create_multi_model_result_manager(self):
+        args = [
+            'model-analyzer', 'analyze', '-f', 'config.yml',
+            '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/',
+            '--export-path', f'{ROOT_DIR}/multi-model-ckpt/'
+        ]
+        yaml_content = convert_to_bytes("""
+            analysis_models: resnet50_libtorch,vgg19_libtorch
+        """)
+        config = self._evaluate_config(args, yaml_content)
+        state_manager = AnalyzerStateManager(config=config, server=None)
+        state_manager.load_checkpoint(checkpoint_required=True)
+
+        self._multi_model_result_manager = ResultManager(
+            config=config, state_manager=state_manager)
+
+        self._multi_model_config = config
+
+        self._multi_model_result_manager.create_tables()
+        self._multi_model_result_manager.compile_and_sort_results()
 
 
 if __name__ == "__main__":
