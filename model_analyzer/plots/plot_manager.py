@@ -83,7 +83,6 @@ class PlotManager:
         for a given model
         """
 
-        # TODO-TMA-564: This needs to be updated because there will be multiple model configs
         for plot_config in self._config.plots:
             constraints = self._constraints['default']
             if plots_key in self._constraints:
