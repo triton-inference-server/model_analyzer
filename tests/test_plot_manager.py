@@ -52,7 +52,6 @@ class TestPlotManager(trc.TestResultCollector):
             result_manager=self._single_model_result_manager)
 
         plot_manager.create_summary_plots()
-        plot_manager.export_summary_plots()
 
         # Uncomment these lines to create a new output dump to compare against
         # file = open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.pkl", "wb")
@@ -73,8 +72,6 @@ class TestPlotManager(trc.TestResultCollector):
         plot = plot_manager._simple_plots['add_sub']['gpu_mem_v_latency']
         self._compare_plot_data(golden, plot)
 
-        rmtree(f"{ROOT_DIR}/single-model-ckpt/plots/")
-
     def test_multi_model_summary_plots_against_golden(self):
         """
         Match the summary plots against the golden versions in
@@ -85,7 +82,6 @@ class TestPlotManager(trc.TestResultCollector):
             result_manager=self._multi_model_result_manager)
 
         plot_manager.create_summary_plots()
-        plot_manager.export_summary_plots()
 
         # Uncomment these lines to create a new output dump to compare against
         # file = open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.pkl", "wb")
@@ -107,8 +103,6 @@ class TestPlotManager(trc.TestResultCollector):
         plot = plot_manager._simple_plots['resnet50_libtorch,vgg19_libtorch'][
             'gpu_mem_v_latency']
         self._compare_plot_data(golden, plot)
-
-    rmtree(f"{ROOT_DIR}/multi-model-ckpt/plots/")
 
     def _compare_plot_data(self, golden, plot):
         self.assertEqual(golden._name, plot._name)
