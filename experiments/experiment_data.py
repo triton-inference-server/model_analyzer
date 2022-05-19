@@ -33,16 +33,16 @@ class ExperimentData:
         if not run_config_measurement:
             return
 
-        keys = self._extract_run_config_keys(run_config)
-        self._add_run_config_measurement_from_keys(keys, run_config,
+        ma_key, pa_key = self._extract_run_config_keys(run_config)
+        self._add_run_config_measurement_from_keys(ma_key, pa_key, run_config,
                                                    run_config_measurement)
 
     def get_run_config_measurement(self, run_config):
         """ 
         Get the run_config_measurement belonging to a given run_config
         """
-        keys = self._extract_run_config_keys(run_config)
-        return self._get_run_config_measurement_from_keys(keys)
+        ma_key, pa_key = self._extract_run_config_keys(run_config)
+        return self._get_run_config_measurement_from_keys(ma_key, pa_key)
 
     def get_model_config_count(self):
         """ 
@@ -72,13 +72,11 @@ class ExperimentData:
         """
         return self._best_run_config
 
-    def _add_run_config_measurement_from_keys(self, keys, run_config,
+    def _add_run_config_measurement_from_keys(self, ma_key, pa_key, run_config,
                                               run_config_measurement):
         self._update_best_trackers(run_config, run_config_measurement)
 
         curr_dict = self._data
-
-        ma_key, pa_key = keys
 
         if ma_key not in curr_dict:
             curr_dict[ma_key] = {}
@@ -89,9 +87,7 @@ class ExperimentData:
             self._best_run_config_measurement = run_config_measurement
             self._best_run_config = run_config
 
-    def _get_run_config_measurement_from_keys(self, keys):
-        ma_key, pa_key = keys
-
+    def _get_run_config_measurement_from_keys(self, ma_key, pa_key):
         if ma_key not in self._data:
             print(f"WARNING: Model config {ma_key} not in results")
             return

@@ -41,11 +41,11 @@ class CheckpointExperimentData(ExperimentData):
             # perf_analyzer information for each measurement associated with it
             # is contained as a string in the run_config_measurements dict
             #
-            (ma_key, _) = self._extract_run_config_keys(run_config)
+            ma_key, _ = self._extract_run_config_keys(run_config)
 
             for (perf_analyzer_string,
                  run_config_measurement) in run_config_measurements.items():
 
                 pa_key = self._make_pa_key_from_cli_string(perf_analyzer_string)
                 self._add_run_config_measurement_from_keys(
-                    [ma_key, pa_key], run_config, run_config_measurement)
+                    ma_key, pa_key, run_config, run_config_measurement)

@@ -23,13 +23,13 @@
 from evaluate_config_generator import EvaluateConfigGenerator
 from model_analyzer.constants import LOGGER_NAME
 import argparse
-import logging
-
-logger = logging.getLogger(LOGGER_NAME)
-logger.setLevel(level=logging.DEBUG)
-logging.basicConfig(format="[Model Analyzer] %(message)s")
 
 parser = argparse.ArgumentParser()
+parser.add_argument('-v',
+                    '--verbose',
+                    required=False,
+                    action='store_true',
+                    help='Enable MA logging')
 parser.add_argument("--model-name",
                     type=str,
                     required=True,
@@ -44,6 +44,12 @@ parser.add_argument("--generator",
                     required=True,
                     help="The name of the config generator to evaluate")
 args = parser.parse_args()
+
+if args.verbose:
+    import logging
+    logger = logging.getLogger(LOGGER_NAME)
+    logger.setLevel(level=logging.DEBUG)
+    logging.basicConfig(format="[Model Analyzer] %(message)s")
 
 ecg = EvaluateConfigGenerator(args.model_name, args.data_path)
 ecg.execute_generator(args.generator)
