@@ -15,7 +15,7 @@
 import unittest
 
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes, ROOT_DIR
+from .common.test_utils import convert_to_bytes, default_encode, ROOT_DIR
 from .mocks.mock_config import MockConfig
 
 from model_analyzer.cli.cli import CLI
@@ -30,7 +30,7 @@ from filecmp import cmp
 from shutil import rmtree
 from unittest.mock import MagicMock, patch
 
-import pickle
+import json
 
 
 class TestPlotManager(trc.TestResultCollector):
@@ -54,20 +54,24 @@ class TestPlotManager(trc.TestResultCollector):
         plot_manager.create_summary_plots()
 
         # Uncomment these lines to create a new output dump to compare against
-        # file = open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.pkl", "wb")
-        # pickle.dump(plot_manager._simple_plots, file)
-        # file.close()
+        with open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.json", "wb") as f:
+            f.write(
+                convert_to_bytes(
+                    json.dumps(plot_manager.to_dict(), default=default_encode)))
 
-        file = open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.pkl", "rb")
-        golden_plot_manager_simple_plots = pickle.load(file)
-        file.close()
+        with open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.json", "rb") as f:
+            golden_plot_manager_dict = json.load(f)
 
-        golden = golden_plot_manager_simple_plots['add_sub'][
+        golden_plot_manager = PlotManager.from_dict(
+            golden_plot_manager_dict, self._single_model_config,
+            self._single_model_result_manager)
+
+        golden = golden_plot_manager._simple_plots['add_sub'][
             'throughput_v_latency']
         plot = plot_manager._simple_plots['add_sub']['throughput_v_latency']
         self._compare_plot_data(golden, plot)
 
-        golden = golden_plot_manager_simple_plots['add_sub'][
+        golden = golden_plot_manager._simple_plots['add_sub'][
             'gpu_mem_v_latency']
         plot = plot_manager._simple_plots['add_sub']['gpu_mem_v_latency']
         self._compare_plot_data(golden, plot)
@@ -84,21 +88,25 @@ class TestPlotManager(trc.TestResultCollector):
         plot_manager.create_summary_plots()
 
         # Uncomment these lines to create a new output dump to compare against
-        # file = open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.pkl", "wb")
-        # pickle.dump(plot_manager._simple_plots, file)
-        # file.close()
+        with open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.json", "wb") as f:
+            f.write(
+                convert_to_bytes(
+                    json.dumps(plot_manager.to_dict(), default=default_encode)))
 
-        file = open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.pkl", "rb")
-        golden_plot_manager_simple_plots = pickle.load(file)
-        file.close()
+        with open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.json", "rb") as f:
+            golden_plot_manager_dict = json.load(f)
 
-        golden = golden_plot_manager_simple_plots[
+        golden_plot_manager = PlotManager.from_dict(
+            golden_plot_manager_dict, self._multi_model_config,
+            self._multi_model_result_manager)
+
+        golden = golden_plot_manager._simple_plots[
             'resnet50_libtorch,vgg19_libtorch']['throughput_v_latency']
         plot = plot_manager._simple_plots['resnet50_libtorch,vgg19_libtorch'][
             'throughput_v_latency']
         self._compare_plot_data(golden, plot)
 
-        golden = golden_plot_manager_simple_plots[
+        golden = golden_plot_manager._simple_plots[
             'resnet50_libtorch,vgg19_libtorch']['gpu_mem_v_latency']
         plot = plot_manager._simple_plots['resnet50_libtorch,vgg19_libtorch'][
             'gpu_mem_v_latency']

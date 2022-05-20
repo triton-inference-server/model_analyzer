@@ -59,6 +59,32 @@ class SimplePlot:
 
         self._data = {}
 
+    def to_dict(self):
+        simple_plot_dict = {}
+        simple_plot_dict['_name'] = self._name
+        simple_plot_dict['_title'] = self._title
+        simple_plot_dict['_x_axis'] = self._x_axis
+        simple_plot_dict['_y_axis'] = self._y_axis
+        simple_plot_dict['_monotonic'] = self._monotonic
+        simple_plot_dict['_data'] = self._data
+
+        # self._fig and self._ax are purposefully omitted
+
+        return simple_plot_dict
+
+    @classmethod
+    def from_dict(cls, simple_plot_dict):
+        simple_plot = SimplePlot(None, None, None, None)
+
+        simple_plot._name = simple_plot_dict['_name']
+        simple_plot._title = simple_plot_dict['_title']
+        simple_plot._x_axis = simple_plot_dict['_x_axis']
+        simple_plot._y_axis = simple_plot_dict['_y_axis']
+        simple_plot._monotonic = simple_plot_dict['_monotonic']
+        simple_plot._data = simple_plot_dict['_data']
+
+        return simple_plot
+
     def add_run_config_measurement(self, label, run_config_measurement):
         """
         Adds a measurment to this plot
