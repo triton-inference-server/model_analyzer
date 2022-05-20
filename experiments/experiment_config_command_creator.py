@@ -40,7 +40,7 @@ class ExperimentConfigCommandCreator:
             '-f', 'path-to-config-file'
         ]
 
-        yaml_content = ""
+        yaml_content = convert_to_bytes("")
 
         # TODO: Add a way to overload yaml data here
         #yaml_content = convert_to_bytes("""
