@@ -94,7 +94,7 @@ class TestConfigGenerator:
                 } for model in self.profile_models
             }
         }
-        self._write_file(5, 10, 8, model_config)
+        self._write_file(5, 10, 9, model_config)
 
     def generate_perf_latency_test(self):
         model_config = {

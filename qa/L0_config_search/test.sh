@@ -114,7 +114,7 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
             MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
             MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
             METRICS_NUM_COLUMNS=10
-            INFERENCE_NUM_COLUMNS=8
+            INFERENCE_NUM_COLUMNS=9
             SERVER_METRICS_NUM_COLUMNS=5
             
             check_table_row_column \

@@ -201,6 +201,7 @@ class TestResultManager(trc.TestResultCollector):
             model_config_path=None,
             dynamic_batchings=None,
             instance_groups=None,
+            max_batch_sizes=None,
             backend_parameters=backend_parameters)
         self.assertTrue(row == [
             'model_name', 'batch_size', 'model_1_value_1', 'model_1_value_2',
