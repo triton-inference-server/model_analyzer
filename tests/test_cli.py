@@ -133,7 +133,7 @@ def get_test_options():
         OptionStruct("stringlist", "profile", "--triton-docker-mounts", None, "a:b:c, d:e:f", None, extra_commands=["--triton-launch-mode", "docker"]),
         OptionStruct("stringlist", "profile", "--gpus", None, "a, b, c", "all"),
         OptionStruct("stringlist", "analyze", "--inference-output-fields", None, "a, b, c",
-            "model_name,batch_size,concurrency,model_config_path,instance_group,satisfies_constraints,perf_throughput,perf_latency_p99"),
+            "model_name,batch_size,concurrency,model_config_path,instance_group,max_batch_size,satisfies_constraints,perf_throughput,perf_latency_p99"),
         OptionStruct("stringlist", "analyze", "--gpu-output-fields", None, "a, b, c",
             "model_name,gpu_uuid,batch_size,concurrency,model_config_path,instance_group,satisfies_constraints,gpu_used_memory,gpu_utilization,gpu_power_usage"),
         OptionStruct("stringlist", "analyze", "--server-output-fields", None, "a, b, c",

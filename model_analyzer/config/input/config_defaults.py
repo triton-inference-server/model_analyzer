@@ -104,8 +104,8 @@ DEFAULT_FILENAME_SERVER_ONLY = 'metrics-server-only.csv'
 
 DEFAULT_INFERENCE_OUTPUT_FIELDS = [
     'model_name', 'batch_size', 'concurrency', 'model_config_path',
-    'instance_group', 'satisfies_constraints', 'perf_throughput',
-    'perf_latency_p99'
+    'instance_group', 'max_batch_size', 'satisfies_constraints',
+    'perf_throughput', 'perf_latency_p99'
 ]
 DEFAULT_GPU_OUTPUT_FIELDS = [
     'model_name', 'gpu_uuid', 'batch_size', 'concurrency', 'model_config_path',

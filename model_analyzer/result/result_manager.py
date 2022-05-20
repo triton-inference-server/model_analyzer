@@ -47,6 +47,7 @@ class ResultManager:
         'concurrency': 'Concurrency',
         'model_config_path': 'Model Config Path',
         'instance_group': 'Instance Group',
+        'max_batch_size': 'Max Batch Size',
         'satisfies_constraints': 'Satisfies Constraints',
         'gpu_uuid': 'GPU UUID'
     }
@@ -486,7 +487,7 @@ class ResultManager:
         """
 
         model_name = run_config_result.model_name()
-        instance_groups, dynamic_batchings, cpu_onlys, backend_parameters = self._tablulate_measurements_setup(
+        instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters = self._tablulate_measurements_setup(
             run_config_result)
 
         passing_measurements = run_config_result.passing_measurements()
@@ -499,6 +500,7 @@ class ResultManager:
                 self._tabulate_measurement(
                     model_name=model_name,
                     instance_groups=instance_groups,
+                    max_batch_sizes=max_batch_sizes,
                     dynamic_batchings=dynamic_batchings,
                     run_config_measurement=run_config_measurement,
                     passes=passes,
@@ -514,6 +516,9 @@ class ResultManager:
             model_config.instance_group_string()
             for model_config in model_configs
         ]
+        max_batch_sizes = [
+            model_config.max_batch_size() for model_config in model_configs
+        ]
         dynamic_batchings = [
             model_config.dynamic_batching_string()
             for model_config in model_configs
@@ -527,11 +532,12 @@ class ResultManager:
             for model_config in model_configs
         ]
 
-        return instance_groups, dynamic_batchings, cpu_onlys, backend_parameters
+        return instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters
 
     def _tabulate_measurement(self, model_name, instance_groups,
-                              dynamic_batchings, run_config_measurement, passes,
-                              cpu_onlys, backend_parameters):
+                              max_batch_sizes, dynamic_batchings,
+                              run_config_measurement, passes, cpu_onlys,
+                              backend_parameters):
         """
         Add a single RunConfigMeasurement to the specified
         table
@@ -548,7 +554,7 @@ class ResultManager:
         inference_row = self._get_common_row_items(
             inference_fields, batch_sizes, concurrencies, satisfies, model_name,
             model_config_name, dynamic_batchings, instance_groups,
-            backend_parameters)
+            max_batch_sizes, backend_parameters)
 
         self._populate_inference_rows(run_config_measurement, inference_fields,
                                       inference_row)
@@ -561,12 +567,10 @@ class ResultManager:
             for gpu_uuid, metrics in run_config_measurement.gpu_data().items():
                 gpu_fields = self._gpu_output_fields
 
-                gpu_row = self._get_common_row_items(gpu_fields, batch_sizes,
-                                                     concurrencies, satisfies,
-                                                     model_name,
-                                                     model_config_name,
-                                                     dynamic_batchings,
-                                                     instance_groups)
+                gpu_row = self._get_common_row_items(
+                    gpu_fields, batch_sizes, concurrencies, satisfies,
+                    model_name, model_config_name, dynamic_batchings,
+                    instance_groups, max_batch_sizes)
 
                 self._add_uuid_to_gpu_row(gpu_row, gpu_uuid, gpu_fields)
                 self._add_metrics_to_gpu_row(gpu_row, metrics, gpu_fields)
@@ -593,7 +597,6 @@ class ResultManager:
         for metric in run_config_measurement.non_gpu_data()[0]:
             metric_tag_index = self._find_index_for_field(
                 inference_fields, metric.tag)
-
             if metric_tag_index is not None:
                 inference_row[
                     metric_tag_index] = self._create_non_gpu_metric_row_entry(
@@ -639,6 +642,7 @@ class ResultManager:
                               model_config_path,
                               dynamic_batchings,
                               instance_groups,
+                              max_batch_sizes,
                               backend_parameters=None):
         row = [None] * len(fields)
 
@@ -674,6 +678,12 @@ class ResultManager:
                                                         'instance_group')
         if instance_group_idx is not None:
             row[instance_group_idx] = format_for_csv(instance_groups)
+
+        # Max Batch Size
+        max_batch_size_idx = self._find_index_for_field(fields,
+                                                        'max_batch_size')
+        if max_batch_size_idx is not None:
+            row[max_batch_size_idx] = format_for_csv(max_batch_sizes)
 
         # Backend parameters
         if backend_parameters is not None:
