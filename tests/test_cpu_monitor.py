@@ -50,7 +50,7 @@ class TestCPUMonitor(trc.TestResultCollector):
         ]
 
         frequency = 1
-        monitoring_time = 2
+        monitoring_time = 0.1
         metrics = [CPUAvailableRAM, CPUUsedRAM]
 
         server = TritonServerFactory.create_server_local(
@@ -89,7 +89,7 @@ class TestCPUMonitor(trc.TestResultCollector):
         ]
 
         frequency = 1
-        monitoring_time = 2
+        monitoring_time = 0.1
         metrics = []
 
         server = TritonServerFactory.create_server_local(

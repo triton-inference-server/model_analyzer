@@ -80,7 +80,7 @@ class TestRemoteMonitor(trc.TestResultCollector):
     def test_record_memory(self):
         # One measurement every 0.1 seconds
         frequency = 0.1
-        monitoring_time = 1
+        monitoring_time = 0.1
         metrics = [GPUUsedMemory, GPUFreeMemory]
         gpu_monitor = RemoteMonitor(TEST_METRICS_URL, frequency, metrics)
         gpu_monitor.start_recording_metrics()
@@ -115,7 +115,7 @@ class TestRemoteMonitor(trc.TestResultCollector):
     def test_record_power(self):
         # One measurement every 0.01 seconds
         frequency = 0.1
-        monitoring_time = 1
+        monitoring_time = 0.1
         metrics = [GPUPowerUsage]
         gpu_monitor = RemoteMonitor(TEST_METRICS_URL, frequency, metrics)
         gpu_monitor.start_recording_metrics()
@@ -138,7 +138,7 @@ class TestRemoteMonitor(trc.TestResultCollector):
     def test_record_utilization(self):
         # One measurement every 0.01 seconds
         frequency = 0.1
-        monitoring_time = 1
+        monitoring_time = 0.1
         metrics = [GPUUtilization]
         gpu_monitor = RemoteMonitor(TEST_METRICS_URL, frequency, metrics)
         gpu_monitor.start_recording_metrics()

@@ -28,7 +28,7 @@ class TritonClient:
     TritonClientFactory
     """
 
-    def wait_for_server_ready(self, num_retries):
+    def wait_for_server_ready(self, num_retries, sleep_time=1):
         """
         Parameters
         ----------
@@ -47,13 +47,13 @@ class TritonClient:
         while retries > 0:
             try:
                 if self._client.is_server_ready():
-                    time.sleep(1)
+                    time.sleep(sleep_time)
                     return
                 else:
-                    time.sleep(1)
+                    time.sleep(sleep_time)
                     retries -= 1
             except Exception as e:
-                time.sleep(1)
+                time.sleep(sleep_time)
                 retries -= 1
                 if retries == 0:
                     raise TritonModelAnalyzerException(e)
@@ -109,7 +109,7 @@ class TritonClient:
             logger.info(f'Model {model_name} unload failed: {e}')
             return -1
 
-    def wait_for_model_ready(self, model_name, num_retries):
+    def wait_for_model_ready(self, model_name, num_retries, sleep_time=1):
         """
         Returns when model is ready.
 
@@ -136,11 +136,11 @@ class TritonClient:
                 if self._client.is_model_ready(model_name):
                     return
                 else:
-                    time.sleep(1)
+                    time.sleep(sleep_time)
                     retries -= 1
             except Exception as e:
                 error = e
-                time.sleep(1)
+                time.sleep(sleep_time)
                 retries -= 1
 
         logger.info(
