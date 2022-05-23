@@ -17,7 +17,7 @@ import re
 import pathlib
 
 FLAGS = None
-SKIP_EXTS = ('pt', 'log', 'png', 'pdf', 'ckpt', 'csv')
+SKIP_EXTS = ('pt', 'log', 'png', 'pdf', 'ckpt', 'csv', 'json')
 
 REPO_PATH_FROM_THIS_FILE = '../..'
 SKIP_PATHS = ('.git', 'VERSION', 'LICENSE')
