@@ -53,38 +53,6 @@ class PlotManager:
         self._simple_plots = defaultdict(list)
         self._detailed_plots = {}
 
-    def to_dict(self):
-        plot_manager_dict = {}
-
-        # These are purposefully omitted
-        # plot_manager_dict['_config'] = self._config
-        # plot_manager_dict['_result_manager'] = self._result_manager
-        # plot_manager_dict[
-        #     '_plot_export_directory'] = self._plot_export_directory
-        # plot_manager_dict['_detailed_plots'] = self._detailed_plots
-
-        plot_manager_dict['_simple_plots'] = {}
-        for spd_key, simple_plot_dict in self._simple_plots.items():
-            plot_manager_dict['_simple_plots'][spd_key] = {}
-            for sp_key, simple_plot in simple_plot_dict.items():
-                plot_manager_dict['_simple_plots'][spd_key][
-                    sp_key] = simple_plot.to_dict()
-
-        return plot_manager_dict
-
-    @classmethod
-    def from_dict(cls, plot_manager_dict, config, result_manager):
-        plot_manager = PlotManager(config, result_manager)
-
-        for simple_plots_key, simple_plots_dict in plot_manager_dict[
-                '_simple_plots'].items():
-            plot_manager._simple_plots[simple_plots_key] = {}
-            for simple_plot_key, simple_plot_dict in simple_plots_dict.items():
-                plot_manager._simple_plots[simple_plots_key][
-                    simple_plot_key] = SimplePlot.from_dict(simple_plot_dict)
-
-        return plot_manager
-
     def create_summary_plots(self):
         """
         Constructs simple plots based on config specs

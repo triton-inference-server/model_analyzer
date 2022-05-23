@@ -57,24 +57,15 @@ class TestPlotManager(trc.TestResultCollector):
         # with open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.json", "wb") as f:
         #     f.write(
         #         convert_to_bytes(
-        #             json.dumps(plot_manager.to_dict(), default=default_encode)))
+        #             json.dumps(self._plot_manager_to_dict(plot_manager),
+        #                        default=default_encode)))
 
         with open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.json", "rb") as f:
             golden_plot_manager_dict = json.load(f)
 
-        golden_plot_manager = PlotManager.from_dict(
-            golden_plot_manager_dict, self._single_model_config,
-            self._single_model_result_manager)
+        plot_manager_dict = self._plot_manager_to_dict(plot_manager)
 
-        golden = golden_plot_manager._simple_plots['add_sub'][
-            'throughput_v_latency']
-        plot = plot_manager._simple_plots['add_sub']['throughput_v_latency']
-        self._compare_plot_data(golden, plot)
-
-        golden = golden_plot_manager._simple_plots['add_sub'][
-            'gpu_mem_v_latency']
-        plot = plot_manager._simple_plots['add_sub']['gpu_mem_v_latency']
-        self._compare_plot_data(golden, plot)
+        self.assertEqual(golden_plot_manager_dict, plot_manager_dict)
 
     def test_multi_model_summary_plots_against_golden(self):
         """
@@ -91,34 +82,15 @@ class TestPlotManager(trc.TestResultCollector):
         # with open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.json", "wb") as f:
         #     f.write(
         #         convert_to_bytes(
-        #             json.dumps(plot_manager.to_dict(), default=default_encode)))
+        #             json.dumps(self._plot_manager_to_dict(plot_manager),
+        #                        default=default_encode)))
 
         with open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.json", "rb") as f:
             golden_plot_manager_dict = json.load(f)
 
-        golden_plot_manager = PlotManager.from_dict(
-            golden_plot_manager_dict, self._multi_model_config,
-            self._multi_model_result_manager)
+        plot_manager_dict = self._plot_manager_to_dict(plot_manager)
 
-        golden = golden_plot_manager._simple_plots[
-            'resnet50_libtorch,vgg19_libtorch']['throughput_v_latency']
-        plot = plot_manager._simple_plots['resnet50_libtorch,vgg19_libtorch'][
-            'throughput_v_latency']
-        self._compare_plot_data(golden, plot)
-
-        golden = golden_plot_manager._simple_plots[
-            'resnet50_libtorch,vgg19_libtorch']['gpu_mem_v_latency']
-        plot = plot_manager._simple_plots['resnet50_libtorch,vgg19_libtorch'][
-            'gpu_mem_v_latency']
-        self._compare_plot_data(golden, plot)
-
-    def _compare_plot_data(self, golden, plot):
-        self.assertEqual(golden._name, plot._name)
-        self.assertEqual(golden._title, plot._title)
-        self.assertEqual(golden._x_axis, plot._x_axis)
-        self.assertEqual(golden._y_axis, plot._y_axis)
-        self.assertEqual(golden._monotonic, plot._monotonic)
-        self.assertEqual(golden._data, plot._data)
+        self.assertEqual(golden_plot_manager_dict, plot_manager_dict)
 
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
@@ -175,6 +147,28 @@ class TestPlotManager(trc.TestResultCollector):
 
         self._multi_model_result_manager.create_tables()
         self._multi_model_result_manager.compile_and_sort_results()
+
+    def _plot_manager_to_dict(self, plot_manager):
+        plot_manager_dict = {}
+        plot_manager_dict['_simple_plots'] = {}
+        for spd_key, simple_plot_dict in plot_manager._simple_plots.items():
+            plot_manager_dict['_simple_plots'][spd_key] = {}
+            for sp_key, simple_plot in simple_plot_dict.items():
+                plot_manager_dict['_simple_plots'][spd_key][
+                    sp_key] = self._simple_plot_to_dict(simple_plot)
+
+        return plot_manager_dict
+
+    def _simple_plot_to_dict(self, simple_plot):
+        simple_plot_dict = {}
+        simple_plot_dict['_name'] = simple_plot._name
+        simple_plot_dict['_title'] = simple_plot._title
+        simple_plot_dict['_x_axis'] = simple_plot._x_axis
+        simple_plot_dict['_y_axis'] = simple_plot._y_axis
+        simple_plot_dict['_monotonic'] = simple_plot._monotonic
+        simple_plot_dict['_data'] = simple_plot._data
+
+        return simple_plot_dict
 
 
 if __name__ == "__main__":
