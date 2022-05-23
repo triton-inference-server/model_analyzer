@@ -33,7 +33,7 @@ from model_analyzer.config.input.config_defaults import \
     DEFAULT_CLIENT_PROTOCOL, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY, \
     DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY, \
     DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_GRPC_ENDPOINT, DEFAULT_MEASUREMENT_MODE, \
-    DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+    DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, DEFAULT_REQUEST_COUNT_MULTIPLIER
 
 
 class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
@@ -509,6 +509,17 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                                                               expected_configs,
                                                               pa_cli_args,
                                                               early_exit=False)
+
+    def test_calculate_measurement_request_count(self):
+        """
+        Test that this method returns the correct request count value
+        """
+        pacg = PerfAnalyzerConfigGenerator(MagicMock(), MagicMock(),
+                                           MagicMock(), MagicMock(),
+                                           MagicMock(), 128)
+
+        self.assertEqual(DEFAULT_REQUEST_COUNT_MULTIPLIER * 256,
+                         pacg._calculate_measurement_request_count(256))
 
     def _get_next_measurement(self):
 

@@ -15,7 +15,7 @@
 from .config_generator_interface import ConfigGeneratorInterface
 from .generator_utils import GeneratorUtils as utils
 
-from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
+from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE, DEFAULT_REQUEST_COUNT_MULTIPLIER
 from model_analyzer.constants import THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_TRIES
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
@@ -33,8 +33,13 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     earlier depending on results that it receives
     """
 
-    def __init__(self, cli_config, model_name, model_perf_analyzer_flags,
-                 model_parameters, early_exit_enable):
+    def __init__(self,
+                 cli_config,
+                 model_name,
+                 model_perf_analyzer_flags,
+                 model_parameters,
+                 early_exit_enable,
+                 model_max_batch_size=1):
         """
         Parameters
         ----------
@@ -52,6 +57,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         early_exit_enable: Bool
             If true, this class can early exit during search of concurrency
+            
+        model_max_batch_size: int
+            The model's maximum batch size
         """
 
         self._early_exit_enable = early_exit_enable
@@ -73,6 +81,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._all_results = []
 
         self._model_name = model_name
+        self._model_max_batch_size = model_max_batch_size
         self._perf_analyzer_flags = model_perf_analyzer_flags
 
         self._batch_sizes = sorted(model_parameters['batch_sizes'])
@@ -146,6 +155,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 new_perf_config.update_config(params)
                 new_perf_config.update_config(
                     {'concurrency-range': concurrency})
+                new_perf_config.update_config({
+                    'measurement-request-count':
+                        self._calculate_measurement_request_count(concurrency)
+                })
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)
 
@@ -246,3 +259,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _get_throughput(self, measurement):
         return measurement.get_non_gpu_metric_value('perf_throughput')
+
+    def _calculate_measurement_request_count(self, concurrency):
+        return DEFAULT_REQUEST_COUNT_MULTIPLIER * max(
+            concurrency, self._model_max_batch_size)

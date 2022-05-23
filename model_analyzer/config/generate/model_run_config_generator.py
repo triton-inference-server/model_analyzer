@@ -85,7 +85,8 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
             self._pacg = PerfAnalyzerConfigGenerator(
                 self._config, model_config.get_field('name'),
                 self._model_pa_flags, self._model_parameters,
-                self._pacg_early_exit_enable)
+                self._pacg_early_exit_enable,
+                model_config.get_field('max_batch_size'))
             perf_analyzer_config_generator = self._pacg.next_config()
             while not self._pacg.is_done():
                 perf_analyzer_config = next(perf_analyzer_config_generator)
