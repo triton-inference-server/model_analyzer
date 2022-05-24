@@ -19,6 +19,11 @@ class SearchConfig:
     """
 
     def __init__(self, dimensions):
+        """
+        Parameters
+        ----------
+        Dimensions: list of SearchDimension
+        """
         self._dimensions = dimensions
 
     def get_num_dimensions(self):
