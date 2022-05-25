@@ -34,11 +34,11 @@ class SearchConfig:
         """ Returns the SearchDimension at the given index """
         return self._dimensions[idx]
 
-    def get_min_dimension(self):
+    def get_min_indexes(self):
         """ 
-        Returns a coordinate cooresponding to the minimum of all SearchDimensions
+        Returns a list cooresponding to the minimum index of all SearchDimensions
         """
-        coordinate = []
+        min_indexes = []
         for dimension in self._dimensions:
-            coordinate.append(dimension.get_min_idx())
-        return coordinate
+            min_indexes.append(dimension.get_min_idx())
+        return min_indexes

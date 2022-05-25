@@ -115,3 +115,7 @@ class TestCoordinate(trc.TestResultCollector):
 
         self.assertEqual(indexes, [0, 1, 2, 3])
         self.assertEqual(values, [2, 4, 1, 7])
+
+    def test_stringification(self):
+        c1 = Coordinate([2, 4, 1, 7])
+        self.assertEqual("[2, 4, 1, 7]", c1.__str__())
