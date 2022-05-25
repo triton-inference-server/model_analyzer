@@ -40,7 +40,7 @@ class TestSearchConfig(trc.TestResultCollector):
         self.assertEqual(7, sc.get_dimension(0).get_value_at_idx(6))
         self.assertEqual(64, sc.get_dimension(1).get_value_at_idx(6))
 
-    def test_get_min_dimension(self):
+    def test_get_min_indexes(self):
         dimensions = []
         dimensions.append(
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 1,
@@ -49,4 +49,4 @@ class TestSearchConfig(trc.TestResultCollector):
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL))
         sc = SearchConfig(dimensions)
 
-        self.assertEqual([1, 0], sc.get_min_dimension())
+        self.assertEqual([1, 0], sc.get_min_indexes())
