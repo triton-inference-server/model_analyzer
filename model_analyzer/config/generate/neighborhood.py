@@ -52,7 +52,7 @@ class Neighborhood:
         """
 
         distance = 0
-        for i, v in enumerate(coordinate1):
+        for i, _ in enumerate(coordinate1):
             diff = coordinate1[i] - coordinate2[i]
             distance += math.pow(diff, 2)
         distance = math.sqrt(distance)
@@ -130,7 +130,7 @@ class Neighborhood:
         datapoints inside of the neighborhood to the weighted center of 
         the datapoints inside of the neighborhood
         """
-        coordinates, throughputs = self._compile_neighborhood_results()
+        coordinates, throughputs = self._compile_neighborhood_throughputs()
 
         coordinate_center = self._determine_coordinate_center(coordinates)
         throughput_center = self._determine_weighted_coordinate_center(
@@ -141,15 +141,15 @@ class Neighborhood:
         unit_vector = self._convert_to_unit_vector(vector)
         return unit_vector
 
-    def _compile_neighborhood_results(self):
+    def _compile_neighborhood_throughputs(self):
         coordinates = []
-        results = []
+        throughputs = []
         for coordinate in self._neighborhood:
             throughput = self._coordinate_data.get_throughput(coordinate)
             if throughput is not None:
                 coordinates.append(deepcopy(coordinate))
-                results.append(throughput)
-        return coordinates, results
+                throughputs.append(throughput)
+        return coordinates, throughputs
 
     def _determine_coordinate_center(self, coordinates):
         coordinate_center = Coordinate([0] *
@@ -184,9 +184,8 @@ class Neighborhood:
 
         # Convert the vector to unit vector
         if magnitude == 0:
-            # FIXME
-            raise Exception("Unhandled case of no resulting magnitude")
-
-        unit_vector = vector / magnitude
+            unit_vector = vector
+        else:
+            unit_vector = vector / magnitude
 
         return unit_vector
