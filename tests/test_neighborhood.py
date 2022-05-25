@@ -183,3 +183,23 @@ class TestNeighborhood(trc.TestResultCollector):
                          n.calculate_new_coordinate(magnitude))
         self.assertEqual(Coordinate([2, 2]),
                          n.calculate_new_coordinate(magnitude))
+
+    def test_no_magnitude_unit_vector(self):
+        """
+        Test that if the coordinate_center and weighted_coordinate_center
+        are the same, then the unit_vector is all 0s
+        """
+        cd = CoordinateData()
+        cd.set_throughput(Coordinate([1, 0]), 4)
+        cd.set_throughput(Coordinate([0, 1]), 4)
+
+        sc = SearchConfig([
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        n = Neighborhood(sc, cd, Coordinate([0, 0]), 2)
+
+        uv = n._get_unit_vector()
+        expected_uv = Coordinate([0, 0])
+        self.assertEqual(uv, expected_uv)
