@@ -29,7 +29,7 @@ PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CONCURRENCY="1"
-BENCHMARK_MODELS="bert_savedmodel resnet50_fp32_libtorch"
+BENCHMARK_MODELS="bert_savedmodel vgg19_libtorch"
 MODEL_NAMES="$(echo $BENCHMARK_MODELS | sed 's/ /,/g')"
 CHECKPOINT_DIRECTORY="./checkpoints"
 

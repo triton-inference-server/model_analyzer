@@ -54,7 +54,7 @@ class TestConfigGenerator:
         # Profile config
         self.config['run_config_search_disable'] = True
         self.config['concurrency'] = 16
-        self.config['batch-sizes'] = 8
+        self.config['batch_sizes'] = 8
         self.config['profile_models'] = self.models
 
         # Analyze config
