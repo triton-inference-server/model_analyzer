@@ -108,3 +108,6 @@ class Coordinate:
         for i, v in enumerate(self._values):
             ret[i] = v / other
         return ret
+
+    def __str__(self):
+        return str(self._values)
