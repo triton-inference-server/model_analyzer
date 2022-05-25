@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
+from model_analyzer.config.generate.undirected_run_config_generator import UndirectedRunConfigGenerator
 from unittest.mock import MagicMock, patch
 
 
@@ -26,6 +27,7 @@ class GeneratorExperimentFactory:
         As a side-effect, some patching may occur to allow the generator
         to run in an offline scenario.
         """
+
         if generator_name == "RunConfigGenerator":
             generator = RunConfigGenerator(config_command,
                                            config_command.profile_models,
@@ -35,6 +37,10 @@ class GeneratorExperimentFactory:
             )
             p.start()
 
+            return generator
+        elif generator_name == "UndirectedRunConfigGenerator":
+            generator = UndirectedRunConfigGenerator(
+                config_command, config_command.profile_models, MagicMock())
             return generator
         else:
             raise Exception(f"Unknown generator {generator_name}")
