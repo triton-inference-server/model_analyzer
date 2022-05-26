@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 from model_analyzer.config.generate.neighborhood import Neighborhood
 from .config_generator_interface import ConfigGeneratorInterface
 
@@ -154,7 +155,6 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
 
     def _get_next_run_config(self):
         # TODO multi-model
-
         mc = self._get_next_model_config()
 
         model_variant_name = mc.get_field('name')
@@ -171,20 +171,22 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         dimension_values = self._get_dimension_values(
             self._coordinate_to_measure)
 
-        base_model_config = ModelConfig.create_from_file(
-            f'{self._model_repository}/{self._base_model_name}')
-        mc_dict = base_model_config.get_config()
+        param_combo = {
+            'dynamic_batching': {},
+            'max_batch_size':
+                dimension_values['max_batch_size'],
+            'instance_group': [{
+                'count': dimension_values['instance_count'],
+                'kind': "KIND_GPU"
+            }]
+        }
 
-        mc_dict['dynamic_batching'] = {}
-        mc_dict['max_batch_size'] = dimension_values['max_batch_size']
-        mc_dict['instance_group'] = [{
-            'count': dimension_values['instance_count'],
-            'kind': "KIND_GPU"
-        }]
-        mc_dict['name'] = self._variant_name_manager.get_model_variant_name(
-            self._base_model_name, mc_dict)
-
-        model_config = ModelConfig.create_from_dictionary(mc_dict)
+        # TODO: multi-model
+        model_config = BaseModelConfigGenerator.make_model_config(
+            param_combo=param_combo,
+            model=self._models[0],
+            model_repository=self._config.model_repository,
+            variant_name_manager=self._variant_name_manager)
         return model_config
 
     # FIXME really need to scrub this
