@@ -39,7 +39,7 @@ class TestNeighborhood(trc.TestResultCollector):
     def test_create_neighborhood(self):
         cd = CoordinateData()
 
-        sc = SearchConfig([
+        sc = SearchConfig(1, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
@@ -66,7 +66,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd = CoordinateData()
         cd.set_throughput(Coordinate([0, 0, 0]), 5)
 
-        sc = SearchConfig([
+        sc = SearchConfig(3, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
@@ -75,21 +75,28 @@ class TestNeighborhood(trc.TestResultCollector):
         n = Neighborhood(sc, cd, Coordinate([1, 1, 1]), 2)
 
         # Started with 1 initialized
-        self.assertEqual(1, n.get_num_initialized_points())
+        self.assertEqual(1, n._get_num_initialized_points())
+        self.assertFalse(n.enough_coordinates_initialized())
 
         cd.set_throughput(Coordinate([0, 0, 1]), 5)
-        self.assertEqual(2, n.get_num_initialized_points())
+        self.assertEqual(2, n._get_num_initialized_points())
+        self.assertFalse(n.enough_coordinates_initialized())
 
         # Set same point. No change to num initialized
         cd.set_throughput(Coordinate([0, 0, 1]), 7)
-        self.assertEqual(2, n.get_num_initialized_points())
+        self.assertEqual(2, n._get_num_initialized_points())
 
         # Set a point outside of neighborhood
         cd.set_throughput(Coordinate([0, 0, 4]), 3)
-        self.assertEqual(2, n.get_num_initialized_points())
+        self.assertEqual(2, n._get_num_initialized_points())
+        self.assertFalse(n.enough_coordinates_initialized())
+
+        # Set a third point inside of neighborhood
+        cd.set_throughput(Coordinate([1, 0, 0]), 9)
+        self.assertTrue(n.enough_coordinates_initialized())
 
     def test_weighted_center(self):
-        sc = SearchConfig([
+        sc = SearchConfig(1, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
@@ -130,7 +137,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 2)
 
-        sc = SearchConfig([
+        sc = SearchConfig(1, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
@@ -149,7 +156,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 4)
 
-        sc = SearchConfig([
+        sc = SearchConfig(1, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
@@ -170,7 +177,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 4)
 
-        sc = SearchConfig([
+        sc = SearchConfig(1, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
@@ -193,7 +200,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 4)
 
-        sc = SearchConfig([
+        sc = SearchConfig(1, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])

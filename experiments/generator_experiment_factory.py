@@ -33,7 +33,7 @@ class GeneratorExperimentFactory:
                                            config_command.profile_models,
                                            MagicMock())
             p = patch(
-                'model_analyzer.config.generate.run_config_generator.RunConfigGenerator._determine_triton_server_env'
+                'model_analyzer.config.generate.run_config_generator.RunConfigGenerator.determine_triton_server_env'
             )
             p.start()
 

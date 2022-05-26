@@ -18,13 +18,20 @@ class SearchConfig:
     Defines all dimensions to search
     """
 
-    def __init__(self, dimensions):
+    def __init__(self, min_initialized, dimensions):
         """
         Parameters
         ----------
-        Dimensions: list of SearchDimension
+        min_initialized: int
+            Minimum number of initialized values in a neighborhood
+            before a step can be taken
+        dimensions: list of SearchDimension
         """
+        self._min_initialized = min_initialized
         self._dimensions = dimensions
+
+    def get_min_initialized(self):
+        return self._min_initialized
 
     def get_num_dimensions(self):
         """ Returns the number of dimensions in this search """
