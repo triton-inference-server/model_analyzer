@@ -20,7 +20,7 @@ CONFIG_PARSER_FAILURE = 0
 RESULT_TABLE_COLUMN_PADDING = 2
 
 # Result Comparator Constants
-COMPARISON_SCORE_THRESHOLD = 0.005
+COMPARISON_SCORE_THRESHOLD = 0
 
 # Dict of parameters to apply on top of the default
 # config to result in the default config (empty dict)
