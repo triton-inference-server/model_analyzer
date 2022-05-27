@@ -129,6 +129,13 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
         return model_config
 
+    def _make_direct_mode_model_config(self, param_combo):
+        return BaseModelConfigGenerator.make_model_config(
+            param_combo=param_combo,
+            model=self._base_model,
+            model_repository=self._model_repository,
+            variant_name_manager=self._variant_name_manager)
+
     @staticmethod
     def make_model_config(param_combo, model, model_repository,
                           variant_name_manager):
@@ -170,8 +177,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         logger.info("")
 
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
-        model_cpu_only = model.cpu_only()
-        model_config.set_cpu_only(model_cpu_only)
+        model_config.set_cpu_only(model.cpu_only())
 
         return model_config
 
@@ -180,13 +186,6 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         config = ModelConfig.create_from_file(
             f'{model_repository}/{model_name}')
         return config.get_config()
-
-    def _make_direct_mode_model_config(self, param_combo):
-        return BaseModelConfigGenerator.make_model_config(
-            param_combo=param_combo,
-            model=self._base_model,
-            model_repository=self._model_repository,
-            variant_name_manager=self._variant_name_manager)
 
     def _reset_max_batch_size(self):
         self._max_batch_size_warning_printed = False

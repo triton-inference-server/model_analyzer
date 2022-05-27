@@ -18,19 +18,42 @@ class SearchConfig:
     Defines all dimensions to search
     """
 
-    def __init__(self, min_initialized, dimensions):
+    def __init__(self,
+                 dimensions,
+                 neighborhood_radius=2,
+                 step_magnitude=2,
+                 min_initialized=3):
         """
         Parameters
         ----------
+        dimensions: list of SearchDimension
+        neighborhood_radius: int
+            All points within distance=radius from a location will be in
+            its neighborhood
+        step_magnitude: int
+            When a step is taken, this is the distance it will step
         min_initialized: int
             Minimum number of initialized values in a neighborhood
             before a step can be taken
-        dimensions: list of SearchDimension
         """
-        self._min_initialized = min_initialized
         self._dimensions = dimensions
+        self._neighborhood_radius = neighborhood_radius
+        self._step_magnitude = step_magnitude
+        self._min_initialized = min_initialized
+
+    def get_neighborhood_radius(self):
+        """ Returns the base radius of a neighborhood """
+        return self._neighborhood_radius
+
+    def get_step_magnitude(self):
+        """ Returns the base magnitude of a step """
+        return self._step_magnitude
 
     def get_min_initialized(self):
+        """ 
+        Returns the minimun number of initialized coordinates needed
+        in a neighborhood before a step can be taken
+        """
         return self._min_initialized
 
     def get_num_dimensions(self):

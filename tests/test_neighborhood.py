@@ -39,7 +39,7 @@ class TestNeighborhood(trc.TestResultCollector):
     def test_create_neighborhood(self):
         cd = CoordinateData()
 
-        sc = SearchConfig(1, [
+        sc = SearchConfig([
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
@@ -66,7 +66,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd = CoordinateData()
         cd.set_throughput(Coordinate([0, 0, 0]), 5)
 
-        sc = SearchConfig(3, [
+        sc = SearchConfig([
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
@@ -96,7 +96,7 @@ class TestNeighborhood(trc.TestResultCollector):
         self.assertTrue(n.enough_coordinates_initialized())
 
     def test_weighted_center(self):
-        sc = SearchConfig(1, [
+        sc = SearchConfig([
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
@@ -137,7 +137,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 2)
 
-        sc = SearchConfig(1, [
+        sc = SearchConfig([
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
@@ -156,7 +156,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 4)
 
-        sc = SearchConfig(1, [
+        sc = SearchConfig([
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
@@ -177,7 +177,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 4)
 
-        sc = SearchConfig(1, [
+        sc = SearchConfig([
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
@@ -191,6 +191,35 @@ class TestNeighborhood(trc.TestResultCollector):
         self.assertEqual(Coordinate([2, 2]),
                          n.calculate_new_coordinate(magnitude))
 
+    def test_calculate_new_coordinate_out_of_bounds(self):
+        """ 
+        Test that calculate_new_coordinate will clamp the result to
+        the search dimention bounds
+
+        Both dimensions are defined to only be from 2-7. The test sets up 
+        the case where the next step WOULD be to [1,8] if not for bounding
+        into the defined range
+        """
+        cd = CoordinateData()
+        cd.set_throughput(Coordinate([3, 6]), 100)
+        cd.set_throughput(Coordinate([4, 5]), 1)
+
+        sc = SearchConfig([
+            SearchDimension("foo",
+                            SearchDimension.DIMENSION_TYPE_LINEAR,
+                            min=2,
+                            max=7),
+            SearchDimension("bar",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL,
+                            min=2,
+                            max=7)
+        ])
+
+        n = Neighborhood(sc, cd, Coordinate([3, 6]), 8)
+
+        self.assertEqual(Coordinate([2, 7]),
+                         n.calculate_new_coordinate(magnitude=3))
+
     def test_no_magnitude_unit_vector(self):
         """
         Test that if the coordinate_center and weighted_coordinate_center
@@ -200,7 +229,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 4)
 
-        sc = SearchConfig(1, [
+        sc = SearchConfig([
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])

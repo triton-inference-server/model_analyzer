@@ -12,22 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
-from model_analyzer.config.generate.neighborhood import Neighborhood
 from .config_generator_interface import ConfigGeneratorInterface
 
+from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.neighborhood import Neighborhood
 from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
-from model_analyzer.config.generate.search_config import SearchConfig
-from model_analyzer.config.generate.search_dimension import SearchDimension
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
-from model_analyzer.triton.model.model_config import ModelConfig
 
 import logging
 
@@ -36,32 +32,33 @@ logger = logging.getLogger(LOGGER_NAME)
 
 class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
 
-    def __init__(self, config, models, client):
+    def __init__(self, search_config, config, models):
+        """
+        Hill climbing algorithm to create RunConfigs
+        
+        Parameters
+        ----------
+        search_config: SearchConfig
+            Defines parameters and dimensions for the search
+        config: ConfigCommandProfile
+            Profile configuration information
+        models: List of ConfigModelProfileSpec
+            List of models to profile
+        """
+        self._search_config = search_config
         self._config = config
         self._models = models
-        self._client = client
         self._variant_name_manager = ModelVariantNameManager()
 
         self._triton_env = RunConfigGenerator.determine_triton_server_env(
             models)
 
-        self._search_config = SearchConfig(
-            min_initialized=3,
-            dimensions=[
-                SearchDimension("max_batch_size",
-                                SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-                SearchDimension("instance_count",
-                                SearchDimension.DIMENSION_TYPE_LINEAR),
-                SearchDimension("concurrency",
-                                SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-            ])
         self._coordinate_data = CoordinateData()
 
         self._current_coordinate = self._get_starting_coordinate()
         self._coordinate_to_measure = self._current_coordinate
 
-        self._radius = 2
-        self._magnitude = 2
+        # FIXME where used?
         self._radius_offset = 0
         self._magnitude_offset = 0
 
@@ -90,9 +87,8 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         # If enough data -> pick a new point via vector
         # If not enough -> pick a point in neighborhood to initialize
 
-        # FIXME radius and magnitude
-        radius = self._radius + self._radius_offset
-        magnitude = self._magnitude + self._magnitude_offset
+        radius = self._get_radius()
+        magnitude = self._get_magnitude()
 
         neighborhood = Neighborhood(self._search_config, self._coordinate_data,
                                     self._current_coordinate, radius)
@@ -153,6 +149,13 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
             dimension_values[key] = value
 
         return dimension_values
+
+    def _get_radius(self):
+        return self._search_config.get_neighborhood_radius(
+        ) + self._radius_offset
+
+    def _get_magnitude(self):
+        return self._search_config.get_step_magnitude() + self._magnitude_offset
 
     def _get_next_run_config(self):
         # TODO multi-model

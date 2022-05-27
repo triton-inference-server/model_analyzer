@@ -75,12 +75,13 @@ class Neighborhood:
         magnitude: int
             How large of a step to take
 
-        returns: coordinate
+        returns: Coordinate
         """
         unit_vector = self._get_unit_vector()
+        tmp_new_coordinate = self._home_coordinate + round(
+            unit_vector * magnitude)
+        new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
 
-        new_coordinate = self._home_coordinate + round(unit_vector * magnitude)
-        new_coordinate = self._clamp_coordinate_to_bounds(new_coordinate)
         return new_coordinate
 
     def pick_point_to_initialize(self):
