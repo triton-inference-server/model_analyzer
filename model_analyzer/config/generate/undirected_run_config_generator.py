@@ -42,9 +42,6 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         self._client = client
         self._variant_name_manager = ModelVariantNameManager()
 
-        # FIXME
-        self._model_repository = config.model_repository
-        self._base_model_name = models[0].model_name()
         self._triton_env = RunConfigGenerator.determine_triton_server_env(
             models)
 
@@ -124,6 +121,10 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
                 logger.debug(
                     "Need more data. Measuring {self._coordinate_to_measure}")
 
+        if self._coordinate_to_measure is None:
+            logger.info("No coordinate to measure. Exiting")
+            self._done = True
+
     def set_last_results(self, measurements):
 
         self._coordinate_data.increment_visit_count(self._coordinate_to_measure)
@@ -160,7 +161,7 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         model_variant_name = mc.get_field('name')
         pac = self._get_next_perf_analyzer_config(model_variant_name)
 
-        mrc = ModelRunConfig(self._base_model_name, mc, pac)
+        mrc = ModelRunConfig(self._models[0].model_name(), mc, pac)
 
         run_config = RunConfig(self._triton_env)
         run_config.add_model_run_config(mrc)
@@ -189,7 +190,6 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
             variant_name_manager=self._variant_name_manager)
         return model_config
 
-    # FIXME really need to scrub this
     def _get_next_perf_analyzer_config(self, model_variant_name):
         dimension_values = self._get_dimension_values(
             self._coordinate_to_measure)
@@ -199,11 +199,14 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         perf_config_params = {
             'model-name': model_variant_name,
             'latency-report-file': model_variant_name + "-results.csv",
-            # FIXME needed?
-            'batch-size': self._models[0].parameters()['batch_sizes'][0],
             'measurement-mode': "count_windows",
+            'batch-size': 1,
             'verbose-csv': '--verbose-csv',
             'concurrency-range': dimension_values['concurrency']
         }
         perf_analyzer_config.update_config(perf_config_params)
+
+        # TODO multi-model
+        perf_analyzer_config.update_config(
+            self._models[0].perf_analyzer_flags())
         return perf_analyzer_config

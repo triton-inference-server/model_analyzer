@@ -107,10 +107,10 @@ class Neighborhood:
                     max_num_uncovered = num_uncovered
                     best_coordinate = coordinate
 
-        # FIXME none
         return best_coordinate
 
     def get_nearest_unvisited_neighbor(self, coordinate_in):
+        """ Returns the nearest unvisited coordinate to coordinate_in """
         min_distance = None
         nearest_uninitialized_neighbor = None
 
@@ -124,6 +124,7 @@ class Neighborhood:
                 nearest_uninitialized_neighbor = coordinate
                 min_distance = distance
 
+        # FIXME what if none in neighborhood? Expand neighborhood?
         return nearest_uninitialized_neighbor
 
     def _create_neighborhood(self):
