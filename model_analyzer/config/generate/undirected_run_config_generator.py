@@ -31,11 +31,12 @@ logger = logging.getLogger(LOGGER_NAME)
 
 
 class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
+    """
+    Hill climbing algorithm to create RunConfigs
+    """
 
     def __init__(self, search_config, config, models):
         """
-        Hill climbing algorithm to create RunConfigs
-        
         Parameters
         ----------
         search_config: SearchConfig
@@ -83,39 +84,24 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
             self._step()
 
     def _step(self):
-        # Determine neighborhood
-        # If enough data -> pick a new point via vector
-        # If not enough -> pick a point in neighborhood to initialize
-
+        """ 
+        Determine self._coordinate_to_measure, which is what is used to
+        create the next RunConfig
+        """
         radius = self._get_radius()
         magnitude = self._get_magnitude()
 
-        neighborhood = Neighborhood(self._search_config, self._coordinate_data,
-                                    self._current_coordinate, radius)
+        self._neighborhood = Neighborhood(self._search_config,
+                                          self._coordinate_data,
+                                          self._current_coordinate, radius)
 
         if self._get_last_results() is None:
-            self._coordinate_to_measure = neighborhood.get_nearest_unvisited_neighbor(
-                self._coordinate_to_measure)
-            logger.debug(
-                f"No throughput found. measuring {self._coordinate_to_measure}")
+            self._handle_invalid_last_results()
         else:
-            if neighborhood.enough_coordinates_initialized():
-                new_coordinate = neighborhood.calculate_new_coordinate(
-                    magnitude)
-                if new_coordinate == self._current_coordinate:
-                    self._done = True
-                if self._coordinate_data.get_visit_count(new_coordinate) >= 2:
-                    self._done = True
-                logger.debug(
-                    f"Stepping {self._current_coordinate}->{new_coordinate}")
-
-                self._current_coordinate = new_coordinate
-                self._coordinate_to_measure = new_coordinate
+            if self._neighborhood.enough_coordinates_initialized():
+                self._take_step(magnitude)
             else:
-                self._coordinate_to_measure = neighborhood.pick_point_to_initialize(
-                )
-                logger.debug(
-                    "Need more data. Measuring {self._coordinate_to_measure}")
+                self._pick_coordinate_to_initialize()
 
         if self._coordinate_to_measure is None:
             logger.info("No coordinate to measure. Exiting")
@@ -135,6 +121,27 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
 
     def _get_last_results(self):
         return self._coordinate_data.get_throughput(self._coordinate_to_measure)
+
+    def _handle_invalid_last_results(self):
+        self._coordinate_to_measure = self._neighborhood.get_nearest_unvisited_neighbor(
+            self._coordinate_to_measure)
+        logger.debug(
+            f"No throughput found. measuring {self._coordinate_to_measure}")
+
+    def _take_step(self, magnitude):
+        new_coordinate = self._neighborhood.calculate_new_coordinate(magnitude)
+        if new_coordinate == self._current_coordinate:
+            self._done = True
+        if self._coordinate_data.get_visit_count(new_coordinate) >= 2:
+            self._done = True
+        logger.debug(f"Stepping {self._current_coordinate}->{new_coordinate}")
+        self._current_coordinate = new_coordinate
+        self._coordinate_to_measure = new_coordinate
+
+    def _pick_coordinate_to_initialize(self):
+        self._coordinate_to_measure = self._neighborhood.pick_coordinate_to_initialize(
+        )
+        logger.debug("Need more data. Measuring {self._coordinate_to_measure}")
 
     def _get_starting_coordinate(self):
         min_indexes = self._search_config.get_min_indexes()

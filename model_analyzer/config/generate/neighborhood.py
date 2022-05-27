@@ -84,7 +84,7 @@ class Neighborhood:
 
         return new_coordinate
 
-    def pick_point_to_initialize(self):
+    def pick_coordinate_to_initialize(self):
         """
         Based on the initialized values, pick an uninitialized coordinate to initialize
         """

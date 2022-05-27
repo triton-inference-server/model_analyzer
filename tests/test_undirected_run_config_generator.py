@@ -60,18 +60,20 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
           - max_batch_size = 32
           - instance_count = 8
           - concurrency = 16
+        Also, dynamic batching should be on, and existing values from the base model
+        config should persist if they aren't overwritten
         """
         urcg = self._urcg
         urcg._coordinate_to_measure = Coordinate([5, 7, 4])
 
         fake_base_config = {
-            "name":
-                "fake_model_name",
+            "name": "fake_model_name",
             "input": [{
                 "name": "INPUT__0",
                 "dataType": "TYPE_FP32",
                 "dims": [16]
-            }]
+            }],
+            "max_batch_size": 4
         }
 
         expected_model_config = {

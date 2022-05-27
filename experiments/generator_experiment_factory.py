@@ -41,17 +41,21 @@ class GeneratorExperimentFactory:
 
             return generator
         elif generator_name == "UndirectedRunConfigGenerator":
-            search_config = SearchConfig(dimensions=[
-                SearchDimension("max_batch_size",
-                                SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-                SearchDimension("instance_count",
-                                SearchDimension.DIMENSION_TYPE_LINEAR),
-                SearchDimension("concurrency",
-                                SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-            ],
-                                         neighborhood_radius=2,
-                                         step_magnitude=2,
-                                         min_initialized=3)
+            #yapf: disable
+            search_config = SearchConfig(
+                dimensions=[
+                    SearchDimension("max_batch_size",
+                                    SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                    SearchDimension("instance_count",
+                                    SearchDimension.DIMENSION_TYPE_LINEAR),
+                    SearchDimension("concurrency",
+                                    SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+                ],
+                neighborhood_radius=2,
+                step_magnitude=2,
+                min_initialized=3
+            )
+            #yapf: enable
             generator = UndirectedRunConfigGenerator(
                 search_config, config_command, config_command.profile_models)
             return generator
