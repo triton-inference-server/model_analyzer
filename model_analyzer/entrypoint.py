@@ -271,7 +271,7 @@ def get_triton_handles(config, gpus):
     """
 
     client = get_client_handle(config)
-    fail_if_server_already_running(client)
+    fail_if_server_already_running(client, config)
     server = get_server_handle(config, gpus)
 
     return client, server
@@ -346,12 +346,15 @@ def create_output_model_repository(config):
             os.mkdir(config.output_model_repository_path)
 
 
-def fail_if_server_already_running(client):
+def fail_if_server_already_running(client, config):
     """ 
     Checks if there is already a Triton server running
-    If so, it will throw an exception
-    If not, nothing will happen
+    If there is and the launch mode is not 'remote', throw an exception
+    Else, nothing will happen
     """
+    if config.triton_launch_mode == 'remote':
+        return
+
     is_server_running = True
     try:
         client._client.is_server_ready()
