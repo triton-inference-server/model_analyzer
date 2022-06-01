@@ -112,9 +112,13 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         self._coordinate_data.increment_visit_count(self._coordinate_to_measure)
 
         if measurements is not None and measurements[0] is not None:
+            assert len(measurements) == 1
+
+            throughput = measurements[0].get_non_gpu_metric_value(
+                "perf_throughput")
+
             self._coordinate_data.set_throughput(
-                self._coordinate_to_measure,
-                measurements[0].get_non_gpu_metric_value("perf_throughput"))
+                coordinate=self._coordinate_to_measure, throughput=throughput)
             logger.debug(
                 f"Throughput for {self._coordinate_to_measure}: {self._get_last_results()}"
             )
