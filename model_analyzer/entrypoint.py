@@ -349,10 +349,10 @@ def create_output_model_repository(config):
 def fail_if_server_already_running(client, config):
     """ 
     Checks if there is already a Triton server running
-    If there is and the launch mode is not 'remote', throw an exception
+    If there is and the launch mode is not 'remote' or 'c_api', throw an exception
     Else, nothing will happen
     """
-    if config.triton_launch_mode == 'remote':
+    if config.triton_launch_mode == 'remote' or config.triton_launch_mode == "c_api":
         return
 
     is_server_running = True
@@ -363,7 +363,7 @@ def fail_if_server_already_running(client, config):
     finally:
         if is_server_running:
             raise TritonModelAnalyzerException(
-                "Detected Triton server already running. Model Analyzer will launch a Triton server for you and requires that a server is not already running."
+                f"Another application (likely a Triton Server) is already using the desired port. In '{config.triton_launch_mode}' mode, Model Analyzer will launch a Triton Server and requires that the HTTP/GRPC port is not occupied by another application. Please kill the other application or specify a different port."
             )
 
 
