@@ -271,6 +271,7 @@ def get_triton_handles(config, gpus):
     """
 
     client = get_client_handle(config)
+    fail_if_server_already_running(client)
     server = get_server_handle(config, gpus)
 
     return client, server
@@ -343,6 +344,24 @@ def create_output_model_repository(config):
             logger.warning('Overriding the output model repo path '
                            f'"{config.output_model_repository_path}"')
             os.mkdir(config.output_model_repository_path)
+
+
+def fail_if_server_already_running(client):
+    """ 
+    Checks if there is already a Triton server running
+    If so, it will throw an exception
+    If not, nothing will happen
+    """
+    is_server_running = True
+    try:
+        client._client.is_server_ready()
+    except:
+        is_server_running = False
+    finally:
+        if is_server_running:
+            raise TritonModelAnalyzerException(
+                "Detected Triton server already running. Model Analyzer will launch a Triton server for you and requires that a server is not already running."
+            )
 
 
 def main():

@@ -47,7 +47,7 @@ class GPUDeviceFactory:
         """
 
         if numba.cuda.is_available():
-            logger.info("Initiliazing GPUDevice handles")
+            logger.info("Initializing GPUDevice handles")
             structs._dcgmInit(dcgmPath)
             dcgm_agent.dcgmInit()
 
