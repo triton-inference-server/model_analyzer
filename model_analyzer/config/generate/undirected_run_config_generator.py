@@ -134,13 +134,20 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
 
     def _take_step(self, magnitude):
         new_coordinate = self._neighborhood.calculate_new_coordinate(magnitude)
+        self._determine_if_done(new_coordinate)
+        logger.debug(f"Stepping {self._current_coordinate}->{new_coordinate}")
+        self._current_coordinate = new_coordinate
+        self._coordinate_to_measure = new_coordinate
+
+    def _determine_if_done(self, new_coordinate):
+        """
+        Based on the new coordinate picked, determine if the generator is done
+        and if so, update self._done
+        """
         if new_coordinate == self._current_coordinate:
             self._done = True
         if self._coordinate_data.get_visit_count(new_coordinate) >= 2:
             self._done = True
-        logger.debug(f"Stepping {self._current_coordinate}->{new_coordinate}")
-        self._current_coordinate = new_coordinate
-        self._coordinate_to_measure = new_coordinate
 
     def _pick_coordinate_to_initialize(self):
         self._coordinate_to_measure = self._neighborhood.pick_coordinate_to_initialize(
