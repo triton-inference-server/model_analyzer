@@ -86,24 +86,17 @@ class Neighborhood:
 
     def pick_coordinate_to_initialize(self):
         """
-        Based on the initialized values, pick an uninitialized coordinate to initialize
+        Based on the initialized coordinate values, pick an uninitialized coordinate to initialize
         """
-        initialized_coordinates, _ = self._compile_neighborhood_throughputs()
+        covered_values_per_dimension = self._get_covered_values_per_dimension()
 
-        covered_values_per_dimension = [{}, {}, {}]
-
-        for coordinate in initialized_coordinates:
-            for i, v in enumerate(coordinate):
-                covered_values_per_dimension[i][v] = 1
-
-        max_num_uncovered = 0
+        max_num_uncovered = -1
         best_coordinate = None
         for coordinate in self._neighborhood:
-            num_uncovered = 0
             if not self._is_coordinate_initialized(coordinate):
-                for i, v in enumerate(coordinate):
-                    if not covered_values_per_dimension[i].get(v, 0):
-                        num_uncovered += 1
+                num_uncovered = self._get_num_uncovered_values(
+                    coordinate, covered_values_per_dimension)
+
                 if num_uncovered > max_num_uncovered:
                     max_num_uncovered = num_uncovered
                     best_coordinate = coordinate
@@ -261,3 +254,36 @@ class Neighborhood:
             v = max(sd.get_min_idx(), v)
             clamped_coordiante[i] = v
         return clamped_coordiante
+
+    def _get_covered_values_per_dimension(self):
+        """
+        Returns list of lists indicating which values have been covered in each dimension
+
+            covered_values_per_dimension[dimension][value] = bool
+
+        """
+        initialized_coordinates, _ = self._compile_neighborhood_throughputs()
+
+        covered_values_per_dimension = [
+            {} for _ in range(self._search_config.get_num_dimensions())
+        ]
+
+        for coordinate in initialized_coordinates:
+            for i, v in enumerate(coordinate):
+                covered_values_per_dimension[i][v] = True
+
+        return covered_values_per_dimension
+
+    def _get_num_uncovered_values(self, coordinate,
+                                  covered_values_per_dimension):
+        """
+        Determine how many of the coordinate dimensions in the input coordinate have values
+        that are not covered in covered_values_per_dimension
+        """
+        num_uncovered = 0
+
+        for i, v in enumerate(coordinate):
+            if not covered_values_per_dimension[i].get(v, False):
+                num_uncovered += 1
+
+        return num_uncovered

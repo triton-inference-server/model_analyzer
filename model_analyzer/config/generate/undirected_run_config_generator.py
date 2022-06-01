@@ -141,7 +141,7 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
     def _pick_coordinate_to_initialize(self):
         self._coordinate_to_measure = self._neighborhood.pick_coordinate_to_initialize(
         )
-        logger.debug("Need more data. Measuring {self._coordinate_to_measure}")
+        logger.debug(f"Need more data. Measuring {self._coordinate_to_measure}")
 
     def _get_starting_coordinate(self):
         min_indexes = self._search_config.get_min_indexes()
