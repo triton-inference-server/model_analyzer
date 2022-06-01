@@ -62,10 +62,11 @@ class ConstraintManager:
         """
 
         if constraints:
-            for model_metrics in run_config_measurement.data():
+            for (i, model_metrics) in enumerate(run_config_measurement.data()):
                 for metric in model_metrics:
-                    if type(metric).tag in constraints:
-                        constraint = constraints[type(metric).tag]
+                    if constraints[i] is not None and type(
+                            metric).tag in constraints[i]:
+                        constraint = constraints[i][type(metric).tag]
                         if 'min' in constraint:
                             if metric.value() < constraint['min']:
                                 return False

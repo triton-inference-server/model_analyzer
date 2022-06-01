@@ -43,7 +43,7 @@ class RunConfigResult:
             RunConfigResults and returns 1 if the first is better than
             the second, 0 if they are equal and -1
             otherwise
-        constraints: dict
+        constraints: dict (single model) or list of dicts (multi-model)
             Used to determine if a RunConfigResult passes or fails
             metric: (constraint_type:constraint_value)
         """
@@ -51,7 +51,8 @@ class RunConfigResult:
         self._model_name = model_name
         self._run_config = run_config
         self._comparator = comparator
-        self._constraints = constraints
+        self._constraints = [constraints
+                            ] if type(constraints) is dict else constraints
 
         # Heaps
         self._measurements = []
