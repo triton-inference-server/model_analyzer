@@ -357,7 +357,7 @@ def fail_if_server_already_running(client, config):
 
     is_server_running = True
     try:
-        client._client.is_server_ready()
+        client.is_server_ready()
     except:
         is_server_running = False
     finally:

@@ -168,3 +168,9 @@ class TritonClient:
         self.wait_for_model_ready(model_name, num_retries)
         model_config_dict = self._client.get_model_config(model_name)
         return model_config_dict
+
+    def is_server_ready(self):
+        """ 
+        Returns true if the server is ready. Else False
+        """
+        return self._client.is_server_ready()
