@@ -54,14 +54,24 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         self._triton_env = RunConfigGenerator.determine_triton_server_env(
             models)
 
+        # This tracks measured results for all coordinates
         self._coordinate_data = CoordinateData()
 
+        # This is our current location that the neighborhood is built around
         self._current_coordinate = self._get_starting_coordinate()
+
+        # This is the coordinate that we want to measure next. It is
+        # updated every step of this generator
         self._coordinate_to_measure = self._current_coordinate
 
-        # FIXME where used?
+        # TODO: Add cases to use these
         self._radius_offset = 0
         self._magnitude_offset = 0
+
+        self._neighborhood = Neighborhood(self._search_config,
+                                          self._coordinate_data,
+                                          self._current_coordinate,
+                                          self._get_radius())
 
         self._generator_started = False
         self._done = False
@@ -88,18 +98,11 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         Determine self._coordinate_to_measure, which is what is used to
         create the next RunConfig
         """
-        radius = self._get_radius()
-        magnitude = self._get_magnitude()
-
-        self._neighborhood = Neighborhood(self._search_config,
-                                          self._coordinate_data,
-                                          self._current_coordinate, radius)
-
         if self._get_last_results() is None:
             self._handle_invalid_last_results()
         else:
             if self._neighborhood.enough_coordinates_initialized():
-                self._take_step(magnitude)
+                self._take_step()
             else:
                 self._pick_coordinate_to_initialize()
 
@@ -108,6 +111,14 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
             self._done = True
 
     def set_last_results(self, measurements):
+        """ 
+        Given the results from the last RunConfig, make decisions
+        about future configurations to generate
+
+        Parameters
+        ----------
+        measurements: List of Measurements from the last run(s)
+        """
 
         self._coordinate_data.increment_visit_count(self._coordinate_to_measure)
 
@@ -132,12 +143,16 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         logger.debug(
             f"No throughput found. measuring {self._coordinate_to_measure}")
 
-    def _take_step(self, magnitude):
+    def _take_step(self):
+        magnitude = self._get_magnitude()
+
         new_coordinate = self._neighborhood.calculate_new_coordinate(magnitude)
         self._determine_if_done(new_coordinate)
+
         logger.debug(f"Stepping {self._current_coordinate}->{new_coordinate}")
         self._current_coordinate = new_coordinate
         self._coordinate_to_measure = new_coordinate
+        self._recreate_neighborhood()
 
     def _determine_if_done(self, new_coordinate):
         """
@@ -148,6 +163,12 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
             self._done = True
         if self._coordinate_data.get_visit_count(new_coordinate) >= 2:
             self._done = True
+
+    def _recreate_neighborhood(self):
+        self._neighborhood = Neighborhood(self._search_config,
+                                          self._coordinate_data,
+                                          self._current_coordinate,
+                                          self._get_radius())
 
     def _pick_coordinate_to_initialize(self):
         self._coordinate_to_measure = self._neighborhood.pick_coordinate_to_initialize(
