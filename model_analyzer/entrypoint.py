@@ -271,6 +271,7 @@ def get_triton_handles(config, gpus):
     """
 
     client = get_client_handle(config)
+    fail_if_server_already_running(client, config)
     server = get_server_handle(config, gpus)
 
     return client, server
@@ -343,6 +344,27 @@ def create_output_model_repository(config):
             logger.warning('Overriding the output model repo path '
                            f'"{config.output_model_repository_path}"')
             os.mkdir(config.output_model_repository_path)
+
+
+def fail_if_server_already_running(client, config):
+    """ 
+    Checks if there is already a Triton server running
+    If there is and the launch mode is not 'remote' or 'c_api', throw an exception
+    Else, nothing will happen
+    """
+    if config.triton_launch_mode == 'remote' or config.triton_launch_mode == "c_api":
+        return
+
+    is_server_running = True
+    try:
+        client.is_server_ready()
+    except:
+        is_server_running = False
+    finally:
+        if is_server_running:
+            raise TritonModelAnalyzerException(
+                f"Another application (likely a Triton Server) is already using the desired port. In '{config.triton_launch_mode}' mode, Model Analyzer will launch a Triton Server and requires that the HTTP/GRPC port is not occupied by another application. Please kill the other application or specify a different port."
+            )
 
 
 def main():
