@@ -35,7 +35,7 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
             SearchDimension("concurrency",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ],
-                          neighborhood_radius=5,
+                          radius=5,
                           step_magnitude=7,
                           min_initialized=2)
         self._urcg = UndirectedRunConfigGenerator(sc, MagicMock(), mock_models)
@@ -47,7 +47,7 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
                 SearchDimension("x", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=2),
                 SearchDimension("y", SearchDimension.DIMENSION_TYPE_LINEAR, min=1),
                 SearchDimension("z", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=3)
-             ])
+             ],radius=2, step_magnitude=2, min_initialized=2)
         #yapf: enable
         urcg = UndirectedRunConfigGenerator(sc, MagicMock(), MagicMock())
         self.assertEqual(urcg._get_starting_coordinate(), Coordinate([2, 1, 3]))

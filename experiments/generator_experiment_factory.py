@@ -51,7 +51,7 @@ class GeneratorExperimentFactory:
                     SearchDimension("concurrency",
                                     SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
                 ],
-                neighborhood_radius=2,
+                radius=2,
                 step_magnitude=2,
                 min_initialized=3
             )

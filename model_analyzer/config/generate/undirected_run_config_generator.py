@@ -68,10 +68,9 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         self._radius_offset = 0
         self._magnitude_offset = 0
 
-        self._neighborhood = Neighborhood(self._search_config,
-                                          self._coordinate_data,
-                                          self._current_coordinate,
-                                          self._get_radius())
+        self._neighborhood = Neighborhood(
+            self._search_config.get_neighborhood_config(),
+            self._coordinate_data, self._current_coordinate)
 
         self._generator_started = False
         self._done = False
@@ -165,10 +164,12 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
             self._done = True
 
     def _recreate_neighborhood(self):
-        self._neighborhood = Neighborhood(self._search_config,
+        neighborhood_config = self._search_config.get_neighborhood_config(
+            self._get_radius())
+
+        self._neighborhood = Neighborhood(neighborhood_config,
                                           self._coordinate_data,
-                                          self._current_coordinate,
-                                          self._get_radius())
+                                          self._current_coordinate)
 
     def _pick_coordinate_to_initialize(self):
         self._coordinate_to_measure = self._neighborhood.pick_coordinate_to_initialize(
@@ -190,8 +191,7 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         return dimension_values
 
     def _get_radius(self):
-        return self._search_config.get_neighborhood_radius(
-        ) + self._radius_offset
+        return self._search_config.get_radius() + self._radius_offset
 
     def _get_magnitude(self):
         return self._search_config.get_step_magnitude() + self._magnitude_offset

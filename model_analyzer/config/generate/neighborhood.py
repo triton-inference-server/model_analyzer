@@ -17,6 +17,7 @@ from itertools import product
 from copy import deepcopy
 
 from model_analyzer.config.generate.coordinate import Coordinate
+from model_analyzer.config.generate.search_config import NeighborhoodConfig
 
 
 class Neighborhood:
@@ -25,24 +26,24 @@ class Neighborhood:
     a 'home' coordinate
     """
 
-    def __init__(self, search_config, coordinate_data, home_coordinate, radius):
+    def __init__(self, neighborhood_config, coordinate_data, home_coordinate):
         """
         Parameters
         ----------
-        search_config: 
-            SearchConfig object
+        neighborhood_config: 
+            NeighborhoodConfig object
         coordinate_data: 
             CoordinateData object
         home_coordinate: 
             Coordinate object to center the neighborhood around
-        radius: Int 
-            How large of a range around the home_coordinate to define the neighborhood
         """
-        self._search_config = search_config
+        assert type(neighborhood_config) == NeighborhoodConfig
+
+        self._config = neighborhood_config
         self._coordinate_data = coordinate_data
         self._home_coordinate = home_coordinate
-        self._radius = radius
 
+        self._radius = self._config.get_radius()
         self._neighborhood = self._create_neighborhood()
 
     @classmethod
@@ -63,7 +64,7 @@ class Neighborhood:
         Returns true if enough coordinates inside of the neighborhood
         have been initialized. Else false
         """
-        min_initialized = self._search_config.get_min_initialized()
+        min_initialized = self._config.get_min_initialized()
         num_initialized = self._get_num_initialized_points()
         return num_initialized >= min_initialized
 
@@ -143,8 +144,8 @@ class Neighborhood:
 
     def _get_bounds(self, coordinate, radius):
         bounds = []
-        for i in range(self._search_config.get_num_dimensions()):
-            dimension = self._search_config.get_dimension(i)
+        for i in range(self._config.get_num_dimensions()):
+            dimension = self._config.get_dimension(i)
 
             lower_bound = max(dimension.get_min_idx(), coordinate[i] - radius)
             upper_bound = min(dimension.get_max_idx(),
@@ -199,8 +200,7 @@ class Neighborhood:
         return coordinates, throughputs
 
     def _determine_coordinate_center(self, coordinates):
-        coordinate_center = Coordinate([0] *
-                                       self._search_config.get_num_dimensions())
+        coordinate_center = Coordinate([0] * self._config.get_num_dimensions())
 
         for coordinate in coordinates:
             coordinate_center += coordinate
@@ -211,8 +211,7 @@ class Neighborhood:
         return coordinate_center
 
     def _determine_weighted_coordinate_center(self, coordinates, weights):
-        weighted_center = Coordinate([0] *
-                                     self._search_config.get_num_dimensions())
+        weighted_center = Coordinate([0] * self._config.get_num_dimensions())
 
         for i, _ in enumerate(weights):
             weighted_center += coordinates[i] * weights[i]
@@ -248,7 +247,7 @@ class Neighborhood:
         clamped_coordiante = deepcopy(coordinate)
 
         for i, v in enumerate(coordinate):
-            sd = self._search_config.get_dimension(i)
+            sd = self._config.get_dimension(i)
 
             v = min(sd.get_max_idx(), v)
             v = max(sd.get_min_idx(), v)
@@ -265,7 +264,7 @@ class Neighborhood:
         initialized_coordinates, _ = self._compile_neighborhood_throughputs()
 
         covered_values_per_dimension = [
-            {} for _ in range(self._search_config.get_num_dimensions())
+            {} for _ in range(self._config.get_num_dimensions())
         ]
 
         for coordinate in initialized_coordinates:

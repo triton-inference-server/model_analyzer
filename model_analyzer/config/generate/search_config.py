@@ -12,49 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from shutil import get_archive_formats
 
-class SearchConfig:
+
+class NeighborhoodConfig:
     """
-    Defines all dimensions to search
+    Defines the configuration for a Neighborhood object
     """
 
-    def __init__(self,
-                 dimensions,
-                 neighborhood_radius=2,
-                 step_magnitude=2,
-                 min_initialized=3):
+    def __init__(self, dimensions, radius, min_initialized):
+        self._dimensions = dimensions
+        self._radius = radius
+        self._min_initialized = min_initialized
         """
         Parameters
         ----------
         dimensions: list of SearchDimension
-        neighborhood_radius: int
+        radius: int
             All points within distance=radius from a location will be in
             its neighborhood
-        step_magnitude: int
-            When a step is taken, this is the distance it will step
         min_initialized: int
             Minimum number of initialized values in a neighborhood
             before a step can be taken
         """
-        self._dimensions = dimensions
-        self._neighborhood_radius = neighborhood_radius
-        self._step_magnitude = step_magnitude
-        self._min_initialized = min_initialized
-
-    def get_neighborhood_radius(self):
-        """ Returns the base radius of a neighborhood """
-        return self._neighborhood_radius
-
-    def get_step_magnitude(self):
-        """ Returns the base magnitude of a step """
-        return self._step_magnitude
-
-    def get_min_initialized(self):
-        """ 
-        Returns the minimun number of initialized coordinates needed
-        in a neighborhood before a step can be taken
-        """
-        return self._min_initialized
 
     def get_num_dimensions(self):
         """ Returns the number of dimensions in this search """
@@ -72,3 +52,53 @@ class SearchConfig:
         for dimension in self._dimensions:
             min_indexes.append(dimension.get_min_idx())
         return min_indexes
+
+    def get_min_initialized(self):
+        """ 
+        Returns the minimun number of initialized coordinates needed
+        in a neighborhood before a step can be taken
+        """
+        return self._min_initialized
+
+    def get_radius(self):
+        """ Returns the base radius of a neighborhood """
+        return self._radius
+
+
+class SearchConfig(NeighborhoodConfig):
+    """
+    Defines all dimensions to search
+    """
+
+    def __init__(self, dimensions, radius, step_magnitude, min_initialized):
+        """
+        Parameters
+        ----------
+        dimensions: list of SearchDimension
+        radius: int
+            All points within distance=radius from a location will be in
+            each neighborhood
+        step_magnitude: int
+            When a step is taken, this is the distance it will step
+        min_initialized: int
+            Minimum number of initialized values in a neighborhood
+            before a step can be taken
+        """
+        super().__init__(dimensions=dimensions,
+                         radius=radius,
+                         min_initialized=min_initialized)
+        self._step_magnitude = step_magnitude
+
+    def get_step_magnitude(self):
+        """ Returns the base magnitude of a step """
+        return self._step_magnitude
+
+    def get_neighborhood_config(self, radius=None):
+        """
+        Return a NeighborhoodConfig with an optional override to the radius
+        """
+        radius_to_use = radius if radius is not None else self.get_radius()
+
+        return NeighborhoodConfig(dimensions=self._dimensions,
+                                  radius=radius_to_use,
+                                  min_initialized=self._min_initialized)
