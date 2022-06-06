@@ -84,7 +84,10 @@ libtorch model which calculates the sum and difference of two inputs. Run the
 Model Analyzer `profile` subcommand inside the container with:
 
 ```
-model-analyzer profile --model-repository <path-to-examples-quick-start> --profile-models add_sub --triton-launch-mode=docker --output-model-repository-path <path-to-output-model-repo>/<output_dir>
+model-analyzer profile \
+    --model-repository <path-to-examples-quick-start> \
+    --profile-models add_sub --triton-launch-mode=docker \
+    --output-model-repository-path <path-to-output-model-repo>/<output_dir>
 ```
 
 **Important:** You must specify an `<output_dir>` subdirectory. You cannot have `--output-model-repository-path` point directly to `<path-to-output-model-repo>`

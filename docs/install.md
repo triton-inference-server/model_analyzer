@@ -28,32 +28,31 @@ Catalog](https://ngc.nvidia.com/catalog/containers/nvidia:tritonserver).<br><br>
 **1. Pull the SDK container:**
 
 ```
-$ docker pull nvcr.io/nvidia/tritonserver:22.05-py3-sdk
+docker pull nvcr.io/nvidia/tritonserver:22.05-py3-sdk
 ```
 
 **2. Run the SDK container**
 
 ```
-$ docker run -it --gpus all \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      -v <path-to-output-model-repo>:<path-to-output-model-repo> \
-      --net=host nvcr.io/nvidia/tritonserver:22.05-py3-sdk
+docker run -it --gpus all \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v <path-to-output-model-repo>:<path-to-output-model-repo> \
+    --net=host nvcr.io/nvidia/tritonserver:22.05-py3-sdk
 ```
 
 **Replacing** `<path-to-output-model-repo>` with the
 **_absolute_ _path_** to the directory where the output model repository
 will be located.
 This ensures the Triton SDK container has access to the model
-config variants that Model Analyzer creates.  
-fasdfa
-dfdasfasdfasdf
+config variants that Model Analyzer creates.<br><br>
+**Important:** You must ensure the `<path-to-output-model-repo>` is identical on both sides of the mount<br><br>
 
 **3. Add PDF support to the container**  
 Model Analyzer uses `pdfkit` for report generation. Once inside the Triton SDK container, you will need to install
 `wkhtmltopdf`:
 
 ```
-$ apt-get update && apt-get install wkhtmltopdf
+apt-get update && apt-get install wkhtmltopdf
 ```
 
 **4. Run Model Analyzer with Docker Launch Mode**  
@@ -80,7 +79,7 @@ default, as all the dependencies will be available.<br><br>
 **1. Clone Model Analyzer's Git Repository**
 
 ```
-$ git clone https://github.com/triton-inference-server/model_analyzer.git -b <rXX.YY>
+git clone https://github.com/triton-inference-server/model_analyzer.git -b <rXX.YY>
 ```
 
 **Replacing** `<rXX.YY>` with the version of Model Analyzer you want to install<br><br>
@@ -88,9 +87,9 @@ $ git clone https://github.com/triton-inference-server/model_analyzer.git -b <rX
 **2. Build the Docker Image**
 
 ```
-$ cd ./model_analyzer
+cd ./model_analyzer
 
-$ docker build --pull -t model-analyzer .
+docker build --pull -t model-analyzer .
 ```
 
 Model Analyzer's Dockerfile bases the container on the latest `tritonserver`
@@ -99,11 +98,11 @@ containers from NGC.<br><br>
 **3. Run the Container**
 
 ```
-$ docker run -it --rm --gpus all \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      -v <path-to-triton-model-repo>:<path-to-triton-model-repo> \
-      -v <path-to-output-model-repo>:<path-to-output-model-repo> \
-      --net=host model-analyzer
+docker run -it --rm --gpus all \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v <path-to-triton-model-repo>:<path-to-triton-model-repo> \
+    -v <path-to-output-model-repo>:<path-to-output-model-repo> \
+    --net=host model-analyzer
 ```
 
 **Replacing** `<path-to-triton-model-repo>` with the
@@ -128,11 +127,11 @@ Follow the instructions found at
 **2. Build Model Analyzer's Main Docker Image**
 
 ```
-$ git clone https://github.com/triton-inference-server/model_analyzer.git -b main
+git clone https://github.com/triton-inference-server/model_analyzer.git -b main
 
-$ cd ./model_analyzer
+cd ./model_analyzer
 
-$ docker build -t model-analyzer --build-arg TRITONSDK_BASE_IMAGE=<built-sdk-image> .
+docker build -t model-analyzer --build-arg TRITONSDK_BASE_IMAGE=<built-sdk-image> .
 ```
 
 **Replacing** `<built-sdk-image>` with the **_absolute_ _path_** to the directory where the Triton SDK image is located<br><br>
@@ -140,11 +139,11 @@ $ docker build -t model-analyzer --build-arg TRITONSDK_BASE_IMAGE=<built-sdk-ima
 **3. Run the Container**
 
 ```
-$ docker run -it --rm --gpus all \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      -v <path-to-triton-model-repo>:<path-to-triton-model-repo> \
-      -v <path-to-output-model-repo>:<path-to-output-model-repo> \
-      --net=host model-analyzer
+docker run -it --rm --gpus all \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v <path-to-triton-model-repo>:<path-to-triton-model-repo> \
+    -v <path-to-output-model-repo>:<path-to-output-model-repo> \
+    --net=host model-analyzer
 ```
 
 **Replacing** `<path-to-triton-model-repo>` with the
@@ -161,20 +160,20 @@ will be located.<br><br>
 You can install pip using:
 
 ```
-$ sudo apt-get update && sudo apt-get install python3-pip
+sudo apt-get update && sudo apt-get install python3-pip
 ```
 
 Model analyzer can be installed with:
 
 ```
-$ pip3 install triton-model-analyzer
+pip3 install triton-model-analyzer
 ```
 
 If you encounter any errors installing dependencies like `numba`, make sure that
 you have the latest version of `pip` using:
 
 ```
-$ pip3 install --upgrade pip
+pip3 install --upgrade pip
 ```
 
 You can then try installing model analyzer again.
@@ -184,9 +183,9 @@ If you are using this approach you need to install DCGM on your machine.
 For installing DCGM on Ubuntu 20.04 you can use the following commands:
 
 ```
-$ export DCGM_VERSION=2.0.13
-$ wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb && \
-   dpkg -i datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb
+export DCGM_VERSION=2.0.13
+wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb && \
+ dpkg -i datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb
 ```
 
 <br>
@@ -200,9 +199,9 @@ dependencies (tritonclient and DCGM) mentioned in [Using Pip](##Using-Pip).<br>
 After that, you can use the following commands:
 
 ```
-$ git clone https://github.com/triton-inference-server/model_analyzer
-$ cd model_analyzer
-$ ./build_wheel.sh <path to perf_analyzer> true
+git clone https://github.com/triton-inference-server/model_analyzer
+cd model_analyzer
+./build_wheel.sh <path to perf_analyzer> true
 ```
 
 In the final command above we are building the triton-model-analyzer wheel. You
@@ -215,7 +214,7 @@ This will create a wheel file in the `wheels` directory named
 install this with:
 
 ```
-$ pip3 install wheels/triton-model-analyzer-*.whl
+pip3 install wheels/triton-model-analyzer-*.whl
 ```
 
 After these steps, `model-analyzer` executable should be available in `$PATH`.
