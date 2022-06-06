@@ -18,7 +18,7 @@ limitations under the License.
 
 The steps below will guide you through using model analyzer to analyze a simple PyTorch model: add_sub.
 
-## Download the add_sub model
+## `Step 1:` Download the add_sub model
 
 ---
 
@@ -42,7 +42,7 @@ echo 'examples' >> .git/info/sparse-checkout && \
 git pull origin main
 ```
 
-## Build and Run Model Analyzer Container
+## `Step 2:` Build and Run Model Analyzer Container
 
 ---
 
@@ -77,7 +77,9 @@ Model Analyzer uses `pdfkit` for report generation. Once inside the Triton SDK c
 apt-get update && apt-get install wkhtmltopdf
 ```
 
-## Step 2: Profile the `add_sub` model
+## `Step 3:` Profile the `add_sub` model
+
+---
 
 The [examples/quick-start](../examples/quick-start) directory contains a simple
 libtorch model which calculates the sum and difference of two inputs. Run the
@@ -117,7 +119,9 @@ configuration:
 
 With these options, model analyzer will test 5 configs (4 new configs as well as the unmodified default add_sub config), and each config will have 2 experiments run on Perf Analyzer (concurrency=1 and concurrency=2). This significantly reduces the search space, and therefore, model analyzer's runtime.
 
-## Step 3: Generate Tables and Summary Reports
+## `Step 4:` Generate Tables and Summary Reports
+
+---
 
 In order to generate tables and summary reports, use the `analyze` subcommand as
 follows.
@@ -156,7 +160,9 @@ $HOME
                               .                |--- result_summary.pdf
 ```
 
-## Step 4: Generate a Detailed Report
+## `Step 5:` Generate a Detailed Report
+
+---
 
 Model analyzer's report subcommand allows you to examine the performance of a
 model config variant in detail. For example, it can show you the latency
