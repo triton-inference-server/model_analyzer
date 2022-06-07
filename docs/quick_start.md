@@ -16,38 +16,88 @@ limitations under the License.
 
 # Quick Start
 
-The steps below will guide you through using model analyzer to analyze a simple PyTorch model.
+The steps below will guide you through using model analyzer to analyze a simple PyTorch model: add_sub.
 
-## Step 1: Build and Run Model Analyzer Container
+## `Step 1:` Download the add_sub model
 
-1. Clone the repository and build the docker:
+---
+
+**1. Create a new directory and enter it**
+
 ```
-$ git clone https://github.com/triton-inference-server/model_analyzer.git -b r22.05
-
-$ cd ./model_analyzer
-
-$ docker build --pull -t model-analyzer .
-```
-
-2. Run the docker:
-```
-$ docker run -it --rm --gpus all \
-    -v $(pwd)/examples/quick-start:/quick_start_repository \
-    --net=host --name model-analyzer \
-    model-analyzer /bin/bash
+mkdir <new_dir> && cd <new_dir>
 ```
 
-## Step 2: Profile the `add_sub` model
+**2. Start a git repository**
+
+```
+git init && git remote add -f https://github.com/triton-inference-server/model_analyzer.git
+```
+
+**3. Enable sparse checkout, and download the examples directory, which contains the add_sub model**
+
+```
+git config core.sparseCheckout true && \
+echo 'examples' >> .git/info/sparse-checkout && \
+git pull origin main
+```
+
+## `Step 2:` Build and Run Model Analyzer Container
+
+---
+
+**1. Pull the SDK container:**
+
+```
+docker pull nvcr.io/nvidia/tritonserver:22.05-py3-sdk
+```
+
+**2. Run the SDK container**
+
+```
+docker run -it --gpus all \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
+      -v <path-to-output-model-repo>:<path-to-output-model-repo> \
+      --net=host nvcr.io/nvidia/tritonserver:22.05-py3-sdk
+```
+
+**Replacing** `<path-to-output-model-repo>` with the
+**_absolute_ _path_** to the directory where the output model repository
+will be located.
+This ensures the Triton SDK container has access to the model
+config variants that Model Analyzer creates.<br><br>
+**Important:** You must ensure the absolutes paths are identical on both sides of the mounts<br><br>
+
+**3. Add PDF support to the container**  
+Model Analyzer uses `pdfkit` for report generation. Once inside the Triton SDK container, you will need to install
+`wkhtmltopdf`:
+
+```
+apt-get update && apt-get install wkhtmltopdf
+```
+
+## `Step 3:` Profile the `add_sub` model
+
+---
 
 The [examples/quick-start](../examples/quick-start) directory contains a simple
 libtorch model which calculates the sum and difference of two inputs. Run the
 Model Analyzer `profile` subcommand inside the container with:
 
 ```
-$ model-analyzer profile --model-repository /quick_start_repository --profile-models add_sub
+model-analyzer profile \
+    --model-repository <path-to-examples-quick-start> \
+    --profile-models add_sub --triton-launch-mode=docker \
+    --output-model-repository-path <path-to-output-model-repo>/<output_dir>
 ```
 
-If you already ran this earlier in the container, you can use the `--override-output-model-repository` option to overwrite the earlier results.
+**Important:** You must specify an `<output_dir>` subdirectory. You cannot have `--output-model-repository-path` point directly to `<path-to-output-model-repo>`
+
+**Important:** If you already ran this earlier in the container, you can use the `--override-output-model-repository` option to overwrite the earlier results.
+
+**Important:** The checkpoint directory should be removed between consecutive runs of
+the `model-analyzer profile` command.<br><br>
 
 This will perform a search across limited configurable model parameters on the
 `add_sub` model. This can take up to 60 minutes to finish. If you want a shorter
@@ -61,14 +111,18 @@ configuration:
 --run-config-search-max-instance-count 2
 ```
 
-`--run-config-search-max-concurrency` sets the max concurrency value that run
-config search will not go beyond. `--run-config-search-max-model-batch-size` sets the highest max_batch_size that run config search will not go beyond.  `--run-config-search-max-instance-count`
-sets the max instance count value that run config search will not go beyond. With these options, model analyzer will test 5 configs (4 new configs as well as the unmodified default add_sub config), and each config will have 2 experiments run on Perf Analyzer (concurrency=1 and concurrency=2). This significantly reduces the search space, and therefore, model analyzer's runtime.
+- `--run-config-search-max-concurrency` sets the max concurrency value that run
+  config search will not go beyond. <br>
+- `--run-config-search-max-model-batch-size` sets the highest max_batch_size that run config search will not go beyond.
+- `--run-config-search-max-instance-count`
+  sets the max instance count value that run config search will not go beyond.<br><br>
 
-**Note**: The checkpoint directory should be removed between consecutive runs of
-the `model-analyzer profile` command.
+With these options, model analyzer will test 5 configs (4 new configs as well as the unmodified default add_sub config), and each config will have 2 experiments run on Perf Analyzer (concurrency=1 and concurrency=2). This significantly reduces the search space, and therefore, model analyzer's runtime.
 
-## Generate tables and summary reports
+## `Step 4:` Generate Tables and Summary Reports
+
+---
+
 In order to generate tables and summary reports, use the `analyze` subcommand as
 follows.
 
@@ -94,34 +148,37 @@ $HOME
                       |             |--- add_sub
                       |                     |--- gpu_mem_v_latency.png
                       |                     |--- throughput_v_latency.png
-                      | 
+                      |
                       |--- results
-                      |       |--- metrics-model-inference.csv 
-                      |       |--- metrics-model-gpu.csv 
+                      |       |--- metrics-model-inference.csv
+                      |       |--- metrics-model-gpu.csv
                       |       |--- metrics-server-only.csv
                       |
                       |--- reports
-                              |--- summaries 
+                              |--- summaries
                               .        |--- add_sub
                               .                |--- result_summary.pdf
 ```
 
-## Generate a detailed report
+## `Step 5:` Generate a Detailed Report
+
+---
 
 Model analyzer's report subcommand allows you to examine the performance of a
 model config variant in detail. For example, it can show you the latency
 breakdown of your model to help you identify potential bottlenecks in your model
-performance. The detailed reports also contain other configurable plots and a
+performance.<br><br>
+The detailed reports also contain other configurable plots and a
 table of measurements taken of that particular config. You can generate a
 detailed report for the two `add_sub` model configs `add_sub_config_default` and
 `add_sub_config_0` using:
 
 ```
-$ model-analyzer report --report-model-configs add_sub_config_default,add_sub_config_0 -e analysis_results 
+$ model-analyzer report --report-model-configs add_sub_config_default,add_sub_config_0 -e analysis_results
 ```
 
 This will create directories named after each of the model configs under
-`.analysis_results/reports/detailed` containing the detailed report PDF files as
+`./analysis_results/reports/detailed` containing the detailed report PDF files as
 shown below.
 
 ```
