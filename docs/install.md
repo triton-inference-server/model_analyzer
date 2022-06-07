@@ -25,19 +25,29 @@ limitations under the License.
 The recommended way to install Model Analyzer is from the Triton SDK docker
 container available on the [NVIDIA GPU Cloud
 Catalog](https://ngc.nvidia.com/catalog/containers/nvidia:tritonserver).<br><br>
-**1. Pull the SDK container:**
+
+**1. Choose a release version**  
+The format is `<rYY.MM>` where, `YY`=year and `MM`=month
+
+For example, the release from May of 2022 is `<r22.05>`
 
 ```
-docker pull nvcr.io/nvidia/tritonserver:22.05-py3-sdk
+export RELEASE=<rYY:MM>
 ```
 
-**2. Run the SDK container**
+**2. Pull the SDK container**
+
+```
+docker pull nvcr.io/nvidia/tritonserver:${RELEASE}-py3-sdk
+```
+
+**3. Run the SDK container**
 
 ```
 docker run -it --gpus all \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v <path-to-output-model-repo>:<path-to-output-model-repo> \
-    --net=host nvcr.io/nvidia/tritonserver:22.05-py3-sdk
+    --net=host nvcr.io/nvidia/tritonserver:${RELEASE}-py3-sdk
 ```
 
 **Replacing** `<path-to-output-model-repo>` with the
@@ -47,7 +57,7 @@ This ensures the Triton SDK container has access to the model
 config variants that Model Analyzer creates.<br><br>
 **Important:** You must ensure the `<path-to-output-model-repo>` is identical on both sides of the mount<br><br>
 
-**3. Add PDF support to the container**  
+**4. Add PDF support to the container**  
 Model Analyzer uses `pdfkit` for report generation. Once inside the Triton SDK container, you will need to install
 `wkhtmltopdf`:
 
@@ -55,7 +65,7 @@ Model Analyzer uses `pdfkit` for report generation. Once inside the Triton SDK c
 apt-get update && apt-get install wkhtmltopdf
 ```
 
-**4. Run Model Analyzer with Docker Launch Mode**  
+**5. Run Model Analyzer with Docker Launch Mode**  
 Be sure to use `--triton-launch-mode=docker`, when running Model Analyzer.<br><br>
 
 # Alternative Installation Methods
@@ -79,10 +89,11 @@ default, as all the dependencies will be available.<br><br>
 **1. Clone Model Analyzer's Git Repository**
 
 ```
-git clone https://github.com/triton-inference-server/model_analyzer.git -b <rXX.YY>
+git clone https://github.com/triton-inference-server/model_analyzer.git -b <rYY.MM>
 ```
 
-**Replacing** `<rXX.YY>` with the version of Model Analyzer you want to install<br><br>
+**Replacing** `<rYY.MM>` with the version of Model Analyzer you want to install.  
+For example, `r22.05` is the release for May of 2022<br><br>
 
 **2. Build the Docker Image**
 
@@ -112,15 +123,15 @@ will be located.
 **_absolute_ _path_** to the directory where the `output` model repository
 will be located.<br><br>
 
-## Main with Local Launch Mode
+## Main Branch with Local Launch Mode
 
 ---
 
-This method allows you build the `main` branch of Model Analyzer.  
+This method allows you build a docker container using the `main` branch of Model Analyzer.  
 This installation method uses `--triton-launch-mode=local` by
 default, as all the dependencies will be available.<br><br>
 
-**1. Build Triton SDK Container**  
+**1. Build Triton SDK Container from Main**  
 Follow the instructions found at
 [Build SDK Image](https://github.com/triton-inference-server/server/blob/main/docs/test.md#build-sdk-image)<br><br>
 

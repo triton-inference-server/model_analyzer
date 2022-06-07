@@ -178,7 +178,7 @@ $ model-analyzer report --report-model-configs add_sub_config_default,add_sub_co
 ```
 
 This will create directories named after each of the model configs under
-`.analysis_results/reports/detailed` containing the detailed report PDF files as
+`./analysis_results/reports/detailed` containing the detailed report PDF files as
 shown below.
 
 ```
