@@ -130,15 +130,16 @@ class TestConstraintManager(trc.TestResultCollector):
             ConstraintManager.get_constraints_for_all_models(config)['model_A']
         ]
 
-        rcm = self._construct_constrained_rcm({"perf_latency_p99": 101})
+        # Constraint is P99 Latency max of 100
+        rcm = self._construct_rcm({"perf_latency_p99": 101})
         self.assertFalse(
             ConstraintManager.satisfies_constraints(constraints, rcm))
 
-        rcm = self._construct_constrained_rcm({"perf_latency_p99": 100})
+        rcm = self._construct_rcm({"perf_latency_p99": 100})
         self.assertTrue(
             ConstraintManager.satisfies_constraints(constraints, rcm))
 
-        rcm = self._construct_constrained_rcm({"perf_latency_p99": 99})
+        rcm = self._construct_rcm({"perf_latency_p99": 99})
         self.assertTrue(
             ConstraintManager.satisfies_constraints(constraints, rcm))
 
@@ -152,15 +153,65 @@ class TestConstraintManager(trc.TestResultCollector):
             ConstraintManager.get_constraints_for_all_models(config)['model_A']
         ]
 
-        rcm = self._construct_constrained_rcm({"perf_throughput": 101})
+        # Constraint is throughput min of 100
+        rcm = self._construct_rcm({"perf_throughput": 101})
         self.assertTrue(
             ConstraintManager.satisfies_constraints(constraints, rcm))
 
-        rcm = self._construct_constrained_rcm({"perf_throughput": 100})
+        rcm = self._construct_rcm({"perf_throughput": 100})
         self.assertTrue(
             ConstraintManager.satisfies_constraints(constraints, rcm))
 
-        rcm = self._construct_constrained_rcm({"perf_throughput": 99})
+        rcm = self._construct_rcm({"perf_throughput": 99})
+        self.assertFalse(
+            ConstraintManager.satisfies_constraints(constraints, rcm))
+
+    def test_multi_model_constraint_checks(self):
+        """
+        Test that satisfies_constraints works for a multi model
+        with a max style constraint
+        """
+        config = self._create_multi_model_both_constraints()
+        mm_constraints_dict = ConstraintManager.get_constraints_for_all_models(
+            config)
+        constraints = [
+            mm_constraints_dict['model_A'], mm_constraints_dict['model_B']
+        ]
+
+        # Constraints are:
+        #  Model A: P99 Latency max of 50
+        #  Model B: Throughput in of 100
+
+        # Model A & B are both at boundaries
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 50,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 100
+        }])
+        self.assertTrue(
+            ConstraintManager.satisfies_constraints(constraints, rcm))
+
+        # Model A exceeds latency
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 51,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 100
+        }])
+        self.assertFalse(
+            ConstraintManager.satisfies_constraints(constraints, rcm))
+
+        # Model B doesn't have enough throughput
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 50,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 99
+        }])
         self.assertFalse(
             ConstraintManager.satisfies_constraints(constraints, rcm))
 
@@ -264,13 +315,23 @@ class TestConstraintManager(trc.TestResultCollector):
 
         return config
 
-    def _construct_constrained_rcm(self, constraints):
+    def _construct_rcm(self, non_gpu_metric_values):
         rcm = construct_run_config_measurement(
             model_name=MagicMock(),
             model_config_names=["test_config_name"],
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=MagicMock(),
-            non_gpu_metric_values=[constraints])
+            non_gpu_metric_values=[non_gpu_metric_values])
+
+        return rcm
+
+    def _construct_mm_rcm(self, non_gpu_metric_values):
+        rcm = construct_run_config_measurement(
+            model_name=MagicMock(),
+            model_config_names=["test_config_name_A", "test_config_name_B"],
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values=MagicMock(),
+            non_gpu_metric_values=non_gpu_metric_values)
 
         return rcm
 
