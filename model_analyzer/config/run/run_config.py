@@ -14,7 +14,6 @@
 
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 
-
 class RunConfig:
     """
     Encapsulates all the information needed to run one or more models 
