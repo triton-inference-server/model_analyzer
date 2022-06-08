@@ -18,7 +18,7 @@ from .mocks.mock_config import MockConfig
 from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
 from model_analyzer.cli.cli import CLI
 
-from .common.test_utils import convert_to_bytes
+from .common.test_utils import convert_to_bytes, construct_run_config_measurement
 
 import unittest
 from unittest.mock import MagicMock, patch
@@ -64,12 +64,12 @@ class TestConstraintManager(trc.TestResultCollector):
         constraints = ConstraintManager.get_constraints_for_all_models(config)
 
         self.assertEqual(constraints['model_A'],
-                         {'perf_latency_p99': {
-                             'max': 100
+                         {'perf_throughput': {
+                             'min': 100
                          }})
         self.assertEqual(constraints['default'],
-                         {'perf_latency_p99': {
-                             'max': 100
+                         {'perf_throughput': {
+                             'min': 100
                          }})
 
     def test_single_model_with_both_constraints(self):
@@ -120,6 +120,50 @@ class TestConstraintManager(trc.TestResultCollector):
             }
         })
 
+    def test_single_model_max_constraint_checks(self):
+        """
+        Test that satisfies_constraints works for a single model
+        with a max style constraint
+        """
+        config = self._create_single_model_with_constraints()
+        constraints = [
+            ConstraintManager.get_constraints_for_all_models(config)['model_A']
+        ]
+
+        rcm = self._construct_constrained_rcm({"perf_latency_p99": 101})
+        self.assertFalse(
+            ConstraintManager.satisfies_constraints(constraints, rcm))
+
+        rcm = self._construct_constrained_rcm({"perf_latency_p99": 100})
+        self.assertTrue(
+            ConstraintManager.satisfies_constraints(constraints, rcm))
+
+        rcm = self._construct_constrained_rcm({"perf_latency_p99": 99})
+        self.assertTrue(
+            ConstraintManager.satisfies_constraints(constraints, rcm))
+
+    def test_single_model_min_constraint_checks(self):
+        """
+        Test that satisfies_constraints works for a single model
+        with a min style constraint
+        """
+        config = self._create_single_model_global_constraints()
+        constraints = [
+            ConstraintManager.get_constraints_for_all_models(config)['model_A']
+        ]
+
+        rcm = self._construct_constrained_rcm({"perf_throughput": 101})
+        self.assertTrue(
+            ConstraintManager.satisfies_constraints(constraints, rcm))
+
+        rcm = self._construct_constrained_rcm({"perf_throughput": 100})
+        self.assertTrue(
+            ConstraintManager.satisfies_constraints(constraints, rcm))
+
+        rcm = self._construct_constrained_rcm({"perf_throughput": 99})
+        self.assertFalse(
+            ConstraintManager.satisfies_constraints(constraints, rcm))
+
     def _evaluate_config(self, args, yaml_content):
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
@@ -164,8 +208,8 @@ class TestConstraintManager(trc.TestResultCollector):
               model_A
                 
             constraints:
-                perf_latency_p99:
-                  max: 100
+                perf_throughput:
+                  min: 100
         """)
         config = self._evaluate_config(args, yaml_content)
 
@@ -219,6 +263,16 @@ class TestConstraintManager(trc.TestResultCollector):
         config = self._evaluate_config(args, yaml_content)
 
         return config
+
+    def _construct_constrained_rcm(self, constraints):
+        rcm = construct_run_config_measurement(
+            model_name=MagicMock(),
+            model_config_names=["test_config_name"],
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values=MagicMock(),
+            non_gpu_metric_values=[constraints])
+
+        return rcm
 
     def _create_args(self):
         return [

@@ -42,7 +42,7 @@ class ConstraintManager:
         return constraints
 
     @staticmethod
-    def check_constraints(constraints, run_config_measurement):
+    def satisfies_constraints(constraints, run_config_measurement):
         """
         Checks that the measurements, for every model, satisfy 
         the provided list of constraints

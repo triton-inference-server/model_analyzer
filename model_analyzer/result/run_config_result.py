@@ -104,8 +104,8 @@ class RunConfigResult:
 
         insort(self._measurements, run_config_measurement)
 
-        if ConstraintManager.check_constraints(self._constraints,
-                                               run_config_measurement):
+        if ConstraintManager.satisfies_constraints(self._constraints,
+                                                   run_config_measurement):
             insort(self._passing_measurements, run_config_measurement)
         else:
             insort(self._failing_measurements, run_config_measurement)
