@@ -119,7 +119,6 @@ class Neighborhood:
                 nearest_uninitialized_neighbor = coordinate
                 min_distance = distance
 
-        # FIXME what if none in neighborhood? Expand neighborhood?
         return nearest_uninitialized_neighbor
 
     def _create_neighborhood(self):

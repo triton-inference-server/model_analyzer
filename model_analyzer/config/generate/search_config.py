@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from shutil import get_archive_formats
-
 
 class NeighborhoodConfig:
     """
@@ -21,9 +19,6 @@ class NeighborhoodConfig:
     """
 
     def __init__(self, dimensions, radius, min_initialized):
-        self._dimensions = dimensions
-        self._radius = radius
-        self._min_initialized = min_initialized
         """
         Parameters
         ----------
@@ -35,6 +30,9 @@ class NeighborhoodConfig:
             Minimum number of initialized values in a neighborhood
             before a step can be taken
         """
+        self._dimensions = dimensions
+        self._radius = radius
+        self._min_initialized = min_initialized
 
     def get_num_dimensions(self):
         """ Returns the number of dimensions in this search """
