@@ -49,7 +49,7 @@ class ConstraintManager:
 
         Parameters
         ----------
-        constraints: dict
+        constraints: list of dicts
             keys are metrics and values are 
             constraint_type:constraint_value pairs
         run_config_measurement : RunConfigMeasurement

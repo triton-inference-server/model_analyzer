@@ -130,7 +130,7 @@ class TestRunConfigResult(trc.TestResultCollector):
         """
         rcr = self._rcr_throughput_with_latency_constraint_multi_model
 
-        # 5 passing, 7 failing
+        # 2 passing, 10 failing
         for i in range(1, 13):
             self._add_multi_model_rcm_to_rcr(rcr,
                                              throughput_values=[10 * i, 15 * i],

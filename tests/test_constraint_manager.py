@@ -169,7 +169,6 @@ class TestConstraintManager(trc.TestResultCollector):
     def test_multi_model_constraint_checks(self):
         """
         Test that satisfies_constraints works for a multi model
-        with a max style constraint
         """
         config = self._create_multi_model_both_constraints()
         mm_constraints_dict = ConstraintManager.get_constraints_for_all_models(
@@ -180,7 +179,7 @@ class TestConstraintManager(trc.TestResultCollector):
 
         # Constraints are:
         #  Model A: P99 Latency max of 50
-        #  Model B: Throughput in of 100
+        #  Model B: Throughput min of 100
 
         # Model A & B are both at boundaries
         rcm = self._construct_mm_rcm([{
