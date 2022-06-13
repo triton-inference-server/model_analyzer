@@ -83,7 +83,10 @@ class ExperimentData:
         curr_dict[ma_key][pa_key] = run_config_measurement
 
     def _update_best_trackers(self, run_config, run_config_measurement):
-        if not self._best_run_config_measurement or run_config_measurement > self._best_run_config_measurement:
+        if not self._best_run_config_measurement or run_config_measurement.get_non_gpu_metric_value(
+                'perf_throughput'
+        ) > self._best_run_config_measurement.get_non_gpu_metric_value(
+                'perf_throughput'):
             self._best_run_config_measurement = run_config_measurement
             self._best_run_config = run_config
 

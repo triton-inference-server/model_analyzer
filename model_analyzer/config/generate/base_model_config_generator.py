@@ -118,10 +118,6 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         else:
             return max(throughputs)
 
-    def _get_model_variant_name(self, param_combo):
-        return self._variant_name_manager.get_model_variant_name(
-            self._base_model_name, param_combo)
-
     def _make_remote_model_config(self):
         if not self._reload_model_disable:
             self._client.load_model(self._base_model_name)
@@ -134,19 +130,45 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         return model_config
 
     def _make_direct_mode_model_config(self, param_combo):
+        return BaseModelConfigGenerator.make_model_config(
+            param_combo=param_combo,
+            model=self._base_model,
+            model_repository=self._model_repository,
+            variant_name_manager=self._variant_name_manager)
+
+    @staticmethod
+    def make_model_config(param_combo, model, model_repository,
+                          variant_name_manager):
         """ 
-        Given a base model config and a combination of parameters to change,
-        apply the changes on top of the base and return the new model config
+        Loads the base model config from the model repository, and then applies the
+        parameters in the param_combo on top to create and return a new model config
+
+        Parameters:
+        -----------
+        param_combo: dict
+            dict of key:value pairs to apply to the model config
+        model: dict
+            dict of model properties
+        model_repository: str
+            path to the model repository on the file system
+        variant_name_manager: ModelVariantNameManager
         """
-        model_config_dict = self._get_base_model_config_dict()
-        model_config_dict['name'] = self._get_model_variant_name(param_combo)
+        model_name = model.model_name()
+        variant_name = variant_name_manager.get_model_variant_name(
+            model_name, param_combo)
+
+        model_config_dict = BaseModelConfigGenerator.get_base_model_config_dict(
+            model_repository, model_name)
+
+        model_config_dict['name'] = variant_name
         logger.info("")
         logger.info(f"Creating model config: {model_config_dict['name']}")
 
         if param_combo is not None:
             for key, value in param_combo.items():
                 if value is not None:
-                    self._apply_value_to_dict(key, value, model_config_dict)
+                    BaseModelConfigGenerator._apply_value_to_dict(
+                        key, value, model_config_dict)
 
                     if value == {}:
                         logger.info(f"  Enabling {key}")
@@ -155,13 +177,14 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         logger.info("")
 
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
-        model_config.set_cpu_only(self._cpu_only)
+        model_config.set_cpu_only(model.cpu_only())
 
         return model_config
 
-    def _get_base_model_config_dict(self):
+    @staticmethod
+    def get_base_model_config_dict(model_repository, model_name):
         config = ModelConfig.create_from_file(
-            f'{self._model_repository}/{self._base_model_name}')
+            f'{model_repository}/{model_name}')
         return config.get_config()
 
     def _reset_max_batch_size(self):

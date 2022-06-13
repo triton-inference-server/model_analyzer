@@ -39,7 +39,8 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._models = models
         self._client = client
 
-        self._triton_env = self._determine_triton_server_env(models)
+        self._triton_env = RunConfigGenerator.determine_triton_server_env(
+            models)
 
         self._num_models = len(models)
 
@@ -113,8 +114,11 @@ class RunConfigGenerator(ConfigGeneratorInterface):
             if not self._curr_generators[index].is_done():
                 break
 
-    def _determine_triton_server_env(self, models):
-
+    @classmethod
+    def determine_triton_server_env(cls, models):
+        """
+        Given a list of models, return the triton environment
+        """
         triton_env = models[0].triton_server_environment()
 
         for model in models:

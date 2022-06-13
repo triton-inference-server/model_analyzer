@@ -29,7 +29,7 @@ class ExperimentEvaluator:
         overall_best_run_config = self._raw_data.get_best_run_config()
         generator_best_measurement = self._profile_data.get_best_run_config_measurement(
         )
-        generator_best_run_config = self._raw_data.get_best_run_config()
+        generator_best_run_config = self._profile_data.get_best_run_config()
 
         print()
         print("====================================")
