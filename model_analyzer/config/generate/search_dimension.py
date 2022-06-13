@@ -65,6 +65,6 @@ class SearchDimension:
         if self._type == SearchDimension.DIMENSION_TYPE_LINEAR:
             return idx + 1
         elif self._type == SearchDimension.DIMENSION_TYPE_EXPONENTIAL:
-            return math.pow(2, idx)
+            return int(math.pow(2, idx))
         else:
             raise Exception(f"Unknown type {self._type}")

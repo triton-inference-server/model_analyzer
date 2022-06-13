@@ -14,6 +14,8 @@
 
 from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
 from model_analyzer.config.generate.undirected_run_config_generator import UndirectedRunConfigGenerator
+from model_analyzer.config.generate.search_config import SearchConfig
+from model_analyzer.config.generate.search_dimension import SearchDimension
 from unittest.mock import MagicMock, patch
 
 
@@ -33,14 +35,29 @@ class GeneratorExperimentFactory:
                                            config_command.profile_models,
                                            MagicMock())
             p = patch(
-                'model_analyzer.config.generate.run_config_generator.RunConfigGenerator._determine_triton_server_env'
+                'model_analyzer.config.generate.run_config_generator.RunConfigGenerator.determine_triton_server_env'
             )
             p.start()
 
             return generator
         elif generator_name == "UndirectedRunConfigGenerator":
+            #yapf: disable
+            search_config = SearchConfig(
+                dimensions=[
+                    SearchDimension("max_batch_size",
+                                    SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                    SearchDimension("instance_count",
+                                    SearchDimension.DIMENSION_TYPE_LINEAR),
+                    SearchDimension("concurrency",
+                                    SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+                ],
+                radius=2,
+                step_magnitude=2,
+                min_initialized=3
+            )
+            #yapf: enable
             generator = UndirectedRunConfigGenerator(
-                config_command, config_command.profile_models, MagicMock())
+                search_config, config_command, config_command.profile_models)
             return generator
         else:
             raise Exception(f"Unknown generator {generator_name}")
