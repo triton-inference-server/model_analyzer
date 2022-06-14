@@ -31,7 +31,7 @@ mkdir <new_dir> && cd <new_dir>
 **2. Start a git repository**
 
 ```
-git init && git remote add -f https://github.com/triton-inference-server/model_analyzer.git
+git init && git remote add -f origin https://github.com/triton-inference-server/model_analyzer.git
 ```
 
 **3. Enable sparse checkout, and download the examples directory, which contains the add_sub model**
