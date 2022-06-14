@@ -39,7 +39,7 @@ class GeneratorExperimentFactory:
         """
 
         if generator_name == "RunConfigGenerator":
-            generator = RunConfigGenerator(config_command,
+            generator = RunConfigGenerator(config_command, MagicMock(),
                                            config_command.profile_models,
                                            MagicMock())
             p = patch(

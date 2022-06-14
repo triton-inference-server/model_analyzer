@@ -22,7 +22,7 @@ class ConfigGeneratorFactory:
     """
 
     @staticmethod
-    def create_model_config_generator(config, model, client,
+    def create_model_config_generator(config, gpus, model, client,
                                       variant_name_manager, default_only,
                                       early_exit_enable):
         """
@@ -30,6 +30,7 @@ class ConfigGeneratorFactory:
         ----------
         config: ConfigCommandProfile
             The Model Analyzer config file for the profile step
+        gpus: List of GPUDevices
         model: ConfigModelProfileSpec
             The model to generate ModelRunConfigs for
         client: TritonClient
@@ -52,11 +53,11 @@ class ConfigGeneratorFactory:
         model_config_params = model.model_config_parameters()
 
         if (remote_mode or search_disabled or model_config_params):
-            return ManualModelConfigGenerator(config, model, client,
+            return ManualModelConfigGenerator(config, gpus, model, client,
                                               variant_name_manager,
                                               default_only, early_exit_enable)
         else:
-            return AutomaticModelConfigGenerator(config, model, client,
+            return AutomaticModelConfigGenerator(config, gpus, model, client,
                                                  variant_name_manager,
                                                  default_only,
                                                  early_exit_enable)

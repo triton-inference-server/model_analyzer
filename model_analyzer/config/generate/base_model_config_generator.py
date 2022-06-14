@@ -16,8 +16,13 @@ from .config_generator_interface import ConfigGeneratorInterface
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.server.server_handler import TritonServerHandler
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
+import os
 import abc
 import logging
+import requests
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -25,12 +30,13 @@ logger = logging.getLogger(LOGGER_NAME)
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
     """ Base class for generating model configs """
 
-    def __init__(self, config, model, client, variant_name_manager,
+    def __init__(self, config, gpus, model, client, variant_name_manager,
                  default_only, early_exit_enable):
         """
         Parameters
         ----------
         config: ModelAnalyzerConfig
+        gpus: List of GPUDevices
         model: The model to generate ModelConfigs for
         client: TritonClient
         variant_name_manager: ModelVariantNameManager
@@ -40,6 +46,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         early_exit_enable: Bool
             If true, the generator can early exit if throughput plateaus
         """
+        self._config = config
+        self._gpus = gpus
         self._client = client
         self._variant_name_manager = variant_name_manager
         self._model_repository = config.model_repository
@@ -182,9 +190,44 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         return model_config
 
     @staticmethod
-    def get_base_model_config_dict(model_repository, model_name):
-        config = ModelConfig.create_from_file(
-            f'{model_repository}/{model_name}')
+    def _get_base_model_config_dict(self):
+        model_path = f'{self._model_repository}/{self._base_model_name}'
+
+        try:
+            config = ModelConfig.create_from_file(model_path)
+        except:
+            server = TritonServerHandler.get_server_handle(
+                self._config, self._gpus, strict_model_config='False')
+
+            server.start()
+            self._client.wait_for_server_ready(self._config.client_max_retries)
+            if (self._client.load_model(self._base_model_name) == -1):
+                server.stop()
+
+                if not os.path.exists(model_path):
+                    raise TritonModelAnalyzerException(
+                        f'Model path "{model_path}" specified does not exist.')
+
+                if os.path.isfile(model_path):
+                    raise TritonModelAnalyzerException(
+                        f'Model output path "{model_path}" must be a directory.'
+                    )
+
+                model_config_path = os.path.join(model_path, "config.pbtxt")
+                raise TritonModelAnalyzerException(
+                    f'Path "{model_config_path}" does not exist.'
+                    ' Attempted to create a default config.pbtxt, but this feature is not'
+                    ' supported for this model type.')
+
+            self._client.wait_for_model_ready(self._base_model_name,
+                                              self._config.client_max_retries)
+
+            # TODO: Replace this with get_model_config() in client.py
+            response = requests.get(
+                f'http://localhost:8000/v2/models/{self._base_model_name}/config'
+            )
+            server.stop()
+
         return config.get_config()
 
     def _reset_max_batch_size(self):

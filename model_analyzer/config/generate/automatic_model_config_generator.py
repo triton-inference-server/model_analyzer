@@ -24,12 +24,13 @@ logger = logging.getLogger(LOGGER_NAME)
 class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in automatic search mode """
 
-    def __init__(self, config, model, client, variant_name_manager,
+    def __init__(self, config, gpus, model, client, variant_name_manager,
                  default_only, early_exit_enable):
         """
         Parameters
         ----------
         config: ModelAnalyzerConfig
+        gpus: List of GPUDevices
         model: The model to generate ModelConfigs for
         client: TritonClient
         variant_name_manager: ModelVariantNameManager
@@ -39,7 +40,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         early_exit_enable: Bool
             If true, the generator can early exit if throughput plateaus
         """
-        super().__init__(config, model, client, variant_name_manager,
+        super().__init__(config, gpus, model, client, variant_name_manager,
                          default_only, early_exit_enable)
 
         self._max_instance_count = config.run_config_search_max_instance_count
