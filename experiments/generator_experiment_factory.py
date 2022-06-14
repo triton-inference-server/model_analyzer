@@ -27,7 +27,7 @@ class GeneratorExperimentFactory:
         to run in an offline scenario.
         """
         if generator_name == "RunConfigGenerator":
-            generator = RunConfigGenerator(config_command,
+            generator = RunConfigGenerator(config_command, MagicMock(),
                                            config_command.profile_models,
                                            MagicMock())
             p = patch(

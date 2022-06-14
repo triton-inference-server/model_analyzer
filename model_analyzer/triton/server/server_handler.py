@@ -35,7 +35,7 @@ class TritonServerHandler():
         NotImplemented
 
     @staticmethod
-    def get_server_handle(config, gpus, strict_model_config=True):
+    def get_server_handle(config, gpus, strict_model_config='True'):
         """
         Creates and returns a TritonServer
         with specified arguments
@@ -58,8 +58,8 @@ class TritonServerHandler():
         if config.triton_launch_mode == 'remote':
             triton_config = TritonServerConfig()
             triton_config.update_config(config.triton_server_flags)
-            triton_config['model-repository'] = 'remote-model-repository'
             triton_config['strict-model-config'] = strict_model_config
+            triton_config['model-repository'] = 'remote-model-repository'
             logger.info('Using remote Triton Server')
             server = TritonServerFactory.create_server_local(
                 path=None, config=triton_config, gpus=[], log_path="")
@@ -79,6 +79,7 @@ class TritonServerHandler():
 
             triton_config = TritonServerConfig()
             triton_config.update_config(config.triton_server_flags)
+            triton_config['strict-model-config'] = strict_model_config
             triton_config[
                 'model-repository'] = config.output_model_repository_path
             triton_config['http-port'] = config.triton_http_endpoint.split(
@@ -100,6 +101,7 @@ class TritonServerHandler():
         elif config.triton_launch_mode == 'docker':
             triton_config = TritonServerConfig()
             triton_config.update_config(config.triton_server_flags)
+            triton_config['strict-model-config'] = strict_model_config
             triton_config['model-repository'] = os.path.abspath(
                 config.output_model_repository_path)
             triton_config['http-port'] = config.triton_http_endpoint.split(
@@ -125,6 +127,7 @@ class TritonServerHandler():
             self._validate_triton_install_path(config)
 
             triton_config = TritonServerConfig()
+            triton_config['strict-model-config'] = strict_model_config
             triton_config['model-repository'] = os.path.abspath(
                 config.output_model_repository_path)
             logger.info("Starting a Triton Server using perf_analyzer's C_API")

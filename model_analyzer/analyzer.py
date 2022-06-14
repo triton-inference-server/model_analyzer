@@ -92,7 +92,7 @@ class Analyzer:
                 " got {type(self._config)}.")
 
         self._create_metrics_manager(client, gpus)
-        self._create_model_manager(client)
+        self._create_model_manager(client, gpus)
         self._get_server_only_metrics(client)
 
         self._profile_models()
@@ -182,9 +182,10 @@ class Analyzer:
             result_manager=self._result_manager,
             state_manager=self._state_manager)
 
-    def _create_model_manager(self, client):
+    def _create_model_manager(self, client, gpus):
         self._model_manager = ModelManager(
             config=self._config,
+            gpus=gpus,
             client=client,
             server=self._server,
             result_manager=self._result_manager,

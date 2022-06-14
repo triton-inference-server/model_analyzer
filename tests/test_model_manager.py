@@ -914,9 +914,9 @@ class TestModelManager(trc.TestResultCollector):
         metrics_manager = MetricsManagerSubclass(config, MagicMock(),
                                                  MagicMock(), MagicMock(),
                                                  MagicMock(), state_manager)
-        model_manager = ModelManager(config,
-                                     MagicMock(), MagicMock(), metrics_manager,
-                                     MagicMock(), state_manager)
+        model_manager = ModelManager(config, MagicMock(), MagicMock(),
+                                     MagicMock(), metrics_manager, MagicMock(),
+                                     state_manager)
 
         model_manager.run_models([config.profile_models[0]])
         self.mock_model_config.stop()

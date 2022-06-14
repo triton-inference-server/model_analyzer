@@ -720,6 +720,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         try:
             mcg = ConfigGeneratorFactory.create_model_config_generator(
                 config,
+                MagicMock(),
                 config.profile_models[0],
                 fake_client,
                 ModelVariantNameManager(),

@@ -25,12 +25,14 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
     ModelConfig and PerfConfig)
     """
 
-    def __init__(self, config, model, client, variant_name_manager,
+    def __init__(self, config, gpus, model, client, variant_name_manager,
                  default_only):
         """
         Parameters
         ----------
         config: ModelAnalyzerConfig
+        
+        gpus: List of GPUDevices
         
         model: ConfigModelProfileSpec
             The model to generate ModelRunConfigs for
@@ -42,6 +44,7 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
         default_only: Bool
         """
         self._config = config
+        self._gpus = gpus
         self._model = model
         self._client = client
         self._variant_name_manger = variant_name_manager
@@ -61,8 +64,9 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
                                                  self._pacg_early_exit_enable)
 
         self._mcg = ConfigGeneratorFactory.create_model_config_generator(
-            self._config, model, self._client, self._variant_name_manger,
-            default_only, self._mcg_early_exit_enable)
+            self._config, self._gpus, model, self._client,
+            self._variant_name_manger, default_only,
+            self._mcg_early_exit_enable)
 
         self._curr_mc_measurements = []
 

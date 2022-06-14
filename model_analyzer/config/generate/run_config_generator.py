@@ -24,11 +24,13 @@ class RunConfigGenerator(ConfigGeneratorInterface):
     Generates all RunConfigs to execute given a list of models
     """
 
-    def __init__(self, config, models, client):
+    def __init__(self, config, gpus, models, client):
         """
         Parameters
         ----------
         config: ModelAnalyzerConfig
+        
+        gpus: List of GPUDevices
         
         models: List of ConfigModelProfileSpec
             The models to generate ModelRunConfigs for
@@ -36,6 +38,7 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         client: TritonClient
         """
         self._config = config
+        self._gpus = gpus
         self._models = models
         self._client = client
 
@@ -75,8 +78,8 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         yield from self._generate_subset(0, default_only=False)
 
     def _generate_subset(self, index, default_only):
-        mrcg = ModelRunConfigGenerator(self._config, self._models[index],
-                                       self._client,
+        mrcg = ModelRunConfigGenerator(self._config, self._gpus,
+                                       self._models[index], self._client,
                                        self._model_variant_name_manager,
                                        default_only)
         model_run_config_generator = mrcg.next_config()
