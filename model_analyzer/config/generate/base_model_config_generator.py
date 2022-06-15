@@ -60,6 +60,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._model_name_index = 0
         self._generator_started = False
         self._max_batch_size_warning_printed = False
+        self._default_config = None
         self._last_results = []
         # Contains the max throughput from each provided list of measurements
         # since the last time we stepped max_batch_size
@@ -191,13 +192,16 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
     @staticmethod
     def _get_base_model_config_dict(self):
+        if (self._default_config):
+            return self._default_config
+
         model_path = f'{self._model_repository}/{self._base_model_name}'
 
         try:
             config = ModelConfig.create_from_file(model_path)
         except:
             server = TritonServerHandler.get_server_handle(
-                self._config, self._gpus, strict_model_config='False')
+                self._config, self._gpus, strict_model_config='false')
 
             server.start()
             self._client.wait_for_server_ready(self._config.client_max_retries)
@@ -216,17 +220,17 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
                 model_config_path = os.path.join(model_path, "config.pbtxt")
                 raise TritonModelAnalyzerException(
                     f'Path "{model_config_path}" does not exist.'
-                    ' Attempted to create a default config.pbtxt, but this feature is not'
-                    ' supported for this model type.')
+                    ' Attempted have Triton create a default config, but this is not'
+                    ' possible for this model type.')
 
             self._client.wait_for_model_ready(self._base_model_name,
                                               self._config.client_max_retries)
 
-            # TODO: Replace this with get_model_config() in client.py
-            response = requests.get(
-                f'http://localhost:8000/v2/models/{self._base_model_name}/config'
-            )
+            self._default_config = self._client.get_model_config(
+                self._base_model_name, self._config.client_max_retries)
             server.stop()
+
+            return self._default_config
 
         return config.get_config()
 
