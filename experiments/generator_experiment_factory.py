@@ -24,10 +24,17 @@ class GeneratorExperimentFactory:
     @staticmethod
     def create_generator(generator_name, config_command):
         """ 
-        Given a generator name, create and return it
-
+        Create and return a RunConfig generator of the requested name
+        
         As a side-effect, some patching may occur to allow the generator
-        to run in an offline scenario.
+        to run offline (without Perf Analyzer)
+
+        Parameters
+        ----------
+        generator_name : string
+            Name of the generator class to create
+        config_command : ConfigCommandExperiment
+            The config for model analyzer algorithm experiment
         """
 
         if generator_name == "RunConfigGenerator":
@@ -51,9 +58,9 @@ class GeneratorExperimentFactory:
                     SearchDimension("concurrency",
                                     SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
                 ],
-                radius=2,
-                step_magnitude=2,
-                min_initialized=3
+                radius=config_command.radius,
+                step_magnitude=config_command.magnitude,
+                min_initialized=config_command.min_initialized
             )
             #yapf: enable
             generator = UndirectedRunConfigGenerator(

@@ -16,7 +16,7 @@ from tests.common.test_utils import convert_to_bytes
 from tests.mocks.mock_config import MockConfig
 from tests.mocks.mock_model_config import MockModelConfig
 from model_analyzer.cli.cli import CLI
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from config_command_experiment import ConfigCommandExperiment
 
 
 class ExperimentConfigCommandCreator:
@@ -25,7 +25,7 @@ class ExperimentConfigCommandCreator:
     """
 
     @staticmethod
-    def make_config(data_path, model_name):
+    def make_config(data_path, model_name, other_args):
         mock_model_config = MockModelConfig("")
         mock_model_config.start()
 
@@ -39,20 +39,13 @@ class ExperimentConfigCommandCreator:
             '--checkpoint-directory', checkpoint_dir,
             '-f', 'path-to-config-file'
         ]
+        args += other_args
 
         yaml_content = convert_to_bytes("")
 
-        # TODO: Add a way to overload yaml data here
-        #yaml_content = convert_to_bytes("""
-        #    run_config_search_max_concurrency: 2
-        #    run_config_search_max_instance_count: 2
-        #    run_config_search_max_model_batch_size: 2
-        #    """)
-        #yapf: enable
-
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
-        config = ConfigCommandProfile()
+        config = ConfigCommandExperiment()
         cli = CLI()
         cli.add_subcommand(
             cmd='profile',
