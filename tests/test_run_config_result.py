@@ -26,6 +26,7 @@ class TestRunConfigResult(trc.TestResultCollector):
     def setUp(self):
         self._construct_empty_rcr()
         self._construct_throughput_with_latency_constraint_rcr()
+        self._construct_throughput_with_latency_constraint_multi_model_rcr()
 
     def tearDown(self):
         patch.stopall()
@@ -66,7 +67,7 @@ class TestRunConfigResult(trc.TestResultCollector):
         Test that failing returns true if only failing measurements are present
         in a multi-model configuration
         """
-        rcr = self._rcr_throughput_with_latency_constraint
+        rcr = self._rcr_throughput_with_latency_constraint_multi_model
 
         # Model A will have some passing measurements,
         # Model B will have all failing measurements
@@ -96,7 +97,7 @@ class TestRunConfigResult(trc.TestResultCollector):
         Test that failing returns false if any passing measurements are present
         in a multi-model configuration
         """
-        rcr = self._rcr_throughput_with_latency_constraint
+        rcr = self._rcr_throughput_with_latency_constraint_multi_model
 
         for i in range(1, 6):
             self._add_multi_model_rcm_to_rcr(rcr,
@@ -127,17 +128,17 @@ class TestRunConfigResult(trc.TestResultCollector):
         Test that passing/failing measurements have the correct number
         of entries
         """
-        rcr = self._rcr_throughput_with_latency_constraint
+        rcr = self._rcr_throughput_with_latency_constraint_multi_model
 
-        # 5 passing, 7 failing
+        # 2 passing, 10 failing
         for i in range(1, 13):
             self._add_multi_model_rcm_to_rcr(rcr,
                                              throughput_values=[10 * i, 15 * i],
                                              latency_values=[15 * i, 20 * i])
 
         # The heap is unordered so just checking for correct count
-        self.assertEqual(len(rcr.passing_measurements()), 5)
-        self.assertEqual(len(rcr.failing_measurements()), 7)
+        self.assertEqual(len(rcr.passing_measurements()), 2)
+        self.assertEqual(len(rcr.failing_measurements()), 10)
 
     def test_top_n_failing(self):
         """
@@ -171,7 +172,7 @@ class TestRunConfigResult(trc.TestResultCollector):
         if no passing measurements are present in a multi-model
         configuration
         """
-        rcr = self._rcr_throughput_with_latency_constraint
+        rcr = self._rcr_throughput_with_latency_constraint_multi_model
 
         for i in range(1, 6):
             self._add_multi_model_rcm_to_rcr(rcr,
@@ -233,7 +234,7 @@ class TestRunConfigResult(trc.TestResultCollector):
         in a multi-model configuration
         """
 
-        rcr = self._rcr_throughput_with_latency_constraint
+        rcr = self._rcr_throughput_with_latency_constraint_multi_model
 
         # 4 passing, 6 failing
         for i in range(1, 11):
@@ -270,6 +271,13 @@ class TestRunConfigResult(trc.TestResultCollector):
                             run_config=MagicMock(),
                             comparator=[{'perf_throughput': 1}],
                             constraints={'perf_latency_p99': {'max': 100}})
+
+    def _construct_throughput_with_latency_constraint_multi_model_rcr(self):
+        self._rcr_throughput_with_latency_constraint_multi_model = \
+            RunConfigResult(model_name=MagicMock(),
+                            run_config=MagicMock(),
+                            comparator=[{'perf_throughput': 1}],
+                            constraints=[{'perf_latency_p99': {'max': 100}}, {'perf_latency_p99': {'max': 50}}])
 
     def _add_rcm_to_rcr(self, rcr, throughput_value, latency_value):
         rcr.add_run_config_measurement(

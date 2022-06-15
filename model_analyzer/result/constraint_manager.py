@@ -42,14 +42,14 @@ class ConstraintManager:
         return constraints
 
     @staticmethod
-    def check_constraints(constraints, run_config_measurement):
+    def satisfies_constraints(constraints, run_config_measurement):
         """
         Checks that the measurements, for every model, satisfy 
         the provided list of constraints
 
         Parameters
         ----------
-        constraints: dict
+        constraints: list of dicts
             keys are metrics and values are 
             constraint_type:constraint_value pairs
         run_config_measurement : RunConfigMeasurement
@@ -62,10 +62,11 @@ class ConstraintManager:
         """
 
         if constraints:
-            for model_metrics in run_config_measurement.data():
+            for (i, model_metrics) in enumerate(run_config_measurement.data()):
                 for metric in model_metrics:
-                    if type(metric).tag in constraints:
-                        constraint = constraints[type(metric).tag]
+                    if constraints[i] is not None and type(
+                            metric).tag in constraints[i]:
+                        constraint = constraints[i][type(metric).tag]
                         if 'min' in constraint:
                             if metric.value() < constraint['min']:
                                 return False
