@@ -194,18 +194,20 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
     def _get_next_run_config(self):
         run_config = RunConfig(self._triton_env)
 
-        # TODO multi-model
         for i, _ in enumerate(self._models):
-            mc = self._get_next_model_config(i)
-
-            model_variant_name = mc.get_field('name')
-            pac = self._get_next_perf_analyzer_config(model_variant_name, i)
-
-            mrc = ModelRunConfig(self._models[i].model_name(), mc, pac)
-
+            mrc = self._get_next_model_run_config(i)
             run_config.add_model_run_config(mrc)
 
         return run_config
+
+    def _get_next_model_run_config(self, model_num):
+        mc = self._get_next_model_config(model_num)
+
+        model_variant_name = mc.get_field('name')
+        pac = self._get_next_perf_analyzer_config(model_variant_name, model_num)
+
+        model_name = self._models[model_num].model_name()
+        return ModelRunConfig(model_name, mc, pac)
 
     def _get_next_model_config(self, model_num):
         dimension_values = self._get_coordinate_values(
@@ -221,7 +223,6 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
             }]
         }
 
-        # TODO: multi-model
         model_config = BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
             model=self._models[model_num],
@@ -245,7 +246,6 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         }
         perf_analyzer_config.update_config(perf_config_params)
 
-        # TODO multi-model
         perf_analyzer_config.update_config(
             self._models[0].perf_analyzer_flags())
         return perf_analyzer_config

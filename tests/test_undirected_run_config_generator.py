@@ -30,7 +30,7 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
         mock_models = [ConfigModelProfileSpec(model_name="fake_model_name")]
 
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("max_batch_size",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("instance_count",
@@ -49,7 +49,7 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
         """ Test that get_starting_coordinate() works for non-zero values """
         #yapf: disable
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
                 SearchDimension("x", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=2),
                 SearchDimension("y", SearchDimension.DIMENSION_TYPE_LINEAR, min=1),
                 SearchDimension("z", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=3)
@@ -130,12 +130,14 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
         config should persist if they aren't overwritten
         """
         mock_models = [
-            ConfigModelProfileSpec(model_name="fake_model_name1"),
-            ConfigModelProfileSpec(model_name="fake_model_name2")
+            ConfigModelProfileSpec(model_name="fake_model_name1",
+                                   perf_analyzer_flags={"model-version": 2}),
+            ConfigModelProfileSpec(model_name="fake_model_name2",
+                                   perf_analyzer_flags={"model-version": 3})
         ]
 
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("max_batch_size",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("instance_count",
@@ -143,7 +145,7 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
             SearchDimension("concurrency",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
-        dims.add(1, [
+        dims.add_dimensions(1, [
             SearchDimension("max_batch_size",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("instance_count",

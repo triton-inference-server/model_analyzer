@@ -26,7 +26,7 @@ class TestSearchConfig(trc.TestResultCollector):
 
     def test_config(self):
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
@@ -49,7 +49,7 @@ class TestSearchConfig(trc.TestResultCollector):
 
     def test_get_min_indexes(self):
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 1,
                             10),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
@@ -63,7 +63,7 @@ class TestSearchConfig(trc.TestResultCollector):
         Test that we can get a NeighborhoodConfig from a SearchConfig and properly override the radius
         """
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])

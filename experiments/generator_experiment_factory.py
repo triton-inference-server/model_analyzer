@@ -53,7 +53,7 @@ class GeneratorExperimentFactory:
 
             #yapf: disable
             for i, _ in enumerate(config_command.profile_models):
-                dimensions.add(i, [
+                dimensions.add_dimensions(i, [
                     SearchDimension(f"max_batch_size", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
                     SearchDimension(f"instance_count", SearchDimension.DIMENSION_TYPE_LINEAR),
                     SearchDimension(f"concurrency", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)

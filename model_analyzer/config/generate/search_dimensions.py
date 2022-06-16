@@ -22,7 +22,7 @@ class SearchDimensions:
         self._dimensions = []
         self._dimension_keys = []
 
-    def add(self, key, dimensions):
+    def add_dimensions(self, key, dimensions):
         """ 
         Add dimensions and associate them all with the given key
 
@@ -40,7 +40,8 @@ class SearchDimensions:
 
     def get_values_for_coordiante(self, coordinate):
         """
-        Given a coordinate, return a dict of all values cooresponding to that coordinate
+        Given a coordinate, return all dimension_name:dimension_value pairs associated with 
+        that coordinate, organized by the dimension's key
         
         Returns: Dict of Dicts
             ret[key][SearchDimension name] = value

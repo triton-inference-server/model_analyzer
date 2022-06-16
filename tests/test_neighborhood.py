@@ -40,7 +40,7 @@ class TestNeighborhood(trc.TestResultCollector):
     def test_create_neighborhood(self):
         cd = CoordinateData()
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
@@ -70,7 +70,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([0, 0, 0]), 5)
 
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
@@ -103,7 +103,7 @@ class TestNeighborhood(trc.TestResultCollector):
 
     def test_weighted_center(self):
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
@@ -147,7 +147,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([0, 1]), 2)
 
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
@@ -169,7 +169,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([0, 1]), 4)
 
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
@@ -193,7 +193,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([0, 1]), 4)
 
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
@@ -223,7 +223,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([4, 5]), 1)
 
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension(
                 "foo", SearchDimension.DIMENSION_TYPE_LINEAR, min=2, max=7),
             SearchDimension(
@@ -247,7 +247,7 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([0, 1]), 4)
 
         dims = SearchDimensions()
-        dims.add(0, [
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])

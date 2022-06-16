@@ -22,14 +22,14 @@ class TestSearchDimensions(trc.TestResultCollector):
 
     def setUp(self):
         self._dims = SearchDimensions()
-        self._dims.add(0, [
+        self._dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 0,
                             10),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_LINEAR, 0,
                             10),
         ])
 
-        self._dims.add(1, [
+        self._dims.add_dimensions(1, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 0,
                             10),
         ])
