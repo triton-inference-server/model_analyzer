@@ -25,10 +25,10 @@ class EvaluateConfigGenerator:
     existing checkpoint of raw measurement data
     """
 
-    def __init__(self, model_name, data_path):
+    def __init__(self, model_name, data_path, other_args):
         self._model_name = model_name
         self._config_command = ExperimentConfigCommandCreator.make_config(
-            data_path, model_name)
+            data_path, model_name, other_args)
 
         self._checkpoint_data = CheckpointExperimentData(self._config_command)
         self._profile_data = ExperimentData()

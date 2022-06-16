@@ -16,8 +16,8 @@
 #
 # Example usage:
 #
-# python3 main.py --model-name resnet50_libtorch --generator RunConfigGenerator
-#
+# python3 main.py --model-name resnet50_libtorch --generator RunConfigGenerator --run-config-search-max-model-batch-size 2
+# python3 main.py --model-name resnet50_libtorch --generator UndirectedRunConfigGenerator --magnitude 5
 #####################
 
 from evaluate_config_generator import EvaluateConfigGenerator
@@ -43,7 +43,7 @@ parser.add_argument("--generator",
                     type=str,
                     required=True,
                     help="The name of the config generator to evaluate")
-args = parser.parse_args()
+args, other_args = parser.parse_known_args()
 
 if args.verbose:
     import logging
@@ -51,6 +51,6 @@ if args.verbose:
     logger.setLevel(level=logging.DEBUG)
     logging.basicConfig(format="[Model Analyzer] %(message)s")
 
-ecg = EvaluateConfigGenerator(args.model_name, args.data_path)
+ecg = EvaluateConfigGenerator(args.model_name, args.data_path, other_args)
 ecg.execute_generator(args.generator)
 ecg.print_results()
