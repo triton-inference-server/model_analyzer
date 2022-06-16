@@ -180,15 +180,10 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         min_indexes = self._search_config.get_min_indexes()
         return Coordinate(min_indexes)
 
-    def _get_dimension_values(self, coordinate):
-        dimension_values = {}
-        for i in range(self._search_config.get_num_dimensions()):
-            dimension = self._search_config.get_dimension(i)
-            key = dimension.get_name()
-            value = dimension.get_value_at_idx(coordinate[i])
-            dimension_values[key] = value
-
-        return dimension_values
+    def _get_coordinate_values(self, coordinate, key):
+        dims = self._search_config.get_dimensions()
+        values = dims.get_values_for_coordiante(coordinate)
+        return values[key]
 
     def _get_radius(self):
         return self._search_config.get_radius() + self._radius_offset
@@ -197,22 +192,24 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         return self._search_config.get_step_magnitude() + self._magnitude_offset
 
     def _get_next_run_config(self):
-        # TODO multi-model
-        mc = self._get_next_model_config()
-
-        model_variant_name = mc.get_field('name')
-        pac = self._get_next_perf_analyzer_config(model_variant_name)
-
-        mrc = ModelRunConfig(self._models[0].model_name(), mc, pac)
-
         run_config = RunConfig(self._triton_env)
-        run_config.add_model_run_config(mrc)
+
+        # TODO multi-model
+        for i, _ in enumerate(self._models):
+            mc = self._get_next_model_config(i)
+
+            model_variant_name = mc.get_field('name')
+            pac = self._get_next_perf_analyzer_config(model_variant_name, i)
+
+            mrc = ModelRunConfig(self._models[i].model_name(), mc, pac)
+
+            run_config.add_model_run_config(mrc)
 
         return run_config
 
-    def _get_next_model_config(self):
-        dimension_values = self._get_dimension_values(
-            self._coordinate_to_measure)
+    def _get_next_model_config(self, model_num):
+        dimension_values = self._get_coordinate_values(
+            self._coordinate_to_measure, model_num)
 
         param_combo = {
             'dynamic_batching': {},
@@ -227,14 +224,14 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         # TODO: multi-model
         model_config = BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
-            model=self._models[0],
+            model=self._models[model_num],
             model_repository=self._config.model_repository,
             variant_name_manager=self._variant_name_manager)
         return model_config
 
-    def _get_next_perf_analyzer_config(self, model_variant_name):
-        dimension_values = self._get_dimension_values(
-            self._coordinate_to_measure)
+    def _get_next_perf_analyzer_config(self, model_variant_name, model_num):
+        dimension_values = self._get_coordinate_values(
+            self._coordinate_to_measure, model_num)
 
         perf_analyzer_config = PerfAnalyzerConfig()
 

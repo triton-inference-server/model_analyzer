@@ -14,23 +14,24 @@
 
 from model_analyzer.config.generate.search_config import SearchConfig, NeighborhoodConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
+from model_analyzer.config.generate.search_dimensions import SearchDimensions
 from .common import test_result_collector as trc
 
 
 class TestSearchConfig(trc.TestResultCollector):
 
     def test_basic(self):
-        sc = SearchConfig([], 0, 0, 0)
+        sc = SearchConfig(SearchDimensions(), 0, 0, 0)
         self.assertEqual(0, sc.get_num_dimensions())
 
     def test_config(self):
-        dimensions = []
-        dimensions.append(
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR))
-        dimensions.append(
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL))
+        dims = SearchDimensions()
+        dims.add(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
 
-        sc = SearchConfig(dimensions=dimensions,
+        sc = SearchConfig(dimensions=dims,
                           radius=4,
                           step_magnitude=6,
                           min_initialized=2)
@@ -47,13 +48,13 @@ class TestSearchConfig(trc.TestResultCollector):
         self.assertEqual(64, sc.get_dimension(1).get_value_at_idx(6))
 
     def test_get_min_indexes(self):
-        dimensions = []
-        dimensions.append(
+        dims = SearchDimensions()
+        dims.add(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 1,
-                            10))
-        dimensions.append(
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL))
-        sc = SearchConfig(dimensions, 0, 0, 0)
+                            10),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+        sc = SearchConfig(dims, 0, 0, 0)
 
         self.assertEqual([1, 0], sc.get_min_indexes())
 
@@ -61,13 +62,13 @@ class TestSearchConfig(trc.TestResultCollector):
         """
         Test that we can get a NeighborhoodConfig from a SearchConfig and properly override the radius
         """
-        dimensions = []
-        dimensions.append(
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR))
-        dimensions.append(
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL))
+        dims = SearchDimensions()
+        dims.add(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
 
-        sc = SearchConfig(dimensions=dimensions,
+        sc = SearchConfig(dimensions=dims,
                           radius=4,
                           step_magnitude=6,
                           min_initialized=2)

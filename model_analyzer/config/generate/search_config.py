@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.generate.search_dimensions import SearchDimensions
+
 
 class NeighborhoodConfig:
     """
@@ -30,6 +32,7 @@ class NeighborhoodConfig:
             Minimum number of initialized values in a neighborhood
             before a step can be taken
         """
+        assert (isinstance(dimensions, SearchDimensions))
         self._dimensions = dimensions
         self._radius = radius
         self._min_initialized = min_initialized
@@ -37,6 +40,10 @@ class NeighborhoodConfig:
     def get_num_dimensions(self):
         """ Returns the number of dimensions in this search """
         return len(self._dimensions)
+
+    def get_dimensions(self):
+        """ Returns the SearchDimensions """
+        return self._dimensions
 
     def get_dimension(self, idx):
         """ Returns the SearchDimension at the given index """

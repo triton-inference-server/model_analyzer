@@ -19,6 +19,7 @@ from .common import test_result_collector as trc
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
+from model_analyzer.config.generate.search_dimensions import SearchDimensions
 from model_analyzer.config.generate.undirected_run_config_generator import UndirectedRunConfigGenerator
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 
@@ -27,14 +28,18 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
 
     def setUp(self):
         mock_models = [ConfigModelProfileSpec(model_name="fake_model_name")]
-        sc = SearchConfig(dimensions=[
+
+        dims = SearchDimensions()
+        dims.add(0, [
             SearchDimension("max_batch_size",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("instance_count",
                             SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("concurrency",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ],
+        ])
+
+        sc = SearchConfig(dimensions=dims,
                           radius=5,
                           step_magnitude=7,
                           min_initialized=2)
@@ -43,11 +48,13 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
     def test_get_starting_coordinate(self):
         """ Test that get_starting_coordinate() works for non-zero values """
         #yapf: disable
-        sc = SearchConfig(dimensions=[
+        dims = SearchDimensions()
+        dims.add(0, [
                 SearchDimension("x", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=2),
                 SearchDimension("y", SearchDimension.DIMENSION_TYPE_LINEAR, min=1),
                 SearchDimension("z", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=3)
-             ],radius=2, step_magnitude=2, min_initialized=2)
+        ])
+        sc = SearchConfig(dimensions=dims,radius=2, step_magnitude=2, min_initialized=2)
         #yapf: enable
         urcg = UndirectedRunConfigGenerator(sc, MagicMock(), MagicMock())
         self.assertEqual(urcg._get_starting_coordinate(), Coordinate([2, 1, 3]))
@@ -66,6 +73,7 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
         urcg = self._urcg
         urcg._coordinate_to_measure = Coordinate([5, 7, 4])
 
+        #yapf: disable
         fake_base_config = {
             "name": "fake_model_name",
             "input": [{
@@ -77,23 +85,21 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
         }
 
         expected_model_config = {
-            'cpu_only':
-                False,
+            'cpu_only': False,
             'dynamicBatching': {},
             'instanceGroup': [{
                 'count': 8,
                 'kind': 'KIND_GPU'
             }],
-            'maxBatchSize':
-                32,
-            'name':
-                'fake_model_name_config_0',
+            'maxBatchSize': 32,
+            'name': 'fake_model_name_config_0',
             'input': [{
                 "name": "INPUT__0",
                 "dataType": "TYPE_FP32",
                 "dims": ['16']
             }]
         }
+        #yapf: enable
 
         with patch(
                 "model_analyzer.config.generate.base_model_config_generator.BaseModelConfigGenerator.get_base_model_config_dict",
@@ -107,6 +113,124 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(model_config.to_dict(), expected_model_config)
         self.assertEqual(perf_config['concurrency-range'], 16)
         self.assertEqual(perf_config['batch-size'], 1)
+
+    def test_get_next_run_config_multi_model(self):
+        """ 
+        Test that get_next_run_config() creates a proper RunConfig for multi-model
+        
+        Sets up a case where the coordinate is [1,2,3,4,5,6], which cooresponds to
+          - model 1 max_batch_size = 2
+          - model 1 instance_count = 3
+          - model 1 concurrency = 8
+          - model 2 max_batch_size = 16
+          - model 2 instance_count = 6
+          - model 2 concurrency = 64
+
+        Also, dynamic batching should be on, and existing values from the base model
+        config should persist if they aren't overwritten
+        """
+        mock_models = [
+            ConfigModelProfileSpec(model_name="fake_model_name1"),
+            ConfigModelProfileSpec(model_name="fake_model_name2")
+        ]
+
+        dims = SearchDimensions()
+        dims.add(0, [
+            SearchDimension("max_batch_size",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("concurrency",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+        dims.add(1, [
+            SearchDimension("max_batch_size",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("concurrency",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        sc = SearchConfig(dimensions=dims,
+                          radius=5,
+                          step_magnitude=7,
+                          min_initialized=2)
+        urcg = UndirectedRunConfigGenerator(sc, MagicMock(), mock_models)
+
+        urcg._coordinate_to_measure = Coordinate([1, 2, 3, 4, 5, 6])
+
+        #yapf: disable
+        fake_base_config1 = {
+            "name": "fake_model_name1",
+            "input": [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": [16]
+            }],
+            "max_batch_size": 4
+        }
+        fake_base_config2 = {
+            "name": "fake_model_name2",
+            "input": [{
+                "name": "INPUT__2",
+                "dataType": "TYPE_FP16",
+                "dims": [32]
+            }],
+            "max_batch_size": 8
+        }
+
+        expected_model_config1 = {
+            'cpu_only': False,
+            'dynamicBatching': {},
+            'instanceGroup': [{
+                'count': 3,
+                'kind': 'KIND_GPU'
+            }],
+            'maxBatchSize': 2,
+            'name': 'fake_model_name1_config_0',
+            'input': [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": ['16']
+            }]
+        }
+
+        expected_model_config2 = {
+            'cpu_only': False,
+            'dynamicBatching': {},
+            'instanceGroup': [{
+                'count': 6,
+                'kind': 'KIND_GPU'
+            }],
+            'maxBatchSize': 16,
+            'name': 'fake_model_name2_config_0',
+            'input': [{
+                "name": "INPUT__2",
+                "dataType": "TYPE_FP16",
+                "dims": ['32']
+            }]
+        }
+        #yapf: enable
+
+        with patch(
+                "model_analyzer.config.generate.base_model_config_generator.BaseModelConfigGenerator.get_base_model_config_dict"
+        ) as f:
+            f.side_effect = [fake_base_config1, fake_base_config2]
+            rc = urcg._get_next_run_config()
+
+        self.assertEqual(len(rc.model_run_configs()), 2)
+        mc1 = rc.model_run_configs()[0].model_config()
+        pc1 = rc.model_run_configs()[0].perf_config()
+        mc2 = rc.model_run_configs()[1].model_config()
+        pc2 = rc.model_run_configs()[1].perf_config()
+
+        self.assertEqual(mc1.to_dict(), expected_model_config1)
+        self.assertEqual(mc2.to_dict(), expected_model_config2)
+        self.assertEqual(pc1['concurrency-range'], 8)
+        self.assertEqual(pc1['batch-size'], 1)
+        self.assertEqual(pc2['concurrency-range'], 64)
+        self.assertEqual(pc2['batch-size'], 1)
 
     def test_radius_magnitude(self):
         """ 
