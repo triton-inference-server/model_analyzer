@@ -62,6 +62,9 @@ class TestSearchDimensions(trc.TestResultCollector):
             dim3 = dims[3]
 
     def test_get_values(self):
+        """
+        Test get_values_for_coordinate() functionality
+        """
         dims = self._dims
         vals = dims.get_values_for_coordiante(Coordinate([0, 2, 4]))
         expected_vals = {

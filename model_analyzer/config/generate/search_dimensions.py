@@ -15,7 +15,7 @@
 
 class SearchDimensions:
     """
-    Data class that holds one or more dimensions and associates them to a key
+    Data class that holds one or more dimensions and associates each one to a key
     """
 
     def __init__(self):
@@ -24,7 +24,7 @@ class SearchDimensions:
 
     def add(self, key, dimensions):
         """ 
-        Add dimensions and associate them with the given key
+        Add dimensions and associate them all with the given key
 
         Parameters
         ----------
@@ -32,7 +32,7 @@ class SearchDimensions:
             The key to associate the dimensions with
 
         Dimensions: List of SearchDimension
-            Dimensions to add and associate with they key
+            Dimensions to add and associate with the key
         """
         for dim in dimensions:
             self._dimensions.append(dim)
@@ -40,7 +40,7 @@ class SearchDimensions:
 
     def get_values_for_coordiante(self, coordinate):
         """
-        Given a coordinate, return all values cooresponding to that coordinate
+        Given a coordinate, return a dict of all values cooresponding to that coordinate
         
         Returns: Dict of Dicts
             ret[key][SearchDimension name] = value
