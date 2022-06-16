@@ -219,7 +219,10 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
                 dimension_values['max_batch_size'],
             'instance_group': [{
                 'count': dimension_values['instance_count'],
-                'kind': "KIND_GPU"
+                'kind': "KIND_GPU",
+                'rate_limiter': {
+                    'priority': 1
+                }
             }]
         }
 

@@ -67,8 +67,11 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
           - max_batch_size = 32
           - instance_count = 8
           - concurrency = 16
-        Also, dynamic batching should be on, and existing values from the base model
-        config should persist if they aren't overwritten
+        
+        Also
+        - rate limiter priority should be 1, even for single model
+        - dynamic batching should be on
+        - existing values from the base model config should persist if they aren't overwritten
         """
         urcg = self._urcg
         urcg._coordinate_to_measure = Coordinate([5, 7, 4])
@@ -89,7 +92,8 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
             'dynamicBatching': {},
             'instanceGroup': [{
                 'count': 8,
-                'kind': 'KIND_GPU'
+                'kind': 'KIND_GPU',
+                'rateLimiter': { 'priority' : 1 }
             }],
             'maxBatchSize': 32,
             'name': 'fake_model_name_config_0',
@@ -126,8 +130,10 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
           - model 2 instance_count = 6
           - model 2 concurrency = 64
 
-        Also, dynamic batching should be on, and existing values from the base model
-        config should persist if they aren't overwritten
+        Also, 
+        - rate limiter priority should be 1
+        - dynamic batching should be on
+        - existing values from the base model config should persist if they aren't overwritten
         """
         mock_models = [
             ConfigModelProfileSpec(model_name="fake_model_name1",
@@ -187,7 +193,8 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
             'dynamicBatching': {},
             'instanceGroup': [{
                 'count': 3,
-                'kind': 'KIND_GPU'
+                'kind': 'KIND_GPU',
+                'rateLimiter': { 'priority' : 1 }
             }],
             'maxBatchSize': 2,
             'name': 'fake_model_name1_config_0',
@@ -203,7 +210,8 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
             'dynamicBatching': {},
             'instanceGroup': [{
                 'count': 6,
-                'kind': 'KIND_GPU'
+                'kind': 'KIND_GPU',
+                'rateLimiter': { 'priority' : 1 }
             }],
             'maxBatchSize': 16,
             'name': 'fake_model_name2_config_0',
