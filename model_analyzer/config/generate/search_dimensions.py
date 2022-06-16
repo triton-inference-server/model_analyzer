@@ -38,11 +38,17 @@ class SearchDimensions:
             self._dimensions.append(dim)
             self._dimension_keys.append(key)
 
-    def get_values_for_coordiante(self, coordinate):
+    def get_values_for_coordinate(self, coordinate):
         """
-        Given a coordinate, return all dimension_name:dimension_value pairs associated with 
+        Given a Coordinate, return all dimension_name:dimension_value pairs associated with 
         that coordinate, organized by the dimension's key
         
+        Parameters
+        ----------
+        
+        coordinate: Coordinate
+            The coordinate to get values for 
+
         Returns: Dict of Dicts
             ret[key][SearchDimension name] = value
 

@@ -182,7 +182,7 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
 
     def _get_coordinate_values(self, coordinate, key):
         dims = self._search_config.get_dimensions()
-        values = dims.get_values_for_coordiante(coordinate)
+        values = dims.get_values_for_coordinate(coordinate)
         return values[key]
 
     def _get_radius(self):

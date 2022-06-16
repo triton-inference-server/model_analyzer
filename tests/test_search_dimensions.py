@@ -23,16 +23,12 @@ class TestSearchDimensions(trc.TestResultCollector):
     def setUp(self):
         self._dims = SearchDimensions()
         self._dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 0,
-                            10),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_LINEAR, 0,
-                            10),
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_LINEAR),
         ])
 
-        self._dims.add_dimensions(1, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 0,
-                            10),
-        ])
+        self._dims.add_dimensions(
+            1, [SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR)])
 
     def test_list_behavior(self):
         """
@@ -66,7 +62,7 @@ class TestSearchDimensions(trc.TestResultCollector):
         Test get_values_for_coordinate() functionality
         """
         dims = self._dims
-        vals = dims.get_values_for_coordiante(Coordinate([0, 2, 4]))
+        vals = dims.get_values_for_coordinate(Coordinate([0, 2, 4]))
         expected_vals = {
             0: {
                 "foo": 1,
