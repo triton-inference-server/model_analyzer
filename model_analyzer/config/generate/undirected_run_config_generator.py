@@ -250,5 +250,5 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config(perf_config_params)
 
         perf_analyzer_config.update_config(
-            self._models[0].perf_analyzer_flags())
+            self._models[model_num].perf_analyzer_flags())
         return perf_analyzer_config

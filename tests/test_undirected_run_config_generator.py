@@ -134,6 +134,7 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
         - rate limiter priority should be 1
         - dynamic batching should be on
         - existing values from the base model config should persist if they aren't overwritten
+        - existing values for perf-analyzer config should persist if they aren't overwritten
         """
         mock_models = [
             ConfigModelProfileSpec(model_name="fake_model_name1",
@@ -239,8 +240,10 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(mc2.to_dict(), expected_model_config2)
         self.assertEqual(pc1['concurrency-range'], 8)
         self.assertEqual(pc1['batch-size'], 1)
+        self.assertEqual(pc1['model-version'], 2)
         self.assertEqual(pc2['concurrency-range'], 64)
         self.assertEqual(pc2['batch-size'], 1)
+        self.assertEqual(pc2['model-version'], 3)
 
     def test_radius_magnitude(self):
         """ 
