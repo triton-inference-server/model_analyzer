@@ -15,6 +15,7 @@
 from model_analyzer.config.generate.neighborhood import Neighborhood
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
+from model_analyzer.config.generate.search_dimensions import SearchDimensions
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.coordinate import Coordinate
 
@@ -38,15 +39,15 @@ class TestNeighborhood(trc.TestResultCollector):
 
     def test_create_neighborhood(self):
         cd = CoordinateData()
-
-        nc = NeighborhoodConfig([
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ],
-                                radius=2,
-                                min_initialized=3)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         n = Neighborhood(nc, cd, Coordinate([1, 1, 1]))
 
         # These are all values within radius of 2 from [1,1,1]
@@ -68,14 +69,15 @@ class TestNeighborhood(trc.TestResultCollector):
         cd = CoordinateData()
         cd.set_throughput(Coordinate([0, 0, 0]), 5)
 
-        nc = NeighborhoodConfig([
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ],
-                                radius=2,
-                                min_initialized=3)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         n = Neighborhood(nc, cd, Coordinate([1, 1, 1]))
 
         # Started with 1 initialized
@@ -100,14 +102,15 @@ class TestNeighborhood(trc.TestResultCollector):
         self.assertTrue(n.enough_coordinates_initialized())
 
     def test_weighted_center(self):
-        nc = NeighborhoodConfig([
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ],
-                                radius=2,
-                                min_initialized=3)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         cd = CoordinateData()
 
         n = Neighborhood(nc, cd, Coordinate([1, 1, 1]))
@@ -143,12 +146,13 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 2)
 
-        nc = NeighborhoodConfig([
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ],
-                                radius=2,
-                                min_initialized=3)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
 
         n = Neighborhood(nc, cd, Coordinate([0, 0]))
 
@@ -164,12 +168,13 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 4)
 
-        nc = NeighborhoodConfig([
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ],
-                                radius=2,
-                                min_initialized=3)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
 
         n = Neighborhood(nc, cd, Coordinate([0, 0]))
         magnitude = 1
@@ -187,12 +192,13 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 4)
 
-        nc = NeighborhoodConfig([
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ],
-                                radius=2,
-                                min_initialized=3)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
 
         n = Neighborhood(nc, cd, Coordinate([0, 0]))
         magnitude = 3
@@ -216,14 +222,15 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([3, 6]), 100)
         cd.set_throughput(Coordinate([4, 5]), 1)
 
-        nc = NeighborhoodConfig([
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
             SearchDimension(
                 "foo", SearchDimension.DIMENSION_TYPE_LINEAR, min=2, max=7),
             SearchDimension(
                 "bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=2, max=7)
-        ],
-                                radius=8,
-                                min_initialized=3)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=8, min_initialized=3)
 
         n = Neighborhood(nc, cd, Coordinate([3, 6]))
 
@@ -239,12 +246,13 @@ class TestNeighborhood(trc.TestResultCollector):
         cd.set_throughput(Coordinate([1, 0]), 4)
         cd.set_throughput(Coordinate([0, 1]), 4)
 
-        nc = NeighborhoodConfig([
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ],
-                                radius=2,
-                                min_initialized=3)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
 
         n = Neighborhood(nc, cd, Coordinate([0, 0]))
 
