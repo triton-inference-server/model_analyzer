@@ -36,7 +36,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model: The model to generate ModelConfigs for
         client: TritonClient
         variant_name_manager: ModelVariantNameManager
-        default_only: Bool 
+        default_only: Bool
             If true, only the default config will be generated
             If false, the default config will NOT be generated
         early_exit_enable: Bool
@@ -62,12 +62,12 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         #
         self._curr_max_batch_size_throughputs = []
 
-    def is_done(self):
+    def _is_done(self):
         """ Returns true if this generator is done generating configs """
         return self._generator_started and (self._default_only or
                                             self._done_walking())
 
-    def next_config(self):
+    def get_configs(self):
         """
         Returns
         -------
@@ -76,13 +76,16 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         """
         self._generator_started = True
         while True:
+            if self._is_done():
+                break
+
             config = self._get_next_model_config()
             yield (config)
             self._step()
 
     def set_last_results(self, measurements):
-        """ 
-        Given the results from the last ModelConfig, make decisions 
+        """
+        Given the results from the last ModelConfig, make decisions
         about future configurations to generate
 
         Parameters
@@ -104,12 +107,10 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         raise NotImplementedError
 
     def _last_results_increased_throughput(self):
-        max_throughput = self._get_last_results_max_throughput()
-        max_throughput_increased = all(
-            max_throughput is not None and t is not None and max_throughput > t
-            for t in self._curr_max_batch_size_throughputs)
-
-        return max_throughput_increased
+        if len(self._curr_max_batch_size_throughputs) >= 2:
+            last_throughput = self._curr_max_batch_size_throughputs[-1]
+            return last_throughput > self._curr_max_batch_size_throughputs[-2]
+        return True
 
     def _get_last_results_max_throughput(self):
         throughputs = [
@@ -146,7 +147,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     @staticmethod
     def make_model_config(param_combo, config, client, gpus, model,
                           model_repository, variant_name_manager):
-        """ 
+        """
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config
 
@@ -194,9 +195,9 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     @classmethod
     def get_base_model_config_dict(cls, config, client, gpus, model_repository,
                                    model_name):
-        """ 
+        """
         Attempts to create a base model config dict from config.pbtxt, if one exists
-        If the config.pbtxt is not present, we will load a Triton Server with the 
+        If the config.pbtxt is not present, we will load a Triton Server with the
         base model and have it create a default config for MA, if possible
 
         Parameters:
@@ -230,7 +231,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     def _apply_value_to_dict(key, value, dict_in):
         """
         Apply the supplied value at the given key into the provided dict.
-        
+
         If the key already exists in the dict and both the existing value as well
         as the new input value are dicts, only overwrite the subkeys (recursively)
         provided in the value

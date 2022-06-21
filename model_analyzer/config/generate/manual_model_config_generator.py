@@ -37,9 +37,9 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         model: The model to generate ModelConfigs for
         client: TritonClient
         variant_name_manager: ModelVariantNameManager
-        default_only: Bool 
+        default_only: Bool
             If true, only the default config will be generated
-            If false, the default config will NOT be generated                
+            If false, the default config will NOT be generated
         early_exit_enable: Bool
             If true, the generator can early exit if throughput plateaus
         """
@@ -71,21 +71,21 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
 
     def _done_walking_max_batch_size(self):
         if (self._max_batch_sizes is None or len(self._max_batch_sizes)
-                == self._curr_max_batch_size_index + 1):
+                == self._curr_max_batch_size_index):
             return True
 
-        if self._early_exit_enable and not self._last_results_increased_throughput(
-        ):
+        if self._early_exit_enable \
+                and not self._last_results_increased_throughput():
             self._print_max_batch_size_plateau_warning()
             return True
         return False
 
     def _step(self):
-        if self._done_walking_max_batch_size():
+        self._step_max_batch_size()
+
+        if not self._done_walking_configs() and self._done_walking_max_batch_size():
             self._reset_max_batch_size()
             self._step_config()
-        else:
-            self._step_max_batch_size()
 
     def _reset_max_batch_size(self):
         super()._reset_max_batch_size()
@@ -138,7 +138,7 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
 
     def _determine_max_batch_sizes_and_param_combos(self):
         """
-        Determine self._max_batch_sizes and self._non_max_batch_size_param_combos 
+        Determine self._max_batch_sizes and self._non_max_batch_size_param_combos
         """
         if self._remote_mode:
             return

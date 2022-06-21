@@ -37,11 +37,11 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         self._fake_throughput = 1
 
     def test_direct_no_params(self):
-        ''' 
+        '''
         Test direct modes with no model_config_parameters specified
-        
+
         It will just sweep instance count and max_batch_size (with dynamic batching on),
-        and default config (empty dict) will be included 
+        and default config (empty dict) will be included
         '''
 
         # yapf: disable
@@ -98,9 +98,9 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs)
 
     def test_direct_no_params_search_disable(self):
-        ''' 
+        '''
         Test direct mode with no model_config_parameters specified and run_search disabled
-        
+
         This will just return a single empty config, since there are no parameters to combine
         '''
 
@@ -118,9 +118,9 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs)
 
     def test_direct_yes_params_search_disable(self):
-        ''' 
+        '''
         Test direct modes with model_config_parameters specified and run_search disabled
-        
+
         This will just combine all model_config_parameters
         '''
 
@@ -135,7 +135,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                         instance_group:
                         -
                             kind: KIND_GPU
-                            count: [1,2]                        
+                            count: [1,2]
             """)
 
         expected_configs = [
@@ -152,7 +152,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs)
 
     def test_run_config_search_options(self):
-        ''' 
+        '''
         Test that ModelConfigGenerator will honor run_config_search_max_instance_count
         and run_config_search_max_model_batch_size and run_config_search_min_model_batch_size
         '''
@@ -186,7 +186,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs)
 
     def test_run_config_search_min_instance_counts(self):
-        ''' 
+        '''
         Test that ModelConfigGenerator will honor run_config_search_min_instance_count
         '''
 
@@ -214,7 +214,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs)
 
     def test_non_power_of_two_max_batch_size(self):
-        ''' 
+        '''
         Test that ModelConfigGenerator will correctly sweep max_batch_size with
         input values that aren't a power of 2
         '''
@@ -242,11 +242,11 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs)
 
     def test_direct_yes_params_specified(self):
-        ''' 
+        '''
         Test direct mode with model_config_parameters specified
-        
-        It will combine all legal combinations of config values, and 
-        default config (None) will be included 
+
+        It will combine all legal combinations of config values, and
+        default config (None) will be included
         '''
 
         # yapf: disable
@@ -260,7 +260,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                         instance_group:
                         -
                             kind: KIND_GPU
-                            count: [1,2]                        
+                            count: [1,2]
             """)
 
         expected_configs = [
@@ -277,7 +277,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs)
 
     def test_direct_cpu_only(self):
-        ''' 
+        '''
         Test direct mode with cpu_only=true
         '''
 
@@ -303,7 +303,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs)
 
     def test_direct_nonempty_default_config(self):
-        ''' 
+        '''
         Test direct mode with the the default config containing some values
 
         It will keep values that aren't part of the search, and will overwrite
@@ -342,15 +342,15 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs, protobuf)
 
     def test_remote_yes_params_specified(self):
-        ''' 
+        '''
         Test remote mode with model_config_parameters specified
-        
+
         It should always return a single empty config in remote mode
         '''
 
         # yapf: disable
         yaml_content = convert_to_bytes("""
-            triton_launch_mode: remote            
+            triton_launch_mode: remote
             run_config_search_max_instance_count: 16
             profile_models:
                 test_model:
@@ -359,7 +359,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                         instance_group:
                         -
                             kind: KIND_GPU
-                            count: [1,2]                        
+                            count: [1,2]
             """)
 
         expected_configs = [{}]
@@ -369,15 +369,15 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs)
 
     def test_remote_no_params_specified(self):
-        ''' 
+        '''
         Test remote mode with no model_config_parameters specified
-        
+
         It should always return a single empty config in remote mode
         '''
 
         # yapf: disable
         yaml_content = convert_to_bytes("""
-            triton_launch_mode: remote            
+            triton_launch_mode: remote
             run_config_search_max_instance_count: 16
             profile_models:
                 - my-model
@@ -390,11 +390,11 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs)
 
     def test_search_subparameter(self):
-        ''' 
+        '''
         Test that if a subparameter is swept, that it will not overwrite other subparameters
 
         Param2 should exist in all results despite the fact that param1 is the one being swept.
-        Also, gpu_execution_accelerator (a nested subproperty) should still exist despite a 
+        Also, gpu_execution_accelerator (a nested subproperty) should still exist despite a
         sibling property (cpu_execution_accelerator) being overwritten
         '''
 
@@ -416,15 +416,15 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                     key: "param2"
                     value: { string_value: "param2_value" }
                 }
-            ]            
+            ]
             optimization { execution_accelerators {
                 cpu_execution_accelerator : [ {
                     name : "fake_cpu_accelerator"
                 }]
                 gpu_execution_accelerator : [ {
                     name : "fake_gpu_accelerator"
-                }]                
-            }}            
+                }]
+            }}
             """
 
         yaml_content = convert_to_bytes("""
@@ -436,7 +436,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                 cpu_execution_accelerator:
                                 - name: "new_cpu_accelerator"
                         parameters:
-                            param1: 
+                            param1:
                                 string_value: ["foo", "bar"]
             """)
 
@@ -482,7 +482,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs, protobuf)
 
     def test_search_dynamic_batching_subparameter(self):
-        ''' 
+        '''
         Test that if dynamic batching was already on with subparameters, they will not be overwritten in automatic search
 
         Normally automatic search just turns on dynamic_batching, but in this case dynamic_batching is already
@@ -524,7 +524,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                                   expected_configs, protobuf)
 
     def test_apply_value_to_dict(self):
-        ''' 
+        '''
         Test different combinations of input and existing value types for apply_value_to_dict()
         '''
         # Both input and existing are scalar value in a dict
@@ -626,7 +626,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                         instance_group:
                         -
                             kind: KIND_GPU
-                            count: [1,2]                        
+                            count: [1,2]
             """)
 
         expected_configs = [
@@ -662,7 +662,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                         instance_group:
                         -
                             kind: KIND_GPU
-                            count: [1,2,3]                        
+                            count: [1,2,3]
             """)
 
         expected_configs = [
@@ -696,7 +696,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                                              protobuf="max_batch_size: 8",
                                              default_only=False,
                                              early_exit_enable=True):
-        ''' 
+        '''
         Main function that creates a config from the yaml_content, runs it through
         ModelConfigGenerator, and compares the resulting model_configs vs the expected_configs
         '''
@@ -725,10 +725,9 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                 ModelVariantNameManager(),
                 default_only=default_only,
                 early_exit_enable=early_exit_enable)
-            mcg_generator = mcg.next_config()
+
             model_configs = []
-            while not mcg.is_done():
-                model_config = next(mcg_generator)
+            for model_config in mcg.get_configs():
                 mcg.set_last_results(self._get_next_fake_results())
                 model_config_dict = model_config.get_config()
                 model_configs.append(model_config_dict)
