@@ -67,7 +67,7 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
            and self._done_walking_max_batch_size()
 
     def _done_walking_configs(self):
-        return len(self._configs) == self._curr_config_index + 1
+        return len(self._configs) == self._curr_config_index
 
     def _done_walking_max_batch_size(self):
         if (self._max_batch_sizes is None or len(self._max_batch_sizes)
@@ -83,9 +83,11 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
     def _step(self):
         self._step_max_batch_size()
 
-        if not self._done_walking_configs() and self._done_walking_max_batch_size():
-            self._reset_max_batch_size()
+        if self._done_walking_max_batch_size():
             self._step_config()
+
+            if not self._done_walking_configs():
+                self._reset_max_batch_size()
 
     def _reset_max_batch_size(self):
         super()._reset_max_batch_size()
