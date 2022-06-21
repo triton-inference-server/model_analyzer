@@ -34,7 +34,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         model: The model to generate ModelConfigs for
         client: TritonClient
         variant_name_manager: ModelVariantNameManager
-        default_only: Bool 
+        default_only: Bool
             If true, only the default config will be generated
             If false, the default config will NOT be generated
         early_exit_enable: Bool
@@ -68,11 +68,13 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
            and self._done_walking_instance_count()
 
     def _step(self):
+        self._step_max_batch_size()
+
         if self._done_walking_max_batch_size():
-            self._reset_max_batch_size()
             self._step_instance_count()
-        else:
-            self._step_max_batch_size()
+
+            if not self._done_walking_instance_count():
+                self._reset_max_batch_size()
 
     def _step_max_batch_size(self):
         self._curr_max_batch_size *= 2
@@ -94,10 +96,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         return False
 
     def _done_walking_instance_count(self):
-        return self._curr_instance_count == self._max_instance_count
+        return self._curr_instance_count > self._max_instance_count
 
     def _max_batch_size_limit_reached(self):
-        return (self._curr_max_batch_size * 2) > self._max_model_batch_size
+        return self._curr_max_batch_size > self._max_model_batch_size
 
     def _reset_max_batch_size(self):
         super()._reset_max_batch_size()
