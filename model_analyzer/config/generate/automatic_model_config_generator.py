@@ -131,7 +131,8 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
     def _determine_sweep_max_batch_size_disabled(self):
         config = BaseModelConfigGenerator.get_base_model_config_dict(
-            self._model_repository, self._base_model_name)
+            self._config, self._client, self._gpus, self._model_repository,
+            self._base_model_name)
         max_batch_size_disabled = False
         if "max_batch_size" not in config or config['max_batch_size'] == 0:
             max_batch_size_disabled = True

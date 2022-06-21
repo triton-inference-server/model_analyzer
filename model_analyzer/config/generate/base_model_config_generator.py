@@ -60,7 +60,6 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._model_name_index = 0
         self._generator_started = False
         self._max_batch_size_warning_printed = False
-        self._default_config = None
         self._last_results = []
         # Contains the max throughput from each provided list of measurements
         # since the last time we stepped max_batch_size
@@ -141,13 +140,16 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     def _make_direct_mode_model_config(self, param_combo):
         return BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
+            config=self._config,
+            client=self._client,
+            gpus=self._gpus,
             model=self._base_model,
             model_repository=self._model_repository,
             variant_name_manager=self._variant_name_manager)
 
     @staticmethod
-    def make_model_config(param_combo, model, model_repository,
-                          variant_name_manager):
+    def make_model_config(param_combo, config, client, gpus, model,
+                          model_repository, variant_name_manager):
         """ 
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config
@@ -156,6 +158,9 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         -----------
         param_combo: dict
             dict of key:value pairs to apply to the model config
+        config: ModelAnalyzerConfig
+        client: TritonClient
+        gpus: List of GPUDevices
         model: dict
             dict of model properties
         model_repository: str
@@ -167,7 +172,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model_name, param_combo)
 
         model_config_dict = BaseModelConfigGenerator.get_base_model_config_dict(
-            model_repository, model_name)
+            config, client, gpus, model_repository, model_name)
 
         model_config_dict['name'] = variant_name
         logger.info("")
@@ -191,21 +196,34 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         return model_config
 
     @staticmethod
-    def _get_base_model_config_dict(self):
-        if (self._default_config):
-            return self._default_config
+    def get_base_model_config_dict(config, client, gpus, model_repository,
+                                   model_name):
+        """ 
+        Attempts to create a base model config dict from config.pbtxt, if one exists
+        If the config.pbtxt is not present, we will load a Triton Server with the 
+        base model and have it create a default config for MA, if possible
 
-        model_path = f'{self._model_repository}/{self._base_model_name}'
+        Parameters:
+        -----------
+        config: ModelAnalyzerConfig
+        client: TritonClient
+        gpus: List of GPUDevices
+        model_repository: str
+            path to the model repository on the file system
+        model_name: str
+            name of the base model
+        """
+        model_path = f'{model_repository}/{model_name}'
 
         try:
             config = ModelConfig.create_from_file(model_path)
         except:
             server = TritonServerHandler.get_server_handle(
-                self._config, self._gpus, strict_model_config='false')
+                config, gpus, strict_model_config='false')
 
             server.start()
-            self._client.wait_for_server_ready(self._config.client_max_retries)
-            if (self._client.load_model(self._base_model_name) == -1):
+            client.wait_for_server_ready(config.client_max_retries)
+            if (client.load_model(model_name) == -1):
                 server.stop()
 
                 if not os.path.exists(model_path):
@@ -223,14 +241,13 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
                     ' Attempted have Triton create a default config, but this is not'
                     ' possible for this model type.')
 
-            self._client.wait_for_model_ready(self._base_model_name,
-                                              self._config.client_max_retries)
+            client.wait_for_model_ready(model_name, config.client_max_retries)
 
-            self._default_config = self._client.get_model_config(
-                self._base_model_name, self._config.client_max_retries)
+            default_config = client.get_model_config(model_name,
+                                                     config.client_max_retries)
             server.stop()
 
-            return self._default_config
+            return default_config
 
         return config.get_config()
 
