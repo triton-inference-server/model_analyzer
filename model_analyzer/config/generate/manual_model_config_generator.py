@@ -70,12 +70,12 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         return len(self._configs) == self._curr_config_index
 
     def _done_walking_max_batch_size(self):
-        if (self._max_batch_sizes is None or len(self._max_batch_sizes)
-                == self._curr_max_batch_size_index):
+        if (self._max_batch_sizes is None or
+                len(self._max_batch_sizes) == self._curr_max_batch_size_index):
             return True
 
-        if self._early_exit_enable \
-                and not self._last_results_increased_throughput():
+        if self._early_exit_enable and not self._last_results_increased_throughput(
+        ):
             self._print_max_batch_size_plateau_warning()
             return True
         return False
