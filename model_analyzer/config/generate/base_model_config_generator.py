@@ -108,8 +108,9 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
     def _last_results_increased_throughput(self):
         if len(self._curr_max_batch_size_throughputs) >= 2:
-            last_throughput = self._curr_max_batch_size_throughputs[-1]
-            return last_throughput > self._curr_max_batch_size_throughputs[-2]
+            lastest_throughput = self._curr_max_batch_size_throughputs[-1]
+            return all(lastest_throughput > prev_throughput for prev_throughput
+                       in self._curr_max_batch_size_throughputs[:-1])
         return True
 
     def _get_last_results_max_throughput(self):
