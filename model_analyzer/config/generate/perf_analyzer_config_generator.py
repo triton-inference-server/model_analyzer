@@ -26,10 +26,10 @@ logger = logging.getLogger(LOGGER_NAME)
 
 
 class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
-    """ 
-    Given Perf Analyzer configuration options, generates Perf Analyzer configs 
-    
-    All combinations are pregenerated in __init__, but it may return is_done==true 
+    """
+    Given Perf Analyzer configuration options, generates Perf Analyzer configs
+
+    All combinations are pregenerated in __init__, but it may return is_done==true
     earlier depending on results that it receives
     """
 
@@ -40,10 +40,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         ----------
         cli_config: ConfigCommandProfile
             CLI Configuration Options
-            
+
         model_name: string
             The model name to profile
-        
+
         model_perf_analyzer_flags: Dict
             custom perf analyzer configuration
 
@@ -89,17 +89,20 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         self._generate_perf_configs()
 
-    def is_done(self):
+    def _is_done(self):
         """ Returns true if this generator is done generating configs """
         if self._last_results_erroneous():
             return True
 
         return self._done_walking()
 
-    def next_config(self):
+    def get_configs(self):
         """ Returns the next generated config """
         self._generator_started = True
         while True:
+            if self._is_done():
+                break
+
             config = self._configs[self._curr_config_index][
                 self._curr_concurrency_index]
             yield (config)
@@ -107,8 +110,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._step()
 
     def set_last_results(self, measurements):
-        """ 
-        Given the results from the last PerfAnalyzerConfig, make decisions 
+        """
+        Given the results from the last PerfAnalyzerConfig, make decisions
         about future configurations to generate
 
         Parameters
@@ -179,13 +182,18 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return perf_config_params
 
     def _step(self):
+        self._step_concurrency()
+
         if self._done_walking_concurrencies():
             self._step_config()
-        else:
-            self._step_concurrency()
+
+            if not self._done_walking_configs():
+                self._reset_concurrencies()
 
     def _step_config(self):
         self._curr_config_index += 1
+
+    def _reset_concurrencies(self):
         self._curr_concurrency_index = 0
         self._concurrency_warning_printed = False
         self._all_results = []
@@ -199,10 +207,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
            and self._done_walking_concurrencies()
 
     def _done_walking_configs(self):
-        return len(self._configs) == self._curr_config_index + 1
+        return len(self._configs) == self._curr_config_index
 
     def _done_walking_concurrencies(self):
-        if len(self._concurrencies) == self._curr_concurrency_index + 1:
+        if len(self._concurrencies) == self._curr_concurrency_index:
             return True
         if self._early_exit_enable and not self._throughput_gain_valid():
             if not self._concurrency_warning_printed:
@@ -228,7 +236,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return True in valid_gains
 
     def _calculate_throughput_gain(self, reverse_index):
-        """ 
+        """
         Given a reverse index, calculate the throughput gain at that index when
         indexing from the back of the results list, when compared to its previous
         results
