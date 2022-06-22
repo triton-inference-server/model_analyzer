@@ -134,7 +134,7 @@ class TritonServerHandler():
                 labels=config.triton_docker_labels,
                 shm_size=config.triton_docker_shm_size)
         elif config.triton_launch_mode == 'c_api':
-            self._validate_triton_install_path(config)
+            TritonServerHandler._validate_triton_install_path(config)
 
             triton_config = TritonServerConfig()
             triton_config['strict-model-config'] = strict_model_config
