@@ -30,6 +30,8 @@ logger = logging.getLogger(LOGGER_NAME)
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
     """ Base class for generating model configs """
 
+    _default_config = {}
+
     def __init__(self, config, gpus, model, client, variant_name_manager,
                  default_only, early_exit_enable):
         """
@@ -195,8 +197,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
         return model_config
 
-    @staticmethod
-    def get_base_model_config_dict(config, client, gpus, model_repository,
+    @classmethod
+    def get_base_model_config_dict(cls, config, client, gpus, model_repository,
                                    model_name):
         """ 
         Attempts to create a base model config dict from config.pbtxt, if one exists
@@ -213,6 +215,9 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_name: str
             name of the base model
         """
+        if (cls._default_config and cls._default_config[model_name]):
+            return cls._default_config[model_name]
+
         model_path = f'{model_repository}/{model_name}'
 
         try:
@@ -243,11 +248,11 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
             client.wait_for_model_ready(model_name, config.client_max_retries)
 
-            default_config = client.get_model_config(model_name,
-                                                     config.client_max_retries)
+            cls._default_config[model_name] = client.get_model_config(
+                model_name, config.client_max_retries)
             server.stop()
 
-            return default_config
+            return cls._default_config[model_name]
 
         return config.get_config()
 
