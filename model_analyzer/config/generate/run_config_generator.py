@@ -29,12 +29,12 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         Parameters
         ----------
         config: ModelAnalyzerConfig
-        
+
         gpus: List of GPUDevices
-        
+
         models: List of ConfigModelProfileSpec
             The models to generate ModelRunConfigs for
-            
+
         client: TritonClient
         """
         self._config = config
@@ -54,16 +54,16 @@ class RunConfigGenerator(ConfigGeneratorInterface):
 
         self._model_variant_name_manager = ModelVariantNameManager()
 
-    def is_done(self):
+    def _is_done(self):
         return    self._default_returned \
               and self._curr_generators[0] is not None \
-              and all([gen.is_done() for gen in self._curr_generators])
+              and all([gen._is_done() for gen in self._curr_generators])
 
     def set_last_results(self, measurements):
         self._update_results_for_all_generators(measurements)
         self._send_results_to_appropriate_generators()
 
-    def next_config(self):
+    def get_configs(self):
         """
         Returns
         -------
@@ -83,13 +83,11 @@ class RunConfigGenerator(ConfigGeneratorInterface):
                                        self._models[index], self._client,
                                        self._model_variant_name_manager,
                                        default_only)
-        model_run_config_generator = mrcg.next_config()
 
         self._curr_generators[index] = mrcg
 
-        while not mrcg.is_done():
-            next_config = next(model_run_config_generator)
-            self._curr_model_run_configs[index] = next_config
+        for model_run_config in mrcg.get_configs():
+            self._curr_model_run_configs[index] = model_run_config
 
             if index == (len(self._models) - 1):
                 yield (self._make_run_config())
@@ -114,7 +112,7 @@ class RunConfigGenerator(ConfigGeneratorInterface):
             self._curr_generators[index].set_last_results(
                 self._curr_results[index])
             self._curr_results[index] = []
-            if not self._curr_generators[index].is_done():
+            if not self._curr_generators[index]._is_done():
                 break
 
     @classmethod
