@@ -21,6 +21,7 @@ from model_analyzer.constants import CONFIG_PARSER_FAILURE, LOGGER_NAME
 
 from urllib.parse import urlparse
 
+import os
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
