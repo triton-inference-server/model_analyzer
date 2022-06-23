@@ -86,6 +86,9 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         self._curr_instance_count += 1
 
     def _done_walking_max_batch_size(self):
+        if self._last_results_erroneous():
+            return True
+
         if self._max_batch_size_limit_reached():
             return True
 
@@ -108,6 +111,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             self._curr_max_batch_size = self._max_model_batch_size
         else:
             self._curr_max_batch_size = self._min_model_batch_size
+
+    def _last_results_erroneous(self):
+        last_max_throughput = self._get_last_results_max_throughput()
+        return last_max_throughput is None
 
     def _get_next_model_config(self):
         param_combo = self._get_curr_param_combo()

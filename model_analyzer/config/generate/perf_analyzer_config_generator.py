@@ -91,9 +91,6 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _is_done(self):
         """ Returns true if this generator is done generating configs """
-        if self._last_results_erroneous():
-            return True
-
         return self._done_walking()
 
     def get_configs(self):
@@ -106,6 +103,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             config = self._configs[self._curr_config_index][
                 self._curr_concurrency_index]
             yield (config)
+
+            if self._last_results_erroneous():
+                break
 
             self._step()
 
