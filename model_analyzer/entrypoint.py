@@ -18,6 +18,7 @@ from .cli.cli import CLI
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.constants import LOGGER_NAME
 from .triton.client.client_factory import TritonClientFactory
+from .triton.server.server_factory import TritonServerFactory
 from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
 from .config.input.config_command_analyze import ConfigCommandAnalyze
