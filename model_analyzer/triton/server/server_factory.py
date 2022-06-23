@@ -127,10 +127,10 @@ class TritonServerFactory:
             server = TritonServerFactory._get_local_server_handle(
                 config, gpus, use_model_repository)
         elif config.triton_launch_mode == 'docker':
-            server = TritonServerFactor._get_docker_server_handle(
+            server = TritonServerFactory._get_docker_server_handle(
                 config, gpus, use_model_repository)
         elif config.triton_launch_mode == 'c_api':
-            server = TritonServerFactor._get_c_api_server_handle(
+            server = TritonServerFactory._get_c_api_server_handle(
                 config, use_model_repository)
         else:
             raise TritonModelAnalyzerException(
