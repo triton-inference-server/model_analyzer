@@ -16,10 +16,8 @@ from .config_generator_interface import ConfigGeneratorInterface
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
-from model_analyzer.triton.server.server_handler import TritonServerHandler
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-import os
 import abc
 import logging
 
@@ -28,8 +26,6 @@ logger = logging.getLogger(LOGGER_NAME)
 
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
     """ Base class for generating model configs """
-
-    _default_config = {}
 
     def __init__(self, config, gpus, model, client, variant_name_manager,
                  default_only, early_exit_enable):
@@ -214,46 +210,10 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_name: str
             name of the base model
         """
-        if (cls._default_config and cls._default_config[model_name]):
-            return cls._default_config[model_name]
+        model_config_dict = ModelConfig.create_model_config_dict(
+            config, client, gpus, model_repository, model_name)
 
-        model_path = f'{model_repository}/{model_name}'
-
-        try:
-            config = ModelConfig.create_from_file(model_path)
-        except:
-            server = TritonServerHandler.get_server_handle(
-                config, gpus, use_model_repository=True)
-
-            server.start()
-            client.wait_for_server_ready(config.client_max_retries)
-            if (client.load_model(model_name) == -1):
-                server.stop()
-
-                if not os.path.exists(model_path):
-                    raise TritonModelAnalyzerException(
-                        f'Model path "{model_path}" specified does not exist.')
-
-                if os.path.isfile(model_path):
-                    raise TritonModelAnalyzerException(
-                        f'Model output path "{model_path}" must be a directory.'
-                    )
-
-                model_config_path = os.path.join(model_path, "config.pbtxt")
-                raise TritonModelAnalyzerException(
-                    f'Path "{model_config_path}" does not exist.'
-                    ' Attempted have Triton create a default config, but this is not'
-                    ' possible for this model type.')
-
-            client.wait_for_model_ready(model_name, config.client_max_retries)
-
-            cls._default_config[model_name] = client.get_model_config(
-                model_name, config.client_max_retries)
-            server.stop()
-
-            return cls._default_config[model_name]
-
-        return config.get_config()
+        return model_config_dict
 
     def _reset_max_batch_size(self):
         self._max_batch_size_warning_printed = False

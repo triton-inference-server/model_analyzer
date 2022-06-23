@@ -23,11 +23,15 @@ from tritonclient.grpc import model_config_pb2
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
+from model_analyzer.triton.server.server_handler import TritonServerHandler
+
 
 class ModelConfig:
     """
     A class that encapsulates all the metadata about a Triton model.
     """
+
+    _default_config_dict = {}
 
     def __init__(self, model_config):
         """
@@ -55,6 +59,55 @@ class ModelConfig:
             model_config = ModelConfig.create_from_dictionary(model_config_dict)
 
         return model_config
+
+    @staticmethod
+    def create_model_config_dict(config, client, gpus, model_repository,
+                                 model_name):
+
+        if (ModelConfig._default_config_dict and
+                model_name in ModelConfig._default_config_dict):
+            return ModelConfig._default_config_dict[model_name]
+
+        model_path = f'{model_repository}/{model_name}'
+
+        try:
+            config = ModelConfig.create_from_file(model_path).get_config()
+        except:
+            server = TritonServerHandler.get_server_handle(
+                config, gpus, use_model_repository=True)
+
+            server.start()
+            client.wait_for_server_ready(config.client_max_retries)
+            if (client.load_model(model_name) == -1):
+                server.stop()
+
+                if not os.path.exists(model_path):
+                    raise TritonModelAnalyzerException(
+                        f'Model path "{model_path}" specified does not exist.')
+
+                if os.path.isfile(model_path):
+                    raise TritonModelAnalyzerException(
+                        f'Model output path "{model_path}" must be a directory.'
+                    )
+
+                model_config_path = os.path.join(model_path, "config.pbtxt")
+                raise TritonModelAnalyzerException(
+                    f'Path "{model_config_path}" does not exist.'
+                    ' Attempted have Triton create a default config, but this is not'
+                    ' possible for this model type.')
+
+                # Add checks to see that input/output exist
+
+            client.wait_for_model_ready(model_name, config.client_max_retries)
+
+            config = client.get_model_config(model_name,
+                                             config.client_max_retries)
+
+            ModelConfig._default_config_dict[model_name] = config
+
+            server.stop()
+
+        return config
 
     @staticmethod
     def create_from_file(model_path):
