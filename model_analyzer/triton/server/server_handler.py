@@ -109,6 +109,9 @@ class TritonServerHandler():
             'model-repository'] = config.model_repository if use_model_repository \
                                                             else config.output_model_repository_path
 
+        if use_model_repository:
+            triton_config['strict-model-config'] = 'false'
+
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
         triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
@@ -136,6 +139,9 @@ class TritonServerHandler():
         else:
             triton_config['model-repository'] = os.path.abspath(
                 config.output_model_repository_path)
+
+        if use_model_repository:
+            triton_config['strict-model-config'] = 'false'
 
         triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
@@ -168,6 +174,9 @@ class TritonServerHandler():
         else:
             triton_config['model-repository'] = os.path.abspath(
                 config.output_model_repository_path)
+
+        if use_model_repository:
+            triton_config['strict-model-config'] = 'false'
 
         logger.info("Starting a Triton Server using perf_analyzer's C_API")
         server = TritonServerFactory.create_server_local(path=None,
