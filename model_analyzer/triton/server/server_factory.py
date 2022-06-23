@@ -16,6 +16,18 @@ from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 
 from .server_docker import TritonServerDocker
 from .server_local import TritonServerLocal
+from .server_config import TritonServerConfig
+
+from model_analyzer.config.input.config_utils import binary_path_validator
+
+from model_analyzer.constants import CONFIG_PARSER_FAILURE, LOGGER_NAME
+
+from urllib.parse import urlparse
+
+import os
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class TritonServerFactory:
@@ -112,7 +124,7 @@ class TritonServerFactory:
         if config.triton_launch_mode == 'remote':
             server = TritonServerFactory._get_remote_server_handle(config)
         elif config.triton_launch_mode == 'local':
-            server = TritonServerFactor._get_local_server_handle(
+            server = TritonServerFactory._get_local_server_handle(
                 config, gpus, use_model_repository)
         elif config.triton_launch_mode == 'docker':
             server = TritonServerFactor._get_docker_server_handle(
