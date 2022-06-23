@@ -65,6 +65,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._configs = []
         self._concurrency_warning_printed = False
 
+        # Flag to indicate we have started to return results
+        #
+        self._generator_started = False
+
         self._last_results = ["valid"]
         self._all_results = []
 
@@ -98,6 +102,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             if self._is_done():
                 break
 
+            self._generator_started = True
             config = self._configs[self._curr_config_index][
                 self._curr_concurrency_index]
             yield (config)
@@ -197,7 +202,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._curr_concurrency_index += 1
 
     def _done_walking(self):
-        return self._done_walking_configs() \
+        return self._generator_started \
+           and self._done_walking_configs() \
            and self._done_walking_concurrencies()
 
     def _done_walking_configs(self):

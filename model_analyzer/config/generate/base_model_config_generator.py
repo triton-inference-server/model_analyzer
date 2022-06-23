@@ -54,6 +54,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._default_only = default_only
         self._early_exit_enable = early_exit_enable
         self._model_name_index = 0
+        self._generator_started = False
         self._max_batch_size_warning_printed = False
         self._last_results = []
         # Contains the max throughput from each provided list of measurements
@@ -63,7 +64,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
     def _is_done(self):
         """ Returns true if this generator is done generating configs """
-        return self._default_only or self._done_walking()
+        return self._generator_started and (self._default_only or
+                                            self._done_walking())
 
     def get_configs(self):
         """
@@ -76,6 +78,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             if self._is_done():
                 break
 
+            self._generator_started = True
             config = self._get_next_model_config()
             yield (config)
             self._step()
