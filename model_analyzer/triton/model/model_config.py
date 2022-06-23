@@ -96,16 +96,21 @@ class ModelConfig:
                     ' Attempted have Triton create a default config, but this is not'
                     ' possible for this model type.')
 
-                # Add checks to see that input/output exist
-
             client.wait_for_model_ready(model_name, config.client_max_retries)
 
             config = client.get_model_config(model_name,
                                              config.client_max_retries)
 
-            ModelConfig._default_config_dict[model_name] = config
-
             server.stop()
+
+            if ("input" not in config or "output" not in config):
+                model_config_path = os.path.join(model_path, "config.pbtxt")
+                raise TritonModelAnalyzerException(
+                    f'Path "{model_config_path}" does not exist.'
+                    ' Attempted have Triton create a default config, but this is not'
+                    ' possible for this model type.')
+
+            ModelConfig._default_config_dict[model_name] = config
 
         return config
 
