@@ -67,7 +67,8 @@ class GeneratorExperimentFactory:
                 min_initialized=config_command.min_initialized)
 
             generator = UndirectedRunConfigGenerator(
-                search_config, config_command, config_command.profile_models)
+                search_config, config_command, MagicMock(),
+                config_command.profile_models, MagicMock())
             return generator
         else:
             raise Exception(f"Unknown generator {generator_name}")
