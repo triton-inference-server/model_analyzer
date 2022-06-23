@@ -57,12 +57,6 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
 
         self._determine_early_exit_enables(config, model)
 
-        # This prevents an error when is_done() is checked befored the first next_config() call
-        #self._pacg = PerfAnalyzerConfigGenerator(self._config, self._model_name,
-        #                                         self._model_pa_flags,
-        #                                         self._model_parameters,
-        #                                         self._pacg_early_exit_enable)
-
         self._mcg = ModelConfigGeneratorFactory.create_model_config_generator(
             self._config, self._gpus, model, self._client,
             self._variant_name_manger, default_only,
@@ -91,6 +85,8 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
                     model_config, perf_analyzer_config)
                 yield run_config
 
+            self._set_last_results_model_config_generator()
+
     def set_last_results(self, measurements):
         """
         Given the results from the last ModelRunConfig, make decisions
@@ -102,9 +98,10 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
         """
         self._pacg.set_last_results(measurements)
         self._curr_mc_measurements.extend(measurements)
-        if self._pacg._is_done():
-            self._mcg.set_last_results(self._curr_mc_measurements)
-            self._curr_mc_measurements = []
+
+    def _set_last_results_model_config_generator(self):
+        self._mcg.set_last_results(self._curr_mc_measurements)
+        self._curr_mc_measurements = []
 
     def _generate_model_run_config(self, model_config, perf_analyzer_config):
         run_config = ModelRunConfig(self._model_name, model_config,

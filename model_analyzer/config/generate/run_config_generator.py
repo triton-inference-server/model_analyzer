@@ -112,8 +112,6 @@ class RunConfigGenerator(ConfigGeneratorInterface):
             self._curr_generators[index].set_last_results(
                 self._curr_results[index])
             self._curr_results[index] = []
-            if not self._curr_generators[index]._is_done():
-                break
 
     @classmethod
     def determine_triton_server_env(cls, models):
