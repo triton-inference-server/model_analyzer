@@ -17,7 +17,6 @@ from .analyzer import Analyzer
 from .cli.cli import CLI
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.constants import LOGGER_NAME
-from .triton.server.server_handler import TritonServerHandler
 from .triton.client.client_factory import TritonClientFactory
 from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
@@ -127,7 +126,7 @@ def get_triton_handles(config, gpus):
 
     client = get_client_handle(config)
     fail_if_server_already_running(client, config)
-    server = TritonServerHandler.get_server_handle(config, gpus)
+    server = TritonServerFactory.get_server_handle(config, gpus)
 
     return client, server
 

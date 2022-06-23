@@ -23,7 +23,7 @@ from tritonclient.grpc import model_config_pb2
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
-from model_analyzer.triton.server.server_handler import TritonServerHandler
+from model_analyzer.triton.server.server_factory import TritonServerFactory
 
 
 class ModelConfig:
@@ -73,7 +73,7 @@ class ModelConfig:
         try:
             config = ModelConfig.create_from_file(model_path).get_config()
         except:
-            server = TritonServerHandler.get_server_handle(
+            server = TritonServerFactory.get_server_handle(
                 config, gpus, use_model_repository=True)
 
             server.start()
