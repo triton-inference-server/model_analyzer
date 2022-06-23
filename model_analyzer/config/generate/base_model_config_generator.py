@@ -224,7 +224,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             config = ModelConfig.create_from_file(model_path)
         except:
             server = TritonServerHandler.get_server_handle(
-                config, gpus, strict_model_config='false')
+                config, gpus, use_model_repository=True)
 
             server.start()
             client.wait_for_server_ready(config.client_max_retries)

@@ -36,7 +36,7 @@ class TritonServerHandler():
         NotImplemented
 
     @staticmethod
-    def get_server_handle(config, gpus, strict_model_config='true'):
+    def get_server_handle(config, gpus, use_model_repository=False):
         """
         Creates and returns a TritonServer
         with specified arguments
@@ -47,9 +47,9 @@ class TritonServerHandler():
             Arguments parsed from the CLI
         gpus : list of str
             Available, supported, visible requested GPU UUIDs
-        strict_model_config : bool
-            Optional flag to turn off Triton's enforcement 
-            of model config presence
+        use_model_repository : bool
+            Optional flag to use the model directory instead
+            of the output model directory
         Returns
         -------
         TritonServer
@@ -79,13 +79,10 @@ class TritonServerHandler():
 
             triton_config = TritonServerConfig()
             triton_config.update_config(config.triton_server_flags)
-            triton_config['strict-model-config'] = strict_model_config
 
-            if (strict_model_config == 'true'):
-                triton_config[
-                    'model-repository'] = config.output_model_repository_path
-            else:
-                triton_config['model-repository'] = config.model_repository
+            triton_config[
+                'model-repository'] = config.model_repository if use_model_repository \
+                                                              else config.output_model_repository_path
 
             triton_config['http-port'] = config.triton_http_endpoint.split(
                 ':')[-1]
@@ -106,14 +103,13 @@ class TritonServerHandler():
         elif config.triton_launch_mode == 'docker':
             triton_config = TritonServerConfig()
             triton_config.update_config(config.triton_server_flags)
-            triton_config['strict-model-config'] = strict_model_config
 
-            if (strict_model_config == 'true'):
-                triton_config['model-repository'] = os.path.abspath(
-                    config.output_model_repository_path)
-            else:
+            if (use_model_repository):
                 triton_config['model-repository'] = os.path.abspath(
                     config.model_repository)
+            else:
+                triton_config['model-repository'] = os.path.abspath(
+                    config.output_model_repository_path)
 
             triton_config['http-port'] = config.triton_http_endpoint.split(
                 ':')[-1]
@@ -138,14 +134,13 @@ class TritonServerHandler():
             TritonServerHandler._validate_triton_install_path(config)
 
             triton_config = TritonServerConfig()
-            triton_config['strict-model-config'] = strict_model_config
 
-            if (strict_model_config == 'true'):
-                triton_config['model-repository'] = os.path.abspath(
-                    config.output_model_repository_path)
-            else:
+            if (use_model_repository):
                 triton_config['model-repository'] = os.path.abspath(
                     config.model_repository)
+            else:
+                triton_config['model-repository'] = os.path.abspath(
+                    config.output_model_repository_path)
 
             logger.info("Starting a Triton Server using perf_analyzer's C_API")
             server = TritonServerFactory.create_server_local(
