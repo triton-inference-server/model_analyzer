@@ -57,103 +57,128 @@ class TritonServerHandler():
         """
 
         if config.triton_launch_mode == 'remote':
-            triton_config = TritonServerConfig()
-            triton_config.update_config(config.triton_server_flags)
-            triton_config['model-repository'] = 'remote-model-repository'
-            logger.info('Using remote Triton Server')
-            server = TritonServerFactory.create_server_local(
-                path=None, config=triton_config, gpus=[], log_path="")
-            logger.warning(
-                'GPU memory metrics reported in the remote mode are not'
-                ' accurate. Model Analyzer uses Triton explicit model control to'
-                ' load/unload models. Some frameworks do not release the GPU'
-                ' memory even when the memory is not being used. Consider'
-                ' using the "local" or "docker" mode if you want to accurately'
-                ' monitor the GPU memory usage for different models.')
-            logger.warning(
-                'Config sweep parameters are ignored in the "remote" mode because'
-                ' Model Analyzer does not have access to the model repository of'
-                ' the remote Triton Server.')
+            server = TritonServerHandler._get_remote_server_handle(config)
         elif config.triton_launch_mode == 'local':
-            TritonServerHandler._validate_triton_server_path(config)
-
-            triton_config = TritonServerConfig()
-            triton_config.update_config(config.triton_server_flags)
-
-            triton_config[
-                'model-repository'] = config.model_repository if use_model_repository \
-                                                              else config.output_model_repository_path
-
-            triton_config['http-port'] = config.triton_http_endpoint.split(
-                ':')[-1]
-            triton_config['grpc-port'] = config.triton_grpc_endpoint.split(
-                ':')[-1]
-            triton_config['metrics-port'] = urlparse(
-                config.triton_metrics_url).port
-            triton_config['model-control-mode'] = 'explicit'
-            if config.use_local_gpu_monitor:
-                triton_config['metrics-interval-ms'] = int(
-                    config.monitoring_interval * 1e3)
-            logger.info('Starting a local Triton Server')
-            server = TritonServerFactory.create_server_local(
-                path=config.triton_server_path,
-                config=triton_config,
-                gpus=gpus,
-                log_path=config.triton_output_path)
+            server = TritonServerHandler._get_local_server_handle(
+                config, gpus, use_model_repository)
         elif config.triton_launch_mode == 'docker':
-            triton_config = TritonServerConfig()
-            triton_config.update_config(config.triton_server_flags)
-
-            if (use_model_repository):
-                triton_config['model-repository'] = os.path.abspath(
-                    config.model_repository)
-            else:
-                triton_config['model-repository'] = os.path.abspath(
-                    config.output_model_repository_path)
-
-            triton_config['http-port'] = config.triton_http_endpoint.split(
-                ':')[-1]
-            triton_config['grpc-port'] = config.triton_grpc_endpoint.split(
-                ':')[-1]
-            triton_config['metrics-port'] = urlparse(
-                config.triton_metrics_url).port
-            triton_config['model-control-mode'] = 'explicit'
-            if config.use_local_gpu_monitor:
-                triton_config['metrics-interval-ms'] = int(
-                    config.monitoring_interval * 1e3)
-            logger.info('Starting a Triton Server using docker')
-            server = TritonServerFactory.create_server_docker(
-                image=config.triton_docker_image,
-                config=triton_config,
-                gpus=gpus,
-                log_path=config.triton_output_path,
-                mounts=config.triton_docker_mounts,
-                labels=config.triton_docker_labels,
-                shm_size=config.triton_docker_shm_size)
+            server = TritonServerHandler._get_docker_server_handle(
+                config, gpus, use_model_repository)
         elif config.triton_launch_mode == 'c_api':
-            TritonServerHandler._validate_triton_install_path(config)
-
-            triton_config = TritonServerConfig()
-
-            if (use_model_repository):
-                triton_config['model-repository'] = os.path.abspath(
-                    config.model_repository)
-            else:
-                triton_config['model-repository'] = os.path.abspath(
-                    config.output_model_repository_path)
-
-            logger.info("Starting a Triton Server using perf_analyzer's C_API")
-            server = TritonServerFactory.create_server_local(
-                path=None, config=triton_config, gpus=[], log_path="")
-            logger.warning(
-                "When profiling with perf_analyzer's C_API, some metrics may be "
-                "affected. Triton is not launched with explicit model control "
-                "mode, and as a result, loads all model config variants as they "
-                "are created in the output_model_repository.")
+            server = TritonServerHandle._get_c_api_server_handle(
+                config, use_model_repository)
         else:
             raise TritonModelAnalyzerException(
                 f"Unrecognized triton-launch-mode : {config.triton_launch_mode}"
             )
+
+        return server
+
+    @staticmethod
+    def _get_remote_server_handle(config):
+        triton_config = TritonServerConfig()
+        triton_config.update_config(config.triton_server_flags)
+        triton_config['model-repository'] = 'remote-model-repository'
+        logger.info('Using remote Triton Server')
+        server = TritonServerFactory.create_server_local(path=None,
+                                                         config=triton_config,
+                                                         gpus=[],
+                                                         log_path="")
+        logger.warning(
+            'GPU memory metrics reported in the remote mode are not'
+            ' accurate. Model Analyzer uses Triton explicit model control to'
+            ' load/unload models. Some frameworks do not release the GPU'
+            ' memory even when the memory is not being used. Consider'
+            ' using the "local" or "docker" mode if you want to accurately'
+            ' monitor the GPU memory usage for different models.')
+        logger.warning(
+            'Config sweep parameters are ignored in the "remote" mode because'
+            ' Model Analyzer does not have access to the model repository of'
+            ' the remote Triton Server.')
+
+        return server
+
+    @staticmethod
+    def _get_local_server_handle(config, gpus, use_model_repository):
+        TritonServerHandler._validate_triton_server_path(config)
+
+        triton_config = TritonServerConfig()
+        triton_config.update_config(config.triton_server_flags)
+
+        triton_config[
+            'model-repository'] = config.model_repository if use_model_repository \
+                                                            else config.output_model_repository_path
+
+        triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
+        triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
+        triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
+        triton_config['model-control-mode'] = 'explicit'
+        if config.use_local_gpu_monitor:
+            triton_config['metrics-interval-ms'] = int(
+                config.monitoring_interval * 1e3)
+        logger.info('Starting a local Triton Server')
+        server = TritonServerFactory.create_server_local(
+            path=config.triton_server_path,
+            config=triton_config,
+            gpus=gpus,
+            log_path=config.triton_output_path)
+
+        return server
+
+    @staticmethod
+    def _get_docker_server_handle(config, gpus, use_model_repository):
+        triton_config = TritonServerConfig()
+        triton_config.update_config(config.triton_server_flags)
+
+        if (use_model_repository):
+            triton_config['model-repository'] = os.path.abspath(
+                config.model_repository)
+        else:
+            triton_config['model-repository'] = os.path.abspath(
+                config.output_model_repository_path)
+
+        triton_config['http-port'] = config.triton_http_endpoint.split(':')[-1]
+        triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
+        triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
+        triton_config['model-control-mode'] = 'explicit'
+        if config.use_local_gpu_monitor:
+            triton_config['metrics-interval-ms'] = int(
+                config.monitoring_interval * 1e3)
+        logger.info('Starting a Triton Server using docker')
+        server = TritonServerFactory.create_server_docker(
+            image=config.triton_docker_image,
+            config=triton_config,
+            gpus=gpus,
+            log_path=config.triton_output_path,
+            mounts=config.triton_docker_mounts,
+            labels=config.triton_docker_labels,
+            shm_size=config.triton_docker_shm_size)
+
+        return server
+
+    @staticmethod
+    def _get_c_api_server_handle(config, use_model_repository):
+        TritonServerHandler._validate_triton_install_path(config)
+
+        triton_config = TritonServerConfig()
+
+        if (use_model_repository):
+            triton_config['model-repository'] = os.path.abspath(
+                config.model_repository)
+        else:
+            triton_config['model-repository'] = os.path.abspath(
+                config.output_model_repository_path)
+
+        logger.info("Starting a Triton Server using perf_analyzer's C_API")
+        server = TritonServerFactory.create_server_local(path=None,
+                                                         config=triton_config,
+                                                         gpus=[],
+                                                         log_path="")
+        logger.warning(
+            "When profiling with perf_analyzer's C_API, some metrics may be "
+            "affected. Triton is not launched with explicit model control "
+            "mode, and as a result, loads all model config variants as they "
+            "are created in the output_model_repository.")
 
         return server
 

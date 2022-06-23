@@ -22,7 +22,6 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 import os
 import abc
 import logging
-import requests
 
 logger = logging.getLogger(LOGGER_NAME)
 
