@@ -519,7 +519,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                                            MagicMock(), 128)
 
         self.assertEqual(DEFAULT_REQUEST_COUNT_MULTIPLIER * 256,
-                         pacg._calculate_measurement_request_count(256))
+                         pacg._calculate_measurement_request_count(128))
 
     def _get_next_measurement(self):
 

@@ -15,8 +15,8 @@
 from .config_generator_interface import ConfigGeneratorInterface
 from .generator_utils import GeneratorUtils as utils
 
-from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE, DEFAULT_REQUEST_COUNT_MULTIPLIER
-from model_analyzer.constants import THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_TRIES
+from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE, DEFAULT_REQUEST_COUNT_MULTIPLIER, ENABLE_MRC, DEFAULT_STABILITY_PCT, DEFAULT_MAX_TRIALS
+from model_analyzer.constants import THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_TRIES, PERF_ANALYZER_MINIMUM_REQUEST_COUNT
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 from model_analyzer.constants import LOGGER_NAME
@@ -155,10 +155,17 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 new_perf_config.update_config(params)
                 new_perf_config.update_config(
                     {'concurrency-range': concurrency})
-                new_perf_config.update_config({
-                    'measurement-request-count':
-                        self._calculate_measurement_request_count(concurrency)
-                })
+                new_perf_config.update_config(
+                    {'stability-percentage': DEFAULT_STABILITY_PCT})
+                new_perf_config.update_config(
+                    {'max-trials': DEFAULT_MAX_TRIALS})
+
+                if ENABLE_MRC:
+                    new_perf_config.update_config({
+                        'measurement-request-count':
+                            self._calculate_measurement_request_count(
+                                concurrency)
+                    })
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)
 
@@ -262,4 +269,5 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _calculate_measurement_request_count(self, concurrency):
         return DEFAULT_REQUEST_COUNT_MULTIPLIER * max(
-            concurrency, self._model_max_batch_size)
+            min(concurrency, self._model_max_batch_size),
+            PERF_ANALYZER_MINIMUM_REQUEST_COUNT)

@@ -36,7 +36,7 @@ from model_analyzer.record.types.perf_server_compute_output \
 from model_analyzer.constants import \
     INTERVAL_SLEEP_TIME, LOGGER_NAME, MEASUREMENT_REQUEST_COUNT_STEP, \
     MEASUREMENT_WINDOW_STEP, PERF_ANALYZER_MEASUREMENT_WINDOW, \
-    PERF_ANALYZER_MINIMUM_REQUEST_COUNT
+    PERF_ANALYZER_MINIMUM_REQUEST_COUNT, MEASUREMENT_REQUEST_COUNT_MULTIPLE, MAX_TRIALS_COUNT_STEP
 
 from subprocess import Popen, STDOUT, PIPE
 import psutil
@@ -192,6 +192,7 @@ class PerfAnalyzer:
         process = self._create_process(cmd, perf_analyzer_env)
         status = self._resolve_process(process)
 
+        print(self._output)
         return status
 
     def _get_cmd(self):
@@ -208,6 +209,7 @@ class PerfAnalyzer:
 
     def _get_single_model_cmd(self, index):
         cmd = [self.bin_path]
+        cmd += ["-v"]
         if self._is_multi_model():
             cmd += ["--enable-mpi"]
         cmd += self._get_pa_cli_command(index).replace('=', ' ').split()
@@ -339,7 +341,9 @@ class PerfAnalyzer:
                 else:
                     perf_config['measurement-request-count'] = int(
                         perf_config['measurement-request-count']
-                    ) + MEASUREMENT_REQUEST_COUNT_STEP
+                    ) * MEASUREMENT_REQUEST_COUNT_MULTIPLE
+                    perf_config['max-trials'] = int(
+                        perf_config['max-trials']) + MAX_TRIALS_COUNT_STEP
 
                 logger.info(
                     "perf_analyzer's request count is too small, "

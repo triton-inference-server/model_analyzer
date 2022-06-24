@@ -1,0 +1,16 @@
+model_repository: /swdev/profile_models
+
+run_config_search_disable: true
+
+concurrency: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+batch_sizes: [1]
+
+profile_models:
+  inception_v1_graphdef:
+    model_config_parameters:
+      max_batch_size: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+      instance_group:
+        - kind: KIND_GPU
+          count: [1, 2, 3, 4, 5]
+      dynamic_batching:
+        max_queue_delay_microseconds: 200

@@ -168,4 +168,9 @@ class ConfigCommand:
         return config_dict
 
     def __getattr__(self, name):
-        return self._fields[name].value()
+        if name == '__deepcopy__':
+            return self
+        elif name == '__getstate__':
+            return self
+        else:
+            return self._fields[name].value()
