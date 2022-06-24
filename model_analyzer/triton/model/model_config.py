@@ -73,14 +73,11 @@ class ModelConfig:
         try:
             config = ModelConfig.create_from_file(model_path).get_config()
         except:
-            server = TritonServerFactory.get_server_handle(
-                config, gpus, use_model_repository=True)
-
-            server.start()
-            client.wait_for_server_ready(config.client_max_retries)
-            if (client.load_model(model_name) == -1):
-                server.stop()
-
+            if (config.triton_launch_mode == 'docker' or
+                    config.triton_launch_mode == 'local'):
+                config = ModelConfig.get_default_config_from_server(
+                    config, client, gpus, model_name, model_path)
+            else:
                 if not os.path.exists(model_path):
                     raise TritonModelAnalyzerException(
                         f'Model path "{model_path}" specified does not exist.')
@@ -93,24 +90,51 @@ class ModelConfig:
                 model_config_path = os.path.join(model_path, "config.pbtxt")
                 raise TritonModelAnalyzerException(
                     f'Path "{model_config_path}" does not exist.'
-                    ' Attempted have Triton create a default config, but this is not'
-                    ' possible for this model type.')
-
-            client.wait_for_model_ready(model_name, config.client_max_retries)
-
-            config = client.get_model_config(model_name,
-                                             config.client_max_retries)
-
-            server.stop()
-
-            if ("input" not in config or "output" not in config):
-                model_config_path = os.path.join(model_path, "config.pbtxt")
-                raise TritonModelAnalyzerException(
-                    f'Path "{model_config_path}" does not exist.'
-                    ' Attempted have Triton create a default config, but this is not'
-                    ' possible for this model type.')
+                    f' Triton does not support default config creation for {config.triton_launch_mode} mode.'
+                )
 
             ModelConfig._default_config_dict[model_name] = config
+
+        return config
+
+    @staticmethod
+    def get_default_config_from_server(config, client, gpus, model_name,
+                                       model_path):
+        server = TritonServerFactory.get_server_handle(
+            config, gpus, use_model_repository=True)
+
+        server.start()
+        client.wait_for_server_ready(config.client_max_retries)
+
+        if (client.load_model(model_name) == -1):
+            server.stop()
+
+            if not os.path.exists(model_path):
+                raise TritonModelAnalyzerException(
+                    f'Model path "{model_path}" specified does not exist.')
+
+            if os.path.isfile(model_path):
+                raise TritonModelAnalyzerException(
+                    f'Model output path "{model_path}" must be a directory.')
+
+            model_config_path = os.path.join(model_path, "config.pbtxt")
+            raise TritonModelAnalyzerException(
+                f'Path "{model_config_path}" does not exist.'
+                ' Attempted have Triton create a default config, but this is not'
+                ' possible for this model type.')
+
+        client.wait_for_model_ready(model_name, config.client_max_retries)
+
+        config = client.get_model_config(model_name, config.client_max_retries)
+
+        server.stop()
+
+        if ("input" not in config or "output" not in config):
+            model_config_path = os.path.join(model_path, "config.pbtxt")
+            raise TritonModelAnalyzerException(
+                f'Path "{model_config_path}" does not exist.'
+                ' Attempted have Triton create a default config, but this is not'
+                ' possible for this model type.')
 
         return config
 
