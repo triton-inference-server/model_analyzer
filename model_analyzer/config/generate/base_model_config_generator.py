@@ -16,7 +16,6 @@ from .config_generator_interface import ConfigGeneratorInterface
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 import abc
 import logging

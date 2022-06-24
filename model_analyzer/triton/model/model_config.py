@@ -63,6 +63,21 @@ class ModelConfig:
     @staticmethod
     def create_model_config_dict(config, client, gpus, model_repository,
                                  model_name):
+        """ 
+        Attempts to create a base model config dict from config.pbtxt, if one exists
+        If the config.pbtxt is not present, we will load a Triton Server with the 
+        base model and have it create a default config for MA, if possible
+
+        Parameters:
+        -----------
+        config: ModelAnalyzerConfig
+        client: TritonClient
+        gpus: List of GPUDevices
+        model_repository: str
+            path to the model repository on the file system
+        model_name: str
+            name of the base model
+        """
 
         if (ModelConfig._default_config_dict and
                 model_name in ModelConfig._default_config_dict):
@@ -71,11 +86,11 @@ class ModelConfig:
         model_path = f'{model_repository}/{model_name}'
 
         try:
-            config = ModelConfig.create_from_file(model_path).get_config()
+            config = ModelConfig._create_from_file(model_path).get_config()
         except:
             if (config.triton_launch_mode == 'docker' or
                     config.triton_launch_mode == 'local'):
-                config = ModelConfig.get_default_config_from_server(
+                config = ModelConfig._get_default_config_from_server(
                     config, client, gpus, model_name, model_path)
             else:
                 if not os.path.exists(model_path):
@@ -98,8 +113,23 @@ class ModelConfig:
         return config
 
     @staticmethod
-    def get_default_config_from_server(config, client, gpus, model_name,
-                                       model_path):
+    def _get_default_config_from_server(config, client, gpus, model_name,
+                                        model_path):
+        """ 
+        Load a Triton Server with the base model and have it create 
+        a default config for MA, if possible
+
+        Parameters:
+        -----------
+        config: ModelAnalyzerConfig
+        client: TritonClient
+        gpus: List of GPUDevices
+        model_name: str
+            name of the base model
+        model_path : str
+            path to the base model
+        """
+
         server = TritonServerFactory.get_server_handle(
             config, gpus, use_model_repository=True)
 
@@ -139,7 +169,7 @@ class ModelConfig:
         return config
 
     @staticmethod
-    def create_from_file(model_path):
+    def _create_from_file(model_path):
         """
         Constructs a ModelConfig from the pbtxt at file
 
