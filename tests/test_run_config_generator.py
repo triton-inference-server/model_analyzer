@@ -110,7 +110,10 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_num_calls_to_set_last_results = 78
 
         with patch.object(ModelRunConfigGenerator,
-                          "set_last_results") as mock_method:
+                          "set_last_results",
+                          side_effect=ModelRunConfigGenerator.set_last_results,
+                          autospec=True) as mock_method:
+
             self._run_and_test_run_config_generator(
                 yaml_content, expected_config_count=expected_num_of_configs)
 
@@ -220,7 +223,9 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_num_calls_to_set_last_results = 1276
 
         with patch.object(ModelRunConfigGenerator,
-                          "set_last_results") as mock_method:
+                          "set_last_results",
+                          side_effect=ModelRunConfigGenerator.set_last_results,
+                          autospec=True) as mock_method:
             self._run_and_test_run_config_generator(
                 yaml_content, expected_config_count=expected_num_of_configs)
 
