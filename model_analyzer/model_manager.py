@@ -59,7 +59,7 @@ class ModelManager:
         """
         Generates configs, runs inferences, gets
         measurements for a list of models
-        
+
         Parameters
         ----------
         models : List of ConfigModelProfileSpec
@@ -80,9 +80,10 @@ class ModelManager:
             models=models,
             client=self._client)
 
-        run_config_generator = rcg.next_config()
-        while not rcg.is_done() and not self._state_manager.exiting():
-            run_config = next(run_config_generator)
+        for run_config in rcg.get_configs():
+            if self._state_manager.exiting():
+                break
+
             if run_config.is_legal_combination():
                 measurement = self._metrics_manager.execute_run_config(
                     run_config)
