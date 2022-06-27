@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
+from model_analyzer.config.generate.run_config_generator_factory import RunConfigGeneratorFactory
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 
 import logging
@@ -74,10 +74,11 @@ class ModelManager:
         triton_server_flags = self._get_triton_server_flags(models)
         self._server.update_config(params=triton_server_flags)
 
-        rcg = RunConfigGenerator(config=self._config,
-                                 gpus=self._gpus,
-                                 models=models,
-                                 client=self._client)
+        rcg = RunConfigGeneratorFactory.create_run_config_generator(
+            command_config=self._config,
+            gpus=self._gpus,
+            models=models,
+            client=self._client)
 
         run_config_generator = rcg.next_config()
         while not rcg.is_done() and not self._state_manager.exiting():

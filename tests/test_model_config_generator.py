@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.generator_factory import ConfigGeneratorFactory
+from model_analyzer.config.generate.model_config_generator_factory import ModelConfigGeneratorFactory
 from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.cli.cli import CLI
 from .common import test_result_collector as trc
 from .common.test_utils import convert_to_bytes
@@ -718,7 +717,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         fake_client.get_model_config = lambda name, retry_count: {'name': name}
 
         try:
-            mcg = ConfigGeneratorFactory.create_model_config_generator(
+            mcg = ModelConfigGeneratorFactory.create_model_config_generator(
                 config,
                 MagicMock(),
                 config.profile_models[0],
