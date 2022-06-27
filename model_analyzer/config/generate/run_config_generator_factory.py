@@ -44,7 +44,10 @@ class RunConfigGeneratorFactory:
 
         if (command_config.run_config_search_undirected_enable):
             return RunConfigGeneratorFactory._create_undirected_run_config_generator(
-                command_config=command_config)
+                command_config=command_config,
+                gpus=gpus,
+                models=models,
+                client=client)
         else:
             return RunConfigGeneratorFactory._create_run_config_generator(
                 command_config=command_config,
@@ -60,11 +63,15 @@ class RunConfigGeneratorFactory:
                                   client=client)
 
     @staticmethod
-    def _create_undirected_run_config_generator(command_config):
+    def _create_undirected_run_config_generator(command_config, gpus, models,
+                                                client):
         search_config = RunConfigGeneratorFactory._create_search_config(
             command_config)
-        return UndirectedRunConfigGenerator(search_config, command_config,
-                                            command_config.profile_models)
+        return UndirectedRunConfigGenerator(search_config=search_config,
+                                            config=command_config,
+                                            gpus=gpus,
+                                            models=models,
+                                            client=client)
 
     @staticmethod
     def _create_search_config(command_config):
@@ -79,7 +86,7 @@ class RunConfigGeneratorFactory:
             ])
         #yapf: enable
 
-        # TODO do we want to expose these options to CLI?
+        # TODO TMA-746: do we want to expose these options to CLI?
         search_config = SearchConfig(dimensions=dimensions,
                                      radius=2,
                                      step_magnitude=2,
