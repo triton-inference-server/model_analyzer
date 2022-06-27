@@ -16,6 +16,7 @@ from .config_generator_interface import ConfigGeneratorInterface
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
+
 import abc
 import logging
 
@@ -25,12 +26,13 @@ logger = logging.getLogger(LOGGER_NAME)
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
     """ Base class for generating model configs """
 
-    def __init__(self, config, model, client, variant_name_manager,
+    def __init__(self, config, gpus, model, client, variant_name_manager,
                  default_only, early_exit_enable):
         """
         Parameters
         ----------
         config: ModelAnalyzerConfig
+        gpus: List of GPUDevices
         model: The model to generate ModelConfigs for
         client: TritonClient
         variant_name_manager: ModelVariantNameManager
@@ -40,6 +42,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         early_exit_enable: Bool
             If true, the generator can early exit if throughput plateaus
         """
+        self._config = config
+        self._gpus = gpus
         self._client = client
         self._variant_name_manager = variant_name_manager
         self._model_repository = config.model_repository
@@ -132,13 +136,16 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     def _make_direct_mode_model_config(self, param_combo):
         return BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
+            config=self._config,
+            client=self._client,
+            gpus=self._gpus,
             model=self._base_model,
             model_repository=self._model_repository,
             variant_name_manager=self._variant_name_manager)
 
     @staticmethod
-    def make_model_config(param_combo, model, model_repository,
-                          variant_name_manager):
+    def make_model_config(param_combo, config, client, gpus, model,
+                          model_repository, variant_name_manager):
         """ 
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config
@@ -147,6 +154,9 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         -----------
         param_combo: dict
             dict of key:value pairs to apply to the model config
+        config: ModelAnalyzerConfig
+        client: TritonClient
+        gpus: List of GPUDevices
         model: dict
             dict of model properties
         model_repository: str
@@ -158,7 +168,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model_name, param_combo)
 
         model_config_dict = BaseModelConfigGenerator.get_base_model_config_dict(
-            model_repository, model_name)
+            config, client, gpus, model_repository, model_name)
 
         model_config_dict['name'] = variant_name
         logger.info("")
@@ -181,11 +191,28 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
         return model_config
 
-    @staticmethod
-    def get_base_model_config_dict(model_repository, model_name):
-        config = ModelConfig.create_from_file(
-            f'{model_repository}/{model_name}')
-        return config.get_config()
+    @classmethod
+    def get_base_model_config_dict(cls, config, client, gpus, model_repository,
+                                   model_name):
+        """ 
+        Attempts to create a base model config dict from config.pbtxt, if one exists
+        If the config.pbtxt is not present, we will load a Triton Server with the 
+        base model and have it create a default config for MA, if possible
+
+        Parameters:
+        -----------
+        config: ModelAnalyzerConfig
+        client: TritonClient
+        gpus: List of GPUDevices
+        model_repository: str
+            path to the model repository on the file system
+        model_name: str
+            name of the base model
+        """
+        model_config_dict = ModelConfig.create_model_config_dict(
+            config, client, gpus, model_repository, model_name)
+
+        return model_config_dict
 
     def _reset_max_batch_size(self):
         self._max_batch_size_warning_printed = False

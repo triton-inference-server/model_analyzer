@@ -27,13 +27,14 @@ class ModelManager:
     It also records the best results for each model.
     """
 
-    def __init__(self, config, client, server, metrics_manager, result_manager,
-                 state_manager):
+    def __init__(self, config, gpus, client, server, metrics_manager,
+                 result_manager, state_manager):
         """
         Parameters
         ----------
         config:ConfigCommandProfile
             The config for the model analyzer
+        gpus: List of GPUDevices
         client: TritonClient
             The client handle used to send requests to Triton
         server: TritonServer
@@ -47,6 +48,7 @@ class ModelManager:
         """
 
         self._config = config
+        self._gpus = gpus
         self._client = client
         self._server = server
         self._metrics_manager = metrics_manager
@@ -73,6 +75,7 @@ class ModelManager:
         self._server.update_config(params=triton_server_flags)
 
         rcg = RunConfigGenerator(config=self._config,
+                                 gpus=self._gpus,
                                  models=models,
                                  client=self._client)
 

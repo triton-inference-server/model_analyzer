@@ -626,7 +626,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.mock_model_config.start()
         config = self._evaluate_config(args, yaml_content)
 
-        rcg = RunConfigGenerator(config, config.profile_models, MagicMock())
+        rcg = RunConfigGenerator(config, MagicMock(), config.profile_models,
+                                 MagicMock())
 
         run_configs = []
         rcg_config_generator = rcg.next_config()

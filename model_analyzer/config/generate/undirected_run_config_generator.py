@@ -35,7 +35,7 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
     Hill climbing algorithm to create RunConfigs
     """
 
-    def __init__(self, search_config, config, models):
+    def __init__(self, search_config, config, gpus, models, client):
         """
         Parameters
         ----------
@@ -43,12 +43,16 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
             Defines parameters and dimensions for the search
         config: ConfigCommandProfile
             Profile configuration information
+        gpus: List of GPUDevices
         models: List of ConfigModelProfileSpec
             List of models to profile
+        client: TritonClient
         """
         self._search_config = search_config
         self._config = config
+        self._gpus = gpus
         self._models = models
+        self._client = client
         self._variant_name_manager = ModelVariantNameManager()
 
         self._triton_env = RunConfigGenerator.determine_triton_server_env(
@@ -228,6 +232,9 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
 
         model_config = BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
+            config=self._config,
+            client=self._client,
+            gpus=self._gpus,
             model=self._models[model_num],
             model_repository=self._config.model_repository,
             variant_name_manager=self._variant_name_manager)

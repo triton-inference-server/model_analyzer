@@ -43,7 +43,8 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
                           radius=5,
                           step_magnitude=7,
                           min_initialized=2)
-        self._urcg = UndirectedRunConfigGenerator(sc, MagicMock(), mock_models)
+        self._urcg = UndirectedRunConfigGenerator(sc, MagicMock(), MagicMock(),
+                                                  mock_models, MagicMock())
 
     def test_get_starting_coordinate(self):
         """ Test that get_starting_coordinate() works for non-zero values """
@@ -56,7 +57,8 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
         ])
         sc = SearchConfig(dimensions=dims,radius=2, step_magnitude=2, min_initialized=2)
         #yapf: enable
-        urcg = UndirectedRunConfigGenerator(sc, MagicMock(), MagicMock())
+        urcg = UndirectedRunConfigGenerator(sc, MagicMock(), MagicMock(),
+                                            MagicMock(), MagicMock())
         self.assertEqual(urcg._get_starting_coordinate(), Coordinate([2, 1, 3]))
 
     def test_get_next_run_config(self):
@@ -165,7 +167,8 @@ class TestUndirectedRunConfigGenerator(trc.TestResultCollector):
                           radius=5,
                           step_magnitude=7,
                           min_initialized=2)
-        urcg = UndirectedRunConfigGenerator(sc, MagicMock(), mock_models)
+        urcg = UndirectedRunConfigGenerator(sc, MagicMock(), MagicMock(),
+                                            mock_models, MagicMock())
 
         urcg._coordinate_to_measure = Coordinate([1, 2, 3, 4, 5, 6])
 

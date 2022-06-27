@@ -84,7 +84,7 @@ instance_group [
         test_protobuf = self._model_config_protobuf
         mock_model_config = MockModelConfig(test_protobuf)
         mock_model_config.start()
-        model_config = ModelConfig.create_from_file('/path/to/model_config')
+        model_config = ModelConfig._create_from_file('/path/to/model_config')
         self.assertTrue(model_config.get_config() == self._model_config)
         mock_model_config.stop()
 
@@ -115,7 +115,7 @@ instance_group [
         mock_model_config = MockModelConfig(content)
         mock_model_config.start()
         model_config_from_file = \
-            ModelConfig.create_from_file(model_output_path)
+            ModelConfig._create_from_file(model_output_path)
         self.assertTrue(
             model_config_from_file.get_config() == self._model_config)
         mock_model_config.stop()
@@ -124,13 +124,13 @@ instance_group [
         with patch('model_analyzer.triton.model.model_config.os.path.exists',
                    MagicMock(return_value=False)):
             with self.assertRaises(TritonModelAnalyzerException):
-                ModelConfig.create_from_file(model_output_path)
+                ModelConfig._create_from_file(model_output_path)
 
         # output path is a file
         with patch('model_analyzer.triton.model.model_config.os.path.isfile',
                    MagicMock(return_value=True)):
             with self.assertRaises(TritonModelAnalyzerException):
-                ModelConfig.create_from_file(model_output_path)
+                ModelConfig._create_from_file(model_output_path)
 
     @patch('model_analyzer.triton.model.model_config.os.listdir',
            MagicMock(return_value=['1', 'config.pbtxt', 'output0_labels.txt']))
