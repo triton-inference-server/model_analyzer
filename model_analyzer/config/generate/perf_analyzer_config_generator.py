@@ -91,7 +91,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _is_done(self):
         """ Returns true if this generator is done generating configs """
-        return self._done_walking()
+        return self._generator_started and self._done_walking()
 
     def get_configs(self):
         """ Returns the next generated config """
@@ -185,10 +185,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._step_concurrency()
 
         if self._done_walking_concurrencies():
+            self._reset_concurrencies()
             self._step_config()
-
-            if not self._done_walking_configs():
-                self._reset_concurrencies()
 
     def _step_config(self):
         self._curr_config_index += 1
@@ -202,11 +200,6 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._curr_concurrency_index += 1
 
     def _done_walking(self):
-        return self._generator_started \
-           and self._done_walking_configs() \
-           and self._done_walking_concurrencies()
-
-    def _done_walking_configs(self):
         return len(self._configs) == self._curr_config_index
 
     def _done_walking_concurrencies(self):

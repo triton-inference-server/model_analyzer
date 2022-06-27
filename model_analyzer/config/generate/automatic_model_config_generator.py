@@ -64,17 +64,14 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             )
 
     def _done_walking(self):
-        return self._done_walking_max_batch_size() \
-           and self._done_walking_instance_count()
+        return self._curr_instance_count > self._max_instance_count
 
     def _step(self):
         self._step_max_batch_size()
 
         if self._done_walking_max_batch_size():
+            self._reset_max_batch_size()
             self._step_instance_count()
-
-            if not self._done_walking_instance_count():
-                self._reset_max_batch_size()
 
     def _step_max_batch_size(self):
         self._curr_max_batch_size *= 2
@@ -97,9 +94,6 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             return True
 
         return False
-
-    def _done_walking_instance_count(self):
-        return self._curr_instance_count > self._max_instance_count
 
     def _max_batch_size_limit_reached(self):
         return self._curr_max_batch_size > self._max_model_batch_size
