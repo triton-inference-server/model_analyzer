@@ -24,8 +24,6 @@ class ConfigGeneratorInterface(abc.ABC):
     def __subclasshook__(cls, subclass):
         return (hasattr(subclass, '__init__') and \
                 callable(subclass.__init__) and \
-                hasattr(subclass, '_is_done') and \
-                callable(subclass._is_done) and \
                 hasattr(subclass, 'get_configs') and \
                 callable(subclass.get_configs) and \
                 hasattr(subclass, 'set_last_results') and \
@@ -34,10 +32,6 @@ class ConfigGeneratorInterface(abc.ABC):
 
     @abc.abstractmethod
     def __init__(self):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def _is_done(self):
         raise NotImplementedError
 
     @abc.abstractmethod

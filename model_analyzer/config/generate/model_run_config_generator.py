@@ -64,9 +64,6 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
 
         self._curr_mc_measurements = []
 
-    def _is_done(self):
-        return self._pacg._is_done() and self._mcg._is_done()
-
     def get_configs(self):
         """
         Returns

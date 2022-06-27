@@ -54,11 +54,6 @@ class RunConfigGenerator(ConfigGeneratorInterface):
 
         self._model_variant_name_manager = ModelVariantNameManager()
 
-    def _is_done(self):
-        return    self._default_returned \
-              and self._curr_generators[0] is not None \
-              and all([gen._is_done() for gen in self._curr_generators])
-
     def set_last_results(self, measurements):
         for index in range(self._num_models):
             self._curr_results[index].extend(measurements)

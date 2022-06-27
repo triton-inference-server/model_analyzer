@@ -107,11 +107,13 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         raise NotImplementedError
 
     def _last_results_increased_throughput(self):
-        if len(self._curr_max_batch_size_throughputs) >= 2:
-            lastest_throughput = self._curr_max_batch_size_throughputs[-1]
-            return all(lastest_throughput > prev_throughput for prev_throughput
-                       in self._curr_max_batch_size_throughputs[:-1])
-        return True
+        if len(self._curr_max_batch_size_throughputs) < 2:
+            return True
+
+        lastest_throughput = self._curr_max_batch_size_throughputs[-1]
+        return all(
+            lastest_throughput > prev_throughput
+            for prev_throughput in self._curr_max_batch_size_throughputs[:-1])
 
     def _get_last_results_max_throughput(self):
         throughputs = [
