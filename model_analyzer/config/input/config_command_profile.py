@@ -34,7 +34,7 @@ from .config_defaults import \
     DEFAULT_OUTPUT_MODEL_REPOSITORY, DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG, \
     DEFAULT_PERF_ANALYZER_CPU_UTIL, DEFAULT_PERF_ANALYZER_PATH, DEFAULT_PERF_MAX_AUTO_ADJUSTS, \
     DEFAULT_PERF_OUTPUT_FLAG, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, DEFAULT_RUN_CONFIG_MIN_CONCURRENCY, \
-    DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE, DEFAULT_RUN_CONFIG_SEARCH_UNDIRECTED_ENABLE, \
+    DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE, DEFAULT_RUN_CONFIG_SEARCH_MODE, \
     DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT, \
     DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE, DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE, \
     DEFAULT_RUN_CONFIG_SEARCH_DISABLE, DEFAULT_TRITON_DOCKER_IMAGE, DEFAULT_TRITON_GRPC_ENDPOINT, \
@@ -527,14 +527,17 @@ class ConfigCommandProfile(ConfigCommand):
             ))
         self._add_config(
             ConfigField(
-                'run_config_search_undirected_enable',
-                flags=['--run-config-search-undirected-enable'],
-                field_type=ConfigPrimitive(bool),
-                parser_args={'action': 'store_true'},
-                default_value=DEFAULT_RUN_CONFIG_SEARCH_UNDIRECTED_ENABLE,
+                'run_config_search_mode',
+                flags=['--run-config-search-mode'],
+                choices=['brute', 'quick'],
+                field_type=ConfigPrimitive(str),
+                default_value=DEFAULT_RUN_CONFIG_SEARCH_MODE,
                 description=
-                "Enable Model Analyzer to do an undirected search to find the optimal config as fast as possible."
-            ))
+                "The search mode for Model Analyzer to find and evaluate"
+                " model configurations. 'brute' will brute force all combinations of"
+                " configuration options.  'quick' will attempt to find a near-optimal"
+                " configuration as fast as possible, but isn't guaranteed to find the"
+                " best."))
         self._add_config(
             ConfigField('run_config_search_disable',
                         flags=['--run-config-search-disable'],

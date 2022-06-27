@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from .run_config_generator import RunConfigGenerator
 from .undirected_run_config_generator import UndirectedRunConfigGenerator
 from .search_dimensions import SearchDimensions
@@ -42,18 +43,22 @@ class RunConfigGeneratorFactory:
         A generator that implements ConfigGeneratorInterface and creates RunConfigs        
         """
 
-        if (command_config.run_config_search_undirected_enable):
+        if (command_config.run_config_search_mode == "quick"):
             return RunConfigGeneratorFactory._create_undirected_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
                 models=models,
                 client=client)
-        else:
+        elif (command_config.run_config_search_mode == "brute"):
             return RunConfigGeneratorFactory._create_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
                 models=models,
                 client=client)
+        else:
+            raise TritonModelAnalyzerException(
+                f"Unexpected search mode {command_config.run_config_search_mode}"
+            )
 
     @staticmethod
     def _create_run_config_generator(command_config, gpus, models, client):

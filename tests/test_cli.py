@@ -65,7 +65,6 @@ def get_test_options():
         OptionStruct("bool", "profile","--collect-cpu-metrics"),
         OptionStruct("bool", "profile","--perf-output"),
         OptionStruct("bool", "profile","--run-config-search-disable"),
-        OptionStruct("bool", "profile","--run-config-search-undirected-enable"),
         OptionStruct("bool", "profile","--run-config-profile-models-concurrently-enable"),
         OptionStruct("bool", "profile","--reload-model-disable"),
         OptionStruct("bool", "profile","--early-exit-enable"),
@@ -123,6 +122,8 @@ def get_test_options():
         OptionStruct("string", "report", "--export-path", "-e", "./test_dir", os.getcwd(), None),
         OptionStruct("string", "report", "--config-file", "-f", "baz", None, None),
         OptionStruct("string", "profile", "--triton-docker-shm-size", None, "1G", None, extra_commands=["--triton-launch-mode", "docker"]),
+        OptionStruct("string", "profile","--run-config-search-mode", None, ["quick", "brute"], "brute", "SHOULD_FAIL"),
+
         #List Options:
         # Options format:
         #   (intlist/stringlist, MA step, long_flag, short_flag, test_value, expected_default_value, extra_commands)
