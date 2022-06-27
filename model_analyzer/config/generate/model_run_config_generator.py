@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from .config_generator_interface import ConfigGeneratorInterface
-from .generator_factory import ConfigGeneratorFactory
+from .model_config_generator_factory import ModelConfigGeneratorFactory
 from .perf_analyzer_config_generator import PerfAnalyzerConfigGenerator
 
 from model_analyzer.config.run.model_run_config import ModelRunConfig
@@ -63,7 +63,7 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
                                                  self._model_parameters,
                                                  self._pacg_early_exit_enable)
 
-        self._mcg = ConfigGeneratorFactory.create_model_config_generator(
+        self._mcg = ModelConfigGeneratorFactory.create_model_config_generator(
             self._config, self._gpus, model, self._client,
             self._variant_name_manger, default_only,
             self._mcg_early_exit_enable)

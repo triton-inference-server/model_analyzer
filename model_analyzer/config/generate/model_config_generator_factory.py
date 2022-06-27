@@ -16,7 +16,7 @@ from .automatic_model_config_generator import AutomaticModelConfigGenerator
 from .manual_model_config_generator import ManualModelConfigGenerator
 
 
-class ConfigGeneratorFactory:
+class ModelConfigGeneratorFactory:
     """
     Factory that creates the correct Config Generators
     """
@@ -45,7 +45,7 @@ class ConfigGeneratorFactory:
 
         Returns
         -------
-        ModelConfigGenerator
+        A generator that implements ConfigGeneratorInterface and creates ModelConfigs
         """
 
         remote_mode = config.triton_launch_mode == 'remote'
