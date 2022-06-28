@@ -34,7 +34,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         model: The model to generate ModelConfigs for
         client: TritonClient
         variant_name_manager: ModelVariantNameManager
-        default_only: Bool 
+        default_only: Bool
             If true, only the default config will be generated
             If false, the default config will NOT be generated
         early_exit_enable: Bool
@@ -64,15 +64,14 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             )
 
     def _done_walking(self):
-        return self._done_walking_max_batch_size() \
-           and self._done_walking_instance_count()
+        return self._curr_instance_count > self._max_instance_count
 
     def _step(self):
+        self._step_max_batch_size()
+
         if self._done_walking_max_batch_size():
             self._reset_max_batch_size()
             self._step_instance_count()
-        else:
-            self._step_max_batch_size()
 
     def _step_max_batch_size(self):
         self._curr_max_batch_size *= 2
@@ -84,6 +83,9 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         self._curr_instance_count += 1
 
     def _done_walking_max_batch_size(self):
+        if self._last_results_erroneous():
+            return True
+
         if self._max_batch_size_limit_reached():
             return True
 
@@ -93,11 +95,8 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
         return False
 
-    def _done_walking_instance_count(self):
-        return self._curr_instance_count == self._max_instance_count
-
     def _max_batch_size_limit_reached(self):
-        return (self._curr_max_batch_size * 2) > self._max_model_batch_size
+        return self._curr_max_batch_size > self._max_model_batch_size
 
     def _reset_max_batch_size(self):
         super()._reset_max_batch_size()
@@ -106,6 +105,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             self._curr_max_batch_size = self._max_model_batch_size
         else:
             self._curr_max_batch_size = self._min_model_batch_size
+
+    def _last_results_erroneous(self):
+        last_max_throughput = self._get_last_results_max_throughput()
+        return last_max_throughput is None
 
     def _get_next_model_config(self):
         param_combo = self._get_curr_param_combo()

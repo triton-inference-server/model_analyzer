@@ -79,10 +79,10 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         self._generator_started = False
         self._done = False
 
-    def is_done(self):
+    def _is_done(self):
         return self._done
 
-    def next_config(self):
+    def get_configs(self):
         """
         Returns
         -------
@@ -97,7 +97,7 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
             self._step()
 
     def _step(self):
-        """ 
+        """
         Determine self._coordinate_to_measure, which is what is used to
         create the next RunConfig
         """
@@ -114,7 +114,7 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
             self._done = True
 
     def set_last_results(self, measurements):
-        """ 
+        """
         Given the results from the last RunConfig, make decisions
         about future configurations to generate
 
