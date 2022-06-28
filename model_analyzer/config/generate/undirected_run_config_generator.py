@@ -246,12 +246,11 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
 
         perf_analyzer_config = PerfAnalyzerConfig()
 
+        perf_analyzer_config.update_params_from_profile_config(
+            model_variant_name, self._config)
+
         perf_config_params = {
-            'model-name': model_variant_name,
-            'latency-report-file': model_variant_name + "-results.csv",
-            'measurement-mode': "count_windows",
             'batch-size': 1,
-            'verbose-csv': '--verbose-csv',
             'concurrency-range': dimension_values['concurrency']
         }
         perf_analyzer_config.update_config(perf_config_params)
