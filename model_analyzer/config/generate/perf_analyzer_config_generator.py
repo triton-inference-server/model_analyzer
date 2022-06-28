@@ -15,7 +15,6 @@
 from .config_generator_interface import ConfigGeneratorInterface
 from .generator_utils import GeneratorUtils as utils
 
-from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
 from model_analyzer.constants import THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_TRIES
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
@@ -140,53 +139,19 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             configs_with_concurrency = []
             for concurrency in self._concurrencies:
                 new_perf_config = PerfAnalyzerConfig()
+
+                new_perf_config.update_params_from_profile_config(
+                    self._model_name, self._cli_config)
+
                 new_perf_config.update_config(params)
                 new_perf_config.update_config(
                     {'concurrency-range': concurrency})
-
-                new_perf_config.update_config(
-                    PerfAnalyzerConfigGenerator._get_common_params(
-                        self._model_name, self._cli_config))
 
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)
 
                 configs_with_concurrency.append(new_perf_config)
             self._configs.append(configs_with_concurrency)
-
-    @staticmethod
-    def _get_common_params(model_name, cli_config):
-        client_protocol_is_http = (cli_config.client_protocol == 'http')
-        launch_mode_is_c_api = (cli_config.triton_launch_mode == 'c_api')
-        triton_install_path = cli_config.triton_install_path
-        output_model_repo_path = cli_config.output_model_repository_path
-        client_protocol = cli_config.client_protocol
-        triton_http_endpoint = cli_config.triton_http_endpoint
-        triton_grpc_endpoint = cli_config.triton_grpc_endpoint
-        client_protocol = cli_config.client_protocol
-
-        params = {
-            'model-name': model_name,
-            'latency-report-file': model_name + "-results.csv",
-            'measurement-mode': DEFAULT_MEASUREMENT_MODE,
-            'verbose-csv': '--verbose-csv'
-        }
-
-        if launch_mode_is_c_api:
-            params.update({
-                'service-kind': 'triton_c_api',
-                'triton-server-directory': triton_install_path,
-                'model-repository': output_model_repo_path
-            })
-        else:
-            params.update({
-                'protocol':
-                    client_protocol,
-                'url':
-                    triton_http_endpoint
-                    if client_protocol_is_http else triton_grpc_endpoint
-            })
-        return params
 
     def _create_non_concurrency_perf_config_params(self):
         perf_config_params = {
