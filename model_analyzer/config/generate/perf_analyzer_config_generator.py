@@ -78,14 +78,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._batch_sizes = sorted(model_parameters['batch_sizes'])
         self._concurrencies = self._create_concurrency_list(
             cli_config, model_parameters)
-        self._client_protocol_is_http = (cli_config.client_protocol == 'http')
-        self._launch_mode_is_c_api = (cli_config.triton_launch_mode == 'c_api')
-        self._triton_install_path = cli_config.triton_install_path
-        self._output_model_repo_path = cli_config.output_model_repository_path
-        self._protocol = cli_config.client_protocol
-        self._triton_http_endpoint = cli_config.triton_http_endpoint
-        self._triton_grpc_endpoint = cli_config.triton_grpc_endpoint
-        self._client_protocol = cli_config.client_protocol
+
+        self._cli_config = cli_config
 
         self._generate_perf_configs()
 
@@ -150,7 +144,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 new_perf_config.update_config(
                     {'concurrency-range': concurrency})
 
-                new_perf_config.update_config(self._get_common_params())
+                new_perf_config.update_config(
+                    self._get_common_params(self._cli_config))
 
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)
@@ -158,7 +153,16 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 configs_with_concurrency.append(new_perf_config)
             self._configs.append(configs_with_concurrency)
 
-    def _get_common_params(self):
+    def _get_common_params(self, cli_config):
+        client_protocol_is_http = (cli_config.client_protocol == 'http')
+        launch_mode_is_c_api = (cli_config.triton_launch_mode == 'c_api')
+        triton_install_path = cli_config.triton_install_path
+        output_model_repo_path = cli_config.output_model_repository_path
+        client_protocol = cli_config.client_protocol
+        triton_http_endpoint = cli_config.triton_http_endpoint
+        triton_grpc_endpoint = cli_config.triton_grpc_endpoint
+        client_protocol = cli_config.client_protocol
+
         params = {
             'model-name': self._model_name,
             'latency-report-file': self._model_name + "-results.csv",
@@ -166,19 +170,19 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             'verbose-csv': '--verbose-csv'
         }
 
-        if self._launch_mode_is_c_api:
+        if launch_mode_is_c_api:
             params.update({
                 'service-kind': 'triton_c_api',
-                'triton-server-directory': self._triton_install_path,
-                'model-repository': self._output_model_repo_path
+                'triton-server-directory': triton_install_path,
+                'model-repository': output_model_repo_path
             })
         else:
             params.update({
                 'protocol':
-                    self._client_protocol,
+                    client_protocol,
                 'url':
-                    self._triton_http_endpoint if self._client_protocol_is_http
-                    else self._triton_grpc_endpoint
+                    triton_http_endpoint
+                    if client_protocol_is_http else triton_grpc_endpoint
             })
         return params
 
