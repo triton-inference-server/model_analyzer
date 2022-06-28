@@ -145,7 +145,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                     {'concurrency-range': concurrency})
 
                 new_perf_config.update_config(
-                    self._get_common_params(self._cli_config))
+                    PerfAnalyzerConfigGenerator._get_common_params(
+                        self._model_name, self._cli_config))
 
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)
@@ -153,7 +154,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 configs_with_concurrency.append(new_perf_config)
             self._configs.append(configs_with_concurrency)
 
-    def _get_common_params(self, cli_config):
+    @staticmethod
+    def _get_common_params(model_name, cli_config):
         client_protocol_is_http = (cli_config.client_protocol == 'http')
         launch_mode_is_c_api = (cli_config.triton_launch_mode == 'c_api')
         triton_install_path = cli_config.triton_install_path
@@ -164,9 +166,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         client_protocol = cli_config.client_protocol
 
         params = {
-            'model-name': self._model_name,
-            'latency-report-file': self._model_name + "-results.csv",
-            'measurement-mode': DEFAULT_MEASUREMENT_MODE,  # FIXME
+            'model-name': model_name,
+            'latency-report-file': model_name + "-results.csv",
+            'measurement-mode': DEFAULT_MEASUREMENT_MODE,
             'verbose-csv': '--verbose-csv'
         }
 
