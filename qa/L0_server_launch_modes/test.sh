@@ -90,7 +90,7 @@ function run_server_launch_modes() {
 
         _run_single_config
         if [ $? -ne 0 ]; then
-            break
+            exit 1
         fi
     done
 }
