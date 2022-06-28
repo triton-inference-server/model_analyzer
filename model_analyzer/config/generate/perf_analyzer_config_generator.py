@@ -149,35 +149,43 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 new_perf_config.update_config(params)
                 new_perf_config.update_config(
                     {'concurrency-range': concurrency})
+
+                new_perf_config.update_config(self._get_common_params())
+
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)
 
                 configs_with_concurrency.append(new_perf_config)
             self._configs.append(configs_with_concurrency)
 
-    def _create_non_concurrency_perf_config_params(self):
-        perf_config_params = {
-            'model-name': [self._model_name],
-            'latency-report-file': [self._model_name + "-results.csv"],
-            'batch-size': self._batch_sizes,
-            'measurement-mode': [DEFAULT_MEASUREMENT_MODE],
-            'verbose-csv': ['--verbose-csv'],
+    def _get_common_params(self):
+        params = {
+            'model-name': self._model_name,
+            'latency-report-file': self._model_name + "-results.csv",
+            'measurement-mode': DEFAULT_MEASUREMENT_MODE,  # FIXME
+            'verbose-csv': '--verbose-csv'
         }
 
         if self._launch_mode_is_c_api:
-            perf_config_params.update({
-                'service-kind': ['triton_c_api'],
-                'triton-server-directory': [self._triton_install_path],
-                'model-repository': [self._output_model_repo_path]
+            params.update({
+                'service-kind': 'triton_c_api',
+                'triton-server-directory': self._triton_install_path,
+                'model-repository': self._output_model_repo_path
             })
         else:
-            perf_config_params.update({
-                'protocol': [self._client_protocol],
-                'url': [
+            params.update({
+                'protocol':
+                    self._client_protocol,
+                'url':
                     self._triton_http_endpoint if self._client_protocol_is_http
                     else self._triton_grpc_endpoint
-                ]
             })
+        return params
+
+    def _create_non_concurrency_perf_config_params(self):
+        perf_config_params = {
+            'batch-size': self._batch_sizes,
+        }
 
         return perf_config_params
 
