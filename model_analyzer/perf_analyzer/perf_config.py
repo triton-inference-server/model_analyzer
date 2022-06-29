@@ -14,6 +14,7 @@
 
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
+from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
 
 
 class PerfAnalyzerConfig:
@@ -127,6 +128,43 @@ class PerfAnalyzerConfig:
         if params and type(params) is dict:
             for key in params:
                 self[key] = params[key]
+
+    def update_config_from_profile_config(self, model_name, profile_config):
+        """
+        Set common values based on the input profile config
+
+        Parameters
+        ----------
+        model_name: str
+            The name of the model
+        profile_config: ConfigCommandProfile
+            The configuration of model analyzer for the profile step
+        """
+
+        params = {
+            'model-name': model_name,
+            'latency-report-file': model_name + "-results.csv",
+            'measurement-mode': DEFAULT_MEASUREMENT_MODE,
+            'verbose-csv': '--verbose-csv'
+        }
+
+        if profile_config.triton_launch_mode == 'c_api':
+            params.update({
+                'service-kind': 'triton_c_api',
+                'triton-server-directory': profile_config.triton_install_path,
+                'model-repository': profile_config.output_model_repository_path
+            })
+        else:
+            if profile_config.client_protocol == 'http':
+                url = profile_config.triton_http_endpoint
+            else:
+                url = profile_config.triton_grpc_endpoint
+
+            params.update({
+                'protocol': profile_config.client_protocol,
+                'url': url
+            })
+        self.update_config(params)
 
     @classmethod
     def from_dict(cls, perf_config_dict):

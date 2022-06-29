@@ -15,7 +15,6 @@
 from .config_generator_interface import ConfigGeneratorInterface
 from .generator_utils import GeneratorUtils as utils
 
-from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
 from model_analyzer.constants import THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_TRIES
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
@@ -78,14 +77,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._batch_sizes = sorted(model_parameters['batch_sizes'])
         self._concurrencies = self._create_concurrency_list(
             cli_config, model_parameters)
-        self._client_protocol_is_http = (cli_config.client_protocol == 'http')
-        self._launch_mode_is_c_api = (cli_config.triton_launch_mode == 'c_api')
-        self._triton_install_path = cli_config.triton_install_path
-        self._output_model_repo_path = cli_config.output_model_repository_path
-        self._protocol = cli_config.client_protocol
-        self._triton_http_endpoint = cli_config.triton_http_endpoint
-        self._triton_grpc_endpoint = cli_config.triton_grpc_endpoint
-        self._client_protocol = cli_config.client_protocol
+
+        self._cli_config = cli_config
 
         self._generate_perf_configs()
 
@@ -146,9 +139,14 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             configs_with_concurrency = []
             for concurrency in self._concurrencies:
                 new_perf_config = PerfAnalyzerConfig()
+
+                new_perf_config.update_config_from_profile_config(
+                    self._model_name, self._cli_config)
+
                 new_perf_config.update_config(params)
                 new_perf_config.update_config(
                     {'concurrency-range': concurrency})
+
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)
 
@@ -157,27 +155,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _create_non_concurrency_perf_config_params(self):
         perf_config_params = {
-            'model-name': [self._model_name],
-            'latency-report-file': [self._model_name + "-results.csv"],
             'batch-size': self._batch_sizes,
-            'measurement-mode': [DEFAULT_MEASUREMENT_MODE],
-            'verbose-csv': ['--verbose-csv'],
         }
-
-        if self._launch_mode_is_c_api:
-            perf_config_params.update({
-                'service-kind': ['triton_c_api'],
-                'triton-server-directory': [self._triton_install_path],
-                'model-repository': [self._output_model_repo_path]
-            })
-        else:
-            perf_config_params.update({
-                'protocol': [self._client_protocol],
-                'url': [
-                    self._triton_http_endpoint if self._client_protocol_is_http
-                    else self._triton_grpc_endpoint
-                ]
-            })
 
         return perf_config_params
 
