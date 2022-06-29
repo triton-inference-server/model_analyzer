@@ -39,6 +39,11 @@ parser.add_argument("--data-path",
                     required=False,
                     default="./data",
                     help="The path to the checkpoint results files")
+parser.add_argument("--output-path",
+                    type=str,
+                    required=False,
+                    default="./output",
+                    help="The path to the output csv files")
 parser.add_argument("--generator",
                     type=str,
                     required=True,
@@ -51,6 +56,8 @@ if args.verbose:
     logger.setLevel(level=logging.DEBUG)
     logging.basicConfig(format="[Model Analyzer] %(message)s")
 
-ecg = EvaluateConfigGenerator(args.model_name, args.data_path, other_args)
+ecg = EvaluateConfigGenerator(args.model_name, args.data_path, args.output_path,
+                              other_args)
 ecg.execute_generator(args.generator)
 ecg.print_results()
+ecg.store_results()
