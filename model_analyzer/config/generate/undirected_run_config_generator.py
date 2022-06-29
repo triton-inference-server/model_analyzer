@@ -247,7 +247,7 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
 
         perf_analyzer_config = PerfAnalyzerConfig()
 
-        perf_analyzer_config.update_params_from_profile_config(
+        perf_analyzer_config.update_config_from_profile_config(
             model_variant_name, self._config)
 
         perf_config_params = {

@@ -129,7 +129,7 @@ class PerfAnalyzerConfig:
             for key in params:
                 self[key] = params[key]
 
-    def update_params_from_profile_config(self, model_name, profile_config):
+    def update_config_from_profile_config(self, model_name, profile_config):
         """
         Set common values based on the input profile config
 

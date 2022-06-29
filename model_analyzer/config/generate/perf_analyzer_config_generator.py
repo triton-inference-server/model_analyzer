@@ -140,7 +140,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             for concurrency in self._concurrencies:
                 new_perf_config = PerfAnalyzerConfig()
 
-                new_perf_config.update_params_from_profile_config(
+                new_perf_config.update_config_from_profile_config(
                     self._model_name, self._cli_config)
 
                 new_perf_config.update_config(params)
