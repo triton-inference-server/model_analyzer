@@ -142,6 +142,9 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         return self._coordinate_data.get_throughput(self._coordinate_to_measure)
 
     def _handle_invalid_last_results(self):
+        # TODO TMA-779: Better handling of this
+        self._done = True
+
         self._coordinate_to_measure = self._neighborhood.get_nearest_unvisited_neighbor(
             self._coordinate_to_measure)
         logger.debug(
