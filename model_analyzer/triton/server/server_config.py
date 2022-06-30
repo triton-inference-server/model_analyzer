@@ -51,6 +51,7 @@ class TritonServerConfig:
         'grpc-root-cert',
         'allow-metrics',
         'allow-gpu-metrics',
+        'metrics-interval-ms',
         'metrics-port',
         # Tracing
         'trace-file',

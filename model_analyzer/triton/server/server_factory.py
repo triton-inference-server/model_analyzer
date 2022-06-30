@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
-
 from .server_docker import TritonServerDocker
 from .server_local import TritonServerLocal
 from .server_config import TritonServerConfig
 
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.input.config_utils import binary_path_validator
 
 from model_analyzer.constants import CONFIG_PARSER_FAILURE, LOGGER_NAME
@@ -181,7 +180,7 @@ class TritonServerFactory:
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
         triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
-        if config.use_local_gpu_monitor:
+        if not config.use_local_gpu_monitor:
             triton_config['metrics-interval-ms'] = int(
                 config.monitoring_interval * 1e3)
         logger.info('Starting a local Triton Server')
@@ -212,7 +211,7 @@ class TritonServerFactory:
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
         triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
-        if config.use_local_gpu_monitor:
+        if not config.use_local_gpu_monitor:
             triton_config['metrics-interval-ms'] = int(
                 config.monitoring_interval * 1e3)
         logger.info('Starting a Triton Server using docker')
