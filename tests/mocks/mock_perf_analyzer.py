@@ -38,11 +38,10 @@ class MockPerfAnalyzerMethods(MockBase):
         self.mock_popen = MagicMock()
         self.mock_popen.pid = 10
         self.mock_popen.returncode = 0
+        self.mock_popen.communicate.return_value = ["", None]
         self.patcher_popen_stdout_read = patch(
             'model_analyzer.perf_analyzer.perf_analyzer.Popen',
             Mock(return_value=self.mock_popen))
-        self.patcher_stdout = patch(
-            'model_analyzer.perf_analyzer.perf_analyzer.STDOUT', MagicMock())
         self.patcher_pipe = patch(
             'model_analyzer.perf_analyzer.perf_analyzer.PIPE', MagicMock())
         super().__init__()
@@ -53,7 +52,6 @@ class MockPerfAnalyzerMethods(MockBase):
         """
 
         self.popen_stdout_read = self.patcher_popen_stdout_read.start()
-        self.stdout_mock = self.patcher_stdout.start()
         self.pipe_mock = self.patcher_pipe.start()
 
     def _fill_patchers(self):
@@ -62,33 +60,21 @@ class MockPerfAnalyzerMethods(MockBase):
         """
 
         self._patchers.append(self.patcher_popen_stdout_read)
-        self._patchers.append(self.patcher_stdout)
         self._patchers.append(self.patcher_pipe)
-
-    def assert_perf_analyzer_run_as(self, cmd):
-        """
-        Checks that Popen was run with the given command.
-        """
-
-        self.popen_stdout_read.assert_called_with(cmd,
-                                                  start_new_session=True,
-                                                  stdout=self.pipe_mock,
-                                                  stderr=self.stdout_mock,
-                                                  encoding='utf-8')
 
     def set_perf_analyzer_result_string(self, output_string):
         """
         Sets the return value of mock_popen
         """
 
-        self.mock_popen.stdout.read.return_value = output_string
+        self.mock_popen.communicate.return_value = [output_string, None]
 
-    def get_perf_analyzer_popen_read_call_count(self):
+    def get_perf_analyzer_popen_communicate_call_count(self):
         """
-        Get perf_analyzer popen read count
+        Get perf_analyzer popen.communicate() call count
         """
 
-        return self.mock_popen.stdout.read.call_count
+        return self.mock_popen.communicate.call_count
 
     def set_perf_analyzer_return_code(self, returncode):
         """
@@ -103,6 +89,5 @@ class MockPerfAnalyzerMethods(MockBase):
         and return values of the
         mocks in this module
         """
-
-        self.mock_popen.stdout.read.side_effect = None
-        self.mock_popen.stdout.read.return_value = None
+        self.mock_popen.communicate.return_value = ["", None]
+        self.mock_popen.communicate.side_effect = None

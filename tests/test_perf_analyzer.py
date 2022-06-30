@@ -421,7 +421,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         perf_metrics = [PerfThroughput, PerfLatencyP99]
         perf_analyzer.run(perf_metrics)
         self.assertEqual(
-            self.perf_mock.get_perf_analyzer_popen_read_call_count(), 10)
+            self.perf_mock.get_perf_analyzer_popen_communicate_call_count(), 10)
 
     def test_measurement_request_count_increase(self):
         server_config = TritonServerConfig()
@@ -447,7 +447,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         perf_metrics = [PerfThroughput, PerfLatencyP99]
         perf_analyzer.run(perf_metrics)
         self.assertEqual(
-            self.perf_mock.get_perf_analyzer_popen_read_call_count(), 10)
+            self.perf_mock.get_perf_analyzer_popen_communicate_call_count(), 10)
 
     def test_is_multi_model(self):
         """ 
