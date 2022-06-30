@@ -32,57 +32,27 @@ class TestTritonServerFactory(trc.TestResultCollector):
             mock_paths=['model_analyzer.triton.server.server_factory'])
         self.mock_os.start()
 
-    def test_get_server_handle_remote(self):
-        self._test_get_server_handle_helper(launch_mode="remote",
-                                            use_dcgm=False,
-                                            expected_local=1,
-                                            expected_docker=0,
-                                            expect_config=False)
-        self._test_get_server_handle_helper(launch_mode="remote",
-                                            use_dcgm=True,
-                                            expected_local=1,
-                                            expected_docker=0,
-                                            expect_config=False)
+    def _test_get_server_handle_helper(self, launch_mode, expect_local,
+                                       expect_docker, expect_config, use_dcgm):
+        """
+        Test get_server_handle() calls the correct Triton Server create function with the
+        correct Triton Server Config options
 
-    def test_get_server_handle_c_api(self):
-        self._test_get_server_handle_helper(launch_mode="c_api",
-                                            use_dcgm=False,
-                                            expected_local=1,
-                                            expected_docker=0,
-                                            expect_config=False)
-        self._test_get_server_handle_helper(launch_mode="c_api",
-                                            use_dcgm=True,
-                                            expected_local=1,
-                                            expected_docker=0,
-                                            expect_config=False)
+        Parameters:
+        ----------
+        launch_mode: str
+            which launch mode to use
+        use_dcgm: bool
+            If true, set use_local_gpu_monitor in the input config
+        expect_local: bool
+            If true, assert that create_server_local() is called
+        expect_docker: bool
+            If true, assert that create_server_docker() is called
+        expect_config: bool
+            If true, verify that certain Triton Server args are passed to the create function as expected
+            If false, verify that those args are NOT passed
+        """
 
-    def test_get_server_handle_local(self):
-        self._test_get_server_handle_helper(launch_mode="local",
-                                            use_dcgm=False,
-                                            expected_local=1,
-                                            expected_docker=0,
-                                            expect_config=True)
-        self._test_get_server_handle_helper(launch_mode="local",
-                                            use_dcgm=True,
-                                            expected_local=1,
-                                            expected_docker=0,
-                                            expect_config=True)
-
-    def test_get_server_handle_docker(self):
-        self._test_get_server_handle_helper(launch_mode="docker",
-                                            use_dcgm=False,
-                                            expected_local=0,
-                                            expected_docker=1,
-                                            expect_config=True)
-        self._test_get_server_handle_helper(launch_mode="docker",
-                                            use_dcgm=True,
-                                            expected_local=0,
-                                            expected_docker=1,
-                                            expect_config=True)
-
-    def _test_get_server_handle_helper(self, launch_mode, expected_local,
-                                       expected_docker, expect_config,
-                                       use_dcgm):
         config = ConfigCommandProfile()
         config.triton_launch_mode = launch_mode
         config.triton_http_endpoint = "1:2"
@@ -90,30 +60,70 @@ class TestTritonServerFactory(trc.TestResultCollector):
         config.monitoring_interval = 0.5
         config.use_local_gpu_monitor = use_dcgm
 
+        expected_http_port = '2'
+        expected_grpc_port = '4'
+        expected_metrics_interval_ms = 500
+
         with patch('model_analyzer.triton.server.server_factory.TritonServerFactory.create_server_local') as mocked_local, \
              patch('model_analyzer.triton.server.server_factory.TritonServerFactory.create_server_docker') as mocked_docker, \
              patch('model_analyzer.triton.server.server_factory.TritonServerFactory._validate_triton_install_path'), \
              patch('model_analyzer.triton.server.server_factory.TritonServerFactory._validate_triton_server_path'):
             _ = TritonServerFactory.get_server_handle(config, MagicMock(),
                                                       False)
-            self.assertEqual(mocked_local.call_count, expected_local)
-            self.assertEqual(mocked_docker.call_count, expected_docker)
+            self.assertEqual(mocked_local.call_count, expect_local)
+            self.assertEqual(mocked_docker.call_count, expect_docker)
 
-            if expected_local:
-                args, kwargs = mocked_local.call_args
+            if expect_local:
+                _, kwargs = mocked_local.call_args
             else:
-                args, kwargs = mocked_docker.call_args
+                _, kwargs = mocked_docker.call_args
             triton_config = kwargs['config']
 
             if expect_config:
-                self.assertEqual(triton_config['http-port'], '2')
-                self.assertEqual(triton_config['grpc-port'], '4')
-                if not use_dcgm:
-                    self.assertEqual(triton_config['metrics-interval-ms'], 500)
+                self.assertEqual(triton_config['http-port'], expected_http_port)
+                self.assertEqual(triton_config['grpc-port'], expected_grpc_port)
+                if use_dcgm:
+                    self.assertEqual(triton_config['metrics-interval-ms'], None)
+                else:
+                    self.assertEqual(triton_config['metrics-interval-ms'],
+                                     expected_metrics_interval_ms)
+
             else:
                 self.assertEqual(triton_config['http-port'], None)
                 self.assertEqual(triton_config['grpc-port'], None)
                 self.assertEqual(triton_config['metrics-interval-ms'], None)
+
+    def test_get_server_handle_remote(self):
+        for use_dcgm in [True, False]:
+            self._test_get_server_handle_helper(launch_mode="remote",
+                                                use_dcgm=use_dcgm,
+                                                expect_local=1,
+                                                expect_docker=0,
+                                                expect_config=False)
+
+    def test_get_server_handle_c_api(self):
+        for use_dcgm in [True, False]:
+            self._test_get_server_handle_helper(launch_mode="c_api",
+                                                use_dcgm=use_dcgm,
+                                                expect_local=1,
+                                                expect_docker=0,
+                                                expect_config=False)
+
+    def test_get_server_handle_local(self):
+        for use_dcgm in [True, False]:
+            self._test_get_server_handle_helper(launch_mode="local",
+                                                use_dcgm=use_dcgm,
+                                                expect_local=1,
+                                                expect_docker=0,
+                                                expect_config=True)
+
+    def test_get_server_handle_docker(self):
+        for use_dcgm in [True, False]:
+            self._test_get_server_handle_helper(launch_mode="docker",
+                                                use_dcgm=use_dcgm,
+                                                expect_local=0,
+                                                expect_docker=1,
+                                                expect_config=True)
 
     def tearDown(self):
         patch.stopall()
