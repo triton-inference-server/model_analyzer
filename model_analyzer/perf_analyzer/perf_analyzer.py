@@ -38,7 +38,7 @@ from model_analyzer.constants import \
     MEASUREMENT_WINDOW_STEP, PERF_ANALYZER_MEASUREMENT_WINDOW, \
     PERF_ANALYZER_MINIMUM_REQUEST_COUNT
 
-from subprocess import Popen, STDOUT, PIPE
+from subprocess import Popen, PIPE, DEVNULL
 import psutil
 import re
 import logging
@@ -236,7 +236,7 @@ class PerfAnalyzer:
             process = Popen(cmd,
                             start_new_session=True,
                             stdout=PIPE,
-                            stderr=STDOUT,
+                            stderr=DEVNULL,
                             encoding='utf-8',
                             env=perf_analyzer_env)
         except FileNotFoundError as e:
@@ -271,7 +271,7 @@ class PerfAnalyzer:
 
         while current_timeout > 0:
             if process.poll() is not None:
-                self._output = process.stdout.read()
+                self._output, _ = process.communicate()
                 break
 
             # perf_analyzer using too much CPU?
@@ -280,8 +280,8 @@ class PerfAnalyzer:
                 logger.info(
                     f'perf_analyzer used significant amount of CPU resources ({cpu_util}%), killing perf_analyzer'
                 )
-                self._output = process.stdout.read()
                 process.kill()
+                self._output, _ = process.communicate()
 
                 return self.PA_FAIL
 
@@ -290,6 +290,7 @@ class PerfAnalyzer:
             logger.info(
                 'perf_analyzer took very long to exit, killing perf_analyzer')
             process.kill()
+            self._output, _ = process.communicate()
 
             return self.PA_FAIL
 
