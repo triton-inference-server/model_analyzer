@@ -38,13 +38,14 @@ from model_analyzer.constants import \
     MEASUREMENT_WINDOW_STEP, PERF_ANALYZER_MEASUREMENT_WINDOW, \
     PERF_ANALYZER_MINIMUM_REQUEST_COUNT
 
-from subprocess import Popen, STDOUT, PIPE
+from subprocess import Popen, STDOUT
 import psutil
 import re
 import logging
 import signal
 import os
 import csv
+import tempfile
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -100,7 +101,7 @@ class PerfAnalyzer:
         self._config = config
         self._max_retries = max_retries
         self._timeout = timeout
-        self._output = None
+        self._output = ""
         self._perf_records = {}
         self._max_cpu_util = max_cpu_util
 
@@ -232,10 +233,11 @@ class PerfAnalyzer:
         return perf_analyzer_env
 
     def _create_process(self, cmd, perf_analyzer_env):
+        self._cmd_log = tempfile.NamedTemporaryFile()
         try:
             process = Popen(cmd,
                             start_new_session=True,
-                            stdout=PIPE,
+                            stdout=self._cmd_log,
                             stderr=STDOUT,
                             encoding='utf-8',
                             env=perf_analyzer_env)
@@ -271,7 +273,7 @@ class PerfAnalyzer:
 
         while current_timeout > 0:
             if process.poll() is not None:
-                self._output = process.stdout.read()
+                self._output = self._get_process_output()
                 break
 
             # perf_analyzer using too much CPU?
@@ -280,7 +282,7 @@ class PerfAnalyzer:
                 logger.info(
                     f'perf_analyzer used significant amount of CPU resources ({cpu_util}%), killing perf_analyzer'
                 )
-                self._output = process.stdout.read()
+                self._output = self._get_process_output()
                 process.kill()
 
                 return self.PA_FAIL
@@ -294,6 +296,12 @@ class PerfAnalyzer:
             return self.PA_FAIL
 
         return self.PA_SUCCESS
+
+    def _get_process_output(self):
+        self._cmd_log.seek(0)
+        tmp_output = self._cmd_log.read()
+        self._cmd_log.close()
+        return tmp_output.decode('utf-8')
 
     def _auto_adjust_parameters(self, process):
         """
@@ -311,8 +319,9 @@ class PerfAnalyzer:
 
             return self.PA_SUCCESS
         else:
+            clamped_output = self._output[:1000]
             logger.info(f"Running perf_analyzer failed with"
-                        f" exit status {process.returncode} : {self._output}")
+                        f" exit status {process.returncode}:\n{clamped_output}")
             return self.PA_FAIL
 
     def _auto_adjust_parameters_for_perf_config(self, perf_config, log):
