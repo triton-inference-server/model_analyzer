@@ -55,14 +55,15 @@ class TestTritonServerFactory(trc.TestResultCollector):
 
         config = ConfigCommandProfile()
         config.triton_launch_mode = launch_mode
-        config.triton_http_endpoint = "1:2"
-        config.triton_grpc_endpoint = "3:4"
+        config.triton_http_endpoint = "fake_address:2345"
+        config.triton_grpc_endpoint = "fake_address:4567"
         config.monitoring_interval = 0.5
         config.use_local_gpu_monitor = use_dcgm
 
-        expected_http_port = '2'
-        expected_grpc_port = '4'
-        expected_metrics_interval_ms = 500
+        expected_http_port = '2345'
+        expected_grpc_port = '4567'
+        # Convert seconds to ms
+        expected_metrics_interval_ms = config.monitoring_interval * 1000
 
         with patch('model_analyzer.triton.server.server_factory.TritonServerFactory.create_server_local') as mocked_local, \
              patch('model_analyzer.triton.server.server_factory.TritonServerFactory.create_server_docker') as mocked_docker, \
