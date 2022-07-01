@@ -14,6 +14,7 @@
 
 from .mock_base import MockBase
 from unittest.mock import patch, Mock, MagicMock
+from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 
 
 class MockCalledProcessError(Exception):
@@ -38,12 +39,19 @@ class MockPerfAnalyzerMethods(MockBase):
         self.mock_popen = MagicMock()
         self.mock_popen.pid = 10
         self.mock_popen.returncode = 0
-        self.mock_popen.communicate.return_value = ["", None]
+
+        self.mock_popen_constructor = MagicMock()
+        self.mock_popen_constructor.return_value = self.mock_popen
+
         self.patcher_popen_stdout_read = patch(
             'model_analyzer.perf_analyzer.perf_analyzer.Popen',
-            Mock(return_value=self.mock_popen))
-        self.patcher_pipe = patch(
-            'model_analyzer.perf_analyzer.perf_analyzer.PIPE', MagicMock())
+            self.mock_popen_constructor)
+
+        self.mock_file = MagicMock()
+        self.mock_file.read.return_value = b''
+        self.patcher_open = patch(
+            'model_analyzer.perf_analyzer.perf_analyzer.tempfile.NamedTemporaryFile',
+            Mock(return_value=self.mock_file))
         super().__init__()
 
     def start(self):
@@ -52,29 +60,28 @@ class MockPerfAnalyzerMethods(MockBase):
         """
 
         self.popen_stdout_read = self.patcher_popen_stdout_read.start()
-        self.pipe_mock = self.patcher_pipe.start()
+        self.open_mock = self.patcher_open.start()
 
     def _fill_patchers(self):
         """
         Fills patcher list
         """
-
+        self._patchers.append(self.patcher_open)
         self._patchers.append(self.patcher_popen_stdout_read)
-        self._patchers.append(self.patcher_pipe)
 
     def set_perf_analyzer_result_string(self, output_string):
         """
-        Sets the return value of mock_popen
+        Sets the return value of mock_file
         """
 
-        self.mock_popen.communicate.return_value = [output_string, None]
+        self.mock_file.read.return_value = output_string.encode('utf-8')
 
-    def get_perf_analyzer_popen_communicate_call_count(self):
+    def get_perf_analyzer_popen_call_count(self):
         """
-        Get perf_analyzer popen.communicate() call count
+        Get PerfAnalyzer.Popen call count
         """
 
-        return self.mock_popen.communicate.call_count
+        return self.mock_popen_constructor.call_count
 
     def set_perf_analyzer_return_code(self, returncode):
         """
@@ -89,5 +96,4 @@ class MockPerfAnalyzerMethods(MockBase):
         and return values of the
         mocks in this module
         """
-        self.mock_popen.communicate.return_value = ["", None]
-        self.mock_popen.communicate.side_effect = None
+        self.mock_file.read.return_value = b''
