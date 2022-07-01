@@ -37,7 +37,8 @@ class ExperimentFileWriter:
             with open(self._filename, mode="a") as csv_file:
                 field_names = [
                     "overall_num_measurements", "overall_best_throughput",
-                    "undirected_num_measurements", "undirected_throughput",
+                    "undirected_num_measurements", "missing_num_measurements",
+                    "undirected_throughput",
                     "radius", "magnitude", "min_initialized"
                 ]
                 writer = csv.DictWriter(csv_file, fieldnames=field_names)
@@ -58,6 +59,8 @@ class ExperimentFileWriter:
                         overall_best_measurement.get_non_gpu_metric_value("perf_throughput"),
                     "undirected_num_measurements":
                         profile_data.get_run_config_measurement_count(),
+                    "missing_num_measurements":
+                        checkpoint_data.get_missing_measurement_count(),
                     "undirected_throughput":
                         undirected_best_measurement.get_non_gpu_metric_value("perf_throughput"),
                     "radius": radius,

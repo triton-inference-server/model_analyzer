@@ -25,6 +25,7 @@ class ExperimentData:
 
         self._best_run_config = None
         self._best_run_config_measurement = None
+        self._missing_measurement_count = 0
 
     def add_run_config_measurement(self, run_config, run_config_measurement):
         """
@@ -58,6 +59,9 @@ class ExperimentData:
         for ma_key in self._data.keys():
             count += len(self._data[ma_key].keys())
         return count
+
+    def get_missing_measurement_count(self):
+        return self._missing_measurement_count
 
     def get_best_run_config_measurement(self):
         """
@@ -93,6 +97,7 @@ class ExperimentData:
     def _get_run_config_measurement_from_keys(self, ma_key, pa_key):
         if ma_key not in self._data:
             print(f"WARNING: Model config {ma_key} not in results")
+            self._missing_measurement_count += 1
             return None
         if pa_key not in self._data[ma_key]:
             print(
