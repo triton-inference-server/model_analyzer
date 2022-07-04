@@ -30,6 +30,11 @@ parser.add_argument('-v',
                     required=False,
                     action='store_true',
                     help='Enable MA logging')
+parser.add_argument('-s',
+                    '--save',
+                    required=False,
+                    action='store_true',
+                    help='Save the config generation results to csv files.')
 parser.add_argument("--model-name",
                     type=str,
                     required=True,
@@ -60,4 +65,6 @@ ecg = EvaluateConfigGenerator(args.model_name, args.data_path, args.output_path,
                               other_args)
 ecg.execute_generator(args.generator)
 ecg.print_results()
-ecg.store_results()
+
+if args.save:
+    ecg.store_results()
