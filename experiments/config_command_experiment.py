@@ -45,3 +45,10 @@ class ConfigCommandExperiment(ConfigCommandProfile):
                 description=
                 'The minimum number of datapoints needed in a neighborhood before stepping'
             ))
+        self._add_config(
+            ConfigField('step_mode',
+                        field_type=ConfigPrimitive(str),
+                        flags=['--step-mode'],
+                        choices=['Unit', 'Variable'],
+                        default_value="Unit",
+                        description='Unit vs Variable'))

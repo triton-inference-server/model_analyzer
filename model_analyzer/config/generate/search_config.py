@@ -20,7 +20,7 @@ class NeighborhoodConfig:
     Defines the configuration for a Neighborhood object
     """
 
-    def __init__(self, dimensions, radius, min_initialized):
+    def __init__(self, dimensions, radius, min_initialized, step_mode):
         """
         Parameters
         ----------
@@ -36,6 +36,7 @@ class NeighborhoodConfig:
         self._dimensions = dimensions
         self._radius = radius
         self._min_initialized = min_initialized
+        self._step_mode = step_mode
 
     def get_num_dimensions(self):
         """ Returns the number of dimensions in this search """
@@ -75,7 +76,8 @@ class SearchConfig(NeighborhoodConfig):
     Defines all dimensions to search
     """
 
-    def __init__(self, dimensions, radius, step_magnitude, min_initialized):
+    def __init__(self, dimensions, radius, step_magnitude, min_initialized,
+                 step_mode):
         """
         Parameters
         ----------
@@ -91,7 +93,8 @@ class SearchConfig(NeighborhoodConfig):
         """
         super().__init__(dimensions=dimensions,
                          radius=radius,
-                         min_initialized=min_initialized)
+                         min_initialized=min_initialized,
+                         step_mode=step_mode)
         self._step_magnitude = step_magnitude
 
     def get_step_magnitude(self):
@@ -106,4 +109,5 @@ class SearchConfig(NeighborhoodConfig):
 
         return NeighborhoodConfig(dimensions=self._dimensions,
                                   radius=radius_to_use,
-                                  min_initialized=self._min_initialized)
+                                  min_initialized=self._min_initialized,
+                                  step_mode=self._step_mode)

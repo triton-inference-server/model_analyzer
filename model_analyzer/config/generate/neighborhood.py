@@ -16,8 +16,13 @@ import math
 from itertools import product
 from copy import deepcopy
 
+from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
+
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class Neighborhood:
@@ -186,6 +191,25 @@ class Neighborhood:
         vector = throughput_center - coordinate_center
 
         unit_vector = self._convert_to_unit_vector(vector)
+
+        if self._config._step_mode == "Variable":
+            vector = vector * 5
+
+            def mag(vec):
+                magnitude = 0
+                for v in vec:
+                    magnitude += math.pow(v, 2)
+                magnitude = math.sqrt(magnitude)
+                return magnitude
+
+            for i, _ in enumerate(throughputs):
+                logger.debug(f"VECTOR: {coordinates[i]}: {throughputs[i]}")
+            logger.debug(
+                f"VECTOR is {vector} ({mag(vector)}). UV is {unit_vector} ({mag(unit_vector)})"
+            )
+
+            return vector
+
         return unit_vector
 
     def _compile_neighborhood_throughputs(self):

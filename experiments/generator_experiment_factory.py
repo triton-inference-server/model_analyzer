@@ -64,7 +64,8 @@ class GeneratorExperimentFactory:
                 dimensions=dimensions,
                 radius=config_command.radius,
                 step_magnitude=config_command.magnitude,
-                min_initialized=config_command.min_initialized)
+                min_initialized=config_command.min_initialized,
+                step_mode=config_command.step_mode)
 
             generator = UndirectedRunConfigGenerator(
                 search_config, config_command, MagicMock(),
