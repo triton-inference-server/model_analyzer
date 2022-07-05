@@ -56,7 +56,7 @@ class GeneratorExperimentFactory:
                 dimensions.add_dimensions(i, [
                     SearchDimension(f"max_batch_size", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
                     SearchDimension(f"instance_count", SearchDimension.DIMENSION_TYPE_LINEAR),
-                    SearchDimension(f"concurrency", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+                    SearchDimension(f"concurrency", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, max=11)
                 ])
             #yapf: enable
 
