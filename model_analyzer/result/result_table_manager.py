@@ -399,8 +399,9 @@ class ResultTableManager:
         self._add_server_data()
 
         # Fill rows in descending order
-        for result_heap in self._result_manager.get_per_model_sorted_results(
-        ).values():  # FIXME
+        per_model_sorted_results = self._result_manager.get_per_model_sorted_results(
+        )
+        for result_heap in per_model_sorted_results.values():
             while not result_heap.empty():
                 self._tabulate_measurements(result_heap.next_best_result())
 
