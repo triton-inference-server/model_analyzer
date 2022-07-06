@@ -15,7 +15,7 @@
 import unittest
 
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes, evaluate_mock_config, ROOT_DIR
+from .common.test_utils import convert_to_bytes, evaluate_mock_config, ROOT_DIR, load_single_model_result_manager, load_multi_model_result_manager
 
 from google.protobuf import text_format
 from tritonclient.grpc import model_config_pb2
@@ -26,7 +26,7 @@ from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
 from filecmp import cmp
 from shutil import rmtree
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 
 class TestResultTableManager(trc.TestResultCollector):
@@ -191,39 +191,13 @@ class TestResultTableManager(trc.TestResultCollector):
         ])
 
     def _create_single_model_result_table_manager(self):
-        args = [
-            'model-analyzer', 'analyze', '-f', 'config.yml',
-            '--checkpoint-directory', f'{ROOT_DIR}/single-model-ckpt/',
-            '--export-path', f'{ROOT_DIR}/single-model-ckpt/'
-        ]
-        yaml_content = convert_to_bytes("""
-            analysis_models: add_sub
-        """)
-        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
-        state_manager = AnalyzerStateManager(config=config, server=None)
-        state_manager.load_checkpoint(checkpoint_required=True)
-
-        result_manager = ResultManager(config=config,
-                                       state_manager=state_manager)
+        result_manager, config = load_single_model_result_manager()
         result_manager.compile_and_sort_results()
 
         return ResultTableManager(config, result_manager)
 
     def _create_multi_model_result_table_manager(self):
-        args = [
-            'model-analyzer', 'analyze', '-f', 'config.yml',
-            '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/',
-            '--export-path', f'{ROOT_DIR}/multi-model-ckpt/'
-        ]
-        yaml_content = convert_to_bytes("""
-            analysis_models: resnet50_libtorch,vgg19_libtorch
-        """)
-        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
-        state_manager = AnalyzerStateManager(config=config, server=None)
-        state_manager.load_checkpoint(checkpoint_required=True)
-
-        result_manager = ResultManager(config=config,
-                                       state_manager=state_manager)
+        result_manager, config = load_multi_model_result_manager()
         result_manager.compile_and_sort_results()
 
         return ResultTableManager(config, result_manager)

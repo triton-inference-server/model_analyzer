@@ -18,10 +18,12 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.cli.cli import CLI
 
+from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.run_config_result import RunConfigResult
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
 from model_analyzer.config.input.config_defaults import \
     DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_CLIENT_PROTOCOL, \
@@ -49,6 +51,40 @@ def evaluate_mock_config(args, yaml_content, subcommand='analyze'):
     cli.parse()
     mock_config.stop()
     return config
+
+
+def load_single_model_result_manager():
+    args = [
+        'model-analyzer', 'analyze', '-f', 'config.yml',
+        '--checkpoint-directory', f'{ROOT_DIR}/single-model-ckpt/',
+        '--export-path', f'{ROOT_DIR}/single-model-ckpt/'
+    ]
+    yaml_content = convert_to_bytes("""
+        analysis_models: add_sub
+    """)
+    config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
+    state_manager = AnalyzerStateManager(config=config, server=None)
+    state_manager.load_checkpoint(checkpoint_required=True)
+
+    result_manager = ResultManager(config=config, state_manager=state_manager)
+    return result_manager, config
+
+
+def load_multi_model_result_manager():
+    args = [
+        'model-analyzer', 'analyze', '-f', 'config.yml',
+        '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/',
+        '--export-path', f'{ROOT_DIR}/multi-model-ckpt/'
+    ]
+    yaml_content = convert_to_bytes("""
+        analysis_models: resnet50_libtorch,vgg19_libtorch
+    """)
+    config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
+    state_manager = AnalyzerStateManager(config=config, server=None)
+    state_manager.load_checkpoint(checkpoint_required=True)
+
+    result_manager = ResultManager(config=config, state_manager=state_manager)
+    return result_manager, config
 
 
 def convert_to_bytes(string):

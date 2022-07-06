@@ -14,9 +14,13 @@
 
 import unittest
 
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
 from .common import test_result_collector as trc
+from .common.test_utils import load_single_model_result_manager, load_multi_model_result_manager
 
 from unittest.mock import patch, MagicMock
+from model_analyzer.result.result_heap import ResultHeap
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
@@ -97,6 +101,67 @@ class TestResultManager(trc.TestResultCollector):
             "Model2_config_default")
         self.assertEqual(config, fake_run_config2)
         self.assertEqual(1, len(measurements))
+
+    def test_get_single_model_names(self):
+        """ Test get_model_names for a single-model run """
+        result_manager, _ = load_single_model_result_manager()
+        result_manager.compile_and_sort_results()
+        self.assertEqual(result_manager.get_model_names(), ["add_sub"])
+
+    def test_get_multi_model_names(self):
+        """ Test get_model_names for a multi-model run """
+        result_manager, _ = load_multi_model_result_manager()
+        result_manager.compile_and_sort_results()
+        self.assertEqual(result_manager.get_model_names(),
+                         ["resnet50_libtorch,vgg19_libtorch"])
+
+    def test_get_model_sorted_results_bad_name(self):
+        """ Test get_model_sorted_results will assert when called with name that doesn't exist """
+
+        result_manager, _ = load_multi_model_result_manager()
+        result_manager.compile_and_sort_results()
+        with self.assertRaises(TritonModelAnalyzerException):
+            result_manager.get_model_sorted_results("SHOULD_ERROR")
+
+    def test_get_single_model_sorted_results(self):
+        """ Test get_model_sorted_results returns a valid ResultHeap with only results for that model """
+        result_manager, _ = load_single_model_result_manager()
+        result_manager.add_run_config_measurement(MagicMock(), MagicMock())
+        result_manager.compile_and_sort_results()
+        sorted_results = result_manager.get_model_sorted_results("add_sub")
+        self.assertTrue(isinstance(sorted_results, ResultHeap))
+        self.assertEqual(5, len(sorted_results.results()))
+
+    def test_get_multi_model_sorted_results(self):
+        """ Test get_model_sorted_results returns a valid ResultHeap """
+        result_manager, _ = load_multi_model_result_manager()
+        result_manager.compile_and_sort_results()
+        sorted_results = result_manager.get_model_sorted_results(
+            "resnet50_libtorch,vgg19_libtorch")
+        self.assertTrue(isinstance(sorted_results, ResultHeap))
+        self.assertEqual(17, len(sorted_results.results()))
+
+    def test_get_across_model_sorted_results(self):
+        """ Test get_across_model_sorted_results returns a valid ResultHeap with all results across all models """
+        result_manager, _ = load_single_model_result_manager()
+        self._add_a_fake_result(result_manager)
+        result_manager.compile_and_sort_results()
+
+        sorted_results = result_manager.get_across_model_sorted_results()
+        self.assertTrue(isinstance(sorted_results, ResultHeap))
+        self.assertEqual(6, len(sorted_results.results()))
+
+    def _add_a_fake_result(self, result_manager):
+        fake_model = MagicMock()
+        fake_model.model_name.return_value = "FakeModel"
+        old_analysis_models = result_manager._config.analysis_models
+        old_analysis_models.append(fake_model)
+        result_manager._config.analysis_models = old_analysis_models
+
+        fake_run_config = MagicMock()
+        fake_run_config.models_name.return_value = "FakeModel"
+
+        result_manager.add_run_config_measurement(fake_run_config, MagicMock())
 
     def tearDown(self):
         patch.stopall()

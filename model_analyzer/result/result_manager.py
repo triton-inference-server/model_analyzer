@@ -51,16 +51,37 @@ class ResultManager:
         self._per_model_sorted_results = defaultdict(ResultHeap)
         self._across_model_sorted_results = ResultHeap()
 
-    def get_per_model_sorted_results(self):
-        return self._per_model_sorted_results
+    def get_model_names(self):
+        """
+        Returns a list of model names that have sorted results
+        """
+        return list(self._per_model_sorted_results.keys())
+
+    def get_model_sorted_results(self, model_name):
+        """
+        Returns a ResultHeap of sorted results for the requested model
+        """
+        if model_name not in self._per_model_sorted_results:
+            raise TritonModelAnalyzerException(
+                f"model name {model_name} not found in result manager")
+
+        return self._per_model_sorted_results[model_name]
 
     def get_across_model_sorted_results(self):
+        """
+        Returns a ResultHeap of sorted results across all models
+        """
         return self._across_model_sorted_results
 
     def get_results(self):
+        """ Returns all results (return type is Results) """
         return self._state_manager.get_state_variable('ResultManager.results')
 
     def get_server_only_data(self):
+        """
+        Returns : dict
+            keys are gpu ids and values are lists of metric values        
+        """
         return self._state_manager.get_state_variable(
             'ResultManager.server_only_data')
 
