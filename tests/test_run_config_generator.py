@@ -16,16 +16,9 @@ import unittest
 
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
-from model_analyzer.config.input.config_command_profile \
-     import ConfigCommandProfile
-from model_analyzer.cli.cli import CLI
-from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.record.types.perf_throughput import PerfThroughput
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes
-from .common.test_utils import construct_run_config_measurement
-from .mocks.mock_config import MockConfig
+from .common.test_utils import convert_to_bytes, construct_run_config_measurement, evaluate_mock_config
 from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
 from unittest.mock import MagicMock, patch
@@ -629,7 +622,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         self.mock_model_config = MockModelConfig(protobuf)
         self.mock_model_config.start()
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="profile")
 
         rcg = BruteRunConfigGenerator(config, MagicMock(),
                                       config.profile_models, MagicMock())
@@ -649,20 +642,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.mock_model_config.stop()
 
         return run_configs
-
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandProfile()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
 
     def setUp(self):
         # Mock path validation

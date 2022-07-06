@@ -14,11 +14,7 @@
 
 from model_analyzer.result.constraint_manager import ConstraintManager
 
-from .mocks.mock_config import MockConfig
-from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
-from model_analyzer.cli.cli import CLI
-
-from .common.test_utils import convert_to_bytes, construct_run_config_measurement
+from .common.test_utils import convert_to_bytes, construct_run_config_measurement, evaluate_mock_config
 
 import unittest
 from unittest.mock import MagicMock, patch
@@ -214,27 +210,13 @@ class TestConstraintManager(trc.TestResultCollector):
         self.assertFalse(
             ConstraintManager.satisfies_constraints(constraints, rcm))
 
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandAnalyze()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='analyze',
-            help=
-            'Collect and sort profiling results and generate data and summaries.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
-
     def _create_single_model_no_constraints(self):
         args = self._create_args()
         yaml_content = convert_to_bytes("""
             analysis_models: 
               model_A
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
 
         return config
 
@@ -247,7 +229,7 @@ class TestConstraintManager(trc.TestResultCollector):
                   perf_latency_p99:
                     max: 100
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
 
         return config
 
@@ -261,7 +243,7 @@ class TestConstraintManager(trc.TestResultCollector):
                 perf_throughput:
                   min: 100
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
 
         return config
 
@@ -278,7 +260,7 @@ class TestConstraintManager(trc.TestResultCollector):
                 perf_latency_p99:
                   max: 100
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
 
         return config
 
@@ -310,7 +292,7 @@ class TestConstraintManager(trc.TestResultCollector):
                 gpu_used_memory:
                   max: 100
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
 
         return config
 

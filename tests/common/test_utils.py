@@ -12,8 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from tests.mocks.mock_config import MockConfig
+from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
+from model_analyzer.cli.cli import CLI
+
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.result.run_config_result import RunConfigResult
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
@@ -26,6 +31,24 @@ from model_analyzer.config.input.config_defaults import \
 import os
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def evaluate_mock_config(args, yaml_content, subcommand='analyze'):
+    mock_config = MockConfig(args, yaml_content)
+    mock_config.start()
+
+    if subcommand == 'report':
+        config = ConfigCommandReport()
+    elif subcommand == 'analyze':
+        config = ConfigCommandAnalyze()
+    else:
+        config = ConfigCommandProfile()
+
+    cli = CLI()
+    cli.add_subcommand(cmd=subcommand, help="", config=config)
+    cli.parse()
+    mock_config.stop()
+    return config
 
 
 def convert_to_bytes(string):

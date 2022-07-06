@@ -15,20 +15,13 @@
 import unittest
 
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes, default_encode, ROOT_DIR
-from .mocks.mock_config import MockConfig
-
-from model_analyzer.cli.cli import CLI
-from model_analyzer.config.input.config_command_analyze \
-    import ConfigCommandAnalyze
+from .common.test_utils import convert_to_bytes, evaluate_mock_config, ROOT_DIR
 
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
-from filecmp import cmp
-from shutil import rmtree
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import json
 
@@ -92,20 +85,6 @@ class TestPlotManager(trc.TestResultCollector):
 
         self.assertEqual(golden_plot_manager_dict, plot_manager_dict)
 
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandAnalyze()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='analyze',
-            help=
-            'Collect and sort profiling results and generate data and summaries.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
-
     def _create_single_model_result_manager(self):
         args = [
             'model-analyzer', 'analyze', '-f', 'config.yml',
@@ -115,7 +94,7 @@ class TestPlotManager(trc.TestResultCollector):
         yaml_content = convert_to_bytes("""
             analysis_models: add_sub
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
         state_manager = AnalyzerStateManager(config=config, server=None)
         state_manager.load_checkpoint(checkpoint_required=True)
 
@@ -135,7 +114,7 @@ class TestPlotManager(trc.TestResultCollector):
         yaml_content = convert_to_bytes("""
             analysis_models: resnet50_libtorch,vgg19_libtorch
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
         state_manager = AnalyzerStateManager(config=config, server=None)
         state_manager.load_checkpoint(checkpoint_required=True)
 

@@ -13,14 +13,9 @@
 # limitations under the License.
 
 from model_analyzer.config.generate.model_config_generator_factory import ModelConfigGeneratorFactory
-from model_analyzer.config.input.config_command_profile \
-     import ConfigCommandProfile
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.cli.cli import CLI
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes
-from .common.test_utils import construct_run_config_measurement
-from .mocks.mock_config import MockConfig
+from .common.test_utils import convert_to_bytes, construct_run_config_measurement, evaluate_mock_config
 from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
 
@@ -708,7 +703,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         # Use mock model config or else TritonModelAnalyzerException will be thrown as it tries to read from disk
         self.mock_model_config = MockModelConfig(protobuf)
         self.mock_model_config.start()
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="profile")
 
         # Fake out a client that can return a 'model_config' dict with
         # a valid name (only used by remote mode)
@@ -766,20 +761,6 @@ class TestModelConfigGenerator(trc.TestResultCollector):
     def _get_next_fake_throughput(self):
         self._fake_throughput += 1
         return self._fake_throughput
-
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandProfile()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
 
     def setUp(self):
         # Mock path validation

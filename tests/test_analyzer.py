@@ -15,9 +15,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from model_analyzer.analyzer import Analyzer
-from model_analyzer.cli.cli import CLI
-from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_status import ConfigStatus
 from model_analyzer.constants import CONFIG_PARSER_SUCCESS
 from model_analyzer.result.results import Results
@@ -27,12 +24,9 @@ from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 
-from google.protobuf import json_format
-from tritonclient.grpc import model_config_pb2
+from tests.common.test_utils import evaluate_mock_config
 
 from .common import test_result_collector as trc
-
-from .mocks.mock_config import MockConfig
 
 
 class TestAnalyzer(trc.TestResultCollector):
@@ -78,7 +72,7 @@ class TestAnalyzer(trc.TestResultCollector):
             '--profile-models', 'model1', '--config-file', '/tmp/my_config.yml',
             '--checkpoint-directory', '/tmp/my_checkpoints'
         ]
-        config = self._evaluate_profile_config(args, '')
+        config = evaluate_mock_config(args, '', subcommand="profile")
         state_manager = AnalyzerStateManager(config, None)
         analyzer = Analyzer(config,
                             None,
@@ -137,7 +131,7 @@ class TestAnalyzer(trc.TestResultCollector):
             '--config-file', '/tmp/my_config.yml', '--checkpoint-directory',
             '/tmp/my_checkpoints', '--export-path', '/tmp/my_export_path'
         ]
-        config = self._evaluate_analyze_config(args, '')
+        config = evaluate_mock_config(args, '', subcommand="analyze")
         state_manager = AnalyzerStateManager(config, None)
         analyzer = Analyzer(config,
                             None,
@@ -150,34 +144,6 @@ class TestAnalyzer(trc.TestResultCollector):
             'config1,config3,config4 --export-path /tmp/my_export_path '
             '--config-file /tmp/my_config.yml --checkpoint-directory '
             '/tmp/my_checkpoints`')
-
-    def _evaluate_profile_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandProfile()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help='Run model inference profiling based on specified CLI or '
-            'config options.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
-
-    def _evaluate_analyze_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandAnalyze()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='analyze',
-            help='Collect and sort profiling results and generate data and '
-            'summaries.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
 
 
 if __name__ == '__main__':

@@ -13,13 +13,9 @@
 # limitations under the License.
 
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
-from model_analyzer.config.input.config_command_profile \
-    import ConfigCommandProfile
-from model_analyzer.cli.cli import CLI
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
-from .mocks.mock_config import MockConfig
 from .mocks.mock_glob import MockGlobMethods
 from .mocks.mock_os import MockOSMethods
 from .mocks.mock_json import MockJSONMethods
@@ -30,24 +26,10 @@ from .common import test_result_collector as trc
 import unittest
 from unittest.mock import patch
 
-from .common.test_utils import convert_to_bytes
+from .common.test_utils import convert_to_bytes, evaluate_mock_config
 
 
 class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
-
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandProfile()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
 
     def setUp(self):
         args = [
@@ -73,7 +55,7 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
         self.mock_os.start()
         self.mock_glob.start()
 
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="profile")
 
         # state manager
         self.state_manager = AnalyzerStateManager(config=config, server=None)

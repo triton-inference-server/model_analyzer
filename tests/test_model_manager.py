@@ -15,21 +15,13 @@
 import unittest
 from .common import test_result_collector as trc
 
-from .common.test_utils import construct_run_config_measurement
-from .mocks.mock_config import MockConfig
+from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
 from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_run_configs import MockRunConfigs
 
-from model_analyzer.cli.cli import CLI
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.record.metrics_manager import MetricsManager
-from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.model_manager import ModelManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
-from model_analyzer.triton.model.model_config import ModelConfig
-from google.protobuf import json_format
-from tritonclient.grpc import model_config_pb2
 
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -908,7 +900,9 @@ class TestModelManager(trc.TestResultCollector):
         # Use mock model config or else TritonModelAnalyzerException will be thrown as it tries to read from disk
         self.mock_model_config = MockModelConfig(self._model_config_protobuf)
         self.mock_model_config.start()
-        config = self._evaluate_config(self._args, yaml_content)
+        config = evaluate_mock_config(self._args,
+                                      yaml_content,
+                                      subcommand="profile")
 
         state_manager = AnalyzerStateManager(config, MagicMock())
         metrics_manager = MetricsManagerSubclass(config, MagicMock(),
@@ -933,22 +927,6 @@ class TestModelManager(trc.TestResultCollector):
 
         self.assertEqual(run_configs.get_configs_set(),
                          expected_configs.get_configs_set())
-
-    def _evaluate_config(self, args, yaml_content):
-        """ Parse the given yaml_content into a config and return it """
-
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandProfile()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
 
 
 if __name__ == '__main__':

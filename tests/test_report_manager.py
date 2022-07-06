@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.cli.cli import CLI
-from model_analyzer.config.input.config_command_analyze \
-    import ConfigCommandAnalyze
-from model_analyzer.config.input.config_command_report \
-    import ConfigCommandReport
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
@@ -28,13 +23,12 @@ from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
 
-from .mocks.mock_config import MockConfig
 from .mocks.mock_io import MockIOMethods
 from .mocks.mock_matplotlib import MockMatplotlibMethods
 from .mocks.mock_os import MockOSMethods
 from .mocks.mock_json import MockJSONMethods
 
-from .common.test_utils import construct_run_config_measurement
+from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
 from .common import test_result_collector as trc
 
 import unittest
@@ -44,26 +38,6 @@ from .common.test_utils import convert_to_bytes
 
 
 class TestReportManagerMethods(trc.TestResultCollector):
-
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config_analyze = ConfigCommandAnalyze()
-        config_report = ConfigCommandReport()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd="analyze",
-            help=
-            "Collect and sort profiling results and generate data and summaries.",
-            config=config_analyze)
-        cli.add_subcommand(cmd='report',
-                           help='Generate detailed reports for a single config',
-                           config=config_report)
-        cli.parse()
-        mock_config.stop()
-
-        ret = config_analyze if config_analyze.export_path else config_report
-        return ret
 
     def _init_managers(self,
                        models="test_model",
@@ -86,7 +60,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
               gpu_used_memory:
                 max: 10000
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand=subcommand)
         state_manager = AnalyzerStateManager(config=config, server=None)
         gpu_info = {
             'gpu_uuid': {

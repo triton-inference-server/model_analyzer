@@ -15,15 +15,11 @@
 import unittest
 
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes, ROOT_DIR
-from .mocks.mock_config import MockConfig
+from .common.test_utils import convert_to_bytes, evaluate_mock_config, ROOT_DIR
 
 from google.protobuf import text_format
 from tritonclient.grpc import model_config_pb2
 
-from model_analyzer.cli.cli import CLI
-from model_analyzer.config.input.config_command_analyze \
-    import ConfigCommandAnalyze
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.result_table_manager import ResultTableManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
@@ -95,7 +91,7 @@ class TestResultTableManager(trc.TestResultCollector):
             analysis_models: analysis_models
             inference_output_fields: model_name,batch_size,backend_parameter/parameter_1,backend_parameter/parameter_2
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
         state_manager = AnalyzerStateManager(config=config, server=None)
         result_manager = ResultManager(config=config,
                                        state_manager=state_manager)
@@ -152,7 +148,7 @@ class TestResultTableManager(trc.TestResultCollector):
             analysis_models: analysis_models
             inference_output_fields: model_name,batch_size,backend_parameter/model_1_key_1,backend_parameter/model_1_key_2,backend_parameter/model_2_key_1
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
         state_manager = AnalyzerStateManager(config=config, server=None)
         result_manager = ResultManager(config=config,
                                        state_manager=state_manager)
@@ -194,20 +190,6 @@ class TestResultTableManager(trc.TestResultCollector):
             None
         ])
 
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandAnalyze()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='analyze',
-            help=
-            'Collect and sort profiling results and generate data and summaries.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
-
     def _create_single_model_result_table_manager(self):
         args = [
             'model-analyzer', 'analyze', '-f', 'config.yml',
@@ -217,7 +199,7 @@ class TestResultTableManager(trc.TestResultCollector):
         yaml_content = convert_to_bytes("""
             analysis_models: add_sub
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
         state_manager = AnalyzerStateManager(config=config, server=None)
         state_manager.load_checkpoint(checkpoint_required=True)
 
@@ -236,7 +218,7 @@ class TestResultTableManager(trc.TestResultCollector):
         yaml_content = convert_to_bytes("""
             analysis_models: resnet50_libtorch,vgg19_libtorch
         """)
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
         state_manager = AnalyzerStateManager(config=config, server=None)
         state_manager.load_checkpoint(checkpoint_required=True)
 
