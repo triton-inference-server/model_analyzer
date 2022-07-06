@@ -19,9 +19,9 @@ from model_analyzer.config.generate.model_run_config_generator import ModelRunCo
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 
 
-class RunConfigGenerator(ConfigGeneratorInterface):
+class BruteRunConfigGenerator(ConfigGeneratorInterface):
     """
-    Generates all RunConfigs to execute given a list of models
+    Generates all RunConfigs to execute via brute force given a list of models
     """
 
     def __init__(self, config, gpus, models, client):
@@ -42,7 +42,7 @@ class RunConfigGenerator(ConfigGeneratorInterface):
         self._models = models
         self._client = client
 
-        self._triton_env = RunConfigGenerator.determine_triton_server_env(
+        self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(
             models)
 
         self._num_models = len(models)

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from .run_config_generator import RunConfigGenerator
-from .undirected_run_config_generator import UndirectedRunConfigGenerator
+from .brute_run_config_generator import BruteRunConfigGenerator
+from .quick_run_config_generator import QuickRunConfigGenerator
 from .search_dimensions import SearchDimensions
 from .search_dimension import SearchDimension
 from .search_config import SearchConfig
@@ -44,13 +44,13 @@ class RunConfigGeneratorFactory:
         """
 
         if (command_config.run_config_search_mode == "quick"):
-            return RunConfigGeneratorFactory._create_undirected_run_config_generator(
+            return RunConfigGeneratorFactory.create_quick_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
                 models=models,
                 client=client)
         elif (command_config.run_config_search_mode == "brute"):
-            return RunConfigGeneratorFactory._create_run_config_generator(
+            return RunConfigGeneratorFactory._create_brute_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
                 models=models,
@@ -61,22 +61,22 @@ class RunConfigGeneratorFactory:
             )
 
     @staticmethod
-    def _create_run_config_generator(command_config, gpus, models, client):
-        return RunConfigGenerator(config=command_config,
-                                  gpus=gpus,
-                                  models=models,
-                                  client=client)
+    def _create_brute_run_config_generator(command_config, gpus, models,
+                                           client):
+        return BruteRunConfigGenerator(config=command_config,
+                                       gpus=gpus,
+                                       models=models,
+                                       client=client)
 
     @staticmethod
-    def _create_undirected_run_config_generator(command_config, gpus, models,
-                                                client):
+    def create_quick_run_config_generator(command_config, gpus, models, client):
         search_config = RunConfigGeneratorFactory._create_search_config(
             command_config)
-        return UndirectedRunConfigGenerator(search_config=search_config,
-                                            config=command_config,
-                                            gpus=gpus,
-                                            models=models,
-                                            client=client)
+        return QuickRunConfigGenerator(search_config=search_config,
+                                       config=command_config,
+                                       gpus=gpus,
+                                       models=models,
+                                       client=client)
 
     @staticmethod
     def _create_search_config(command_config):

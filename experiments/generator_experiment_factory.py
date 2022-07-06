@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
-from model_analyzer.config.generate.undirected_run_config_generator import UndirectedRunConfigGenerator
+from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
+from model_analyzer.config.generate.quick_run_config_generator import QuickRunConfigGenerator
 from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
 from model_analyzer.config.generate.search_dimensions import SearchDimensions
@@ -38,17 +38,17 @@ class GeneratorExperimentFactory:
             The config for model analyzer algorithm experiment
         """
 
-        if generator_name == "RunConfigGenerator":
-            generator = RunConfigGenerator(config_command, MagicMock(),
-                                           config_command.profile_models,
-                                           MagicMock())
+        if generator_name == "BruteRunConfigGenerator":
+            generator = BruteRunConfigGenerator(config_command, MagicMock(),
+                                                config_command.profile_models,
+                                                MagicMock())
             p = patch(
-                'model_analyzer.config.generate.run_config_generator.RunConfigGenerator.determine_triton_server_env'
+                'model_analyzer.config.generate.brute_run_config_generator.BruteRunConfigGenerator.determine_triton_server_env'
             )
             p.start()
 
             return generator
-        elif generator_name == "UndirectedRunConfigGenerator":
+        elif generator_name == "QuickRunConfigGenerator":
             dimensions = SearchDimensions()
 
             #yapf: disable
@@ -66,9 +66,10 @@ class GeneratorExperimentFactory:
                 step_magnitude=config_command.magnitude,
                 min_initialized=config_command.min_initialized)
 
-            generator = UndirectedRunConfigGenerator(
-                search_config, config_command, MagicMock(),
-                config_command.profile_models, MagicMock())
+            generator = QuickRunConfigGenerator(search_config, config_command,
+                                                MagicMock(),
+                                                config_command.profile_models,
+                                                MagicMock())
             return generator
         else:
             raise Exception(f"Unknown generator {generator_name}")

@@ -18,7 +18,7 @@ from model_analyzer.config.generate.base_model_config_generator import BaseModel
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.neighborhood import Neighborhood
-from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
+from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
@@ -30,7 +30,7 @@ import logging
 logger = logging.getLogger(LOGGER_NAME)
 
 
-class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
+class QuickRunConfigGenerator(ConfigGeneratorInterface):
     """
     Hill climbing algorithm to create RunConfigs
     """
@@ -55,7 +55,7 @@ class UndirectedRunConfigGenerator(ConfigGeneratorInterface):
         self._client = client
         self._variant_name_manager = ModelVariantNameManager()
 
-        self._triton_env = RunConfigGenerator.determine_triton_server_env(
+        self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(
             models)
 
         # This tracks measured results for all coordinates

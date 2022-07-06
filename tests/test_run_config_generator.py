@@ -15,7 +15,7 @@
 import unittest
 
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
-from model_analyzer.config.generate.run_config_generator import RunConfigGenerator
+from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
 from model_analyzer.config.input.config_command_profile \
      import ConfigCommandProfile
 from model_analyzer.cli.cli import CLI
@@ -631,8 +631,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.mock_model_config.start()
         config = self._evaluate_config(args, yaml_content)
 
-        rcg = RunConfigGenerator(config, MagicMock(), config.profile_models,
-                                 MagicMock())
+        rcg = BruteRunConfigGenerator(config, MagicMock(),
+                                      config.profile_models, MagicMock())
 
         run_configs = []
         for run_config in rcg.get_configs():

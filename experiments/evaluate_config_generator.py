@@ -46,11 +46,7 @@ class EvaluateConfigGenerator:
         result_evaluator.print_results()
 
     def _run_generator(self, cg):
-        config_generator = cg.next_config()
-
-        while not cg.is_done():
-            run_config = next(config_generator)
-
+        for run_config in cg.get_configs():
             run_config_measurement = self._checkpoint_data.get_run_config_measurement(
                 run_config)
             self._profile_data.add_run_config_measurement(
