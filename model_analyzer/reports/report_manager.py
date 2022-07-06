@@ -502,8 +502,9 @@ class ReportManager:
         return throughput_phrase
 
     def _find_default_configs_throughput(self, report_key):
-        for run_config_result in self._result_manager._per_model_sorted_results[
-                report_key]._sorted_results:
+        sorted_results = self._result_manager.get_per_model_sorted_results()
+
+        for run_config_result in sorted_results[report_key].results():
             run_config_measurements = run_config_result.passing_measurements()
             if run_config_measurements and 'default' in run_config_measurements[
                     0].model_variants_name():

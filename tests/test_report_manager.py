@@ -138,9 +138,6 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.json_mock = MockJSONMethods()
         self.json_mock.start()
 
-    @patch(
-        'model_analyzer.reports.report_manager.ReportManager._find_default_configs_throughput',
-        return_value=100)
     def test_add_results(self, *args):
         for mode in ['online', 'offline']:
             self._init_managers("test_model1,test_model2", mode=mode)
@@ -363,7 +360,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
         for i in range(10):
             p99 = 20 + i
-            throughput = 100 - 10 * i if default_within_top else 100 + 10 * i
+            throughput = 100 - 10 * i if default_within_top else 200 + 10 * i
             avg_non_gpu_metrics = {
                 "perf_throughput": throughput,
                 "perf_latency_p99": p99,
@@ -379,6 +376,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         self.assertEqual(expected_plot_count, add_plot_fn.call_count)
         self.assertEqual(expected_table_count, add_table_fn.call_count)
+
+        default_throughput = self.report_manager._find_default_configs_throughput(
+            "test_model1")
+        expected_default_throughput = 100 if default_within_top else 200
+        self.assertEqual(default_throughput, expected_default_throughput)
 
     def tearDown(self):
         self.matplotlib_mock.stop()
