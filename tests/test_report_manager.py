@@ -14,6 +14,7 @@
 
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.constants import TOP_MODELS_REPORT_KEY
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 
 from model_analyzer.reports.report_manager import ReportManager
@@ -381,6 +382,10 @@ class TestReportManagerMethods(trc.TestResultCollector):
             "test_model1")
         expected_default_throughput = 100 if default_within_top else 200
         self.assertEqual(default_throughput, expected_default_throughput)
+
+        top_models_throughput = self.report_manager._find_default_configs_throughput(
+            TOP_MODELS_REPORT_KEY)
+        self.assertEqual(top_models_throughput, 0)
 
     def tearDown(self):
         self.matplotlib_mock.stop()

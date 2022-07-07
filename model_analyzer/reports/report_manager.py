@@ -502,6 +502,12 @@ class ReportManager:
         return throughput_phrase
 
     def _find_default_configs_throughput(self, model_name):
+        # There is no single default config when comparing across
+        # multiple model runs
+        #
+        if model_name == TOP_MODELS_REPORT_KEY:
+            return 0
+
         sorted_results = self._result_manager.get_model_sorted_results(
             model_name)
 
