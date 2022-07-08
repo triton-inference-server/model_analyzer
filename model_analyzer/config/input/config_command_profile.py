@@ -232,7 +232,7 @@ class ConfigCommandProfile(ConfigCommand):
                         flags=['-m', '--model-repository'],
                         field_type=ConfigPrimitive(
                             str, required=True, validator=file_path_validator),
-                        description='Model repository location'))
+                        description='Triton Model repository location'))
         self._add_config(
             ConfigField(
                 'output_model_repository_path',

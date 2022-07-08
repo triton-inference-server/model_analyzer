@@ -86,7 +86,7 @@ various metrics at fixed time intervals during these perf analyzer runs. Each
 perf analyzer run generates a single measurement, which corresponds to a row in
 the output tables. After completing the runs for all configurations for each
 model, the Model Analyzer will save the measurements it has collected into the
-**checkpoint directory** as a *pickle* file. See the
+**checkpoint directory**. See the
 [Checkpointing](./checkpoints.md) section for more details on checkpoints
 
 ### Examples
