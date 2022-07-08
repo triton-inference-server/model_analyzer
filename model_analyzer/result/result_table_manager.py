@@ -54,6 +54,112 @@ class ResultTableManager:
         self._non_gpu_metrics_to_headers = {}
         self._result_tables = {}
 
+    def create_tables(self):
+        """
+        Creates the inference, gpu, and server tables
+        """
+        self._determine_table_headers()
+
+        self._create_inference_table()
+        self._create_gpu_table()
+        self._create_server_table()
+
+    def tabulate_results(self):
+        """
+        The function called at the end of all runs
+        FOR ALL MODELs that compiles all results and
+        dumps the data into tables for exporting.
+        """
+
+        self._add_server_data()
+
+        # Fill rows in descending order
+        for model in self._result_manager.get_model_names():
+            result_heap = self._result_manager.get_model_sorted_results(model)
+
+            while not result_heap.empty():
+                self._tabulate_measurements(result_heap.next_best_result())
+
+    def write_results(self):
+        """
+        Writes table to console
+        """
+
+        self._write_results(writer=FileWriter(), column_separator=' ')
+
+    def export_results(self):
+        """
+        Makes calls to _write_results out to streams or files. If
+        exporting results is requested, uses a FileWriter for specified output
+        files.
+        """
+
+        # Results exported to export_path/results
+        results_export_directory = os.path.join(self._config.export_path,
+                                                'results')
+        os.makedirs(results_export_directory, exist_ok=True)
+
+        # Configure server only results path and export results
+        server_metrics_path = os.path.join(results_export_directory,
+                                           self._config.filename_server_only)
+        logger.info(f"Exporting server only metrics to {server_metrics_path}")
+        self._export_server_only_csv(
+            writer=FileWriter(filename=server_metrics_path),
+            column_separator=',')
+
+        # Configure model metrics results path and export results
+        metrics_inference_path = os.path.join(
+            results_export_directory, self._config.filename_model_inference)
+        metrics_gpu_path = os.path.join(results_export_directory,
+                                        self._config.filename_model_gpu)
+        logger.info(f"Exporting inference metrics to {metrics_inference_path}")
+        logger.info(f"Exporting GPU metrics to {metrics_gpu_path}")
+        self._export_model_csv(
+            inference_writer=FileWriter(filename=metrics_inference_path),
+            gpu_metrics_writer=FileWriter(filename=metrics_gpu_path),
+            column_separator=',')
+
+    def _determine_table_headers(self):
+
+        # Finds which metric(s) are actually collected during profile phase.
+        # Since a profile phase can be run twice with different metric(s)
+        # being collected.
+        gpu_metrics_from_measurements = {}
+        non_gpu_metrics_from_measurements = {}
+
+        # Server data
+        data = self._result_manager.get_server_only_data()
+        for gpu_metrics in data.values():
+            for gpu_metric in gpu_metrics:
+                if gpu_metric.tag not in gpu_metrics_from_measurements:
+                    gpu_metrics_from_measurements[gpu_metric.tag] = gpu_metric
+
+        # Measurements
+        results = self._result_manager.get_results()
+
+        for run_config_measurement in results.get_list_of_run_config_measurements(
+        ):
+            for gpu_metrics in run_config_measurement.gpu_data().values():
+                for gpu_metric in gpu_metrics:
+                    if gpu_metric.tag not in gpu_metrics_from_measurements:
+                        gpu_metrics_from_measurements[
+                            gpu_metric.tag] = gpu_metric
+
+            for non_gpu_metric_list in run_config_measurement.non_gpu_data():
+                for non_gpu_metric in non_gpu_metric_list:
+                    if non_gpu_metric.tag not in non_gpu_metrics_from_measurements:
+                        non_gpu_metrics_from_measurements[
+                            non_gpu_metric.tag] = non_gpu_metric
+
+        gpu_specific_metrics = gpu_metrics_from_measurements.values()
+        non_gpu_specific_metrics = non_gpu_metrics_from_measurements.values()
+
+        # Add metric tags to header mappings
+        for metric in gpu_specific_metrics:
+            self._gpu_metrics_to_headers[metric.tag] = metric.header()
+        for metric in non_gpu_specific_metrics:
+            self._non_gpu_metrics_to_headers[metric.tag] = metric.header()
+
     def _create_server_table(self):
         # Server only
         server_output_headers = []
@@ -124,121 +230,12 @@ class ResultTableManager:
                                title='Models (GPU Metrics)',
                                headers=gpu_output_headers)
 
-    def create_tables(self,
-                      gpu_specific_metrics=None,
-                      non_gpu_specific_metrics=None):
-        """
-        Creates the tables to print hold, display, and write
-        results
-
-        Parameters
-        ----------
-        gpu_specific_metrics : list of RecordTypes
-            The metrics that have a GPU id associated with them
-        non_gpu_specific_metrics : list of RecordTypes
-            The metrics that do not have a GPU id associated with them
-        """
-
-        # Finds which metric(s) are actually collected during profile phase.
-        # Since a profile phase can be run twice with different metric(s)
-        # being collected.
-        gpu_specific_metrics_from_measurements = {}
-        non_gpu_specific_metrics_from_measurements = {}
-        # Find metrics if one or more of them is not provided
-        if gpu_specific_metrics == None or non_gpu_specific_metrics == None:
-            # Server data
-            data = self._result_manager.get_server_only_data()
-            for gpu_uuid, gpu_metrics in data.items():
-                for gpu_metric in gpu_metrics:
-                    if gpu_metric.tag not in gpu_specific_metrics_from_measurements:
-                        gpu_specific_metrics_from_measurements[
-                            gpu_metric.tag] = gpu_metric
-            # Measurements
-            results = self._result_manager.get_results()
-
-            for run_config_measurement in results.get_list_of_run_config_measurements(
-            ):
-                for gpu_uuid, gpu_metrics in run_config_measurement.gpu_data(
-                ).items():
-                    for gpu_metric in gpu_metrics:
-                        if gpu_metric.tag not in gpu_specific_metrics_from_measurements:
-                            gpu_specific_metrics_from_measurements[
-                                gpu_metric.tag] = gpu_metric
-
-                for non_gpu_metric_list in run_config_measurement.non_gpu_data(
-                ):
-                    for non_gpu_metric in non_gpu_metric_list:
-                        if non_gpu_metric.tag not in non_gpu_specific_metrics_from_measurements:
-                            non_gpu_specific_metrics_from_measurements[
-                                non_gpu_metric.tag] = non_gpu_metric
-
-        # Update not provided metric(s)
-        if gpu_specific_metrics == None:
-            gpu_specific_metrics = []
-            for metric_tag, metric in gpu_specific_metrics_from_measurements.items(
-            ):
-                gpu_specific_metrics.append(metric)
-        if non_gpu_specific_metrics == None:
-            non_gpu_specific_metrics = []
-            for metric_tag, metric in non_gpu_specific_metrics_from_measurements.items(
-            ):
-                non_gpu_specific_metrics.append(metric)
-
-        # Add metric tag to header mapping
-        for metric in gpu_specific_metrics:
-            self._gpu_metrics_to_headers[metric.tag] = metric.header()
-        for metric in non_gpu_specific_metrics:
-            self._non_gpu_metrics_to_headers[metric.tag] = metric.header()
-
-        self._create_inference_table()
-        self._create_gpu_table()
-        self._create_server_table()
-
     def _find_index_for_field(self, fields, field_name):
         try:
             index = fields.index(field_name)
             return index
         except ValueError:
             return None
-
-    def write_results(self):
-        """
-        Writes table to console
-        """
-
-        self._write_results(writer=FileWriter(), column_separator=' ')
-
-    def export_results(self):
-        """
-        Makes calls to _write_results out to streams or files. If
-        exporting results is requested, uses a FileWriter for specified output
-        files.
-        """
-
-        # Results exported to export_path/results
-        results_export_directory = os.path.join(self._config.export_path,
-                                                'results')
-        os.makedirs(results_export_directory, exist_ok=True)
-
-        # Configure server only results path and export results
-        server_metrics_path = os.path.join(results_export_directory,
-                                           self._config.filename_server_only)
-        logger.info(f"Exporting server only metrics to {server_metrics_path}")
-        self._export_server_only_csv(
-            writer=FileWriter(filename=server_metrics_path),
-            column_separator=',')
-
-        # Configure model metrics results path and export results
-        metrics_inference_path = os.path.join(
-            results_export_directory, self._config.filename_model_inference)
-        metrics_gpu_path = os.path.join(results_export_directory,
-                                        self._config.filename_model_gpu)
-        logger.info(f"Exporting inference metrics to {metrics_inference_path}")
-        logger.info(f"Exporting GPU metrics to {metrics_gpu_path}")
-        self._export_model_csv(
-            inference_writer=FileWriter(filename=metrics_inference_path),
-            gpu_metrics_writer=FileWriter(filename=metrics_gpu_path),
-            column_separator=',')
 
     def _export_server_only_csv(self, writer, column_separator):
         """
@@ -388,22 +385,6 @@ class ResultTableManager:
         # Create headers
         self._result_tables[table_key] = ResultTable(headers=headers,
                                                      title=title)
-
-    def tabulate_results(self):
-        """
-        The function called at the end of all runs
-        FOR ALL MODELs that compiles all results and
-        dumps the data into tables for exporting.
-        """
-
-        self._add_server_data()
-
-        # Fill rows in descending order
-        for model in self._result_manager.get_model_names():
-            result_heap = self._result_manager.get_model_sorted_results(model)
-
-            while not result_heap.empty():
-                self._tabulate_measurements(result_heap.next_best_result())
 
     def _tabulate_measurements(self, run_config_result):
         """
