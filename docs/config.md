@@ -62,7 +62,7 @@ converting the `snake_case` options to `--kebab-case`. For example,
 
 
 ```yaml
-# Path to the Triton Model Repository
+# Path to the Triton Model Repository (https://github.com/triton-inference-server/server/blob/main/docs/model_repository.md)
 model_repository: <string>
 
 # List of the model names to be profiled
