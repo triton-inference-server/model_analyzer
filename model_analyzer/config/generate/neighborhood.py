@@ -78,9 +78,9 @@ class Neighborhood:
 
         returns: Coordinate
         """
-        unit_vector = self._get_step_vector()
+        step_vector = self._get_step_vector()
         tmp_new_coordinate = self._home_coordinate + round(
-            unit_vector * magnitude)
+            step_vector * magnitude)
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
 
         return new_coordinate
