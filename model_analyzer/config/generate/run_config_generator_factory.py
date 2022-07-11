@@ -86,8 +86,7 @@ class RunConfigGeneratorFactory:
         for i, _ in enumerate(command_config.profile_models):
             dimensions.add_dimensions(i, [
                 SearchDimension(f"max_batch_size", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-                SearchDimension(f"instance_count", SearchDimension.DIMENSION_TYPE_LINEAR),
-                SearchDimension(f"concurrency", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+                SearchDimension(f"instance_count", SearchDimension.DIMENSION_TYPE_LINEAR)
             ])
         #yapf: enable
 
