@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from ctypes import Union
 from typing import Tuple
 from tests.mocks.mock_config import MockConfig
 from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
@@ -36,7 +37,16 @@ import os
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def evaluate_mock_config(args, yaml_content, subcommand='analyze'):
+def evaluate_mock_config(
+    args: list,
+    yaml_str: str,
+    subcommand: str = 'analyze'
+) -> Union[ConfigCommandAnalyze, ConfigCommandProfile, ConfigCommandReport]:
+    """
+    Return a ConfigCommandReport/Analyze/Profile created from the fake CLI
+    'args' list and fake config.yaml contents 'yaml_str'
+    """
+    yaml_content = convert_to_bytes(yaml_str)
     mock_config = MockConfig(args, yaml_content)
     mock_config.start()
 
@@ -81,9 +91,7 @@ def _load_result_manager_helper(dir_path: str, yaml_str: str):
         'model-analyzer', 'analyze', '-f', 'config.yml',
         '--checkpoint-directory', dir_path, '--export-path', dir_path
     ]
-    yaml_content = convert_to_bytes(yaml_str)
-
-    config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
+    config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
     state_manager = AnalyzerStateManager(config=config, server=None)
     state_manager.load_checkpoint(checkpoint_required=True)
 

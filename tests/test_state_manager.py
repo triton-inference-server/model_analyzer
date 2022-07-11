@@ -26,7 +26,7 @@ from .common import test_result_collector as trc
 import unittest
 from unittest.mock import patch
 
-from .common.test_utils import convert_to_bytes, evaluate_mock_config
+from .common.test_utils import evaluate_mock_config
 
 
 class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
@@ -36,7 +36,7 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', '--profile-models', 'test_model'
         ]
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             export_path: /test_export_path/
         """)
 
@@ -55,7 +55,7 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
         self.mock_os.start()
         self.mock_glob.start()
 
-        config = evaluate_mock_config(args, yaml_content, subcommand="profile")
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
         # state manager
         self.state_manager = AnalyzerStateManager(config=config, server=None)

@@ -35,8 +35,6 @@ from .common import test_result_collector as trc
 import unittest
 from unittest.mock import MagicMock, patch
 
-from .common.test_utils import convert_to_bytes
-
 
 class TestReportManagerMethods(trc.TestResultCollector):
 
@@ -51,7 +49,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         else:
             args.extend(["--report-model-configs", models])
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             num_configs_per_model: """ + str(num_configs_per_model) + """
             client_protocol: grpc
             export_path: /test/export/path
@@ -61,7 +59,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
               gpu_used_memory:
                 max: 10000
         """)
-        config = evaluate_mock_config(args, yaml_content, subcommand=subcommand)
+        config = evaluate_mock_config(args, yaml_str, subcommand=subcommand)
         state_manager = AnalyzerStateManager(config=config, server=None)
         gpu_info = {
             'gpu_uuid': {

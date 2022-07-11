@@ -15,7 +15,7 @@
 import unittest
 
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes, evaluate_mock_config, ROOT_DIR, load_single_model_result_manager, load_multi_model_result_manager
+from .common.test_utils import evaluate_mock_config, ROOT_DIR, load_single_model_result_manager, load_multi_model_result_manager
 
 from google.protobuf import text_format
 from tritonclient.grpc import model_config_pb2
@@ -87,11 +87,11 @@ class TestResultTableManager(trc.TestResultCollector):
 
     def test_create_inference_table_with_backend_parameters(self):
         args = ['model-analyzer', 'analyze', '-f', 'config.yml']
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             analysis_models: analysis_models
             inference_output_fields: model_name,batch_size,backend_parameter/parameter_1,backend_parameter/parameter_2
         """)
-        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
         state_manager = AnalyzerStateManager(config=config, server=None)
         result_manager = ResultManager(config=config,
                                        state_manager=state_manager)
@@ -144,11 +144,11 @@ class TestResultTableManager(trc.TestResultCollector):
         """
 
         args = ['model-analyzer', 'analyze', '-f', 'config.yml']
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             analysis_models: analysis_models
             inference_output_fields: model_name,batch_size,backend_parameter/model_1_key_1,backend_parameter/model_1_key_2,backend_parameter/model_2_key_1
         """)
-        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
         state_manager = AnalyzerStateManager(config=config, server=None)
         result_manager = ResultManager(config=config,
                                        state_manager=state_manager)

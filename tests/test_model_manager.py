@@ -26,8 +26,6 @@ from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from .common.test_utils import convert_to_bytes
-
 
 class MetricsManagerSubclass(MetricsManager):
     """ 
@@ -132,7 +130,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 5
@@ -140,7 +138,7 @@ class TestModelManager(trc.TestResultCollector):
             run_config_search_disable: False
             """)
 
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_another_full_sweep(self):
         """
@@ -163,7 +161,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8, 16, 32]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
@@ -172,7 +170,7 @@ class TestModelManager(trc.TestResultCollector):
             run_config_search_disable: False
             """)
 
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_run_search_disable(self):
         """
@@ -191,7 +189,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
@@ -200,7 +198,7 @@ class TestModelManager(trc.TestResultCollector):
             run_config_search_disable: True
             """)
 
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_manual_concurrency(self):
         """
@@ -222,7 +220,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [5, 7]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 32
             run_config_search_max_instance_count: 7
@@ -232,7 +230,7 @@ class TestModelManager(trc.TestResultCollector):
             concurrency: [5, 7]
             """)
 
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_remote_mode(self):
         """
@@ -249,7 +247,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128, 256, 512]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 512
             run_config_search_max_instance_count: 7
@@ -259,7 +257,7 @@ class TestModelManager(trc.TestResultCollector):
             triton_launch_mode: remote            
             """)
 
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_manual_parameters(self):
         """
@@ -282,7 +280,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [2, 10, 18, 26, 34, 42, 50, 58]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 512
             run_config_search_max_instance_count: 7
@@ -296,7 +294,7 @@ class TestModelManager(trc.TestResultCollector):
             batch_sizes: 1,2,3     
             """)
 
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_triton_parameters(self):
         """
@@ -314,7 +312,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_concurrency: 8
             run_config_search_max_instance_count: 16
             run_config_search_min_model_batch_size: 8
@@ -326,7 +324,7 @@ class TestModelManager(trc.TestResultCollector):
                         max_batch_size: [1,2,4,8,16]
             """)
 
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_default_config_always_run_no_dynamic_batching_off(self):
         """
@@ -352,7 +350,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_concurrency: 8
             run_config_search_max_instance_count: 16
             run_config_search_min_model_batch_size: 8
@@ -366,7 +364,7 @@ class TestModelManager(trc.TestResultCollector):
                             max_queue_delay_microseconds: [200, 300]                        
             """)
 
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_default_config_always_run_wrong_instances(self):
         """
@@ -417,7 +415,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 16
             run_config_search_min_model_batch_size: 8
@@ -432,7 +430,7 @@ class TestModelManager(trc.TestResultCollector):
                             count: 1
             """)
 
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_default_config_always_run_cpu_vs_gpu(self):
         """
@@ -482,7 +480,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 16
             run_config_search_min_model_batch_size: 8
@@ -497,7 +495,7 @@ class TestModelManager(trc.TestResultCollector):
                             count: 1
             """)
 
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_default_config_always_run_automatic_search(self):
         """
@@ -548,7 +546,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 1
             run_config_search_min_model_batch_size: 8
@@ -556,7 +554,7 @@ class TestModelManager(trc.TestResultCollector):
             run_config_search_disable: False
             profile_models: test_model
             """)
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_throughput_early_exit_minimum_runs(self):
         """
@@ -590,7 +588,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 2
@@ -603,7 +601,7 @@ class TestModelManager(trc.TestResultCollector):
         with patch.object(MetricsManagerSubclass,
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.return_value = 1
-            self._test_model_manager(yaml_content, expected_ranges)
+            self._test_model_manager(yaml_str, expected_ranges)
 
     def test_no_early_exit_if_not_auto_search(self):
         """
@@ -631,7 +629,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 2
@@ -645,7 +643,7 @@ class TestModelManager(trc.TestResultCollector):
         with patch.object(MetricsManagerSubclass,
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.return_value = 1
-            self._test_model_manager(yaml_content, expected_ranges)
+            self._test_model_manager(yaml_str, expected_ranges)
 
     def test_throughput_early_exit(self):
         """
@@ -675,7 +673,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8, 16, 32, 64, 128]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 2048
             run_config_search_max_instance_count: 1
@@ -689,7 +687,7 @@ class TestModelManager(trc.TestResultCollector):
             mock_method.side_effect = [
                 1, 2, 4, 8, 16, 16, 16, 16, 1, 2, 4, 8, 16, 16, 16, 16
             ]
-            self._test_model_manager(yaml_content, expected_ranges)
+            self._test_model_manager(yaml_str, expected_ranges)
 
     def test_bad_result_early_PA_exit(self):
         """
@@ -718,7 +716,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 128
             run_config_search_max_instance_count: 2
@@ -730,7 +728,7 @@ class TestModelManager(trc.TestResultCollector):
         with patch.object(MetricsManagerSubclass,
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.return_value = None
-            self._test_model_manager(yaml_content, expected_ranges)
+            self._test_model_manager(yaml_str, expected_ranges)
 
     def test_lower_throughput_early_batch_size_exit(self):
         """
@@ -775,7 +773,7 @@ class TestModelManager(trc.TestResultCollector):
             }
         ]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 2
@@ -799,7 +797,7 @@ class TestModelManager(trc.TestResultCollector):
             #yapf: enable
 
             mock_method.return_value = None
-            self._test_model_manager(yaml_content, expected_ranges)
+            self._test_model_manager(yaml_str, expected_ranges)
 
     def test_no_max_batch_size_sweep_if_protobuf_0(self):
         """
@@ -833,13 +831,13 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_concurrency: 4
             run_config_search_max_instance_count: 1
             run_config_search_disable: False
             profile_models: test_model
             """)
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
     def test_client_batch_size_never_above_max_batch_size(self):
         """
@@ -877,7 +875,7 @@ class TestModelManager(trc.TestResultCollector):
             'concurrency': [1, 2, 4, 8]
         }]
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models: test_model
             run_config_search_max_concurrency: 8
             run_config_search_max_instance_count: 1
@@ -887,11 +885,11 @@ class TestModelManager(trc.TestResultCollector):
             batch_sizes: 1,2,4,8,16,32,64
             """)
 
-        self._test_model_manager(yaml_content, expected_ranges)
+        self._test_model_manager(yaml_str, expected_ranges)
 
-    def _test_model_manager(self, yaml_content, expected_ranges):
+    def _test_model_manager(self, yaml_str, expected_ranges):
         """ 
-        Test helper function that passes the given yaml_content into
+        Test helper function that passes the given yaml_str into
         model_manager, runs the model, and confirms the result is as expected
         based on a full cartesian product of the lists in the input list of 
         dicts expected_ranges
@@ -901,7 +899,7 @@ class TestModelManager(trc.TestResultCollector):
         self.mock_model_config = MockModelConfig(self._model_config_protobuf)
         self.mock_model_config.start()
         config = evaluate_mock_config(self._args,
-                                      yaml_content,
+                                      yaml_str,
                                       subcommand="profile")
 
         state_manager = AnalyzerStateManager(config, MagicMock())

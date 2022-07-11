@@ -15,7 +15,7 @@
 import unittest
 
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes, evaluate_mock_config, ROOT_DIR
+from .common.test_utils import evaluate_mock_config, ROOT_DIR
 
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.result.result_manager import ResultManager
@@ -91,10 +91,10 @@ class TestPlotManager(trc.TestResultCollector):
             '--checkpoint-directory', f'{ROOT_DIR}/single-model-ckpt/',
             '--export-path', f'{ROOT_DIR}/single-model-ckpt/'
         ]
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             analysis_models: add_sub
         """)
-        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
         state_manager = AnalyzerStateManager(config=config, server=None)
         state_manager.load_checkpoint(checkpoint_required=True)
 
@@ -111,10 +111,10 @@ class TestPlotManager(trc.TestResultCollector):
             '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/',
             '--export-path', f'{ROOT_DIR}/multi-model-ckpt/'
         ]
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             analysis_models: resnet50_libtorch,vgg19_libtorch
         """)
-        config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
         state_manager = AnalyzerStateManager(config=config, server=None)
         state_manager.load_checkpoint(checkpoint_required=True)
 
