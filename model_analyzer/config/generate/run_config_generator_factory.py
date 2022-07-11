@@ -91,10 +91,9 @@ class RunConfigGeneratorFactory:
             ])
         #yapf: enable
 
-        # TODO TMA-746: do we want to expose these options to CLI?
         search_config = SearchConfig(dimensions=dimensions,
-                                     radius=2,
-                                     step_magnitude=2,
+                                     radius=3,
+                                     step_magnitude=20,
                                      min_initialized=3)
 
         return search_config
