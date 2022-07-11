@@ -22,12 +22,7 @@ from model_analyzer.config.generate.generator_utils import GeneratorUtils as uti
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from model_analyzer.config.input.config_defaults import \
-    DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, \
-    DEFAULT_CLIENT_PROTOCOL, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY, \
-    DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY, \
-    DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_GRPC_ENDPOINT, DEFAULT_MEASUREMENT_MODE, \
-    DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+from model_analyzer.config.input.config_defaults import DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
 
 
 class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):

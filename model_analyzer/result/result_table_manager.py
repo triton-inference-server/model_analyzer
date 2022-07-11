@@ -382,7 +382,6 @@ class ResultTableManager:
         comparator for that table.
         """
 
-        # Create headers
         self._result_tables[table_key] = ResultTable(headers=headers,
                                                      title=title)
 

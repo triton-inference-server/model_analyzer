@@ -360,6 +360,17 @@ class TestReportManagerMethods(trc.TestResultCollector):
         }])
         avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
         for i in range(10):
+
+            # Create a bunch of fake measurement results
+            #
+            # For the 'default_within_top' case, have the throughput
+            # be decreasing for each config (so the highest throughput is the
+            # first, default config)
+            #
+            # For the default not within top case, have the throughput be
+            # increasing for each config (so the highest throughput is the last
+            # config, and the default config is the worst)
+            #
             p99 = 20 + i
             throughput = 100 - 10 * i if default_within_top else 200 + 10 * i
             avg_non_gpu_metrics = {
