@@ -241,7 +241,7 @@ class TestNeighborhood(trc.TestResultCollector):
         self.assertEqual(Coordinate([2, 7]),
                          n.calculate_new_coordinate(magnitude=3))
 
-    def test_no_magnitude_unit_vector(self):
+    def test_no_magnitude_vector(self):
         """
         Test that if the coordinate_center and weighted_coordinate_center
         are the same, then the step vector is all 0s
