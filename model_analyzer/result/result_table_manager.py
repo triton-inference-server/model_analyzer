@@ -70,7 +70,6 @@ class ResultTableManager:
         FOR ALL MODELs that compiles all results and
         dumps the data into tables for exporting.
         """
-
         self._add_server_data()
 
         # Fill rows in descending order
@@ -84,7 +83,6 @@ class ResultTableManager:
         """
         Writes table to console
         """
-
         self._write_results(writer=FileWriter(), column_separator=' ')
 
     def export_results(self):
@@ -120,7 +118,6 @@ class ResultTableManager:
             column_separator=',')
 
     def _determine_table_headers(self):
-
         # Finds which metric(s) are actually collected during profile phase.
         # Since a profile phase can be run twice with different metric(s)
         # being collected.

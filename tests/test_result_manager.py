@@ -116,7 +116,10 @@ class TestResultManager(trc.TestResultCollector):
                          ["resnet50_libtorch,vgg19_libtorch"])
 
     def test_get_model_sorted_results_bad_name(self):
-        """ Test get_model_sorted_results will assert when called with name that doesn't exist """
+        """ 
+        Test get_model_sorted_results will assert when called 
+        with name that doesn't exist 
+        """
 
         result_manager, _ = load_multi_model_result_manager()
         result_manager.compile_and_sort_results()
@@ -124,7 +127,10 @@ class TestResultManager(trc.TestResultCollector):
             result_manager.get_model_sorted_results("SHOULD_ERROR")
 
     def test_get_single_model_sorted_results(self):
-        """ Test get_model_sorted_results returns a valid ResultHeap with only results for that model """
+        """ 
+        Test get_model_sorted_results returns a valid ResultHeap
+        with only results for that model 
+        """
         result_manager, _ = load_single_model_result_manager()
         result_manager.add_run_config_measurement(MagicMock(), MagicMock())
         result_manager.compile_and_sort_results()
@@ -142,7 +148,10 @@ class TestResultManager(trc.TestResultCollector):
         self.assertEqual(17, len(sorted_results.results()))
 
     def test_get_across_model_sorted_results(self):
-        """ Test get_across_model_sorted_results returns a valid ResultHeap with all results across all models """
+        """ 
+        Test get_across_model_sorted_results returns a valid ResultHeap
+        with all results across all models 
+        """
         result_manager, _ = load_single_model_result_manager()
         self._add_a_fake_result(result_manager)
         result_manager.compile_and_sort_results()

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Tuple
 from tests.mocks.mock_config import MockConfig
 from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
@@ -53,32 +54,35 @@ def evaluate_mock_config(args, yaml_content, subcommand='analyze'):
     return config
 
 
-def load_single_model_result_manager():
+def load_single_model_result_manager(
+) -> Tuple[ResultManager, ConfigCommandAnalyze]:
+    """
+    Return a ResultManager with the single model test checkpoint loaded, as well
+    as the ConfigCommandAnalyze used to fake the analyze step
+    """
+    dir_path = f'{ROOT_DIR}/single-model-ckpt/'
+    yaml_str = "analysis_models: add_sub"
+    return _load_result_manager_helper(dir_path, yaml_str)
+
+
+def load_multi_model_result_manager(
+) -> Tuple[ResultManager, ConfigCommandAnalyze]:
+    """
+    Return a ResultManager with the multi model test checkpoint loaded, as well
+    as the ConfigCommandAnalyze used to fake the analyze step
+    """
+    dir_path = f'{ROOT_DIR}/multi-model-ckpt/'
+    yaml_str = "analysis_models: resnet50_libtorch,vgg19_libtorch"
+    return _load_result_manager_helper(dir_path, yaml_str)
+
+
+def _load_result_manager_helper(dir_path: str, yaml_str: str):
     args = [
         'model-analyzer', 'analyze', '-f', 'config.yml',
-        '--checkpoint-directory', f'{ROOT_DIR}/single-model-ckpt/',
-        '--export-path', f'{ROOT_DIR}/single-model-ckpt/'
+        '--checkpoint-directory', dir_path, '--export-path', dir_path
     ]
-    yaml_content = convert_to_bytes("""
-        analysis_models: add_sub
-    """)
-    config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
-    state_manager = AnalyzerStateManager(config=config, server=None)
-    state_manager.load_checkpoint(checkpoint_required=True)
+    yaml_content = convert_to_bytes(yaml_str)
 
-    result_manager = ResultManager(config=config, state_manager=state_manager)
-    return result_manager, config
-
-
-def load_multi_model_result_manager():
-    args = [
-        'model-analyzer', 'analyze', '-f', 'config.yml',
-        '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/',
-        '--export-path', f'{ROOT_DIR}/multi-model-ckpt/'
-    ]
-    yaml_content = convert_to_bytes("""
-        analysis_models: resnet50_libtorch,vgg19_libtorch
-    """)
     config = evaluate_mock_config(args, yaml_content, subcommand="analyze")
     state_manager = AnalyzerStateManager(config=config, server=None)
     state_manager.load_checkpoint(checkpoint_required=True)
