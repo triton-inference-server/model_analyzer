@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ctypes import Union
-from typing import Tuple
+from typing import Tuple, Union
 from tests.mocks.mock_config import MockConfig
 from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
