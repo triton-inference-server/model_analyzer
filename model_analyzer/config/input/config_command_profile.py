@@ -418,45 +418,6 @@ class ConfigCommandProfile(ConfigCommand):
                 ],
                                        required=True),
                 description='List of the models to be profiled'))
-
-        analysis_model_scheme = ConfigObject(
-            required=True,
-            schema={
-                # Any key is allowed, but the keys must follow the pattern
-                # below
-                '*':
-                    ConfigObject(
-                        schema={
-                            'objectives': objectives_scheme,
-                            'constraints': constraints_scheme,
-                        })
-            },
-            output_mapper=ConfigModelAnalysisSpec.
-            model_object_to_config_model_analysis_spec)
-        self._add_config(
-            ConfigField(
-                'analysis_models',
-                flags=['--analysis-models'],
-                field_type=ConfigUnion([
-                    analysis_model_scheme,
-                    ConfigListGeneric(
-                        ConfigUnion([
-                            analysis_model_scheme,
-                            ConfigPrimitive(
-                                str,
-                                output_mapper=ConfigModelAnalysisSpec.
-                                model_str_to_config_model_analysis_spec)
-                        ]),
-                        required=True,
-                        output_mapper=ConfigModelAnalysisSpec.
-                        model_mixed_to_config_model_analysis_spec),
-                    ConfigListString(output_mapper=ConfigModelAnalysisSpec.
-                                     model_list_to_config_model_analysis_spec),
-                ],
-                                       required=True),
-                description=
-                'Comma-delimited list of the model names for whom to generate reports.'
-            ))
         self._add_config(
             ConfigField(
                 'batch_sizes',
@@ -1012,10 +973,37 @@ class ConfigCommandProfile(ConfigCommand):
         Fill in the implied or default
         config values.
         """
-
         cpu_only = False
         if len(self.gpus) == 0 or not cuda.is_available():
             cpu_only = True
+
+        # Set global constraints if latency budget is specified
+        if self.latency_budget:
+            if self.constraints:
+                constraints = self.constraints
+                constraints['perf_latency_p99'] = {'max': self.latency_budget}
+                if 'perf_latency' in constraints:
+                    # In case a tighter perf_latency is provided
+                    constraints['perf_latency'] = constraints[
+                        'perf_latency_p99']
+                self._fields['constraints'].set_value(constraints)
+            else:
+                self._fields['constraints'].set_value(
+                    {'perf_latency_p99': {
+                        'max': self.latency_budget
+                    }})
+
+        # Set global constraints if minimum throughput is specified
+        if self.min_throughput:
+            if self.constraints:
+                constraints = self.constraints
+                constraints['perf_throughput'] = {'min': self.min_throughput}
+                self._fields['constraints'].set_value(constraints)
+            else:
+                self._fields['constraints'].set_value(
+                    {'perf_throughput': {
+                        'min': self.min_throughput
+                    }})
 
         new_profile_models = {}
         for model in self.profile_models:
@@ -1029,11 +1017,39 @@ class ConfigCommandProfile(ConfigCommand):
 
             # Constraints
             if not model.constraints():
-                if 'constraints' in self._fields and self._fields[
-                        'constraints'].value():
+                if 'constraints' in self._fields and self.constraints:
                     new_model['constraints'] = self.constraints
             else:
                 new_model['constraints'] = model.constraints()
+
+            # Shorthands
+            if self.latency_budget:
+                if 'constraints' in new_model:
+                    new_model['constraints']['perf_latency_p99'] = {
+                        'max': self.latency_budget
+                    }
+                    if 'perf_latency' in new_model['constraints']:
+                        # In case a tighter perf_latency is provided
+                        new_model['constraints']['perf_latency'] = new_model[
+                            'constraints']['perf_latency_p99']
+                else:
+                    new_model['constraints'] = {
+                        'perf_latency_p99': {
+                            'max': self.latency_budget
+                        }
+                    }
+
+            if self.min_throughput:
+                if 'constraints' in new_model:
+                    new_model['constraints']['perf_throughput'] = {
+                        'min': self.min_throughput
+                    }
+                else:
+                    new_model['constraints'] = {
+                        'perf_throughput': {
+                            'min': self.min_throughput
+                        }
+                    }
 
             # Run parameters
             if not model.parameters():
@@ -1083,78 +1099,3 @@ class ConfigCommandProfile(ConfigCommand):
 
             new_profile_models[model.model_name()] = new_model
         self._fields['profile_models'].set_value(new_profile_models)
-
-        # Set global constraints if latency budget is specified
-        if self.latency_budget:
-            if self.constraints:
-                constraints = self.constraints
-                constraints['perf_latency_p99'] = {'max': self.latency_budget}
-                if 'perf_latency' in constraints:
-                    # In case a tighter perf_latency is provided
-                    constraints['perf_latency'] = constraints[
-                        'perf_latency_p99']
-                self._fields['constraints'].set_value(constraints)
-            else:
-                self._fields['constraints'].set_value(
-                    {'perf_latency_p99': {
-                        'max': self.latency_budget
-                    }})
-
-        # Set global constraints if minimum throughput is specified
-        if self.min_throughput:
-            if self.constraints:
-                constraints = self.constraints
-                constraints['perf_throughput'] = {'min': self.min_throughput}
-                self._fields['constraints'].set_value(constraints)
-            else:
-                self._fields['constraints'].set_value(
-                    {'perf_throughput': {
-                        'min': self.min_throughput
-                    }})
-
-        new_analysis_models = {}
-        for model in self.analysis_models:
-            new_model = {}
-
-            # Objectives
-            if not model.objectives():
-                new_model['objectives'] = self.objectives
-            else:
-                new_model['objectives'] = model.objectives()
-            # Constraints
-            if not model.constraints():
-                if 'constraints' in self._fields and self.constraints:
-                    new_model['constraints'] = self.constraints
-            else:
-                new_model['constraints'] = model.constraints()
-
-            # Shorthands
-            if self.latency_budget:
-                if 'constraints' in new_model:
-                    new_model['constraints']['perf_latency_p99'] = {
-                        'max': self.latency_budget
-                    }
-                    if 'perf_latency' in new_model['constraints']:
-                        # In case a tighter perf_latency is provided
-                        new_model['constraints']['perf_latency'] = new_model[
-                            'constraints']['perf_latency_p99']
-                else:
-                    new_model['constraints'] = {
-                        'perf_latency_p99': {
-                            'max': self.latency_budget
-                        }
-                    }
-
-            if self.min_throughput:
-                if 'constraints' in new_model:
-                    new_model['constraints']['perf_throughput'] = {
-                        'min': self.min_throughput
-                    }
-                else:
-                    new_model['constraints'] = {
-                        'perf_throughput': {
-                            'min': self.min_throughput
-                        }
-                    }
-            new_analysis_models[model.model_name()] = new_model
-        self._fields['analysis_models'].set_value(new_analysis_models)

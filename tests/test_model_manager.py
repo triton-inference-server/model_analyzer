@@ -83,7 +83,7 @@ class TestModelManager(trc.TestResultCollector):
         super().__init__(methodname)
         self._args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
+            '-f', 'path-to-config-file'
         ]
 
         self._model_config_protobuf = """
