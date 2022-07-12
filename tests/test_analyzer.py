@@ -70,7 +70,8 @@ class TestAnalyzer(trc.TestResultCollector):
         args = [
             'model-analyzer', 'profile', '--model-repository', '/tmp',
             '--profile-models', 'model1', '--config-file', '/tmp/my_config.yml',
-            '--checkpoint-directory', '/tmp/my_checkpoints'
+            '--checkpoint-directory', '/tmp/my_checkpoints',
+            '--analysis-models', 'test_model'
         ]
         config = evaluate_mock_config(args, '', subcommand="profile")
         state_manager = AnalyzerStateManager(config, None)

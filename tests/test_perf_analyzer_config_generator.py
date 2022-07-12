@@ -525,7 +525,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                                                      early_exit=False):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
 
         if type(pa_cli_args) == list:
