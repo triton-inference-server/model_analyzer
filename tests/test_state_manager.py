@@ -31,7 +31,10 @@ from .common.test_utils import evaluate_mock_config
 
 class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
 
-    def setUp(self):
+    @patch(
+        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments'
+    )
+    def setUp(self, mocked_verify_args_profile):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', '--profile-models', 'test_model',
