@@ -216,6 +216,9 @@ class Neighborhood:
 
         weights_sum = sum(weights)
 
+        if (weights_sum == 0):
+            return self._determine_coordinate_center(coordinates)
+
         weighted_center /= weights_sum
 
         return weighted_center
