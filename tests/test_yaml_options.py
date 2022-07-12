@@ -15,7 +15,6 @@
 import yaml
 from .common import test_result_collector as trc
 from model_analyzer.config.input.yaml_config_validator import YamlConfigValidator
-from .common.test_utils import convert_to_bytes
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
@@ -62,7 +61,7 @@ class TestYamlOptions(trc.TestResultCollector):
 
     def test_valid_yaml_file(self):
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_instance_count: 16
             run_config_search_disable: True
             profile_models:
@@ -76,7 +75,7 @@ class TestYamlOptions(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        yaml_config = self._load_config_file(yaml_content)
+        yaml_config = self._load_config_file(yaml_str)
         YamlConfigValidator.validate(yaml_config)
 
     def test_invalid_yaml_file(self):
@@ -85,7 +84,7 @@ class TestYamlOptions(trc.TestResultCollector):
         hyphens instead of the required underscores
         """
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run-config-search-max-instance-count: 16
             run_config_search_disable: True
             profile_models:
@@ -99,14 +98,14 @@ class TestYamlOptions(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        yaml_config = self._load_config_file(yaml_content)
+        yaml_config = self._load_config_file(yaml_str)
         with self.assertRaises(TritonModelAnalyzerException):
             YamlConfigValidator.validate(yaml_config)
 
-    def _load_config_file(self, yaml_content):
+    def _load_config_file(self, yaml_str):
         """
         Load YAML config
         """
 
-        config = yaml.safe_load(yaml_content)
+        config = yaml.safe_load(yaml_str)
         return config

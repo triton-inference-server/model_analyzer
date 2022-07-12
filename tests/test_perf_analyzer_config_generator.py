@@ -13,27 +13,16 @@
 # limitations under the License.
 
 import unittest
-from tests.common.test_utils import construct_perf_analyzer_config
+from tests.common.test_utils import construct_perf_analyzer_config, evaluate_mock_config, construct_run_config_measurement
 
-from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.config.generate.perf_analyzer_config_generator import PerfAnalyzerConfigGenerator
-from model_analyzer.config.input.config_command_profile \
-     import ConfigCommandProfile
-from model_analyzer.cli.cli import CLI
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes, construct_run_config_measurement
-from .mocks.mock_config import MockConfig
 from .mocks.mock_os import MockOSMethods
 from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from model_analyzer.config.input.config_defaults import \
-    DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, \
-    DEFAULT_CLIENT_PROTOCOL, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY, \
-    DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY, \
-    DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_GRPC_ENDPOINT, DEFAULT_MEASUREMENT_MODE, \
-    DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+from model_analyzer.config.input.config_defaults import DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
 
 
 class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
@@ -90,7 +79,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -103,7 +92,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         ]
 
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs)
+            yaml_str, expected_configs)
 
     def test_search_disabled(self):
         """
@@ -115,7 +104,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -124,7 +113,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         expected_configs = [construct_perf_analyzer_config()]
 
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs, '--run-config-search-disable')
+            yaml_str, expected_configs, '--run-config-search-disable')
 
     def test_c_api(self):
         """
@@ -136,7 +125,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -150,7 +139,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         ]
 
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs, '--triton-launch-mode=c_api')
+            yaml_str, expected_configs, '--triton-launch-mode=c_api')
 
     def test_http(self):
         """
@@ -162,7 +151,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -177,7 +166,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         ]
 
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs, '--client-protocol=http')
+            yaml_str, expected_configs, '--client-protocol=http')
 
     def test_batch_size_search_disabled(self):
         """
@@ -191,7 +180,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -204,7 +193,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         pa_cli_args = ['-b 1,2,4', '--run-config-search-disable']
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args)
 
     def test_batch_size_search_enabled(self):
         """
@@ -217,7 +206,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -234,7 +223,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         pa_cli_args = ['-b 1,2,4']
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args)
 
     def test_concurrency(self):
         """
@@ -248,7 +237,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -261,11 +250,11 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         pa_cli_args = ['-c 1,2,3,4']
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args)
 
         pa_cli_args = ['-c 1,2,3,4', '--run-config-search-disable']
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args)
 
     def test_batch_size_and_concurrency(self):
         """
@@ -281,7 +270,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -298,11 +287,11 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         pa_cli_args = ['-b 1,2,4', '-c 1,2,3,4']
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args)
 
         pa_cli_args = ['-b 1,2,4', '-c 1,2,3,4', '--run-config-search-disable']
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args)
 
     def test_max_concurrency(self):
         """
@@ -315,7 +304,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -328,7 +317,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         pa_cli_args = ['--run-config-search-max-concurrency', '16']
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args)
 
     def test_min_concurrency(self):
         """
@@ -340,7 +329,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -356,7 +345,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             '--run-config-search-max-concurrency', '16'
         ]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args)
 
     def test_perf_analyzer_flags(self):
         """
@@ -370,7 +359,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model:
                     perf_analyzer_flags:
@@ -387,7 +376,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         ]
 
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs)
+            yaml_str, expected_configs)
 
     def test_perf_analyzer_config_ssl_options(self):
         """
@@ -396,7 +385,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model:
                     perf_analyzer_flags:
@@ -433,7 +422,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         ]
 
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_content, expected_configs)
+            yaml_str, expected_configs)
 
     def test_early_exit_on_no_plateau(self):
         """
@@ -441,7 +430,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         do not early exit
         """
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -453,7 +442,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         ]
 
         pa_cli_args = ['--run-config-search-max-concurrency', '64']
-        self._run_and_test_perf_analyzer_config_generator(yaml_content,
+        self._run_and_test_perf_analyzer_config_generator(yaml_str,
                                                           expected_configs,
                                                           pa_cli_args,
                                                           early_exit=True)
@@ -464,7 +453,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -479,7 +468,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         with patch.object(TestPerfAnalyzerConfigGenerator,
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.side_effect = [1, 2, 4, 4, 4, 4, 4]
-            self._run_and_test_perf_analyzer_config_generator(yaml_content,
+            self._run_and_test_perf_analyzer_config_generator(yaml_str,
                                                               expected_configs,
                                                               pa_cli_args,
                                                               early_exit=True)
@@ -490,7 +479,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -505,7 +494,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         with patch.object(TestPerfAnalyzerConfigGenerator,
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.side_effect = [1, 2, 4, 4, 4, 4, 4]
-            self._run_and_test_perf_analyzer_config_generator(yaml_content,
+            self._run_and_test_perf_analyzer_config_generator(yaml_str,
                                                               expected_configs,
                                                               pa_cli_args,
                                                               early_exit=False)
@@ -530,7 +519,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         return self._perf_throughput
 
     def _run_and_test_perf_analyzer_config_generator(self,
-                                                     yaml_content,
+                                                     yaml_str,
                                                      expected_configs,
                                                      pa_cli_args=None,
                                                      early_exit=False):
@@ -544,7 +533,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         elif type(pa_cli_args) == str:
             args.append(pa_cli_args)
 
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
         pacg = PerfAnalyzerConfigGenerator(
             config, config.profile_models[0].model_name(),
@@ -587,20 +576,6 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                              perf_analyzer_configs[i]._args)
             self.assertEqual(expected_configs[i]._additive_args,
                              perf_analyzer_configs[i]._additive_args)
-
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandProfile()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
 
     def setUp(self):
         # Mock path validation

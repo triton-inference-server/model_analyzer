@@ -12,11 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Tuple, Union
+from tests.mocks.mock_config import MockConfig
+from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
+from model_analyzer.cli.cli import CLI
+
+from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.result.run_config_result import RunConfigResult
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
 from model_analyzer.config.input.config_defaults import \
     DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_CLIENT_PROTOCOL, \
@@ -26,6 +34,68 @@ from model_analyzer.config.input.config_defaults import \
 import os
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def evaluate_mock_config(
+    args: list,
+    yaml_str: str,
+    subcommand: str = 'analyze'
+) -> Union[ConfigCommandAnalyze, ConfigCommandProfile, ConfigCommandReport]:
+    """
+    Return a ConfigCommandReport/Analyze/Profile created from the fake CLI
+    'args' list and fake config.yaml contents 'yaml_str'
+    """
+    yaml_content = convert_to_bytes(yaml_str)
+    mock_config = MockConfig(args, yaml_content)
+    mock_config.start()
+
+    if subcommand == 'report':
+        config = ConfigCommandReport()
+    elif subcommand == 'analyze':
+        config = ConfigCommandAnalyze()
+    else:
+        config = ConfigCommandProfile()
+
+    cli = CLI()
+    cli.add_subcommand(cmd=subcommand, help="", config=config)
+    cli.parse()
+    mock_config.stop()
+    return config
+
+
+def load_single_model_result_manager(
+) -> Tuple[ResultManager, ConfigCommandAnalyze]:
+    """
+    Return a ResultManager with the single model test checkpoint loaded, as well
+    as the ConfigCommandAnalyze used to fake the analyze step
+    """
+    dir_path = f'{ROOT_DIR}/single-model-ckpt/'
+    yaml_str = "analysis_models: add_sub"
+    return _load_result_manager_helper(dir_path, yaml_str)
+
+
+def load_multi_model_result_manager(
+) -> Tuple[ResultManager, ConfigCommandAnalyze]:
+    """
+    Return a ResultManager with the multi model test checkpoint loaded, as well
+    as the ConfigCommandAnalyze used to fake the analyze step
+    """
+    dir_path = f'{ROOT_DIR}/multi-model-ckpt/'
+    yaml_str = "analysis_models: resnet50_libtorch,vgg19_libtorch"
+    return _load_result_manager_helper(dir_path, yaml_str)
+
+
+def _load_result_manager_helper(dir_path: str, yaml_str: str):
+    args = [
+        'model-analyzer', 'analyze', '-f', 'config.yml',
+        '--checkpoint-directory', dir_path, '--export-path', dir_path
+    ]
+    config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
+    state_manager = AnalyzerStateManager(config=config, server=None)
+    state_manager.load_checkpoint(checkpoint_required=True)
+
+    result_manager = ResultManager(config=config, state_manager=state_manager)
+    return result_manager, config
 
 
 def convert_to_bytes(string):

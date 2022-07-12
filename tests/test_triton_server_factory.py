@@ -17,11 +17,9 @@ from .common import test_result_collector as trc
 
 from model_analyzer.triton.server.server_factory import TritonServerFactory
 from unittest.mock import patch, MagicMock
-from .mocks.mock_config import MockConfig
 from .mocks.mock_os import MockOSMethods
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.cli.cli import CLI
 
 
 class TestTritonServerFactory(trc.TestResultCollector):
@@ -128,20 +126,6 @@ class TestTritonServerFactory(trc.TestResultCollector):
 
     def tearDown(self):
         patch.stopall()
-
-    def _evaluate_profile_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandProfile()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help='Run model inference profiling based on specified CLI or '
-            'config options.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
 
 
 if __name__ == '__main__':

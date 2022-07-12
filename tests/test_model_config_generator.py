@@ -13,14 +13,9 @@
 # limitations under the License.
 
 from model_analyzer.config.generate.model_config_generator_factory import ModelConfigGeneratorFactory
-from model_analyzer.config.input.config_command_profile \
-     import ConfigCommandProfile
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.cli.cli import CLI
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes
-from .common.test_utils import construct_run_config_measurement
-from .mocks.mock_config import MockConfig
+from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
 from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
 
@@ -45,7 +40,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         '''
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -94,8 +89,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs)
 
     def test_direct_no_params_search_disable(self):
         '''
@@ -105,7 +99,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         '''
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_disable: True
             profile_models:
                 - my-model
@@ -114,8 +108,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         expected_configs = [{'max_batch_size': 8}]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs)
 
     def test_direct_yes_params_search_disable(self):
         '''
@@ -125,7 +118,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         '''
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_instance_count: 16
             run_config_search_disable: True
             profile_models:
@@ -148,8 +141,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs)
 
     def test_run_config_search_options(self):
         '''
@@ -158,7 +150,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         '''
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_instance_count: 3
             run_config_search_min_model_batch_size: 2
             run_config_search_max_model_batch_size: 16
@@ -182,8 +174,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs)
 
     def test_run_config_search_min_instance_counts(self):
         '''
@@ -191,7 +182,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         '''
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_min_instance_count: 2
             run_config_search_max_instance_count: 3
             run_config_search_min_model_batch_size: 2
@@ -210,8 +201,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs)
 
     def test_non_power_of_two_max_batch_size(self):
         '''
@@ -220,7 +210,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         '''
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_instance_count: 2
             run_config_search_min_model_batch_size: 3
             run_config_search_max_model_batch_size: 15
@@ -238,8 +228,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs)
 
     def test_direct_yes_params_specified(self):
         '''
@@ -250,7 +239,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         '''
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_instance_count: 16
             run_config_search_disable: False
             profile_models:
@@ -273,8 +262,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs)
 
     def test_direct_cpu_only(self):
         '''
@@ -282,7 +270,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         '''
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_instance_count: 2
             run_config_search_min_model_batch_size: 8
             run_config_search_max_model_batch_size: 16
@@ -299,8 +287,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs)
 
     def test_direct_nonempty_default_config(self):
         '''
@@ -322,7 +309,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             ]
             """
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_instance_count: 4
             run_config_search_min_model_batch_size: 8
             run_config_search_max_model_batch_size: 8
@@ -338,8 +325,8 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs, protobuf)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs,
+                                                  protobuf)
 
     def test_remote_yes_params_specified(self):
         '''
@@ -349,7 +336,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         '''
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             triton_launch_mode: remote
             run_config_search_max_instance_count: 16
             profile_models:
@@ -365,8 +352,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         expected_configs = [{}]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs)
 
     def test_remote_no_params_specified(self):
         '''
@@ -376,7 +362,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         '''
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             triton_launch_mode: remote
             run_config_search_max_instance_count: 16
             profile_models:
@@ -386,8 +372,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         expected_configs = [{}]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs)
 
     def test_search_subparameter(self):
         '''
@@ -427,7 +412,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             }}
             """
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 my-model:
                     model_config_parameters:
@@ -478,8 +463,8 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs, protobuf)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs,
+                                                  protobuf)
 
     def test_search_dynamic_batching_subparameter(self):
         '''
@@ -504,7 +489,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             }
             """
 
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_instance_count: 4
             run_config_search_min_model_batch_size: 8
             run_config_search_max_model_batch_size: 8
@@ -520,8 +505,8 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        self._run_and_test_model_config_generator(yaml_content,
-                                                  expected_configs, protobuf)
+        self._run_and_test_model_config_generator(yaml_str, expected_configs,
+                                                  protobuf)
 
     def test_apply_value_to_dict(self):
         '''
@@ -562,7 +547,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -571,7 +556,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         with self.assertRaises(TritonModelAnalyzerException):
-            self._run_and_test_model_config_generator(yaml_content,
+            self._run_and_test_model_config_generator(yaml_str,
                                                       expected_configs,
                                                       early_exit_enable=False)
 
@@ -580,7 +565,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         Test that automatic mode will early exit max_batch_size when throughput plateaus
         """
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             run_config_search_max_instance_count: 3
@@ -607,7 +592,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                 1, 1,        # 2 instances. Yes backoff
                 1, 2, 4, 8   # 3 instances
             ]
-            self._run_and_test_model_config_generator(yaml_content,
+            self._run_and_test_model_config_generator(yaml_str,
                                                       expected_configs,
                                                       early_exit_enable=True)
         # yapf: enable
@@ -618,7 +603,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 test_model:
                     model_config_parameters:
@@ -644,7 +629,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         with patch.object(TestModelConfigGenerator,
                           "_get_next_fake_throughput") as mock_method:
             mock_method.return_value = 1
-            self._run_and_test_model_config_generator(yaml_content,
+            self._run_and_test_model_config_generator(yaml_str,
                                                       expected_configs,
                                                       early_exit_enable=False)
 
@@ -654,7 +639,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 test_model:
                     model_config_parameters:
@@ -685,19 +670,19 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                 1, 1,        # 2 instances. Yes backoff
                 1, 2, 4, 8   # 3 instances
             ]
-            self._run_and_test_model_config_generator(yaml_content,
+            self._run_and_test_model_config_generator(yaml_str,
                                                       expected_configs,
                                                       early_exit_enable=True)
         # yapf: enable
 
     def _run_and_test_model_config_generator(self,
-                                             yaml_content,
+                                             yaml_str,
                                              expected_configs,
                                              protobuf="max_batch_size: 8",
                                              default_only=False,
                                              early_exit_enable=True):
         '''
-        Main function that creates a config from the yaml_content, runs it through
+        Main function that creates a config from the yaml_str, runs it through
         ModelConfigGenerator, and compares the resulting model_configs vs the expected_configs
         '''
         args = [
@@ -708,7 +693,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         # Use mock model config or else TritonModelAnalyzerException will be thrown as it tries to read from disk
         self.mock_model_config = MockModelConfig(protobuf)
         self.mock_model_config.start()
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
         # Fake out a client that can return a 'model_config' dict with
         # a valid name (only used by remote mode)
@@ -766,20 +751,6 @@ class TestModelConfigGenerator(trc.TestResultCollector):
     def _get_next_fake_throughput(self):
         self._fake_throughput += 1
         return self._fake_throughput
-
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandProfile()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
 
     def setUp(self):
         # Mock path validation

@@ -15,6 +15,7 @@
 from model_analyzer.constants import LOGGER_NAME
 from .model_manager import ModelManager
 from .result.result_manager import ResultManager
+from .result.result_table_manager import ResultTableManager
 from .record.metrics_manager import MetricsManager
 from .reports.report_manager import ReportManager
 
@@ -127,18 +128,20 @@ class Analyzer:
             config=self._config,
             gpu_info=gpu_info,
             result_manager=self._result_manager)
+        self._result_table_manager = ResultTableManager(self._config,
+                                                        self._result_manager)
 
         # Create result tables, put top results and get stats
-        self._result_manager.create_tables()
         self._result_manager.compile_and_sort_results()
         self._report_manager.create_summaries()
         self._report_manager.export_summaries()
 
         # Dump to tables and write to disk
-        self._result_manager.tabulate_results()
-        self._result_manager.export_results()
+        self._result_table_manager.create_tables()
+        self._result_table_manager.tabulate_results()
+        self._result_table_manager.export_results()
         if verbose:
-            self._result_manager.write_results()
+            self._result_table_manager.write_results()
 
         logger.info("")
         logger.info(self._get_report_command_help_string())

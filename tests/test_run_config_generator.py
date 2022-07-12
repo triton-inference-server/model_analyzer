@@ -16,16 +16,9 @@ import unittest
 
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
-from model_analyzer.config.input.config_command_profile \
-     import ConfigCommandProfile
-from model_analyzer.cli.cli import CLI
-from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.record.types.perf_throughput import PerfThroughput
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes
-from .common.test_utils import construct_run_config_measurement
-from .mocks.mock_config import MockConfig
+from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
 from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
 from unittest.mock import MagicMock, patch
@@ -33,10 +26,6 @@ from unittest.mock import MagicMock, patch
 from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
 
 from model_analyzer.config.input.config_defaults import \
-    DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, \
-    DEFAULT_CLIENT_PROTOCOL, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY, \
-    DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY, \
-    DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_GRPC_ENDPOINT, DEFAULT_MEASUREMENT_MODE, \
     DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE
 
 
@@ -58,7 +47,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             profile_models:
                 - my-model
             """)
@@ -73,7 +62,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_num_of_configs = expected_pa_configs * expected_model_configs
 
         self._run_and_test_run_config_generator(
-            yaml_content, expected_config_count=expected_num_of_configs)
+            yaml_str, expected_config_count=expected_num_of_configs)
 
     def test_two_models(self):
         """
@@ -89,7 +78,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
@@ -115,7 +104,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                           autospec=True) as mock_method:
 
             self._run_and_test_run_config_generator(
-                yaml_content, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs)
 
             self.assertEqual(mock_method.call_count,
                              expected_num_calls_to_set_last_results)
@@ -139,7 +128,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
@@ -160,7 +149,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_num_of_configs = 150
 
         self._run_and_test_run_config_generator(
-            yaml_content, expected_config_count=expected_num_of_configs)
+            yaml_str, expected_config_count=expected_num_of_configs)
 
     def test_three_uneven_models(self):
         """
@@ -187,7 +176,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
@@ -227,7 +216,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                           side_effect=ModelRunConfigGenerator.set_last_results,
                           autospec=True) as mock_method:
             self._run_and_test_run_config_generator(
-                yaml_content, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs)
 
             self.assertEqual(mock_method.call_count,
                              expected_num_calls_to_set_last_results)
@@ -257,7 +246,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 8
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
@@ -277,7 +266,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_content, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs)
 
     def test_early_backoff_root_model(self):
         """
@@ -303,7 +292,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 8
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
@@ -326,7 +315,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_content, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs)
 
     def test_measurement_list(self):
         """
@@ -348,7 +337,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 8
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
@@ -374,7 +363,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_content, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs)
 
     def test_matching_triton_server_env(self):
         """
@@ -382,7 +371,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
@@ -402,7 +391,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         expected_num_of_configs = 68
         self._run_and_test_run_config_generator(
-            yaml_content, expected_config_count=expected_num_of_configs)
+            yaml_str, expected_config_count=expected_num_of_configs)
 
     def test_mismatching_triton_server_env(self):
         """
@@ -410,7 +399,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 2
@@ -431,7 +420,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         with self.assertRaises(TritonModelAnalyzerException):
             expected_num_of_configs = 100
             self._run_and_test_run_config_generator(
-                yaml_content, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs)
 
     def test_none_result_in_max_batch_size(self):
         """
@@ -445,7 +434,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_num_of_configs = 17
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 4
             run_config_search_max_instance_count: 3
             run_config_search_max_concurrency: 2
@@ -470,7 +459,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_content, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs)
 
     def test_none_result_before_threshold(self):
         """
@@ -485,7 +474,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_num_of_configs = 27
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 1
             run_config_search_max_concurrency: 2048
@@ -504,7 +493,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_content, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs)
 
     def test_none_result_after_threshold(self):
         """
@@ -519,7 +508,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_num_of_configs = 35
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 2
             run_config_search_max_instance_count: 1
             run_config_search_max_concurrency: 2048
@@ -538,7 +527,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_content, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs)
 
     def test_variant_naming(self):
         """
@@ -557,7 +546,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         """
 
         # yapf: disable
-        yaml_content = convert_to_bytes("""
+        yaml_str = ("""
             run_config_search_max_model_batch_size: 4
             run_config_search_max_instance_count: 2
             run_config_search_max_concurrency: 1
@@ -604,13 +593,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                           "_get_next_perf_throughput_value") as mock_method:
             mock_method.side_effect = perf_throughput_values
             run_configs = self._run_and_test_run_config_generator(
-                yaml_content, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs)
 
         for i, rc in enumerate(run_configs):
             self.assertEqual(expected_modelB_name_order[i],
                              rc.model_run_configs()[1].model_variant_name())
 
-    def _run_and_test_run_config_generator(self, yaml_content,
+    def _run_and_test_run_config_generator(self, yaml_str,
                                            expected_config_count):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
@@ -629,7 +618,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         self.mock_model_config = MockModelConfig(protobuf)
         self.mock_model_config.start()
-        config = self._evaluate_config(args, yaml_content)
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
         rcg = BruteRunConfigGenerator(config, MagicMock(),
                                       config.profile_models, MagicMock())
@@ -649,20 +638,6 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.mock_model_config.stop()
 
         return run_configs
-
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandProfile()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
 
     def setUp(self):
         # Mock path validation

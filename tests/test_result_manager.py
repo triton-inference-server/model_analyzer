@@ -14,251 +14,166 @@
 
 import unittest
 
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
 from .common import test_result_collector as trc
-from .common.test_utils import convert_to_bytes, ROOT_DIR
-from .mocks.mock_config import MockConfig
+from .common.test_utils import load_single_model_result_manager, load_multi_model_result_manager
 
-from google.protobuf import text_format
-from tritonclient.grpc import model_config_pb2
-
-from model_analyzer.cli.cli import CLI
-from model_analyzer.config.input.config_command_analyze \
-    import ConfigCommandAnalyze
+from unittest.mock import patch, MagicMock
+from model_analyzer.result.result_heap import ResultHeap
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
-
-from filecmp import cmp
-from shutil import rmtree
-from unittest.mock import MagicMock, patch
 
 
 class TestResultManager(trc.TestResultCollector):
 
-    def setUp(self):
-        self._create_single_model_result_manager()
-        self._create_multi_model_result_manager()
+    def test_server_data(self):
+        """
+        Test that add_server_data() and get_server_only_data() 
+        are effectively mirrored set/get functions
+        """
+        state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
+        result_manager = ResultManager(config=MagicMock(),
+                                       state_manager=state_manager)
+
+        server_data = {'a': 5, 'b': 7}
+        result_manager.add_server_data(server_data)
+
+        self.assertEqual(server_data, result_manager.get_server_only_data())
+
+    def test_measurements(self):
+        """
+        Test add_run_config_measurement and get_model_configs_run_config_measurements
+        
+        Confirm that run_config_measurements are stored per-model, and then per-variant, and
+        then in a list per-representation
+        Confirm that the measurements can be read out via get_model_configs_run_config_measurements()
+        """
+        state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
+        result_manager = ResultManager(config=MagicMock(),
+                                       state_manager=state_manager)
+
+        fake_run_config1a = MagicMock()
+        fake_run_config1a.models_name.return_value = "Model1"
+        fake_run_config1a.model_variants_name.return_value = "Model1_config_default"
+        fake_run_config1a.representation.return_value = "1a"
+
+        fake_run_config1b = MagicMock()
+        fake_run_config1b.models_name.return_value = "Model1"
+        fake_run_config1b.model_variants_name.return_value = "Model1_config_default"
+        fake_run_config1b.representation.return_value = "1b"
+
+        fake_run_config1c = MagicMock()
+        fake_run_config1c.models_name.return_value = "Model1"
+        fake_run_config1c.model_variants_name.return_value = "Model1_config_0"
+        fake_run_config1c.representation.return_value = "1c"
+
+        fake_run_config2 = MagicMock()
+        fake_run_config2.models_name.return_value = "Model2"
+        fake_run_config2.model_variants_name.return_value = "Model2_config_default"
+        fake_run_config2.representation.return_value = "2"
+
+        rcm1a = MagicMock()
+        rcm1b = MagicMock()
+        rcm1c = MagicMock()
+        rcm2 = MagicMock()
+
+        result_manager.add_run_config_measurement(run_config=fake_run_config1a,
+                                                  run_config_measurement=rcm1a)
+        result_manager.add_run_config_measurement(run_config=fake_run_config1b,
+                                                  run_config_measurement=rcm1b)
+        result_manager.add_run_config_measurement(run_config=fake_run_config1c,
+                                                  run_config_measurement=rcm1c)
+        result_manager.add_run_config_measurement(run_config=fake_run_config2,
+                                                  run_config_measurement=rcm2)
+
+        config, measurements = result_manager.get_model_configs_run_config_measurements(
+            "Model1_config_default")
+        self.assertEqual(config, fake_run_config1a)
+        self.assertEqual(2, len(measurements))
+
+        config, measurements = result_manager.get_model_configs_run_config_measurements(
+            "Model1_config_0")
+        self.assertEqual(config, fake_run_config1c)
+        self.assertEqual(1, len(measurements))
+
+        config, measurements = result_manager.get_model_configs_run_config_measurements(
+            "Model2_config_default")
+        self.assertEqual(config, fake_run_config2)
+        self.assertEqual(1, len(measurements))
+
+    def test_get_single_model_names(self):
+        """ Test get_model_names for a single-model run """
+        result_manager, _ = load_single_model_result_manager()
+        result_manager.compile_and_sort_results()
+        self.assertEqual(result_manager.get_model_names(), ["add_sub"])
+
+    def test_get_multi_model_names(self):
+        """ Test get_model_names for a multi-model run """
+        result_manager, _ = load_multi_model_result_manager()
+        result_manager.compile_and_sort_results()
+        self.assertEqual(result_manager.get_model_names(),
+                         ["resnet50_libtorch,vgg19_libtorch"])
+
+    def test_get_model_sorted_results_bad_name(self):
+        """ 
+        Test get_model_sorted_results will assert when called 
+        with name that doesn't exist 
+        """
+
+        result_manager, _ = load_multi_model_result_manager()
+        result_manager.compile_and_sort_results()
+        with self.assertRaises(TritonModelAnalyzerException):
+            result_manager.get_model_sorted_results("SHOULD_ERROR")
+
+    def test_get_single_model_sorted_results(self):
+        """ 
+        Test get_model_sorted_results returns a valid ResultHeap
+        with only results for that model 
+        """
+        result_manager, _ = load_single_model_result_manager()
+        result_manager.add_run_config_measurement(MagicMock(), MagicMock())
+        result_manager.compile_and_sort_results()
+        sorted_results = result_manager.get_model_sorted_results("add_sub")
+        self.assertTrue(isinstance(sorted_results, ResultHeap))
+        self.assertEqual(5, len(sorted_results.results()))
+
+    def test_get_multi_model_sorted_results(self):
+        """ Test get_model_sorted_results returns a valid ResultHeap """
+        result_manager, _ = load_multi_model_result_manager()
+        result_manager.compile_and_sort_results()
+        sorted_results = result_manager.get_model_sorted_results(
+            "resnet50_libtorch,vgg19_libtorch")
+        self.assertTrue(isinstance(sorted_results, ResultHeap))
+        self.assertEqual(17, len(sorted_results.results()))
+
+    def test_get_across_model_sorted_results(self):
+        """ 
+        Test get_across_model_sorted_results returns a valid ResultHeap
+        with all results across all models 
+        """
+        result_manager, _ = load_single_model_result_manager()
+        self._add_a_fake_result(result_manager)
+        result_manager.compile_and_sort_results()
+
+        sorted_results = result_manager.get_across_model_sorted_results()
+        self.assertTrue(isinstance(sorted_results, ResultHeap))
+        self.assertEqual(6, len(sorted_results.results()))
+
+    def _add_a_fake_result(self, result_manager):
+        fake_model = MagicMock()
+        fake_model.model_name.return_value = "FakeModel"
+        old_analysis_models = result_manager._config.analysis_models
+        old_analysis_models.append(fake_model)
+        result_manager._config.analysis_models = old_analysis_models
+
+        fake_run_config = MagicMock()
+        fake_run_config.models_name.return_value = "FakeModel"
+
+        result_manager.add_run_config_measurement(fake_run_config, MagicMock())
 
     def tearDown(self):
         patch.stopall()
-
-    def test_single_model_csv_against_golden(self):
-        """
-        Match the csvs against the golden versions in
-        tests/common/single-model-ckpt
-        """
-        self._single_model_result_manager.tabulate_results()
-        self._single_model_result_manager.export_results()
-
-        self.assertTrue(
-            cmp(f"{ROOT_DIR}/single-model-ckpt/results/metrics-model-gpu.csv",
-                f"{ROOT_DIR}/single-model-ckpt/golden-metrics-model-gpu.csv"))
-
-        self.assertTrue(
-            cmp(
-                f"{ROOT_DIR}/single-model-ckpt/results/metrics-model-inference.csv",
-                f"{ROOT_DIR}/single-model-ckpt/golden-metrics-model-inference.csv"
-            ))
-
-        self.assertTrue(
-            cmp(f"{ROOT_DIR}/single-model-ckpt/results/metrics-server-only.csv",
-                f"{ROOT_DIR}/single-model-ckpt/golden-metrics-server-only.csv"))
-
-        rmtree(f"{ROOT_DIR}/single-model-ckpt/results/")
-
-    def test_create_inference_table_with_backend_parameters(self):
-        args = ['model-analyzer', 'analyze', '-f', 'config.yml']
-        yaml_content = convert_to_bytes("""
-            analysis_models: analysis_models
-            inference_output_fields: model_name,batch_size,backend_parameter/parameter_1,backend_parameter/parameter_2
-        """)
-        config = self._evaluate_config(args, yaml_content)
-        state_manager = AnalyzerStateManager(config=config, server=None)
-        result_manager = ResultManager(config=config,
-                                       state_manager=state_manager)
-
-        result_manager._create_inference_table()
-        self.assertTrue(result_manager._inference_output_fields == [
-            'model_name', 'batch_size', 'backend_parameter/parameter_1',
-            'backend_parameter/parameter_2'
-        ])
-
-    def test_multi_model_csv_against_golden(self):
-        """
-        Match the csvs against the golden versions in
-        tests/common/multi-model-ckpt
-        """
-        self._multi_model_result_manager.tabulate_results()
-        self._multi_model_result_manager.export_results()
-
-        self.assertTrue(
-            cmp(f"{ROOT_DIR}/multi-model-ckpt/results/metrics-model-gpu.csv",
-                f"{ROOT_DIR}/multi-model-ckpt/golden-metrics-model-gpu.csv"))
-
-        self.assertTrue(
-            cmp(
-                f"{ROOT_DIR}/multi-model-ckpt/results/metrics-model-inference.csv",
-                f"{ROOT_DIR}/multi-model-ckpt/golden-metrics-model-inference.csv"
-            ))
-
-        self.assertTrue(
-            cmp(f"{ROOT_DIR}/multi-model-ckpt/results/metrics-server-only.csv",
-                f"{ROOT_DIR}/multi-model-ckpt/golden-metrics-server-only.csv"))
-
-        rmtree(f"{ROOT_DIR}/multi-model-ckpt/results/")
-
-    def test_create_inference_table_with_backend_parameters(self):
-        args = ['model-analyzer', 'analyze', '-f', 'config.yml']
-        yaml_content = convert_to_bytes("""
-            analysis_models: analysis_models
-            inference_output_fields: model_name,batch_size,backend_parameter/parameter_1,backend_parameter/parameter_2
-        """)
-        config = self._evaluate_config(args, yaml_content)
-        state_manager = AnalyzerStateManager(config=config, server=None)
-        result_manager = ResultManager(config=config,
-                                       state_manager=state_manager)
-
-        result_manager._create_inference_table()
-        self.assertTrue(result_manager._inference_output_fields == [
-            'model_name', 'batch_size', 'backend_parameter/parameter_1',
-            'backend_parameter/parameter_2'
-        ])
-
-    def test_get_common_row_items_with_backend_parameters(self):
-        """
-        This tests that a metrics model inference table row can be created with
-        backend parameters included. Each backend parameter gets its own column.
-        The column name is the backend parameter key (prepended with a prefix
-        to avoid potentially overlapping with an existing column). The column
-        value is the backend parameter value.
-
-        Here is an example table:
-
-        Models (Inference):
-        Model     Model Config Path   backend_parameter/add_sub_key_1   backend_parameter/add_sub_key_2  
-        add_sub   add_sub_config_2    add_sub_value_1                   add_sub_value_2                  
-        add_sub   add_sub_config_0    add_sub_value_1                   add_sub_value_2                  
-        add_sub   add_sub_config_1    add_sub_value_1                   add_sub_value_2                  
-
-        Each row of the metrics model inference table corresponds to one model
-        config variant.
-
-        It is possible for a user to run the analyze command with multiple
-        models config variants from different models with potentially different
-        backend parameters. This test includes backend parameters from two
-        separate models, showing that for one particular row (for a 'model A'
-        config variant), it only populates the backend parameter cells for
-        'model A', and the backend parameter cells for 'model B' are empty
-        (None).
-
-        Here is an example table with backend parameters from different models:
-
-        Models (Inference):
-        Model       Model Config Path   backend_parameter/add_sub_key_1   backend_parameter/add_sub_key_2   backend_parameter/add_sub_2_key_1   backend_parameter/add_sub_2_key_2  
-        add_sub     add_sub_config_2    add_sub_value_1                   add_sub_value_2                   None                                None                               
-        add_sub     add_sub_config_0    add_sub_value_1                   add_sub_value_2                   None                                None                               
-        add_sub     add_sub_config_1    add_sub_value_1                   add_sub_value_2                   None                                None                               
-        add_sub_2   add_sub_2_config_2  None                              None                              add_sub_2_value_1                   add_sub_2_value_2                  
-        add_sub_2   add_sub_2_config_1  None                              None                              add_sub_2_value_1                   add_sub_2_value_2                  
-        add_sub_2   add_sub_2_config_0  None                              None                              add_sub_2_value_1                   add_sub_2_value_2       
-        """
-
-        args = ['model-analyzer', 'analyze', '-f', 'config.yml']
-        yaml_content = convert_to_bytes("""
-            analysis_models: analysis_models
-            inference_output_fields: model_name,batch_size,backend_parameter/model_1_key_1,backend_parameter/model_1_key_2,backend_parameter/model_2_key_1
-        """)
-        config = self._evaluate_config(args, yaml_content)
-        state_manager = AnalyzerStateManager(config=config, server=None)
-        result_manager = ResultManager(config=config,
-                                       state_manager=state_manager)
-
-        model_config_str = """
-            parameters: {
-            key: "model_1_key_1"
-                value: {
-                string_value:"model_1_value_1"
-                }
-            }
-            parameters: {
-            key:"model_1_key_2"
-                value: {
-                string_value:"model_1_value_2"
-                }
-            }
-            """
-        backend_parameters = text_format.Parse(
-            model_config_str, model_config_pb2.ModelConfig()).parameters
-        row = result_manager._get_common_row_items(
-            fields=[
-                'model_name', 'batch_size', 'backend_parameter/model_1_key_1',
-                'backend_parameter/model_1_key_2',
-                'backend_parameter/model_2_key_1'
-            ],
-            batch_sizes='batch_size',
-            concurrencies=None,
-            satisfies=None,
-            model_name='model_name',
-            model_config_path=None,
-            dynamic_batchings=None,
-            instance_groups=None,
-            max_batch_sizes=None,
-            backend_parameters=backend_parameters)
-        self.assertTrue(row == [
-            'model_name', 'batch_size', 'model_1_value_1', 'model_1_value_2',
-            None
-        ])
-
-    def _evaluate_config(self, args, yaml_content):
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
-        config = ConfigCommandAnalyze()
-        cli = CLI()
-        cli.add_subcommand(
-            cmd='analyze',
-            help=
-            'Collect and sort profiling results and generate data and summaries.',
-            config=config)
-        cli.parse()
-        mock_config.stop()
-        return config
-
-    def _create_single_model_result_manager(self):
-        args = [
-            'model-analyzer', 'analyze', '-f', 'config.yml',
-            '--checkpoint-directory', f'{ROOT_DIR}/single-model-ckpt/',
-            '--export-path', f'{ROOT_DIR}/single-model-ckpt/'
-        ]
-        yaml_content = convert_to_bytes("""
-            analysis_models: add_sub
-        """)
-        config = self._evaluate_config(args, yaml_content)
-        state_manager = AnalyzerStateManager(config=config, server=None)
-        state_manager.load_checkpoint(checkpoint_required=True)
-
-        self._single_model_result_manager = ResultManager(
-            config=config, state_manager=state_manager)
-
-        self._single_model_result_manager.create_tables()
-        self._single_model_result_manager.compile_and_sort_results()
-
-    def _create_multi_model_result_manager(self):
-        args = [
-            'model-analyzer', 'analyze', '-f', 'config.yml',
-            '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/',
-            '--export-path', f'{ROOT_DIR}/multi-model-ckpt/'
-        ]
-        yaml_content = convert_to_bytes("""
-            analysis_models: resnet50_libtorch,vgg19_libtorch
-        """)
-        config = self._evaluate_config(args, yaml_content)
-        state_manager = AnalyzerStateManager(config=config, server=None)
-        state_manager.load_checkpoint(checkpoint_required=True)
-
-        self._multi_model_result_manager = ResultManager(
-            config=config, state_manager=state_manager)
-
-        self._multi_model_result_manager.create_tables()
-        self._multi_model_result_manager.compile_and_sort_results()
 
 
 if __name__ == "__main__":
