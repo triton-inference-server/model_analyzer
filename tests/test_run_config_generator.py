@@ -603,7 +603,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                                            expected_config_count):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
+            '-f', 'path-to-config-file'
         ]
 
         protobuf = """

@@ -224,9 +224,7 @@ class CLIConfigProfileStruct():
             '--model-repository',
             'foo',
             '--profile-models',
-            'bar',
-            '--analysis-models',
-            'a,b,c'
+            'bar'
         ]
         #yapf: enable
         config_profile = ConfigCommandProfile()

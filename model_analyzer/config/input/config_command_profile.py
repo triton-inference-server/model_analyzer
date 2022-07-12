@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.input.objects.config_model_analysis_spec \
-    import ConfigModelAnalysisSpec
 from model_analyzer.config.input.config_utils \
     import binary_path_validator, objective_list_output_mapper, file_path_validator, parent_path_validator
 from .config_field import ConfigField
@@ -41,11 +39,7 @@ from .config_defaults import \
     DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE, DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE, \
     DEFAULT_RUN_CONFIG_SEARCH_DISABLE, DEFAULT_TRITON_DOCKER_IMAGE, DEFAULT_TRITON_GRPC_ENDPOINT, \
     DEFAULT_TRITON_HTTP_ENDPOINT, DEFAULT_TRITON_INSTALL_PATH, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_TRITON_METRICS_URL, \
-    DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT, DEFAULT_USE_LOCAL_GPU_MONITOR, \
-    DEFAULT_EXPORT_PATH, DEFAULT_FILENAME_MODEL_INFERENCE, DEFAULT_FILENAME_MODEL_GPU, \
-    DEFAULT_FILENAME_SERVER_ONLY, DEFAULT_NUM_CONFIGS_PER_MODEL, DEFAULT_NUM_TOP_MODEL_CONFIGS, \
-    DEFAULT_INFERENCE_OUTPUT_FIELDS, DEFAULT_GPU_OUTPUT_FIELDS, DEFAULT_SERVER_OUTPUT_FIELDS, \
-    DEFAULT_ONLINE_OBJECTIVES, DEFAULT_ONLINE_ANALYSIS_PLOTS, DEFAULT_OFFLINE_ANALYSIS_PLOTS
+    DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT, DEFAULT_USE_LOCAL_GPU_MONITOR
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.server.server_config import \
@@ -55,7 +49,6 @@ from model_analyzer.perf_analyzer.perf_config import \
 from model_analyzer.record.record import RecordType
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
-from .objects.config_plot import ConfigPlot
 from .objects.config_model_profile_spec import ConfigModelProfileSpec
 from .objects.config_protobuf_utils import \
     is_protobuf_type_primitive, protobuf_to_config_type
@@ -63,7 +56,6 @@ from .objects.config_protobuf_utils import \
 from tritonclient.grpc.model_config_pb2 import ModelConfig
 from google.protobuf.descriptor import FieldDescriptor
 
-import os
 import numba
 from numba import cuda
 import psutil
@@ -230,10 +222,9 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_perf_analyzer_configs()
         self._add_triton_configs()
         self._add_run_search_configs()
-        self._add_export_configs()
-        self._add_report_configs()
+
+        # FIXME: From analyze
         self._add_table_configs()
-        self._add_shorthand_configs()
 
     def _add_repository_configs(self):
         """
@@ -362,7 +353,6 @@ class ConfigCommandProfile(ConfigCommand):
                 description=
                 'Constraints on the objectives specified in the "objectives" field of the config.'
             ))
-
         model_config_fields = self._get_model_config_fields()
         profile_model_scheme = ConfigObject(
             required=True,
@@ -418,45 +408,6 @@ class ConfigCommandProfile(ConfigCommand):
                 ],
                                        required=True),
                 description='List of the models to be profiled'))
-
-        analysis_model_scheme = ConfigObject(
-            required=True,
-            schema={
-                # Any key is allowed, but the keys must follow the pattern
-                # below
-                '*':
-                    ConfigObject(
-                        schema={
-                            'objectives': objectives_scheme,
-                            'constraints': constraints_scheme,
-                        })
-            },
-            output_mapper=ConfigModelAnalysisSpec.
-            model_object_to_config_model_analysis_spec)
-        self._add_config(
-            ConfigField(
-                'analysis_models',
-                flags=['--analysis-models'],
-                field_type=ConfigUnion([
-                    analysis_model_scheme,
-                    ConfigListGeneric(
-                        ConfigUnion([
-                            analysis_model_scheme,
-                            ConfigPrimitive(
-                                str,
-                                output_mapper=ConfigModelAnalysisSpec.
-                                model_str_to_config_model_analysis_spec)
-                        ]),
-                        required=True,
-                        output_mapper=ConfigModelAnalysisSpec.
-                        model_mixed_to_config_model_analysis_spec),
-                    ConfigListString(output_mapper=ConfigModelAnalysisSpec.
-                                     model_list_to_config_model_analysis_spec),
-                ],
-                                       required=True),
-                description=
-                'Comma-delimited list of the model names for whom to generate reports.'
-            ))
         self._add_config(
             ConfigField(
                 'batch_sizes',
@@ -769,172 +720,6 @@ class ConfigCommandProfile(ConfigCommand):
                 "launched with auto adjusted parameters in an attempt to profile a model. "
             ))
 
-    def _add_export_configs(self):
-        """
-        Add configs related to exporting data
-        """
-        self._add_config(
-            ConfigField('export_path',
-                        flags=['-e', '--export-path'],
-                        default_value=DEFAULT_EXPORT_PATH,
-                        field_type=ConfigPrimitive(
-                            str, validator=file_path_validator),
-                        description=
-                        "Full path to directory in which to store the results"))
-        self._add_config(
-            ConfigField(
-                'filename_model_inference',
-                flags=['--filename-model-inference'],
-                default_value=DEFAULT_FILENAME_MODEL_INFERENCE,
-                field_type=ConfigPrimitive(str),
-                description=
-                'Specifies filename for storing model inference metrics'))
-        self._add_config(
-            ConfigField(
-                'filename_model_gpu',
-                flags=['--filename-model-gpu'],
-                field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_FILENAME_MODEL_GPU,
-                description='Specifies filename for storing model GPU metrics'))
-        self._add_config(
-            ConfigField(
-                'filename_server_only',
-                flags=['--filename-server-only'],
-                field_type=ConfigPrimitive(str),
-                default_value=DEFAULT_FILENAME_SERVER_ONLY,
-                description='Specifies filename for server-only metrics'))
-
-    def _add_report_configs(self):
-        """
-        Adds report related configs
-        """
-        self._add_config(
-            ConfigField(
-                'num_configs_per_model',
-                flags=['--num-configs-per-model'],
-                field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_NUM_CONFIGS_PER_MODEL,
-                description=
-                'The number of configurations to plot per model in the summary.'
-            ))
-        self._add_config(
-            ConfigField(
-                'num_top_model_configs',
-                flags=['--num-top-model-configs'],
-                field_type=ConfigPrimitive(int),
-                default_value=DEFAULT_NUM_TOP_MODEL_CONFIGS,
-                description=
-                'Model Analyzer will compare this many of the top models configs across all models.'
-            ))
-
-    def _add_table_configs(self):
-        """
-        Adds result table related
-        configs
-        """
-        self._add_config(
-            ConfigField(
-                'inference_output_fields',
-                flags=['--inference-output-fields'],
-                field_type=ConfigListString(),
-                default_value=DEFAULT_INFERENCE_OUTPUT_FIELDS,
-                description=
-                'Specifies column keys for model inference metrics table'))
-        self._add_config(
-            ConfigField(
-                'gpu_output_fields',
-                flags=['--gpu-output-fields'],
-                field_type=ConfigListString(),
-                default_value=DEFAULT_GPU_OUTPUT_FIELDS,
-                description='Specifies column keys for model gpu metrics table')
-        )
-        self._add_config(
-            ConfigField(
-                'server_output_fields',
-                flags=['--server-output-fields'],
-                field_type=ConfigListString(),
-                default_value=DEFAULT_SERVER_OUTPUT_FIELDS,
-                description='Specifies column keys for server-only metrics table'
-            ))
-
-    def _add_shorthand_configs(self):
-        """
-        Adds configs for various shorthands
-        """
-        self._add_config(
-            ConfigField(
-                'latency_budget',
-                flags=['--latency-budget'],
-                field_type=ConfigPrimitive(int),
-                description=
-                "Shorthand flag for specifying a maximum latency in ms."))
-
-        self._add_config(
-            ConfigField(
-                'min_throughput',
-                flags=['--min-throughput'],
-                field_type=ConfigPrimitive(int),
-                description="Shorthand flag for specifying a minimum throughput."
-            ))
-
-    def set_config_values(self, args):
-        """
-        Set the config values. This function sets all the values for the
-        config. CLI arguments have the highest priority, then YAML config
-        values and then default values.
-
-        Parameters
-        ----------
-        args : argparse.Namespace
-            Parsed arguments from the CLI
-
-        Raises
-        ------
-        TritonModelAnalyzerException
-            If the required fields are not specified, it will raise
-            this exception
-        """
-        if args.mode == 'online' and 'latency_budget' not in args:
-            self._fields['objectives'].set_default_value(
-                DEFAULT_ONLINE_OBJECTIVES)
-
-        super().set_config_values(args)
-
-        # Add plot configs and after config parse. Users should not be
-        # able to edit these plots.
-        self._add_plot_configs()
-        if args.mode == 'online':
-            self._fields['plots'].set_value(DEFAULT_ONLINE_ANALYSIS_PLOTS)
-        elif args.mode == 'offline':
-            self._fields['plots'].set_value(DEFAULT_OFFLINE_ANALYSIS_PLOTS)
-
-    def _add_plot_configs(self):
-        """
-        Add plots to the config
-        """
-        plots_scheme = ConfigObject(schema={
-            '*':
-                ConfigObject(
-                    schema={
-                        'title': ConfigPrimitive(type_=str),
-                        'x_axis': ConfigPrimitive(type_=str),
-                        'y_axis': ConfigPrimitive(type_=str),
-                        'monotonic': ConfigPrimitive(type_=bool)
-                    })
-        },
-                                    output_mapper=ConfigPlot.from_object)
-        self._add_config(
-            ConfigField(
-                'plots',
-                field_type=ConfigUnion([
-                    plots_scheme,
-                    ConfigListGeneric(type_=plots_scheme,
-                                      output_mapper=ConfigPlot.from_list)
-                ]),
-                description=
-                'Model analyzer uses the information in this section to construct plots of the results.'
-            ))
-
     def _preprocess_and_verify_arguments(self):
         """
         Enforces some rules on the config.
@@ -993,56 +778,15 @@ class ConfigCommandProfile(ConfigCommand):
             if len(self.concurrency) == 0:
                 self.concurrency = [1]
 
-        if not self.export_path:
-            logger.warning(
-                f"--export-path not specified. Using {self._fields['export_path'].default_value()}"
-            )
-        elif self.export_path and not os.path.isdir(self.export_path):
-            raise TritonModelAnalyzerException(
-                f"Export path {self.export_path} is not a directory.")
-
-        if self.num_top_model_configs > 0 and not self.constraints:
-            raise TritonModelAnalyzerException(
-                "If setting num_top_model_configs > 0, comparison across models is requested. "
-                "This requires that global constraints be specified in the config to be used as default."
-            )
-
     def _autofill_values(self):
         """
         Fill in the implied or default
         config values.
         """
+
         cpu_only = False
         if len(self.gpus) == 0 or not cuda.is_available():
             cpu_only = True
-
-        # Set global constraints if latency budget is specified
-        if self.latency_budget:
-            if self.constraints:
-                constraints = self.constraints
-                constraints['perf_latency_p99'] = {'max': self.latency_budget}
-                if 'perf_latency' in constraints:
-                    # In case a tighter perf_latency is provided
-                    constraints['perf_latency'] = constraints[
-                        'perf_latency_p99']
-                self._fields['constraints'].set_value(constraints)
-            else:
-                self._fields['constraints'].set_value(
-                    {'perf_latency_p99': {
-                        'max': self.latency_budget
-                    }})
-
-        # Set global constraints if minimum throughput is specified
-        if self.min_throughput:
-            if self.constraints:
-                constraints = self.constraints
-                constraints['perf_throughput'] = {'min': self.min_throughput}
-                self._fields['constraints'].set_value(constraints)
-            else:
-                self._fields['constraints'].set_value(
-                    {'perf_throughput': {
-                        'min': self.min_throughput
-                    }})
 
         new_profile_models = {}
         for model in self.profile_models:
@@ -1061,35 +805,6 @@ class ConfigCommandProfile(ConfigCommand):
                     new_model['constraints'] = self.constraints
             else:
                 new_model['constraints'] = model.constraints()
-
-            # Shorthands
-            if self.latency_budget:
-                if 'constraints' in new_model:
-                    new_model['constraints']['perf_latency_p99'] = {
-                        'max': self.latency_budget
-                    }
-                    if 'perf_latency' in new_model['constraints']:
-                        # In case a tighter perf_latency is provided
-                        new_model['constraints']['perf_latency'] = new_model[
-                            'constraints']['perf_latency_p99']
-                else:
-                    new_model['constraints'] = {
-                        'perf_latency_p99': {
-                            'max': self.latency_budget
-                        }
-                    }
-
-            if self.min_throughput:
-                if 'constraints' in new_model:
-                    new_model['constraints']['perf_throughput'] = {
-                        'min': self.min_throughput
-                    }
-                else:
-                    new_model['constraints'] = {
-                        'perf_throughput': {
-                            'min': self.min_throughput
-                        }
-                    }
 
             # Run parameters
             if not model.parameters():
@@ -1139,78 +854,3 @@ class ConfigCommandProfile(ConfigCommand):
 
             new_profile_models[model.model_name()] = new_model
         self._fields['profile_models'].set_value(new_profile_models)
-
-        # Set global constraints if latency budget is specified
-        if self.latency_budget:
-            if self.constraints:
-                constraints = self.constraints
-                constraints['perf_latency_p99'] = {'max': self.latency_budget}
-                if 'perf_latency' in constraints:
-                    # In case a tighter perf_latency is provided
-                    constraints['perf_latency'] = constraints[
-                        'perf_latency_p99']
-                self._fields['constraints'].set_value(constraints)
-            else:
-                self._fields['constraints'].set_value(
-                    {'perf_latency_p99': {
-                        'max': self.latency_budget
-                    }})
-
-        # Set global constraints if minimum throughput is specified
-        if self.min_throughput:
-            if self.constraints:
-                constraints = self.constraints
-                constraints['perf_throughput'] = {'min': self.min_throughput}
-                self._fields['constraints'].set_value(constraints)
-            else:
-                self._fields['constraints'].set_value(
-                    {'perf_throughput': {
-                        'min': self.min_throughput
-                    }})
-
-        new_analysis_models = {}
-        for model in self.analysis_models:
-            new_model = {}
-
-            # Objectives
-            if not model.objectives():
-                new_model['objectives'] = self.objectives
-            else:
-                new_model['objectives'] = model.objectives()
-            # Constraints
-            if not model.constraints():
-                if 'constraints' in self._fields and self.constraints:
-                    new_model['constraints'] = self.constraints
-            else:
-                new_model['constraints'] = model.constraints()
-
-            # Shorthands
-            if self.latency_budget:
-                if 'constraints' in new_model:
-                    new_model['constraints']['perf_latency_p99'] = {
-                        'max': self.latency_budget
-                    }
-                    if 'perf_latency' in new_model['constraints']:
-                        # In case a tighter perf_latency is provided
-                        new_model['constraints']['perf_latency'] = new_model[
-                            'constraints']['perf_latency_p99']
-                else:
-                    new_model['constraints'] = {
-                        'perf_latency_p99': {
-                            'max': self.latency_budget
-                        }
-                    }
-
-            if self.min_throughput:
-                if 'constraints' in new_model:
-                    new_model['constraints']['perf_throughput'] = {
-                        'min': self.min_throughput
-                    }
-                else:
-                    new_model['constraints'] = {
-                        'perf_throughput': {
-                            'min': self.min_throughput
-                        }
-                    }
-            new_analysis_models[model.model_name()] = new_model
-        self._fields['analysis_models'].set_value(new_analysis_models)

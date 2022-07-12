@@ -688,7 +688,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         '''
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
+            '-f', 'path-to-config-file'
         ]
 
         # Use mock model config or else TritonModelAnalyzerException will be thrown as it tries to read from disk
