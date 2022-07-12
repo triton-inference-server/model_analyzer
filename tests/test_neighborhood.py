@@ -206,10 +206,11 @@ class TestNeighborhood(trc.TestResultCollector):
 
         n = Neighborhood(nc, cd, Coordinate([0, 0]))
         magnitude = 20
-        new_coord = n.calculate_new_coordinate(magnitude)
 
         # Run it multiple times to make sure no values are changing
+        new_coord = n.calculate_new_coordinate(magnitude)
         self.assertEqual(new_coord, Coordinate([2, 2]))
+        new_coord = n.calculate_new_coordinate(magnitude)
         self.assertEqual(new_coord, Coordinate([2, 2]))
 
     def test_calculate_new_coordinate_out_of_bounds(self):
