@@ -21,7 +21,6 @@ from .triton.client.client_factory import TritonClientFactory
 from .triton.server.server_factory import TritonServerFactory
 from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
-from .config.input.config_command_analyze import ConfigCommandAnalyze
 from .config.input.config_command_report import ConfigCommandReport
 from .log_formatter import setup_logging
 import sys
@@ -151,7 +150,6 @@ def get_cli_and_config_options():
     # Parse CLI options
     try:
         config_profile = ConfigCommandProfile()
-        config_analyze = ConfigCommandAnalyze()
         config_report = ConfigCommandReport()
 
         cli = CLI()
@@ -164,7 +162,7 @@ def get_cli_and_config_options():
             cmd='analyze',
             help=
             'Collect and sort profiling results and generate data and summaries.',
-            config=config_analyze)
+            config=config_profile)
         cli.add_subcommand(cmd='report',
                            help='Generate detailed reports for a single config',
                            config=config_report)
