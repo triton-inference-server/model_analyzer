@@ -230,7 +230,8 @@ class TestConfig(trc.TestResultCollector):
     def test_config(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file', '--profile-models', 'vgg11'
+            '-f', 'path-to-config-file', '--profile-models', 'vgg11',
+            '--analysis-models', 'vgg11'
         ]
         yaml_content = 'model_repository: yaml_repository'
         config = self._evaluate_config(args, yaml_content)
@@ -241,7 +242,7 @@ class TestConfig(trc.TestResultCollector):
 
         args = [
             'model-analyzer', 'profile', '-f', 'path-to-config-file',
-            '--profile-models', 'vgg11'
+            '--profile-models', 'vgg11', '--analysis-models', 'vgg11'
         ]
         yaml_content = 'model_repository: yaml_repository'
         config = self._evaluate_config(args, yaml_content)
@@ -250,14 +251,15 @@ class TestConfig(trc.TestResultCollector):
         self.assertTrue(
             config.get_all_config()['model_repository'] == 'yaml_repository')
 
-        args = ['model-analyzer', 'profile', '-f', 'path-to-config-file']
+        args = ['model-analyzer', 'profile', '-f', 'path-to-config-file',
+                '--analysis-models', 'test_model']
         yaml_content = 'model_repository: yaml_repository'
         self._assert_error_on_evaluate_config(args, yaml_content)
 
     def test_range_and_list_values(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
         yaml_content = 'profile_models: model_1,model_2'
         config = self._evaluate_config(args, yaml_content)
@@ -302,7 +304,8 @@ profile_models:
 
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file', '--profile-models', 'model_1,model_2'
+            '-f', 'path-to-config-file', '--profile-models', 'model_1,model_2',
+            '--analysis-models', 'model_1,model_2'
         ]
         yaml_content = """
 batch_sizes:
@@ -358,7 +361,7 @@ batch_sizes:
     def test_object(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
         yaml_content = """
 profile_models:
@@ -470,7 +473,7 @@ profile_models:
     def test_constraints(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
         yaml_content = """
 profile_models:
@@ -560,7 +563,7 @@ profile_models:
     def test_validation(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
 
         # end key should not be included in concurrency
@@ -578,7 +581,7 @@ profile_models:
 
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
 
         yaml_content = """
@@ -595,7 +598,7 @@ profile_models:
     def test_config_model(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
         yaml_content = """
 profile_models:
@@ -659,7 +662,7 @@ profile_models:
 
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
         yaml_content = """
             profile_models:
@@ -699,7 +702,7 @@ profile_models:
 
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
         yaml_content = """
             profile_models:
@@ -943,7 +946,7 @@ profile_models:
                                               expected_plot_configs)
 
         yaml_content = """
-            report_model_configs: 
+            report_model_configs:
               vgg_16_graphdef:
                 plots:
                     test_plot1:
@@ -1073,7 +1076,7 @@ profile_models:
     def test_autofill(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
         yaml_content = """
         profile_models:
@@ -1441,7 +1444,7 @@ profile_models:
     def test_triton_server_flags(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
         yaml_content = """
             profile_models: model1, model2
@@ -1482,7 +1485,7 @@ profile_models:
     def test_triton_server_environment(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            '-f', 'path-to-config-file', '--analysis-models', 'test_model'
         ]
         yaml_content = """
             profile_models: model1, model2
@@ -1498,7 +1501,7 @@ profile_models:
             })
 
         yaml_content = """
-            profile_models: 
+            profile_models:
                 model1:
                     triton_server_environment:
                         LD_PRELOAD: libtest.so
@@ -1646,7 +1649,7 @@ profile_models:
         # Test parent path validator
         args = [
             'model-analyzer', 'profile', '--model-repository', '/', '-f',
-            'path-to-config-file'
+            'path-to-config-file', '--analysis-models', 'test_model'
         ]
         yaml_content = """
         checkpoint_directory: /test
@@ -1695,7 +1698,7 @@ profile_models:
         # Test the binary path validator
         args = [
             'model-analyzer', 'profile', '--model-repository', '/', '-f',
-            'path-to-config-file'
+            'path-to-config-file', '--analysis-models', 'test_model'
         ]
         yaml_content = """
         triton_server_path: tritonserver

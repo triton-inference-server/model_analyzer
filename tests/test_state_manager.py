@@ -34,7 +34,8 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
     def setUp(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file', '--profile-models', 'test_model'
+            '-f', 'path-to-config-file', '--profile-models', 'test_model',
+            '--analysis-models', 'test_model'
         ]
         yaml_str = ("""
             export_path: /test_export_path/

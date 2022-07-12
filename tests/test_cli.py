@@ -86,6 +86,11 @@ def get_test_options():
         OptionStruct("int", "profile", "--run-config-search-max-instance-count", None, "10", "5"),
         OptionStruct("float", "profile", "--monitoring-interval", "-i", "10.0", "1.0"),
         OptionStruct("float", "profile", "--perf-analyzer-cpu-util", None, "10.0", str(psutil.cpu_count() * 80.0)),
+        OptionStruct("int", "profile", "--num-configs-per-model", None, "10", "3"),
+        OptionStruct("int", "profile", "--num-top-model-configs", None, "10", "0"),
+        OptionStruct("int", "profile", "--latency-budget", None, "200", None),
+        OptionStruct("int", "profile", "--min-throughput", None, "300", None),
+
         OptionStruct("int", "analyze", "--num-configs-per-model", None, "10", "3"),
         OptionStruct("int", "analyze", "--num-top-model-configs", None, "10", "0"),
         OptionStruct("int", "analyze", "--latency-budget", None, "200", None),
@@ -112,6 +117,13 @@ def get_test_options():
         OptionStruct("string", "profile", "--triton-output-path", None, "test_path", None, None),
         OptionStruct("string", "profile", "--triton-launch-mode", None, ["local", "docker", "remote","c_api"], "local", "SHOULD_FAIL"),
         OptionStruct("string", "profile", "--triton-install-path", None, "test_path", "/opt/tritonserver", None),
+        OptionStruct("string", "profile", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
+        OptionStruct("string", "profile", "--export-path", "-e", "./test_dir", os.getcwd(), None),
+        OptionStruct("string", "profile", "--filename-model-inference", None, "foo", "metrics-model-inference.csv", None),
+        OptionStruct("string", "profile", "--filename-model-gpu", None, "foo", "metrics-model-gpu.csv", None),
+        OptionStruct("string", "profile", "--filename-server-only", None, "foo", "metrics-server-only.csv", None),
+        OptionStruct("string", "profile", "--config-file", "-f", "baz", None, None),
+
         OptionStruct("string", "analyze", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
         OptionStruct("string", "analyze", "--export-path", "-e", "./test_dir", os.getcwd(), None),
         OptionStruct("string", "analyze", "--filename-model-inference", None, "foo", "metrics-model-inference.csv", None),
@@ -134,6 +146,13 @@ def get_test_options():
         OptionStruct("intlist", "profile", "--concurrency", "-c", "1, 2, 3", None),
         OptionStruct("stringlist", "profile", "--triton-docker-mounts", None, "a:b:c, d:e:f", None, extra_commands=["--triton-launch-mode", "docker"]),
         OptionStruct("stringlist", "profile", "--gpus", None, "a, b, c", "all"),
+        OptionStruct("stringlist", "profile", "--inference-output-fields", None, "a, b, c",
+            "model_name,batch_size,concurrency,model_config_path,instance_group,max_batch_size,satisfies_constraints,perf_throughput,perf_latency_p99"),
+        OptionStruct("stringlist", "profile", "--gpu-output-fields", None, "a, b, c",
+            "model_name,gpu_uuid,batch_size,concurrency,model_config_path,instance_group,satisfies_constraints,gpu_used_memory,gpu_utilization,gpu_power_usage"),
+        OptionStruct("stringlist", "profile", "--server-output-fields", None, "a, b, c",
+            "model_name,gpu_uuid,gpu_used_memory,gpu_utilization,gpu_power_usage"),
+
         OptionStruct("stringlist", "analyze", "--inference-output-fields", None, "a, b, c",
             "model_name,batch_size,concurrency,model_config_path,instance_group,max_batch_size,satisfies_constraints,perf_throughput,perf_latency_p99"),
         OptionStruct("stringlist", "analyze", "--gpu-output-fields", None, "a, b, c",
@@ -149,6 +168,8 @@ def get_test_options():
         # Others are yaml only options
         OptionStruct("noop", "profile", "--model-repository"),
         OptionStruct("noop", "profile", "--profile-models"),
+        OptionStruct("noop", "profile", "--analysis-models"),
+
         OptionStruct("noop", "analyze", "--analysis-models"),
         OptionStruct("noop", "report", "--report-model-configs"),
         OptionStruct("noop", "report", "--output-formats", "-o", ["pdf", "csv", "png"], "pdf", "SHOULD_FAIL"),
@@ -158,6 +179,10 @@ def get_test_options():
         OptionStruct("noop", "yaml_profile", "perf_analyzer_flags"),
         OptionStruct("noop", "yaml_profile", "triton_docker_labels"),
         OptionStruct("noop", "yaml_profile", "triton_server_environment"),
+        OptionStruct("noop", "yaml_profile", "constraints"),
+        OptionStruct("noop", "yaml_profile", "objectives"),
+        OptionStruct("noop", "yaml_profile", "plots"),
+
         OptionStruct("noop", "yaml_analyze", "constraints"),
         OptionStruct("noop", "yaml_analyze", "objectives"),
         OptionStruct("noop", "yaml_analyze", "plots"),
@@ -199,7 +224,9 @@ class CLIConfigProfileStruct():
             '--model-repository',
             'foo',
             '--profile-models',
-            'bar'
+            'bar',
+            '--analysis-models',
+            'a,b,c'
         ]
         #yapf: enable
         config_profile = ConfigCommandProfile()
@@ -337,9 +364,13 @@ class TestCLI(trc.TestResultCollector):
         'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._preprocess_and_verify_arguments'
     )
     @patch(
+        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments'
+    )
+    @patch(
         'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file'
     )
     def test_all_options(self, mocked_load_config_file_profile,
+                         mocked_verify_args_profile,
                          mocked_verify_args_analyze,
                          mocked_load_config_file_analyze,
                          mocked_verify_args_report,
