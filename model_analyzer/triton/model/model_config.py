@@ -13,9 +13,7 @@
 # limitations under the License.
 
 import os
-import re
 from numba import cuda
-from pathlib import Path
 from distutils.dir_util import copy_tree
 from google.protobuf import text_format, json_format
 from google.protobuf.descriptor import FieldDescriptor
@@ -108,8 +106,7 @@ class ModelConfig:
                     f' Triton does not support default config creation for {config.triton_launch_mode} mode.'
                 )
 
-            ModelConfig._default_config_dict[model_name] = config
-
+        ModelConfig._default_config_dict[model_name] = config
         return config
 
     @staticmethod
