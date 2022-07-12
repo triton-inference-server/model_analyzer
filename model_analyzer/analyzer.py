@@ -97,6 +97,11 @@ class Analyzer:
         self._get_server_only_metrics(client)
 
         self._profile_models()
+        # TODO: TMA-792: This won't be needed once analysis is part of profile
+        self._analyze_model()
+
+        # TODO: TMA-790: Skip this step if the CLI option indicates the user doesn't want summary reports
+        self._create_summary_reports()
 
         logger.info(self._get_profile_complete_string())
         logger.info("")
@@ -222,6 +227,31 @@ class Analyzer:
                     self._model_manager.run_models(models=[model])
                 finally:
                     self._state_manager.save_checkpoint()
+
+    def _analyze_model(self):
+        gpu_info = self._state_manager.get_state_variable('MetricsManager.gpus')
+        if not gpu_info:
+            gpu_info = {}
+
+        # Create result tables, put top results and get stats
+        self._result_manager.create_tables()
+        self._result_manager.compile_and_sort_results()
+
+        # Dump to tables and write to disk
+        self._result_manager.tabulate_results()
+        self._result_manager.export_results()
+        if verbose:
+            self._result_manager.write_results()
+
+    def _create_summary_reports(self):
+        self._report_manager = ReportManager(
+            mode=mode,
+            config=self._config,
+            gpu_info=gpu_info,
+            result_manager=self._result_manager)
+
+        self._report_manager.create_summaries()
+        self._report_manager.export_summaries()
 
     def _should_profile_multiple_models_concurrently(self):
         return (self._config.run_config_profile_models_concurrently_enable and
