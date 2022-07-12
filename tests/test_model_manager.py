@@ -22,6 +22,7 @@ from .mocks.mock_run_configs import MockRunConfigs
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.model_manager import ModelManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.triton.model.model_config import ModelConfig
 
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -76,6 +77,7 @@ class TestModelManager(trc.TestResultCollector):
 
     def tearDown(self):
         patch.stopall()
+        ModelConfig._default_config_dict = {}
 
     def __init__(self, methodname):
         super().__init__(methodname)

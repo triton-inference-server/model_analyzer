@@ -14,6 +14,7 @@
 
 from model_analyzer.config.generate.model_config_generator_factory import ModelConfigGeneratorFactory
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.triton.model.model_config import ModelConfig
 from .common import test_result_collector as trc
 from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
 from .mocks.mock_model_config import MockModelConfig
@@ -761,6 +762,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
     def tearDown(self):
         self.mock_os.stop()
         patch.stopall()
+        ModelConfig._default_config_dict = {}
 
 
 if __name__ == '__main__':
