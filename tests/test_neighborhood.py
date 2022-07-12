@@ -271,8 +271,9 @@ class TestNeighborhood(trc.TestResultCollector):
         """
         cd = CoordinateData()
         cd.set_throughput(Coordinate([1, 0, 1]), 0)
-        cd.set_throughput(Coordinate([0, 1, 0]), 0)
+        cd.set_throughput(Coordinate([0, 0, 0]), 0)
         cd.set_throughput(Coordinate([0, 1, 1]), 0)
+        cd.set_throughput(Coordinate([1, 1, 0]), 0)
 
         dims = SearchDimensions()
         dims.add_dimensions(0, [
@@ -288,5 +289,5 @@ class TestNeighborhood(trc.TestResultCollector):
 
         coordinates, throughputs = n._compile_neighborhood_throughputs()
         tc = n._determine_weighted_coordinate_center(coordinates, throughputs)
-        expected_tc = Coordinate([0, 0, 0])
+        expected_tc = Coordinate([0.5, 0.5, 0.5])
         self.assertEqual(tc, expected_tc)
