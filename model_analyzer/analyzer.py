@@ -68,10 +68,10 @@ class Analyzer:
         """
         Subcommand: PROFILE
 
-        Creates a RunConfigGenerator to generate RunConfigs, and then
+        Creates a RunConfigGenerator to generate RunConfigs, and then 
         profiles each RunConfig on Perf Analyzer and gathers the resulting
         measurements.
-
+        
         Each RunConfig contains one or more (in the case of concurrent multi-model)
         ModelRunConfigs, each of which contain a ModelConfig and a PerfAnalyzerConfig
 
