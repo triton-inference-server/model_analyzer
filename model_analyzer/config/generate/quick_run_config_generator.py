@@ -137,6 +137,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         else:
             self._coordinate_data.set_throughput(
                 coordinate=self._coordinate_to_measure, throughput=0)
+            logger.debug(f"Throughput for {self._coordinate_to_measure}: 0")
 
     def _get_last_results(self):
         return self._coordinate_data.get_throughput(self._coordinate_to_measure)
