@@ -102,13 +102,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         Determine self._coordinate_to_measure, which is what is used to
         create the next RunConfig
         """
-        if self._get_last_results() is None:
-            self._handle_invalid_last_results()
+        if self._neighborhood.enough_coordinates_initialized():
+            self._take_step()
         else:
-            if self._neighborhood.enough_coordinates_initialized():
-                self._take_step()
-            else:
-                self._pick_coordinate_to_initialize()
+            self._pick_coordinate_to_initialize()
 
         if self._coordinate_to_measure is None:
             logger.info("No coordinate to measure. Exiting")
@@ -137,18 +134,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             logger.debug(
                 f"Throughput for {self._coordinate_to_measure}: {self._get_last_results()}"
             )
+        else:
+            self._coordinate_data.set_throughput(
+                coordinate=self._coordinate_to_measure, throughput=0)
+            logger.debug(f"Throughput for {self._coordinate_to_measure}: 0")
 
     def _get_last_results(self):
         return self._coordinate_data.get_throughput(self._coordinate_to_measure)
-
-    def _handle_invalid_last_results(self):
-        # TODO TMA-779: Better handling of this
-        self._done = True
-
-        self._coordinate_to_measure = self._neighborhood.get_nearest_unvisited_neighbor(
-            self._coordinate_to_measure)
-        logger.debug(
-            f"No throughput found. measuring {self._coordinate_to_measure}")
 
     def _take_step(self):
         magnitude = self._get_magnitude()
@@ -254,8 +246,11 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_variant_name, self._config)
 
         perf_config_params = {
-            'batch-size': 1,
-            'concurrency-range': dimension_values['concurrency']
+            'batch-size':
+                1,
+            'concurrency-range':
+                2 * dimension_values['instance_count'] *
+                dimension_values['max_batch_size']
         }
         perf_analyzer_config.update_config(perf_config_params)
 

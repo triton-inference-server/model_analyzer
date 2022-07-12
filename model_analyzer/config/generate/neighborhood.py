@@ -78,9 +78,9 @@ class Neighborhood:
 
         returns: Coordinate
         """
-        unit_vector = self._get_unit_vector()
+        step_vector = self._get_step_vector()
         tmp_new_coordinate = self._home_coordinate + round(
-            unit_vector * magnitude)
+            step_vector * magnitude)
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
 
         return new_coordinate
@@ -171,9 +171,9 @@ class Neighborhood:
                 num_initialized += 1
         return num_initialized
 
-    def _get_unit_vector(self):
+    def _get_step_vector(self):
         """
-        Create a unit vector pointing from the unweighted center of the
+        Create a vector pointing from the unweighted center of the
         datapoints inside of the neighborhood to the weighted center of 
         the datapoints inside of the neighborhood
         """
@@ -185,8 +185,7 @@ class Neighborhood:
 
         vector = throughput_center - coordinate_center
 
-        unit_vector = self._convert_to_unit_vector(vector)
-        return unit_vector
+        return vector
 
     def _compile_neighborhood_throughputs(self):
         coordinates = []
@@ -216,6 +215,9 @@ class Neighborhood:
             weighted_center += coordinates[i] * weights[i]
 
         weights_sum = sum(weights)
+
+        if (weights_sum == 0):
+            return self._determine_coordinate_center(coordinates)
 
         weighted_center /= weights_sum
 

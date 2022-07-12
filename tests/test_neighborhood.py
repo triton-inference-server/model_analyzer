@@ -156,7 +156,10 @@ class TestNeighborhood(trc.TestResultCollector):
 
         n = Neighborhood(nc, cd, Coordinate([0, 0]))
 
-        self.assertEqual(Coordinate([1, 0]), n.calculate_new_coordinate(1))
+        magnitude = 20
+        new_coord = n.calculate_new_coordinate(magnitude)
+
+        self.assertEqual(new_coord, Coordinate([3, 0]))
 
     def test_calculate_new_coordinate_two_dimensions(self):
         """ 
@@ -177,9 +180,10 @@ class TestNeighborhood(trc.TestResultCollector):
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
 
         n = Neighborhood(nc, cd, Coordinate([0, 0]))
-        magnitude = 1
-        self.assertEqual(Coordinate([1, 1]),
-                         n.calculate_new_coordinate(magnitude))
+        magnitude = 20
+        new_coord = n.calculate_new_coordinate(magnitude)
+
+        self.assertEqual(new_coord, Coordinate([1, 1]))
 
     def test_calculate_new_coordinate_larger_magnitude(self):
         """ 
@@ -189,8 +193,8 @@ class TestNeighborhood(trc.TestResultCollector):
         """
         cd = CoordinateData()
         cd.set_throughput(Coordinate([0, 0]), 2)
-        cd.set_throughput(Coordinate([1, 0]), 4)
-        cd.set_throughput(Coordinate([0, 1]), 4)
+        cd.set_throughput(Coordinate([1, 0]), 8)
+        cd.set_throughput(Coordinate([0, 1]), 8)
 
         dims = SearchDimensions()
         dims.add_dimensions(0, [
@@ -201,13 +205,13 @@ class TestNeighborhood(trc.TestResultCollector):
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
 
         n = Neighborhood(nc, cd, Coordinate([0, 0]))
-        magnitude = 3
+        magnitude = 20
 
         # Run it multiple times to make sure no values are changing
-        self.assertEqual(Coordinate([2, 2]),
-                         n.calculate_new_coordinate(magnitude))
-        self.assertEqual(Coordinate([2, 2]),
-                         n.calculate_new_coordinate(magnitude))
+        new_coord = n.calculate_new_coordinate(magnitude)
+        self.assertEqual(new_coord, Coordinate([2, 2]))
+        new_coord = n.calculate_new_coordinate(magnitude)
+        self.assertEqual(new_coord, Coordinate([2, 2]))
 
     def test_calculate_new_coordinate_out_of_bounds(self):
         """ 
@@ -240,7 +244,7 @@ class TestNeighborhood(trc.TestResultCollector):
     def test_no_magnitude_unit_vector(self):
         """
         Test that if the coordinate_center and weighted_coordinate_center
-        are the same, then the unit_vector is all 0s
+        are the same, then the step vector is all 0s
         """
         cd = CoordinateData()
         cd.set_throughput(Coordinate([1, 0]), 4)
@@ -256,6 +260,6 @@ class TestNeighborhood(trc.TestResultCollector):
 
         n = Neighborhood(nc, cd, Coordinate([0, 0]))
 
-        uv = n._get_unit_vector()
+        uv = n._get_step_vector()
         expected_uv = Coordinate([0, 0])
         self.assertEqual(uv, expected_uv)

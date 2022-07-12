@@ -28,20 +28,20 @@ class ConfigCommandExperiment(ConfigCommandProfile):
             ConfigField('radius',
                         field_type=ConfigPrimitive(int),
                         flags=['--radius'],
-                        default_value=2,
+                        default_value=3,
                         description='The size of the neighborhood radius'))
         self._add_config(
             ConfigField('magnitude',
                         field_type=ConfigPrimitive(int),
                         flags=['--magnitude'],
-                        default_value=2,
+                        default_value=20,
                         description='The size of each step'))
         self._add_config(
             ConfigField(
                 'min_initialized',
                 field_type=ConfigPrimitive(int),
                 flags=['--min-initialized'],
-                default_value=2,
+                default_value=3,
                 description=
                 'The minimum number of datapoints needed in a neighborhood before stepping'
             ))

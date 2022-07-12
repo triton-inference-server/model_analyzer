@@ -65,10 +65,10 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         """ 
         Test that get_next_run_config() creates a proper RunConfig 
         
-        Sets up a case where the coordinate is [5,7,4], which cooresponds to
+        Sets up a case where the coordinate is [5,7], which cooresponds to
           - max_batch_size = 32
           - instance_count = 8
-          - concurrency = 16
+          - concurrency = 32*8*2 = 512
         
         Also
         - rate limiter priority should be 1, even for single model
@@ -76,7 +76,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         - existing values from the base model config should persist if they aren't overwritten
         """
         urcg = self._urcg
-        urcg._coordinate_to_measure = Coordinate([5, 7, 4])
+        urcg._coordinate_to_measure = Coordinate([5, 7])
 
         #yapf: disable
         fake_base_config = {
@@ -117,20 +117,20 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         perf_config = rc.model_run_configs()[0].perf_config()
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
-        self.assertEqual(perf_config['concurrency-range'], 16)
+        self.assertEqual(perf_config['concurrency-range'], 512)
         self.assertEqual(perf_config['batch-size'], 1)
 
     def test_get_next_run_config_multi_model(self):
         """ 
         Test that get_next_run_config() creates a proper RunConfig for multi-model
         
-        Sets up a case where the coordinate is [1,2,3,4,5,6], which cooresponds to
+        Sets up a case where the coordinate is [1,2,4,5], which cooresponds to
           - model 1 max_batch_size = 2
           - model 1 instance_count = 3
-          - model 1 concurrency = 8
+          - model 1 concurrency = 2*3*2 = 12
           - model 2 max_batch_size = 16
           - model 2 instance_count = 6
-          - model 2 concurrency = 64
+          - model 2 concurrency = 16*6*2 = 192
 
         Also, 
         - rate limiter priority should be 1
@@ -150,17 +150,13 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             SearchDimension("max_batch_size",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("instance_count",
-                            SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("concurrency",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+                            SearchDimension.DIMENSION_TYPE_LINEAR)
         ])
         dims.add_dimensions(1, [
             SearchDimension("max_batch_size",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("instance_count",
-                            SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("concurrency",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+                            SearchDimension.DIMENSION_TYPE_LINEAR)
         ])
 
         sc = SearchConfig(dimensions=dims,
@@ -170,7 +166,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         urcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
                                        mock_models, MagicMock())
 
-        urcg._coordinate_to_measure = Coordinate([1, 2, 3, 4, 5, 6])
+        urcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
 
         #yapf: disable
         fake_base_config1 = {
@@ -241,10 +237,10 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         self.assertEqual(mc1.to_dict(), expected_model_config1)
         self.assertEqual(mc2.to_dict(), expected_model_config2)
-        self.assertEqual(pc1['concurrency-range'], 8)
+        self.assertEqual(pc1['concurrency-range'], 12)
         self.assertEqual(pc1['batch-size'], 1)
         self.assertEqual(pc1['model-version'], 2)
-        self.assertEqual(pc2['concurrency-range'], 64)
+        self.assertEqual(pc2['concurrency-range'], 192)
         self.assertEqual(pc2['batch-size'], 1)
         self.assertEqual(pc2['model-version'], 3)
 
