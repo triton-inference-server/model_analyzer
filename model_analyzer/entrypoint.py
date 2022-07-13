@@ -260,7 +260,10 @@ def main():
                                 server,
                                 state_manager,
                                 checkpoint_required=False)
-            analyzer.profile(client=client, gpus=gpus)
+            analyzer.profile(client=client,
+                             gpus=gpus,
+                             mode=args.mode,
+                             verbose=bool(args.verbose))
 
         elif args.subcommand == 'analyze':
             analyzer = Analyzer(config,

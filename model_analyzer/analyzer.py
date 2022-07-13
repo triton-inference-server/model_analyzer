@@ -30,6 +30,11 @@ from .config.input.config_defaults import \
 from .model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
+from .triton.client.grpc_client import TritonGRPCClient
+from .triton.client.http_client import TritonHTTPClient
+
+from typing import Union
+
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -64,7 +69,8 @@ class Analyzer:
         self._result_manager = ResultManager(config=config,
                                              state_manager=self._state_manager)
 
-    def profile(self, client, gpus):
+    def profile(self, client: Union[TritonGRPCClient, TritonHTTPClient],
+                gpus: list, mode: str, verbose: bool):
         """
         Subcommand: PROFILE
 
@@ -101,16 +107,16 @@ class Analyzer:
         # TODO: TMA-792: This won't be needed once the Results class is used in profile
         self._analyze_models()
 
-        self._create_summary_tables()
+        self._create_summary_tables(verbose)
 
         # TODO: TMA-790: Skip this step if the CLI option indicates the user doesn't want summary reports
-        self._create_summary_reports()
+        self._create_summary_reports(mode)
 
         logger.info(self._get_profile_complete_string())
         logger.info("")
         logger.info(self._get_analyze_command_help_string())
 
-    def analyze(self, mode, verbose):
+    def analyze(self, mode: str, verbose: bool):
         """
         subcommand: ANALYZE
 
@@ -154,7 +160,7 @@ class Analyzer:
         logger.info("")
         logger.info(self._get_report_command_help_string())
 
-    def report(self, mode):
+    def report(self, mode: str):
         """
         Subcommand: REPORT
 
@@ -242,7 +248,7 @@ class Analyzer:
 
         self._result_manager.compile_and_sort_results()
 
-    def _create_summary_tables(self):
+    def _create_summary_tables(self, verbose: bool):
         self._result_table_manager = ResultTableManager(self._config,
                                                         self._result_manager)
 
@@ -253,7 +259,11 @@ class Analyzer:
         if verbose:
             self._result_table_manager.write_results()
 
-    def _create_summary_reports(self):
+    def _create_summary_reports(self, mode: str):
+        gpu_info = self._state_manager.get_state_variable('MetricsManager.gpus')
+        if not gpu_info:
+            gpu_info = {}
+
         self._report_manager = ReportManager(
             mode=mode,
             config=self._config,
