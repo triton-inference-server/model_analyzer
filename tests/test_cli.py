@@ -168,7 +168,6 @@ def get_test_options():
         # Others are yaml only options
         OptionStruct("noop", "profile", "--model-repository"),
         OptionStruct("noop", "profile", "--profile-models"),
-        OptionStruct("noop", "profile", "--analysis-models"),
 
         OptionStruct("noop", "analyze", "--analysis-models"),
         OptionStruct("noop", "report", "--report-model-configs"),
