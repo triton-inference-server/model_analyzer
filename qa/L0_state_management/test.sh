@@ -208,22 +208,11 @@ if [ $? -ne 0 ]; then
     RET=1
 fi
 
-# Run analyze because here we check the results not just the logs
-MODEL_ANALYZER_SUBCOMMAND="analyze"
-MODEL_ANALYZER_ARGS="-e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --analysis-models $MODEL_NAMES"
-run_analyzer
+python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $CHECKPOINT_DIRECTORY -l $ANALYZER_LOG
 if [ $? -ne 0 ]; then
-    echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
+    echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
     cat $ANALYZER_LOG
     RET=1
-else
-    python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $CHECKPOINT_DIRECTORY -l $ANALYZER_LOG
-    if [ $? -ne 0 ]; then
-        echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
-        cat $ANALYZER_LOG
-        RET=1
-    fi
 fi
 
 rm -rf $EXPORT_PATH/*

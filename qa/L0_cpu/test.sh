@@ -53,6 +53,8 @@ set +e
 PROFILE_CONFIG='config-profile.yml'
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE --checkpoint-directory $CHECKPOINT_DIRECTORY -f $PROFILE_CONFIG"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 run_analyzer
 if [ $? -ne 0 ]; then
@@ -61,32 +63,20 @@ if [ $? -ne 0 ]; then
     RET=1
 fi
 
-# Run analyze to generate reports
-MODEL_ANALYZER_ARGS="--analysis-models resnet_v1_50_cpu_graphdef -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY  --checkpoint-directory $CHECKPOINT_DIRECTORY"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS "
-MODEL_ANALYZER_SUBCOMMAND="analyze"
-run_analyzer
+SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
+MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
+MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
+INFERENCE_NUM_COLUMNS=9
+
+check_table_row_column \
+    $ANALYZER_LOG "" "" \
+    $MODEL_METRICS_INFERENCE_FILE "" "" \
+    $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS \
+    0 0 0 0
 if [ $? -ne 0 ]; then
-    echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"
+    echo -e "\n***\n*** Test Output Verification Failed.\n***"
     cat $ANALYZER_LOG
     RET=1
-else
-    SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
-    MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
-    MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
-    INFERENCE_NUM_COLUMNS=9
-
-    check_table_row_column \
-        $ANALYZER_LOG "" "" \
-        $MODEL_METRICS_INFERENCE_FILE "" "" \
-        $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS \
-        0 0 0 0
-    if [ $? -ne 0 ]; then
-        echo -e "\n***\n*** Test Output Verification Failed.\n***"
-        cat $ANALYZER_LOG
-        RET=1
-    fi
 fi
 set -e
 
