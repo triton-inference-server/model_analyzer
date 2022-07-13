@@ -14,6 +14,7 @@
 
 ANALYZER_LOG="test.log"
 source ../common/util.sh
+source ../common/check_analyzer_results.sh
 
 rm -f *.log
 rm -rf results && mkdir -p results
@@ -32,8 +33,16 @@ PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CONFIG_FILE="config.yml"
+EXPORT_PATH="`pwd`/results"
+FILENAME_SERVER_ONLY="server-metrics.csv"
+FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
+FILENAME_GPU_MODEL="model-metrics-gpu.csv"
+MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
+
+# Create results directory
+mkdir $EXPORT_PATH
 
 python3 test_config_generator.py --profile-models $MODEL_NAMES
 
@@ -47,6 +56,8 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --t
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 run_analyzer
 if [ $? -ne 0 ]; then
@@ -59,6 +70,28 @@ else
     python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
+        cat $ANALYZER_LOG
+        RET=1
+    fi
+
+    SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
+    MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
+    MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
+    METRICS_NUM_COLUMNS=10
+    METRICS_NUM_ROWS=8
+    INFERENCE_NUM_COLUMNS=9
+    INFERENCE_NUM_ROWS=8
+    SERVER_NUM_COLUMNS=5
+    SERVER_NUM_ROWS=1
+
+    check_table_row_column \
+        $ANALYZER_LOG $ANALYZER_LOG $ANALYZER_LOG \
+        $MODEL_METRICS_INFERENCE_FILE $MODEL_METRICS_GPU_FILE $SERVER_METRICS_FILE \
+        $INFERENCE_NUM_COLUMNS $INFERENCE_NUM_ROWS \
+        $METRICS_NUM_COLUMNS $METRICS_NUM_ROWS \
+        $SERVER_NUM_COLUMNS $SERVER_NUM_ROWS
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test Output Verification Failed.\n***"
         cat $ANALYZER_LOG
         RET=1
     fi
