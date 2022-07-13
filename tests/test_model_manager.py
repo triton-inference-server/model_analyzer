@@ -298,6 +298,107 @@ class TestModelManager(trc.TestResultCollector):
 
         self._test_model_manager(yaml_str, expected_ranges)
 
+    def test_no_early_exit_client_batch_size(self):
+        """ 
+        Test that we will NOT early exit client batch size by default
+        """
+        self._test_early_exit_client_batch_size_helper(early_exit=False)
+
+    def test_early_exit_client_batch_size(self):
+        """ 
+        Test that we will early exit client batch size if
+        --early-exit-enable is true
+        """
+        self._test_early_exit_client_batch_size_helper(early_exit=True)
+
+    def _test_early_exit_client_batch_size_helper(self, early_exit):
+
+        args = self._args.copy()
+
+        if early_exit:
+            args.append('--early-exit-enable')
+
+            expected_ranges = [{
+                'instances': [1],
+                'kind': ["KIND_GPU"],
+                'batching': [0],
+                'batch_sizes': [1, 3],
+                'max_batch_size': [8],
+                'concurrency': [1, 2, 4, 8]
+            }, {
+                'instances': [1],
+                'kind': ["KIND_CPU"],
+                'batching': [None],
+                'batch_sizes': [1, 3, 4],
+                'max_batch_size': [8],
+                'concurrency': [1, 2, 4, 8, 16]
+            }]
+
+        else:
+            expected_ranges = [{
+                'instances': [1],
+                'kind': ["KIND_GPU"],
+                'batching': [0],
+                'batch_sizes': [1, 3, 4, 7],
+                'max_batch_size': [8],
+                'concurrency': [1, 2, 4, 8, 16]
+            }, {
+                'instances': [1],
+                'kind': ["KIND_CPU"],
+                'batching': [None],
+                'batch_sizes': [1, 3, 4, 7],
+                'max_batch_size': [8],
+                'concurrency': [1, 2, 4, 8, 16]
+            }]
+
+        yaml_content = ("""
+            profile_models: test_model
+            run_config_search_max_instance_count: 1
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
+            concurrency: 16,1,2,4,8
+            batch_sizes: 3,7,1,4
+            """)
+
+        with patch.object(MetricsManagerSubclass,
+                          "_get_next_perf_throughput_value") as mock_method:
+            #yapf: disable
+            side_effect = [
+                # Default config, bs=1, concurrency 1,2,4,8,16
+                # Will not cause early exit for concurrency
+                # "Best" result for bs early exit is 5
+                1, 2, 3, 4, 5,
+
+                # Default config, bs=3, concurrency 1,2,4,8,16
+                # Will not cause early exit for concurrency
+                # "Best" result for bs early exit is 6
+                # Thus, we will not early exit batch size
+                6, 5, 4, 5, 2,
+
+                # Default config, bs=4, concurrency 1,2,4,8,16
+                # Will not cause early exit for concurrency
+                # "Best" result for bs early exit is 4
+                # Thus, we WILL early exit batch size
+                1, 1, 4, 1, 1,
+
+                # 1 instance, bs=1, concurrency 1,2,4,8
+                # Will early exit concurrency
+                # "Best" result for bs early exit is 1
+                1, 1, 1, 1,
+
+                # 1 instance, bs=3, concurrency 1,2,4,8
+                # Will early exit concurrency
+                # "Best" result for bs early exit is 1
+                # Thus, we WILL early exit batch size
+                1, 1, 1, 1
+            ]
+            # Add a bunch of extra results for the no-early-exit case
+            side_effect.extend([1]*100)
+            mock_method.side_effect = side_effect
+            #yapf: enable
+
+            self._test_model_manager(yaml_content, expected_ranges, args=args)
+
     def test_triton_parameters(self):
         """
         Test with manually specified triton options. 
@@ -889,7 +990,7 @@ class TestModelManager(trc.TestResultCollector):
 
         self._test_model_manager(yaml_str, expected_ranges)
 
-    def _test_model_manager(self, yaml_str, expected_ranges):
+    def _test_model_manager(self, yaml_content, expected_ranges, args=None):
         """ 
         Test helper function that passes the given yaml_str into
         model_manager, runs the model, and confirms the result is as expected
@@ -897,12 +998,13 @@ class TestModelManager(trc.TestResultCollector):
         dicts expected_ranges
         """
 
+        if args == None:
+            args = self._args
+
         # Use mock model config or else TritonModelAnalyzerException will be thrown as it tries to read from disk
         self.mock_model_config = MockModelConfig(self._model_config_protobuf)
         self.mock_model_config.start()
-        config = evaluate_mock_config(self._args,
-                                      yaml_str,
-                                      subcommand="profile")
+        config = evaluate_mock_config(args, yaml_content, subcommand="profile")
 
         state_manager = AnalyzerStateManager(config, MagicMock())
         metrics_manager = MetricsManagerSubclass(config, MagicMock(),
