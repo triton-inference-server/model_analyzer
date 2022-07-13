@@ -113,16 +113,17 @@ kill -2 $ANALYZER_PID
 wait $ANALYZER_PID
 
 if [ $? -ne 0 ]; then
-    echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
-    cat $ANALYZER_LOG
-    RET=1
-else
     python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $CHECKPOINT_DIRECTORY -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
         RET=1
     fi
+else
+    echo -e "\n***\n*** Test Failed. model-analyzer exited with ZERO exit code when SIGINT occurred. \n***"
+    cat $ANALYZER_LOG
+    RET=1
+    
 fi
 
 TEST_NAME="continue_after_checkpoint"
