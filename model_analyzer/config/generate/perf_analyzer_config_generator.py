@@ -14,6 +14,8 @@
 
 from typing import List
 
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+
 from .config_generator_interface import ConfigGeneratorInterface
 from .generator_utils import GeneratorUtils as utils
 
@@ -123,8 +125,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._last_results = measurement
         self._concurrency_results.extend(measurement)
 
-    def _create_concurrency_list(self, cli_config,
-                                 model_parameters) -> List[int]:
+    def _create_concurrency_list(self, cli_config: ConfigCommandProfile,
+                                 model_parameters: dict) -> List[int]:
         if model_parameters['concurrency']:
             return sorted(model_parameters['concurrency'])
         elif cli_config.run_config_search_disable:
