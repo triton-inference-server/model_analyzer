@@ -97,8 +97,11 @@ class Analyzer:
         self._get_server_only_metrics(client)
 
         self._profile_models()
-        # TODO: TMA-792: This won't be needed once analysis is part of profile
-        self._analyze_model()
+
+        # TODO: TMA-792: This won't be needed once the Results class is used in profile
+        self._analyze_models()
+
+        self._create_summary_tables()
 
         # TODO: TMA-790: Skip this step if the CLI option indicates the user doesn't want summary reports
         self._create_summary_reports()
@@ -228,20 +231,27 @@ class Analyzer:
                 finally:
                     self._state_manager.save_checkpoint()
 
-    def _analyze_model(self):
+    def _analyze_models(self):
+        # TODO: Until we get rid of analysis we need to copy some values from profile
+        self._config._fields["analysis_models"] = self._config._fields[
+            "profile_models"]
+
         gpu_info = self._state_manager.get_state_variable('MetricsManager.gpus')
         if not gpu_info:
             gpu_info = {}
 
-        # Create result tables, put top results and get stats
-        self._result_manager.create_tables()
         self._result_manager.compile_and_sort_results()
 
-        # Dump to tables and write to disk
-        self._result_manager.tabulate_results()
-        self._result_manager.export_results()
+    def _create_summary_tables(self):
+        self._result_table_manager = ResultTableManager(self._config,
+                                                        self._result_manager)
+
+        self._result_table_manager.create_tables()
+        self._result_table_manager.tabulate_results()
+        self._result_table_manager.export_results()
+
         if verbose:
-            self._result_manager.write_results()
+            self._result_table_manager.write_results()
 
     def _create_summary_reports(self):
         self._report_manager = ReportManager(
