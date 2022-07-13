@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 from model_analyzer.constants import LOGGER_NAME
 from .model_manager import ModelManager
 from .result.result_manager import ResultManager
@@ -103,6 +104,9 @@ class Analyzer:
         self._get_server_only_metrics(client)
 
         self._profile_models()
+
+        if (self._state_manager.exiting()):
+            sys.exit(1)
 
         # TODO: TMA-792: This won't be needed once the Results class is used in profile
         self._analyze_models()
