@@ -103,6 +103,7 @@ class ExperimentData:
             print(
                 f"WARNING: Model config {ma_key}, concurrency={pa_key} not in results"
             )
+            self._missing_measurement_count += 1
             return None
 
         return self._data[ma_key][pa_key]
