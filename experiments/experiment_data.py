@@ -93,8 +93,11 @@ class ExperimentData:
     def _get_run_config_measurement_from_keys(self, ma_key, pa_key):
         if ma_key not in self._data:
             print(f"WARNING: Model config {ma_key} not in results")
-            return
+            return None
         if pa_key not in self._data[ma_key]:
+            print(
+                f"WARNING: Model config {ma_key}, concurrency={pa_key} not in results"
+            )
             return None
 
         return self._data[ma_key][pa_key]
@@ -125,6 +128,24 @@ class ExperimentData:
         return self._make_pa_key_from_cli_string(pa_string)
 
     def _make_pa_key_from_cli_string(self, pa_cli_string):
-        concurrencies = re.findall('--concurrency-range=\d+', pa_cli_string)
-        key = ';'.join(concurrencies)
-        return key
+        concurrencies = re.findall('--concurrency-range=(\d+)', pa_cli_string)
+        batch_sizes = re.findall(' -b (\d+)', pa_cli_string)
+
+        if len(concurrencies) != len(batch_sizes):
+            raise Exception(f"concurrencies don't match batch sizes")
+
+        for i in range(len(concurrencies)):
+            tmp_int = int(concurrencies[i]) * int(batch_sizes[i])
+            clamped_int = self._clamp_to_power_of_two(tmp_int)
+            concurrencies[i] = str(clamped_int)
+
+        return ';'.join(concurrencies)
+
+    def _clamp_to_power_of_two(self, num):
+        """ 
+        Return the smallest power of two that is >= the input
+        """
+        v = 1
+        while v < num:
+            v *= 2
+        return v
