@@ -22,29 +22,27 @@ class ExperimentFileWriter:
     A file writer that collects all the results from the undirected algorithm
     and the corresponding brute-force algorithm and writes them into csv files.
     """
+    field_names = [
+        "overall_num_measurements", "overall_best_throughput",
+        "undirected_num_measurements", "missing_num_measurements",
+        "undirected_throughput", "radius", "magnitude", "min_initialized"
+    ]
 
     def __init__(self, output_path, file_name="output_vgg19_libtorch.csv"):
         self._filename = os.path.join(output_path, file_name)
-        self._file_exists = True
 
         if not os.path.exists(self._filename):
             os.makedirs(output_path, exist_ok=True)
-            self._file_exists = False
+
+            with open(self._filename, mode="w") as csv_file:
+                writer = csv.DictWriter(csv_file, fieldnames=self.field_names)
+                writer.writeheader()
 
     def write(self, checkpoint_data, profile_data, radius, magnitude,
               min_initialized):
         try:
             with open(self._filename, mode="a") as csv_file:
-                field_names = [
-                    "overall_num_measurements", "overall_best_throughput",
-                    "undirected_num_measurements", "missing_num_measurements",
-                    "undirected_throughput",
-                    "radius", "magnitude", "min_initialized"
-                ]
-                writer = csv.DictWriter(csv_file, fieldnames=field_names)
-
-                if not self._file_exists:
-                    writer.writeheader()
+                writer = csv.DictWriter(csv_file, fieldnames=self.field_names)
 
                 overall_best_measurement = checkpoint_data.get_best_run_config_measurement(
                 )

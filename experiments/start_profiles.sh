@@ -27,7 +27,7 @@ for model in inception_v1_graphdef resnet50_libtorch vgg19_libtorch; do
             --output-path output \
             --radius $radius \
             --magnitude $magnitude \
-            --min-initialized $min_initialized \
+            --min-initialized $min_initialized
       done
     done
   done
