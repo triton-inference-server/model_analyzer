@@ -267,7 +267,7 @@ class TestNeighborhood(trc.TestResultCollector):
     def test_all_zero_throughputs(self):
         """
         Test that when all the coorindates in the neighborhood has
-        zero throughputs, the weighed coordinate is all 0s.
+        zero throughputs, the weighted center is same as the unweighted center.
         """
         cd = CoordinateData()
         cd.set_throughput(Coordinate([1, 0, 1]), 0)
@@ -280,7 +280,6 @@ class TestNeighborhood(trc.TestResultCollector):
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("foobar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-
         ])
 
         nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
@@ -289,5 +288,5 @@ class TestNeighborhood(trc.TestResultCollector):
 
         coordinates, throughputs = n._compile_neighborhood_throughputs()
         tc = n._determine_weighted_coordinate_center(coordinates, throughputs)
-        expected_tc = Coordinate([0.5, 0.5, 0.5])
+        expected_tc = n._determine_coordinate_center(coordinates)
         self.assertEqual(tc, expected_tc)
