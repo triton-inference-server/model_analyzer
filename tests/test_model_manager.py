@@ -322,16 +322,16 @@ class TestModelManager(trc.TestResultCollector):
                 'instances': [1],
                 'kind': ["KIND_GPU"],
                 'batching': [0],
-                'batch_sizes': [1, 3],
+                'batch_sizes': [1, 2, 3, 4],
                 'max_batch_size': [8],
-                'concurrency': [1, 2, 4, 8]
+                'concurrency': [1, 2, 4, 8, 16]
             }, {
                 'instances': [1],
                 'kind': ["KIND_CPU"],
                 'batching': [None],
-                'batch_sizes': [1, 3, 4],
+                'batch_sizes': [1, 2, 3, 4, 7],
                 'max_batch_size': [8],
-                'concurrency': [1, 2, 4, 8, 16]
+                'concurrency': [1, 2, 4, 8]
             }]
 
         else:
@@ -339,14 +339,14 @@ class TestModelManager(trc.TestResultCollector):
                 'instances': [1],
                 'kind': ["KIND_GPU"],
                 'batching': [0],
-                'batch_sizes': [1, 3, 4, 7],
+                'batch_sizes': [1, 2, 3, 4, 7],
                 'max_batch_size': [8],
                 'concurrency': [1, 2, 4, 8, 16]
             }, {
                 'instances': [1],
                 'kind': ["KIND_CPU"],
                 'batching': [None],
-                'batch_sizes': [1, 3, 4, 7],
+                'batch_sizes': [1, 2, 3, 4, 7],
                 'max_batch_size': [8],
                 'concurrency': [1, 2, 4, 8, 16]
             }]
@@ -357,40 +357,61 @@ class TestModelManager(trc.TestResultCollector):
             run_config_search_min_model_batch_size: 8
             run_config_search_max_model_batch_size: 8
             concurrency: 16,1,2,4,8
-            batch_sizes: 3,7,1,4
+            batch_sizes: 3,7,1,4,2
             """)
 
         with patch.object(MetricsManagerSubclass,
                           "_get_next_perf_throughput_value") as mock_method:
             #yapf: disable
             side_effect = [
-                # Default config, bs=1, concurrency 1,2,4,8,16
-                # Will not cause early exit for concurrency
+                # Default config, bs=1, concurrency 1,2,4,8
+                # Will early exit for concurrency
                 # "Best" result for bs early exit is 5
-                1, 2, 3, 4, 5,
+                5, 5, 5, 5,
 
-                # Default config, bs=3, concurrency 1,2,4,8,16
-                # Will not cause early exit for concurrency
-                # "Best" result for bs early exit is 6
-                # Thus, we will not early exit batch size
-                6, 5, 4, 5, 2,
-
-                # Default config, bs=4, concurrency 1,2,4,8,16
-                # Will not cause early exit for concurrency
+                # Default config, bs=2, concurrency 1,2,4,8
+                # Will early exit for concurrency
                 # "Best" result for bs early exit is 4
-                # Thus, we WILL early exit batch size
-                1, 1, 4, 1, 1,
+                4, 4, 4, 4,
 
-                # 1 instance, bs=1, concurrency 1,2,4,8
-                # Will early exit concurrency
+                # Default config, bs=3, concurrency 1,2,4,8
+                # Will early exit for concurrency
+                # "Best" result for bs early exit is 6
+                6, 6, 6, 6,
+
+                # Default config, bs=4, concurrency 1,2,4,8
+                # Will early exit for concurrency
+                # "Best" result for bs early exit is 5
+                # We will not early exit batch size
+                5, 5, 5, 5,
+
+                # Default config, bs=7, concurrency 1,2,4,8
+                # Will not early exit for concurrency
                 # "Best" result for bs early exit is 1
+                # We are done sweeping batch size
                 1, 1, 1, 1,
 
-                # 1 instance, bs=3, concurrency 1,2,4,8
-                # Will early exit concurrency
-                # "Best" result for bs early exit is 1
-                # Thus, we WILL early exit batch size
-                1, 1, 1, 1
+
+                # 1 instance, bs=1, concurrency 1,2,4,8,16
+                # Will not early exit for concurrency
+                # "Best" result for bs early exit is 10
+                1, 1, 10, 1, 1,
+
+                # 1 instance, bs=2, concurrency 1,2,4,8,16
+                # Will not early exit for concurrency
+                # "Best" result for bs early exit is 9
+                1, 9, 1, 1, 2,
+
+                # 1 instance, bs=3, concurrency 1,2,4,8,16
+                # Will not early exit for concurrency
+                # "Best" result for bs early exit is 8
+                1, 1, 1, 8, 3,
+
+                # 1 instance, bs=4, concurrency 1,2,4,8,16
+                # Will not early exit for concurrency
+                # "Best" result for bs early exit is 7
+                # Will early exit batch size now
+                1, 1, 7, 1, 4
             ]
             # Add a bunch of extra results for the no-early-exit case
             side_effect.extend([1]*100)
