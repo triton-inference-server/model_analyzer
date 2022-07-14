@@ -24,13 +24,17 @@ from .mocks.mock_io import MockIOMethods
 from .common import test_result_collector as trc
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from .common.test_utils import evaluate_mock_config
 
 
 class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
 
+    @patch(
+        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments',
+        MagicMock()
+    )
     def setUp(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
