@@ -50,7 +50,6 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         self._curr_model_run_configs = [None for n in range(self._num_models)]
         self._curr_results = [[] for n in range(self._num_models)]
         self._curr_generators = [None for n in range(self._num_models)]
-        self._default_returned = False
 
         self._model_variant_name_manager = ModelVariantNameManager()
 
@@ -70,8 +69,13 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
 
     def _get_next_config(self):
         yield from self._generate_subset(0, default_only=True)
-        self._default_returned = True
-        yield from self._generate_subset(0, default_only=False)
+        if self._do_search():
+            yield from self._generate_subset(0, default_only=False)
+
+    def _do_search(self) -> bool:
+        remote_mode = self._config.triton_launch_mode == 'remote'
+        search_disable = self._config.run_config_search_disable
+        return not remote_mode and not search_disable
 
     def _generate_subset(self, index, default_only):
         mrcg = ModelRunConfigGenerator(self._config, self._gpus,
