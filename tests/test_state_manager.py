@@ -33,7 +33,8 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
 
     @patch(
         'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments',
-        MagicMock())
+        MagicMock()
+    )
     def setUp(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',

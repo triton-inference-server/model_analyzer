@@ -168,7 +168,6 @@ def get_test_options():
         # Others are yaml only options
         OptionStruct("noop", "profile", "--model-repository"),
         OptionStruct("noop", "profile", "--profile-models"),
-        OptionStruct("noop", "profile", "--analysis-models"),
 
         OptionStruct("noop", "analyze", "--analysis-models"),
         OptionStruct("noop", "report", "--report-model-configs"),
@@ -351,22 +350,28 @@ class TestCLI(trc.TestResultCollector):
 
     @patch(
         'model_analyzer.config.input.config_command_report.ConfigCommandReport._load_config_file',
-        MagicMock())
+        MagicMock()
+    )
     @patch(
         'model_analyzer.config.input.config_command_report.ConfigCommandReport._preprocess_and_verify_arguments',
-        MagicMock())
+        MagicMock()
+    )
     @patch(
         'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._load_config_file',
-        MagicMock())
+        MagicMock()
+    )
     @patch(
         'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._preprocess_and_verify_arguments',
-        MagicMock())
+        MagicMock()
+    )
     @patch(
         'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments',
-        MagicMock())
+        MagicMock()
+    )
     @patch(
         'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file',
-        MagicMock())
+        MagicMock()
+    )
     def test_all_options(self):
 
         options = get_test_options()
