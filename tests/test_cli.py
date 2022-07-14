@@ -40,7 +40,7 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 import psutil
 import unittest
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 def setUp(self):
@@ -349,29 +349,30 @@ class TestCLI(trc.TestResultCollector):
         self.assertEqual('bar', profile_model)
 
     @patch(
-        'model_analyzer.config.input.config_command_report.ConfigCommandReport._load_config_file'
+        'model_analyzer.config.input.config_command_report.ConfigCommandReport._load_config_file',
+        MagicMock()
     )
     @patch(
-        'model_analyzer.config.input.config_command_report.ConfigCommandReport._preprocess_and_verify_arguments'
+        'model_analyzer.config.input.config_command_report.ConfigCommandReport._preprocess_and_verify_arguments',
+        MagicMock()
     )
     @patch(
-        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._load_config_file'
+        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._load_config_file',
+        MagicMock()
     )
     @patch(
-        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._preprocess_and_verify_arguments'
+        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._preprocess_and_verify_arguments',
+        MagicMock()
     )
     @patch(
-        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments'
+        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments',
+        MagicMock()
     )
     @patch(
-        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file'
+        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file',
+        MagicMock()
     )
-    def test_all_options(self, mocked_load_config_file_profile,
-                         mocked_verify_args_profile,
-                         mocked_verify_args_analyze,
-                         mocked_load_config_file_analyze,
-                         mocked_verify_args_report,
-                         mocked_load_config_file_report):
+    def test_all_options(self):
 
         options = get_test_options()
         all_tested_options_set = set()

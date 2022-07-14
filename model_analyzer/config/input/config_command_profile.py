@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.input.objects.config_model_analysis_spec \
-    import ConfigModelAnalysisSpec
 from model_analyzer.config.input.config_utils \
     import binary_path_validator, objective_list_output_mapper, file_path_validator, parent_path_validator
 from .config_field import ConfigField
@@ -1017,7 +1015,8 @@ class ConfigCommandProfile(ConfigCommand):
 
             # Constraints
             if not model.constraints():
-                if 'constraints' in self._fields and self.constraints:
+                if 'constraints' in self._fields and self._fields[
+                        'constraints'].value():
                     new_model['constraints'] = self.constraints
             else:
                 new_model['constraints'] = model.constraints()

@@ -943,7 +943,7 @@ profile_models:
                                               expected_plot_configs)
 
         yaml_content = """
-            report_model_configs:
+            report_model_configs: 
               vgg_16_graphdef:
                 plots:
                     test_plot1:
@@ -1498,7 +1498,7 @@ profile_models:
             })
 
         yaml_content = """
-            profile_models:
+            profile_models: 
                 model1:
                     triton_server_environment:
                         LD_PRELOAD: libtest.so
