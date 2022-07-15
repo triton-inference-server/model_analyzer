@@ -19,13 +19,13 @@ import csv
 
 class ExperimentFileWriter:
     """
-    A file writer that collects all the results from the undirected algorithm
+    A file writer that collects all the results from the quick algorithm
     and the corresponding brute-force algorithm and writes them into csv files.
     """
     field_names = [
         "overall_num_measurements", "overall_best_throughput",
-        "undirected_num_measurements", "missing_num_measurements",
-        "undirected_throughput", "radius", "magnitude", "min_initialized"
+        "quick_num_measurements", "missing_num_measurements",
+        "quick_throughput", "radius", "magnitude", "min_initialized"
     ]
 
     def __init__(self, output_path, file_name="output_vgg19_libtorch.csv"):
@@ -46,7 +46,7 @@ class ExperimentFileWriter:
 
                 overall_best_measurement = checkpoint_data.get_best_run_config_measurement(
                 )
-                undirected_best_measurement = profile_data.get_best_run_config_measurement(
+                quick_best_measurement = profile_data.get_best_run_config_measurement(
                 )
 
                 # yapf: disable
@@ -55,12 +55,12 @@ class ExperimentFileWriter:
                         checkpoint_data.get_run_config_measurement_count(),
                     "overall_best_throughput":
                         overall_best_measurement.get_non_gpu_metric_value("perf_throughput"),
-                    "undirected_num_measurements":
+                    "quick_num_measurements":
                         profile_data.get_run_config_measurement_count(),
                     "missing_num_measurements":
                         checkpoint_data.get_missing_measurement_count(),
-                    "undirected_throughput":
-                        undirected_best_measurement.get_non_gpu_metric_value("perf_throughput"),
+                    "quick_throughput":
+                        quick_best_measurement.get_non_gpu_metric_value("perf_throughput"),
                     "radius": radius,
                     "magnitude": magnitude,
                     "min_initialized": min_initialized
