@@ -35,8 +35,6 @@ from .model_analyzer_exceptions \
 from .triton.client.client import TritonClient
 from .device.gpu_device import GPUDevice
 
-from typing import Union
-
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
