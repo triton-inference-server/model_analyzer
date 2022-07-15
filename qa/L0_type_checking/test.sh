@@ -12,6 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-mypy --version
-mypy ../../model_analyzer/*.py --config-file ./mypi.ini
+mypy --config-file ./mypi.ini
 exit $?
