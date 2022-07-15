@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
 import sys
 from model_analyzer.constants import LOGGER_NAME
 from .model_manager import ModelManager
@@ -31,8 +32,8 @@ from .config.input.config_defaults import \
 from .model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
-from .triton.client.grpc_client import TritonGRPCClient
-from .triton.client.http_client import TritonHTTPClient
+from .triton.client.client import TritonClient
+from .device.gpu_device import GPUDevice
 
 from typing import Union
 
@@ -70,8 +71,8 @@ class Analyzer:
         self._result_manager = ResultManager(config=config,
                                              state_manager=self._state_manager)
 
-    def profile(self, client: Union[TritonGRPCClient, TritonHTTPClient],
-                gpus: list, mode: str, verbose: bool):
+    def profile(self, client: TritonClient, gpus: List[GPUDevice], mode: str,
+                verbose: bool):
         """
         Subcommand: PROFILE
 
@@ -105,20 +106,20 @@ class Analyzer:
 
         self._profile_models()
 
+        # The message is in interrupt_hanlder(), so we can just exit
         if (self._state_manager.exiting()):
             sys.exit(1)
 
         # TODO: TMA-792: This won't be needed once the Results class is used in profile
         self._analyze_models()
 
+        # TODO: TMA-790: Skip these steps if the CLI option indicates the user doesn't want summary reports
         self._create_summary_tables(verbose)
-
-        # TODO: TMA-790: Skip this step if the CLI option indicates the user doesn't want summary reports
         self._create_summary_reports(mode)
 
         logger.info(self._get_profile_complete_string())
         logger.info("")
-        logger.info(self._get_analyze_command_help_string())
+        logger.info(self._get_report_command_help_string())
 
     def analyze(self, mode: str, verbose: bool):
         """
@@ -242,7 +243,7 @@ class Analyzer:
                     self._state_manager.save_checkpoint()
 
     def _analyze_models(self):
-        # TODO: Until we get rid of analysis we need to copy some values from profile
+        # TODO: TMA-792: Until we get rid of analysis we need to copy some values from profile
         self._config._fields["analysis_models"] = self._config._fields[
             "profile_models"]
 
