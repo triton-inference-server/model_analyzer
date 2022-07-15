@@ -247,10 +247,6 @@ class Analyzer:
         self._config._fields["analysis_models"] = self._config._fields[
             "profile_models"]
 
-        gpu_info = self._state_manager.get_state_variable('MetricsManager.gpus')
-        if not gpu_info:
-            gpu_info = {}
-
         self._result_manager.compile_and_sort_results()
 
     def _create_summary_tables(self, verbose: bool):
