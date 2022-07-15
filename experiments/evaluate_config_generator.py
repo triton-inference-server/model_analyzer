@@ -12,20 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from experiments.experiment_evaluator import ExperimentEvaluator
+from experiment_evaluator import ExperimentEvaluator
 from generator_experiment_factory import GeneratorExperimentFactory
 from experiment_config_command_creator import ExperimentConfigCommandCreator
 from experiment_data import ExperimentData
 from checkpoint_experiment_data import CheckpointExperimentData
+from experiment_file_writer import ExperimentFileWriter
 
 
 class EvaluateConfigGenerator:
     """
-    Class to run and evaluate an ConfigGenerator algorithm using an 
+    Class to run and evaluate an ConfigGenerator algorithm using an
     existing checkpoint of raw measurement data
     """
 
-    def __init__(self, model_name, data_path, other_args):
+    def __init__(self, model_name, data_path, output_path, other_args):
+        self._output_path = output_path
         self._model_name = model_name
         self._config_command = ExperimentConfigCommandCreator.make_config(
             data_path, model_name, other_args)
@@ -44,6 +46,14 @@ class EvaluateConfigGenerator:
         result_evaluator = ExperimentEvaluator(self._checkpoint_data,
                                                self._profile_data)
         result_evaluator.print_results()
+
+    def store_results(self):
+        configs = self._config_command.get_all_config()
+        file_writer = ExperimentFileWriter(
+            self._output_path, file_name=f"output_{self._model_name}.csv")
+        file_writer.write(self._checkpoint_data, self._profile_data,
+                          configs["radius"], configs["magnitude"],
+                          configs["min_initialized"])
 
     def _run_generator(self, cg):
         for run_config in cg.get_configs():

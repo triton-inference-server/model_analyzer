@@ -30,6 +30,11 @@ parser.add_argument('-v',
                     required=False,
                     action='store_true',
                     help='Enable MA logging')
+parser.add_argument('-s',
+                    '--save',
+                    required=False,
+                    action='store_true',
+                    help='Save the config generation results to csv files.')
 parser.add_argument("--model-name",
                     type=str,
                     required=True,
@@ -39,6 +44,11 @@ parser.add_argument("--data-path",
                     required=False,
                     default="./data",
                     help="The path to the checkpoint results files")
+parser.add_argument("--output-path",
+                    type=str,
+                    required=False,
+                    default="./output",
+                    help="The path to the output csv files")
 parser.add_argument("--generator",
                     type=str,
                     required=True,
@@ -51,6 +61,10 @@ if args.verbose:
     logger.setLevel(level=logging.DEBUG)
     logging.basicConfig(format="[Model Analyzer] %(message)s")
 
-ecg = EvaluateConfigGenerator(args.model_name, args.data_path, other_args)
+ecg = EvaluateConfigGenerator(args.model_name, args.data_path, args.output_path,
+                              other_args)
 ecg.execute_generator(args.generator)
 ecg.print_results()
+
+if args.save:
+    ecg.store_results()

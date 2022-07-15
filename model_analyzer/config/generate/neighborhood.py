@@ -223,20 +223,6 @@ class Neighborhood:
 
         return weighted_center
 
-    def _convert_to_unit_vector(self, vector):
-        magnitude = 0
-        for v in vector:
-            magnitude += math.pow(v, 2)
-        magnitude = math.sqrt(magnitude)
-
-        # Convert the vector to unit vector
-        if magnitude == 0:
-            unit_vector = vector
-        else:
-            unit_vector = vector / magnitude
-
-        return unit_vector
-
     def _is_coordinate_initialized(self, coordinate):
         return self._coordinate_data.get_throughput(coordinate) is not None
 

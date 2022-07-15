@@ -48,6 +48,9 @@ class ExperimentEvaluator:
             f"Generator num measurements: {self._profile_data.get_run_config_measurement_count()}"
         )
         print(
+            f"Generator missing num measurements: {self._raw_data.get_missing_measurement_count()}"
+        )
+        print(
             f"Generator num configs: {self._profile_data.get_model_config_count()}"
         )
         print(

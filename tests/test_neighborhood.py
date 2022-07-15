@@ -241,7 +241,7 @@ class TestNeighborhood(trc.TestResultCollector):
         self.assertEqual(Coordinate([2, 7]),
                          n.calculate_new_coordinate(magnitude=3))
 
-    def test_no_magnitude_unit_vector(self):
+    def test_no_magnitude_vector(self):
         """
         Test that if the coordinate_center and weighted_coordinate_center
         are the same, then the step vector is all 0s
@@ -263,3 +263,30 @@ class TestNeighborhood(trc.TestResultCollector):
         uv = n._get_step_vector()
         expected_uv = Coordinate([0, 0])
         self.assertEqual(uv, expected_uv)
+
+    def test_all_zero_throughputs(self):
+        """
+        Test that when all the coorindates in the neighborhood has
+        zero throughputs, the weighted center is same as the unweighted center.
+        """
+        cd = CoordinateData()
+        cd.set_throughput(Coordinate([1, 0, 1]), 0)
+        cd.set_throughput(Coordinate([0, 0, 0]), 0)
+        cd.set_throughput(Coordinate([0, 1, 1]), 0)
+        cd.set_throughput(Coordinate([1, 1, 0]), 0)
+
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("foobar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
+
+        n = Neighborhood(nc, cd, Coordinate([0, 0, 0]))
+
+        coordinates, throughputs = n._compile_neighborhood_throughputs()
+        tc = n._determine_weighted_coordinate_center(coordinates, throughputs)
+        expected_tc = n._determine_coordinate_center(coordinates)
+        self.assertEqual(tc, expected_tc)
