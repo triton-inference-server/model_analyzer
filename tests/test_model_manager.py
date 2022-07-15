@@ -189,6 +189,13 @@ class TestModelManager(trc.TestResultCollector):
             'batch_sizes': [1],
             'max_batch_size': [8],
             'concurrency': [1]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1]
         }]
 
         yaml_str = ("""
