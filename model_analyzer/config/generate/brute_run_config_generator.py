@@ -69,12 +69,11 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
 
     def _get_next_config(self):
         yield from self._generate_subset(0, default_only=True)
-        if self._do_search():
+        if self._should_generate_non_default_configs():
             yield from self._generate_subset(0, default_only=False)
 
-    def _do_search(self) -> bool:
-        remote_mode = self._config.triton_launch_mode == 'remote'
-        return not remote_mode
+    def _should_generate_non_default_configs(self) -> bool:
+        return self._config.triton_launch_mode != 'remote'
 
     def _generate_subset(self, index, default_only):
         mrcg = ModelRunConfigGenerator(self._config, self._gpus,
