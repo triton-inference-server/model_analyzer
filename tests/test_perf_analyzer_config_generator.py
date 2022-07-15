@@ -518,6 +518,12 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         self._test_throughput_gain_valid_helper(throughput_values,
                                                 expected_result)
 
+        # Expect false because gain is only 5%
+        throughput_values = [50, 35, 45, 51.5]
+        expected_result = False
+        self._test_throughput_gain_valid_helper(throughput_values,
+                                                expected_result)
+
         # Expect true because gain is more than 5%
         throughput_values = [50, 50, 50, 52.51]
         expected_result = True
