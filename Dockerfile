@@ -76,6 +76,8 @@ RUN python3 -m pip install --upgrade pip && \
 #Other pip packages
 RUN python3 -m pip install \
     coverage
+RUN python3 -m pip install \
+    mypy
 
 RUN apt-get install -y wkhtmltopdf
 
