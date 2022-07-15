@@ -245,28 +245,16 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if len(throughputs) < min_tries:
             return True
 
-        valid_gains = [self._calculate_throughput_gain(throughputs, x) > min_gain \
-                       for x in range(1,min_tries)
-                      ]
-        return True in valid_gains
+        tputs_in_range = [
+            self._get_throughput(throughputs[x]) for x in range(-min_tries, 0)
+        ]
 
-    def _calculate_throughput_gain(self,
-                                   throughputs: List[RunConfigMeasurement],
-                                   reverse_index: int) -> float:
-        """
-        Given a reverse index, calculate the throughput gain at that index when
-        indexing from the back of the results list, when compared to its previous
-        results
+        first = tputs_in_range[0]
+        best = max(tputs_in_range)
 
-        For example, setting reverse_index=1 will calculate the gain for the last
-        two results in the list (indexes -2 and -1)
-        """
-        before_index = -(reverse_index + 1)
-        after_index = -reverse_index
-        throughput_before = self._get_throughput(throughputs[before_index])
-        throughput_after = self._get_throughput(throughputs[after_index])
-        gain = (throughput_after - throughput_before) / throughput_before
-        return gain
+        gain = (best - first) / first
+
+        return gain > min_gain
 
     def _get_throughput(self, measurement: RunConfigMeasurement) -> float:
         return measurement.get_non_gpu_metric_value('perf_throughput')
