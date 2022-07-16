@@ -16,7 +16,6 @@ from .base_model_config_generator import BaseModelConfigGenerator
 from .generator_utils import GeneratorUtils
 from model_analyzer.constants import LOGGER_NAME, DEFAULT_CONFIG_PARAMS
 
-from model_analyzer.triton.model.model_config import ModelConfig
 import logging
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
@@ -68,6 +67,9 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
     def _done_walking_max_batch_size(self):
         if (self._max_batch_sizes is None or
                 len(self._max_batch_sizes) == self._curr_max_batch_size_index):
+            return True
+
+        if self._early_exit_enable and self._last_results_erroneous():
             return True
 
         if self._early_exit_enable and not self._last_results_increased_throughput(
