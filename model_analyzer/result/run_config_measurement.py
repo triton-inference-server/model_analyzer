@@ -76,9 +76,6 @@ class RunConfigMeasurement:
         run_config_measurement._model_config_weights = run_config_measurement_dict[
             '_model_config_weights']
 
-        run_config_measurement._model_config_constraints = run_config_measurement_dict[
-            '_model_config_constraints']
-
         return run_config_measurement
 
     def set_model_config_weighting(self, model_config_weights):
