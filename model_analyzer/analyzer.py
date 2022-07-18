@@ -104,7 +104,7 @@ class Analyzer:
 
         self._profile_models()
 
-        # The message is in interrupt_hanlder(), so we can just exit
+        # The message is in interrupt_handler(), so we can just exit
         if (self._state_manager.exiting()):
             sys.exit(1)
 
