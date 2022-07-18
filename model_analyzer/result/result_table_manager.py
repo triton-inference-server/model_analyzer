@@ -16,6 +16,7 @@ from .result_table import ResultTable
 from .result_utils import format_for_csv
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.output.file_writer import FileWriter
+from copy import deepcopy
 import os
 import logging
 
@@ -74,7 +75,8 @@ class ResultTableManager:
 
         # Fill rows in descending order
         for model in self._result_manager.get_model_names():
-            result_heap = self._result_manager.get_model_sorted_results(model)
+            result_heap = deepcopy(
+                self._result_manager.get_model_sorted_results(model))
 
             while not result_heap.empty():
                 self._tabulate_measurements(result_heap.next_best_result())

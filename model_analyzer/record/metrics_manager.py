@@ -117,7 +117,7 @@ class MetricsManager:
             if self._gpus[i].device_uuid() not in gpu_info:
                 device_info = {}
                 device = numba.cuda.list_devices()[i]
-                device_info['name'] = device.name
+                device_info['name'] = str(device.name, encoding='utf-8')
                 with device:
                     # convert bytes to GB
                     device_info['total_memory'] = numba.cuda.current_context(

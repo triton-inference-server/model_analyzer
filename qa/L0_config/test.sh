@@ -41,9 +41,8 @@ MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --client-pro
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
-
-MODEL_ANALYZER_ANALYZE_BASE_ARGS="--analysis-models $MODEL_NAMES -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY --checkpoint-directory $CHECKPOINT_DIRECTORY"
-MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
+MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY --checkpoint-directory $CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 
 python3 config_generator.py -m $MODEL_NAMES
 
@@ -73,32 +72,24 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
         cat $ANALYZER_LOG
         RET=1
     fi
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS"
-    MODEL_ANALYZER_SUBCOMMAND="analyze"
-    run_analyzer
+    
+    SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
+    MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
+    MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
+    METRICS_NUM_COLUMNS=10
+    INFERENCE_NUM_COLUMNS=9
+    SERVER_METRICS_NUM_COLUMNS=5
+
+    check_table_row_column \
+        "" "" "" \
+        $MODEL_METRICS_INFERENCE_FILE $MODEL_METRICS_GPU_FILE $SERVER_METRICS_FILE \
+        $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS \
+        $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) \
+        $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]}))
     if [ $? -ne 0 ]; then
-        echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"
+        echo -e "\n***\n*** Test Output Verification Failed.\n***"
         cat $ANALYZER_LOG
         RET=1
-    else
-        SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
-        MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
-        MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
-        METRICS_NUM_COLUMNS=10
-        INFERENCE_NUM_COLUMNS=9
-        SERVER_METRICS_NUM_COLUMNS=5
-
-        check_table_row_column \
-            "" "" "" \
-            $MODEL_METRICS_INFERENCE_FILE $MODEL_METRICS_GPU_FILE $SERVER_METRICS_FILE \
-            $INFERENCE_NUM_COLUMNS $TEST_OUTPUT_NUM_ROWS \
-            $METRICS_NUM_COLUMNS $(($TEST_OUTPUT_NUM_ROWS * ${#GPUS[@]})) \
-            $SERVER_METRICS_NUM_COLUMNS $((1 * ${#GPUS[@]}))
-        if [ $? -ne 0 ]; then
-            echo -e "\n***\n*** Test Output Verification Failed.\n***"
-            cat $ANALYZER_LOG
-            RET=1
-        fi
     fi
 
     rm $ANALYZER_LOG
