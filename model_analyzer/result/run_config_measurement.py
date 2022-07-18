@@ -50,6 +50,7 @@ class RunConfigMeasurement:
 
         self._model_config_measurements = []
         self._model_config_weights = []
+        self._model_config_constraints = []
 
     @classmethod
     def from_dict(cls, run_config_measurement_dict):
@@ -75,11 +76,15 @@ class RunConfigMeasurement:
         run_config_measurement._model_config_weights = run_config_measurement_dict[
             '_model_config_weights']
 
+        run_config_measurement._model_config_constraints = run_config_measurement_dict[
+            '_model_config_constraints']
+
         return run_config_measurement
 
     def set_model_config_weighting(self, model_config_weights):
         """
         Sets the model config weightings used when calculating 
+        
         weighted metrics
         
         Parameters
@@ -92,6 +97,17 @@ class RunConfigMeasurement:
             model_config_weight / sum(model_config_weights)
             for model_config_weight in model_config_weights
         ]
+
+    def set_model_config_constraints(self, model_config_constraints):
+        """
+
+        Parameters
+        ----------
+            model_config_constraints: dict (single model) or list of dicts (multi-model)
+            Used to determine if an ModelConfigMeasurement passes or fails
+        """
+        self._model_config_constraints = [model_config_constraints] if type(
+            model_config_constraints) is dict else model_config_constraints
 
     def add_model_config_measurement(self, model_config_name,
                                      model_specific_pa_params, non_gpu_data):
@@ -379,6 +395,36 @@ class RunConfigMeasurement:
         """
 
         return not self.is_better_than(other)
+
+    def is_passing_constraints(self):
+        NotImplemented
+
+    def compare_measurements(self, other):
+        """
+        Compares two RunConfig measurements based on each
+        ModelConfigs weighted metric objectives and the
+        ModelConfigs weighted value within the RunConfig
+
+        Parameters
+        ----------
+            other: RunConfigMeasurement
+            
+        Returns
+        -------
+        float
+           Positive value if other is better
+           Negaive value is self is better
+           Zero if they are equal 
+        """
+        # Step 1: for each ModelConfig determine the weighted score
+        weighted_mcm_scores = self._calculate_weighted_mcm_score(other)
+
+        # Step 2: combine these using the ModelConfig weighting
+        weighted_rcm_score = self._calculate_weighted_rcm_score(
+            weighted_mcm_scores)
+
+        # Positive value means self is better than other, so invert this
+        return -1 * weighted_rcm_score
 
     def _compare_measurements(self, other):
         """
