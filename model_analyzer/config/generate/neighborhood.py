@@ -241,7 +241,9 @@ class Neighborhood:
         return weighted_center
 
     def _is_coordinate_initialized(self, coordinate: Coordinate) -> bool:
+        # TODO: Remove.
         return self._coordinate_data.get_throughput(coordinate) is not None
+        #return self._coordinate_data.get_measurement(coordinate) is not None
 
     def _is_coordinate_visited(self, coordinate: Coordinate) -> bool:
         return self._coordinate_data.get_visit_count(coordinate) > 0

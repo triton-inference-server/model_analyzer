@@ -140,8 +140,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._coordinate_data.increment_visit_count(self._coordinate_to_measure)
 
         if measurements is not None and measurements[0] is not None:
-            assert len(measurements) == 1
+            assert len(measurements) == 1, \
+                "Multi-model is currently not supported in quick search mode."
 
+            # TODO: Remove.
             throughput = measurements[0].get_non_gpu_metric_value(
                 "perf_throughput")
 
@@ -150,10 +152,21 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             logger.debug(
                 f"Throughput for {self._coordinate_to_measure}: {self._get_last_results()}"
             )
+            self._coordinate_data.set_measurement(
+                coordinate=self._coordinate_to_measure, measurement=measurements[0])
         else:
+            # TODO: Remove.
             self._coordinate_data.set_throughput(
                 coordinate=self._coordinate_to_measure, throughput=0)
             logger.debug(f"Throughput for {self._coordinate_to_measure}: 0")
+
+            # TODO: How to handle this case?
+            #  1. throughput = 0 and latency = ?
+            #       => how to compute metric & weighed vectors?
+            #  2. Just treat it None
+            #       => should we consider it initialized?
+            self._coordinate_data.set_measurement(
+                coordinate=self._coordinate_to_measure, measurement=None)
 
     def _get_last_results(self) -> float:
         return self._coordinate_data.get_throughput(self._coordinate_to_measure)
@@ -183,6 +196,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         neighborhood_config = self._search_config.get_neighborhood_config(
             self._get_radius())
 
+        self._coordinate_data.reset_measurements()
         self._neighborhood = Neighborhood(neighborhood_config,
                                           self._coordinate_data,
                                           self._current_coordinate)

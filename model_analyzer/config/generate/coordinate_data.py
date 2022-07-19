@@ -12,16 +12,55 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.generate.coordinate import Coordinate
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
-class CoordinateData:
+
+class NeighborhoodData:
     """
-    Holds throughputs and visit counts for coordinates
+    A class that holds measurement information of the coordinates
+    visited in the current neighborhood.
     """
 
     def __init__(self):
-        self._throughputs = {}
+        self._measurements = {}
+
+    def get_measurement(self, coordinate: Coordinate) -> RunConfigMeasurement:
+        """
+        Return the measurement data of the given coordinate.
+        """
+        key = tuple(coordinate)
+        return self._measurements.get(key, None)
+
+    def set_measurement(self,
+                        coordinate: Coordinate,
+                        measurement: RunConfigMeasurement):
+        """
+        Set the measurement for the given coordinate.
+        """
+        key = tuple(coordinate)
+        self._measurements[key] = measurement
+
+    def reset_measurements(self):
+        """
+        Reset the measurement data of the current neighborhood.
+        """
+        self._measurements = {}
+
+
+class CoordinateData(NeighborhoodData):
+    """
+    A class that tracks the measurement data in the current neighborhood
+    and the visit counts of all the coordinates in the coordinate space.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        self._throughputs = {}  # TODO: Remove.
         self._visit_counts = {}
 
+    # TODO: Remove.
     def get_throughput(self, coordinate):
         """
         Get the throughput for the given coordinate. 
@@ -30,6 +69,7 @@ class CoordinateData:
         key = tuple(coordinate)
         return self._throughputs.get(key, None)
 
+    # TODO: Remove.
     def set_throughput(self, coordinate, throughput):
         """
         Set the throughput for the given coordinate. 
@@ -37,7 +77,7 @@ class CoordinateData:
         key = tuple(coordinate)
         self._throughputs[key] = throughput
 
-    def get_visit_count(self, coordinate):
+    def get_visit_count(self, coordinate: Coordinate) -> int:
         """
         Get the visit count for the given coordinate. 
         Returns 0 if the coordinate hasn't been visited yet
@@ -45,7 +85,7 @@ class CoordinateData:
         key = tuple(coordinate)
         return self._visit_counts.get(key, 0)
 
-    def increment_visit_count(self, coordinate):
+    def increment_visit_count(self, coordinate: Coordinate):
         """
         Increase the visit count for the given coordinate by 1
         """
