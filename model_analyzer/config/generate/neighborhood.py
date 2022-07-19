@@ -16,7 +16,10 @@ import math
 from itertools import product
 from copy import deepcopy
 
+from typing import List, Tuple, Dict
+
 from model_analyzer.config.generate.coordinate import Coordinate
+from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
 
 
@@ -26,7 +29,10 @@ class Neighborhood:
     a 'home' coordinate
     """
 
-    def __init__(self, neighborhood_config, coordinate_data, home_coordinate):
+    def __init__(self,
+                 neighborhood_config: NeighborhoodConfig,
+                 coordinate_data: CoordinateData,
+                 home_coordinate: Coordinate):
         """
         Parameters
         ----------
@@ -47,7 +53,9 @@ class Neighborhood:
         self._neighborhood = self._create_neighborhood()
 
     @classmethod
-    def calc_distance(cls, coordinate1, coordinate2):
+    def calc_distance(cls,
+                      coordinate1: Coordinate,
+                      coordinate2: Coordinate) -> float:
         """ 
         Return the euclidean distance between two coordinates
         """
@@ -59,7 +67,7 @@ class Neighborhood:
         distance = math.sqrt(distance)
         return distance
 
-    def enough_coordinates_initialized(self):
+    def enough_coordinates_initialized(self) -> bool:
         """
         Returns true if enough coordinates inside of the neighborhood
         have been initialized. Else false
@@ -68,7 +76,7 @@ class Neighborhood:
         num_initialized = self._get_num_initialized_points()
         return num_initialized >= min_initialized
 
-    def calculate_new_coordinate(self, magnitude):
+    def calculate_new_coordinate(self, magnitude: int) -> Coordinate:
         """
         Based on the throughputs in the neighborhood, determine where
         the next location should be
@@ -85,7 +93,7 @@ class Neighborhood:
 
         return new_coordinate
 
-    def pick_coordinate_to_initialize(self):
+    def pick_coordinate_to_initialize(self) -> Coordinate:
         """
         Based on the initialized coordinate values, pick an uninitialized coordinate to initialize
         """
@@ -104,7 +112,8 @@ class Neighborhood:
 
         return best_coordinate
 
-    def get_nearest_unvisited_neighbor(self, coordinate_in):
+    def get_nearest_unvisited_neighbor(self,
+                                       coordinate_in: Coordinate) -> Coordinate:
         """ Returns the nearest unvisited coordinate to coordinate_in """
         min_distance = None
         nearest_uninitialized_neighbor = None
@@ -121,7 +130,7 @@ class Neighborhood:
 
         return nearest_uninitialized_neighbor
 
-    def _create_neighborhood(self):
+    def _create_neighborhood(self) -> List[Coordinate]:
 
         neighborhood = []
         potential_neighborhood = self._get_potential_neighborhood(
@@ -136,12 +145,16 @@ class Neighborhood:
 
         return neighborhood
 
-    def _get_potential_neighborhood(self, coordinate, radius):
+    def _get_potential_neighborhood(self,
+                                    coordinate: Coordinate,
+                                    radius: int) -> List[Coordinate]:
         bounds = self._get_bounds(coordinate, radius)
         potential_values = self._enumerate_all_values_in_bounds(bounds)
         return [Coordinate(x) for x in potential_values]
 
-    def _get_bounds(self, coordinate, radius):
+    def _get_bounds(self,
+                    coordinate: Coordinate,
+                    radius: int) -> List[List[int]]:
         bounds = []
         for i in range(self._config.get_num_dimensions()):
             dimension = self._config.get_dimension(i)
@@ -152,7 +165,8 @@ class Neighborhood:
             bounds.append([lower_bound, upper_bound])
         return bounds
 
-    def _enumerate_all_values_in_bounds(self, bounds):
+    def _enumerate_all_values_in_bounds(self,
+                                        bounds: List[List[int]]) -> List[List[int]]:
         possible_index_values = []
         for bound in bounds:
             possible_index_values.append(list(range(bound[0], bound[1])))
@@ -160,8 +174,8 @@ class Neighborhood:
         tuples = list(product(*possible_index_values))
         return [list(x) for x in tuples]
 
-    def _get_num_initialized_points(self):
-        """ 
+    def _get_num_initialized_points(self) -> int:
+        """
         Returns the number of coordinates in the neighborhood that have a throughput
         associated with it
         """
@@ -171,7 +185,7 @@ class Neighborhood:
                 num_initialized += 1
         return num_initialized
 
-    def _get_step_vector(self):
+    def _get_step_vector(self) -> Coordinate:
         """
         Create a vector pointing from the unweighted center of the
         datapoints inside of the neighborhood to the weighted center of 
@@ -187,7 +201,7 @@ class Neighborhood:
 
         return vector
 
-    def _compile_neighborhood_throughputs(self):
+    def _compile_neighborhood_throughputs(self) -> Tuple[List[Coordinate], List[float]]:
         coordinates = []
         throughputs = []
         for coordinate in self._neighborhood:
@@ -197,7 +211,8 @@ class Neighborhood:
                 throughputs.append(throughput)
         return coordinates, throughputs
 
-    def _determine_coordinate_center(self, coordinates):
+    def _determine_coordinate_center(self,
+                                     coordinates: List[Coordinate]) -> Coordinate:
         coordinate_center = Coordinate([0] * self._config.get_num_dimensions())
 
         for coordinate in coordinates:
@@ -208,7 +223,9 @@ class Neighborhood:
 
         return coordinate_center
 
-    def _determine_weighted_coordinate_center(self, coordinates, weights):
+    def _determine_weighted_coordinate_center(self,
+                                              coordinates: List[Coordinate],
+                                              weights: List[float]) -> Coordinate:
         weighted_center = Coordinate([0] * self._config.get_num_dimensions())
 
         for i, _ in enumerate(weights):
@@ -223,13 +240,13 @@ class Neighborhood:
 
         return weighted_center
 
-    def _is_coordinate_initialized(self, coordinate):
+    def _is_coordinate_initialized(self, coordinate: Coordinate) -> bool:
         return self._coordinate_data.get_throughput(coordinate) is not None
 
-    def _is_coordinate_visited(self, coordinate):
+    def _is_coordinate_visited(self, coordinate: Coordinate) -> bool:
         return self._coordinate_data.get_visit_count(coordinate) > 0
 
-    def _clamp_coordinate_to_bounds(self, coordinate):
+    def _clamp_coordinate_to_bounds(self, coordinate: Coordinate) -> Coordinate:
 
         clamped_coordiante = deepcopy(coordinate)
 
@@ -241,9 +258,9 @@ class Neighborhood:
             clamped_coordiante[i] = v
         return clamped_coordiante
 
-    def _get_covered_values_per_dimension(self):
+    def _get_covered_values_per_dimension(self) -> List[Dict[Coordinate, bool]]:
         """
-        Returns list of lists indicating which values have been covered in each dimension
+        Returns list of dicts indicating which values have been covered in each dimension
 
             covered_values_per_dimension[dimension][value] = bool
 
@@ -260,8 +277,10 @@ class Neighborhood:
 
         return covered_values_per_dimension
 
-    def _get_num_uncovered_values(self, coordinate,
-                                  covered_values_per_dimension):
+    def _get_num_uncovered_values(self,
+                                  coordinate: Coordinate,
+                                  covered_values_per_dimension: List[Dict[Coordinate, bool]]
+                                  ) -> int:
         """
         Determine how many of the coordinate dimensions in the input coordinate have values
         that are not covered in covered_values_per_dimension

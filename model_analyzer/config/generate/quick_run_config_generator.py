@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
 from .config_generator_interface import ConfigGeneratorInterface
 
 from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
+from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.neighborhood import Neighborhood
@@ -24,6 +27,12 @@ from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 import logging
 
@@ -35,8 +44,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     Hill climbing algorithm to create RunConfigs
     """
 
-    def __init__(self, search_config, config, gpus, models, client,
-                 model_variant_name_manager):
+    def __init__(self,
+                 search_config: SearchConfig,
+                 config: ConfigCommandProfile,
+                 gpus: List[GPUDevice],
+                 models: List[ConfigModelProfileSpec],
+                 client: TritonClient,
+                 model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
         ----------
@@ -80,10 +94,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         self._done = False
 
-    def _is_done(self):
+    def _is_done(self) -> bool:
         return self._done
 
-    def get_configs(self):
+    def get_configs(self) -> RunConfig:
         """
         Returns
         -------
@@ -113,7 +127,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             logger.info("No coordinate to measure. Exiting")
             self._done = True
 
-    def set_last_results(self, measurements):
+    def set_last_results(self, measurements: List[RunConfigMeasurement]):
         """
         Given the results from the last RunConfig, make decisions
         about future configurations to generate
@@ -141,7 +155,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                 coordinate=self._coordinate_to_measure, throughput=0)
             logger.debug(f"Throughput for {self._coordinate_to_measure}: 0")
 
-    def _get_last_results(self):
+    def _get_last_results(self) -> float:
         return self._coordinate_data.get_throughput(self._coordinate_to_measure)
 
     def _take_step(self):
@@ -155,7 +169,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._coordinate_to_measure = new_coordinate
         self._recreate_neighborhood()
 
-    def _determine_if_done(self, new_coordinate):
+    def _determine_if_done(self, new_coordinate: Coordinate):
         """
         Based on the new coordinate picked, determine if the generator is done
         and if so, update self._done
@@ -178,22 +192,24 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         )
         logger.debug(f"Need more data. Measuring {self._coordinate_to_measure}")
 
-    def _get_starting_coordinate(self):
+    def _get_starting_coordinate(self) -> Coordinate:
         min_indexes = self._search_config.get_min_indexes()
         return Coordinate(min_indexes)
 
-    def _get_coordinate_values(self, coordinate, key):
+    def _get_coordinate_values(self,
+                               coordinate: Coordinate,
+                               key: int) -> int:
         dims = self._search_config.get_dimensions()
         values = dims.get_values_for_coordinate(coordinate)
         return values[key]
 
-    def _get_radius(self):
+    def _get_radius(self) -> int:
         return self._search_config.get_radius() + self._radius_offset
 
-    def _get_magnitude(self):
+    def _get_magnitude(self) -> int:
         return self._search_config.get_step_magnitude() + self._magnitude_offset
 
-    def _get_next_run_config(self):
+    def _get_next_run_config(self) -> RunConfig:
         run_config = RunConfig(self._triton_env)
 
         for i, _ in enumerate(self._models):
@@ -202,7 +218,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         return run_config
 
-    def _get_next_model_run_config(self, model_num):
+    def _get_next_model_run_config(self, model_num: int) -> ModelRunConfig:
         mc = self._get_next_model_config(model_num)
 
         model_variant_name = mc.get_field('name')
@@ -211,7 +227,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         model_name = self._models[model_num].model_name()
         return ModelRunConfig(model_name, mc, pac)
 
-    def _get_next_model_config(self, model_num):
+    def _get_next_model_config(self, model_num: int) -> ModelConfig:
         dimension_values = self._get_coordinate_values(
             self._coordinate_to_measure, model_num)
 
@@ -238,7 +254,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_variant_name_manager=self._model_variant_name_manager)
         return model_config
 
-    def _get_next_perf_analyzer_config(self, model_variant_name, model_num):
+    def _get_next_perf_analyzer_config(self,
+                                       model_variant_name: str,
+                                       model_num: int) -> PerfAnalyzerConfig:
         dimension_values = self._get_coordinate_values(
             self._coordinate_to_measure, model_num)
 
