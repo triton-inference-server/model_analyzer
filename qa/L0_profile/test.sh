@@ -40,9 +40,6 @@ FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
-# Create results directory
-mkdir $EXPORT_PATH
-
 python3 test_config_generator.py --profile-models $MODEL_NAMES
 
 # Run the analyzer and check the results
