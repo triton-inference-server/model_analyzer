@@ -16,6 +16,7 @@ from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
 from model_analyzer.constants import LOGGER_NAME
 
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
+from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.record import RecordType
 
 from statistics import mean
@@ -394,7 +395,12 @@ class RunConfigMeasurement:
         return not self.is_better_than(other)
 
     def is_passing_constraints(self):
-        NotImplemented
+        """
+        Returns true if all model measurements pass
+        their respective constraints
+        """
+        return ConstraintManager.satisfies_constraints(
+            self._model_config_constraints, self)
 
     def compare_measurements(self, other):
         """
