@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict, Any
+
 # Config constants
 CONFIG_PARSER_SUCCESS = 1
 CONFIG_PARSER_FAILURE = 0
@@ -24,7 +26,7 @@ COMPARISON_SCORE_THRESHOLD = 0
 
 # Dict of parameters to apply on top of the default
 # config to result in the default config (empty dict)
-DEFAULT_CONFIG_PARAMS = {}
+DEFAULT_CONFIG_PARAMS: Dict[str, Any] = {}
 
 # Run Search
 THROUGHPUT_MINIMUM_GAIN = 0.05
