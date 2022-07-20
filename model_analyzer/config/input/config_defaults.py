@@ -32,6 +32,7 @@ DEFAULT_USE_LOCAL_GPU_MONITOR = False
 DEFAULT_COLLECT_CPU_METRICS = False
 DEFAULT_LOG_LEVEL = 'INFO'
 DEFAULT_GPUS = 'all'
+DEFAULT_SKIP_SUMMARY_REPORTS = False
 DEFAULT_OUTPUT_MODEL_REPOSITORY = os.path.join(os.getcwd(),
                                                'output_model_repository')
 DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG = False

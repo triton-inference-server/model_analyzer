@@ -152,6 +152,16 @@ function check_csv_table_row_column() {
     return 0
 }
 
+function check_no_csv_exists() {
+    local csv_file=$1
+    if [[ ! -f "$csv_file" ]]; then
+        return 0
+    else
+        echo -e "\n***\n*** Test Failed: $csv_file should not exist\n***"
+        return 1
+    fi
+}
+
 function get_number_of_rows_logfile() {
     local log_file=$1
     num_rows_found=`awk  "BEGIN{i=0} /$tag/{flag=1;getline;getline} /^$/{flag=0} flag {i+=1} END{print i}" $log_file`

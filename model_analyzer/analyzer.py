@@ -111,13 +111,13 @@ class Analyzer:
         # TODO: TMA-792: This won't be needed once the Results class is used in profile
         self._analyze_models()
 
-        # TODO: TMA-790: Skip these steps if the CLI option indicates the user doesn't want summary reports
-        self._create_summary_tables(verbose)
-        self._create_summary_reports(mode)
-
         logger.info(self._get_profile_complete_string())
         logger.info("")
-        logger.info(self._get_report_command_help_string())
+
+        if not self._config.skip_summary_reports:
+            self._create_summary_tables(verbose)
+            self._create_summary_reports(mode)
+            logger.info(self._get_report_command_help_string())
 
     def analyze(self, mode: str, verbose: bool):
         """

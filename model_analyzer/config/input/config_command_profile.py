@@ -29,7 +29,7 @@ from .config_command import ConfigCommand
 from .config_defaults import \
     DEFAULT_BATCH_SIZES, DEFAULT_CHECKPOINT_DIRECTORY, \
     DEFAULT_CLIENT_PROTOCOL, DEFAULT_DURATION_SECONDS, \
-    DEFAULT_GPUS, DEFAULT_MAX_RETRIES, \
+    DEFAULT_GPUS, DEFAULT_SKIP_SUMMARY_REPORTS, DEFAULT_MAX_RETRIES, \
     DEFAULT_MONITORING_INTERVAL, DEFAULT_COLLECT_CPU_METRICS, DEFAULT_OFFLINE_OBJECTIVES, \
     DEFAULT_OUTPUT_MODEL_REPOSITORY, DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG, \
     DEFAULT_PERF_ANALYZER_CPU_UTIL, DEFAULT_PERF_ANALYZER_PATH, DEFAULT_PERF_MAX_AUTO_ADJUSTS, \
@@ -63,6 +63,7 @@ from google.protobuf.descriptor import FieldDescriptor
 
 import os
 import numba
+import argparse
 from numba import cuda
 import psutil
 import logging
@@ -75,7 +76,7 @@ class ConfigCommandProfile(ConfigCommand):
     Model Analyzer config object.
     """
 
-    def _resolve_protobuf_field(self, field):
+    def _resolve_protobuf_field(self, field: FieldDescriptor):
         """
         Recursively resolve protobuf fields.
 
@@ -221,6 +222,14 @@ class ConfigCommandProfile(ConfigCommand):
                 default_value=DEFAULT_GPUS,
                 description="List of GPU UUIDs to be used for the profiling. "
                 "Use 'all' to profile all the GPUs visible by CUDA."))
+        self._add_config(
+            ConfigField(
+                'skip_summary_reports',
+                flags=['--skip-summary-reports'],
+                field_type=ConfigPrimitive(bool),
+                parser_args={'action': 'store_true'},
+                default_value=DEFAULT_SKIP_SUMMARY_REPORTS,
+                description='Skips the generation of analysis summary reports and tables.'))
 
         self._add_repository_configs()
         self._add_client_configs()
@@ -836,7 +845,7 @@ class ConfigCommandProfile(ConfigCommand):
                 description="Shorthand flag for specifying a minimum throughput."
             ))
 
-    def set_config_values(self, args):
+    def set_config_values(self, args: argparse.Namespace):
         """
         Set the config values. This function sets all the values for the
         config. CLI arguments have the highest priority, then YAML config
