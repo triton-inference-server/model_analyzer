@@ -146,20 +146,16 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             # TODO: Remove.
             throughput = measurements[0].get_non_gpu_metric_value(
                 "perf_throughput")
+            avg_latency = measurements[0].get_non_gpu_metric_value(
+                "perf_latency_avg")
 
-            self._coordinate_data.set_throughput(
-                coordinate=self._coordinate_to_measure, throughput=throughput)
-            logger.debug(
-                f"Throughput for {self._coordinate_to_measure}: {self._get_last_results()}"
-            )
             self._coordinate_data.set_measurement(
                 coordinate=self._coordinate_to_measure, measurement=measurements[0])
+            logger.debug(
+                f"Measurement for {self._coordinate_to_measure}: "
+                f"throughput = {throughput}, avg_latency = {avg_latency}"
+            )
         else:
-            # TODO: Remove.
-            self._coordinate_data.set_throughput(
-                coordinate=self._coordinate_to_measure, throughput=0)
-            logger.debug(f"Throughput for {self._coordinate_to_measure}: 0")
-
             # TODO: How to handle this case?
             #  1. throughput = 0 and latency = ?
             #       => how to compute metric & weighed vectors?
@@ -167,9 +163,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             #       => should we consider it initialized?
             self._coordinate_data.set_measurement(
                 coordinate=self._coordinate_to_measure, measurement=None)
-
-    def _get_last_results(self) -> float:
-        return self._coordinate_data.get_throughput(self._coordinate_to_measure)
+            logger.debug(
+                f"Measurement for {self._coordinate_to_measure}: None"
+            )
+            
+    def _get_last_results(self) -> RunConfigMeasurement:
+        return self._coordinate_data.get_measurement(
+            coordinate=self._coordinate_to_measure)
 
     def _take_step(self):
         magnitude = self._get_magnitude()

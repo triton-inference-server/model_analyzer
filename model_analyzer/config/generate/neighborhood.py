@@ -18,9 +18,15 @@ from copy import deepcopy
 
 from typing import List, Tuple, Dict
 
+from model_analyzer.constants import LOGGER_NAME  # TODO: Remove.
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+
+# TODO: Remove.
+import logging
+logger = logging.getLogger(LOGGER_NAME)
 
 
 class Neighborhood:
@@ -78,7 +84,7 @@ class Neighborhood:
 
     def calculate_new_coordinate(self, magnitude: int) -> Coordinate:
         """
-        Based on the throughputs in the neighborhood, determine where
+        Based on the measurements in the neighborhood, determine where
         the next location should be
 
         magnitude: int
@@ -91,6 +97,7 @@ class Neighborhood:
             step_vector * magnitude)
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
 
+        logger.debug(f"\tNew Coordinate: {new_coordinate}")  # TODO: Remove.
         return new_coordinate
 
     def pick_coordinate_to_initialize(self) -> Coordinate:
@@ -176,74 +183,94 @@ class Neighborhood:
 
     def _get_num_initialized_points(self) -> int:
         """
-        Returns the number of coordinates in the neighborhood that have a throughput
-        associated with it
+        Returns the number of coordinates in the neighborhood that have a
+        measurement associated with it (except the home coordinate).
         """
         num_initialized = 0
         for coordinate in self._neighborhood:
-            if self._is_coordinate_initialized(coordinate):
+            if coordinate != self._home_coordinate \
+                    and self._is_coordinate_initialized(coordinate):
                 num_initialized += 1
         return num_initialized
 
     def _get_step_vector(self) -> Coordinate:
         """
-        Create a vector pointing from the unweighted center of the
-        datapoints inside of the neighborhood to the weighted center of 
-        the datapoints inside of the neighborhood
+        Create a vector pointing from the home coordinate (current center)
+        to the weighted center of the datapoints inside the neighborhood.
+
+        Returns
+        -------
+        step_vector
+            a coordinate that tells the direction to move.
         """
-        coordinates, throughputs = self._compile_neighborhood_throughputs()
+        coordinates, measurements = self._compile_neighborhood_measurements()
+        weighted_center = self._determine_weighted_center(
+            coordinates=coordinates, measurements=measurements)
+        step_vector = weighted_center - self._home_coordinate
 
-        coordinate_center = self._determine_coordinate_center(coordinates)
-        throughput_center = self._determine_weighted_coordinate_center(
-            coordinates, throughputs)
+        # TODO: Remove.
+        logger.debug("\tCandidate coordinates")
+        for i, coord in enumerate(coordinates):
+            logger.debug(f"\t\tCoordinate {i}: {coord}")
+        logger.debug(f"\tWeighted Center: {weighted_center}")
+        logger.debug(f"\tStep Vector: {step_vector}")
 
-        vector = throughput_center - coordinate_center
+        return step_vector
 
-        return vector
+    def _compile_neighborhood_measurements(self) -> Tuple[List[Coordinate],
+                                                          List[RunConfigMeasurement]]:
+        """
+        Gather all the coordinates in the neighborhood that has
+        a valid measurement.
 
-    def _compile_neighborhood_throughputs(self) -> Tuple[List[Coordinate], List[float]]:
+        Returns
+        -------
+        (coordinates, measurements)
+            collection of coordinates with their corresponding measurements.
+        """
         coordinates = []
-        throughputs = []
+        measurements = []
         for coordinate in self._neighborhood:
-            throughput = self._coordinate_data.get_throughput(coordinate)
-            if throughput is not None:
+            measurement = self._coordinate_data.get_measurement(coordinate)
+            if measurement is not None:
                 coordinates.append(deepcopy(coordinate))
-                throughputs.append(throughput)
-        return coordinates, throughputs
+                measurements.append(measurement)
+        return coordinates, measurements
 
-    def _determine_coordinate_center(self,
-                                     coordinates: List[Coordinate]) -> Coordinate:
-        coordinate_center = Coordinate([0] * self._config.get_num_dimensions())
+    def _determine_weighted_center(self,
+                                   coordinates: List[Coordinate],
+                                   measurements: List[RunConfigMeasurement]
+                                   ) -> Coordinate:
+        """
+        Calculate the weighted center based on the given measurements
+        relative to the home coordinate and its measurement.
 
-        for coordinate in coordinates:
-            coordinate_center += coordinate
+        Returns
+        -------
+        weighted_center
+            a weighted coordinate center based on the measurements.
+        """
+        home_measurement = self._coordinate_data.get_measurement(
+            coordinate=self._home_coordinate)
 
-        num_coordinates = len(coordinates)
-        coordinate_center /= num_coordinates
-
-        return coordinate_center
-
-    def _determine_weighted_coordinate_center(self,
-                                              coordinates: List[Coordinate],
-                                              weights: List[float]) -> Coordinate:
         weighted_center = Coordinate([0] * self._config.get_num_dimensions())
+        weights_sum = 0
 
-        for i, _ in enumerate(weights):
-            weighted_center += coordinates[i] * weights[i]
+        for coordinate, measurement in zip(coordinates, measurements):
+            if coordinate != self._home_coordinate:
+                # TODO: handle negative weights?
+                weight = home_measurement.compare_measurements(measurement)
+                weighted_center += coordinate * weight
+                weights_sum += weight
 
-        weights_sum = sum(weights)
-
-        if (weights_sum == 0):
-            return self._determine_coordinate_center(coordinates)
+        if weights_sum == 0:
+            return self._home_coordinate
 
         weighted_center /= weights_sum
-
         return weighted_center
 
     def _is_coordinate_initialized(self, coordinate: Coordinate) -> bool:
-        # TODO: Remove.
-        return self._coordinate_data.get_throughput(coordinate) is not None
-        #return self._coordinate_data.get_measurement(coordinate) is not None
+        return self._coordinate_data.get_measurement(coordinate) is not None
 
     def _is_coordinate_visited(self, coordinate: Coordinate) -> bool:
         return self._coordinate_data.get_visit_count(coordinate) > 0
@@ -262,12 +289,13 @@ class Neighborhood:
 
     def _get_covered_values_per_dimension(self) -> List[Dict[Coordinate, bool]]:
         """
-        Returns list of dicts indicating which values have been covered in each dimension
+        Returns a list of dicts that indicates which values have been
+        covered in each dimension.
 
+        (e.g.)
             covered_values_per_dimension[dimension][value] = bool
-
         """
-        initialized_coordinates, _ = self._compile_neighborhood_throughputs()
+        initialized_coordinates, _ = self._compile_neighborhood_measurements()
 
         covered_values_per_dimension = [
             {} for _ in range(self._config.get_num_dimensions())

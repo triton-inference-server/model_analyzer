@@ -56,26 +56,7 @@ class CoordinateData(NeighborhoodData):
 
     def __init__(self):
         super().__init__()
-
-        self._throughputs = {}  # TODO: Remove.
         self._visit_counts = {}
-
-    # TODO: Remove.
-    def get_throughput(self, coordinate):
-        """
-        Get the throughput for the given coordinate. 
-        Returns None if no throughput has been stored for that coordinate yet
-        """
-        key = tuple(coordinate)
-        return self._throughputs.get(key, None)
-
-    # TODO: Remove.
-    def set_throughput(self, coordinate, throughput):
-        """
-        Set the throughput for the given coordinate. 
-        """
-        key = tuple(coordinate)
-        self._throughputs[key] = throughput
 
     def get_visit_count(self, coordinate: Coordinate) -> int:
         """
