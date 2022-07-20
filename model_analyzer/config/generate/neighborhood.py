@@ -250,15 +250,15 @@ class Neighborhood:
 
     def _clamp_coordinate_to_bounds(self, coordinate: Coordinate) -> Coordinate:
 
-        clamped_coordiante = deepcopy(coordinate)
+        clamped_coordinate = deepcopy(coordinate)
 
         for i, v in enumerate(coordinate):
             sd = self._config.get_dimension(i)
 
             v = min(sd.get_max_idx(), v)
             v = max(sd.get_min_idx(), v)
-            clamped_coordiante[i] = v
-        return clamped_coordiante
+            clamped_coordinate[i] = v
+        return clamped_coordinate
 
     def _get_covered_values_per_dimension(self) -> List[Dict[Coordinate, bool]]:
         """
