@@ -32,15 +32,9 @@ class TestCoordinateData(trc.TestResultCollector):
         model_config_name = [config_name]
 
         # yapf: disable
-        gpu_metric_values = {
-            '0': {
-                "gpu_used_memory": 6000,
-                "gpu_utilization": 60
-            },
-        }
         non_gpu_metric_values = [{
-                "perf_throughput": throughput,
-                "perf_latency_avg": latency
+            "perf_throughput": throughput,
+            "perf_latency_avg": latency
         }]
         # yapf: enable
 
@@ -51,7 +45,7 @@ class TestCoordinateData(trc.TestResultCollector):
             model_name=model_name,
             model_config_names=model_config_name,
             model_specific_pa_params=MagicMock(),
-            gpu_metric_values=gpu_metric_values,
+            gpu_metric_values={},
             non_gpu_metric_values=non_gpu_metric_values,
             metric_objectives=metric_objectives,
             model_config_weights=weights
