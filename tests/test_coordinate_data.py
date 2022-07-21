@@ -12,41 +12,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import MagicMock
+
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.config.generate.coordinate_data import CoordinateData, NeighborhoodData
 from model_analyzer.config.generate.coordinate import Coordinate
 
-from .common.test_utils import convert_gpu_metrics_to_data
+from .common.test_utils import construct_run_config_measurement
 from .common import test_result_collector as trc
 
 
 class TestCoordinateData(trc.TestResultCollector):
 
+    def _construct_rcm(self,
+                       throughput: float,
+                       latency: float,
+                       config_name: str = "modelA_config_0"):
+        model_name = "modelA"
+        model_config_name = [config_name]
+
+        # yapf: disable
+        gpu_metric_values = {
+            '0': {
+                "gpu_used_memory": 6000,
+                "gpu_utilization": 60
+            },
+        }
+        non_gpu_metric_values = [{
+                "perf_throughput": throughput,
+                "perf_latency_avg": latency
+        }]
+        # yapf: enable
+
+        metric_objectives = [{"perf_throughput": 1}]
+        weights = [1]
+
+        rcm = construct_run_config_measurement(
+            model_name=model_name,
+            model_config_names=model_config_name,
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values=gpu_metric_values,
+            non_gpu_metric_values=non_gpu_metric_values,
+            metric_objectives=metric_objectives,
+            model_config_weights=weights
+        )
+        return rcm
+
     def test_basic(self):
         result_data = CoordinateData()
 
         coordinate = Coordinate([0, 0, 0])
-        self.assertEqual(result_data.get_throughput(coordinate), None)
+        self.assertEqual(result_data.get_measurement(coordinate), None)
         self.assertEqual(result_data.get_visit_count(coordinate), 0)
 
         neighborhood_data = NeighborhoodData()
         self.assertEqual(neighborhood_data.get_measurement(coordinate), None)
-
-    def test_throughput(self):
-        result_data = CoordinateData()
-
-        coordinate1 = Coordinate([0, 0, 0])
-        coordinate2 = Coordinate([0, 4, 1])
-
-        result_data.set_throughput(coordinate1, 7)
-        result_data.set_throughput(coordinate2, 9)
-
-        self.assertEqual(7, result_data.get_throughput(coordinate1))
-        self.assertEqual(9, result_data.get_throughput(coordinate2))
-
-        # Overwrite
-        result_data.set_throughput(coordinate2, 12)
-        self.assertEqual(12, result_data.get_throughput(coordinate2))
 
     def test_visit_count(self):
         result_data = CoordinateData()
@@ -66,29 +86,27 @@ class TestCoordinateData(trc.TestResultCollector):
         self.assertEqual(1, result_data.get_visit_count(coordinate2))
 
     def test_neighborhood_measurement(self):
+        """
+        Test if NeighborhoodData can properly set and get and reset
+        the measurements correctly.
+        """
         neighborhood_data = NeighborhoodData()
 
         coordinate1 = Coordinate([0, 0, 0])
         coordinate2 = Coordinate([0, 4, 1])
 
-        gpu_data = convert_gpu_metrics_to_data({
-            '0': {
-                "gpu_used_memory": 10,
-                "gpu_utilization": 30
-            }
-        })
-        rcm1 = RunConfigMeasurement("model_config_0", gpu_data)
-        rcm2 = RunConfigMeasurement("model_config_1", gpu_data)
+        rcm0 = self._construct_rcm(10, 5, config_name="modelA_config_0")
+        rcm1 = self._construct_rcm(10, 5, config_name="modelB_config_0")
 
-        neighborhood_data.set_measurement(coordinate1, rcm1)
-        neighborhood_rcm1 = neighborhood_data.get_measurement(coordinate1)
+        neighborhood_data.set_measurement(coordinate1, rcm0)
+        neighborhood_rcm0 = neighborhood_data.get_measurement(coordinate1)
+        self.assertEqual(rcm0.model_variants_name(),
+                         neighborhood_rcm0.model_variants_name())
+
+        neighborhood_data.set_measurement(coordinate2, rcm1)
+        neighborhood_rcm1 = neighborhood_data.get_measurement(coordinate2)
         self.assertEqual(rcm1.model_variants_name(),
                          neighborhood_rcm1.model_variants_name())
-
-        neighborhood_data.set_measurement(coordinate2, rcm2)
-        neighborhood_rcm2 = neighborhood_data.get_measurement(coordinate2)
-        self.assertEqual(rcm2.model_variants_name(),
-                         neighborhood_rcm2.model_variants_name())
 
         neighborhood_data.reset_measurements()
         self.assertEqual(None, neighborhood_data.get_measurement(coordinate1))

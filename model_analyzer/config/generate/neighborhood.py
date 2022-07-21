@@ -119,6 +119,7 @@ class Neighborhood:
 
         return best_coordinate
 
+    # TODO: Unused & remove?
     def get_nearest_unvisited_neighbor(self,
                                        coordinate_in: Coordinate) -> Coordinate:
         """ Returns the nearest unvisited coordinate to coordinate_in """
@@ -261,7 +262,7 @@ class Neighborhood:
                 # TODO: handle negative weights?
                 weight = home_measurement.compare_measurements(measurement)
                 weighted_center += coordinate * weight
-                weights_sum += weight
+                weights_sum += abs(weight)
 
         if weights_sum == 0:
             return self._home_coordinate

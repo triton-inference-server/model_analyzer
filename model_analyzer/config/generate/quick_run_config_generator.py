@@ -166,7 +166,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             logger.debug(
                 f"Measurement for {self._coordinate_to_measure}: None"
             )
-            
+
     def _get_last_results(self) -> RunConfigMeasurement:
         return self._coordinate_data.get_measurement(
             coordinate=self._coordinate_to_measure)
