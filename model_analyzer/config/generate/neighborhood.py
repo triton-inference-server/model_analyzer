@@ -18,15 +18,10 @@ from copy import deepcopy
 
 from typing import List, Tuple, Dict
 
-from model_analyzer.constants import LOGGER_NAME  # TODO: Remove.
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-
-# TODO: Remove.
-import logging
-logger = logging.getLogger(LOGGER_NAME)
 
 
 class Neighborhood:
@@ -96,8 +91,6 @@ class Neighborhood:
         tmp_new_coordinate = self._home_coordinate + round(
             step_vector * magnitude)
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
-
-        logger.debug(f"\tNew Coordinate: {new_coordinate}")  # TODO: Remove.
         return new_coordinate
 
     def pick_coordinate_to_initialize(self) -> Coordinate:
@@ -119,7 +112,6 @@ class Neighborhood:
 
         return best_coordinate
 
-    # TODO: Unused & remove?
     def get_nearest_unvisited_neighbor(self,
                                        coordinate_in: Coordinate) -> Coordinate:
         """ Returns the nearest unvisited coordinate to coordinate_in """
@@ -208,14 +200,6 @@ class Neighborhood:
         weighted_center = self._determine_weighted_center(
             coordinates=coordinates, measurements=measurements)
         step_vector = weighted_center - self._home_coordinate
-
-        # TODO: Remove.
-        logger.debug("\tCandidate coordinates")
-        for i, coord in enumerate(coordinates):
-            logger.debug(f"\t\tCoordinate {i}: {coord}")
-        logger.debug(f"\tWeighted Center: {weighted_center}")
-        logger.debug(f"\tStep Vector: {step_vector}")
-
         return step_vector
 
     def _compile_neighborhood_measurements(self) -> Tuple[List[Coordinate],
@@ -259,7 +243,6 @@ class Neighborhood:
 
         for coordinate, measurement in zip(coordinates, measurements):
             if coordinate != self._home_coordinate:
-                # TODO: handle negative weights?
                 weight = home_measurement.compare_measurements(measurement)
                 weighted_center += coordinate * weight
                 weights_sum += abs(weight)
