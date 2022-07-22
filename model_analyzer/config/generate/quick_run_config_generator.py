@@ -33,6 +33,7 @@ from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.record.metrics_manager import MetricsManager
 
 import logging
 
@@ -143,7 +144,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             assert len(measurements) == 1, \
                 "Multi-model is currently not supported in quick search mode."
 
-            # TODO: Remove.
             throughput = measurements[0].get_non_gpu_metric_value(
                 "perf_throughput")
             avg_latency = measurements[0].get_non_gpu_metric_value(
@@ -156,15 +156,12 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                 f"throughput = {throughput}, avg_latency = {avg_latency}"
             )
         else:
-            # TODO: How to handle this case?
-            #  1. throughput = 0 and latency = ?
-            #       => how to compute metric & weighed vectors?
-            #  2. Just treat it None
-            #       => should we consider it initialized?
+            measurement = self._create_zero_throughput_measurement()
             self._coordinate_data.set_measurement(
-                coordinate=self._coordinate_to_measure, measurement=None)
+                coordinate=self._coordinate_to_measure, measurement=measurement)
             logger.debug(
-                f"Measurement for {self._coordinate_to_measure}: None"
+                f"Measurement for {self._coordinate_to_measure}: None "
+                "(set to measurement w/ throughput = 0)"
             )
 
     def _get_last_results(self) -> RunConfigMeasurement:
@@ -291,3 +288,22 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config(
             self._models[model_num].perf_analyzer_flags())
         return perf_analyzer_config
+
+    def _create_zero_throughput_measurement(self) -> RunConfigMeasurement:
+        """
+        Create a run config measurement with dummy measurement of zero
+        throughput.
+        """
+        metric_type = MetricsManager.get_metric_types(["perf_throughput"])[0]
+        zero_throughput = metric_type(value=0)
+
+        run_config_measurement = RunConfigMeasurement(
+            model_variants_name="",
+            gpu_data={}
+        )
+        run_config_measurement.add_model_config_measurement(
+            model_config_name="",
+            model_specific_pa_params=None,
+            non_gpu_data=[zero_throughput]
+        )
+        return run_config_measurement
