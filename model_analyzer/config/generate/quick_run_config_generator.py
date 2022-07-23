@@ -160,8 +160,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self._coordinate_data.set_measurement(
                 coordinate=self._coordinate_to_measure, measurement=measurement)
             logger.debug(
-                f"Measurement for {self._coordinate_to_measure}: None "
-                "(set to measurement w/ throughput = 0)"
+                f"Measurement for {self._coordinate_to_measure}: None. "
+                "Setting the measurement to zero throughput."
             )
 
     def _get_last_results(self) -> RunConfigMeasurement:
