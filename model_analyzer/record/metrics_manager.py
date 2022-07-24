@@ -184,7 +184,7 @@ class MetricsManager:
                 "Existing measurement found for run config. Skipping profile")
             return measurement
 
-        current_model_variants =  run_config.model_variants_name()
+        current_model_variants = run_config.model_variants_name()
         if current_model_variants != self._loaded_models:
             logger.debug(f"Loaded model variants: {self._loaded_models}")
             logger.debug(f"Next variant: {current_model_variants}")
