@@ -186,8 +186,8 @@ class MetricsManager:
 
         current_model_variants = run_config.model_variants_name()
         if current_model_variants != self._loaded_models:
-            logger.debug(f"Loaded model variants: {self._loaded_models}")
-            logger.debug(f"Next variant: {current_model_variants}")
+            logger.debug(f"Loaded model: {self._loaded_models}")
+            logger.debug(f"Next model to load: {current_model_variants}")
             self._server.stop()
             self._server.start(env=run_config.triton_environment())
 
