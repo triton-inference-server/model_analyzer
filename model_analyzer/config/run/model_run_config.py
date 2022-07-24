@@ -93,10 +93,29 @@ class ModelRunConfig:
 
     def representation(self):
         """
-        Returns a representation string for the ModelRunConfig that can be used
+        Returns a representation string, containing model name, batch size, 
+        and concurrency for the ModelRunConfig that can be used
         as a key to uniquely identify it
         """
-        return self.perf_config().representation()
+        pc_string = self.perf_config().representation()
+        pc_list = pc_string.split()
+
+        repr_list = []
+        if '-m' in pc_list:
+            repr_list.append(pc_list[pc_list.index('-m')])
+            repr_list.append(pc_list[pc_list.index('-m') + 1])
+
+        if '-b' in pc_list:
+            repr_list.append(pc_list[pc_list.index('-b')])
+            repr_list.append(pc_list[pc_list.index('-b') + 1])
+
+        if '--concurrency' in pc_list:
+            repr_list.append(
+                next((str for str in pc_list if '--concurrency' in str), None))
+
+        repr_str = ' '.join(repr_list)
+
+        return repr_str
 
     def is_legal_combination(self):
         """
