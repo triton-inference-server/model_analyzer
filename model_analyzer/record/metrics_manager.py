@@ -97,6 +97,8 @@ class MetricsManager:
         self._gpus = gpus
         self._init_state()
 
+        self._loaded_models = None
+
     def start_new_model(self):
         """ Indicate that profiling of a new model is starting """
         self._first_config_variant = {}
@@ -182,14 +184,17 @@ class MetricsManager:
                 "Existing measurement found for run config. Skipping profile")
             return measurement
 
-        self._server.start(env=run_config.triton_environment())
-        if not self._load_model_variants(run_config):
+        if run_config.model_variants_name != self._loaded_models:
             self._server.stop()
-            return
+            self._server.start(env=run_config.triton_environment())
+
+            if not self._load_model_variants(run_config):
+                self._loaded_models = None
+                return
+
+            self._loaded_models = run_config.model_variants_name
 
         measurement = self.profile_models(run_config)
-
-        self._server.stop()
 
         return measurement
 
@@ -246,7 +251,7 @@ class MetricsManager:
                 model_name = perf_config['model-name']
 
                 model_non_gpu_metrics = \
-                      list(perf_analyzer_metrics[model_name].values()) \
+                    list(perf_analyzer_metrics[model_name].values()) \
                     + list(model_cpu_metrics.values())
 
                 model_specific_pa_params = perf_config.extract_model_specific_parameters(
@@ -260,6 +265,9 @@ class MetricsManager:
                 run_config, run_config_measurement)
 
         return run_config_measurement
+
+    def finalize(self):
+        self._server.stop()
 
     def _create_model_variants(self, run_config):
         """
@@ -547,7 +555,7 @@ class MetricsManager:
 
     def _print_run_config_info(self, run_config):
         for perf_config in [
-                mrc.perf_config() for mrc in run_config.model_run_configs()
+            mrc.perf_config() for mrc in run_config.model_run_configs()
         ]:
             logger.info(
                 f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
