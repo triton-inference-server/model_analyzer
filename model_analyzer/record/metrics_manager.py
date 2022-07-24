@@ -184,9 +184,10 @@ class MetricsManager:
                 "Existing measurement found for run config. Skipping profile")
             return measurement
 
-        if run_config.model_variants_name != self._loaded_models:
+        current_model_variants =  run_config.model_variants_name()
+        if current_model_variants != self._loaded_models:
             logger.debug(f"Loaded model variants: {self._loaded_models}")
-            logger.debug(f"Next variant: {run_config.model_variants_name}")
+            logger.debug(f"Next variant: {current_model_variants}")
             self._server.stop()
             self._server.start(env=run_config.triton_environment())
 
@@ -194,7 +195,7 @@ class MetricsManager:
                 self._loaded_models = None
                 return
 
-            self._loaded_models = run_config.model_variants_name
+            self._loaded_models = current_model_variants
 
         measurement = self.profile_models(run_config)
 
