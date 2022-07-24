@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
 from model_analyzer.constants import LOGGER_NAME
 import logging
 
@@ -93,29 +94,16 @@ class ModelRunConfig:
 
     def representation(self):
         """
-        Returns a representation string, containing model name, batch size, 
-        and concurrency for the ModelRunConfig that can be used
+        Returns a representation string for the ModelRunConfig that can be used
         as a key to uniquely identify it
         """
-        pc_string = self.perf_config().representation()
-        pc_list = pc_string.split()
+        repr_string = self.perf_config().representation()
+        repr_list = self._remove_mrc_from_list(repr_string.split())
 
-        repr_list = []
-        if '-m' in pc_list:
-            repr_list.append(pc_list[pc_list.index('-m')])
-            repr_list.append(pc_list[pc_list.index('-m') + 1])
+        return ' '.join(repr_list)
 
-        if '-b' in pc_list:
-            repr_list.append(pc_list[pc_list.index('-b')])
-            repr_list.append(pc_list[pc_list.index('-b') + 1])
-
-        if '--concurrency' in pc_list:
-            repr_list.append(
-                next((str for str in pc_list if '--concurrency' in str), None))
-
-        repr_str = ' '.join(repr_list)
-
-        return repr_str
+    def _remove_mrc_from_list(self, repr_list: List[str]):
+        return [s for s in repr_list if '--measurement-request-count' not in s]
 
     def is_legal_combination(self):
         """
