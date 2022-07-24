@@ -101,11 +101,10 @@ class RunConfigMeasurement:
 
         Parameters
         ----------
-            model_config_constraints: dict (single model) or list of dicts (multi-model)
-            Used to determine if an ModelConfigMeasurement passes or fails
+        model_config_constraints: list of dicts of constraints 
+        Used to determine if an ModelConfigMeasurement passes or fails
         """
-        self._model_config_constraints = [model_config_constraints] if type(
-            model_config_constraints) is dict else model_config_constraints
+        self._model_config_constraints = model_config_constraints
 
     def add_model_config_measurement(self, model_config_name,
                                      model_specific_pa_params, non_gpu_data):
@@ -410,7 +409,7 @@ class RunConfigMeasurement:
 
         Parameters
         ----------
-            other: RunConfigMeasurement
+        other: RunConfigMeasurement
             
         Returns
         -------
@@ -426,7 +425,7 @@ class RunConfigMeasurement:
         weighted_rcm_score = self._calculate_weighted_rcm_score(
             weighted_mcm_scores)
 
-        # Positive value means self is better than other, so invert this
+        # Step 3: Reverse the polarity to match what is expected in the docstring return
         return -1 * weighted_rcm_score
 
     def _compare_measurements(self, other):

@@ -222,6 +222,9 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         rcm4_vs_rcm5 = self.rcm4.compare_measurements(self.rcm5)
         self.assertEqual(rcm4_vs_rcm5, 1000 / 1500)
 
+        rcm5_vs_rcm4 = self.rcm5.compare_measurements(self.rcm4)
+        self.assertEqual(rcm5_vs_rcm4, -1000 / 1500)
+
     def test_is_passing_constraints_none(self):
         """
         Test to ensure constraints are reported as passing
@@ -235,16 +238,18 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         passing/failing if model is above/below
         throughput threshold
         """
-        self.rcm5.set_model_config_constraints(
-            {"perf_throughput": {
+        self.rcm5.set_model_config_constraints([{
+            "perf_throughput": {
                 "min": 500
-            }})
+            }
+        }])
         self.assertTrue(self.rcm5.is_passing_constraints())
 
-        self.rcm5.set_model_config_constraints(
-            {"perf_throughput": {
+        self.rcm5.set_model_config_constraints([{
+            "perf_throughput": {
                 "min": 3000
-            }})
+            }
+        }])
         self.assertFalse(self.rcm5.is_passing_constraints())
 
     def test_from_dict(self):
