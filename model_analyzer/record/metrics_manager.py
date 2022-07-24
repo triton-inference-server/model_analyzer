@@ -185,6 +185,8 @@ class MetricsManager:
             return measurement
 
         if run_config.model_variants_name != self._loaded_models:
+            logger.debug(f"Loaded model variants: {self._loaded_models}")
+            logger.debug(f"Next variant: {run_config.model_variants_name}")
             self._server.stop()
             self._server.start(env=run_config.triton_environment())
 
