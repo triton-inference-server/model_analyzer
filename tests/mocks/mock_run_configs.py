@@ -87,7 +87,12 @@ class MockRunConfigs():
     def __init__(self):
         self._configs = []
 
-    def get_configs_set(self):
+    def get_num_configs(self) -> int:
+        """ Returns the number of configs """
+        return len(self._configs)
+
+    def get_configs_set(self) -> set:
+        """ Returns a set of the configs """
         configs_set = {config.get_config_tuple() for config in self._configs}
         return configs_set
 

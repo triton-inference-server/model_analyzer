@@ -189,6 +189,13 @@ class TestModelManager(trc.TestResultCollector):
             'batch_sizes': [1],
             'max_batch_size': [8],
             'concurrency': [1]
+        }, {
+            'instances': [1],
+            'kind': ["KIND_CPU"],
+            'batching': [None],
+            'batch_sizes': [1],
+            'max_batch_size': [8],
+            'concurrency': [1]
         }]
 
         yaml_str = ("""
@@ -420,9 +427,9 @@ class TestModelManager(trc.TestResultCollector):
 
             self._test_model_manager(yaml_content, expected_ranges, args=args)
 
-    def test_triton_parameters(self):
+    def test_model_config_parameters(self):
         """
-        Test with manually specified triton options. 
+        Test with manually specified model config parameters
         
         In this case we don't automatically search instances or dynamic_batching
         since model config parameters are specified.
@@ -432,7 +439,7 @@ class TestModelManager(trc.TestResultCollector):
             'instances': [1],
             'kind': ["KIND_CPU"],
             'batch_sizes': [1],
-            'max_batch_size': [1, 2, 4, 8, 16],
+            'max_batch_size': [1, 3, 7, 8, 13],
             'concurrency': [1, 2, 4, 8]
         }]
 
@@ -445,7 +452,7 @@ class TestModelManager(trc.TestResultCollector):
             profile_models:
                 test_model:
                     model_config_parameters:
-                        max_batch_size: [1,2,4,8,16]
+                        max_batch_size: [1,3,7,13]
             """)
 
         self._test_model_manager(yaml_str, expected_ranges)
@@ -1050,6 +1057,8 @@ class TestModelManager(trc.TestResultCollector):
 
         self.assertEqual(run_configs.get_configs_set(),
                          expected_configs.get_configs_set())
+        self.assertEqual(run_configs.get_num_configs(),
+                         expected_configs.get_num_configs())
 
 
 if __name__ == '__main__':
