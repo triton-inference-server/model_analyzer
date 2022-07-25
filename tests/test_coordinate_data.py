@@ -78,8 +78,7 @@ class TestCoordinateData(trc.TestResultCollector):
 
     def test_measurement(self):
         """
-        Test if CoordinateData can properly set and get and reset
-        the measurements correctly.
+        Test if CoordinateData can properly set and get the measurements.
         """
         coordinate_data = CoordinateData()
 
