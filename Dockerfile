@@ -74,10 +74,11 @@ RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install nvidia-pyindex && \
     python3 -m pip install wheels/triton_model_analyzer-*-manylinux*.whl
 #Other pip packages
-RUN python3 -m pip install \
-    coverage
-RUN python3 -m pip install \
-    mypy
+RUN python3 -m pip install coverage
+RUN python3 -m pip install mypy
+RUN python3 -m pip install types-PyYAML
+RUN python3 -m pip install types-requests
+RUN python3 -m pip install types-protobuf
 
 RUN apt-get install -y wkhtmltopdf
 
