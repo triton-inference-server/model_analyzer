@@ -76,8 +76,13 @@ class PerfAnalyzer:
     ]
     #yapf: enable
 
-    perf_metrics = (lambda x=RECORD_CLASS, y=perf_metric_table:
-                    [perf_metric[x] for perf_metric in y])()
+    @staticmethod
+    def get_perf_metrics():
+        perf_metrics = [
+            perf_metric[PerfAnalyzer.RECORD_CLASS]
+            for perf_metric in PerfAnalyzer.perf_metric_table
+        ]
+        return perf_metrics
 
     def __init__(self, path, config, max_retries, timeout, max_cpu_util):
         """

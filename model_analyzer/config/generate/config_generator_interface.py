@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import abc
+from typing import List, Union
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 
 class ConfigGeneratorInterface(abc.ABC):
@@ -39,5 +41,6 @@ class ConfigGeneratorInterface(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def set_last_results(self):
+    def set_last_results(self, measurements: List[Union[RunConfigMeasurement,
+                                                        None]]):
         raise NotImplementedError

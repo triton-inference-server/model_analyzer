@@ -17,6 +17,8 @@ from abc import ABCMeta, abstractmethod
 from statistics import mean
 import importlib
 
+from typing import Dict, Any
+
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
@@ -26,7 +28,7 @@ class RecordType(ABCMeta):
     A metaclass that holds the instantiated Record types
     """
 
-    record_types = {}
+    record_types: Dict[str, 'RecordType'] = {}
 
     def __new__(cls, name, base, namespace):
         """

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Union
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 
@@ -107,7 +107,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
             self._step()
 
-    def set_last_results(self, measurements: List[RunConfigMeasurement]):
+    def set_last_results(self, measurements: List[Union[RunConfigMeasurement,
+                                                        None]]):
         """
         Given the results from the last PerfAnalyzerConfig, make decisions
         about future configurations to generate
@@ -118,9 +119,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         """
 
         # Remove 'NONE' cases, and find single max measurement from the list
-        measurements = [m for m in measurements if m]
+        valid_measurements = [m for m in measurements if m]
 
-        measurement = [max(measurements)] if measurements else [None]
+        measurement: List[Union[RunConfigMeasurement, None]] = [None]
+        if valid_measurements:
+            measurement = [max(valid_measurements)]
 
         self._last_results = measurement
         self._concurrency_results.extend(measurement)
@@ -177,9 +180,6 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _add_best_throughput_to_batch_sizes(self):
         best = max(self._concurrency_results)
         self._batch_size_results.append(best)
-
-    def _step_batch_size(self):
-        self._curr_batch_size_index += 1
 
     def _reset_concurrencies(self):
         self._curr_concurrency_index = 0
@@ -241,7 +241,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _throughput_gain_valid_helper(self,
                                       throughputs: List[RunConfigMeasurement],
-                                      min_tries: int, min_gain: int) -> bool:
+                                      min_tries: int, min_gain: float) -> bool:
         if len(throughputs) < min_tries:
             return True
 
@@ -252,7 +252,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _calculate_throughput_gain(self,
                                    throughputs: List[RunConfigMeasurement],
-                                   reverse_index: int) -> int:
+                                   reverse_index: int) -> float:
         """
         Given a reverse index, calculate the throughput gain at that index when
         indexing from the back of the results list, when compared to its previous
