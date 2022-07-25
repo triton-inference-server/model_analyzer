@@ -21,6 +21,7 @@ from model_analyzer.result.model_config_measurement import ModelConfigMeasuremen
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.record import Record, RecordType
 
+from copy import deepcopy
 from statistics import mean
 
 from functools import total_ordering
@@ -56,6 +57,12 @@ class RunConfigMeasurement:
         self._model_config_weights: List[float] = []
         self._model_config_constraints: List[Dict[str, Dict[str, int]]] = []
 
+    def to_dict(self):
+        rcm_dict = deepcopy(self.__dict__)
+        del rcm_dict['_model_config_weights']
+
+        return rcm_dict
+
     @classmethod
     def from_dict(cls,
                   run_config_measurement_dict: Dict) -> 'RunConfigMeasurement':
@@ -77,9 +84,6 @@ class RunConfigMeasurement:
         run_config_measurement._model_config_measurements = cls._deserialize_model_config_measurements(
             run_config_measurement,
             run_config_measurement_dict['_model_config_measurements'])
-
-        run_config_measurement._model_config_weights = run_config_measurement_dict[
-            '_model_config_weights']
 
         return run_config_measurement
 

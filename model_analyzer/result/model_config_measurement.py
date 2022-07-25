@@ -17,6 +17,7 @@ from model_analyzer.constants import LOGGER_NAME
 
 from model_analyzer.record.record import RecordType
 
+from copy import deepcopy
 from statistics import mean
 from functools import total_ordering
 import logging
@@ -53,6 +54,12 @@ class ModelConfigMeasurement:
         # Set a default metric weighting
         self._metric_weights = {"perf_throughput": 1}
 
+    def to_dict(self):
+        mcm_dict = deepcopy(self.__dict__)
+        del mcm_dict['_metric_weights']
+
+        return mcm_dict
+
     @classmethod
     def from_dict(cls, model_config_measurement_dict):
         model_config_measurement = ModelConfigMeasurement(None, {}, [])
@@ -68,9 +75,6 @@ class ModelConfigMeasurement:
 
         model_config_measurement._non_gpu_data_from_tag = cls._get_non_gpu_data_from_tag(
             model_config_measurement)
-
-        model_config_measurement._metric_weights = model_config_measurement_dict[
-            '_metric_weights']
 
         return model_config_measurement
 

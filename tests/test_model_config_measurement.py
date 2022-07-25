@@ -173,7 +173,7 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         """
         Test to ensure class can be correctly restored from a dictionary
         """
-        mcmA_json = json.dumps(self.mcmA.__dict__, default=default_encode)
+        mcmA_json = json.dumps(self.mcmA, default=default_encode)
 
         mcmA_from_dict = ModelConfigMeasurement.from_dict(json.loads(mcmA_json))
 
