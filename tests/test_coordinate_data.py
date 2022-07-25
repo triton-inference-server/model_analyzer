@@ -15,7 +15,7 @@
 from unittest.mock import MagicMock
 
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.config.generate.coordinate_data import CoordinateData, NeighborhoodData
+from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.coordinate import Coordinate
 
 from .common.test_utils import construct_run_config_measurement
@@ -59,9 +59,6 @@ class TestCoordinateData(trc.TestResultCollector):
         self.assertEqual(result_data.get_measurement(coordinate), None)
         self.assertEqual(result_data.get_visit_count(coordinate), 0)
 
-        neighborhood_data = NeighborhoodData()
-        self.assertEqual(neighborhood_data.get_measurement(coordinate), None)
-
     def test_visit_count(self):
         result_data = CoordinateData()
 
@@ -79,29 +76,23 @@ class TestCoordinateData(trc.TestResultCollector):
         self.assertEqual(3, result_data.get_visit_count(coordinate1))
         self.assertEqual(1, result_data.get_visit_count(coordinate2))
 
-    def test_neighborhood_measurement(self):
+    def test_measurement(self):
         """
-        Test if NeighborhoodData can properly set and get and reset
+        Test if CoordinateData can properly set and get and reset
         the measurements correctly.
         """
-        neighborhood_data = NeighborhoodData()
+        coordinate_data = CoordinateData()
 
-        coordinate1 = Coordinate([0, 0, 0])
-        coordinate2 = Coordinate([0, 4, 1])
+        coordinate0 = Coordinate([0, 0, 0])
+        coordinate1 = Coordinate([0, 4, 1])
 
         rcm0 = self._construct_rcm(10, 5, config_name="modelA_config_0")
-        rcm1 = self._construct_rcm(10, 5, config_name="modelB_config_0")
+        rcm1 = self._construct_rcm(20, 8, config_name="modelB_config_0")
 
-        neighborhood_data.set_measurement(coordinate1, rcm0)
-        neighborhood_rcm0 = neighborhood_data.get_measurement(coordinate1)
-        self.assertEqual(rcm0.model_variants_name(),
-                         neighborhood_rcm0.model_variants_name())
+        coordinate_data.set_measurement(coordinate0, rcm0)
+        measurement0 = coordinate_data.get_measurement(coordinate0)
+        self.assertEqual("modelA_config_0", measurement0.model_variants_name())
 
-        neighborhood_data.set_measurement(coordinate2, rcm1)
-        neighborhood_rcm1 = neighborhood_data.get_measurement(coordinate2)
-        self.assertEqual(rcm1.model_variants_name(),
-                         neighborhood_rcm1.model_variants_name())
-
-        neighborhood_data.reset_measurements()
-        self.assertEqual(None, neighborhood_data.get_measurement(coordinate1))
-        self.assertEqual(None, neighborhood_data.get_measurement(coordinate2))
+        coordinate_data.set_measurement(coordinate1, rcm1)
+        measurement1 = coordinate_data.get_measurement(coordinate1)
+        self.assertEqual("modelB_config_0", measurement1.model_variants_name())

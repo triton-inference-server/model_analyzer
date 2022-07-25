@@ -16,14 +16,15 @@ from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 
-class NeighborhoodData:
+class CoordinateData:
     """
-    A class that holds measurement information of the coordinates
-    visited in the current neighborhood.
+    A class that tracks the measurement data in the current neighborhood
+    and the visit counts of all the coordinates in the coordinate space.
     """
 
     def __init__(self):
         self._measurements = {}
+        self._visit_counts = {}
 
     def get_measurement(self, coordinate: Coordinate) -> RunConfigMeasurement:
         """
@@ -40,23 +41,6 @@ class NeighborhoodData:
         """
         key = tuple(coordinate)
         self._measurements[key] = measurement
-
-    def reset_measurements(self):
-        """
-        Reset the measurement data of the current neighborhood.
-        """
-        self._measurements = {}
-
-
-class CoordinateData(NeighborhoodData):
-    """
-    A class that tracks the measurement data in the current neighborhood
-    and the visit counts of all the coordinates in the coordinate space.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self._visit_counts = {}
 
     def get_visit_count(self, coordinate: Coordinate) -> int:
         """
