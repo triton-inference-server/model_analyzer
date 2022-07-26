@@ -24,7 +24,7 @@ class PerfAnalyzerConfig:
     """
 
     perf_analyzer_args = [
-        'service-kind', 'model-signature-name',
+        'service-kind', 'model-signature-name', 'async', 'sync',
         'measurement-interval', 'concurrency-range', 'request-rate-range',
         'request-distribution', 'request-intervals', 'binary-search',
         'num-of-sequences', 'latency-threshold', 'max-threads',
