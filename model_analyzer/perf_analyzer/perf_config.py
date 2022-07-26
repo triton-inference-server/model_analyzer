@@ -24,7 +24,7 @@ class PerfAnalyzerConfig:
     """
 
     perf_analyzer_args = [
-        'service-kind', 'model-signature-name', 'async', 'sync',
+        'service-kind', 'model-signature-name',
         'measurement-interval', 'concurrency-range', 'request-rate-range',
         'request-distribution', 'request-intervals', 'binary-search',
         'num-of-sequences', 'latency-threshold', 'max-threads',
@@ -51,7 +51,7 @@ class PerfAnalyzerConfig:
 
     additive_args = ['input-data', 'shape', 'streaming']
 
-    boolean_args = ['ssl-grpc-use-ssl']
+    boolean_args = ['async', 'sync', 'ssl-grpc-use-ssl']
 
     def __init__(self):
         """
