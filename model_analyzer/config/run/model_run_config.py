@@ -97,13 +97,8 @@ class ModelRunConfig:
         Returns a representation string for the ModelRunConfig that can be used
         as a key to uniquely identify it
         """
-        repr_string = self.perf_config().representation()
-        repr_list = self._remove_mrc_from_list(repr_string.split())
 
-        return ' '.join(repr_list)
-
-    def _remove_mrc_from_list(self, repr_list: List[str]):
-        return [s for s in repr_list if '--measurement-request-count' not in s]
+        return self.perf_config().representation()
 
     def is_legal_combination(self):
         """
