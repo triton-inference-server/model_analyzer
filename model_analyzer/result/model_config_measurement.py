@@ -287,7 +287,9 @@ class ModelConfigMeasurement:
 
             metric_diff = self_metric - other_metric
             average = mean([self_metric.value(), other_metric.value()])
-            weighted_score += weight * (metric_diff.value() / average)
+
+            if average != 0.0:
+                weighted_score += weight * (metric_diff.value() / average)
 
         return weighted_score
 
