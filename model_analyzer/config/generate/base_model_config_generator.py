@@ -106,6 +106,10 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     def _get_next_model_config(self):
         raise NotImplementedError
 
+    def _last_results_erroneous(self):
+        last_max_throughput = self._get_last_results_max_throughput()
+        return last_max_throughput is None
+
     def _last_results_increased_throughput(self):
         if len(self._curr_max_batch_size_throughputs) < 2:
             return True

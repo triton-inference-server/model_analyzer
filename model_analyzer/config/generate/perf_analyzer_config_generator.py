@@ -186,9 +186,6 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._concurrency_warning_printed = False
         self._concurrency_results = []
 
-    def _reset_batch_sizes(self):
-        self._curr_batch_size_index = 0
-
     def _step_concurrency(self):
         self._curr_concurrency_index += 1
 
@@ -217,6 +214,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         if self._early_exit_enable and not self._batch_size_throughput_gain_valid(
         ):
+
+            logger.info(
+                "No longer increasing client batch size as throughput has plateaued"
+            )
+
             return True
         return False
 

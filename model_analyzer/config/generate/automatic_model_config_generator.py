@@ -106,10 +106,6 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         else:
             self._curr_max_batch_size = self._min_model_batch_size
 
-    def _last_results_erroneous(self):
-        last_max_throughput = self._get_last_results_max_throughput()
-        return last_max_throughput is None
-
     def _get_next_model_config(self):
         param_combo = self._get_curr_param_combo()
         model_config = self._make_direct_mode_model_config(param_combo)
