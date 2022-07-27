@@ -182,8 +182,10 @@ class PerfAnalyzerConfig:
         Returns
         -------
         str
-            a string representation that does not include the url
-            Useful for mapping measurements across systems.
+            a string representation of the PA config 
+            that removes values which can vary between
+            runs, but should be ignored when determining
+            if a previous (checkpointed) run can be used
         """
         cli_string = self.to_cli_string()
         cli_string = PerfAnalyzerConfig.remove_url_from_cli_string(cli_string)
