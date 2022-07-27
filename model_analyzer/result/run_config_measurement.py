@@ -14,8 +14,6 @@
 
 from typing import Any, Dict, List, Union
 
-from numpy import intc
-
 from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
 from model_analyzer.constants import LOGGER_NAME
 
