@@ -74,7 +74,7 @@ class Neighborhood:
         have been initialized. Else false
         """
         min_initialized = self._config.get_min_initialized()
-        num_initialized = self._get_num_initialized_points()
+        num_initialized = len(self._get_initialized_coordinates())
         return num_initialized >= min_initialized
 
     def calculate_new_coordinate(self, magnitude: int) -> Coordinate:
@@ -174,17 +174,17 @@ class Neighborhood:
         tuples = list(product(*possible_index_values))
         return [list(x) for x in tuples]
 
-    def _get_num_initialized_points(self) -> int:
+    def _get_initialized_coordinates(self) -> List[Coordinate]:
         """
-        Returns the number of coordinates in the neighborhood that have a
+        Returns the list of coordinates in the neighborhood that have a
         measurement associated with it (except the home coordinate).
         """
-        num_initialized = 0
+        initialized_coordinates = []
         for coordinate in self._neighborhood:
             if coordinate != self._home_coordinate \
                     and self._is_coordinate_initialized(coordinate):
-                num_initialized += 1
-        return num_initialized
+                initialized_coordinates.append(deepcopy(coordinate))
+        return initialized_coordinates
 
     def _get_step_vector(self) -> Coordinate:
         """
@@ -198,7 +198,7 @@ class Neighborhood:
         """
         step_vector = Coordinate([0] * self._config.get_num_dimensions())
 
-        _, vectors, measurements = self._compile_neighborhood_measurements()
+        vectors, measurements = self._compile_neighborhood_measurements()
         home_measurement = self._coordinate_data.get_measurement(
             coordinate=self._home_coordinate)
 
@@ -211,24 +211,23 @@ class Neighborhood:
     def _compile_neighborhood_measurements(self) -> Tuple[List[Coordinate],
                                                           List[RunConfigMeasurement]]:
         """
-        Gather all the coordinates in the neighborhood that has
-        a valid measurement.
+        Gather all the vectors (or directions from the home coordinate)
+        and their corresponding measurements.
 
         Returns
         -------
-        (coordinates, measurements)
-            collection of coordinates with their corresponding measurements.
+        (vectors, measurements)
+            collection of vectors and their measurements.
         """
-        coordinates = []
+        initialized_coordinates = self._get_initialized_coordinates()
+
         vectors = []
         measurements = []
-        for coordinate in self._neighborhood:
+        for coordinate in initialized_coordinates:
             measurement = self._coordinate_data.get_measurement(coordinate)
-            if coordinate != self._home_coordinate and measurement is not None:
-                coordinates.append(deepcopy(coordinate))
-                vectors.append(coordinate - self._home_coordinate)
-                measurements.append(measurement)
-        return coordinates, vectors, measurements
+            vectors.append(coordinate - self._home_coordinate)
+            measurements.append(measurement)
+        return vectors, measurements
 
     def _is_coordinate_initialized(self, coordinate: Coordinate) -> bool:
         return self._coordinate_data.get_measurement(coordinate) is not None
@@ -256,7 +255,7 @@ class Neighborhood:
         (e.g.)
             covered_values_per_dimension[dimension][value] = bool
         """
-        initialized_coordinates, _, _ = self._compile_neighborhood_measurements()
+        initialized_coordinates = self._get_initialized_coordinates()
 
         covered_values_per_dimension = [
             {} for _ in range(self._config.get_num_dimensions())
