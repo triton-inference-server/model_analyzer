@@ -188,18 +188,24 @@ class Neighborhood:
 
     def _get_step_vector(self) -> Coordinate:
         """
-        Create a vector pointing from the home coordinate (current center)
-        to the weighted center of the datapoints inside the neighborhood.
+        Calculate a vector that indicates a direction to step from the
+        home coordinate (current center).
 
         Returns
         -------
         step_vector
             a coordinate that tells the direction to move.
         """
-        coordinates, measurements = self._compile_neighborhood_measurements()
-        weighted_center = self._determine_weighted_center(
-            coordinates=coordinates, measurements=measurements)
-        step_vector = weighted_center - self._home_coordinate
+        step_vector = Coordinate([0] * self._config.get_num_dimensions())
+
+        _, vectors, measurements = self._compile_neighborhood_measurements()
+        home_measurement = self._coordinate_data.get_measurement(
+            coordinate=self._home_coordinate)
+
+        for vector, measurement in zip(vectors, measurements):
+            weight = home_measurement.compare_measurements(measurement)
+            step_vector += vector * weight
+
         return step_vector
 
     def _compile_neighborhood_measurements(self) -> Tuple[List[Coordinate],
@@ -214,44 +220,15 @@ class Neighborhood:
             collection of coordinates with their corresponding measurements.
         """
         coordinates = []
+        vectors = []
         measurements = []
         for coordinate in self._neighborhood:
             measurement = self._coordinate_data.get_measurement(coordinate)
-            if measurement is not None:
+            if coordinate != self._home_coordinate and measurement is not None:
                 coordinates.append(deepcopy(coordinate))
+                vectors.append(coordinate - self._home_coordinate)
                 measurements.append(measurement)
-        return coordinates, measurements
-
-    def _determine_weighted_center(self,
-                                   coordinates: List[Coordinate],
-                                   measurements: List[RunConfigMeasurement]
-                                   ) -> Coordinate:
-        """
-        Calculate the weighted center based on the given measurements
-        relative to the home coordinate and its measurement.
-
-        Returns
-        -------
-        weighted_center
-            a weighted coordinate center based on the measurements.
-        """
-        home_measurement = self._coordinate_data.get_measurement(
-            coordinate=self._home_coordinate)
-
-        weighted_center = Coordinate([0] * self._config.get_num_dimensions())
-        weights_sum = 0
-
-        for coordinate, measurement in zip(coordinates, measurements):
-            if coordinate != self._home_coordinate:
-                weight = home_measurement.compare_measurements(measurement)
-                weighted_center += coordinate * weight
-                weights_sum += abs(weight)
-
-        if weights_sum == 0:
-            return self._home_coordinate
-
-        weighted_center /= weights_sum
-        return weighted_center
+        return coordinates, vectors, measurements
 
     def _is_coordinate_initialized(self, coordinate: Coordinate) -> bool:
         return self._coordinate_data.get_measurement(coordinate) is not None
@@ -279,7 +256,7 @@ class Neighborhood:
         (e.g.)
             covered_values_per_dimension[dimension][value] = bool
         """
-        initialized_coordinates, _ = self._compile_neighborhood_measurements()
+        initialized_coordinates, _, _ = self._compile_neighborhood_measurements()
 
         covered_values_per_dimension = [
             {} for _ in range(self._config.get_num_dimensions())
