@@ -193,6 +193,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         neighborhood_config = self._search_config.get_neighborhood_config(
             self._get_radius())
 
+        self._coordinate_data.reset_measurements()
         self._neighborhood = Neighborhood(neighborhood_config,
                                           self._coordinate_data,
                                           self._current_coordinate)

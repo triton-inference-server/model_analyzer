@@ -42,6 +42,12 @@ class CoordinateData:
         key = tuple(coordinate)
         self._measurements[key] = measurement
 
+    def reset_measurements(self):
+        """
+        Resets the collection of measurements.
+        """
+        self._measurements = {}
+
     def get_visit_count(self, coordinate: Coordinate) -> int:
         """
         Get the visit count for the given coordinate. 
