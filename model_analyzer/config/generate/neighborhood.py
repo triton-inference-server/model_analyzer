@@ -206,6 +206,7 @@ class Neighborhood:
             weight = home_measurement.compare_measurements(measurement)
             step_vector += vector * weight
 
+        step_vector /= len(vectors)
         return step_vector
 
     def _compile_neighborhood_measurements(self) -> Tuple[List[Coordinate],

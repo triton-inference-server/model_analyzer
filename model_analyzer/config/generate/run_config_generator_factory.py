@@ -102,7 +102,7 @@ class RunConfigGeneratorFactory:
 
         search_config = SearchConfig(dimensions=dimensions,
                                      radius=3,
-                                     step_magnitude=3,
+                                     step_magnitude=5,
                                      min_initialized=3)
 
         return search_config
