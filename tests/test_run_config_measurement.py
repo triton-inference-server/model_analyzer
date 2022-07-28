@@ -36,6 +36,8 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self._construct_rcm1()
         self._construct_rcm2()
         self._construct_rcm3()
+        self._construct_rcm4()
+        self._construct_rcm5()
 
     def tearDown(self):
         patch.stopall()
@@ -207,6 +209,48 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         # Therefore, RCM2 is (very slightly) better than RCM3
         self.assertTrue(self.rcm2.is_better_than(self.rcm3))
         self.assertFalse(self.rcm3.is_better_than(self.rcm2))
+
+    def test_compare_measurements(self):
+        """
+        Test to ensure compare measurement function returns
+        the correct magnitude
+        # RCM4's throughput is 1000
+        # RCM5's throughput is 2000
+        # Therefore, the magnitude is (RCM5 - RCM4) / avg throughput
+        #                             (2000 - 1000) / 1500
+        """
+        rcm4_vs_rcm5 = self.rcm4.compare_measurements(self.rcm5)
+        self.assertEqual(rcm4_vs_rcm5, 1000 / 1500)
+
+        rcm5_vs_rcm4 = self.rcm5.compare_measurements(self.rcm4)
+        self.assertEqual(rcm5_vs_rcm4, -1000 / 1500)
+
+    def test_is_passing_constraints_none(self):
+        """
+        Test to ensure constraints are reported as passing
+        if none were specified
+        """
+        self.assertTrue(self.rcm5.is_passing_constraints())
+
+    def test_is_passing_constraints(self):
+        """
+        Test to ensure constraints are reported as
+        passing/failing if model is above/below
+        throughput threshold
+        """
+        self.rcm5.set_model_config_constraints([{
+            "perf_throughput": {
+                "min": 500
+            }
+        }])
+        self.assertTrue(self.rcm5.is_passing_constraints())
+
+        self.rcm5.set_model_config_constraints([{
+            "perf_throughput": {
+                "min": 3000
+            }
+        }])
+        self.assertFalse(self.rcm5.is_passing_constraints())
 
     def test_from_dict(self):
         """
@@ -455,6 +499,106 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.rcm3 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
             gpu_metric_values, self.rcm3_non_gpu_metric_values,
+            metric_objectives, weights)
+
+    def _construct_rcm4(self):
+        model_name = "modelA"
+        model_config_name = ["modelA_config_0"]
+        model_variants_name = "".join(self.model_config_name)
+        model_specific_pa_params = [{
+            "batch_size": 1,
+            "concurrency": 1
+        }, {
+            "batch_size": 2,
+            "concurrency": 2
+        }]
+
+        gpu_metric_values = {
+            '0': {
+                "gpu_used_memory": 6000,
+                "gpu_utilization": 60
+            },
+            '1': {
+                "gpu_used_memory": 10000,
+                "gpu_utilization": 20
+            }
+        }
+        avg_gpu_metric_values = {"gpu_used_memory": 8000, "gpu_utilization": 40}
+
+        self.rcm4_non_gpu_metric_values = [
+            {
+                # modelA_config_0
+                "perf_throughput": 1000,
+                "perf_latency_p99": 20,
+                "cpu_used_ram": 1000
+            },
+        ]
+
+        metric_objectives = [{"perf_throughput": 1}]
+
+        weights = [1]
+
+        self.rcm4_weighted_non_gpu_metric_values = []
+        for index, non_gpu_metric_values in enumerate(
+                self.rcm4_non_gpu_metric_values):
+            self.rcm4_weighted_non_gpu_metric_values.append({
+                objective: value * self.weights[index] / sum(self.weights)
+                for (objective, value) in non_gpu_metric_values.items()
+            })
+
+        self.rcm4 = construct_run_config_measurement(
+            model_name, model_config_name, model_specific_pa_params,
+            gpu_metric_values, self.rcm4_non_gpu_metric_values,
+            metric_objectives, weights)
+
+    def _construct_rcm5(self):
+        model_name = "modelA"
+        model_config_name = ["modelA_config_0"]
+        model_variants_name = "".join(self.model_config_name)
+        model_specific_pa_params = [{
+            "batch_size": 1,
+            "concurrency": 1
+        }, {
+            "batch_size": 2,
+            "concurrency": 2
+        }]
+
+        gpu_metric_values = {
+            '0': {
+                "gpu_used_memory": 6000,
+                "gpu_utilization": 60
+            },
+            '1': {
+                "gpu_used_memory": 10000,
+                "gpu_utilization": 20
+            }
+        }
+        avg_gpu_metric_values = {"gpu_used_memory": 8000, "gpu_utilization": 40}
+
+        self.rcm5_non_gpu_metric_values = [
+            {
+                # modelA_config_0
+                "perf_throughput": 2000,
+                "perf_latency_p99": 20,
+                "cpu_used_ram": 1000
+            },
+        ]
+
+        metric_objectives = [{"perf_throughput": 1}]
+
+        weights = [1]
+
+        self.rcm5_weighted_non_gpu_metric_values = []
+        for index, non_gpu_metric_values in enumerate(
+                self.rcm5_non_gpu_metric_values):
+            self.rcm5_weighted_non_gpu_metric_values.append({
+                objective: value * self.weights[index] / sum(self.weights)
+                for (objective, value) in non_gpu_metric_values.items()
+            })
+
+        self.rcm5 = construct_run_config_measurement(
+            model_name, model_config_name, model_specific_pa_params,
+            gpu_metric_values, self.rcm5_non_gpu_metric_values,
             metric_objectives, weights)
 
 

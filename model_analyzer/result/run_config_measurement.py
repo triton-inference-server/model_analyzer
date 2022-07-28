@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any, Dict, List, Union
+
 from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
 from model_analyzer.constants import LOGGER_NAME
 
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
+from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.record import RecordType
 
 from statistics import mean
@@ -33,7 +36,8 @@ class RunConfigMeasurement:
     in a single RunConfig
     """
 
-    def __init__(self, model_variants_name, gpu_data):
+    def __init__(self, model_variants_name: Union[str, None],
+                 gpu_data: Dict[int, List[RecordType]]):
         """
         model_variants_name: str
             Name of the model variants this measurement was collected for
@@ -48,11 +52,13 @@ class RunConfigMeasurement:
         self._avg_gpu_data = self._average_list(list(self._gpu_data.values()))
         self._avg_gpu_data_from_tag = self._get_avg_gpu_data_from_tag()
 
-        self._model_config_measurements = []
-        self._model_config_weights = []
+        self._model_config_measurements: List[ModelConfigMeasurement] = []
+        self._model_config_weights: List[float] = []
+        self._model_config_constraints: List[Dict[str, Dict[str, int]]] = []
 
     @classmethod
-    def from_dict(cls, run_config_measurement_dict):
+    def from_dict(cls,
+                  run_config_measurement_dict: Dict) -> 'RunConfigMeasurement':
         run_config_measurement = RunConfigMeasurement(None, {})
 
         run_config_measurement._model_variants_name = run_config_measurement_dict[
@@ -77,7 +83,7 @@ class RunConfigMeasurement:
 
         return run_config_measurement
 
-    def set_model_config_weighting(self, model_config_weights):
+    def set_model_config_weighting(self, model_config_weights: List[int]):
         """
         Sets the model config weightings used when calculating 
         weighted metrics
@@ -93,8 +99,20 @@ class RunConfigMeasurement:
             for model_config_weight in model_config_weights
         ]
 
-    def add_model_config_measurement(self, model_config_name,
-                                     model_specific_pa_params, non_gpu_data):
+    def set_model_config_constraints(
+            self, model_config_constraints: List[Dict[str, Dict[str, int]]]):
+        """
+
+        Parameters
+        ----------
+        model_config_constraints: list of dicts of constraints 
+        Used to determine if an ModelConfigMeasurement passes or fails
+        """
+        self._model_config_constraints = model_config_constraints
+
+    def add_model_config_measurement(self, model_config_name: str,
+                                     model_specific_pa_params: Dict[str, int],
+                                     non_gpu_data: List[RecordType]):
         """ 
         Adds a measurement from a single model config in this PA's run 
         
@@ -114,7 +132,7 @@ class RunConfigMeasurement:
         # By default setting all models to have equal weighting
         self._model_config_weights.append(1)
 
-    def set_metric_weightings(self, metric_objectives):
+    def set_metric_weightings(self, metric_objectives: List[Dict[str, int]]):
         """
         Sets the metric weighting for all non-GPU measurements
         
@@ -126,7 +144,7 @@ class RunConfigMeasurement:
         for index, measurement in enumerate(self._model_config_measurements):
             measurement.set_metric_weighting(metric_objectives[index])
 
-    def model_variants_name(self):
+    def model_variants_name(self) -> Union[str, None]:
         """
         Returns: str
             The name of the model variants this measurement was collected for
@@ -134,16 +152,16 @@ class RunConfigMeasurement:
 
         return self._model_variants_name
 
-    def model_name(self):
+    def model_name(self) -> Union[str, None]:
         """
         Returns
         -------
         str: Model name for this RunConfigMeasurement
         """
 
-        return self._model_name
+        return self._model_variants_name
 
-    def data(self):
+    def data(self) -> List[List[RecordType]]:
         """
         Returns
         -------
@@ -157,17 +175,17 @@ class RunConfigMeasurement:
             for mcm in self._model_config_measurements
         ]
 
-    def gpu_data(self):
+    def gpu_data(self) -> Dict[int, List[RecordType]]:
         """
         Returns
         -------
-        List of Records
+        Dict of List of Records
             GPU specific measurements
         """
 
         return self._gpu_data
 
-    def non_gpu_data(self):
+    def non_gpu_data(self) -> List[List[RecordType]]:
         """
         Returns
         -------
@@ -180,7 +198,7 @@ class RunConfigMeasurement:
             for model_config_measurement in self._model_config_measurements
         ]
 
-    def get_gpu_metric(self, tag):
+    def get_gpu_metric(self, tag: str) -> RecordType:
         """
         Returns the average of Records associated with this GPU metric
         
@@ -205,7 +223,7 @@ class RunConfigMeasurement:
                 "measurements across devices.")
             return None
 
-    def get_non_gpu_metric(self, tag):
+    def get_non_gpu_metric(self, tag: str) -> List[RecordType]:
         """
         Returns the Records associated with this non-GPU metric
         
@@ -226,7 +244,7 @@ class RunConfigMeasurement:
             for model_config_measurement in self._model_config_measurements
         ]
 
-    def get_weighted_non_gpu_metric(self, tag):
+    def get_weighted_non_gpu_metric(self, tag: str) -> List[RecordType]:
         """
         Parameters
         ----------
@@ -252,7 +270,9 @@ class RunConfigMeasurement:
                 self._model_config_measurements)
         ]
 
-    def get_non_gpu_metric_value(self, tag, default_value=0):
+    def get_non_gpu_metric_value(self,
+                                 tag: str,
+                                 default_value: Any = 0) -> float:
         """
         Parameters
         ----------
@@ -274,7 +294,7 @@ class RunConfigMeasurement:
             for m in self.get_non_gpu_metric(tag)
         ])
 
-    def get_gpu_metric_value(self, tag, default_value=0):
+    def get_gpu_metric_value(self, tag: str, default_value: Any = 0) -> float:
         """
         Parameters
         ----------
@@ -286,14 +306,17 @@ class RunConfigMeasurement:
 
         Returns
         -------
-        Record : 
+        float : 
             Average of the values of the GPU metric Records 
             corresponding to the tag, default_value if tag not found.
         """
         return default_value if self.get_gpu_metric(
             tag) is None else self.get_gpu_metric(tag).value()
 
-    def get_weighted_non_gpu_metric_value(self, tag, default_value=0):
+    def get_weighted_non_gpu_metric_value(self,
+                                          tag: str,
+                                          default_value: Any = 0
+                                         ) -> List[float]:
         """
         Parameters
         ----------
@@ -305,7 +328,7 @@ class RunConfigMeasurement:
 
         Returns
         -------
-        list of Records
+        list of floats
             Weighted average of the values of the metric Record corresponding 
             to the tag, default_value if tag not found.
         """
@@ -320,7 +343,7 @@ class RunConfigMeasurement:
         return RecordType.get_all_record_types()[tag].value_function()(
             weighted_non_gpu_metrics)
 
-    def gpus_used(self):
+    def gpus_used(self) -> List[int]:
         """
         Returns
         -------
@@ -330,7 +353,7 @@ class RunConfigMeasurement:
 
         return list(self._gpu_data.keys())
 
-    def model_specific_pa_params(self):
+    def model_specific_pa_params(self) -> List[Dict[str, int]]:
         """
         Returns
         -------
@@ -345,7 +368,7 @@ class RunConfigMeasurement:
             for model_config_measurement in self._model_config_measurements
         ]
 
-    def is_better_than(self, other):
+    def is_better_than(self, other: 'RunConfigMeasurement') -> bool:
         """
         Checks whether a measurement is better than another
         by using the weighted average across all model configs in the
@@ -357,14 +380,14 @@ class RunConfigMeasurement:
         # seems like this should be == -1 but we're using a min heap
         return self._compare_measurements(other) == 1
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """
         Check whether two sets of measurements are equivalent
         """
 
         return self._compare_measurements(other) == 0
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         """
         Checks whether a measurement is better than another
         by using the weighted average across all model configs in the
@@ -380,11 +403,46 @@ class RunConfigMeasurement:
 
         return not self.is_better_than(other)
 
-    def _compare_measurements(self, other):
+    def is_passing_constraints(self) -> bool:
         """
-        Compares two RunConfig measurements based on each
+        Returns true if all model measurements pass
+        their respective constraints
+        """
+        return ConstraintManager.satisfies_constraints(
+            self._model_config_constraints, self)
+
+    def compare_measurements(self, other: 'RunConfigMeasurement') -> float:
+        """
+        Compares two RunConfigMeasurements based on each
+        ModelConfigs weighted metric objectives and the
+        ModelConfigs weighted value within the RunConfigMeasurement
+
+        Parameters
+        ----------
+        other: RunConfigMeasurement
+            
+        Returns
+        -------
+        float
+           Positive value if other is better
+           Negaive value is self is better
+           Zero if they are equal 
+        """
+        # Step 1: for each ModelConfig determine the weighted score
+        weighted_mcm_scores = self._calculate_weighted_mcm_score(other)
+
+        # Step 2: combine these using the ModelConfig weighting
+        weighted_rcm_score = self._calculate_weighted_rcm_score(
+            weighted_mcm_scores)
+
+        # Step 3: Reverse the polarity to match what is expected in the docstring return
+        return -1 * weighted_rcm_score
+
+    def _compare_measurements(self, other: 'RunConfigMeasurement') -> int:
+        """
+        Compares two RunConfigMeasurements based on each
         ModelConfigs weighted metric objectives and the 
-        ModelConfigs weighted value within the RunConfig
+        ModelConfigs weighted value within the RunConfigMeasurement
         
         Parameters
         ----------
@@ -416,7 +474,8 @@ class RunConfigMeasurement:
             return -1
         return 0
 
-    def _calculate_weighted_mcm_score(self, other):
+    def _calculate_weighted_mcm_score(
+            self, other: 'RunConfigMeasurement') -> List[float]:
         """
         Parameters
         ----------
@@ -433,7 +492,7 @@ class RunConfigMeasurement:
                                            other._model_config_measurements)
         ]
 
-    def _calculate_weighted_rcm_score(self, weighted_mcm_scores):
+    def _calculate_weighted_rcm_score(self, weighted_mcm_scores) -> float:
         """
         Parameters
         ----------
@@ -470,7 +529,8 @@ class RunConfigMeasurement:
                               start=row_list[0][i]) * 1.0) / N
             return avg
 
-    def _deserialize_gpu_data(self, serialized_gpu_data):
+    def _deserialize_gpu_data(
+            self, serialized_gpu_data: Dict) -> Dict[int, List[RecordType]]:
         gpu_data = {}
         for gpu_uuid, gpu_data_list in serialized_gpu_data.items():
             metric_list = []
@@ -482,11 +542,12 @@ class RunConfigMeasurement:
 
         return gpu_data
 
-    def _get_avg_gpu_data_from_tag(self):
+    def _get_avg_gpu_data_from_tag(self) -> Dict[str, RecordType]:
         return {type(metric).tag: metric for metric in self._avg_gpu_data}
 
     def _deserialize_model_config_measurements(
-            self, serialized_model_config_measurements):
+        self, serialized_model_config_measurements: List[Dict]
+    ) -> List[ModelConfigMeasurement]:
         model_config_measurements = []
         for mcm_dict in serialized_model_config_measurements:
             model_config_measurements.append(

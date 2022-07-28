@@ -13,4 +13,5 @@
 # limitations under the License.
 
 mypy --config-file ./mypi.ini
+rm -rf .mypy_cache
 exit $?
