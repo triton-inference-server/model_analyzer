@@ -93,6 +93,7 @@ class TestConfigGenerator:
     def generate_perf_output_timeout(self):
         model_config = {
             'profile_models': ['vgg19_libtorch'],
+            'skip_summary_reports': True,  # Don't fail analyzing no results
             'perf_output': True,
             'perf_analyzer_timeout': 2,
             'perf_analyzer_flags': {
