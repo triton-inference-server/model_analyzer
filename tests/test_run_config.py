@@ -72,6 +72,19 @@ class TestRunConfig(trc.TestResultCollector):
         expected_representation = pc1.representation() + pc2.representation()
         self.assertEqual(rc.representation(), expected_representation)
 
+    def test_representation_mrc_removal(self):
+        """
+        Test that representation removes measurement request count
+        """
+        pc = PerfAnalyzerConfig()
+        pc.update_config({'model-name': "TestModel1"})
+        pc.update_config({'measurement-request-count': "500"})
+
+        mrc = ModelRunConfig("model1", MagicMock(), pc)
+
+        expected_represenation = "-m TestModel1"
+        self.assertEqual(mrc.representation(), expected_represenation)
+
     def test_cpu_only(self):
         """
         Test that cpu_only() is only true if all ModelConfigs are cpu_only() 

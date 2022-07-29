@@ -182,12 +182,16 @@ class PerfAnalyzerConfig:
         Returns
         -------
         str
-            a string representation that does not include the url
-            Useful for mapping measurements across systems.
+            a string representation of the PA config 
+            that removes values which can vary between
+            runs, but should be ignored when determining
+            if a previous (checkpointed) run can be used
         """
+        cli_string = self.to_cli_string()
+        cli_string = PerfAnalyzerConfig.remove_url_from_cli_string(cli_string)
+        cli_string = PerfAnalyzerConfig.remove_mrc_from_cli_string(cli_string)
 
-        return PerfAnalyzerConfig.remove_url_from_cli_string(
-            self.to_cli_string())
+        return cli_string
 
     def extract_model_specific_parameters(self):
         """
@@ -225,6 +229,30 @@ class PerfAnalyzerConfig:
             perf_str_tokens.pop(url_index)
         except ValueError:
             pass
+
+        return ' '.join(perf_str_tokens)
+
+    @classmethod
+    def remove_mrc_from_cli_string(cls, cli_string):
+        """
+        utility function strips the measruement request count
+        from a cli string representation
+
+        Parameters
+        ----------
+        cli_string : str
+            The cli string representation
+        """
+
+        perf_str_tokens = cli_string.split(' ')
+
+        mrc_index = [
+            i for i, s in enumerate(perf_str_tokens)
+            if '--measurement-request-count' in s
+        ]
+
+        if mrc_index:
+            perf_str_tokens.pop(mrc_index[0])
 
         return ' '.join(perf_str_tokens)
 

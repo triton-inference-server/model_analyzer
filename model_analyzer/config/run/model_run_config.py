@@ -96,6 +96,7 @@ class ModelRunConfig:
         Returns a representation string for the ModelRunConfig that can be used
         as a key to uniquely identify it
         """
+
         return self.perf_config().representation()
 
     def is_legal_combination(self):
