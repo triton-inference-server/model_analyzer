@@ -14,6 +14,7 @@
 
 import logging
 
+from typing import Set
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
@@ -25,7 +26,7 @@ class YamlConfigValidator:
     Validate all options from the yaml file.
     """
 
-    _valid_yaml_options = set({})
+    _valid_yaml_options: Set[str] = set({})
 
     @staticmethod
     def validate(yaml_file):

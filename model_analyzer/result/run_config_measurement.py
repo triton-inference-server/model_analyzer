@@ -19,7 +19,7 @@ from model_analyzer.constants import LOGGER_NAME
 
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.result.constraint_manager import ConstraintManager
-from model_analyzer.record.record import RecordType
+from model_analyzer.record.record import Record, RecordType
 
 from statistics import mean
 
@@ -37,7 +37,7 @@ class RunConfigMeasurement:
     """
 
     def __init__(self, model_variants_name: Union[str, None],
-                 gpu_data: Dict[int, List[RecordType]]):
+                 gpu_data: Dict[int, List[Record]]):
         """
         model_variants_name: str
             Name of the model variants this measurement was collected for
@@ -112,7 +112,7 @@ class RunConfigMeasurement:
 
     def add_model_config_measurement(self, model_config_name: str,
                                      model_specific_pa_params: Dict[str, int],
-                                     non_gpu_data: List[RecordType]):
+                                     non_gpu_data: List[Record]):
         """ 
         Adds a measurement from a single model config in this PA's run 
         
@@ -161,7 +161,7 @@ class RunConfigMeasurement:
 
         return self._model_variants_name
 
-    def data(self) -> List[List[RecordType]]:
+    def data(self) -> List[List[Record]]:
         """
         Returns
         -------
@@ -175,7 +175,7 @@ class RunConfigMeasurement:
             for mcm in self._model_config_measurements
         ]
 
-    def gpu_data(self) -> Dict[int, List[RecordType]]:
+    def gpu_data(self) -> Dict[int, List[Record]]:
         """
         Returns
         -------
@@ -185,7 +185,7 @@ class RunConfigMeasurement:
 
         return self._gpu_data
 
-    def non_gpu_data(self) -> List[List[RecordType]]:
+    def non_gpu_data(self) -> List[List[Record]]:
         """
         Returns
         -------
@@ -198,7 +198,7 @@ class RunConfigMeasurement:
             for model_config_measurement in self._model_config_measurements
         ]
 
-    def get_gpu_metric(self, tag: str) -> RecordType:
+    def get_gpu_metric(self, tag: str) -> Union[Record, None]:
         """
         Returns the average of Records associated with this GPU metric
         
@@ -223,7 +223,7 @@ class RunConfigMeasurement:
                 "measurements across devices.")
             return None
 
-    def get_non_gpu_metric(self, tag: str) -> List[RecordType]:
+    def get_non_gpu_metric(self, tag: str) -> List[Record]:
         """
         Returns the Records associated with this non-GPU metric
         
@@ -244,7 +244,7 @@ class RunConfigMeasurement:
             for model_config_measurement in self._model_config_measurements
         ]
 
-    def get_weighted_non_gpu_metric(self, tag: str) -> List[RecordType]:
+    def get_weighted_non_gpu_metric(self, tag: str) -> List[Record]:
         """
         Parameters
         ----------
@@ -310,8 +310,11 @@ class RunConfigMeasurement:
             Average of the values of the GPU metric Records 
             corresponding to the tag, default_value if tag not found.
         """
-        return default_value if self.get_gpu_metric(
-            tag) is None else self.get_gpu_metric(tag).value()
+        metric = self.get_gpu_metric(tag)
+        if metric is None:
+            return default_value
+        else:
+            return metric.value()
 
     def get_weighted_non_gpu_metric_value(self,
                                           tag: str,
@@ -530,7 +533,7 @@ class RunConfigMeasurement:
             return avg
 
     def _deserialize_gpu_data(
-            self, serialized_gpu_data: Dict) -> Dict[int, List[RecordType]]:
+            self, serialized_gpu_data: Dict) -> Dict[int, List[Record]]:
         gpu_data = {}
         for gpu_uuid, gpu_data_list in serialized_gpu_data.items():
             metric_list = []
@@ -542,7 +545,7 @@ class RunConfigMeasurement:
 
         return gpu_data
 
-    def _get_avg_gpu_data_from_tag(self) -> Dict[str, RecordType]:
+    def _get_avg_gpu_data_from_tag(self) -> Dict[str, Record]:
         return {type(metric).tag: metric for metric in self._avg_gpu_data}
 
     def _deserialize_model_config_measurements(

@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import os
+from typing import Dict, Any
+
 from numba import cuda
 from distutils.dir_util import copy_tree
 from google.protobuf import text_format, json_format
@@ -29,7 +31,7 @@ class ModelConfig:
     A class that encapsulates all the metadata about a Triton model.
     """
 
-    _default_config_dict = {}
+    _default_config_dict: Dict[str, Any] = {}
 
     def __init__(self, model_config):
         """

@@ -144,7 +144,7 @@ class MetricsManager:
             if metric in DCGMMonitor.model_analyzer_to_dcgm_field or metric in RemoteMonitor.gpu_metrics.values(
             ):
                 gpu_metrics.append(metric)
-            elif metric in PerfAnalyzer.perf_metrics:
+            elif metric in PerfAnalyzer.get_perf_metrics():
                 perf_metrics.append(metric)
             elif collect_cpu_metrics and (metric in CPUMonitor.cpu_metrics):
                 cpu_metrics.append(metric)
@@ -612,7 +612,7 @@ class MetricsManager:
         False otherwise
         """
         metric = MetricsManager.get_metric_types([tag])[0]
-        return metric in PerfAnalyzer.perf_metrics
+        return metric in PerfAnalyzer.get_perf_metrics()
 
     @staticmethod
     def is_cpu_metric(tag):

@@ -43,7 +43,7 @@ class Report(ABC):
         """
 
     @abstractmethod
-    def add_images(self, images, image_captionss):
+    def add_images(self, images, image_captions):
         """
         Parameters
         ----------
