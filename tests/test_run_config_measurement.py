@@ -269,6 +269,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(rcm0_from_dict._model_config_measurements,
                          self.rcm0._model_config_measurements)
         self.assertEqual(rcm0_from_dict._model_config_weights, [])
+        self.assertEqual(rcm0_from_dict._model_config_constraints, [])
 
     def _construct_rcm0(self):
         self.model_name = "modelA,modelB"
