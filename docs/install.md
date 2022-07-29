@@ -70,10 +70,10 @@ Be sure to use `--triton-launch-mode=docker`, when running Model Analyzer.<br><b
 
 # Alternative Installation Methods
 
-- [Specific Version with Local Launch Mode](##Specific-Version-with-Local-Launch-Mode)
-- [Main with Local Launch Mode](##Main-with-Local-Launch-Mode)
-- [Using Pip](##Using-Pip)
-- [From the Source](##From-the-Source)
+- [Specific Version with Local Launch Mode](#Specific-Version-with-Local-Launch-Mode)
+- [Main with Local Launch Mode](#Main-branch-with-Local-Launch-Mode)
+- [Using Pip](#Pip)
+- [From the Source](#From-the-Source)
 
 <br>
 
@@ -164,7 +164,7 @@ will be located.
 **_absolute_ _path_** to the directory where the `output` model repository
 will be located.<br><br>
 
-## Pip3
+## Pip
 
 ---
 
