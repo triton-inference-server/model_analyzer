@@ -250,7 +250,6 @@ class Analyzer:
     def _create_summary_tables(self, verbose: bool):
         self._result_table_manager = ResultTableManager(self._config,
                                                         self._result_manager)
-
         self._result_table_manager.create_tables()
         self._result_table_manager.tabulate_results()
         self._result_table_manager.export_results()

@@ -94,30 +94,35 @@ class ResultTableManager:
         files.
         """
 
-        # Results exported to export_path/results
         results_export_directory = os.path.join(self._config.export_path,
                                                 'results')
         os.makedirs(results_export_directory, exist_ok=True)
 
-        # Configure server only results path and export results
-        server_metrics_path = os.path.join(results_export_directory,
-                                           self._config.filename_server_only)
-        logger.info(f"Exporting server only metrics to {server_metrics_path}")
-        self._export_server_only_csv(
-            writer=FileWriter(filename=server_metrics_path),
-            column_separator=',')
+        self._export_results(name="server only",
+                             dir=results_export_directory,
+                             filename=self._config.filename_server_only,
+                             key=self.server_only_table_key)
 
-        # Configure model metrics results path and export results
-        metrics_inference_path = os.path.join(
-            results_export_directory, self._config.filename_model_inference)
-        metrics_gpu_path = os.path.join(results_export_directory,
-                                        self._config.filename_model_gpu)
-        logger.info(f"Exporting inference metrics to {metrics_inference_path}")
-        logger.info(f"Exporting GPU metrics to {metrics_gpu_path}")
-        self._export_model_csv(
-            inference_writer=FileWriter(filename=metrics_inference_path),
-            gpu_metrics_writer=FileWriter(filename=metrics_gpu_path),
-            column_separator=',')
+        self._export_results(name="inference",
+                             dir=results_export_directory,
+                             filename=self._config.filename_model_inference,
+                             key=self.model_inference_table_key)
+
+        self._export_results(name="GPU",
+                             dir=results_export_directory,
+                             filename=self._config.filename_model_gpu,
+                             key=self.model_gpu_table_key)
+
+    def _export_results(self, name, dir, filename, key):
+        table = self._result_tables[key]
+        if table.size():
+            outfile = os.path.join(dir, filename)
+            logger.info(f"Exporting {name} metrics to {outfile}")
+            self._write_result(table=table,
+                               writer=FileWriter(filename=outfile),
+                               column_separator=',',
+                               ignore_widths=True,
+                               include_title=False)
 
     def _determine_table_headers(self):
         # Finds which metric(s) are actually collected during profile phase.
@@ -235,63 +240,6 @@ class ResultTableManager:
             return index
         except ValueError:
             return None
-
-    def _export_server_only_csv(self, writer, column_separator):
-        """
-        Writes the server-only table as a csv file using the given writer
-
-        Parameters
-        ----------
-        writer : OutputWriter
-            Used to write the result tables to an output stream
-        column_separator : str
-            The string that will be inserted between each column
-            of the table
-
-        Raises
-        ------
-        TritonModelAnalyzerException
-        """
-
-        self._write_result(self._result_tables[self.server_only_table_key],
-                           writer,
-                           column_separator,
-                           ignore_widths=True,
-                           include_title=False)
-
-    def _export_model_csv(self, inference_writer, gpu_metrics_writer,
-                          column_separator):
-        """
-        Writes the model table as a csv file using the given writer
-
-        Parameters
-        ----------
-        inference_writer : OutputWriter
-            Used to write the inference table result to an output stream
-        gpu_metrics_writer : OutputWriter
-            Used to write the gpu metrics table result to an output stream
-        column_separator : str
-            The string that will be inserted between each column
-            of the table
-
-        Raises
-        ------
-        TritonModelAnalyzerException
-        """
-
-        gpu_table = self._result_tables[self.model_gpu_table_key]
-        self._write_result(table=gpu_table,
-                           writer=gpu_metrics_writer,
-                           column_separator=column_separator,
-                           ignore_widths=True,
-                           include_title=False)
-
-        non_gpu_table = self._result_tables[self.model_inference_table_key]
-        self._write_result(table=non_gpu_table,
-                           writer=inference_writer,
-                           column_separator=column_separator,
-                           ignore_widths=True,
-                           include_title=False)
 
     def _write_results(self, writer, column_separator):
         """

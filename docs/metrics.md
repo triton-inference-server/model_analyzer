@@ -49,7 +49,7 @@ for more info on these
 
 ## GPU metrics
 
-These are metrics currently captured using DCGM. They are recorded for each GPU
+These are metrics captured by the tritonserver using DCGM. They are recorded for each GPU
 in fixed intervals during perf analyzer runs and then aggregated across all the
 records for a run. 
 
