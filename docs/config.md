@@ -713,7 +713,7 @@ More information about this can be found in the
 
 **Important Notes**:
 
-- Only a subset of flags can be specified on the command line. Use `model-analyzer profile --help` to see the list of flags that can be specified on the command line. If a flag isn't listed here, it must be specified via the yaml file.
+- Only a subset of flags can be specified on the command line. Use `model-analyzer profile --help` to see the list of flags that can be specified on the command line. If a flag isn't listed there, it can be specified via the yaml file.
 - When providing arguments under `perf_analyzer_flags`, you must use `-` instead
   of `_`. This casing is important and Model Analyzer will not recognize
   `snake_cased` arguments.
