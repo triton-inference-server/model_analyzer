@@ -86,6 +86,10 @@ class RunConfigMeasurement:
             run_config_measurement,
             run_config_measurement_dict['_model_config_measurements'])
 
+        # By default setting all models to have equal weighting
+        for mcm in run_config_measurement._model_config_measurements:
+            run_config_measurement._model_config_weights.append(1)
+
         return run_config_measurement
 
     def set_model_config_weighting(self, model_config_weights: List[int]):
