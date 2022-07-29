@@ -23,33 +23,38 @@ configurations are only supported using the config file.
 
 The placeholders below are used throughout the configuration:
 
-* `<boolean>`: a boolean that can take `true` or `false` as value.
-* `<string>`: a regular string
-* `<comma-delimited-list>`: a list of comma separated items.
-* `<int>`: a regular integer value.
-* `<list>`: a list of values.
-* `<range>`: An object containing `start` and `stop` key with an optional `step`
+- `<boolean>`: a boolean that can take `true` or `false` as value.
+- `<string>`: a regular string
+- `<comma-delimited-list>`: a list of comma separated items.
+- `<int>`: a regular integer value.
+- `<list>`: a list of values.
+- `<range>`: An object containing `start` and `stop` key with an optional `step`
   value. If `step` is not defined, we use 1 as the default value for `step`. The
   types that support `<range>` can be described by a list or using the example
   structure below:
+
 ```yaml
 batch_sizes:
-    start: 2
-    stop: 6
-    step: 2
+  start: 2
+  stop: 6
+  step: 2
 ```
-* `<dict>`: a set of key-value pairs. Here is an example:
+
+- `<dict>`: a set of key-value pairs. Here is an example:
+
 ```yaml
 triton_server_flags:
-    log_verbose: True
-    exit_timeout_secs: 120
+  log_verbose: True
+  exit_timeout_secs: 120
 ```
 
 The above YAML declares the value of batch_sizes to be an array `[2, 4, 6]`.
 
 The following sections describe the configuration options for each of the
 subcommands of the Model Analyzer.
+
 ## Config options for `profile`
+
 ### CLI and YAML Config Options
 
 A list of all the configuration options supported by both the CLI and YAML
@@ -59,7 +64,6 @@ non-list and non-object parameters the value is set to the specified default.
 The CLI flags corresponding to each of the options below are obtained by
 converting the `snake_case` options to `--kebab-case`. For example,
 `profile_models` in the YAML would be `--profile-models` in the CLI.
-
 
 ```yaml
 # Path to the Triton Model Repository (https://github.com/triton-inference-server/server/blob/main/docs/model_repository.md)
@@ -143,7 +147,7 @@ profile_models: <comma-delimited-string-list>
 # The full path to a file to write the Triton Server output log.
 [ triton_output_path: <string> ]
 
-# List of strings containing the paths to the volumes to be mounted into the tritonserver docker 
+# List of strings containing the paths to the volumes to be mounted into the tritonserver docker
 # containers launched by model-analyzer. Will be ignored in other launch modes
 [ triton_docker_mounts: <list of strings> ]
 
@@ -208,19 +212,19 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 # launched by model analyzer
 [ triton_server_environment: <dict> ]
 
-# Dict of name=value pairs containing metadata for the tritonserve docker container 
+# Dict of name=value pairs containing metadata for the tritonserve docker container
 # launched in docker launch mode
 [ triton_docker_labels: <dict> ]
 ```
 
 ## Config Options for `analyze`
+
 ### CLI and YAML Options
 
 The config options for the `analyze` subcommand supported by both the CLI and
 YAML config file are shown below. Brackets indicate that a parameter is
 optional. For non-list and non-object parameters the value is set to the
 specified default.
-
 
 ```yaml
 
@@ -283,6 +287,7 @@ analysis_models: <comma-delimited-string|list|analysis_model>
 ```
 
 ## Config Options for `report`
+
 ### CLI and YAML options
 
 The config options for the `report` subcommand supported by both the CLI and
@@ -321,7 +326,9 @@ report_model_configs: <comma-delimited-string-list|list|report_model_config>
 ## Field Descriptions
 
 Before proceeding, it will be helpful to see the documentation on [Model Analyzer Metrics](./metrics.md) regarding what metric tags are and how to use them.
+
 ### `<constraint>`
+
 A constraint, specifies the bounds that determine a successful run. There are
 three constraints allowed:
 
@@ -331,35 +338,36 @@ three constraints allowed:
 | `perf_latency_p99` |    ms     |    max     | Specify maximum tolerable latency or latency budget. |
 | `gpu_used_memory`  |    MB     |    max     | Specify maximum GPU memory used by model.            |
 
-
 #### Examples
 
 To filter out the results when `perf_throughput` is less than 5 infer/sec:
 
 ```yaml
 perf_throughput:
-    min: 5
+  min: 5
 ```
 
 To filter out the results when `perf_latency_p99` is larger than 100 milliseconds:
 
 ```yaml
 perf_latency_p99:
-    max: 100
+  max: 100
 ```
 
 To filter out the results when `gpu_used_memory` is larger than 200 MBs:
+
 ```yaml
 gpu_used_memory:
-    max: 200
+  max: 200
 ```
 
 Keys can be combined for more complex constraints:
+
 ```yaml
 gpu_used_memory:
-    max: 200
+  max: 200
 perf_latency_p99:
-    max: 100
+  max: 100
 ```
 
 This will filter out the results when `gpu_used_memory` is larger than 200 MBs
@@ -377,8 +385,8 @@ analysis_models:
   - model_2
 
 constraints:
-    gpu_used_memory:
-        max: 200
+  gpu_used_memory:
+    max: 200
 ```
 
 In the global mode, the constraint specified will be enforced on every model. To
@@ -389,12 +397,12 @@ model_repository: /path/to/model-repository
 analysis_models:
   model_1:
     constraints:
-        gpu_used_memory:
-            max: 200
+      gpu_used_memory:
+        max: 200
   model_2:
     constraints:
-        perf_latency_p99:
-            max: 50
+      perf_latency_p99:
+        max: 50
 ```
 
 ### `<objective>`
@@ -417,15 +425,16 @@ below:
 
 ```yaml
 objectives:
-- perf_throughput
+  - perf_throughput
 ```
 
 To sort the results by latency, `objectives` should look like:
 
 ```yaml
 objectives:
-- perf_latency_p99
+  - perf_latency_p99
 ```
+
 #### Weighted Objectives
 
 In addition to the mode discussed above, multiple values can be provided in the
@@ -434,8 +443,8 @@ analyzer sorts results. For example:
 
 ```yaml
 objectives:
-- perf_latency_p99
-- perf_throughput
+  - perf_latency_p99
+  - perf_throughput
 ```
 
 The above config is telling model analyzer to compare two measurements by
@@ -460,10 +469,11 @@ for metrics in which less is better and those which more is better.
 
 An extension of the above `objectives` is explicitly specifying the weights. For
 example:
+
 ```yaml
 objectives:
-    perf_latency_p99: 2
-    perf_throughput: 3
+  perf_latency_p99: 2
+  perf_throughput: 3
 ```
 
 The score for each measurement will be a weighted average using the weights
@@ -487,16 +497,15 @@ Options available under this parameter are described in table below:
 | `concurrency` | Request concurrency used for generating the input load. | `<range>`, `<comma-delimited-list>`, or a `<list>` |
 | `batch_sizes` | Static batch size used for generating requests.         | `<range>`, `<comma-delimited-list>`, or a `<list>` |
 
-
 An example `<parameter>` looks like below:
 
 ```yaml
 parameters:
-    concurrency:
-        start: 2
-        stop: 64
-        step: 8
-    batch_sizes: 1,2,3
+  concurrency:
+    start: 2
+    stop: 64
+    step: 8
+  batch_sizes: 1,2,3
 ```
 
 A complete config example looks like below:
@@ -506,11 +515,11 @@ model_repository: /path/to/model-repository
 profile_models:
   model_1:
     parameters:
-        concurrency:
-            start: 2
-            stop: 64
-            step: 8
-        batch_sizes: 1,2,3
+      concurrency:
+        start: 2
+        stop: 64
+        step: 8
+      batch_sizes: 1,2,3
 ```
 
 These parameters will result in testing the concurrency configurations of 2, 10,
@@ -522,7 +531,7 @@ This will result in 27 individual test runs of the model.
 This field represents the values that can be changed or swept through using
 Model Analyzer. All the values supported in the [Triton
 Config](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md)
-can be specified or swept through here. `<model-config-parameters>`  should be
+can be specified or swept through here. `<model-config-parameters>` should be
 specified on a per model basis and cannot be specified globally (like
 `<parameter>`).
 
@@ -536,24 +545,25 @@ sweeping:
 |  [`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups)   | Triton can provide multiple instances of a model so that multiple inference requests for that model can be handled simultaneously. The model configuration ModelInstanceGroup property is used to specify the number of execution instances that should be made available and what compute resource should be used for those instances. |
 
 An example `<model-config-parameters>` look like below:
+
 ```yaml
 model_config_parameters:
-    max_batch_size: [6, 8]
-    dynamic_batching:
-        max_queue_delay_microseconds: [200, 300]
-    instance_group:
-    -
-        kind: KIND_GPU
-        count: [1, 2]
+  max_batch_size: [6, 8]
+  dynamic_batching:
+    max_queue_delay_microseconds: [200, 300]
+  instance_group:
+    - kind: KIND_GPU
+      count: [1, 2]
 ```
 
 Note that for values that accept a list by default the user needs to specify an
 additional list if want to sweep through it. Otherwise, it will only change the
 original model config to the value specified and it will not sweep through it.
-To read more about the automatic config search, check out 
+To read more about the automatic config search, check out
 [Config Search](./config_search.md) docs.
 
 A complete `profile` YAML config looks like below:
+
 ```yaml
 model_repository: /path/to/model/repository/
 
@@ -561,22 +571,21 @@ run_config_search_disable: True
 profile_models:
   model_1:
     model_config_parameters:
-        max_batch_size: 2
-        dynamic_batching:
-            max_queue_delay_microseconds: 200
-        instance_group:
-        -
-            kind: KIND_GPU
-            count: 1
-        -
-            kind: KIND_CPU
-            count: 1
+      max_batch_size: 2
+      dynamic_batching:
+        max_queue_delay_microseconds: 200
+      instance_group:
+        - kind: KIND_GPU
+          count: 1
+        - kind: KIND_CPU
+          count: 1
 ```
 
 Note that in the above configuration, it will not sweep through any of the
-parameters. The reason is that `instance_group` accepts a list by default. 
+parameters. The reason is that `instance_group` accepts a list by default.
 Sweeping thorough different parameters can be achieved
 using the configuration below:
+
 ```yaml
 model_repository: /path/to/model/repository/
 
@@ -584,18 +593,14 @@ run_config_search_disable: True
 profile_models:
   model_1:
     model_config_parameters:
-        max_batch_size: 2
-        dynamic_batching:
-            max_queue_delay_microseconds: [200, 400, 600]
-        instance_group:
-        -
-            -
-                kind: KIND_GPU
-                count: 1
-        -
-            -
-                kind: KIND_CPU
-                count: 1
+      max_batch_size: 2
+      dynamic_batching:
+        max_queue_delay_microseconds: [200, 400, 600]
+      instance_group:
+        - - kind: KIND_GPU
+            count: 1
+        - - kind: KIND_CPU
+            count: 1
 ```
 
 This will lead to 6 different configurations (3 different max queue delays
@@ -620,6 +625,7 @@ profile_models:
     percentile: 95
     latency-report-file: /path/to/latency/report/file
 ```
+
 The above config tells model analyzer to profile `model_1` on CPU only,
 but profile `model_2` using GPU.
 
@@ -639,8 +645,8 @@ model_repository: /path/to/model/repository/
 profile_models:
   model_1:
     perf_analyzer_flags:
-        percentile: 95
-        latency-report-file: /path/to/latency/report/file
+      percentile: 95
+      latency-report-file: /path/to/latency/report/file
 ```
 
 The `perf_analyzer_flags` section can also be specified globally to affect
@@ -651,10 +657,10 @@ model_repository: /path/to/model/repository/
 profile_models:
   model_1:
     parameters:
-        batch_sizes: 4
+      batch_sizes: 4
 perf_analyzer_flags:
-    percentile: 95
-    latency-report-file: /path/to/latency/report/file
+  percentile: 95
+  latency-report-file: /path/to/latency/report/file
 ```
 
 The `input-data`, `shape`, and `streaming` perf_analyzer options are additive and can take either
@@ -665,16 +671,16 @@ model_repository: /path/to/model/repository/
 profile_models:
   model_1:
     parameters:
-        batch_sizes: 4
+      batch_sizes: 4
 perf_analyzer_flags:
   shape:
     - INPUT0:1024,1024
     - INPUT1:1024,1024
 ```
 
-If a model configuration has variable-sized dimensions in the inputs section, 
+If a model configuration has variable-sized dimensions in the inputs section,
 then the `shape` option of the `perf_analyzer_flags` option must be specified.
-More information about this can be found in the 
+More information about this can be found in the
 [Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#input-data).
 
 **Note**:
@@ -687,7 +693,7 @@ model_repository: /path/to/model/repository/
 profile_models:
   model_1:
     perf_analyzer_flags:
-        ssl-grpc-root-certifications-file: /path/to/PEM/encoded/server/root/cert
+      ssl-grpc-root-certifications-file: /path/to/PEM/encoded/server/root/cert
 ```
 
 HTTPS example:
@@ -697,29 +703,32 @@ model_repository: /path/to/model/repository/
 profile_models:
   model_1:
     perf_analyzer_flags:
-        ssl-https-ca-certificates-file: /path/to/cert/authority/cert/file
-        ssl-https-client-certificate-file: /path/to/client/cert/file
-        ssl-https-private-key-file: /path/to/private/key/file
+      ssl-https-ca-certificates-file: /path/to/cert/authority/cert/file
+      ssl-https-client-certificate-file: /path/to/client/cert/file
+      ssl-https-private-key-file: /path/to/private/key/file
 ```
-More information about this can be found in the 
+
+More information about this can be found in the
 [Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#ssltls-support).
 
 **Important Notes**:
-* When providing arguments under `perf_analyzer_flags`, you must use `-` instead
+
+- Only a subset of flags can be specified on the command line. Use `model-analyzer profile --help` to see the list of flags that can be specified on the command line. If a flag isn't listed there, it can be specified via the yaml file.
+- When providing arguments under `perf_analyzer_flags`, you must use `-` instead
   of `_`. This casing is important and Model Analyzer will not recognize
   `snake_cased` arguments.
-* The Model Analyzer also provides certain arguments to the `perf_analyzer`
+- The Model Analyzer also provides certain arguments to the `perf_analyzer`
   instances it launches. They are the following:
-  * `concurrency-range`
-  * `batch-size`
-  * `model-name`
-  * `measurement-mode`
-  * `service-kind`
-  * `triton-server-directory`
-  * `model-repository`
-  * `protocol`
-  * `url`
-  If provided under the `perf_analyzer_flags` section, their values will be overriden. Caution should therefore be exercised when overriding these.
+  - `concurrency-range`
+  - `batch-size`
+  - `model-name`
+  - `measurement-mode`
+  - `service-kind`
+  - `triton-server-directory`
+  - `model-repository`
+  - `protocol`
+  - `url`
+    If provided under the `perf_analyzer_flags` section, their values will be overriden. Caution should therefore be exercised when overriding these.
 
 ### `<triton-server-flags>`
 
@@ -735,16 +744,16 @@ model_repository: /path/to/model/repository/
 profile_models:
   model_1:
     parameters:
-        batch_sizes:
-            start: 4
-            stop: 9
-        concurrency:
-            - 2
-            - 4
-            - 8
+      batch_sizes:
+        start: 4
+        stop: 9
+      concurrency:
+        - 2
+        - 4
+        - 8
 triton_server_flags:
-    strict_model_config: False
-    log_verbose: True
+  strict_model_config: False
+  log_verbose: True
 ```
 
 Since Model Analyzer relaunches Triton Server each time a model config is
@@ -768,40 +777,41 @@ Triton Server now supports SSL via GRPC. It can be enabled via Model Analyzer co
 
 GRPC example:
 
-
 ```yaml
 model_repository: /path/to/model/repository/
 profile_models:
   model_1:
     parameters:
-        batch_sizes:
-            start: 4
-            stop: 9
-        concurrency:
-            - 2
-            - 4
-            - 8
+      batch_sizes:
+        start: 4
+        stop: 9
+      concurrency:
+        - 2
+        - 4
+        - 8
 triton_server_flags:
-    grpc-use-ssl: 1
-    grpc-server-cert: /path/to/grpc/server/cert
-    grpc-server-key: /path/to/grpc/server/keyfile
-    grpc-root-cert: /path/to/grpc/root/cert
+  grpc-use-ssl: 1
+  grpc-server-cert: /path/to/grpc/server/cert
+  grpc-server-key: /path/to/grpc/server/keyfile
+  grpc-root-cert: /path/to/grpc/root/cert
 ```
-More information about this can be found in the 
+
+More information about this can be found in the
 [Triton Server documentation](https://github.com/triton-inference-server/server/blob/main/docs/inference_protocols.md#ssltls).
 
 **Important Notes**:
-* The Model Analyzer also provides certain arguments to the `tritonserver`
-  instances it launches. These ***cannot*** be overriden by providing those
+
+- The Model Analyzer also provides certain arguments to the `tritonserver`
+  instances it launches. These **_cannot_** be overriden by providing those
   arguments in this section. An example of this is `http-port`, which is an
   argument to Model Analyzer itself.
 
 ### `<triton-server-environment>`
 
 This section enables setting environment variables for the tritonserver
-instances launched by Model Analyzer. For example, when a custom operation is 
-required by a model, Triton requires the LD_PRELOAD and LD_LIBRARY_PATH 
-environment variables to be set. See [this link](https://github.com/triton-inference-server/server/blob/main/docs/custom_operations.md) 
+instances launched by Model Analyzer. For example, when a custom operation is
+required by a model, Triton requires the LD_PRELOAD and LD_LIBRARY_PATH
+environment variables to be set. See [this link](https://github.com/triton-inference-server/server/blob/main/docs/custom_operations.md)
 for details. The value for this section is a dictionary where the
 keys are the environment variable names and their values are the values to be
 set.
@@ -815,7 +825,6 @@ profile_models:
 triton_server_environment:
   LD_PRELOAD: /path/to/custom/op/.so
   LD_LIBRARY_PATH: /path/to/shared/libararies
-
 ```
 
 Since Model Analyzer relaunches Triton Server each time a model config is
@@ -827,12 +836,13 @@ model_repository: /path/to/model/repository/
 profile_models:
   model_1:
     triton_server_environment:
-        LD_PRELOAD: /path/to/custom/op
+      LD_PRELOAD: /path/to/custom/op
 ```
 
-**Important Notes**: 
-* The Model Analyzer also provides certain environment variables to the `tritonserver`
-  instances it launches. These ***cannot*** be overriden by providing those
+**Important Notes**:
+
+- The Model Analyzer also provides certain environment variables to the `tritonserver`
+  instances it launches. These **_cannot_** be overriden by providing those
   arguments in this section. An example of this is `CUDA_VISIBLE_DEVICES`.
 
 ### `<plots>`
@@ -848,8 +858,7 @@ plots:
     x_axis: perf_latency_p99
     y_axis: perf_throughput
     monotonic: True
-  plot_name_2:
-    .
+  plot_name_2: .
     .
     .
 ```
@@ -857,15 +866,17 @@ plots:
 Each `<plot>` object consists of the `plot_name` which is also the name of the
 file to which the plot will be saved as a `.png`. Each plot object also requires
 specifying each of the following:
-* `title` : The title of the plot
-* `x_axis` : The metric tag for the metric that should appear in the x-axis,
+
+- `title` : The title of the plot
+- `x_axis` : The metric tag for the metric that should appear in the x-axis,
   e.g. `perf_latency_p99`. The plotted points are also sorted by the values of this
   metric.
-* `y_axis` : The metric tag for the metric that should appear in the y-axis. 
-* `monotonic` : Some plots may require consecutive points to be strictly
+- `y_axis` : The metric tag for the metric that should appear in the y-axis.
+- `monotonic` : Some plots may require consecutive points to be strictly
   increasing. A boolean value of `true` can be specified here to require this.
 
 ## `<profile-model>`
+
 The `--profile-models` argument can be provided as a list of strings (names of
 models) from the CLI interface, or as a more complex `<profile-model>` object
 but only through the YAML configuration file. The model object can contain
@@ -882,32 +893,28 @@ run_config_search_disable: True
 profile_models:
   model_1:
     perf_analyzer_flags:
-        percentile: 95
-        latency-report-file: /path/to/latency/report/file
+      percentile: 95
+      latency-report-file: /path/to/latency/report/file
     model_config_parameters:
-        max_batch_size: 2
-        dynamic_batching:
-            max_queue_delay_microseconds: 200
-        instance_group:
-        -
-            -
-                kind: KIND_GPU
-                count: 1
-        -
-            -
-                kind: KIND_CPU
-                count: 1
+      max_batch_size: 2
+      dynamic_batching:
+        max_queue_delay_microseconds: 200
+      instance_group:
+        - - kind: KIND_GPU
+            count: 1
+        - - kind: KIND_CPU
+            count: 1
     parameters:
-        concurrency:
-            start: 2
-            stop: 64
-            step: 8
-        batch_sizes: 1,2,3
+      concurrency:
+        start: 2
+        stop: 64
+        step: 8
+      batch_sizes: 1,2,3
 ```
 
 Multiple models can be specified under the `profile_models` key.
 
- #### Example
+#### Example
 
 An example configuration looks like below:
 
@@ -918,36 +925,32 @@ triton_launch_mode: docker
 profile_models:
   vgg_19_graphdef:
     parameters:
-        batch_sizes: 1, 2, 3
+      batch_sizes: 1, 2, 3
     model_config_parameters:
-        dynamic_batching:
-            max_queue_delay_microseconds: 200
-        instance_group:
-        -
-            -
-                kind: KIND_CPU
-                count: 1
+      dynamic_batching:
+        max_queue_delay_microseconds: 200
+      instance_group:
+        - - kind: KIND_CPU
+            count: 1
     vgg_16_graphdef:
       parameters:
         concurrency:
-            start: 2
-            stop: 64
-            step: 8
+          start: 2
+          stop: 64
+          step: 8
       model_config_parameters:
         dynamic_batching:
-            max_queue_delay_microseconds: 200
+          max_queue_delay_microseconds: 200
         instance_group:
-        -
-            -
-                kind: KIND_GPU
-                count: 1
+          - - kind: KIND_GPU
+              count: 1
 batch_sizes:
-    start: 4
-    stop: 9
+  start: 4
+  stop: 9
 concurrency:
-    - 2
-    - 4
-    - 8
+  - 2
+  - 4
+  - 8
 ```
 
 If this file is saved to the `config.yml`, Model Analyzer can be started using
@@ -966,6 +969,7 @@ It will also run the model `vgg_16_graphdef` over combinations of batch sizes
 `[2,10,18,26,34,42,50,58]`, with dynamic batching enabled and a single GPU instance.
 
 ## `<analysis-model>`
+
 The `--analysis-models` argument can be provided as a list of strings (names of
 models) from the CLI interface, or as a more complex `<analysis-model>` object
 but only through the YAML configuration file. The model object can contain
@@ -973,23 +977,23 @@ but only through the YAML configuration file. The model object can contain
 
 ```yaml
 analysis_models:
-  model_1:  
+  model_1:
     constraints:
-        gpu_used_memory:
-            max: 200
+      gpu_used_memory:
+        max: 200
     objectives:
-    - perf_throughput
+      - perf_throughput
 ```
 
 Multiple models can be specified under the `analysis_models` key as well.
 
 ```yaml
 analysis_models:
-  model_1:  
+  model_1:
     constraints:
         gpu_used_memory:
             max: 200
-  model_1:  
+  model_1:
     constraints:
         perf_latency_p99:
             max: 80
@@ -998,6 +1002,7 @@ objectives:
 ```
 
 ## `<report-model-config>`
+
 The `--report-model-configs` argument can be provided as a list of strings
 (names of models) from the CLI interface, or as a more complex
 `<report-model-config>` object but only through the YAML configuration file. The
