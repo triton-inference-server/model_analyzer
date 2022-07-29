@@ -256,7 +256,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         Test to ensure class can be correctly restored from a dictionary
         """
-        rcm0_json = json.dumps(self.rcm0.__dict__, default=default_encode)
+        rcm0_json = json.dumps(self.rcm0, default=default_encode)
 
         rcm0_from_dict = RunConfigMeasurement.from_dict(json.loads(rcm0_json))
 
@@ -268,9 +268,8 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(rcm0_from_dict.data(), self.rcm0.data())
         self.assertEqual(rcm0_from_dict._model_config_measurements,
                          self.rcm0._model_config_measurements)
-
-        # Catchall in case something new is added
-        self.assertEqual(rcm0_from_dict, self.rcm0)
+        self.assertEqual(rcm0_from_dict._model_config_weights, [])
+        self.assertEqual(rcm0_from_dict._model_config_constraints, [])
 
     def _construct_rcm0(self):
         self.model_name = "modelA,modelB"

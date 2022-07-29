@@ -21,6 +21,7 @@ from model_analyzer.result.model_config_measurement import ModelConfigMeasuremen
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.record import Record, RecordType
 
+from copy import deepcopy
 from statistics import mean
 
 from functools import total_ordering
@@ -56,6 +57,13 @@ class RunConfigMeasurement:
         self._model_config_weights: List[float] = []
         self._model_config_constraints: List[Dict[str, Dict[str, int]]] = []
 
+    def to_dict(self):
+        rcm_dict = deepcopy(self.__dict__)
+        del rcm_dict['_model_config_weights']
+        del rcm_dict['_model_config_constraints']
+
+        return rcm_dict
+
     @classmethod
     def from_dict(cls,
                   run_config_measurement_dict: Dict) -> 'RunConfigMeasurement':
@@ -77,9 +85,6 @@ class RunConfigMeasurement:
         run_config_measurement._model_config_measurements = cls._deserialize_model_config_measurements(
             run_config_measurement,
             run_config_measurement_dict['_model_config_measurements'])
-
-        run_config_measurement._model_config_weights = run_config_measurement_dict[
-            '_model_config_weights']
 
         return run_config_measurement
 
@@ -316,24 +321,22 @@ class RunConfigMeasurement:
         else:
             return metric.value()
 
-    def get_weighted_non_gpu_metric_value(self,
-                                          tag: str,
-                                          default_value: Any = 0
-                                         ) -> List[float]:
+    def get_weighted_non_gpu_metric_value(
+        self,
+        tag: str,
+    ) -> List[float]:
         """
         Parameters
         ----------
         tag : str
             A human readable tag that corresponds
             to a particular metric
-        default_value : any
-            Value to return if tag is not found
 
         Returns
         -------
         list of floats
             Weighted average of the values of the metric Record corresponding 
-            to the tag, default_value if tag not found.
+            to the tag
         """
         assert len(self._model_config_weights) == len(
             self._model_config_measurements)
