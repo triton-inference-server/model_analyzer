@@ -79,11 +79,11 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._coordinate_data = CoordinateData()
 
         # This is our current location that the neighborhood is built around
-        self._current_coordinate = self._get_starting_coordinate()
+        self._home_coordinate = self._get_starting_coordinate()
 
         # This is the coordinate that we want to measure next. It is
         # updated every step of this generator
-        self._coordinate_to_measure = self._current_coordinate
+        self._coordinate_to_measure = self._home_coordinate
 
         # TODO: Add cases to use these
         self._radius_offset = 0
@@ -91,7 +91,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         self._neighborhood = Neighborhood(
             self._search_config.get_neighborhood_config(),
-            self._coordinate_data, self._current_coordinate)
+            self._coordinate_data, self._home_coordinate)
 
         self._done = False
 
@@ -174,8 +174,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         new_coordinate = self._neighborhood.calculate_new_coordinate(magnitude)
         self._determine_if_done(new_coordinate)
 
-        logger.debug(f"Stepping {self._current_coordinate}->{new_coordinate}")
-        self._current_coordinate = new_coordinate
+        logger.debug(f"Stepping {self._home_coordinate}->{new_coordinate}")
+        self._home_coordinate = new_coordinate
         self._coordinate_to_measure = new_coordinate
         self._recreate_neighborhood()
 
@@ -184,7 +184,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         Based on the new coordinate picked, determine if the generator is done
         and if so, update self._done
         """
-        if new_coordinate == self._current_coordinate:
+        if new_coordinate == self._home_coordinate:
             self._done = True
         if self._coordinate_data.get_visit_count(new_coordinate) >= 2:
             self._done = True
@@ -196,7 +196,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._coordinate_data.reset_measurements()
         self._neighborhood = Neighborhood(neighborhood_config,
                                           self._coordinate_data,
-                                          self._current_coordinate)
+                                          self._home_coordinate)
 
     def _pick_coordinate_to_initialize(self):
         self._coordinate_to_measure = self._neighborhood.pick_coordinate_to_initialize(
