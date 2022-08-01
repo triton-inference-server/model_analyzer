@@ -499,6 +499,80 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                                                               pa_cli_args,
                                                               early_exit=False)
 
+    def test_throughput_gain_based_on_max(self):
+        # Expect false because no increases
+        throughput_values = [50, 40, 30, 20]
+        expected_result = False
+        self._test_throughput_gain_valid_helper(throughput_values,
+                                                expected_result)
+
+        # Expect false because no increases in the last 4
+        throughput_values = [10, 20, 30, 40, 50, 40, 30, 20]
+        expected_result = False
+        self._test_throughput_gain_valid_helper(throughput_values,
+                                                expected_result)
+
+        # Expect false because gain is only 5%
+        throughput_values = [50, 50, 50, 52.5]
+        expected_result = False
+        self._test_throughput_gain_valid_helper(throughput_values,
+                                                expected_result)
+
+        # Expect false because gain is only 5%
+        throughput_values = [50, 35, 45, 51.5]
+        expected_result = False
+        self._test_throughput_gain_valid_helper(throughput_values,
+                                                expected_result)
+
+        # Expect true because gain is more than 5%
+        throughput_values = [50, 50, 50, 52.51]
+        expected_result = True
+        self._test_throughput_gain_valid_helper(throughput_values,
+                                                expected_result)
+
+        # Expect true because not enough data
+        throughput_values = [50, 10]
+        expected_result = True
+        self._test_throughput_gain_valid_helper(throughput_values,
+                                                expected_result)
+
+        # Expect true because of increases
+        throughput_values = [50, 100, 200, 400]
+        expected_result = True
+        self._test_throughput_gain_valid_helper(throughput_values,
+                                                expected_result)
+
+        # Expect false because no new max
+        throughput_values = [50, 10, 50, 10]
+        expected_result = False
+        self._test_throughput_gain_valid_helper(throughput_values,
+                                                expected_result)
+
+    def _test_throughput_gain_valid_helper(self, throughput_values,
+                                           expected_result):
+        throughputs = [
+            construct_run_config_measurement(
+                model_name=MagicMock(),
+                model_config_names=["test_model_config_name"],
+                model_specific_pa_params=MagicMock(),
+                gpu_metric_values=MagicMock(),
+                non_gpu_metric_values=[{
+                    "perf_throughput": throughput_value
+                }]) for throughput_value in throughput_values
+        ]
+
+        pacg = PerfAnalyzerConfigGenerator(MagicMock(),
+                                           MagicMock(),
+                                           MagicMock(),
+                                           MagicMock(),
+                                           early_exit_enable=False)
+
+        result = pacg._throughput_gain_valid_helper(throughputs=throughputs,
+                                                    min_tries=4,
+                                                    min_gain=0.05)
+
+        self.assertEqual(result, expected_result)
+
     def _get_next_measurement(self):
 
         throughput_value = self._get_next_perf_throughput_value()
