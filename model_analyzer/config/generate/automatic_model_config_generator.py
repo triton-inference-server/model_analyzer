@@ -53,7 +53,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         self._curr_instance_count = self._min_instance_count
         self._curr_max_batch_size = 0
 
-        self._sweep_max_batch_size_disabled = self._determine_sweep_max_batch_size_disabled(
+        self._max_batch_size_disabled = self._determine_max_batch_size_disabled(
         )
 
         self._reset_max_batch_size()
@@ -101,7 +101,7 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     def _reset_max_batch_size(self):
         super()._reset_max_batch_size()
 
-        if self._sweep_max_batch_size_disabled:
+        if self._max_batch_size_disabled:
             self._curr_max_batch_size = self._max_model_batch_size
         else:
             self._curr_max_batch_size = self._min_model_batch_size
@@ -116,19 +116,19 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             return DEFAULT_CONFIG_PARAMS
 
         config = {
-            'dynamic_batching': {},
             'instance_group': [{
                 'count': self._curr_instance_count,
                 'kind': self._instance_kind
             }]
         }
 
-        if not self._sweep_max_batch_size_disabled:
+        if not self._max_batch_size_disabled:
             config['max_batch_size'] = self._curr_max_batch_size
+            config['dynamic_batching'] = {}
 
         return config
 
-    def _determine_sweep_max_batch_size_disabled(self):
+    def _determine_max_batch_size_disabled(self):
         config = BaseModelConfigGenerator.get_base_model_config_dict(
             self._config, self._client, self._gpus, self._model_repository,
             self._base_model_name)
