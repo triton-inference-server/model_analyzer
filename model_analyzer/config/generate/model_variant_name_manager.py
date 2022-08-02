@@ -80,7 +80,7 @@ class ModelVariantNameManager:
             if model_config_dict == model_config_variant_dict:
                 return (True, model_config_name)
 
-        return (False, None)
+        return (False, "")
 
     def _is_default_config(self, param_combo: Dict) -> bool:
         return param_combo == DEFAULT_CONFIG_PARAMS
