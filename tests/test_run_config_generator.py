@@ -16,6 +16,7 @@ import unittest
 
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from .common import test_result_collector as trc
 from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
@@ -621,7 +622,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
         rcg = BruteRunConfigGenerator(config, MagicMock(),
-                                      config.profile_models, MagicMock())
+                                      config.profile_models, MagicMock(),
+                                      ModelVariantNameManager())
 
         run_configs = []
         for run_config in rcg.get_configs():

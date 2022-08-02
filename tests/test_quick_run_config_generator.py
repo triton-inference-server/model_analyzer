@@ -20,6 +20,7 @@ from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
 from model_analyzer.config.generate.search_dimensions import SearchDimensions
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.config.generate.quick_run_config_generator import QuickRunConfigGenerator
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 
@@ -45,7 +46,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                           min_initialized=2)
         self._urcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
                                              mock_models, MagicMock(),
-                                             MagicMock())
+                                             ModelVariantNameManager())
 
     def test_get_starting_coordinate(self):
         """ Test that get_starting_coordinate() works for non-zero values """
@@ -59,7 +60,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         sc = SearchConfig(dimensions=dims,radius=2, step_magnitude=2, min_initialized=2)
         #yapf: enable
         urcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                       MagicMock(), MagicMock())
+                                       MagicMock(), MagicMock(),
+                                       ModelVariantNameManager())
         self.assertEqual(urcg._get_starting_coordinate(), Coordinate([2, 1, 3]))
 
     def test_get_next_run_config(self):
@@ -165,7 +167,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                           step_magnitude=7,
                           min_initialized=2)
         urcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                       mock_models, MagicMock())
+                                       mock_models, MagicMock(),
+                                       ModelVariantNameManager())
 
         urcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
 
