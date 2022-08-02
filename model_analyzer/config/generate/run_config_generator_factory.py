@@ -19,6 +19,8 @@ from .search_dimensions import SearchDimensions
 from .search_dimension import SearchDimension
 from .search_config import SearchConfig
 
+from model_analyzer.constants import RADIUS, MAGNITUDE, MIN_INITIALIZED
+
 
 class RunConfigGeneratorFactory:
     """
@@ -101,8 +103,8 @@ class RunConfigGeneratorFactory:
         #yapf: enable
 
         search_config = SearchConfig(dimensions=dimensions,
-                                     radius=3,
-                                     step_magnitude=5,
-                                     min_initialized=3)
+                                     radius=RADIUS,
+                                     step_magnitude=MAGNITUDE,
+                                     min_initialized=MIN_INITIALIZED)
 
         return search_config

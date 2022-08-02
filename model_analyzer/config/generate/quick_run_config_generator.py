@@ -25,7 +25,6 @@ from model_analyzer.config.generate.brute_run_config_generator import BruteRunCo
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
-from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.triton.client.client import TritonClient
@@ -34,6 +33,8 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.record.metrics_manager import MetricsManager
+
+from model_analyzer.constants import LOGGER_NAME, MAGNITUDE_DECAY_RATE
 
 import logging
 
@@ -91,7 +92,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         # TODO: Add cases to use these
         self._radius_offset = 0
-        self._magnitude_decay_rate = 1.0
+        self._magnitude_scaler = 1.0
 
         self._neighborhood = Neighborhood(
             self._search_config.get_neighborhood_config(),
@@ -206,7 +207,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._coordinate_to_measure = new_coordinate
         self._recreate_neighborhood()
 
-        self._magnitude_decay_rate *= 0.5
+        self._magnitude_scaler *= MAGNITUDE_DECAY_RATE
 
     def _is_home_measurement_none(self):
         return self._coordinate_to_measure == self._home_coordinate \
@@ -250,7 +251,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def _get_magnitude(self) -> float:
         magnitude = self._search_config.get_step_magnitude()
-        return self._magnitude_decay_rate * magnitude
+        return self._magnitude_scaler * magnitude
 
     def _get_next_run_config(self) -> RunConfig:
         run_config = RunConfig(self._triton_env)
