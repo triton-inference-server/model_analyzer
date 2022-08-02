@@ -55,7 +55,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._gpus = gpus
         self._models = models
         self._client = client
-        self._variant_name_manager = model_variant_name_manager
+        self._model_variant_name_manager = model_variant_name_manager
 
         self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(
             models)
