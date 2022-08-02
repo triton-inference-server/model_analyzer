@@ -17,32 +17,40 @@ from .common import test_result_collector as trc
 import unittest
 from unittest.mock import patch
 
+from tests.common.test_utils import default_encode
+from model_analyzer.constants import DEFAULT_CONFIG_PARAMS
+
 
 class TestModelVariantNameManager(trc.TestResultCollector):
 
     def setUp(self):
-        NotImplemented
+        self._mvnm = ModelVariantNameManager()
+        self._non_default_param_combo = {'foo': 1}
 
     def tearDown(self):
         patch.stopall()
 
     def test_default(self):
         """
-        If no param is passed in, it is considered the default config
+        Check that default config is returned
         """
-        mvnm = ModelVariantNameManager()
-        name = mvnm.get_model_variant_name("modelA", {})
+        name = self._mvnm.get_model_variant_name("modelA", {'A': 1},
+                                                 DEFAULT_CONFIG_PARAMS)
+
         self.assertEqual(name, "modelA_config_default")
 
     def test_basic(self):
         """
-        If multiple unique param combos are passed in, the name will keep
+        If multiple unique model configs are passed in, the name will keep
         incrementing
         """
-        mvnm = ModelVariantNameManager()
-        name0 = mvnm.get_model_variant_name("modelA", {'A': 1})
-        name1 = mvnm.get_model_variant_name("modelA", {'A': 2})
-        name2 = mvnm.get_model_variant_name("modelA", {'A': 4})
+        name0 = self._mvnm.get_model_variant_name("modelA", {'A': 1},
+                                                  self._non_default_param_combo)
+        name1 = self._mvnm.get_model_variant_name("modelA", {'A': 2},
+                                                  self._non_default_param_combo)
+        name2 = self._mvnm.get_model_variant_name("modelA", {'A': 4},
+                                                  self._non_default_param_combo)
+
         self.assertEqual(name0, "modelA_config_0")
         self.assertEqual(name1, "modelA_config_1")
         self.assertEqual(name2, "modelA_config_2")
@@ -51,28 +59,20 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         """
         The two models should have no impact on each other's naming or counts
         """
-        mvnm = ModelVariantNameManager()
-        a0 = mvnm.get_model_variant_name("modelA", {'A': 1})
-        b0 = mvnm.get_model_variant_name("modelB", {'A': 1})
-        a1 = mvnm.get_model_variant_name("modelA", {'A': 2})
-        b1 = mvnm.get_model_variant_name("modelB", {'A': 2})
+
+        a0 = self._mvnm.get_model_variant_name("modelA", {'A': 1},
+                                               self._non_default_param_combo)
+        b0 = self._mvnm.get_model_variant_name("modelB", {'A': 1},
+                                               self._non_default_param_combo)
+        a1 = self._mvnm.get_model_variant_name("modelA", {'A': 2},
+                                               self._non_default_param_combo)
+        b1 = self._mvnm.get_model_variant_name("modelB", {'A': 2},
+                                               self._non_default_param_combo)
+
         self.assertEqual(a0, "modelA_config_0")
         self.assertEqual(a1, "modelA_config_1")
         self.assertEqual(b0, "modelB_config_0")
         self.assertEqual(b1, "modelB_config_1")
-
-    def test_combos(self):
-        """
-        Unique combos that share some of the same data should still be considered
-        unique and return new names
-        """
-        mvnm = ModelVariantNameManager()
-        a0 = mvnm.get_model_variant_name("modelA", {'A': 1})
-        a1 = mvnm.get_model_variant_name("modelA", {'B': 1})
-        a2 = mvnm.get_model_variant_name("modelA", {'A': 1, 'B': 1})
-        self.assertEqual(a0, "modelA_config_0")
-        self.assertEqual(a1, "modelA_config_1")
-        self.assertEqual(a2, "modelA_config_2")
 
     def test_repeat(self):
         """
@@ -80,125 +80,46 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         in the same name being returned
         """
 
-        mvnm = ModelVariantNameManager()
-        a0 = mvnm.get_model_variant_name("modelA", {'A': 1})
-        a1 = mvnm.get_model_variant_name("modelA", {'A': 1})
+        a0 = self._mvnm.get_model_variant_name("modelA", {'A': 1},
+                                               self._non_default_param_combo)
+        a1 = self._mvnm.get_model_variant_name("modelA", {'A': 1},
+                                               self._non_default_param_combo)
+
         self.assertEqual(a0, "modelA_config_0")
         self.assertEqual(a1, "modelA_config_0")
 
-    def test_dict_order(self):
+    def test_from_dict(self):
         """
-        The order of the dict doesn't matter. If the contents are the same
-        then the name should be the same
+        Restoring from a dict should see existing configs
         """
-        mvnm = ModelVariantNameManager()
-        a0 = mvnm.get_model_variant_name("modelA", {'A': 1, 'B': 1})
-        a1 = mvnm.get_model_variant_name("modelA", {'B': 1, 'A': 1})
-        self.assertEqual(a0, "modelA_config_0")
-        self.assertEqual(a1, "modelA_config_0")
+        _ = self._mvnm.get_model_variant_name("modelA", {'A': 1},
+                                              self._non_default_param_combo)
+        _ = self._mvnm.get_model_variant_name("modelB", {'A': 1},
+                                              self._non_default_param_combo)
+        _ = self._mvnm.get_model_variant_name("modelA", {'A': 2},
+                                              self._non_default_param_combo)
 
-    def test_list_order(self):
-        """
-        The order of a list DOES matter. If the contents are the same but
-        in a different order, the name should be different
-        """
-        mvnm = ModelVariantNameManager()
-        a0 = mvnm.get_model_variant_name("modelA", {'A': 1, 'B': [1, 2, 3]})
-        a1 = mvnm.get_model_variant_name("modelA", {'A': 1, 'B': [3, 2, 1]})
+        mvnm_dict = default_encode(self._mvnm)
+
+        mvnm = ModelVariantNameManager._from_dict(mvnm_dict)
+
+        self.assertEqual(mvnm._model_config_dicts,
+                         self._mvnm._model_config_dicts)
+        self.assertEqual(mvnm._model_name_index, self._mvnm._model_name_index)
+
+        a0 = mvnm.get_model_variant_name("modelA", {'A': 1},
+                                         self._non_default_param_combo)
+        b0 = mvnm.get_model_variant_name("modelB", {'A': 1},
+                                         self._non_default_param_combo)
+        a1 = mvnm.get_model_variant_name("modelA", {'A': 2},
+                                         self._non_default_param_combo)
+        b1 = mvnm.get_model_variant_name("modelB", {'A': 2},
+                                         self._non_default_param_combo)
+
         self.assertEqual(a0, "modelA_config_0")
         self.assertEqual(a1, "modelA_config_1")
-
-    def test_nested_combos(self):
-        """
-        Make sure that having more complicated param_combos works as expected
-        """
-        mvnm = ModelVariantNameManager()
-        a0 = mvnm.get_model_variant_name("modelA", {
-            'A': {
-                'C': 5,
-                'D': 6
-            },
-            'B': [3, 2, 1]
-        })
-
-        # Same dict for A, but different order. Should return same as A0
-        a1 = mvnm.get_model_variant_name("modelA", {
-            'A': {
-                'D': 6,
-                'C': 5
-            },
-            'B': [3, 2, 1]
-        })
-
-        # Different dict for A. Should return new name
-        a2 = mvnm.get_model_variant_name("modelA", {
-            'A': {
-                'C': 5,
-                'D': 7
-            },
-            'B': [3, 2, 1]
-        })
-
-        # Different list for B. Should return new name
-        a3 = mvnm.get_model_variant_name("modelA", {
-            'A': {
-                'C': 5,
-                'D': 6
-            },
-            'B': [3, 2, 0]
-        })
-
-        # Same as A. Should return same as A0
-        a4 = mvnm.get_model_variant_name("modelA", {
-            'A': {
-                'C': 5,
-                'D': 6
-            },
-            'B': [3, 2, 1]
-        })
-
-        self.assertEqual(a0, "modelA_config_0")
-        self.assertEqual(a1, "modelA_config_0")
-        self.assertEqual(a2, "modelA_config_1")
-        self.assertEqual(a3, "modelA_config_2")
-        self.assertEqual(a4, "modelA_config_0")
-
-        # Complicated case with all combinations of dict/list inside of dict/list
-        b0 = mvnm.get_model_variant_name(
-            "modelB", {
-                'A': {
-                    'C': {
-                        'F': 4,
-                        'G': 5
-                    },
-                    'D': [1, 2, 3],
-                    'E': "abc"
-                },
-                'B': [{
-                    'H': 4,
-                    'I': 5
-                }, [4, 5, 6], "J", 7]
-            })
-
-        # Same as B0 (with some dict ordering differences). Should return same name
-        b1 = mvnm.get_model_variant_name(
-            "modelB", {
-                'A': {
-                    'E': "abc",
-                    'C': {
-                        'G': 5,
-                        'F': 4
-                    },
-                    'D': [1, 2, 3]
-                },
-                'B': [{
-                    'I': 5,
-                    'H': 4
-                }, [4, 5, 6], "J", 7]
-            })
-
         self.assertEqual(b0, "modelB_config_0")
-        self.assertEqual(b1, "modelB_config_0")
+        self.assertEqual(b1, "modelB_config_1")
 
 
 if __name__ == '__main__':
