@@ -235,7 +235,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             gpus=self._gpus,
             model=self._models[model_num],
             model_repository=self._config.model_repository,
-            variant_name_manager=self._variant_name_manager)
+            model_variant_name_manager=self._model_variant_name_manager)
         return model_config
 
     def _get_next_perf_analyzer_config(self, model_variant_name, model_num):

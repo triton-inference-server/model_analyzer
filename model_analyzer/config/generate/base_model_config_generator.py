@@ -26,7 +26,7 @@ logger = logging.getLogger(LOGGER_NAME)
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
     """ Base class for generating model configs """
 
-    def __init__(self, config, gpus, model, client, variant_name_manager,
+    def __init__(self, config, gpus, model, client, model_variant_name_manager,
                  default_only, early_exit_enable):
         """
         Parameters
@@ -35,7 +35,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         gpus: List of GPUDevices
         model: The model to generate ModelConfigs for
         client: TritonClient
-        variant_name_manager: ModelVariantNameManager
+        model_variant_name_manager: ModelVariantNameManager
         default_only: Bool
             If true, only the default config will be generated
             If false, the default config will NOT be generated
@@ -45,7 +45,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._config = config
         self._gpus = gpus
         self._client = client
-        self._variant_name_manager = variant_name_manager
+        self._model_variant_name_manager = model_variant_name_manager
         self._model_repository = config.model_repository
         self._base_model = model
         self._base_model_name = model.model_name()
@@ -149,11 +149,11 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             gpus=self._gpus,
             model=self._base_model,
             model_repository=self._model_repository,
-            variant_name_manager=self._variant_name_manager)
+            model_variant_name_manager=self._model_variant_name_manager)
 
     @staticmethod
     def make_model_config(param_combo, config, client, gpus, model,
-                          model_repository, variant_name_manager):
+                          model_repository, model_variant_name_manager):
         """
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config
@@ -169,7 +169,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             dict of model properties
         model_repository: str
             path to the model repository on the file system
-        variant_name_manager: ModelVariantNameManager
+        model_variant_name_manager: ModelVariantNameManager
         """
         model_name = model.model_name()
 
@@ -189,7 +189,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
                         logger_str.append(f"  Setting {key} to {value}")
 
         (variant_found,
-         variant_name) = variant_name_manager.get_model_variant_name(
+         variant_name) = model_variant_name_manager.get_model_variant_name(
              model_name, model_config_dict, param_combo)
 
         model_config_dict['name'] = variant_name

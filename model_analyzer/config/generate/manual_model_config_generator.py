@@ -26,7 +26,7 @@ from copy import deepcopy
 class ManualModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in manual search mode """
 
-    def __init__(self, config, gpus, model, client, variant_name_manager,
+    def __init__(self, config, gpus, model, client, model_variant_name_manager,
                  default_only, early_exit_enable):
         """
         Parameters
@@ -35,15 +35,16 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         gpus: List of GPUDevices
         model: The model to generate ModelConfigs for
         client: TritonClient
-        variant_name_manager: ModelVariantNameManager
+        model_variant_name_manager: ModelVariantNameManager
         default_only: Bool
             If true, only the default config will be generated
             If false, the default config will NOT be generated
         early_exit_enable: Bool
             If true, the generator can early exit if throughput plateaus
         """
-        super().__init__(config, gpus, model, client, variant_name_manager,
-                         default_only, early_exit_enable)
+        super().__init__(config, gpus, model, client,
+                         model_variant_name_manager, default_only,
+                         early_exit_enable)
 
         self._reload_model_disable = config.reload_model_disable
         self._num_retries = config.client_max_retries
