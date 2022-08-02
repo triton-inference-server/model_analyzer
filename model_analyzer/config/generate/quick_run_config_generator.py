@@ -79,19 +79,23 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._coordinate_data = CoordinateData()
 
         # This is our current location that the neighborhood is built around
-        self._home_coordinate = self._get_starting_coordinate()
+        self._origin = self._get_starting_coordinate()
+        self._home_coordinate = self._origin
 
         # This is the coordinate that we want to measure next. It is
         # updated every step of this generator
         self._coordinate_to_measure = self._home_coordinate
 
+        self._best_coordinate = self._origin
+        self._best_measurement = None
+
         # TODO: Add cases to use these
         self._radius_offset = 0
-        self._magnitude_offset = 0
+        self._magnitude_decay_rate = 1.0
 
         self._neighborhood = Neighborhood(
             self._search_config.get_neighborhood_config(),
-            self._coordinate_data, self._home_coordinate)
+            self._home_coordinate)
 
         self._done = False
 
@@ -119,7 +123,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         Determine self._coordinate_to_measure, which is what is used to
         create the next RunConfig
         """
-        if self._neighborhood.enough_coordinates_initialized():
+        if self._is_home_measurement_none():
+            self._take_step_back()
+        elif self._neighborhood.enough_coordinates_initialized():
             self._take_step()
         else:
             self._pick_coordinate_to_initialize()
@@ -139,6 +145,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         """
 
         self._coordinate_data.increment_visit_count(self._coordinate_to_measure)
+        self._neighborhood._coordinate_data.increment_visit_count(self._coordinate_to_measure)
 
         if measurements is not None and measurements[0] is not None:
             assert len(measurements) == 1, \
@@ -149,23 +156,32 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             avg_latency = measurements[0].get_non_gpu_metric_value(
                 "perf_latency_avg")
 
-            self._coordinate_data.set_measurement(
+            self._neighborhood._coordinate_data.set_measurement(
                 coordinate=self._coordinate_to_measure, measurement=measurements[0])
             logger.debug(
                 f"Measurement for {self._coordinate_to_measure}: "
                 f"throughput = {throughput}, avg_latency = {avg_latency}"
             )
         else:
-            measurement = self._create_zero_throughput_measurement()
-            self._coordinate_data.set_measurement(
-                coordinate=self._coordinate_to_measure, measurement=measurement)
+            self._neighborhood._coordinate_data.set_measurement(
+                coordinate=self._coordinate_to_measure, measurement=None)
             logger.debug(
-                f"Measurement for {self._coordinate_to_measure}: None. "
-                "Setting the measurement to zero throughput."
+                f"Measurement for {self._coordinate_to_measure}: None."
             )
 
+        self._update_best_measurement(measurements)
+
+    def _update_best_measurement(self, measurements: List[RunConfigMeasurement]):
+        if self._best_measurement is None:
+            self._best_measurement = measurements[0]
+        elif measurements[0] and measurements[0].is_better_than(self._best_measurement):
+            self._best_coordinate = self._coordinate_to_measure
+            self._best_measurement = measurements[0]
+
+        logger.debug(f"Best Measurement: {self._best_coordinate}")
+
     def _get_last_results(self) -> RunConfigMeasurement:
-        return self._coordinate_data.get_measurement(
+        return self._neighborhood._coordinate_data.get_measurement(
             coordinate=self._coordinate_to_measure)
 
     def _take_step(self):
@@ -178,6 +194,23 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._home_coordinate = new_coordinate
         self._coordinate_to_measure = new_coordinate
         self._recreate_neighborhood()
+
+    def _take_step_back(self):
+        new_coordinate = self._neighborhood.get_nearest_neighbor(
+            coordinate_in=self._best_coordinate)
+
+        logger.debug(
+            f"Stepping back: {self._home_coordinate}->{new_coordinate}"
+        )
+        self._home_coordinate = new_coordinate
+        self._coordinate_to_measure = new_coordinate
+        self._recreate_neighborhood()
+
+        self._magnitude_decay_rate *= 0.5
+
+    def _is_home_measurement_none(self):
+        return self._coordinate_to_measure == self._home_coordinate \
+            and self._get_last_results() is None
 
     def _determine_if_done(self, new_coordinate: Coordinate):
         """
@@ -193,9 +226,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         neighborhood_config = self._search_config.get_neighborhood_config(
             self._get_radius())
 
-        self._coordinate_data.reset_measurements()
         self._neighborhood = Neighborhood(neighborhood_config,
-                                          self._coordinate_data,
                                           self._home_coordinate)
 
     def _pick_coordinate_to_initialize(self):
@@ -217,8 +248,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _get_radius(self) -> int:
         return self._search_config.get_radius() + self._radius_offset
 
-    def _get_magnitude(self) -> int:
-        return self._search_config.get_step_magnitude() + self._magnitude_offset
+    def _get_magnitude(self) -> float:
+        magnitude = self._search_config.get_step_magnitude()
+        return self._magnitude_decay_rate * magnitude
 
     def _get_next_run_config(self) -> RunConfig:
         run_config = RunConfig(self._triton_env)

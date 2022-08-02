@@ -32,23 +32,20 @@ class Neighborhood:
 
     def __init__(self,
                  neighborhood_config: NeighborhoodConfig,
-                 coordinate_data: CoordinateData,
                  home_coordinate: Coordinate):
         """
         Parameters
         ----------
         neighborhood_config: 
             NeighborhoodConfig object
-        coordinate_data: 
-            CoordinateData object
         home_coordinate: 
             Coordinate object to center the neighborhood around
         """
         assert type(neighborhood_config) == NeighborhoodConfig
 
         self._config = neighborhood_config
-        self._coordinate_data = coordinate_data
         self._home_coordinate = home_coordinate
+        self._coordinate_data = CoordinateData()
 
         self._radius = self._config.get_radius()
         self._neighborhood = self._create_neighborhood()
@@ -74,7 +71,7 @@ class Neighborhood:
         have been initialized. Else false
         """
         min_initialized = self._config.get_min_initialized()
-        num_initialized = len(self._get_initialized_coordinates())
+        num_initialized = len(self._get_visited_coordinates())
         return num_initialized >= min_initialized
 
     def calculate_new_coordinate(self, magnitude: int) -> Coordinate:
@@ -87,22 +84,34 @@ class Neighborhood:
 
         returns: Coordinate
         """
-        step_vector = self._get_step_vector()
-        tmp_new_coordinate = self._home_coordinate + round(
-            step_vector * magnitude)
+        step_vector = round(self._get_step_vector() * magnitude)
+        clipped_step_vector = self._clip_coordinate_values(step_vector)
+
+        tmp_new_coordinate = self._home_coordinate + clipped_step_vector
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
         return new_coordinate
 
+    def _clip_coordinate_values(self,
+                                coordinate: Coordinate,
+                                max_value: int = 2) -> Coordinate:
+        """
+        Clip the coordinate to be within the values set by `max_value`.
+        """
+        for i in range(len(coordinate)):
+            coordinate[i] = min(coordinate[i], max_value)
+        return coordinate
+
     def pick_coordinate_to_initialize(self) -> Coordinate:
         """
-        Based on the initialized coordinate values, pick an uninitialized coordinate to initialize
+        Based on the initialized coordinate values, pick an unvisited
+        coordinate to initialize next.
         """
         covered_values_per_dimension = self._get_covered_values_per_dimension()
 
         max_num_uncovered = -1
         best_coordinate = None
         for coordinate in self._neighborhood:
-            if not self._is_coordinate_initialized(coordinate):
+            if not self._is_coordinate_visited(coordinate):
                 num_uncovered = self._get_num_uncovered_values(
                     coordinate, covered_values_per_dimension)
 
@@ -112,23 +121,21 @@ class Neighborhood:
 
         return best_coordinate
 
-    def get_nearest_unvisited_neighbor(self,
-                                       coordinate_in: Coordinate) -> Coordinate:
-        """ Returns the nearest unvisited coordinate to coordinate_in """
-        min_distance = None
-        nearest_uninitialized_neighbor = None
+    def get_nearest_neighbor(self, coordinate_in: Coordinate) -> Coordinate:
+        """
+        Find the nearest coordinate to the `coordinate_in` among the
+        coordinates within the current neighborhood.
+        """
+        min_distance = float('inf')
+        nearest_neighbor = None
 
         for coordinate in self._neighborhood:
-
-            if self._is_coordinate_visited(coordinate):
-                continue
-
             distance = Neighborhood.calc_distance(coordinate, coordinate_in)
-            if not min_distance or distance < min_distance:
-                nearest_uninitialized_neighbor = coordinate
+            if distance < min_distance:
+                nearest_neighbor = coordinate
                 min_distance = distance
 
-        return nearest_uninitialized_neighbor
+        return nearest_neighbor
 
     def _create_neighborhood(self) -> List[Coordinate]:
 
@@ -174,17 +181,17 @@ class Neighborhood:
         tuples = list(product(*possible_index_values))
         return [list(x) for x in tuples]
 
-    def _get_initialized_coordinates(self) -> List[Coordinate]:
+    def _get_visited_coordinates(self) -> List[Coordinate]:
         """
-        Returns the list of coordinates in the neighborhood that have a
-        measurement associated with it (except the home coordinate).
+        Returns the list of coordinates in the neighborhood that have been
+        visited (except the home coordinate).
         """
-        initialized_coordinates = []
+        visited_coordinates = []
         for coordinate in self._neighborhood:
             if coordinate != self._home_coordinate \
-                    and self._is_coordinate_initialized(coordinate):
-                initialized_coordinates.append(deepcopy(coordinate))
-        return initialized_coordinates
+                    and self._is_coordinate_visited(coordinate):
+                visited_coordinates.append(deepcopy(coordinate))
+        return visited_coordinates
 
     def _get_step_vector(self) -> Coordinate:
         """
@@ -203,7 +210,11 @@ class Neighborhood:
             coordinate=self._home_coordinate)
 
         for vector, measurement in zip(vectors, measurements):
-            weight = home_measurement.compare_measurements(measurement)
+            if measurement:
+                weight = home_measurement.compare_measurements(measurement)
+            else:
+                weight = 0.0  # Ignore the None measurements.
+
             step_vector += vector * weight
 
         step_vector /= len(vectors)
@@ -220,18 +231,15 @@ class Neighborhood:
         (vectors, measurements)
             collection of vectors and their measurements.
         """
-        initialized_coordinates = self._get_initialized_coordinates()
+        visited_coordinates = self._get_visited_coordinates()
 
         vectors = []
         measurements = []
-        for coordinate in initialized_coordinates:
+        for coordinate in visited_coordinates:
             measurement = self._coordinate_data.get_measurement(coordinate)
             vectors.append(coordinate - self._home_coordinate)
             measurements.append(measurement)
         return vectors, measurements
-
-    def _is_coordinate_initialized(self, coordinate: Coordinate) -> bool:
-        return self._coordinate_data.get_measurement(coordinate) is not None
 
     def _is_coordinate_visited(self, coordinate: Coordinate) -> bool:
         return self._coordinate_data.get_visit_count(coordinate) > 0
@@ -256,13 +264,13 @@ class Neighborhood:
         (e.g.)
             covered_values_per_dimension[dimension][value] = bool
         """
-        initialized_coordinates = self._get_initialized_coordinates()
+        visited_coordinates = self._get_visited_coordinates()
 
         covered_values_per_dimension = [
             {} for _ in range(self._config.get_num_dimensions())
         ]
 
-        for coordinate in initialized_coordinates:
+        for coordinate in visited_coordinates:
             for i, v in enumerate(coordinate):
                 covered_values_per_dimension[i][v] = True
 

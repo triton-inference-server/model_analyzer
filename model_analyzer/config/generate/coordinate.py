@@ -33,6 +33,9 @@ class Coordinate:
     def __setitem__(self, idx, item):
         self._values[idx] = item
 
+    def __len__(self):
+        return len(self._values)
+
     def __add__(self, other):
         if type(other) == Coordinate:
             return self._add_coordinate(other)
@@ -111,3 +114,6 @@ class Coordinate:
 
     def __str__(self):
         return str(self._values)
+
+    def __repr__(self):
+        return repr(f"Coordinate({self._values})")
