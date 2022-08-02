@@ -26,7 +26,8 @@ class RunConfigGeneratorFactory:
     """
 
     @staticmethod
-    def create_run_config_generator(command_config, gpus, models, client):
+    def create_run_config_generator(command_config, gpus, models, client,
+                                    model_variant_name_manager):
         """
         Parameters
         ----------
@@ -37,6 +38,8 @@ class RunConfigGeneratorFactory:
             The models to generate RunConfigs for
         client: TritonClient
             The client handle used to send requests to Triton
+        model_variant_name_manager: ModelVariantNameManager
+            Maps model variants to config names
 
         Returns
         -------
@@ -48,35 +51,42 @@ class RunConfigGeneratorFactory:
                 command_config=command_config,
                 gpus=gpus,
                 models=models,
-                client=client)
+                client=client,
+                model_variant_name_manager=model_variant_name_manager)
         elif (command_config.run_config_search_mode == "brute"):
             return RunConfigGeneratorFactory._create_brute_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
                 models=models,
-                client=client)
+                client=client,
+                model_variant_name_manager=model_variant_name_manager)
         else:
             raise TritonModelAnalyzerException(
                 f"Unexpected search mode {command_config.run_config_search_mode}"
             )
 
     @staticmethod
-    def _create_brute_run_config_generator(command_config, gpus, models,
-                                           client):
-        return BruteRunConfigGenerator(config=command_config,
-                                       gpus=gpus,
-                                       models=models,
-                                       client=client)
+    def _create_brute_run_config_generator(command_config, gpus, models, client,
+                                           model_variant_name_manager):
+        return BruteRunConfigGenerator(
+            config=command_config,
+            gpus=gpus,
+            models=models,
+            client=client,
+            model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod
-    def create_quick_run_config_generator(command_config, gpus, models, client):
+    def create_quick_run_config_generator(command_config, gpus, models, client,
+                                          model_variant_name_manager):
         search_config = RunConfigGeneratorFactory._create_search_config(
             command_config)
-        return QuickRunConfigGenerator(search_config=search_config,
-                                       config=command_config,
-                                       gpus=gpus,
-                                       models=models,
-                                       client=client)
+        return QuickRunConfigGenerator(
+            search_config=search_config,
+            config=command_config,
+            gpus=gpus,
+            models=models,
+            client=client,
+            model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod
     def _create_search_config(command_config):

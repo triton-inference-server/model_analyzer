@@ -35,7 +35,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     Hill climbing algorithm to create RunConfigs
     """
 
-    def __init__(self, search_config, config, gpus, models, client):
+    def __init__(self, search_config, config, gpus, models, client,
+                 model_variant_name_manager):
         """
         Parameters
         ----------
@@ -47,13 +48,14 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         models: List of ConfigModelProfileSpec
             List of models to profile
         client: TritonClient
+        model_variant_name_manager: ModelVariantNameManager
         """
         self._search_config = search_config
         self._config = config
         self._gpus = gpus
         self._models = models
         self._client = client
-        self._variant_name_manager = ModelVariantNameManager()
+        self._variant_name_manager = model_variant_name_manager
 
         self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(
             models)

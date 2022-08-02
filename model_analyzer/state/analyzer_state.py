@@ -31,8 +31,14 @@ class AnalyzerState:
 
     @classmethod
     def from_dict(cls, state_dict):
-        # Fill results
         state = AnalyzerState()
+
+        # Model Variant mapping
+        state._state_dict[
+            'ModelManager.model_variant_name_manager'] = state_dict[
+                'ModelManager.model_variant_name_manager']
+
+        # Fill results
         state._state_dict['ResultManager.results'] = Results.from_dict(
             state_dict['ResultManager.results'])
 

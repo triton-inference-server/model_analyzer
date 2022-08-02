@@ -24,7 +24,8 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
     Generates all RunConfigs to execute via brute force given a list of models
     """
 
-    def __init__(self, config, gpus, models, client):
+    def __init__(self, config, gpus, models, client,
+                 model_variant_name_manager):
         """
         Parameters
         ----------
@@ -36,11 +37,14 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
             The models to generate ModelRunConfigs for
 
         client: TritonClient
+        
+        model_variant_name_manager: ModelVariantNameManager
         """
         self._config = config
         self._gpus = gpus
         self._models = models
         self._client = client
+        self._model_variant_name_manager = model_variant_name_manager
 
         self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(
             models)
@@ -50,8 +54,6 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         self._curr_model_run_configs = [None for n in range(self._num_models)]
         self._curr_results = [[] for n in range(self._num_models)]
         self._curr_generators = [None for n in range(self._num_models)]
-
-        self._model_variant_name_manager = ModelVariantNameManager()
 
     def set_last_results(self, measurements):
         for index in range(self._num_models):

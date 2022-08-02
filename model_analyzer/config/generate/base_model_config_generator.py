@@ -172,15 +172,9 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         variant_name_manager: ModelVariantNameManager
         """
         model_name = model.model_name()
-        variant_name = variant_name_manager.get_model_variant_name(
-            model_name, param_combo)
 
         model_config_dict = BaseModelConfigGenerator.get_base_model_config_dict(
             config, client, gpus, model_repository, model_name)
-
-        model_config_dict['name'] = variant_name
-        logger.info("")
-        logger.info(f"Creating model config: {model_config_dict['name']}")
 
         if param_combo is not None:
             for key, value in param_combo.items():
@@ -193,6 +187,13 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
                     else:
                         logger.info(f"  Setting {key} to {value}")
         logger.info("")
+
+        variant_name = variant_name_manager.get_model_variant_name(
+            model_name, model_config_dict, param_combo)
+
+        model_config_dict['name'] = variant_name
+        logger.info("")
+        logger.info(f"Creating model config: {model_config_dict['name']}")
 
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
         model_config.set_cpu_only(model.cpu_only())

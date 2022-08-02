@@ -15,7 +15,9 @@
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.config.generate.run_config_generator_factory import RunConfigGeneratorFactory
 from .model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 
+from tests.common.test_utils import default_encode
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -55,6 +57,13 @@ class ModelManager:
         self._result_manager = result_manager
         self._state_manager = state_manager
 
+        if state_manager.starting_fresh_run():
+            self._init_state()
+
+        self._model_variant_name_manager = ModelVariantNameManager._from_dict(
+            self._state_manager.get_state_variable(
+                'ModelManager.model_variant_name_manager'))
+
     def run_models(self, models):
         """
         Generates configs, runs inferences, gets
@@ -78,7 +87,8 @@ class ModelManager:
             command_config=self._config,
             gpus=self._gpus,
             models=models,
-            client=self._client)
+            client=self._client,
+            model_variant_name_manager=self._model_variant_name_manager)
 
         for run_config in rcg.get_configs():
             if self._state_manager.exiting():
@@ -97,6 +107,13 @@ class ModelManager:
         # Reset the server args to global config
         self._server.update_config(params=server_config_copy.server_args())
 
+        model_variant_name_manager_dict = default_encode(
+            rcg._model_variant_name_manager)
+
+        self._state_manager.set_state_variable(
+            'ModelManager.model_variant_name_manager',
+            model_variant_name_manager_dict)
+
     def _get_triton_server_flags(self, models):
         triton_server_flags = models[0].triton_server_flags()
 
@@ -105,3 +122,13 @@ class ModelManager:
                 raise TritonModelAnalyzerException(
                     f"Triton server flags must be the same for all models to run concurrently"
                 )
+
+    def _init_state(self):
+        """
+        Sets ModelManager object managed
+        state variables in AnalyerState
+        """
+
+        self._state_manager.set_state_variable(
+            'ModelManager.model_variant_name_manager',
+            default_encode(ModelVariantNameManager()))
