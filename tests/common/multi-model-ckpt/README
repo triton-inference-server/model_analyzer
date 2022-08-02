@@ -16,5 +16,6 @@ Settings used to create this checkpoint:
 
 --profile-models resnet50_libtorch,vgg19_libtorch 
 --run-config-search-max-concurrency 2
+--run-config-serach-max-instance-count 2
 --run-config-search-max-model-batch-size 2 
 --run-config-profile-models-concurrently-enable
