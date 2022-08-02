@@ -566,15 +566,14 @@ class MetricsManager:
             if not self._cpu_warning_printed:
                 self._cpu_warning_printed = True
                 logger.warning(
-                    "CPU metric(s) are not being collected, while this profiling will run on CPU(s)."
+                    "One or more models are running on the CPU, but CPU metric(s) are not being collected"
                 )
         # Warn user about CPU monitor performance issue
         if collect_cpu_metrics_actual:
             if not self._cpu_warning_printed:
                 self._cpu_warning_printed = True
-                logger.warning("CPU metric(s) are being collected.")
                 logger.warning(
-                    "Collecting CPU metric(s) can affect the latency or throughput numbers reported by perf analyzer."
+                    "CPU metrics are being collected. This can affect the latency or throughput numbers reported by perf analyzer."
                 )
 
     @staticmethod
