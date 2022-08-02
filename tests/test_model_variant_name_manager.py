@@ -37,7 +37,7 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         name = self._mvnm.get_model_variant_name("modelA", {'A': 1},
                                                  DEFAULT_CONFIG_PARAMS)
 
-        self.assertEqual(name, "modelA_config_default")
+        self.assertEqual(name, (False, "modelA_config_default"))
 
     def test_basic(self):
         """
@@ -51,9 +51,9 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         name2 = self._mvnm.get_model_variant_name("modelA", {'A': 4},
                                                   self._non_default_param_combo)
 
-        self.assertEqual(name0, "modelA_config_0")
-        self.assertEqual(name1, "modelA_config_1")
-        self.assertEqual(name2, "modelA_config_2")
+        self.assertEqual(name0, (False, "modelA_config_0"))
+        self.assertEqual(name1, (False, "modelA_config_1"))
+        self.assertEqual(name2, (False, "modelA_config_2"))
 
     def test_multiple_models(self):
         """
@@ -69,10 +69,10 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         b1 = self._mvnm.get_model_variant_name("modelB", {'A': 2},
                                                self._non_default_param_combo)
 
-        self.assertEqual(a0, "modelA_config_0")
-        self.assertEqual(a1, "modelA_config_1")
-        self.assertEqual(b0, "modelB_config_0")
-        self.assertEqual(b1, "modelB_config_1")
+        self.assertEqual(a0, (False, "modelA_config_0"))
+        self.assertEqual(a1, (False, "modelA_config_1"))
+        self.assertEqual(b0, (False, "modelB_config_0"))
+        self.assertEqual(b1, (False, "modelB_config_1"))
 
     def test_repeat(self):
         """
@@ -85,8 +85,8 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         a1 = self._mvnm.get_model_variant_name("modelA", {'A': 1},
                                                self._non_default_param_combo)
 
-        self.assertEqual(a0, "modelA_config_0")
-        self.assertEqual(a1, "modelA_config_0")
+        self.assertEqual(a0, (False, "modelA_config_0"))
+        self.assertEqual(a1, (True, "modelA_config_0"))
 
     def test_from_dict(self):
         """
@@ -116,10 +116,10 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         b1 = mvnm.get_model_variant_name("modelB", {'A': 2},
                                          self._non_default_param_combo)
 
-        self.assertEqual(a0, "modelA_config_0")
-        self.assertEqual(a1, "modelA_config_1")
-        self.assertEqual(b0, "modelB_config_0")
-        self.assertEqual(b1, "modelB_config_1")
+        self.assertEqual(a0, (True, "modelA_config_0"))
+        self.assertEqual(a1, (True, "modelA_config_1"))
+        self.assertEqual(b0, (True, "modelB_config_0"))
+        self.assertEqual(b1, (False, "modelB_config_1"))
 
 
 if __name__ == '__main__':

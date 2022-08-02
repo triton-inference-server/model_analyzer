@@ -176,6 +176,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_config_dict = BaseModelConfigGenerator.get_base_model_config_dict(
             config, client, gpus, model_repository, model_name)
 
+        logger_str = []
         if param_combo is not None:
             for key, value in param_combo.items():
                 if value is not None:
@@ -183,17 +184,24 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
                         key, value, model_config_dict)
 
                     if value == {}:
-                        logger.info(f"  Enabling {key}")
+                        logger_str.append(f"  Enabling {key}")
                     else:
-                        logger.info(f"  Setting {key} to {value}")
-        logger.info("")
+                        logger_str.append(f"  Setting {key} to {value}")
 
-        variant_name = variant_name_manager.get_model_variant_name(
-            model_name, model_config_dict, param_combo)
+        (variant_found,
+         variant_name) = variant_name_manager.get_model_variant_name(
+             model_name, model_config_dict, param_combo)
 
         model_config_dict['name'] = variant_name
         logger.info("")
-        logger.info(f"Creating model config: {model_config_dict['name']}")
+        if variant_found:
+            logger.info(
+                f"Found existing model config: {model_config_dict['name']}")
+        else:
+            logger.info(f"Creating model config: {model_config_dict['name']}")
+        for str in logger_str:
+            logger.info(str)
+        logger.info("")
 
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
         model_config.set_cpu_only(model.cpu_only())

@@ -42,10 +42,11 @@ class ModelVariantNameManager:
         return model_variant_name_manager
 
     def get_model_variant_name(self, model_name: str, model_config_dict: Dict,
-                               param_combo: Dict) -> str:
+                               param_combo: Dict) -> Tuple[bool, str]:
         """
         Given a base model name and a dict of parameters to be applied
-        to the base model config, return the name of the model variant
+        to the base model config, return the name of the model variant 
+        and if the variant already existed
 
         If the same input values are provided to this function multiple times, 
         the same value will be returned
@@ -56,14 +57,14 @@ class ModelVariantNameManager:
             model_name, mcd)
 
         if variant_found:
-            return model_variant_name
+            return (True, model_variant_name)
 
         if self._is_default_config(param_combo):
-            return model_name + '_config_default'
+            return (False, model_name + '_config_default')
 
         model_variant_name = self._create_new_model_variant(model_name, mcd)
 
-        return model_variant_name
+        return (False, model_variant_name)
 
     def _copy_and_restore_mcd_name(self, model_name: str,
                                    model_config_dict: Dict) -> Dict:

@@ -44,7 +44,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                           step_magnitude=7,
                           min_initialized=2)
         self._urcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                             mock_models, MagicMock())
+                                             mock_models, MagicMock(),
+                                             MagicMock())
 
     def test_get_starting_coordinate(self):
         """ Test that get_starting_coordinate() works for non-zero values """
