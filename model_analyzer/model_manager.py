@@ -17,7 +17,6 @@ from model_analyzer.config.generate.run_config_generator_factory import RunConfi
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 
-from tests.common.test_utils import default_encode
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -107,7 +106,7 @@ class ModelManager:
         # Reset the server args to global config
         self._server.update_config(params=server_config_copy.server_args())
 
-        model_variant_name_manager_dict = default_encode(
+        model_variant_name_manager_dict = self._state_manager.default_encode(
             rcg._model_variant_name_manager)
 
         self._state_manager.set_state_variable(
@@ -131,4 +130,4 @@ class ModelManager:
 
         self._state_manager.set_state_variable(
             'ModelManager.model_variant_name_manager',
-            default_encode(ModelVariantNameManager()))
+            self._state_manager.default_encode(ModelVariantNameManager()))
