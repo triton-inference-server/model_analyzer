@@ -74,14 +74,14 @@ $ model-analyzer profile -h
 
 Depending on the command line or YAML config options provided, the `profile`
 subcommand will either perform a
-[manual](./config_search.md#Manual-Configuration-Search) or [automatic
-search](./config_search.md#Automatic-Configuration-Search) over perf analyzer
+[manual](./config_search.md#manual-configuration-search) or [automatic
+search](./config_search.md#automatic-configuration-search) over perf analyzer
 and model config file parameters. For each combination of [model config
 parameters](./config.md#model-config-parameters) (e.g. *max batch size*, *dynamic batching*, and *instance count*), it will run tritonserver and perf analyzer instances with
 all the specified run parameters (client request concurrency and static batch
 size). It will also save the protobuf (.pbtxt) model config files corresponding
 to each combination in the [*output model
-repository*](./config.md#CLI-and-YAML-Config-Options). Model Analyzer collects
+repository*](./config.md#cli-and-yaml-config-options). Model Analyzer collects
 various metrics at fixed time intervals during these perf analyzer runs. Each
 perf analyzer run generates a single measurement, which corresponds to a row in
 the output tables. After completing the runs for all configurations for each
@@ -169,7 +169,7 @@ the checkpoint directory. Next, it sorts the models specified in the CLI or
 config YAML, provided they contain measurements in the checkpoint, using the
 objectives specified in the config YAML. Finally, it constructs summary PDFs
 using the top model configs for each model, as well as across models, if
-requested (See the [Reports](./reports.md) section for more details). The
+requested (See the [Reports](./report.md) section for more details). The
 `analyze` subcommand can be run multiple times with different configurations if
 the user would like to sort and filter the results using different objectives or
 under different constraints.
@@ -225,7 +225,7 @@ $ model-analyzer report -h
 
 Instead of showing only the top measurements from each config like in the
 summary reports, Model Analyzer compiles and displays all the meausurements for
-a given config in the detailed report (See the [Reports](./reports.md) section
+a given config in the detailed report (See the [Reports](./report.md) section
 for more details).
 
 ### Examples

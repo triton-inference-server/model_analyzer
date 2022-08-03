@@ -57,6 +57,6 @@ Analyzer**](./config.md) section for more details) The detailed report will
 look like the one shown [*here*](../examples/online_detailed_report.pdf).
 
 
-See the [**quick start**](./quick_start.md#plots) and [**configuring model
-analyzer**](./config.md) sections for more details on how to configure these
+See the [**configuring model
+analyzer**](./config.md) section for more details on how to configure these
 reports.
