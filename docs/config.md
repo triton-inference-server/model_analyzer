@@ -16,10 +16,10 @@ limitations under the License.
 
 # Configuring Model Analyzer
 
-Each subcommand in the Model Analyzer can be configured with a
-[YAML](https://yaml.org/) file or via the command line interface (CLI). Every
+Each [subcommand](cli.md#model-analyzer-subcommands) in Model Analyzer can be configured with a
+[YAML](https://yaml.org/) config file or via the command line interface (CLI). Every
 flag supported by the CLI is supported in the configuration file, but some
-configurations are only supported using the config file.
+flags are only supported using the config file.
 
 The placeholders below are used throughout the configuration:
 
