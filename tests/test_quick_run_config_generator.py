@@ -65,14 +65,14 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(urcg._get_starting_coordinate(), Coordinate([2, 1, 3]))
 
     def test_get_next_run_config(self):
-        """ 
-        Test that get_next_run_config() creates a proper RunConfig 
-        
+        """
+        Test that get_next_run_config() creates a proper RunConfig
+
         Sets up a case where the coordinate is [5,7], which cooresponds to
           - max_batch_size = 32
           - instance_count = 8
           - concurrency = 32*8*2 = 512
-        
+
         Also
         - rate limiter priority should be 1, even for single model
         - dynamic batching should be on
@@ -124,9 +124,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(perf_config['batch-size'], 1)
 
     def test_get_next_run_config_multi_model(self):
-        """ 
+        """
         Test that get_next_run_config() creates a proper RunConfig for multi-model
-        
+
         Sets up a case where the coordinate is [1,2,4,5], which cooresponds to
           - model 1 max_batch_size = 2
           - model 1 instance_count = 3
@@ -135,7 +135,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
           - model 2 instance_count = 6
           - model 2 concurrency = 16*6*2 = 192
 
-        Also, 
+        Also,
         - rate limiter priority should be 1
         - dynamic batching should be on
         - existing values from the base model config should persist if they aren't overwritten
@@ -248,20 +248,29 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(pc2['batch-size'], 1)
         self.assertEqual(pc2['model-version'], 3)
 
-    def test_radius_magnitude(self):
-        """ 
-        Test that get_radius and get_magnitude work correctly 
+    def test_radius(self):
+        """
+        Test that get_radius works correctly.
 
         Expected radius is 6 (search config has 5, and offset is 1)
-        Expected magnitude is 8 (search config has 7, and offset is 1)
         """
 
         urcg = self._urcg
         urcg._radius_offset = 1
-        urcg._magnitude_offset = 1
-
         self.assertEqual(urcg._get_radius(), 6)
-        self.assertEqual(urcg._get_magnitude(), 8)
+
+    def test_magnitude(self):
+        """
+        Test that _get_magnitude works correctly.
+        """
+        urcg = self._urcg
+        self.assertEqual(urcg._get_magnitude(), 7)  # initial value
+
+        urcg._magnitude_scaler *= 0.5
+        self.assertAlmostEqual(urcg._get_magnitude(), 3.5)
+
+        urcg._magnitude_scaler *= 0.2
+        self.assertAlmostEqual(urcg._get_magnitude(), 0.7)
 
     def tearDown(self):
         patch.stopall()
