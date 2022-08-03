@@ -933,7 +933,7 @@ class TestModelManager(trc.TestResultCollector):
     def test_no_max_batch_size_sweep_if_protobuf_0(self):
         """
         Test that if the max_batch_size is 0 in the original model config, 
-        then do not sweep max batch size
+        then do not sweep max batch size or dynamic batching
         """
 
         self._model_config_protobuf = """
@@ -951,7 +951,7 @@ class TestModelManager(trc.TestResultCollector):
         expected_ranges = [{
             'instances': [1],
             'kind': ["KIND_GPU"],
-            'batching': [0],
+            'batching': [None],
             'batch_sizes': [1],
             'concurrency': [1, 2, 4]
         }, {

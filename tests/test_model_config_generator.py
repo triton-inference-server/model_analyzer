@@ -290,6 +290,81 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
         self._run_and_test_model_config_generator(yaml_str, expected_configs)
 
+    def test_direct_max_batch_size_0(self):
+        '''
+        Test direct mode with the the default config stating max_batch_size=0
+
+        max_batch_size and dynamic_batching should not be part of the resulting configs
+        '''
+
+        # yapf: disable
+        protobuf = """
+            platform: "fake_platform"
+            max_batch_size: 0
+            instance_group [
+            {
+                kind: KIND_CPU
+                count: 1
+            }
+            ]
+            """
+
+        yaml_str = ("""
+            run_config_search_max_instance_count: 4
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
+            profile_models:
+                - my-model
+            """)
+
+        expected_configs = [
+            {'platform': "fake_platform", 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]}
+        ]
+        # yapf: enable
+
+        self._run_and_test_model_config_generator(yaml_str, expected_configs,
+                                                  protobuf)
+
+    def test_direct_max_batch_size_unspecified(self):
+        '''
+        Test direct mode with the the default config not specifying max_batch_size
+
+        max_batch_size and dynamic_batching should not be part of the resulting configs
+        '''
+
+        # yapf: disable
+        protobuf = """
+            platform: "fake_platform"
+            instance_group [
+            {
+                kind: KIND_CPU
+                count: 1
+            }
+            ]
+            """
+
+        yaml_str = ("""
+            run_config_search_max_instance_count: 4
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
+            profile_models:
+                - my-model
+            """)
+
+        expected_configs = [
+            {'platform': "fake_platform", 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]}
+        ]
+        # yapf: enable
+
+        self._run_and_test_model_config_generator(yaml_str, expected_configs,
+                                                  protobuf)
+
     def test_direct_nonempty_default_config(self):
         '''
         Test direct mode with the the default config containing some values
