@@ -87,6 +87,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         # updated every step of this generator
         self._coordinate_to_measure = self._home_coordinate
 
+        # Track the best coordinate seen so far that can be used during
+        # the back-off stage.
         self._best_coordinate = self._origin
         self._best_measurement = None
 
@@ -146,25 +148,25 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         """
 
         self._coordinate_data.increment_visit_count(self._coordinate_to_measure)
-        self._neighborhood._coordinate_data.increment_visit_count(self._coordinate_to_measure)
+        self._neighborhood.coordinate_data.increment_visit_count(
+            coordinate=self._coordinate_to_measure)
 
         if measurements is not None and measurements[0] is not None:
-            assert len(measurements) == 1, \
-                "Multi-model is currently not supported in quick search mode."
+            assert len(measurements) == 1
 
             throughput = measurements[0].get_non_gpu_metric_value(
                 "perf_throughput")
             avg_latency = measurements[0].get_non_gpu_metric_value(
                 "perf_latency_avg")
 
-            self._neighborhood._coordinate_data.set_measurement(
+            self._neighborhood.coordinate_data.set_measurement(
                 coordinate=self._coordinate_to_measure, measurement=measurements[0])
             logger.debug(
                 f"Measurement for {self._coordinate_to_measure}: "
                 f"throughput = {throughput}, avg_latency = {avg_latency}"
             )
         else:
-            self._neighborhood._coordinate_data.set_measurement(
+            self._neighborhood.coordinate_data.set_measurement(
                 coordinate=self._coordinate_to_measure, measurement=None)
             logger.debug(
                 f"Measurement for {self._coordinate_to_measure}: None."
@@ -173,16 +175,17 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._update_best_measurement(measurements)
 
     def _update_best_measurement(self, measurements: List[RunConfigMeasurement]):
-        if self._best_measurement is None:
-            self._best_measurement = measurements[0]
-        elif measurements[0] and measurements[0].is_better_than(self._best_measurement):
-            self._best_coordinate = self._coordinate_to_measure
-            self._best_measurement = measurements[0]
+        """Keep track of the best coordinate/measurement seen so far."""
+        measurement = measurements[0]
 
-        logger.debug(f"Best Measurement: {self._best_coordinate}")
+        if self._best_measurement is None:
+            self._best_measurement = measurement
+        elif measurement and measurement.is_better_than(self._best_measurement):
+            self._best_coordinate = self._coordinate_to_measure
+            self._best_measurement = measurement
 
     def _get_last_results(self) -> RunConfigMeasurement:
-        return self._neighborhood._coordinate_data.get_measurement(
+        return self._neighborhood.coordinate_data.get_measurement(
             coordinate=self._coordinate_to_measure)
 
     def _take_step(self):

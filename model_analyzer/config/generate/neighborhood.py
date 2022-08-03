@@ -50,6 +50,10 @@ class Neighborhood:
         self._radius = self._config.get_radius()
         self._neighborhood = self._create_neighborhood()
 
+    @property
+    def coordinate_data(self):
+        return self._coordinate_data
+
     @classmethod
     def calc_distance(cls,
                       coordinate1: Coordinate,
@@ -74,20 +78,31 @@ class Neighborhood:
         num_initialized = len(self._get_visited_coordinates())
         return num_initialized >= min_initialized
 
-    def calculate_new_coordinate(self, magnitude: int) -> Coordinate:
+    def calculate_new_coordinate(self,
+                                 magnitude: int,
+                                 disable_clipping: bool = False) -> Coordinate:
         """
         Based on the measurements in the neighborhood, determine where
         the next location should be
 
-        magnitude: int
+        Parameters
+        ----------
+        magnitude
             How large of a step to take
+        disable_clipping
+            Determines whether or not to clip the final step vector.
 
-        returns: Coordinate
+        Returns
+        -------
+        new_coordinate
+            The new coordinate computed based on the neighborhood measurements.
         """
         step_vector = round(self._get_step_vector() * magnitude)
-        clipped_step_vector = self._clip_coordinate_values(step_vector)
 
-        tmp_new_coordinate = self._home_coordinate + clipped_step_vector
+        if not disable_clipping:
+            step_vector = self._clip_coordinate_values(step_vector)
+
+        tmp_new_coordinate = self._home_coordinate + step_vector
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
         return new_coordinate
 
