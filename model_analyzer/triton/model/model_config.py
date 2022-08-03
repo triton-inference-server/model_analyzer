@@ -14,6 +14,7 @@
 
 import os
 from typing import Dict, Any
+from copy import deepcopy
 
 from numba import cuda
 from distutils.dir_util import copy_tree
@@ -81,7 +82,7 @@ class ModelConfig:
 
         if (ModelConfig._default_config_dict and
                 model_name in ModelConfig._default_config_dict):
-            return ModelConfig._default_config_dict[model_name]
+            return deepcopy(ModelConfig._default_config_dict[model_name])
 
         model_path = f'{model_repository}/{model_name}'
 
