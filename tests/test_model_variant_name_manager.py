@@ -101,7 +101,7 @@ class TestModelVariantNameManager(trc.TestResultCollector):
 
         mvnm_dict = default_encode(self._mvnm)
 
-        mvnm = ModelVariantNameManager._from_dict(mvnm_dict)
+        mvnm = ModelVariantNameManager.from_dict(mvnm_dict)
 
         self.assertEqual(mvnm._model_config_dicts,
                          self._mvnm._model_config_dicts)

@@ -23,13 +23,13 @@ class ModelVariantNameManager:
     def __init__(self):
 
         # Dict of {model_config_name: model_config_dict}
-        self._model_config_dicts = {}
+        self._model_config_dicts: Dict[str, Dict] = {}
 
         # Dict of {base_model_name: current_count_integer}
-        self._model_name_index = {}
+        self._model_name_index: Dict[str, int] = {}
 
     @classmethod
-    def _from_dict(
+    def from_dict(
             cls,
             model_variant_name_manager_dict: Dict) -> "ModelVariantNameManager":
         model_variant_name_manager = ModelVariantNameManager()
@@ -53,8 +53,7 @@ class ModelVariantNameManager:
         """
         mcd = self._copy_and_restore_mcd_name(model_name, model_config_dict)
 
-        variant_found, model_variant_name = self._find_existing_variant(
-            model_name, mcd)
+        variant_found, model_variant_name = self._find_existing_variant(mcd)
 
         if variant_found:
             return (True, model_variant_name)
@@ -73,7 +72,7 @@ class ModelVariantNameManager:
 
         return mcd
 
-    def _find_existing_variant(self, model_name: str,
+    def _find_existing_variant(self,
                                model_config_dict: Dict) -> Tuple[bool, str]:
         for model_config_name, model_config_variant_dict in self._model_config_dicts.items(
         ):

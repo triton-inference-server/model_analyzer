@@ -59,7 +59,7 @@ class ModelManager:
         if state_manager.starting_fresh_run():
             self._init_state()
 
-        self._model_variant_name_manager = ModelVariantNameManager._from_dict(
+        self._model_variant_name_manager = ModelVariantNameManager.from_dict(
             self._state_manager.get_state_variable(
                 'ModelManager.model_variant_name_manager'))
 
