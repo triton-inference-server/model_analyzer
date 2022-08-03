@@ -92,6 +92,8 @@ class ModelManager:
                 measurement = None
             rcg.set_last_results([measurement])
 
+        self._metrics_manager.finalize()
+
         # Reset the server args to global config
         self._server.update_config(params=server_config_copy.server_args())
 

@@ -89,6 +89,7 @@ class MetricsManager:
         self._server = server
         self._result_manager = result_manager
         self._state_manager = state_manager
+        self._loaded_models = None
 
         self._cpu_warning_printed = False
 
@@ -182,14 +183,19 @@ class MetricsManager:
                 "Existing measurement found for run config. Skipping profile")
             return measurement
 
-        self._server.start(env=run_config.triton_environment())
-        if not self._load_model_variants(run_config):
+        current_model_variants = run_config.model_variants_name()
+        if current_model_variants != self._loaded_models:
             self._server.stop()
-            return
+            self._server.start(env=run_config.triton_environment())
+
+            if not self._load_model_variants(run_config):
+                self._server.stop()
+                self._loaded_models = None
+                return
+
+            self._loaded_models = current_model_variants
 
         measurement = self.profile_models(run_config)
-
-        self._server.stop()
 
         return measurement
 
@@ -260,6 +266,9 @@ class MetricsManager:
                 run_config, run_config_measurement)
 
         return run_config_measurement
+
+    def finalize(self):
+        self._server.stop()
 
     def _create_model_variants(self, run_config):
         """

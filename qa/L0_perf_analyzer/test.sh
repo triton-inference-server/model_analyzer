@@ -63,7 +63,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         TEST_NAME="count_window"
     elif [[ "$CONFIG_FILE" == "config-additive-args-count-no-adjust.yml" ]]; then
         TEST_NAME="count_window"
-    elif [[ "$CONFIG_FILE" == "config_perf_output_timeout.yml" ]]; then
+    elif [[ "$CONFIG_FILE" == "config-perf-output-timeout.yml" ]]; then
         TEST_NAME="perf_output_timeout"
     fi
 
