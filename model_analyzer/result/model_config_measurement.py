@@ -137,10 +137,6 @@ class ModelConfigMeasurement:
         if tag in self._non_gpu_data_from_tag:
             return self._non_gpu_data_from_tag[tag]
         else:
-            logger.warning(
-                f"No non-GPU metric corresponding to tag '{tag}' "
-                "found in the model's measurement. Possibly comparing "
-                "measurements across devices.")
             return None
 
     def get_metric_value(self, tag, default_value=0):

@@ -189,16 +189,6 @@ pip3 install --upgrade pip
 
 You can then try installing model analyzer again.
 
-If you are using this approach you need to install DCGM on your machine.
-
-For installing DCGM on Ubuntu 20.04 you can use the following commands:
-
-```
-export DCGM_VERSION=2.0.13
-wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb && \
- dpkg -i datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb
-```
-
 <br>
 
 ## From the Source
@@ -206,7 +196,7 @@ wget -q https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_
 ---
 
 To build model analyzer from the source. You'll need to install the same
-dependencies (tritonclient and DCGM) mentioned in [Using Pip](##Using-Pip).<br>
+dependencies (tritonclient) mentioned in [Pip Install](#Pip).<br>
 After that, you can use the following commands:
 
 ```

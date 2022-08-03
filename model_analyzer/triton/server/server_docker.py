@@ -182,7 +182,7 @@ class TritonServerDocker(TritonServer):
             self._tritonserver_container.stop()
             self._tritonserver_container.remove(force=True)
             self._tritonserver_container = None
-            logger.info('Stopped Triton Server.')
+            logger.debug('Stopped Triton Server.')
         self._docker_client.close()
 
     def cpu_stats(self):
