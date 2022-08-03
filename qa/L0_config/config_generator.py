@@ -52,8 +52,8 @@ def _get_sweep_configs(profile_models):
             } for model in profile_models
         },
     }
-    # total_param=5 because the default config will also be generated
-    model_config['total_param'] = 5
+    # total_param=7 due to dynamic batching
+    model_config['total_param'] = 7
     sweep_configs.append(model_config)
 
     model_config = {
@@ -69,8 +69,8 @@ def _get_sweep_configs(profile_models):
             } for model in profile_models
         },
     }
-    # total_param=5 because the default config will also be generated
-    model_config['total_param'] = 5
+    # total_param=9 due to max_queue_delay
+    model_config['total_param'] = 9
     sweep_configs.append(model_config)
     return sweep_configs
 
