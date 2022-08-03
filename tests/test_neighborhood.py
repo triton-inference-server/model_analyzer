@@ -158,11 +158,11 @@ class TestNeighborhood(trc.TestResultCollector):
                 [1, 2, 1] - [1, 1, 1] = [0, 1, 0]
 
           2. Multiply each vectors by its weights:
-                [1, 0, 0] * 1.0 = [1, 0, 0]
-                [0, 1, 0] * 1.0 = [0, 1, 0]
+                [1, 0, 0] * 1.5 = [1.5, 0, 0]
+                [0, 1, 0] * 1.0 = [  0, 1, 0]
 
           2. Compute the average of the vectors:
-                ([1, 0, 0] + [0, 1, 0]) / 2 = [1/2, 1/2, 0]
+                ([1.5, 0, 0] + [0, 1, 0]) / 2 = [3/4, 1/2, 0]
         """
         dims = SearchDimensions()
         dims.add_dimensions(0, [
@@ -176,7 +176,7 @@ class TestNeighborhood(trc.TestResultCollector):
         n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
 
         rcm0 = self._construct_rcm(throughput=1, latency=5)
-        rcm1 = self._construct_rcm(throughput=3, latency=5)
+        rcm1 = self._construct_rcm(throughput=7, latency=5)
         rcm2 = self._construct_rcm(throughput=3, latency=5)
 
         n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
@@ -189,7 +189,7 @@ class TestNeighborhood(trc.TestResultCollector):
         n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
 
         step_vector = n._get_step_vector()
-        expected_step_vector = Coordinate([1/2, 1/2, 0])
+        expected_step_vector = Coordinate([3/4, 1/2, 0])
         self.assertEqual(step_vector, expected_step_vector)
 
     def test_calculate_new_coordinate_one_dimension(self):
