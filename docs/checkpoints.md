@@ -18,7 +18,7 @@ limitations under the License.
 
 The Model Analyzer writes the collected measurements to checkpoint files when profiling. These are
 located within the specified checkpoint directory (See [Config
-Defaults](./config.md#Config-Defaults) section for default location). Checkpoint files are used to create data table, summaries and detailed reports.
+Defaults](./config.md#config-defaults) section for default location). Checkpoint files are used to create data table, summaries and detailed reports.
 
 ## When is Checkpointing Done?
 

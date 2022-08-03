@@ -70,10 +70,10 @@ Be sure to use `--triton-launch-mode=docker`, when running Model Analyzer.<br><b
 
 # Alternative Installation Methods
 
-- [Specific Version with Local Launch Mode](#Specific-Version-with-Local-Launch-Mode)
-- [Main with Local Launch Mode](#Main-branch-with-Local-Launch-Mode)
-- [Using Pip](#Pip)
-- [From the Source](#From-the-Source)
+- [Specific Version with Local Launch Mode](#specific-version-with-local-launch-mode)
+- [Main with Local Launch Mode](#main-branch-with-local-launch-mode)
+- [Using Pip](#pip)
+- [From the Source](#from-the-source)
 
 <br>
 
@@ -196,7 +196,7 @@ You can then try installing model analyzer again.
 ---
 
 To build model analyzer from the source. You'll need to install the same
-dependencies (tritonclient) mentioned in [Pip Install](#Pip).<br>
+dependencies (tritonclient) mentioned in [Pip Install](#pip).<br>
 After that, you can use the following commands:
 
 ```
