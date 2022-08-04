@@ -45,8 +45,8 @@ class ModelVariantNameManager:
                                param_combo: Dict) -> Tuple[bool, str]:
         """
         Given a base model name and a dict of parameters to be applied
-        to the base model config, return the name of the model variant 
-        and if the variant already existed
+        to the base model config, return if the variant already existed 
+        and the name of the model variant
 
         If the same input values are provided to this function multiple times, 
         the same value will be returned
@@ -87,13 +87,12 @@ class ModelVariantNameManager:
     def _create_new_model_variant(self, model_name: str,
                                   model_config_dict: Dict) -> str:
         if model_name not in self._model_name_index:
-            self._model_name_index[model_name] = 0
-            model_config_name = model_name + '_config_0'
-            self._model_config_dicts[model_config_name] = model_config_dict
+            new_index = 0
         else:
             new_index = self._model_name_index[model_name] + 1
-            self._model_name_index[model_name] = new_index
-            model_config_name = model_name + '_config_' + str(new_index)
-            self._model_config_dicts[model_config_name] = model_config_dict
+
+        self._model_name_index[model_name] = new_index
+        model_config_name = model_name + '_config_' + str(new_index)
+        self._model_config_dicts[model_config_name] = model_config_dict
 
         return model_config_name

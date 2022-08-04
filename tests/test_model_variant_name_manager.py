@@ -44,16 +44,16 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         If multiple unique model configs are passed in, the name will keep
         incrementing
         """
-        name0 = self._mvnm.get_model_variant_name("modelA", {'A': 1},
-                                                  self._non_default_param_combo)
-        name1 = self._mvnm.get_model_variant_name("modelA", {'A': 2},
-                                                  self._non_default_param_combo)
-        name2 = self._mvnm.get_model_variant_name("modelA", {'A': 4},
-                                                  self._non_default_param_combo)
+        a0 = self._mvnm.get_model_variant_name("modelA", {'A': 1},
+                                               self._non_default_param_combo)
+        a1 = self._mvnm.get_model_variant_name("modelA", {'A': 2},
+                                               self._non_default_param_combo)
+        a2 = self._mvnm.get_model_variant_name("modelA", {'A': 4},
+                                               self._non_default_param_combo)
 
-        self.assertEqual(name0, (False, "modelA_config_0"))
-        self.assertEqual(name1, (False, "modelA_config_1"))
-        self.assertEqual(name2, (False, "modelA_config_2"))
+        self.assertEqual(a0, (False, "modelA_config_0"))
+        self.assertEqual(a1, (False, "modelA_config_1"))
+        self.assertEqual(a2, (False, "modelA_config_2"))
 
     def test_multiple_models(self):
         """
@@ -76,8 +76,8 @@ class TestModelVariantNameManager(trc.TestResultCollector):
 
     def test_repeat(self):
         """
-        Calling with the same param_combo multiple times should result
-        in the same name being returned
+        Calling with the same model name/config/combo multiple times 
+        should result in the same config name being returned
         """
 
         a0 = self._mvnm.get_model_variant_name("modelA", {'A': 1},
@@ -87,6 +87,38 @@ class TestModelVariantNameManager(trc.TestResultCollector):
 
         self.assertEqual(a0, (False, "modelA_config_0"))
         self.assertEqual(a1, (True, "modelA_config_0"))
+
+    def test_nested_dicts_matching(self):
+        """
+        Test matching with a model config consisting of matching nested dicts
+        """
+        model_config_A_0 = {"A": {"B": {"C": 1, "D": 2}}}
+        model_config_A_1 = {"A": {"B": {"D": 2, "C": 1}}}
+
+        a0 = self._mvnm.get_model_variant_name("modelA", model_config_A_0,
+                                               self._non_default_param_combo)
+
+        a1 = self._mvnm.get_model_variant_name("modelA", model_config_A_1,
+                                               self._non_default_param_combo)
+
+        self.assertEqual(a0, (False, "modelA_config_0"))
+        self.assertEqual(a1, (True, "modelA_config_0"))
+
+    def test_nested_dicts_different(self):
+        """
+        Test matching with a model config consisting of different nested dicts
+        """
+        model_config_A_0 = {"A": {"B": {"C": 1, "D": 2}}}
+        model_config_A_1 = {"A": {"B": {"D": 1, "C": 2}}}
+
+        a0 = self._mvnm.get_model_variant_name("modelA", model_config_A_0,
+                                               self._non_default_param_combo)
+
+        a1 = self._mvnm.get_model_variant_name("modelA", model_config_A_1,
+                                               self._non_default_param_combo)
+
+        self.assertEqual(a0, (False, "modelA_config_0"))
+        self.assertEqual(a1, (False, "modelA_config_1"))
 
     def test_from_dict(self):
         """
