@@ -38,7 +38,6 @@ def _get_range_configs():
         'profile_models': [['resnet50_libtorch']],
         'run_config_search_disable': [True],
         'perf_analyzer_cpu_util': [600],
-        'triton_launch_mode': ['docker'],
         'batch_sizes': [{
             'start': begin,
             'stop': end,
