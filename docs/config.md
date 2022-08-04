@@ -81,6 +81,9 @@ profile_models: <comma-delimited-string-list>
 # Allow model analyzer to overwrite contents of the output model repository
 [ override_output_model_repository: <boolean> | default: false ]
 
+# Export path to be used
+[ export_path: <string> | default: '.' ]
+
 # Concurrency values to be used for the analysis
 [ concurrency: <comma-delimited-string|list|range> ]
 
@@ -183,6 +186,36 @@ profile_models: <comma-delimited-string-list>
 # Disables automatic config search
 [ run_config_search_disable: <bool> | default: false ]
 
+# Number of top configs to show in summary plots
+[ num_configs_per_model: <int> | default: 3]
+
+# Number of top model configs to save across ALL models, none saved by default
+[ num_top_model_configs: <int> | default: 0 ]
+
+# File name to be used for the model inference results
+[ filename_model_inference: <string> | default: metrics-model-inference.csv ]
+
+# File name to be used for the GPU metrics results
+[ filename_model_gpu: <string> | default: metrics-model-gpu.csv ]
+
+# File name to be used for storing the server only metrics.
+[ filename_server_only: <string> | default: metrics-server-only.csv ]
+
+# Specifies columns keys for model inference metrics table
+[ inference_output_fields: <comma-delimited-string-list> | default: See [Config Defaults](#config-defaults) section]
+
+# Specifies columns keys for model gpu metrics table
+[ gpu_output_fields: <comma-delimited-string-list> | default: See [Config Defaults](#config-defaults) section]
+
+# Specifies columns keys for server only metrics table
+[ server_output_fields: <comma-delimited-string-list> | default: See [Config Defaults](#config-defaults) section]
+
+# Shorthand that allows a user to specify a max latency constraint in ms
+[ latency_budget: <int>]
+
+# Shorthand that allows a user to specify a min throughput constraint
+[ min_throughput: <int>]
+
 # Specify path to config yaml file
 [ config_file: <string> ]
 ```
@@ -215,6 +248,12 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 # Dict of name=value pairs containing metadata for the tritonserve docker container
 # launched in docker launch mode
 [ triton_docker_labels: <dict> ]
+
+# List of constraints placed on the config search results.
+[ constraints: <constraint> ]
+
+# List of objectives that user wants to sort the results by it.
+[ objectives: <objective|list> ]
 ```
 
 ## Config Options for `analyze`

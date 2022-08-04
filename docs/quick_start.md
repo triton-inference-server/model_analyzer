@@ -81,10 +81,10 @@ apt-get update && apt-get install wkhtmltopdf
 
 ---
 
-The [examples/quick-start](../examples/quick-start) directory is an example 
-[Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/model_repository.md) that contains a simple libtorch model which calculates 
-the sum and difference of two inputs. 
- 
+The [examples/quick-start](../examples/quick-start) directory is an example
+[Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/model_repository.md) that contains a simple libtorch model which calculates
+the sum and difference of two inputs.
+
 Run the Model Analyzer `profile` subcommand inside the container with:
 
 ```
@@ -92,6 +92,7 @@ model-analyzer profile \
     --model-repository <path-to-examples-quick-start> \
     --profile-models add_sub --triton-launch-mode=docker \
     --output-model-repository-path <path-to-output-model-repo>/<output_dir>
+    --export-path analysis_results
 ```
 
 **Important:** You must specify an `<output_dir>` subdirectory. You cannot have `--output-model-repository-path` point directly to `<path-to-output-model-repo>`
@@ -121,20 +122,8 @@ configuration:
 
 With these options, model analyzer will test 5 configs (4 new configs as well as the unmodified default add_sub config), and each config will have 2 experiments run on Perf Analyzer (concurrency=1 and concurrency=2). This significantly reduces the search space, and therefore, model analyzer's runtime.
 
-## `Step 4:` Generate Tables and Summary Reports
-
----
-
-In order to generate tables and summary reports, use the `analyze` subcommand as
-follows.
-
-```
-$ mkdir analysis_results
-$ model-analyzer analyze --analysis-models add_sub -e analysis_results
-```
-
 The measured data and summary report will be placed inside the
-`./analysis_results` directory. The directory should be structured as follows.
+`./analysis_results` directory. The directory will be structured as follows.
 
 ```
 $HOME

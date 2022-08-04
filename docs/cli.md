@@ -34,21 +34,21 @@ in which it is being run. Currently model analyzer supports 2 modes.
 ### Online Mode
 
 This is the default mode. When in this mode, Model Analyzer will operate to find
-the optimal model configuration for an online inference scenario. By default in 
-online mode, the best model configuration will be the one that maximizes 
-throughput. If a latency budget is specified to the [analyze subcommand](#subcommand-analyze) via 
-`--latency-budget`, then the best model configuration will be the one with the highest throughput in the given budget. 
+the optimal model configuration for an online inference scenario. By default in
+online mode, the best model configuration will be the one that maximizes
+throughput. If a latency budget is specified to the [profile subcommand](#subcommand-profile) via
+`--latency-budget`, then the best model configuration will be the one with the highest throughput in the given budget.
 
-In online mode the analyze and report subcommands will generate summaries specific to online inference. 
+In online mode the analyze and report subcommands will generate summaries specific to online inference.
 See the example [online summary](../examples/online_summary.pdf) and [online detailed report](../examples/online_summary.pdf).
 
 ### Offline Mode
 
 The offline mode `--mode=offline` tells Model Analyzer to operate to find the
-optimal model configuration for an offline inference scenario.  By default
+optimal model configuration for an offline inference scenario. By default
 in offline mode, the best model configuration will be the one that maximizes throughput.
-A minimum throughput can be specified to the [analyze subcommand](#subcommand-analyze)
-via `--min-throughput` to ignore any configuration that does not exceed a minimum number of inferences per second. 
+A minimum throughput can be specified to the [profile subcommand](#subcommand-profile)
+via `--min-throughput` to ignore any configuration that does not exceed a minimum number of inferences per second.
 
 In offline mode the analyze and report subcommands will generate reports specific to offline inference.
 See the example [offline summary](../examples/offline_summary.pdf) and
@@ -56,7 +56,7 @@ See the example [offline summary](../examples/offline_summary.pdf) and
 
 ## Model Analyzer Subcommands
 
-The Model Analyzer's functionality is split across 3 separate subcommands. Each
+The Model Analyzer's functionality is split across three separate subcommands. Each
 subcommand has its own CLI and config options. Some options are required for
 more than one subcommand (e.g. `--export-path`). See the [Configuring Model
 Analyzer](./config.md) section for more details on configuring each of these
@@ -64,9 +64,21 @@ subcommands.
 
 ## Subcommand: `profile`
 
-The `profile` subcommand allows the user to run model inferences using perf
-analyzer, and collect metrics like throughput, latency and memory usage. Use the
-following command to see the usage and argument descriptions for the subcommand.
+The `profile` subcommand begins by loading the "latest" checkpoint (if available) in
+the checkpoint directory. It will then run model inferences using perf
+analyzer, and collect metrics like throughput, latency and memory usage for
+any measurements not present in the checkpoint.
+
+Next, it sorts the models specified in the CLI or
+config YAML, using the objectives specified in the config YAML. Finally, it constructs summary PDFs
+using the top model configs for each model, as well as across models, if
+requested (See the [Reports](./report.md) section for more details).
+
+The `profile` subcommand can be run multiple times with different configurations if
+the user would like to sort and filter the results using different objectives or
+under different constraints.
+
+Use the following command to see the usage and argument descriptions for the subcommand.
 
 ```
 $ model-analyzer profile -h
@@ -77,11 +89,11 @@ subcommand will either perform a
 [manual](./config_search.md#manual-configuration-search) or [automatic
 search](./config_search.md#automatic-configuration-search) over perf analyzer
 and model config file parameters. For each combination of [model config
-parameters](./config.md#model-config-parameters) (e.g. *max batch size*, *dynamic batching*, and *instance count*), it will run tritonserver and perf analyzer instances with
+parameters](./config.md#model-config-parameters) (e.g. _max batch size_, _dynamic batching_, and _instance count_), it will run tritonserver and perf analyzer instances with
 all the specified run parameters (client request concurrency and static batch
 size). It will also save the protobuf (.pbtxt) model config files corresponding
-to each combination in the [*output model
-repository*](./config.md#cli-and-yaml-config-options). Model Analyzer collects
+to each combination in the [_output model
+repository_](./config.md#cli-and-yaml-config-options). Model Analyzer collects
 various metrics at fixed time intervals during these perf analyzer runs. Each
 perf analyzer run generates a single measurement, which corresponds to a row in
 the output tables. After completing the runs for all configurations for each
@@ -91,67 +103,95 @@ model, the Model Analyzer will save the measurements it has collected into the
 
 ### Examples
 
-Some example profile commands are shown here. For a full example see the 
+Some example profile commands are shown here. For a full example see the
 [quick start](./quick_start.md) section.
 
 1. Run auto config search on a model called `resnet50_libtorch` located in `/home/model_repo`
 
-  ```
-  $ model-analyzer profile -m /home/model_repo --profile-models resnet50_libtorch
-  ```
+```
+$ model-analyzer profile -m /home/model_repo --profile-models resnet50_libtorch
+```
 
 2. Run auto config search on 2 models called `resnet50_libtorch` and `vgg16_graphdef` located in `/home/model_repo` and save checkpoints to `checkpoints`
 
-  ```
-  $ model-analyzer profile -m /home/model_repo --profile-models resnet50_libtorch,vgg16_graphdef --checkpoint-directory=checkpoints
-  ```
+```
+$ model-analyzer profile -m /home/model_repo --profile-models resnet50_libtorch,vgg16_graphdef --checkpoint-directory=checkpoints
+```
 
 3.  Run auto config search on a model called `resnet50_libtorch` located in `/home/model_repo`, but change the repository where model config variants are stored to `/home/output_repo`
 
-  ```
-  $ model-analyzer profile -m /home/model_repo --output-model-repository-path=/home/output_repo --profile-models resnet50_libtorch
-  ```
+```
+$ model-analyzer profile -m /home/model_repo --output-model-repository-path=/home/output_repo --profile-models resnet50_libtorch
+```
 
 4. Run profile over manually defined configurations for a models `classification_malaria_v1` and `classification_chestxray_v1` located in `/home/model_repo` using the YAML config file
 
-  ```
-  $ model-analyzer profile -f /path/to/config.yaml
-  ```
-
 The contents of `config.yaml` are shown below.
-```yaml
 
+```yaml
 model_repository: /home/model_repo
 
 run_config_search_disable: True
 
-concurrency: [2,4,8,16,32]
-batch_sizes: [8,16,64]
+concurrency: [2, 4, 8, 16, 32]
+batch_sizes: [8, 16, 64]
 
-profile_models: 
+profile_models:
   classification_malaria_v1:
     model_config_parameters:
       instance_group:
-        -
-          kind: KIND_GPU
-          count: [1,2]
+        - kind: KIND_GPU
+          count: [1, 2]
       dynamic_batching:
         max_queue_delay_microseconds: [100]
   classification_chestxray_v1:
     model_config_parameters:
       instance_group:
-        -
-          kind: KIND_GPU
-          count: [1,2]
+        - kind: KIND_GPU
+          count: [1, 2]
       dynamic_batching:
         max_queue_delay_microseconds: [100]
+```
 
+5. Apply objectives and constraints to sort and filter results in summary plots and tables using yaml config file.
+
+```
+$ model-analyzer profile -f /path/to/config.yaml
+```
+
+The contents of `config.yaml` are shown below.
+
+```yaml
+checkpoint_directory: ./checkpoints/
+export_path: ./export_directory/
+
+analysis_models:
+  resnet50_libtorch:
+    objectives:
+      - perf_throughput
+    constraints:
+      perf_latency_p99:
+        max: 15
+  vgg16_graphdef:
+    objectives:
+      - gpu_used_memory
+    constraints:
+      perf_latency_p99:
+        max: 15
+```
+
+```
+$ model-analyzer profile -f /path/to/config.yaml
 ```
 
 **Note**: The checkpoint directory should be removed between consecutive runs of
-the `model-analyzer profile` command.
+the `model-analyzer profile` command when you do not want to include the results
+from a previous profile.
 
 ## Subcommand: `analyze`
+
+**Note: This subcommand has been deprecated and is slated for removal. This
+subcommand's functionality has been subsumed into the profile subcommand**
 
 The `analyze` subcommand allows the user to create summaries and data tables
 from the measurements taken using the `profile` subcommand. The YAML config file
@@ -178,46 +218,47 @@ under different constraints.
 
 1. Create summary and results for model `resnet50_libtorch` from latest checkpoint in directory `checkpoints`.
 
-  ```
-  $ model-analyzer analyze --analysis-models resnet50_libtorch --checkpoint-directory=checkpoints
-  ```
+```
+$ model-analyzer analyze --analysis-models resnet50_libtorch --checkpoint-directory=checkpoints
+```
 
 2. Create summaries and results for models `resnet50_libtorch` and `vgg16_graphdef` from same checkpoint as above and export them to a directory called `export_directory`
 
-  ```
-  $ model-analyzer analyze --analysis-models resnet50_libtorch,vgg16_graphdef -e export_directory --checkpoint-directory=checkpoints
-  ```
+```
+$ model-analyzer analyze --analysis-models resnet50_libtorch,vgg16_graphdef -e export_directory --checkpoint-directory=checkpoints
+```
+
 3. Apply objectives and constraints to sort and filter results in summary plots and tables using yaml config file.
 
-  ```
-  $ model-analyzer analyze -f /path/to/config.yaml
-  ```
+```
+$ model-analyzer analyze -f /path/to/config.yaml
+```
 
 The contents of `config.yaml` are shown below.
 
-  ```yaml
-  checkpoint_directory: ./checkpoints/
-  export_path: ./export_directory/
+```yaml
+checkpoint_directory: ./checkpoints/
+export_path: ./export_directory/
 
-  analysis_models: 
-    resnet50_libtorch:
-      objectives:
-        - perf_throughput
-      constraints:
-        perf_latency_p99:
-          max: 15
-    vgg16_graphdef:
-      objectives:
-        - gpu_used_memory
-      constraints:
-        perf_latency_p99:
-          max: 15
-  ```
+analysis_models:
+  resnet50_libtorch:
+    objectives:
+      - perf_throughput
+    constraints:
+      perf_latency_p99:
+        max: 15
+  vgg16_graphdef:
+    objectives:
+      - gpu_used_memory
+    constraints:
+      perf_latency_p99:
+        max: 15
+```
 
 ## Subcommand: `report`
 
 The `report` subcommand allows the user to create detailed reports on one or
-more of the model configs that were profiled. 
+more of the model configs that were profiled.
 
 ```
 $ model-analyzer report -h
@@ -232,27 +273,27 @@ for more details).
 
 1. Generate detailed reports for a model configs of `resnet50_libtorch` called `resnet50_libtorch_config_1` and `resnet50_libtorch_config_2`. Read from `checkpoints` and write to `export_directory`.
 
-  ```
-  $ model-analyzer --report-model-configs resnet50_libtorch_config_1,resnet50_libtorch_config_2 --checkpoint-directory checkpoints -e export_directory
-  ```
+```
+$ model-analyzer --report-model-configs resnet50_libtorch_config_1,resnet50_libtorch_config_2 --checkpoint-directory checkpoints -e export_directory
+```
 
 2. Generate detailed report for `resnet50_libtorch_config_2` with a custom plot using YAML config file
 
-  ```
-  $ model-analyzer report -f /path/to/config.yaml
-  ```
+```
+$ model-analyzer report -f /path/to/config.yaml
+```
 
 The contents of the `config.yaml` are shown below
 
-  ```yaml
-  checkpoint_directory: ./checkpoints/
-  export_path: './export_directory'
-  report_model_configs:
-    resnet50_libtorch_config_2:
-      plots:
-        throughput_v_memory:
-           title: Thoughput vs GPU Memory
-           x_axis: gpu_used_memory
-           y_axis: perf_throughput
-           monotonic: True    
-  ```
+```yaml
+checkpoint_directory: ./checkpoints/
+export_path: "./export_directory"
+report_model_configs:
+  resnet50_libtorch_config_2:
+    plots:
+      throughput_v_memory:
+        title: Thoughput vs GPU Memory
+        x_axis: gpu_used_memory
+        y_axis: perf_throughput
+        monotonic: True
+```
