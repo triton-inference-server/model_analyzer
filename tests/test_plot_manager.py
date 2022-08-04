@@ -15,7 +15,7 @@
 import unittest
 
 from .common import test_result_collector as trc
-from .common.test_utils import evaluate_mock_config, ROOT_DIR
+from .common.test_utils import evaluate_mock_config, convert_to_bytes, default_encode, ROOT_DIR
 
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.result.result_manager import ResultManager

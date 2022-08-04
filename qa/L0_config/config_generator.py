@@ -52,8 +52,8 @@ def _get_sweep_configs(profile_models):
             } for model in profile_models
         },
     }
-    # total_param=5 because the default config will also be generated
-    model_config['total_param'] = 5
+    # total_param=8 -- 5 from previous run + 5 new configs - 2 matching previous run
+    model_config['total_param'] = 8
     sweep_configs.append(model_config)
 
     model_config = {
@@ -69,8 +69,8 @@ def _get_sweep_configs(profile_models):
             } for model in profile_models
         },
     }
-    # total_param=5 because the default config will also be generated
-    model_config['total_param'] = 5
+    # total_param=10 -- 8 from previous run + 2 new configs
+    model_config['total_param'] = 10
     sweep_configs.append(model_config)
     return sweep_configs
 

@@ -25,7 +25,7 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
     ModelConfig and PerfConfig)
     """
 
-    def __init__(self, config, gpus, model, client, variant_name_manager,
+    def __init__(self, config, gpus, model, client, model_variant_name_manager,
                  default_only):
         """
         Parameters
@@ -39,7 +39,7 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
 
         client: TritonClient
 
-        variant_name_manager: ModelVariantNameManager
+        model_variant_name_manager: ModelVariantNameManager
 
         default_only: Bool
         """
@@ -47,7 +47,7 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
         self._gpus = gpus
         self._model = model
         self._client = client
-        self._variant_name_manger = variant_name_manager
+        self._model_variant_name_manager = model_variant_name_manager
 
         self._model_name = model.model_name()
 
@@ -59,7 +59,7 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
 
         self._mcg = ModelConfigGeneratorFactory.create_model_config_generator(
             self._config, self._gpus, model, self._client,
-            self._variant_name_manger, default_only,
+            self._model_variant_name_manager, default_only,
             self._mcg_early_exit_enable)
 
         self._curr_mc_measurements = []
