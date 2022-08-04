@@ -227,18 +227,36 @@ class TestConfig(trc.TestResultCollector):
         self.mock_os.stop()
         patch.stopall()
 
-    def test_config(self):
+    def test_missing_config(self):
+        ''' Test that we fail if the required option profile-models is omitted '''
+
+        args = ['model-analyzer', 'profile', '-f', 'path-to-config-file']
+        yaml_content = 'model_repository: yaml_repository'
+        self._assert_error_on_evaluate_config(args, yaml_content)
+
+    def test_conflicting_configs(self):
+        ''' Test that we fail if an option is specified in both CLI and YAML '''
+
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
             '-f', 'path-to-config-file', '--profile-models', 'vgg11'
         ]
         yaml_content = 'model_repository: yaml_repository'
+        self._assert_error_on_evaluate_config(args, yaml_content)
+
+    def test_config(self):
+        # Data from CLI
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--profile-models', 'vgg11'
+        ]
+        yaml_content = ''
         config = self._evaluate_config(args, yaml_content)
 
-        # CLI flag has the highest priority
         self.assertTrue(
             config.get_all_config()['model_repository'] == 'cli_repository')
 
+        # Data from YAML
         args = [
             'model-analyzer', 'profile', '-f', 'path-to-config-file',
             '--profile-models', 'vgg11'
@@ -246,13 +264,8 @@ class TestConfig(trc.TestResultCollector):
         yaml_content = 'model_repository: yaml_repository'
         config = self._evaluate_config(args, yaml_content)
 
-        # If CLI flag doesn't exist, YAML config has the highest priority
         self.assertTrue(
             config.get_all_config()['model_repository'] == 'yaml_repository')
-
-        args = ['model-analyzer', 'profile', '-f', 'path-to-config-file']
-        yaml_content = 'model_repository: yaml_repository'
-        self._assert_error_on_evaluate_config(args, yaml_content)
 
     def test_range_and_list_values(self):
         args = [
