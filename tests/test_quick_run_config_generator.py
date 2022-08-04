@@ -23,6 +23,7 @@ from model_analyzer.config.generate.search_dimensions import SearchDimensions
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.config.generate.quick_run_config_generator import QuickRunConfigGenerator
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.constants import MAGNITUDE_DECAY_RATE
 
 
 class TestQuickRunConfigGenerator(trc.TestResultCollector):
@@ -248,17 +249,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(pc2['batch-size'], 1)
         self.assertEqual(pc2['model-version'], 3)
 
-    def test_radius(self):
-        """
-        Test that get_radius works correctly.
-
-        Expected radius is 6 (search config has 5, and offset is 1)
-        """
-
-        qrcg = self._qrcg
-        qrcg._radius_offset = 1
-        self.assertEqual(qrcg._get_radius(), 6)
-
     def test_magnitude(self):
         """
         Test that _get_magnitude works correctly.
@@ -266,11 +256,11 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg = self._qrcg
         self.assertEqual(qrcg._get_magnitude(), 7)  # initial value
 
-        qrcg._magnitude_scaler *= 0.5
-        self.assertAlmostEqual(qrcg._get_magnitude(), 3.5)
+        qrcg._magnitude_scaler *= MAGNITUDE_DECAY_RATE
+        self.assertEqual(qrcg._get_magnitude(), 7/2)
 
-        qrcg._magnitude_scaler *= 0.2
-        self.assertAlmostEqual(qrcg._get_magnitude(), 0.7)
+        qrcg._magnitude_scaler *= MAGNITUDE_DECAY_RATE
+        self.assertEqual(qrcg._get_magnitude(), 7/4)
 
     def tearDown(self):
         patch.stopall()

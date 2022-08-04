@@ -27,8 +27,7 @@ class TestCoordinateData(trc.TestResultCollector):
     def _construct_rcm(self,
                        throughput: float,
                        latency: float,
-                       config_name: str = "modelA_config_0"):
-        model_name = "modelA"
+                       config_name: str):
         model_config_name = [config_name]
 
         # yapf: disable
@@ -42,7 +41,7 @@ class TestCoordinateData(trc.TestResultCollector):
         weights = [1]
 
         rcm = construct_run_config_measurement(
-            model_name=model_name,
+            model_name="",
             model_config_names=model_config_name,
             model_specific_pa_params=MagicMock(),
             gpu_metric_values={},
@@ -91,7 +90,11 @@ class TestCoordinateData(trc.TestResultCollector):
         coordinate_data.set_measurement(coordinate0, rcm0)
         measurement0 = coordinate_data.get_measurement(coordinate0)
         self.assertEqual("modelA_config_0", measurement0.model_variants_name())
+        self.assertEqual(10, measurement0.get_non_gpu_metric_value("perf_throughput"))
+        self.assertEqual(5, measurement0.get_non_gpu_metric_value("perf_latency_avg"))
 
         coordinate_data.set_measurement(coordinate1, rcm1)
         measurement1 = coordinate_data.get_measurement(coordinate1)
         self.assertEqual("modelB_config_0", measurement1.model_variants_name())
+        self.assertEqual(20, measurement1.get_non_gpu_metric_value("perf_throughput"))
+        self.assertEqual(8, measurement1.get_non_gpu_metric_value("perf_latency_avg"))

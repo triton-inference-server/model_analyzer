@@ -80,7 +80,8 @@ class Neighborhood:
 
     def calculate_new_coordinate(self,
                                  magnitude: int,
-                                 disable_clipping: bool = False) -> Coordinate:
+                                 enable_clipping: bool = True,
+                                 clip_value: int = 2) -> Coordinate:
         """
         Based on the measurements in the neighborhood, determine where
         the next location should be
@@ -99,8 +100,9 @@ class Neighborhood:
         """
         step_vector = round(self._get_step_vector() * magnitude)
 
-        if not disable_clipping:
-            step_vector = self._clip_coordinate_values(step_vector)
+        if enable_clipping:
+            step_vector = self._clip_coordinate_values(
+                coordinate=step_vector, clip_value=clip_value)
 
         tmp_new_coordinate = self._home_coordinate + step_vector
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
@@ -108,12 +110,15 @@ class Neighborhood:
 
     def _clip_coordinate_values(self,
                                 coordinate: Coordinate,
-                                max_value: int = 2) -> Coordinate:
+                                clip_value: int) -> Coordinate:
         """
-        Clip the coordinate to be within the values set by `max_value`.
+        Clip the coordinate values to be within the interval range of
+        [-clip_value, clip_value].
         """
+        assert clip_value >= 0, "clip_value must be non-negative number."
+
         for i in range(len(coordinate)):
-            coordinate[i] = min(coordinate[i], max_value)
+            coordinate[i] = max(-clip_value, min(coordinate[i], clip_value))
         return coordinate
 
     def pick_coordinate_to_initialize(self) -> Coordinate:
@@ -228,7 +233,8 @@ class Neighborhood:
             if measurement:
                 weight = home_measurement.compare_measurements(measurement)
             else:
-                weight = 0.0  # Ignore the None measurements.
+                # Minimize the effect of None measurement on the step vector.
+                weight = 0.0
 
             step_vector += vector * weight
 
@@ -238,7 +244,7 @@ class Neighborhood:
     def _compile_neighborhood_measurements(self) -> Tuple[List[Coordinate],
                                                           List[RunConfigMeasurement]]:
         """
-        Gather all the vectors (or directions from the home coordinate)
+        Gather all the vectors (directions from the home coordinate)
         and their corresponding measurements.
 
         Returns

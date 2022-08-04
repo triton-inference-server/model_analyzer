@@ -28,7 +28,6 @@ from .common import test_result_collector as trc
 class TestNeighborhood(trc.TestResultCollector):
 
     def _construct_rcm(self, throughput: float, latency: float):
-        model_name = "modelA"
         model_config_name = ["modelA_config_0"]
 
         # yapf: disable
@@ -42,7 +41,7 @@ class TestNeighborhood(trc.TestResultCollector):
         weights = [1]
 
         rcm = construct_run_config_measurement(
-            model_name=model_name,
+            model_name="",
             model_config_names=model_config_name,
             model_specific_pa_params=MagicMock(),
             gpu_metric_values={},
@@ -219,10 +218,9 @@ class TestNeighborhood(trc.TestResultCollector):
         n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
         n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
 
-        magnitude = 20
-        new_coord = n.calculate_new_coordinate(magnitude,
-                                               disable_clipping=True)
-        self.assertEqual(new_coord, Coordinate([10, 0]))
+        magnitude = 5
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([2, 0]))
 
     def test_calculate_new_coordinate_two_dimensions(self):
         """
@@ -251,10 +249,9 @@ class TestNeighborhood(trc.TestResultCollector):
         n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
         n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
 
-        magnitude = 20
-        new_coord = n.calculate_new_coordinate(magnitude,
-                                               disable_clipping=True)
-        self.assertEqual(new_coord, Coordinate([10, 10]))
+        magnitude = 5
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([2, 2]))
 
     def test_calculate_new_coordinate_larger_magnitude(self):
         """
@@ -284,16 +281,14 @@ class TestNeighborhood(trc.TestResultCollector):
         n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
         n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
 
-        magnitude = 30
+        magnitude = 7
 
         # Run it multiple times to make sure no values are changing
-        new_coord = n.calculate_new_coordinate(magnitude,
-                                               disable_clipping=True)
-        self.assertEqual(new_coord, Coordinate([22, 22]))
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([5, 5]))
 
-        new_coord = n.calculate_new_coordinate(magnitude,
-                                               disable_clipping=True)
-        self.assertEqual(new_coord, Coordinate([22, 22]))
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([5, 5]))
 
     def test_calculate_new_coordinate_out_of_bounds(self):
         """
@@ -337,8 +332,7 @@ class TestNeighborhood(trc.TestResultCollector):
         n.coordinate_data.increment_visit_count(Coordinate([4, 5]))
 
         magnitude = 8
-        new_coord = n.calculate_new_coordinate(magnitude,
-                                               disable_clipping=True)
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
         self.assertEqual(new_coord, Coordinate([7, 2]))
 
     def test_all_same_throughputs(self):
@@ -378,6 +372,100 @@ class TestNeighborhood(trc.TestResultCollector):
         self.assertEqual(step_vector, Coordinate([0, 0, 0]))
 
         magnitude = 5
-        new_coord = n.calculate_new_coordinate(magnitude,
-                                               disable_clipping=True)
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
         self.assertEqual(new_coord, Coordinate([1, 1, 1]))
+
+    def test_clipping_positive_values(self):
+        """
+        Test that clipping on the step vector calculation works correctly
+        on the positive coordinate values when computing the new coordinate.
+
+            -Unclipped step vector: floor(5 * [1/2, 3/4]) = [2, 4]
+            -Clipped w/ clip_value of 2: [2, 2]
+            -Clipped w/ clip_value of 3: [2, 3]
+        """
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]))
+
+        rcm0 = self._construct_rcm(throughput=1, latency=5)
+        rcm1 = self._construct_rcm(throughput=3, latency=5)
+        rcm2 = self._construct_rcm(throughput=7, latency=5)
+
+        n.coordinate_data.set_measurement(Coordinate([0, 0]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([0, 0]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 0]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 0]))
+
+        n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
+
+        magnitude = 5
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([2, 4]))
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=True,
+                                               clip_value=2)
+        self.assertEqual(new_coord, Coordinate([2, 2]))
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=True,
+                                               clip_value=3)
+        self.assertEqual(new_coord, Coordinate([2, 3]))
+
+
+    def test_clipping_negative_values(self):
+        """
+        Test that clipping on the step vector calculation works correctly
+        on the negative coordinate values when computing the new coordinate.
+
+            - Unclipped step vector: floor(5 * [-2/5, -3/4]) = [-2, -4]
+            - Clipped w/ clip_value of 2: [-2, -2]
+            - Clipped w/ clip_value of 3: [-2, -3]
+        """
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([10, 10]))
+
+        rcm0 = self._construct_rcm(throughput=7, latency=5)
+        rcm1 = self._construct_rcm(throughput=3, latency=5)
+        rcm2 = self._construct_rcm(throughput=1, latency=5)
+
+        n.coordinate_data.set_measurement(Coordinate([10, 10]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([10, 10]))
+
+        n.coordinate_data.set_measurement(Coordinate([11, 10]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([11, 10]))
+
+        n.coordinate_data.set_measurement(Coordinate([10, 11]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([10, 11]))
+
+        magnitude = 5
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([8, 6]))
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=True,
+                                               clip_value=2)
+        self.assertEqual(new_coord, Coordinate([8, 8]))
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=True,
+                                               clip_value=3)
+        self.assertEqual(new_coord, Coordinate([8, 7]))

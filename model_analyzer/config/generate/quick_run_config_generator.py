@@ -79,9 +79,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         # This tracks measured results for all coordinates
         self._coordinate_data = CoordinateData()
 
-        # This is our current location that the neighborhood is built around
-        self._origin = self._get_starting_coordinate()
-        self._home_coordinate = self._origin
+        # This is an initial center that the neighborhood is built around.
+        # It is updated every new creation of the neighborhood.
+        self._home_coordinate  = self._get_starting_coordinate()
 
         # This is the coordinate that we want to measure next. It is
         # updated every step of this generator
@@ -89,11 +89,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         # Track the best coordinate seen so far that can be used during
         # the back-off stage.
-        self._best_coordinate = self._origin
+        self._best_coordinate = self._home_coordinate
         self._best_measurement = None
 
-        # TODO: Add cases to use these
-        self._radius_offset = 0
         self._magnitude_scaler = 1.0
 
         self._neighborhood = Neighborhood(
@@ -126,7 +124,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         Determine self._coordinate_to_measure, which is what is used to
         create the next RunConfig
         """
-        if self._is_home_measurement_none():
+        if self._measuring_home_coordinate() and self._get_last_results is None:
             self._take_step_back()
         elif self._neighborhood.enough_coordinates_initialized():
             self._take_step()
@@ -212,9 +210,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         self._magnitude_scaler *= MAGNITUDE_DECAY_RATE
 
-    def _is_home_measurement_none(self):
-        return self._coordinate_to_measure == self._home_coordinate \
-            and self._get_last_results() is None
+    def _measuring_home_coordinate(self):
+        return self._coordinate_to_measure == self._home_coordinate
 
     def _determine_if_done(self, new_coordinate: Coordinate):
         """
@@ -227,8 +224,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self._done = True
 
     def _recreate_neighborhood(self):
-        neighborhood_config = self._search_config.get_neighborhood_config(
-            self._get_radius())
+        neighborhood_config = self._search_config.get_neighborhood_config()
 
         self._neighborhood = Neighborhood(neighborhood_config,
                                           self._home_coordinate)
@@ -248,9 +244,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         dims = self._search_config.get_dimensions()
         values = dims.get_values_for_coordinate(coordinate)
         return values[key]
-
-    def _get_radius(self) -> int:
-        return self._search_config.get_radius() + self._radius_offset
 
     def _get_magnitude(self) -> float:
         magnitude = self._search_config.get_step_magnitude()
@@ -324,22 +317,3 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config(
             self._models[model_num].perf_analyzer_flags())
         return perf_analyzer_config
-
-    def _create_zero_throughput_measurement(self) -> RunConfigMeasurement:
-        """
-        Create a run config measurement with dummy measurement of zero
-        throughput.
-        """
-        metric_type = MetricsManager.get_metric_types(["perf_throughput"])[0]
-        zero_throughput = metric_type(value=0)
-
-        run_config_measurement = RunConfigMeasurement(
-            model_variants_name="",
-            gpu_data={}
-        )
-        run_config_measurement.add_model_config_measurement(
-            model_config_name="",
-            model_specific_pa_params=None,
-            non_gpu_data=[zero_throughput]
-        )
-        return run_config_measurement
