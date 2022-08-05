@@ -14,9 +14,7 @@
 
 # FIXME -- currently assume triton is running
 
-import re
-import psutil
-import tempfile
+import re, csv, sys, psutil, tempfile
 from subprocess import Popen, STDOUT, TimeoutExpired
 from statistics import mean
 from itertools import product
@@ -26,11 +24,19 @@ from time import sleep
 model_repository = "output_model_repository"
 model_name = "ncf"
 #pa_configurations = {"concurrency": [25, 50, 100, 200, 300, 400], "is_async": [False]}
-pa_configurations = {"concurrency": [200], "is_async": [False]}
+pa_configurations = {
+    "model": [model_name],
+    "concurrency": [200, 400],
+    "is_async": [False]
+}
 ##########################
 
 
 class RunConfigData:
+
+    MEMBERS = [
+        "model", "concurrency", "batch_size", "is_async", "measurement_mode"
+    ]
 
     def __init__(self,
                  model="ncf",
@@ -45,14 +51,16 @@ class RunConfigData:
         self.measurement_mode = measurement_mode
 
     def __repr__(self) -> str:
-        members = [
-            attr for attr in dir(self)
-            if not callable(getattr(self, attr)) and not attr.startswith("__")
-        ]
         str = ""
-        for member in members:
+        for member in RunConfigData.MEMBERS:
             str += f"\n{member}: {getattr(self, member)}"
         return str
+
+    def dict(self) -> dict:
+        d = {}
+        for member in RunConfigData.MEMBERS:
+            d[member] = getattr(self, member)
+        return d
 
 
 class RunResultData:
@@ -201,17 +209,32 @@ class PATester():
 
     def __init__(self, triton_pid):
         self._runner = PARunner(triton_pid=triton_pid)
+        self._results = []
 
     def run(self, config: dict):
-        cmds = self._get_cmds(config)
-        for cmd in cmds:
-            print(f"TKG: running {cmd}")
-            self._run_cmd(cmd)
+        run_configs = self._get_configs(config)
+        for run_config in run_configs:
+            self._run_config(run_config)
 
-    def _run_cmd(self, cmd):
+    def print_results(self):
+        fieldnames = RunConfigData.MEMBERS + RunResultData.MEMBERS
+        writer = csv.DictWriter(f=sys.stdout, fieldnames=fieldnames)
+        writer.writeheader()
+        for config, result in self._results:
+            dict1 = config.dict()
+            dict2 = result.dict()
+            dict1.update(dict2)
+            for k, v in dict1.items():
+                if isinstance(v, float):
+                    dict1[k] = f'{v:0.3}'
+            writer.writerow(dict1)
+
+    def _run_config(self, config):
+        cmd = self._get_cmd(config)
+        print(f"TKG: running {cmd}")
         self._runner.run_pa(cmd)
         results = self._runner.get_run_result()
-        print(f"TKG: results for {cmd} were {results}")
+        self._results.append((config, results))
 
     def _get_cmd(self, config: RunConfigData):
         cmd = [
@@ -231,17 +254,16 @@ class PATester():
         param_combinations = list(product(*tuple(config.values())))
         return [dict(zip(config.keys(), vals)) for vals in param_combinations]
 
-    def _get_cmds(self, config: dict):
+    def _get_configs(self, config: dict):
         dict_combos = self._get_dict_combos(config)
-        cmds = []
+        configs = []
 
         for c in dict_combos:
             config = RunConfigData()
             for k, v in c.items():
                 setattr(config, k, v)
-            cmd = self._get_cmd(config)
-            cmds.append(cmd)
-        return cmds
+            configs.append(config)
+        return configs
 
 
 class TritonServer():
@@ -250,6 +272,15 @@ class TritonServer():
         self._proc = None
 
     def start(self, model_repo, model):
+        for proc in psutil.process_iter():
+            try:
+                # Check if process name contains the given name string.
+                if "tritonserver" in proc.name().lower():
+                    raise Exception("Tritonserver already running")
+            except (psutil.NoSuchProcess, psutil.AccessDenied,
+                    psutil.ZombieProcess):
+                pass
+
         print(
             f"Starting tritonserver with repo={model_repo}, model={model_name}")
         cmd = self._get_cmd(model_repo, model)
@@ -261,11 +292,13 @@ class TritonServer():
         print(f"Stopping tritonserver")
         if self._proc is not None:
             self._proc.terminate()
-        try:
-            self._proc.communicate(timeout=10)
-        except TimeoutExpired:
-            self._proc.kill()
-            self._proc.communicate()
+            try:
+                self._proc.communicate(timeout=10)
+            except TimeoutExpired:
+                self._proc.kill()
+                self._proc.communicate()
+        else:
+            print(f"TritonServer does not exist?!")
 
     def _create_process(self, cmd):
         self._triton_log = tempfile.NamedTemporaryFile()
@@ -291,7 +324,13 @@ class TritonServer():
 server = TritonServer()
 triton_pid = server.start(model_repository, model_name)
 
-tester = PATester(triton_pid=triton_pid)
-tester.run(pa_configurations)
+try:
+    tester = PATester(triton_pid=triton_pid)
+    tester.run(pa_configurations)
+    tester.print_results()
+except Exception as e:
+    print("Caught error. Stopping triton first")
+    server.stop()
+    raise e
 
 server.stop()
