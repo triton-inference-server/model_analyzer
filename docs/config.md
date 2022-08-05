@@ -186,6 +186,9 @@ profile_models: <comma-delimited-string-list>
 # Disables automatic config search
 [ run_config_search_disable: <bool> | default: false ]
 
+# Skips the generation of analysis summary reports and tables
+[ skip_summary_reports: <bool> | default: false]
+
 # Number of top configs to show in summary plots
 [ num_configs_per_model: <int> | default: 3]
 
