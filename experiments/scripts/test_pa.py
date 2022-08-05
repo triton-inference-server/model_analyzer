@@ -18,22 +18,28 @@ from statistics import mean
 from itertools import product
 from time import sleep
 
+# REQUIREMENTS:
+#
+# A model repository at the below model_repository variable must exist with
+# the requested model name in it
+#
+#
+
 ### RUN CONFIGURATION ###
 num_times = 1
 model_repository = "output_model_repository"
-model_name = "ncf"
+model_name = "resnet50_libtorch"
 pa_configurations = {
     "model": [model_name],
-    "concurrency": [200],
-    "batch_size": [1],
-    "is_async": [True],
-    "max_threads": [1, 2, 4, 8, 16, 32, 64, 128]
+    "concurrency": [1, 2, 4, 8, 16],
+    "batch_size": [1, 1024],
+    "is_async": [False, True]
 }
 # pa_configurations = {
 #     "model": [model_name],
-#     "concurrency": [1, 2, 4, 8, 16],
-#     "batch_size": [1, 1024],
-#     "is_async": [False, True]
+#     "concurrency": [1,2,4,8,16,32,64,128,256,512,1024,2048],
+#     "batch_size": [1, 16],
+#     "is_async": [False],
 # }
 ##########################
 
@@ -130,10 +136,14 @@ class PARunner:
 
     def _update_run_result(self):
         self._run_result.time = self._time
-        self._run_result.pa_mem_pct = mean(self._pa_mem_pcts[5:])
-        self._run_result.pa_cpu_usage = mean(self._pa_cpu_usages[5:])
-        self._run_result.triton_cpu_usage = mean(self._triton_cpu_usages[5:])
-        self._run_result.triton_mem_pct = mean(self._triton_mem_pcts[5:])
+        self._run_result.pa_mem_pct = mean(
+            self._pa_mem_pcts[5:]) if self._pa_mem_pcts[5:] else 0
+        self._run_result.pa_cpu_usage = mean(
+            self._pa_cpu_usages[5:]) if self._pa_cpu_usages[5:] else 0
+        self._run_result.triton_cpu_usage = mean(
+            self._triton_cpu_usages[5:]) if self._triton_cpu_usages[5:] else 0
+        self._run_result.triton_mem_pct = mean(
+            self._triton_mem_pcts[5:]) if self._triton_mem_pcts[5:] else 0
         r = re.findall(r'\[(\d+)\]', self._pa_output)
         if r:
             self._run_result.num_passes = int(r[-1])
@@ -187,7 +197,7 @@ class PARunner:
         while self._time < self._timeout:
             if process.poll() is not None:
                 self._pa_output = self._get_process_output()
-                #print(f"TKG: PA output is {self._pa_output}")
+                #print(f"PA output is {self._pa_output}")
                 break
 
             with pa_process_util.oneshot():
@@ -248,7 +258,7 @@ class PATester():
 
     def _run_config(self, config):
         cmd = self._get_cmd(config)
-        print(f"TKG: running {cmd}")
+        print(f"running {cmd}")
         self._runner.run_pa(cmd)
         results = self._runner.get_run_result()
         self._add_results(config, results)
@@ -306,7 +316,7 @@ class TritonServer():
             f"Starting tritonserver with repo={model_repo}, model={model_name}")
         cmd = self._get_cmd(model_repo, model)
         self._proc = self._create_process(cmd)
-        sleep(2)
+        sleep(5)
         return self._proc.pid
 
     def stop(self):
