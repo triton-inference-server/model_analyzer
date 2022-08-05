@@ -39,7 +39,7 @@ online mode, the best model configuration will be the one that maximizes
 throughput. If a latency budget is specified to the [profile subcommand](#subcommand-profile) via
 `--latency-budget`, then the best model configuration will be the one with the highest throughput in the given budget.
 
-In online mode the analyze and report subcommands will generate summaries specific to online inference.
+In online mode the profile and report subcommands will generate summaries specific to online inference.
 See the example [online summary](../examples/online_summary.pdf) and [online detailed report](../examples/online_summary.pdf).
 
 ### Offline Mode
@@ -70,7 +70,7 @@ analyzer, and collect metrics like throughput, latency and memory usage for
 any measurements not present in the checkpoint.
 
 Next, it sorts the models specified in the CLI or
-config YAML, using the objectives specified in the config YAML. Finally, it constructs summary PDFs
+config YAML, using any objectives specified in the config YAML. Finally, it constructs summary PDFs
 using the top model configs for each model, as well as across models, if
 requested (See the [Reports](./report.md) section for more details).
 
@@ -178,10 +178,6 @@ analysis_models:
     constraints:
       perf_latency_p99:
         max: 15
-```
-
-```
-$ model-analyzer profile -f /path/to/config.yaml
 ```
 
 **Note**: The checkpoint directory should be removed between consecutive runs of
