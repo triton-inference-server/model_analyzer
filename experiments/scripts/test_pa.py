@@ -17,7 +17,7 @@
 import re
 import psutil
 import tempfile
-from subprocess import Popen, STDOUT
+from subprocess import Popen, STDOUT, TimeoutExpired
 from statistics import mean
 from itertools import product
 from time import sleep
@@ -83,7 +83,7 @@ class RunResultData:
 
 class PARunner:
 
-    def __init__(self):
+    def __init__(self, triton_pid):
         self._pa_output = ""
         self._time = 0
         self._pa_cpu_usages = []
@@ -92,6 +92,7 @@ class PARunner:
         self._triton_mem_pcts = []
         self._timeout = 30
         self._run_result = RunResultData()
+        self._triton_pid = triton_pid
 
     def run_pa(self, cmd):
         self._reset()
@@ -150,7 +151,7 @@ class PARunner:
         INTERVAL = 0.1
         NUM_CORES = psutil.cpu_count()
         pa_process_util = psutil.Process(process.pid)
-        triton_process_util = psutil.Process(15510)
+        triton_process_util = psutil.Process(self._triton_pid)
 
         while self._time < self._timeout:
             if process.poll() is not None:
@@ -191,8 +192,8 @@ class PARunner:
 
 class PATester():
 
-    def __init__(self):
-        self._runner = PARunner()
+    def __init__(self, triton_pid):
+        self._runner = PARunner(triton_pid=triton_pid)
 
     def run(self, config: dict):
         cmds = self._get_cmds(config)
@@ -235,8 +236,54 @@ class PATester():
         return cmds
 
 
+class TritonServer():
+
+    def __init__(self):
+        self._proc = None
+
+    def start(self, model_repo, model):
+        cmd = self._get_cmd(model_repo, model)
+        self._proc = self._create_process(cmd)
+        sleep(2)
+        return self._proc.pid
+
+    def stop(self):
+        if self._proc is not None:
+            self._proc.terminate()
+        try:
+            self._proc.communicate(timeout=10)
+        except TimeoutExpired:
+            self._proc.kill()
+            self._proc.communicate()
+
+    def _create_process(self, cmd):
+        self._triton_log = tempfile.NamedTemporaryFile()
+        try:
+            process = Popen(cmd,
+                            start_new_session=True,
+                            stdout=self._triton_log,
+                            stderr=STDOUT,
+                            encoding='utf-8')
+        except FileNotFoundError as e:
+            raise Exception(f"command failed immediately: {e}")
+        return process
+
+    def _get_cmd(self, model_repo, model):
+        cmd = [
+            "tritonserver", "--model-repository", model_repo, "--http-port",
+            "8000", "--grpc-port", "8001", "--model-control-mode", "explicit",
+            "--load-model", model
+        ]
+        return cmd
+
+
 #x = {"concurrency": [25, 50, 100, 200, 300, 400], "is_async": [False]}
 x = {"concurrency": [200], "is_async": [False]}
 
-tester = PATester()
+server = TritonServer()
+triton_pid = server.start("output_model_repository", "ncf")
+
+tester = PATester(triton_pid=triton_pid)
 tester.run(x)
+
+server.stop()
