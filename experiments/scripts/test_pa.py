@@ -19,10 +19,11 @@ import psutil
 import tempfile
 from subprocess import Popen, STDOUT
 from statistics import mean
-import multiprocessing
+from itertools import product
+from time import sleep
 
 
-class RunConfig:
+class RunConfigData:
 
     def __init__(self,
                  model="ncf",
@@ -47,24 +48,35 @@ class RunConfig:
         return str
 
 
-class RunResult:
+class RunResultData:
+
+    MEMBERS = [
+        "success", "time", "num_passes", "pa_cpu_usage", "pa_num_threads",
+        "pa_mem_pct", "triton_cpu_usage", "triton_mem_pct", "throughput",
+        "latency"
+    ]
 
     def __init__(self):
         self.time = 0
         self.pa_cpu_usage = 0
+        self.pa_num_threads = 0
+        self.pa_mem_pct = 0
         self.triton_cpu_usage = 0
+        self.triton_mem_pct = 0
         self.num_passes = 0
         self.success = False
         self.throughput = 0
         self.latency = 0
 
+    def dict(self) -> dict:
+        d = {}
+        for member in RunResultData.MEMBERS:
+            d[member] = getattr(self, member)
+        return d
+
     def __repr__(self) -> str:
-        members = [
-            attr for attr in dir(self)
-            if not callable(getattr(self, attr)) and not attr.startswith("__")
-        ]
         str = ""
-        for member in members:
+        for member in RunResultData.MEMBERS:
             str += f"\n{member}: {getattr(self, member)}"
         return str
 
@@ -75,9 +87,11 @@ class PARunner:
         self._pa_output = ""
         self._time = 0
         self._pa_cpu_usages = []
+        self._pa_mem_pcts = []
         self._triton_cpu_usages = []
+        self._triton_mem_pcts = []
         self._timeout = 30
-        self._run_result = RunResult()
+        self._run_result = RunResultData()
 
     def run_pa(self, cmd):
         self._reset()
@@ -89,12 +103,11 @@ class PARunner:
         return self._run_result
 
     def _update_run_result(self):
-        print(f"TKG: pa usage ignored was {self._pa_cpu_usages[5:]}")
-        print(f"TKG: triton usage ignored was {self._triton_cpu_usages[5:]}")
-
         self._run_result.time = self._time
+        self._run_result.pa_mem_pct = mean(self._pa_mem_pcts[5:])
         self._run_result.pa_cpu_usage = mean(self._pa_cpu_usages[5:])
         self._run_result.triton_cpu_usage = mean(self._triton_cpu_usages[5:])
+        self._run_result.triton_mem_pct = mean(self._triton_mem_pcts[5:])
         r = re.findall(r'\[(\d+)\]', self._pa_output)
         if r:
             self._run_result.num_passes = int(r[-1])
@@ -113,11 +126,13 @@ class PARunner:
             self._run_result.latency = 0
 
     def _reset(self):
-        self._run_result = RunResult()
+        self._run_result = RunResultData()
         self._pa_output = ""
         self._time = 0
         self._pa_cpu_usages = []
+        self._pa_mem_pcts = []
         self._triton_cpu_usages = []
+        self._triton_mem_pcts = []
 
     def _create_pa_process(self, cmd):
         self._pa_log = tempfile.NamedTemporaryFile()
@@ -133,8 +148,9 @@ class PARunner:
 
     def _resolve_process(self, process):
         INTERVAL = 0.1
+        NUM_CORES = psutil.cpu_count()
         pa_process_util = psutil.Process(process.pid)
-        triton_process_util = psutil.Process(478)
+        triton_process_util = psutil.Process(15510)
 
         while self._time < self._timeout:
             if process.poll() is not None:
@@ -142,11 +158,25 @@ class PARunner:
                 print(f"TKG: result is {self._pa_output}")
                 break
 
-            pa_cpu_util = pa_process_util.cpu_percent()
-            triton_cpu_util = triton_process_util.cpu_percent(INTERVAL)
+            with pa_process_util.oneshot():
+                pa_cpu_util = pa_process_util.cpu_percent() / NUM_CORES
+                pa_num_threads = pa_process_util.num_threads()
+                pa_mem_percent = pa_process_util.memory_percent()
+
+            with triton_process_util.oneshot():
+                triton_cpu_util = triton_process_util.cpu_percent() / NUM_CORES
+                triton_mem_percent = triton_process_util.memory_percent()
+
+            self._run_result.pa_num_threads = max(
+                self._run_result.pa_num_threads, pa_num_threads)
+            self._pa_mem_pcts.append(pa_mem_percent)
             self._pa_cpu_usages.append(pa_cpu_util)
             self._triton_cpu_usages.append(triton_cpu_util)
+            self._triton_mem_pcts.append(triton_mem_percent)
+            # JUNK: Other subprocesses do the IO: print(f"TKG: PA net_io {pa_process_util.io_counters()}")
+            # JUNK: print(f"TKG: PA connections: {pa_process_util.connections()}")
             self._time += INTERVAL
+            sleep(INTERVAL)
 
         else:
             print('perf_analyzer took very long to exit, killing perf_analyzer')
@@ -159,7 +189,7 @@ class PARunner:
         return tmp_output.decode('utf-8')
 
 
-class TestPA():
+class PATester():
 
     def __init__(self):
         self._runner = PARunner()
@@ -172,9 +202,9 @@ class TestPA():
     def _run_cmd(self, cmd):
         self._runner.run_pa(cmd)
         results = self._runner.get_run_result()
-        print(f"TKG: results were {results}")
+        print(f"TKG: results for {cmd} were {results}")
 
-    def _get_cmd(self, config: RunConfig):
+    def _get_cmd(self, config: RunConfigData):
         cmd = [
             "/usr/local/bin/perf_analyzer", "-v", "-u", "localhost:8000", "-i",
             "http", "--measurement-mode", config.measurement_mode, "-m",
@@ -189,7 +219,6 @@ class TestPA():
         return cmd
 
     def _get_dict_combos(self, config: dict):
-        from itertools import product
         param_combinations = list(product(*tuple(config.values())))
         return [dict(zip(config.keys(), vals)) for vals in param_combinations]
 
@@ -198,7 +227,7 @@ class TestPA():
         cmds = []
 
         for c in dict_combos:
-            config = RunConfig()
+            config = RunConfigData()
             for k, v in c.items():
                 setattr(config, k, v)
             cmd = self._get_cmd(config)
@@ -206,8 +235,8 @@ class TestPA():
         return cmds
 
 
-x = {"concurrency": [25, 50, 100, 200, 300, 400], "is_async": [True]}
+#x = {"concurrency": [25, 50, 100, 200, 300, 400], "is_async": [False]}
+x = {"concurrency": [200], "is_async": [False]}
 
-main = TestPA()
-main.run(x)
-print(f"Num cores is {multiprocessing.cpu_count()}")
+tester = PATester()
+tester.run(x)
