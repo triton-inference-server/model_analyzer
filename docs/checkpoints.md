@@ -23,10 +23,10 @@ Defaults](./config.md#config-defaults) section for default location). Checkpoint
 ## When is Checkpointing Done?
 
 Model Analyzer saves a checkpoint in multiple circumstances:
+
 1. Model Analyzer will save a checkpoint after all the perf
    analyzer runs for a given model are complete.
-2. The user can initiate an early exit from profiling using `CTRL-C
-   (SIGINT)`. This will wait for the current perf analyzer run to finish and
+2. The user can initiate an early exit from profiling using `CTRL-C (SIGINT)`. This will wait for the current perf analyzer run to finish and
    then save a checkpoint before exiting.
 3. If the user needs to exit immediately, they send the `SIGINT` 3 times. In
    this case, Model Analyzer will save a checkpoint and exit immediately.
@@ -59,9 +59,10 @@ $ ls -l checkpoints
 Checkpoints are named using consecutive non-negative integers. On startup, Model
 Analyzer identifies the latest checkpoint (highest integer) and loads it. If
 there are any changes to the data in the checkpoint, the checkpoint index is
-incremented before it is saved again, thus creating a new latest checkpoint. 
+incremented before it is saved again, thus creating a new latest checkpoint.
 
 **Note**: Model analyzer does not clean up old checkpoints. It merely guarantees
 that the checkpoint with the highest integer index is the one with the most
 up-to-date measurements. The checkpoint directory should be removed between
-consecutive runs of the `model-analyzer profile` command.
+consecutive runs of the `model-analyzer profile` command if you want to start
+a fresh run.
