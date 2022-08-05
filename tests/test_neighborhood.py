@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import MagicMock
+
 from model_analyzer.config.generate.neighborhood import Neighborhood
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
@@ -19,10 +21,35 @@ from model_analyzer.config.generate.search_dimensions import SearchDimensions
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.coordinate import Coordinate
 
+from .common.test_utils import construct_run_config_measurement
 from .common import test_result_collector as trc
 
 
 class TestNeighborhood(trc.TestResultCollector):
+
+    def _construct_rcm(self, throughput: float, latency: float):
+        model_config_name = ["modelA_config_0"]
+
+        # yapf: disable
+        non_gpu_metric_values = [{
+            "perf_throughput": throughput,
+            "perf_latency_avg": latency
+        }]
+        # yapf: enable
+
+        metric_objectives = [{"perf_throughput": 1}]
+        weights = [1]
+
+        rcm = construct_run_config_measurement(
+            model_name="",
+            model_config_names=model_config_name,
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values={},
+            non_gpu_metric_values=non_gpu_metric_values,
+            metric_objectives=metric_objectives,
+            model_config_weights=weights
+        )
+        return rcm
 
     def test_calc_distance(self):
         a = Coordinate([1, 4, 6, 3])
@@ -38,7 +65,6 @@ class TestNeighborhood(trc.TestResultCollector):
         self.assertAlmostEqual(Neighborhood.calc_distance(a, b), 4.69, places=3)
 
     def test_create_neighborhood(self):
-        cd = CoordinateData()
         dims = SearchDimensions()
         dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
@@ -48,7 +74,7 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, cd, Coordinate([1, 1, 1]))
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
 
         # These are all values within radius of 2 from [1,1,1]
         # but within the bounds (no negative values)
@@ -66,9 +92,6 @@ class TestNeighborhood(trc.TestResultCollector):
         self.assertEqual(tuple(n._neighborhood), tuple(expected_coordinates))
 
     def test_num_initialized(self):
-        cd = CoordinateData()
-        cd.set_throughput(Coordinate([0, 0, 0]), 5)
-
         dims = SearchDimensions()
         dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
@@ -78,30 +101,68 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, cd, Coordinate([1, 1, 1]))
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
 
-        # Started with 1 initialized
-        self.assertEqual(1, n._get_num_initialized_points())
+        rcm = self._construct_rcm(throughput=100, latency=80)
+
+        # Start with 0 initialized
+        self.assertEqual(0, len(n._get_visited_coordinates()))
         self.assertFalse(n.enough_coordinates_initialized())
 
-        cd.set_throughput(Coordinate([0, 0, 1]), 5)
-        self.assertEqual(2, n._get_num_initialized_points())
+        # Home coordinate is ignored. No change to num initialized/visited.
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
+        self.assertEqual(0, len(n._get_visited_coordinates()))
+        self.assertFalse(n.enough_coordinates_initialized())
+
+        # Incremented to 1 initialized
+        n.coordinate_data.set_measurement(Coordinate([0, 0, 0]), rcm)
+        n.coordinate_data.increment_visit_count(Coordinate([0, 0, 0]))
+        self.assertEqual(1, len(n._get_visited_coordinates()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Set same point. No change to num initialized
-        cd.set_throughput(Coordinate([0, 0, 1]), 7)
-        self.assertEqual(2, n._get_num_initialized_points())
+        n.coordinate_data.set_measurement(Coordinate([0, 0, 0]), rcm)
+        n.coordinate_data.increment_visit_count(Coordinate([0, 0, 0]))
+        self.assertEqual(1, len(n._get_visited_coordinates()))
+        self.assertFalse(n.enough_coordinates_initialized())
 
         # Set a point outside of neighborhood
-        cd.set_throughput(Coordinate([0, 0, 4]), 3)
-        self.assertEqual(2, n._get_num_initialized_points())
+        n.coordinate_data.set_measurement(Coordinate([0, 0, 4]), rcm)
+        n.coordinate_data.increment_visit_count(Coordinate([0, 0, 4]))
+        self.assertEqual(1, len(n._get_visited_coordinates()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Set a third point inside of neighborhood
-        cd.set_throughput(Coordinate([1, 0, 0]), 9)
+        n.coordinate_data.set_measurement(Coordinate([1, 0, 0]), rcm)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 0, 0]))
+        self.assertEqual(2, len(n._get_visited_coordinates()))
+        self.assertFalse(n.enough_coordinates_initialized())
+
+        # Set the last point inside of neighborhood
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 0]), rcm)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 0]))
+        self.assertEqual(3, len(n._get_visited_coordinates()))
         self.assertTrue(n.enough_coordinates_initialized())
 
-    def test_weighted_center(self):
+    def test_step_vector(self):
+        """
+        Test _get_step_vector method that determines the direction to step
+        towards from the home coordinate using the collected coordinates
+        and their measurements.
+
+          1. Get vectors from home to the candidate coordinates
+             and their measurements.
+                [2, 1, 1] - [1, 1, 1] = [1, 0, 0]
+                [1, 2, 1] - [1, 1, 1] = [0, 1, 0]
+
+          2. Multiply each vectors by its weights:
+                [1, 0, 0] * 1.5 = [1.5, 0, 0]
+                [0, 1, 0] * 1.0 = [  0, 1, 0]
+
+          2. Compute the average of the vectors:
+                ([1.5, 0, 0] + [0, 1, 0]) / 2 = [3/4, 1/2, 0]
+        """
         dims = SearchDimensions()
         dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
@@ -111,41 +172,30 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        cd = CoordinateData()
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
 
-        n = Neighborhood(nc, cd, Coordinate([1, 1, 1]))
+        rcm0 = self._construct_rcm(throughput=1, latency=5)
+        rcm1 = self._construct_rcm(throughput=7, latency=5)
+        rcm2 = self._construct_rcm(throughput=3, latency=5)
 
-        coordinates = [
-            Coordinate([2, 0, 0]),
-            Coordinate([0, 1, 0]),
-            Coordinate([0, 0, 1])
-        ]
-        weights = [2, 1, 4]
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
 
-        weighted_center = n._determine_weighted_coordinate_center(
-            coordinates, weights)
+        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
 
-        # Weighted center
-        #   First multiply each coordinate by its weights:
-        #      [4,0,0], [0,1,0], [0,0,4]
-        #   Then sum up the coordinates:
-        #      [4,1,4]
-        #   Then divide by sum of weights (2+1+4=7)
-        #      [4/7, 1/7, 4/7]
-        expected_weighted_center = Coordinate([4 / 7, 1 / 7, 4 / 7])
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
 
-        self.assertEqual(weighted_center, expected_weighted_center)
+        step_vector = n._get_step_vector()
+        expected_step_vector = Coordinate([3/4, 1/2, 0])
+        self.assertEqual(step_vector, expected_step_vector)
 
     def test_calculate_new_coordinate_one_dimension(self):
-        """ 
-        Test calculate_new_coordinate for a case where only
-        one of the dimensions increases the throughput
         """
-        cd = CoordinateData()
-        cd.set_throughput(Coordinate([0, 0]), 2)
-        cd.set_throughput(Coordinate([1, 0]), 4)
-        cd.set_throughput(Coordinate([0, 1]), 2)
-
+        Test calculate_new_coordinate for a case where only
+        one of the dimensions increases the measurement.
+        """
         dims = SearchDimensions()
         dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
@@ -153,24 +203,30 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]))
 
-        n = Neighborhood(nc, cd, Coordinate([0, 0]))
+        rcm0 = self._construct_rcm(throughput=1, latency=5)
+        rcm1 = self._construct_rcm(throughput=3, latency=5)
+        rcm2 = self._construct_rcm(throughput=1, latency=5)
 
-        magnitude = 20
-        new_coord = n.calculate_new_coordinate(magnitude)
+        n.coordinate_data.set_measurement(Coordinate([0, 0]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([0, 0]))
 
-        self.assertEqual(new_coord, Coordinate([3, 0]))
+        n.coordinate_data.set_measurement(Coordinate([1, 0]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 0]))
+
+        n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
+
+        magnitude = 5
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([2, 0]))
 
     def test_calculate_new_coordinate_two_dimensions(self):
-        """ 
-        Test calculate_new_coordinate for a case where both of the 
-        dimensions increases the throughput equally
         """
-        cd = CoordinateData()
-        cd.set_throughput(Coordinate([0, 0]), 2)
-        cd.set_throughput(Coordinate([1, 0]), 4)
-        cd.set_throughput(Coordinate([0, 1]), 4)
-
+        Test calculate_new_coordinate for a case where both of the
+        dimensions increases the measurement equally.
+        """
         dims = SearchDimensions()
         dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
@@ -178,24 +234,31 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]))
 
-        n = Neighborhood(nc, cd, Coordinate([0, 0]))
-        magnitude = 20
-        new_coord = n.calculate_new_coordinate(magnitude)
+        rcm0 = self._construct_rcm(throughput=1, latency=5)
+        rcm1 = self._construct_rcm(throughput=3, latency=5)
+        rcm2 = self._construct_rcm(throughput=3, latency=5)
 
-        self.assertEqual(new_coord, Coordinate([1, 1]))
+        n.coordinate_data.set_measurement(Coordinate([0, 0]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([0, 0]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 0]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 0]))
+
+        n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
+
+        magnitude = 5
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([2, 2]))
 
     def test_calculate_new_coordinate_larger_magnitude(self):
-        """ 
-        Test calculate_new_coordinate for a case where both of the 
-        dimensions increases the throughput equally, and magnitude is 
-        larger than 1
         """
-        cd = CoordinateData()
-        cd.set_throughput(Coordinate([0, 0]), 2)
-        cd.set_throughput(Coordinate([1, 0]), 8)
-        cd.set_throughput(Coordinate([0, 1]), 8)
-
+        Test calculate_new_coordinate for a case where both of the
+        dimensions increases the measurement equally, and magnitude is
+        larger.
+        """
         dims = SearchDimensions()
         dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
@@ -203,29 +266,51 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]))
 
-        n = Neighborhood(nc, cd, Coordinate([0, 0]))
-        magnitude = 20
+        rcm0 = self._construct_rcm(throughput=1, latency=5)
+        rcm1 = self._construct_rcm(throughput=7, latency=5)
+        rcm2 = self._construct_rcm(throughput=7, latency=5)
+
+        n.coordinate_data.set_measurement(Coordinate([0, 0]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([0, 0]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 0]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 0]))
+
+        n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
+
+        magnitude = 7
 
         # Run it multiple times to make sure no values are changing
-        new_coord = n.calculate_new_coordinate(magnitude)
-        self.assertEqual(new_coord, Coordinate([2, 2]))
-        new_coord = n.calculate_new_coordinate(magnitude)
-        self.assertEqual(new_coord, Coordinate([2, 2]))
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([5, 5]))
+
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([5, 5]))
 
     def test_calculate_new_coordinate_out_of_bounds(self):
-        """ 
-        Test that calculate_new_coordinate will clamp the result to
-        the search dimention bounds
-
-        Both dimensions are defined to only be from 2-7. The test sets up 
-        the case where the next step WOULD be to [1,8] if not for bounding
-        into the defined range
         """
-        cd = CoordinateData()
-        cd.set_throughput(Coordinate([3, 6]), 100)
-        cd.set_throughput(Coordinate([4, 5]), 1)
+        Test that calculate_new_coordinate will clamp the result to
+        the search dimension bounds.
 
+        Both dimensions are defined to only be from 2-7. The test sets up
+        the case where the next step WOULD be to [11, -2] if not for bounding
+        into the defined range.
+
+          1. Compute the candidate vectors:
+              [4, 5] - [3, 6] = [1, -1]
+
+          2. Compute the step vector:
+              8 * [1, -1] = [8, -8]
+
+          3. Calculate new coordinate:
+              [3, 6] + [8, -8] = [11, -2]
+
+          4. Clamp the new coordinate within bounds:
+              [11, -2] -> [7, 2]
+        """
         dims = SearchDimensions()
         dims.add_dimensions(0, [
             SearchDimension(
@@ -235,46 +320,27 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=8, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([3, 6]))
 
-        n = Neighborhood(nc, cd, Coordinate([3, 6]))
+        rcm0 = self._construct_rcm(throughput=1, latency=5)
+        rcm1 = self._construct_rcm(throughput=3, latency=5)
 
-        self.assertEqual(Coordinate([2, 7]),
-                         n.calculate_new_coordinate(magnitude=3))
+        n.coordinate_data.set_measurement(Coordinate([3, 6]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([3, 6]))
 
-    def test_no_magnitude_vector(self):
+        n.coordinate_data.set_measurement(Coordinate([4, 5]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([4, 5]))
+
+        magnitude = 8
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([7, 2]))
+
+    def test_all_same_throughputs(self):
         """
-        Test that if the coordinate_center and weighted_coordinate_center
-        are the same, then the step vector is all 0s
+        Test that when all the coordinates in the neighborhood has the
+        same throughputs, the step vector is zero and new coordinate is
+        same as the home coordinate.
         """
-        cd = CoordinateData()
-        cd.set_throughput(Coordinate([1, 0]), 4)
-        cd.set_throughput(Coordinate([0, 1]), 4)
-
-        dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
-
-        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-
-        n = Neighborhood(nc, cd, Coordinate([0, 0]))
-
-        uv = n._get_step_vector()
-        expected_uv = Coordinate([0, 0])
-        self.assertEqual(uv, expected_uv)
-
-    def test_all_zero_throughputs(self):
-        """
-        Test that when all the coorindates in the neighborhood has
-        zero throughputs, the weighted center is same as the unweighted center.
-        """
-        cd = CoordinateData()
-        cd.set_throughput(Coordinate([1, 0, 1]), 0)
-        cd.set_throughput(Coordinate([0, 0, 0]), 0)
-        cd.set_throughput(Coordinate([0, 1, 1]), 0)
-        cd.set_throughput(Coordinate([1, 1, 0]), 0)
-
         dims = SearchDimensions()
         dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
@@ -283,10 +349,123 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
 
-        n = Neighborhood(nc, cd, Coordinate([0, 0, 0]))
+        rcm0 = self._construct_rcm(throughput=10, latency=5)
+        rcm1 = self._construct_rcm(throughput=10, latency=5)
+        rcm2 = self._construct_rcm(throughput=10, latency=5)
+        rcm3 = self._construct_rcm(throughput=10, latency=5)
 
-        coordinates, throughputs = n._compile_neighborhood_throughputs()
-        tc = n._determine_weighted_coordinate_center(coordinates, throughputs)
-        expected_tc = n._determine_coordinate_center(coordinates)
-        self.assertEqual(tc, expected_tc)
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 0, 0]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 0, 0]))
+
+        n.coordinate_data.set_measurement(Coordinate([0, 1, 0]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([0, 1, 0]))
+
+        n.coordinate_data.set_measurement(Coordinate([0, 0, 1]), rcm3)
+        n.coordinate_data.increment_visit_count(Coordinate([0, 0, 1]))
+
+        step_vector = n._get_step_vector()
+        self.assertEqual(step_vector, Coordinate([0, 0, 0]))
+
+        magnitude = 5
+        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([1, 1, 1]))
+
+    def test_clipping_positive_values(self):
+        """
+        Test that clipping on the step vector calculation works correctly
+        on the positive coordinate values when computing the new coordinate.
+
+            -Unclipped step vector: floor(5 * [1/2, 3/4]) = [2, 4]
+            -Clipped w/ clip_value of 2: [2, 2]
+            -Clipped w/ clip_value of 3: [2, 3]
+        """
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]))
+
+        rcm0 = self._construct_rcm(throughput=1, latency=5)
+        rcm1 = self._construct_rcm(throughput=3, latency=5)
+        rcm2 = self._construct_rcm(throughput=7, latency=5)
+
+        n.coordinate_data.set_measurement(Coordinate([0, 0]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([0, 0]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 0]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 0]))
+
+        n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
+
+        magnitude = 5
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([2, 4]))
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=True,
+                                               clip_value=2)
+        self.assertEqual(new_coord, Coordinate([2, 2]))
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=True,
+                                               clip_value=3)
+        self.assertEqual(new_coord, Coordinate([2, 3]))
+
+
+    def test_clipping_negative_values(self):
+        """
+        Test that clipping on the step vector calculation works correctly
+        on the negative coordinate values when computing the new coordinate.
+
+            - Unclipped step vector: floor(5 * [-2/5, -3/4]) = [-2, -4]
+            - Clipped w/ clip_value of 2: [-2, -2]
+            - Clipped w/ clip_value of 3: [-2, -3]
+        """
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([10, 10]))
+
+        rcm0 = self._construct_rcm(throughput=7, latency=5)
+        rcm1 = self._construct_rcm(throughput=3, latency=5)
+        rcm2 = self._construct_rcm(throughput=1, latency=5)
+
+        n.coordinate_data.set_measurement(Coordinate([10, 10]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([10, 10]))
+
+        n.coordinate_data.set_measurement(Coordinate([11, 10]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([11, 10]))
+
+        n.coordinate_data.set_measurement(Coordinate([10, 11]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([10, 11]))
+
+        magnitude = 5
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=False)
+        self.assertEqual(new_coord, Coordinate([8, 6]))
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=True,
+                                               clip_value=2)
+        self.assertEqual(new_coord, Coordinate([8, 8]))
+
+        new_coord = n.calculate_new_coordinate(magnitude,
+                                               enable_clipping=True,
+                                               clip_value=3)
+        self.assertEqual(new_coord, Coordinate([8, 7]))

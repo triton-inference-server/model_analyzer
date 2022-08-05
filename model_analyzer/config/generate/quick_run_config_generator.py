@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
 from .config_generator_interface import ConfigGeneratorInterface
 
 from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
+from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.neighborhood import Neighborhood
@@ -22,8 +25,16 @@ from model_analyzer.config.generate.brute_run_config_generator import BruteRunCo
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
-from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.record.metrics_manager import MetricsManager
+
+from model_analyzer.constants import LOGGER_NAME, MAGNITUDE_DECAY_RATE
 
 import logging
 
@@ -35,8 +46,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     Hill climbing algorithm to create RunConfigs
     """
 
-    def __init__(self, search_config, config, gpus, models, client,
-                 model_variant_name_manager):
+    def __init__(self,
+                 search_config: SearchConfig,
+                 config: ConfigCommandProfile,
+                 gpus: List[GPUDevice],
+                 models: List[ConfigModelProfileSpec],
+                 client: TritonClient,
+                 model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
         ----------
@@ -63,27 +79,31 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         # This tracks measured results for all coordinates
         self._coordinate_data = CoordinateData()
 
-        # This is our current location that the neighborhood is built around
-        self._current_coordinate = self._get_starting_coordinate()
+        # This is an initial center that the neighborhood is built around.
+        # It is updated every new creation of the neighborhood.
+        self._home_coordinate  = self._get_starting_coordinate()
 
         # This is the coordinate that we want to measure next. It is
         # updated every step of this generator
-        self._coordinate_to_measure = self._current_coordinate
+        self._coordinate_to_measure = self._home_coordinate
 
-        # TODO: Add cases to use these
-        self._radius_offset = 0
-        self._magnitude_offset = 0
+        # Track the best coordinate seen so far that can be used during
+        # the back-off stage.
+        self._best_coordinate = self._home_coordinate
+        self._best_measurement = None
+
+        self._magnitude_scaler = 1.0
 
         self._neighborhood = Neighborhood(
             self._search_config.get_neighborhood_config(),
-            self._coordinate_data, self._current_coordinate)
+            self._home_coordinate)
 
         self._done = False
 
-    def _is_done(self):
+    def _is_done(self) -> bool:
         return self._done
 
-    def get_configs(self):
+    def get_configs(self) -> RunConfig:
         """
         Returns
         -------
@@ -104,7 +124,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         Determine self._coordinate_to_measure, which is what is used to
         create the next RunConfig
         """
-        if self._neighborhood.enough_coordinates_initialized():
+        if self._measuring_home_coordinate() and self._get_last_results() is None:
+            self._take_step_back()
+        elif self._neighborhood.enough_coordinates_initialized():
             self._take_step()
         else:
             self._pick_coordinate_to_initialize()
@@ -113,7 +135,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             logger.info("No coordinate to measure. Exiting")
             self._done = True
 
-    def set_last_results(self, measurements):
+    def set_last_results(self, measurements: List[RunConfigMeasurement]):
         """
         Given the results from the last RunConfig, make decisions
         about future configurations to generate
@@ -122,27 +144,30 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         ----------
         measurements: List of Measurements from the last run(s)
         """
+        self._print_debug_logs(measurements)
 
         self._coordinate_data.increment_visit_count(self._coordinate_to_measure)
+        self._neighborhood.coordinate_data.increment_visit_count(
+            coordinate=self._coordinate_to_measure)
 
-        if measurements is not None and measurements[0] is not None:
-            assert len(measurements) == 1
+        self._neighborhood.coordinate_data.set_measurement(
+            coordinate=self._coordinate_to_measure, measurement=measurements[0])
 
-            throughput = measurements[0].get_non_gpu_metric_value(
-                "perf_throughput")
+        self._update_best_measurement(measurements)
 
-            self._coordinate_data.set_throughput(
-                coordinate=self._coordinate_to_measure, throughput=throughput)
-            logger.debug(
-                f"Throughput for {self._coordinate_to_measure}: {self._get_last_results()}"
-            )
-        else:
-            self._coordinate_data.set_throughput(
-                coordinate=self._coordinate_to_measure, throughput=0)
-            logger.debug(f"Throughput for {self._coordinate_to_measure}: 0")
+    def _update_best_measurement(self, measurements: List[RunConfigMeasurement]):
+        """Keep track of the best coordinate/measurement seen so far."""
+        measurement = measurements[0]
 
-    def _get_last_results(self):
-        return self._coordinate_data.get_throughput(self._coordinate_to_measure)
+        if self._best_measurement is None:
+            self._best_measurement = measurement
+        elif measurement and measurement.is_better_than(self._best_measurement):
+            self._best_coordinate = self._coordinate_to_measure
+            self._best_measurement = measurement
+
+    def _get_last_results(self) -> RunConfigMeasurement:
+        return self._neighborhood.coordinate_data.get_measurement(
+            coordinate=self._coordinate_to_measure)
 
     def _take_step(self):
         magnitude = self._get_magnitude()
@@ -150,50 +175,64 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         new_coordinate = self._neighborhood.calculate_new_coordinate(magnitude)
         self._determine_if_done(new_coordinate)
 
-        logger.debug(f"Stepping {self._current_coordinate}->{new_coordinate}")
-        self._current_coordinate = new_coordinate
+        logger.debug(f"Stepping {self._home_coordinate}->{new_coordinate}")
+        self._home_coordinate = new_coordinate
         self._coordinate_to_measure = new_coordinate
         self._recreate_neighborhood()
 
-    def _determine_if_done(self, new_coordinate):
+    def _take_step_back(self):
+        new_coordinate = self._neighborhood.get_nearest_neighbor(
+            coordinate_in=self._best_coordinate)
+
+        logger.debug(
+            f"Stepping back: {self._home_coordinate}->{new_coordinate}"
+        )
+        self._home_coordinate = new_coordinate
+        self._coordinate_to_measure = new_coordinate
+        self._recreate_neighborhood()
+
+        self._magnitude_scaler *= MAGNITUDE_DECAY_RATE
+
+    def _measuring_home_coordinate(self):
+        return self._coordinate_to_measure == self._home_coordinate
+
+    def _determine_if_done(self, new_coordinate: Coordinate):
         """
         Based on the new coordinate picked, determine if the generator is done
         and if so, update self._done
         """
-        if new_coordinate == self._current_coordinate:
+        if new_coordinate == self._home_coordinate:
             self._done = True
         if self._coordinate_data.get_visit_count(new_coordinate) >= 2:
             self._done = True
 
     def _recreate_neighborhood(self):
-        neighborhood_config = self._search_config.get_neighborhood_config(
-            self._get_radius())
+        neighborhood_config = self._search_config.get_neighborhood_config()
 
         self._neighborhood = Neighborhood(neighborhood_config,
-                                          self._coordinate_data,
-                                          self._current_coordinate)
+                                          self._home_coordinate)
 
     def _pick_coordinate_to_initialize(self):
         self._coordinate_to_measure = self._neighborhood.pick_coordinate_to_initialize(
         )
         logger.debug(f"Need more data. Measuring {self._coordinate_to_measure}")
 
-    def _get_starting_coordinate(self):
+    def _get_starting_coordinate(self) -> Coordinate:
         min_indexes = self._search_config.get_min_indexes()
         return Coordinate(min_indexes)
 
-    def _get_coordinate_values(self, coordinate, key):
+    def _get_coordinate_values(self,
+                               coordinate: Coordinate,
+                               key: int) -> int:
         dims = self._search_config.get_dimensions()
         values = dims.get_values_for_coordinate(coordinate)
         return values[key]
 
-    def _get_radius(self):
-        return self._search_config.get_radius() + self._radius_offset
+    def _get_magnitude(self) -> float:
+        magnitude = self._search_config.get_step_magnitude()
+        return self._magnitude_scaler * magnitude
 
-    def _get_magnitude(self):
-        return self._search_config.get_step_magnitude() + self._magnitude_offset
-
-    def _get_next_run_config(self):
+    def _get_next_run_config(self) -> RunConfig:
         run_config = RunConfig(self._triton_env)
 
         for i, _ in enumerate(self._models):
@@ -202,7 +241,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         return run_config
 
-    def _get_next_model_run_config(self, model_num):
+    def _get_next_model_run_config(self, model_num: int) -> ModelRunConfig:
         mc = self._get_next_model_config(model_num)
 
         model_variant_name = mc.get_field('name')
@@ -211,7 +250,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         model_name = self._models[model_num].model_name()
         return ModelRunConfig(model_name, mc, pac)
 
-    def _get_next_model_config(self, model_num):
+    def _get_next_model_config(self, model_num: int) -> ModelConfig:
         dimension_values = self._get_coordinate_values(
             self._coordinate_to_measure, model_num)
 
@@ -238,7 +277,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_variant_name_manager=self._model_variant_name_manager)
         return model_config
 
-    def _get_next_perf_analyzer_config(self, model_variant_name, model_num):
+    def _get_next_perf_analyzer_config(self,
+                                       model_variant_name: str,
+                                       model_num: int) -> PerfAnalyzerConfig:
         dimension_values = self._get_coordinate_values(
             self._coordinate_to_measure, model_num)
 
@@ -259,3 +300,21 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config(
             self._models[model_num].perf_analyzer_flags())
         return perf_analyzer_config
+
+    def _print_debug_logs(self, measurements: List[RunConfigMeasurement]):
+        if measurements is not None and measurements[0] is not None:
+            assert len(measurements) == 1
+
+            throughput = measurements[0].get_non_gpu_metric_value(
+                "perf_throughput")
+            avg_latency = measurements[0].get_non_gpu_metric_value(
+                "perf_latency_avg")
+
+            logger.debug(
+                f"Measurement for {self._coordinate_to_measure}: "
+                f"throughput = {throughput}, avg_latency = {avg_latency}"
+            )
+        else:
+            logger.debug(
+                f"Measurement for {self._coordinate_to_measure}: None."
+            )

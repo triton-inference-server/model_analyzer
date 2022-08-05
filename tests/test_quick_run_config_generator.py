@@ -44,7 +44,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                           radius=5,
                           step_magnitude=7,
                           min_initialized=2)
-        self._urcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
+        self._qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
                                              mock_models, MagicMock(),
                                              ModelVariantNameManager())
 
@@ -59,27 +59,27 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         ])
         sc = SearchConfig(dimensions=dims,radius=2, step_magnitude=2, min_initialized=2)
         #yapf: enable
-        urcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
+        qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
                                        MagicMock(), MagicMock(),
                                        ModelVariantNameManager())
-        self.assertEqual(urcg._get_starting_coordinate(), Coordinate([2, 1, 3]))
+        self.assertEqual(qrcg._get_starting_coordinate(), Coordinate([2, 1, 3]))
 
     def test_get_next_run_config(self):
-        """ 
-        Test that get_next_run_config() creates a proper RunConfig 
-        
+        """
+        Test that get_next_run_config() creates a proper RunConfig
+
         Sets up a case where the coordinate is [5,7], which cooresponds to
           - max_batch_size = 32
           - instance_count = 8
           - concurrency = 32*8*2 = 512
-        
+
         Also
         - rate limiter priority should be 1, even for single model
         - dynamic batching should be on
         - existing values from the base model config should persist if they aren't overwritten
         """
-        urcg = self._urcg
-        urcg._coordinate_to_measure = Coordinate([5, 7])
+        qrcg = self._qrcg
+        qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         #yapf: disable
         fake_base_config = {
@@ -113,7 +113,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         with patch(
                 "model_analyzer.config.generate.base_model_config_generator.BaseModelConfigGenerator.get_base_model_config_dict",
                 return_value=fake_base_config):
-            rc = urcg._get_next_run_config()
+            rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
         model_config = rc.model_run_configs()[0].model_config()
@@ -124,9 +124,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(perf_config['batch-size'], 1)
 
     def test_get_next_run_config_multi_model(self):
-        """ 
+        """
         Test that get_next_run_config() creates a proper RunConfig for multi-model
-        
+
         Sets up a case where the coordinate is [1,2,4,5], which cooresponds to
           - model 1 max_batch_size = 2
           - model 1 instance_count = 3
@@ -135,7 +135,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
           - model 2 instance_count = 6
           - model 2 concurrency = 16*6*2 = 192
 
-        Also, 
+        Also,
         - rate limiter priority should be 1
         - dynamic batching should be on
         - existing values from the base model config should persist if they aren't overwritten
@@ -166,11 +166,11 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                           radius=5,
                           step_magnitude=7,
                           min_initialized=2)
-        urcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
+        qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
                                        mock_models, MagicMock(),
                                        ModelVariantNameManager())
 
-        urcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
+        qrcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
 
         #yapf: disable
         fake_base_config1 = {
@@ -231,7 +231,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 "model_analyzer.config.generate.base_model_config_generator.BaseModelConfigGenerator.get_base_model_config_dict"
         ) as f:
             f.side_effect = [fake_base_config1, fake_base_config2]
-            rc = urcg._get_next_run_config()
+            rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 2)
         mc1 = rc.model_run_configs()[0].model_config()
@@ -248,20 +248,18 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(pc2['batch-size'], 1)
         self.assertEqual(pc2['model-version'], 3)
 
-    def test_radius_magnitude(self):
-        """ 
-        Test that get_radius and get_magnitude work correctly 
-
-        Expected radius is 6 (search config has 5, and offset is 1)
-        Expected magnitude is 8 (search config has 7, and offset is 1)
+    def test_magnitude(self):
         """
+        Test that _get_magnitude works correctly.
+        """
+        qrcg = self._qrcg
+        self.assertEqual(qrcg._get_magnitude(), 7)  # initial value
 
-        urcg = self._urcg
-        urcg._radius_offset = 1
-        urcg._magnitude_offset = 1
+        qrcg._magnitude_scaler = 0.5
+        self.assertEqual(qrcg._get_magnitude(), 3.5)
 
-        self.assertEqual(urcg._get_radius(), 6)
-        self.assertEqual(urcg._get_magnitude(), 8)
+        qrcg._magnitude_scaler = 0.1
+        self.assertAlmostEqual(qrcg._get_magnitude(), 0.7)
 
     def tearDown(self):
         patch.stopall()

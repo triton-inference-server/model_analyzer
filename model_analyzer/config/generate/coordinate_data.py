@@ -12,32 +12,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.generate.coordinate import Coordinate
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+
 
 class CoordinateData:
     """
-    Holds throughputs and visit counts for coordinates
+    A class that tracks the measurement data in the current neighborhood
+    and the visit counts of all the coordinates in the coordinate space.
     """
 
     def __init__(self):
-        self._throughputs = {}
+        self._measurements = {}
         self._visit_counts = {}
 
-    def get_throughput(self, coordinate):
+    def get_measurement(self, coordinate: Coordinate) -> RunConfigMeasurement:
         """
-        Get the throughput for the given coordinate. 
-        Returns None if no throughput has been stored for that coordinate yet
-        """
-        key = tuple(coordinate)
-        return self._throughputs.get(key, None)
-
-    def set_throughput(self, coordinate, throughput):
-        """
-        Set the throughput for the given coordinate. 
+        Return the measurement data of the given coordinate.
         """
         key = tuple(coordinate)
-        self._throughputs[key] = throughput
+        return self._measurements.get(key, None)
 
-    def get_visit_count(self, coordinate):
+    def set_measurement(self,
+                        coordinate: Coordinate,
+                        measurement: RunConfigMeasurement):
+        """
+        Set the measurement for the given coordinate.
+        """
+        key = tuple(coordinate)
+        self._measurements[key] = measurement
+
+    def reset_measurements(self):
+        """
+        Resets the collection of measurements.
+        """
+        self._measurements = {}
+
+    def get_visit_count(self, coordinate: Coordinate) -> int:
         """
         Get the visit count for the given coordinate. 
         Returns 0 if the coordinate hasn't been visited yet
@@ -45,7 +56,7 @@ class CoordinateData:
         key = tuple(coordinate)
         return self._visit_counts.get(key, 0)
 
-    def increment_visit_count(self, coordinate):
+    def increment_visit_count(self, coordinate: Coordinate):
         """
         Increase the visit count for the given coordinate by 1
         """

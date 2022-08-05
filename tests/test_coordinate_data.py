@@ -12,36 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import MagicMock
+
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.coordinate import Coordinate
 
+from .common.test_utils import construct_run_config_measurement
 from .common import test_result_collector as trc
 
 
 class TestCoordinateData(trc.TestResultCollector):
 
+    def _construct_rcm(self,
+                       throughput: float,
+                       latency: float,
+                       config_name: str):
+        model_config_name = [config_name]
+
+        # yapf: disable
+        non_gpu_metric_values = [{
+            "perf_throughput": throughput,
+            "perf_latency_avg": latency
+        }]
+        # yapf: enable
+
+        metric_objectives = [{"perf_throughput": 1}]
+        weights = [1]
+
+        rcm = construct_run_config_measurement(
+            model_name="",
+            model_config_names=model_config_name,
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values={},
+            non_gpu_metric_values=non_gpu_metric_values,
+            metric_objectives=metric_objectives,
+            model_config_weights=weights
+        )
+        return rcm
+
     def test_basic(self):
         result_data = CoordinateData()
 
         coordinate = Coordinate([0, 0, 0])
-        self.assertEqual(result_data.get_throughput(coordinate), None)
+        self.assertEqual(result_data.get_measurement(coordinate), None)
         self.assertEqual(result_data.get_visit_count(coordinate), 0)
-
-    def test_throughput(self):
-        result_data = CoordinateData()
-
-        coordinate1 = Coordinate([0, 0, 0])
-        coordinate2 = Coordinate([0, 4, 1])
-
-        result_data.set_throughput(coordinate1, 7)
-        result_data.set_throughput(coordinate2, 9)
-
-        self.assertEqual(7, result_data.get_throughput(coordinate1))
-        self.assertEqual(9, result_data.get_throughput(coordinate2))
-
-        # Overwrite
-        result_data.set_throughput(coordinate2, 12)
-        self.assertEqual(12, result_data.get_throughput(coordinate2))
 
     def test_visit_count(self):
         result_data = CoordinateData()
@@ -59,3 +74,27 @@ class TestCoordinateData(trc.TestResultCollector):
         result_data.increment_visit_count(coordinate1)
         self.assertEqual(3, result_data.get_visit_count(coordinate1))
         self.assertEqual(1, result_data.get_visit_count(coordinate2))
+
+    def test_measurement(self):
+        """
+        Test if CoordinateData can properly set and get the measurements.
+        """
+        coordinate_data = CoordinateData()
+
+        coordinate0 = Coordinate([0, 0, 0])
+        coordinate1 = Coordinate([0, 4, 1])
+
+        rcm0 = self._construct_rcm(10, 5, config_name="modelA_config_0")
+        rcm1 = self._construct_rcm(20, 8, config_name="modelB_config_0")
+
+        coordinate_data.set_measurement(coordinate0, rcm0)
+        measurement0 = coordinate_data.get_measurement(coordinate0)
+        self.assertEqual("modelA_config_0", measurement0.model_variants_name())
+        self.assertEqual(10, measurement0.get_non_gpu_metric_value("perf_throughput"))
+        self.assertEqual(5, measurement0.get_non_gpu_metric_value("perf_latency_avg"))
+
+        coordinate_data.set_measurement(coordinate1, rcm1)
+        measurement1 = coordinate_data.get_measurement(coordinate1)
+        self.assertEqual("modelB_config_0", measurement1.model_variants_name())
+        self.assertEqual(20, measurement1.get_non_gpu_metric_value("perf_throughput"))
+        self.assertEqual(8, measurement1.get_non_gpu_metric_value("perf_latency_avg"))

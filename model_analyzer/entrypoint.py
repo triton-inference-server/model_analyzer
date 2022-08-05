@@ -28,6 +28,7 @@ import sys
 import os
 import logging
 import shutil
+from pprint import pformat
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -235,7 +236,7 @@ def main():
 
     setup_logging(quiet=args.quiet, verbose=args.verbose)
 
-    logger.debug(config.get_all_config())
+    logger.debug("\n%s", pformat(config.get_all_config()))
 
     # Launch subcommand handlers
     server = None
