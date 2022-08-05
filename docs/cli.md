@@ -126,6 +126,10 @@ $ model-analyzer profile -m /home/model_repo --output-model-repository-path=/hom
 
 4. Run profile over manually defined configurations for a models `classification_malaria_v1` and `classification_chestxray_v1` located in `/home/model_repo` using the YAML config file
 
+```
+$ model-analyzer profile -f /path/to/config.yaml
+```
+
 The contents of `config.yaml` are shown below.
 
 ```yaml
