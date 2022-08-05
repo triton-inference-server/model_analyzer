@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# FIXME -- currently assume triton is running
-
 import re, csv, sys, psutil, tempfile
 from subprocess import Popen, STDOUT, TimeoutExpired
 from statistics import mean
@@ -21,21 +19,30 @@ from itertools import product
 from time import sleep
 
 ### RUN CONFIGURATION ###
+num_times = 1
 model_repository = "output_model_repository"
 model_name = "ncf"
-#pa_configurations = {"concurrency": [25, 50, 100, 200, 300, 400], "is_async": [False]}
 pa_configurations = {
     "model": [model_name],
-    "concurrency": [200, 400],
-    "is_async": [False]
+    "concurrency": [200],
+    "batch_size": [1],
+    "is_async": [True],
+    "max_threads": [1, 2, 4, 8, 16, 32, 64, 128]
 }
+# pa_configurations = {
+#     "model": [model_name],
+#     "concurrency": [1, 2, 4, 8, 16],
+#     "batch_size": [1, 1024],
+#     "is_async": [False, True]
+# }
 ##########################
 
 
 class RunConfigData:
 
     MEMBERS = [
-        "model", "concurrency", "batch_size", "is_async", "measurement_mode"
+        "model", "concurrency", "batch_size", "is_async", "max_threads",
+        "measurement_mode"
     ]
 
     def __init__(self,
@@ -43,11 +50,13 @@ class RunConfigData:
                  concurrency=1,
                  batch_size=1,
                  is_async=False,
+                 max_threads=16,
                  measurement_mode="count_windows"):
         self.model = model
         self.concurrency = concurrency
         self.batch_size = batch_size
         self.is_async = is_async
+        self.max_threads = max_threads
         self.measurement_mode = measurement_mode
 
     def __repr__(self) -> str:
@@ -68,7 +77,7 @@ class RunResultData:
     MEMBERS = [
         "success", "time", "num_passes", "pa_cpu_usage", "pa_num_threads",
         "pa_mem_pct", "triton_cpu_usage", "triton_mem_pct", "throughput",
-        "latency"
+        "latency", "average_batch_size"
     ]
 
     def __init__(self):
@@ -82,6 +91,7 @@ class RunResultData:
         self.success = False
         self.throughput = 0
         self.latency = 0
+        self.average_batch_size = 0
 
     def dict(self) -> dict:
         d = {}
@@ -130,16 +140,22 @@ class PARunner:
         else:
             self._run_result.num_passes = 0
         r = re.search(
-            'Concurrency: [0-9.]+, throughput: ([0-9.]+) infer/sec, latency ([0-9.]+) usec',
+            'Concurrency: [0-9.e+]+, throughput: ([0-9.e+]+) infer/sec, latency ([0-9.e+]+) usec',
             self._pa_output)
         if r:
             self._run_result.success = True
-            self._run_result.throughput = r.group(1)
-            self._run_result.latency = r.group(2)
+            self._run_result.throughput = float(r.group(1))
+            self._run_result.latency = float(r.group(2))
         else:
             self._run_result.success = False
             self._run_result.throughput = 0
             self._run_result.latency = 0
+
+        if self._run_result.success:
+            r1 = re.search('Inference count: ([0-9.e+]+)', self._pa_output)
+            r2 = re.search('Execution count: ([0-9.e+]+)', self._pa_output)
+            self._run_result.average_batch_size = float(r1.group(1)) / float(
+                r2.group(1))
 
     def _reset(self):
         self._run_result = RunResultData()
@@ -211,10 +227,11 @@ class PATester():
         self._runner = PARunner(triton_pid=triton_pid)
         self._results = []
 
-    def run(self, config: dict):
+    def run(self, config: dict, num_tries: int):
         run_configs = self._get_configs(config)
         for run_config in run_configs:
-            self._run_config(run_config)
+            for _ in range(num_tries):
+                self._run_config(run_config)
 
     def print_results(self):
         fieldnames = RunConfigData.MEMBERS + RunResultData.MEMBERS
@@ -226,7 +243,7 @@ class PATester():
             dict1.update(dict2)
             for k, v in dict1.items():
                 if isinstance(v, float):
-                    dict1[k] = f'{v:0.3}'
+                    dict1[k] = f'{v:0.1f}'
             writer.writerow(dict1)
 
     def _run_config(self, config):
@@ -234,6 +251,9 @@ class PATester():
         print(f"TKG: running {cmd}")
         self._runner.run_pa(cmd)
         results = self._runner.get_run_result()
+        self._add_results(config, results)
+
+    def _add_results(self, config, results):
         self._results.append((config, results))
 
     def _get_cmd(self, config: RunConfigData):
@@ -242,7 +262,8 @@ class PATester():
             "http", "--measurement-mode", config.measurement_mode, "-m",
             config.model, "-b",
             str(config.batch_size), "--concurrency-range",
-            str(config.concurrency)
+            str(config.concurrency), "--max-threads",
+            str(config.max_threads)
         ]
         if config.is_async:
             cmd += ["--async"]
@@ -326,7 +347,7 @@ triton_pid = server.start(model_repository, model_name)
 
 try:
     tester = PATester(triton_pid=triton_pid)
-    tester.run(pa_configurations)
+    tester.run(pa_configurations, num_times)
     tester.print_results()
 except Exception as e:
     print("Caught error. Stopping triton first")
