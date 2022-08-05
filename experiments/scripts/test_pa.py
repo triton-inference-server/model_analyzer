@@ -22,6 +22,13 @@ from statistics import mean
 from itertools import product
 from time import sleep
 
+### RUN CONFIGURATION ###
+model_repository = "output_model_repository"
+model_name = "ncf"
+#pa_configurations = {"concurrency": [25, 50, 100, 200, 300, 400], "is_async": [False]}
+pa_configurations = {"concurrency": [200], "is_async": [False]}
+##########################
+
 
 class RunConfigData:
 
@@ -156,7 +163,7 @@ class PARunner:
         while self._time < self._timeout:
             if process.poll() is not None:
                 self._pa_output = self._get_process_output()
-                print(f"TKG: result is {self._pa_output}")
+                #print(f"TKG: PA output is {self._pa_output}")
                 break
 
             with pa_process_util.oneshot():
@@ -198,6 +205,7 @@ class PATester():
     def run(self, config: dict):
         cmds = self._get_cmds(config)
         for cmd in cmds:
+            print(f"TKG: running {cmd}")
             self._run_cmd(cmd)
 
     def _run_cmd(self, cmd):
@@ -242,12 +250,15 @@ class TritonServer():
         self._proc = None
 
     def start(self, model_repo, model):
+        print(
+            f"Starting tritonserver with repo={model_repo}, model={model_name}")
         cmd = self._get_cmd(model_repo, model)
         self._proc = self._create_process(cmd)
         sleep(2)
         return self._proc.pid
 
     def stop(self):
+        print(f"Stopping tritonserver")
         if self._proc is not None:
             self._proc.terminate()
         try:
@@ -277,13 +288,10 @@ class TritonServer():
         return cmd
 
 
-#x = {"concurrency": [25, 50, 100, 200, 300, 400], "is_async": [False]}
-x = {"concurrency": [200], "is_async": [False]}
-
 server = TritonServer()
-triton_pid = server.start("output_model_repository", "ncf")
+triton_pid = server.start(model_repository, model_name)
 
 tester = PATester(triton_pid=triton_pid)
-tester.run(x)
+tester.run(pa_configurations)
 
 server.stop()
