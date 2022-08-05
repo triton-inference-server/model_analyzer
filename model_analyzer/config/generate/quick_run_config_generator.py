@@ -124,7 +124,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         Determine self._coordinate_to_measure, which is what is used to
         create the next RunConfig
         """
-        if self._measuring_home_coordinate() and self._get_last_results is None:
+        if self._measuring_home_coordinate() and self._get_last_results() is None:
             self._take_step_back()
         elif self._neighborhood.enough_coordinates_initialized():
             self._take_step()
@@ -144,31 +144,14 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         ----------
         measurements: List of Measurements from the last run(s)
         """
+        self._print_debug_logs(measurements)
 
         self._coordinate_data.increment_visit_count(self._coordinate_to_measure)
         self._neighborhood.coordinate_data.increment_visit_count(
             coordinate=self._coordinate_to_measure)
 
-        if measurements is not None and measurements[0] is not None:
-            assert len(measurements) == 1
-
-            throughput = measurements[0].get_non_gpu_metric_value(
-                "perf_throughput")
-            avg_latency = measurements[0].get_non_gpu_metric_value(
-                "perf_latency_avg")
-
-            self._neighborhood.coordinate_data.set_measurement(
-                coordinate=self._coordinate_to_measure, measurement=measurements[0])
-            logger.debug(
-                f"Measurement for {self._coordinate_to_measure}: "
-                f"throughput = {throughput}, avg_latency = {avg_latency}"
-            )
-        else:
-            self._neighborhood.coordinate_data.set_measurement(
-                coordinate=self._coordinate_to_measure, measurement=None)
-            logger.debug(
-                f"Measurement for {self._coordinate_to_measure}: None."
-            )
+        self._neighborhood.coordinate_data.set_measurement(
+            coordinate=self._coordinate_to_measure, measurement=measurements[0])
 
         self._update_best_measurement(measurements)
 
@@ -317,3 +300,21 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config(
             self._models[model_num].perf_analyzer_flags())
         return perf_analyzer_config
+
+    def _print_debug_logs(self, measurements: List[RunConfigMeasurement]):
+        if measurements is not None and measurements[0] is not None:
+            assert len(measurements) == 1
+
+            throughput = measurements[0].get_non_gpu_metric_value(
+                "perf_throughput")
+            avg_latency = measurements[0].get_non_gpu_metric_value(
+                "perf_latency_avg")
+
+            logger.debug(
+                f"Measurement for {self._coordinate_to_measure}: "
+                f"throughput = {throughput}, avg_latency = {avg_latency}"
+            )
+        else:
+            logger.debug(
+                f"Measurement for {self._coordinate_to_measure}: None."
+            )
