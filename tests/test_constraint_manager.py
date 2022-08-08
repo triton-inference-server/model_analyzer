@@ -210,6 +210,148 @@ class TestConstraintManager(trc.TestResultCollector):
         self.assertFalse(
             ConstraintManager.satisfies_constraints(constraints, rcm))
 
+    def test_single_model_max_failure_percentage(self):
+        """
+        Test that constraint_failure_percentage works for a single model
+        with a max style constraint
+        """
+        config = self._create_single_model_with_constraints()
+        constraints = [
+            ConstraintManager.get_constraints_for_all_models(config)['model_A']
+        ]
+
+        # Constraint is P99 Latency max of 100
+        rcm = self._construct_rcm({"perf_latency_p99": 225})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            125)
+        rcm = self._construct_rcm({"perf_latency_p99": 150})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            50)
+
+        rcm = self._construct_rcm({"perf_latency_p99": 100})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            0)
+
+        rcm = self._construct_rcm({"perf_latency_p99": 99})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            0)
+
+    def test_single_model_min_failure_percentage(self):
+        """
+        Test that constraint_failure_percentage works for a single model
+        with a min style constraint
+        """
+
+        config = self._create_single_model_global_constraints()
+        constraints = [
+            ConstraintManager.get_constraints_for_all_models(config)['model_A']
+        ]
+
+        # Constraint is throughput min of 100
+        rcm = self._construct_rcm({"perf_throughput": 25})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            75)
+        rcm = self._construct_rcm({"perf_throughput": 50})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            50)
+
+        rcm = self._construct_rcm({"perf_throughput": 100})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            0)
+
+        rcm = self._construct_rcm({"perf_throughput": 101})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            0)
+
+    def test_multi_model_failure_percentage(self):
+        """
+        Test that failure percentage works for a multi model setup
+        """
+        config = self._create_multi_model_both_constraints()
+        mm_constraints_dict = ConstraintManager.get_constraints_for_all_models(
+            config)
+        constraints = [
+            mm_constraints_dict['model_A'], mm_constraints_dict['model_B']
+        ]
+
+        # Constraints are:
+        #  Model A: P99 Latency max of 50
+        #  Model B: Throughput min of 100
+
+        # Model A & B are both at boundaries
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 50,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 100
+        }])
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            0)
+
+        # Model A exceeds latency, Model B misses on throughput - each by 20%
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 60,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 80
+        }])
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            40)
+
+        # Model A exceeds latency by 40%, Model B misses on throughput by 10%
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 70,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 90
+        }])
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            50)
+
+    def test_single_model_max_failure_percentage(self):
+        """
+        Test that constraint_failure_percentage works for a single model
+        with a max style constraint
+        """
+        config = self._create_single_model_with_constraints()
+        constraints = [
+            ConstraintManager.get_constraints_for_all_models(config)['model_A']
+        ]
+
+        # Constraint is P99 Latency max of 100
+        rcm = self._construct_rcm({"perf_latency_p99": 225})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            125)
+        rcm = self._construct_rcm({"perf_latency_p99": 150})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            50)
+
+        rcm = self._construct_rcm({"perf_latency_p99": 100})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            0)
+
+        rcm = self._construct_rcm({"perf_latency_p99": 99})
+        self.assertEqual(
+            ConstraintManager.constraint_failure_percentage(constraints, rcm),
+            0)
+
     def _create_single_model_no_constraints(self):
         args = self._create_args()
         yaml_str = ("""

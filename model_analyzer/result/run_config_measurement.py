@@ -448,6 +448,24 @@ class RunConfigMeasurement:
         # Step 3: Reverse the polarity to match what is expected in the docstring return
         return -1 * weighted_rcm_score
 
+    def compare_constraints(self, other: 'RunConfigMeasurement') -> float:
+        """
+        Compares two RunConfigMeasurements based on how close
+        each RCM is to passing their constraints
+
+        Parameters
+        ----------
+        other: RunConfigMeasurement
+            
+        Returns
+        -------
+        float
+           Positive value if other is better
+           Negaive value is self is better
+           Zero if they are equal 
+        """
+        NotImplemented
+
     def _compare_measurements(self, other: 'RunConfigMeasurement') -> int:
         """
         Compares two RunConfigMeasurements based on each
