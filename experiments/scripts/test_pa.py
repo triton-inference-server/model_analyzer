@@ -17,50 +17,52 @@ from subprocess import Popen, STDOUT, TimeoutExpired
 from statistics import mean
 from itertools import product
 from time import sleep
+from pynvml import *
 
 # REQUIREMENTS:
 #
-# A model repository at the below model_repository variable must exist with
-# the requested model name in it
+# - nvml python lib:
+#     pip install nvidia-ml-py
 #
+# - A model repository at the below model_repository variable must exist with
+#   the requested model name in it
 #
 
 ### RUN CONFIGURATION ###
-num_times = 1
+num_times = 1  # Number of times to run each pa configuration
 model_repository = "output_model_repository"
 model_name = "resnet50_libtorch"
+
+# This will run the full cross product of all listed options
 pa_configurations = {
     "model": [model_name],
-    "concurrency": [1, 2, 4, 8, 16],
-    "batch_size": [1, 1024],
+    "concurrency": [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024],
+    "batch_size": [1],
+    "protocol": ["grpc", "http"],
     "is_async": [False, True]
 }
-# pa_configurations = {
-#     "model": [model_name],
-#     "concurrency": [1,2,4,8,16,32,64,128,256,512,1024,2048],
-#     "batch_size": [1, 16],
-#     "is_async": [False],
-# }
 ##########################
 
 
 class RunConfigData:
 
     MEMBERS = [
-        "model", "concurrency", "batch_size", "is_async", "max_threads",
-        "measurement_mode"
+        "model", "concurrency", "batch_size", "protocol", "is_async",
+        "max_threads", "measurement_mode"
     ]
 
     def __init__(self,
                  model="ncf",
                  concurrency=1,
                  batch_size=1,
+                 protocol="http",
                  is_async=False,
                  max_threads=16,
                  measurement_mode="count_windows"):
         self.model = model
         self.concurrency = concurrency
         self.batch_size = batch_size
+        self.protocol = protocol
         self.is_async = is_async
         self.max_threads = max_threads
         self.measurement_mode = measurement_mode
@@ -82,8 +84,8 @@ class RunResultData:
 
     MEMBERS = [
         "success", "time", "num_passes", "pa_cpu_usage", "pa_num_threads",
-        "pa_mem_pct", "triton_cpu_usage", "triton_mem_pct", "throughput",
-        "latency", "average_batch_size"
+        "pa_mem_pct", "triton_cpu_usage", "triton_mem_pct", "gpu_utilization",
+        "gpu_mem_pct", "throughput", "latency", "average_batch_size"
     ]
 
     def __init__(self):
@@ -93,6 +95,8 @@ class RunResultData:
         self.pa_mem_pct = 0
         self.triton_cpu_usage = 0
         self.triton_mem_pct = 0
+        self.gpu_utilization = 0
+        self.gpu_mem_pct = 0
         self.num_passes = 0
         self.success = False
         self.throughput = 0
@@ -114,16 +118,19 @@ class RunResultData:
 
 class PARunner:
 
-    def __init__(self, triton_pid):
+    def __init__(self, triton_pid, gpu_handle):
         self._pa_output = ""
         self._time = 0
         self._pa_cpu_usages = []
         self._pa_mem_pcts = []
         self._triton_cpu_usages = []
         self._triton_mem_pcts = []
+        self._gpu_utilizations = []
+        self._gpu_mem_pcts = []
         self._timeout = 30
         self._run_result = RunResultData()
         self._triton_pid = triton_pid
+        self._gpu_handle = gpu_handle
 
     def run_pa(self, cmd):
         self._reset()
@@ -144,6 +151,10 @@ class PARunner:
             self._triton_cpu_usages[5:]) if self._triton_cpu_usages[5:] else 0
         self._run_result.triton_mem_pct = mean(
             self._triton_mem_pcts[5:]) if self._triton_mem_pcts[5:] else 0
+        self._run_result.gpu_utilization = mean(
+            self._gpu_utilizations[5:]) if self._gpu_utilizations[5:] else 0
+        self._run_result.gpu_mem_pct = mean(
+            self._gpu_mem_pcts[5:]) if self._gpu_mem_pcts[5:] else 0
         r = re.findall(r'\[(\d+)\]', self._pa_output)
         if r:
             self._run_result.num_passes = int(r[-1])
@@ -175,6 +186,8 @@ class PARunner:
         self._pa_mem_pcts = []
         self._triton_cpu_usages = []
         self._triton_mem_pcts = []
+        self._gpu_mem_pcts = []
+        self._gpu_utilizations = []
 
     def _create_pa_process(self, cmd):
         self._pa_log = tempfile.NamedTemporaryFile()
@@ -209,8 +222,12 @@ class PARunner:
                 triton_cpu_util = triton_process_util.cpu_percent() / NUM_CORES
                 triton_mem_percent = triton_process_util.memory_percent()
 
+            gpu_utilizations = nvmlDeviceGetUtilizationRates(gpu_handle)
+
             self._run_result.pa_num_threads = max(
                 self._run_result.pa_num_threads, pa_num_threads)
+            self._gpu_utilizations.append(gpu_utilizations.gpu)
+            self._gpu_mem_pcts.append(gpu_utilizations.memory)
             self._pa_mem_pcts.append(pa_mem_percent)
             self._pa_cpu_usages.append(pa_cpu_util)
             self._triton_cpu_usages.append(triton_cpu_util)
@@ -233,8 +250,8 @@ class PARunner:
 
 class PATester():
 
-    def __init__(self, triton_pid):
-        self._runner = PARunner(triton_pid=triton_pid)
+    def __init__(self, triton_pid, gpu_handle):
+        self._runner = PARunner(triton_pid=triton_pid, gpu_handle=gpu_handle)
         self._results = []
 
     def run(self, config: dict, num_tries: int):
@@ -267,18 +284,26 @@ class PATester():
         self._results.append((config, results))
 
     def _get_cmd(self, config: RunConfigData):
+        # yapf: disable
         cmd = [
-            "/usr/local/bin/perf_analyzer", "-v", "-u", "localhost:8000", "-i",
-            "http", "--measurement-mode", config.measurement_mode, "-m",
-            config.model, "-b",
-            str(config.batch_size), "--concurrency-range",
-            str(config.concurrency), "--max-threads",
-            str(config.max_threads)
+            "/usr/local/bin/perf_analyzer", "-v",
+            "-i", config.protocol,
+            "--measurement-mode", config.measurement_mode,
+            "-m", config.model,
+            "-b", str(config.batch_size),
+            "--concurrency-range", str(config.concurrency),
+            "--max-threads", str(config.max_threads)
         ]
+        if config.protocol == "http":
+            cmd += ["-u", "localhost:8000"]
+        else:
+            cmd += ["-u", "localhost:8001"]
+
         if config.is_async:
             cmd += ["--async"]
         else:
             cmd += ["--sync"]
+        # yapf: enable
         return cmd
 
     def _get_dict_combos(self, config: dict):
@@ -352,16 +377,25 @@ class TritonServer():
         return cmd
 
 
+nvmlInit()
+# FIXME hardcoded to 1 GPU
+gpu_count = nvmlDeviceGetCount()
+assert gpu_count == 1
+gpu_handle = nvmlDeviceGetHandleByIndex(0)
+
 server = TritonServer()
 triton_pid = server.start(model_repository, model_name)
 
 try:
-    tester = PATester(triton_pid=triton_pid)
+
+    tester = PATester(triton_pid=triton_pid, gpu_handle=gpu_handle)
     tester.run(pa_configurations, num_times)
     tester.print_results()
 except Exception as e:
     print("Caught error. Stopping triton first")
     server.stop()
+    nvmlShutdown()
     raise e
 
 server.stop()
+nvmlShutdown()
