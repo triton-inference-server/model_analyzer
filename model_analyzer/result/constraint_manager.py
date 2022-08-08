@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict
+from typing import List, Dict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 
 class ConstraintManager:
@@ -45,7 +48,7 @@ class ConstraintManager:
     @staticmethod
     def satisfies_constraints(
             constraints: List[Dict[str, Dict[str, int]]],
-            run_config_measurement: "RunConfigMeasurement") -> bool:
+            run_config_measurement: 'RunConfigMeasurement') -> bool:
         """
         Checks that the measurements, for every model, satisfy 
         the provided list of constraints
@@ -82,7 +85,7 @@ class ConstraintManager:
     @staticmethod
     def constraint_failure_percentage(
             constraints: List[Dict[str, Dict[str, int]]],
-            run_config_measurement: "RunConfigMeasurent") -> float:
+            run_config_measurement: 'RunConfigMeasurement') -> float:
         """
         Additive percentage, for every measurement, in every model, of how much 
         the RCM is failing the constraints by
