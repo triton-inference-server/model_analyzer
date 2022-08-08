@@ -19,6 +19,10 @@ from itertools import product
 from time import sleep
 from pynvml import *
 
+# This script will sweep through PA configurations, gather statistics, and then
+# print out a csv to stdout. It does not take any options -- for now everything
+# is specified at the top of the file under RUN CONFIGURATION
+#
 # REQUIREMENTS:
 #
 # - nvml python lib:
@@ -29,11 +33,16 @@ from pynvml import *
 #
 
 ### RUN CONFIGURATION ###
-num_times = 1  # Number of times to run each pa configuration
+# Number of times to run each pa configuration
+num_times = 1
+
+# Path to the model repository
 model_repository = "output_model_repository"
+
+# Name of the model to run (script only supports one model for now)
 model_name = "resnet50_libtorch"
 
-# This will run the full cross product of all listed options
+# This script will run the full cross product of all these listed options
 pa_configurations = {
     "model": [model_name],
     "concurrency": [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024],
@@ -45,6 +54,7 @@ pa_configurations = {
 
 
 class RunConfigData:
+    """ Holds the configuration for one run """
 
     MEMBERS = [
         "model", "concurrency", "batch_size", "protocol", "is_async",
@@ -81,7 +91,7 @@ class RunConfigData:
 
 
 class RunResultData:
-
+    """ Holds the results for one run """
     MEMBERS = [
         "success", "time", "num_passes", "pa_cpu_usage", "pa_num_threads",
         "pa_mem_pct", "triton_cpu_usage", "triton_mem_pct", "gpu_utilization",
@@ -117,6 +127,7 @@ class RunResultData:
 
 
 class PARunner:
+    """ Runs PA and gathers GPU, CPU-PA, and CPU-Triton statistics """
 
     def __init__(self, triton_pid, gpu_handle):
         self._pa_output = ""
@@ -249,6 +260,7 @@ class PARunner:
 
 
 class PATester():
+    """ Primary class that runs through and tests PA configurations """
 
     def __init__(self, triton_pid, gpu_handle):
         self._runner = PARunner(triton_pid=triton_pid, gpu_handle=gpu_handle)
@@ -323,6 +335,7 @@ class PATester():
 
 
 class TritonServer():
+    """ Starts and stops a single triton server """
 
     def __init__(self):
         self._proc = None
