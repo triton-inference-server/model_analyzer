@@ -87,7 +87,6 @@ class ConstraintManager:
         Additive percentage, for every measurement, in every model, of how much 
         the RCM is failing the constraints by
         
-        
         Returns
         -------
         Float
