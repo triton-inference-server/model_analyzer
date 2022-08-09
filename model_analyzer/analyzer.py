@@ -35,6 +35,9 @@ from .model_analyzer_exceptions \
 from .triton.client.client import TritonClient
 from .device.gpu_device import GPUDevice
 
+from pynvml import nvmlInit, nvmlDeviceGetCount, \
+    nvmlDeviceGetHandleByIndex, nvmlDeviceGetUUID
+
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -100,7 +103,15 @@ class Analyzer:
 
         self._create_metrics_manager(client, gpus)
         self._create_model_manager(client, gpus)
-        self._get_server_only_metrics(client)
+
+        skip_server_only_metrics = self._do_checkpoint_server_metrics_match()
+
+        if not skip_server_only_metrics:
+            self._get_server_only_metrics(client)
+        else:
+            logger.info(
+                "GPU devices match checkpoint - skipping server metric acquisition"
+            )
 
         self._profile_models()
 
@@ -344,3 +355,21 @@ class Analyzer:
             x.run_config().model_variants_name()
             for x in self._result_manager.top_n_results(n=n)
         ]
+
+    def _do_checkpoint_server_metrics_match(self) -> bool:
+        foo = nvmlInit()
+        device_count = nvmlDeviceGetCount()
+
+        handles = [
+            nvmlDeviceGetHandleByIndex(device) for device in range(device_count)
+        ]
+
+        uuids = [nvmlDeviceGetUUID(handle) for handle in handles]
+
+        server_only_data = self._result_manager.get_server_only_data()
+
+        for uuid in uuids:
+            if uuid not in server_only_data:
+                return False
+
+        return True
