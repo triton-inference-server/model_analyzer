@@ -303,8 +303,10 @@ class Neighborhood:
                                           ) -> Coordinate:
         """
         Calculate a step vector that steps toward the coordinates that
-        pass the constraints. If no vectors are provided, continue with
-        measurements that are not passing constraints (but is still better).
+        pass the constraints (set default weights to 1.0). When no vectors
+        are provided (meaning there are no neighbors passing constraints),
+        continue with the neighbors that are not passing constraints by
+        comparing how much they are close to passing constraints.
 
         Parameters
         ----------
@@ -328,7 +330,12 @@ class Neighborhood:
                 vectors=vectors, measurements=measurements)
 
         for vector, measurement in zip(vectors, measurements):
-            weight = self._home_measurement.compare_constraints(measurement)
+            if measurement.is_passing_constraints():
+                weight = 1.0  # when home fails & neighbor passes
+            else:
+                weight = self._home_measurement.compare_constraints(
+                    other=measurement)
+
             step_vector += vector * weight
 
         step_vector /= len(vectors)
@@ -337,7 +344,7 @@ class Neighborhood:
     def _get_all_visited_measurements(
             self) -> Tuple[List[Coordinate], List[RunConfigMeasurement]]:
         """
-        Gather all the vectors (directions from the home coordinate)
+        Gather all the visited vectors (directions from the home coordinate)
         and their corresponding measurements.
 
         Returns
