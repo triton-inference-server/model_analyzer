@@ -16,7 +16,7 @@ import math
 from itertools import product
 from copy import deepcopy
 
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.coordinate_data import CoordinateData
@@ -62,7 +62,7 @@ class Neighborhood:
         Return the euclidean distance between two coordinates
         """
 
-        distance = 0
+        distance = 0.0
         for i, _ in enumerate(coordinate1):
             diff = coordinate1[i] - coordinate2[i]
             distance += math.pow(diff, 2)
@@ -98,7 +98,8 @@ class Neighborhood:
         new_coordinate
             The new coordinate computed based on the neighborhood measurements.
         """
-        step_vector = round(self._get_step_vector() * magnitude)
+        step_vector = self._get_step_vector()
+        step_vector = Coordinate.round(step_vector * magnitude)
 
         if enable_clipping:
             step_vector = self._clip_coordinate_values(
@@ -121,7 +122,7 @@ class Neighborhood:
             coordinate[i] = max(-clip_value, min(coordinate[i], clip_value))
         return coordinate
 
-    def pick_coordinate_to_initialize(self) -> Coordinate:
+    def pick_coordinate_to_initialize(self) -> Optional[Coordinate]:
         """
         Based on the initialized coordinate values, pick an unvisited
         coordinate to initialize next.
@@ -141,7 +142,7 @@ class Neighborhood:
 
         return best_coordinate
 
-    def get_nearest_neighbor(self, coordinate_in: Coordinate) -> Coordinate:
+    def get_nearest_neighbor(self, coordinate_in: Coordinate) -> Optional[Coordinate]:
         """
         Find the nearest coordinate to the `coordinate_in` among the
         coordinates within the current neighborhood.
@@ -287,7 +288,7 @@ class Neighborhood:
         """
         visited_coordinates = self._get_visited_coordinates()
 
-        covered_values_per_dimension = [
+        covered_values_per_dimension: List[Dict[Coordinate, bool]] = [
             {} for _ in range(self._config.get_num_dimensions())
         ]
 

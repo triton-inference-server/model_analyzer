@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Tuple
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
@@ -30,7 +31,7 @@ class CoordinateData:
         """
         Return the measurement data of the given coordinate.
         """
-        key = tuple(coordinate)
+        key: Tuple[Coordinate, ...] = tuple(coordinate)
         return self._measurements.get(key, None)
 
     def set_measurement(self,
@@ -39,7 +40,7 @@ class CoordinateData:
         """
         Set the measurement for the given coordinate.
         """
-        key = tuple(coordinate)
+        key: Tuple[Coordinate, ...] = tuple(coordinate)
         self._measurements[key] = measurement
 
     def reset_measurements(self):
@@ -53,13 +54,13 @@ class CoordinateData:
         Get the visit count for the given coordinate. 
         Returns 0 if the coordinate hasn't been visited yet
         """
-        key = tuple(coordinate)
+        key: Tuple[Coordinate, ...] = tuple(coordinate)
         return self._visit_counts.get(key, 0)
 
     def increment_visit_count(self, coordinate: Coordinate):
         """
         Increase the visit count for the given coordinate by 1
         """
-        key = tuple(coordinate)
+        key: Tuple[Coordinate, ...] = tuple(coordinate)
         new_count = self.get_visit_count(coordinate) + 1
         self._visit_counts[key] = new_count
