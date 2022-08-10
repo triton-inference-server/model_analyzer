@@ -292,7 +292,7 @@ class ModelConfigMeasurement:
         return weighted_score
 
     def _get_non_gpu_data_from_tag(self):
-        return {type(metric).tag: metric for metric in self._non_gpu_data}
+        return {metric.tag: metric for metric in self._non_gpu_data}
 
     def _deserialize_non_gpu_data(self, serialized_non_gpu_data):
         non_gpu_data = []

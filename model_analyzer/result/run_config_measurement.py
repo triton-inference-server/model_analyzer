@@ -581,7 +581,7 @@ class RunConfigMeasurement:
         return gpu_data
 
     def _get_avg_gpu_data_from_tag(self) -> Dict[str, Record]:
-        return {type(metric).tag: metric for metric in self._avg_gpu_data}
+        return {metric.tag: metric for metric in self._avg_gpu_data}
 
     def _deserialize_model_config_measurements(
         self, serialized_model_config_measurements: List[Dict]
