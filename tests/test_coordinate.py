@@ -92,7 +92,7 @@ class TestCoordinate(trc.TestResultCollector):
 
     def test_round(self):
         c1 = Coordinate([0.1, 4.6, 3.9])
-        c2 = round(c1)
+        c2 = Coordinate.round(c1)
         self.assertEqual(c2, Coordinate([0, 5, 4]))
 
     def test_iterator(self):
