@@ -68,6 +68,9 @@ class TritonServerDocker(TritonServer):
         assert self._server_config['model-repository'], \
             "Triton Server requires --model-repository argument to be set."
 
+        logger.info(f"Pulling docker image {self._tritonserver_image}")
+        self._docker_client.images.pull(self._tritonserver_image)
+
     def start(self, env=None):
         """
         Starts the tritonserver docker container using docker-py
