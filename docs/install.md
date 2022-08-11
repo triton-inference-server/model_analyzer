@@ -57,15 +57,7 @@ This ensures the Triton SDK container has access to the model
 config variants that Model Analyzer creates.<br><br>
 **Important:** You must ensure the `<path-to-output-model-repo>` is identical on both sides of the mount<br><br>
 
-**4. Add PDF support to the container**  
-Model Analyzer uses `pdfkit` for report generation. Once inside the Triton SDK container, you will need to install
-`wkhtmltopdf`:
-
-```
-apt-get update && apt-get install wkhtmltopdf
-```
-
-**5. Run Model Analyzer with Docker Launch Mode**  
+**4. Run Model Analyzer with Docker Launch Mode**  
 Be sure to use `--triton-launch-mode=docker`, when running Model Analyzer.<br><br>
 
 # Alternative Installation Methods
