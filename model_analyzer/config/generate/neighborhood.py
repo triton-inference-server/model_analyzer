@@ -30,8 +30,7 @@ class Neighborhood:
     a 'home' coordinate
     """
 
-    def __init__(self,
-                 neighborhood_config: NeighborhoodConfig,
+    def __init__(self, neighborhood_config: NeighborhoodConfig,
                  home_coordinate: Coordinate):
         """
         Parameters
@@ -55,8 +54,7 @@ class Neighborhood:
         return self._coordinate_data
 
     @classmethod
-    def calc_distance(cls,
-                      coordinate1: Coordinate,
+    def calc_distance(cls, coordinate1: Coordinate,
                       coordinate2: Coordinate) -> float:
         """ 
         Return the euclidean distance between two coordinates
@@ -98,19 +96,18 @@ class Neighborhood:
         new_coordinate
             The new coordinate computed based on the neighborhood measurements.
         """
-        step_vector = self._get_step_vector()
-        step_vector = Coordinate.round(step_vector * magnitude)
+        step_vector = self._get_step_vector() * magnitude
+        step_vector.round()
 
         if enable_clipping:
-            step_vector = self._clip_coordinate_values(
-                coordinate=step_vector, clip_value=clip_value)
+            step_vector = self._clip_coordinate_values(coordinate=step_vector,
+                                                       clip_value=clip_value)
 
         tmp_new_coordinate = self._home_coordinate + step_vector
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
         return new_coordinate
 
-    def _clip_coordinate_values(self,
-                                coordinate: Coordinate,
+    def _clip_coordinate_values(self, coordinate: Coordinate,
                                 clip_value: int) -> Coordinate:
         """
         Clip the coordinate values to be within the interval range of
@@ -142,7 +139,8 @@ class Neighborhood:
 
         return best_coordinate
 
-    def get_nearest_neighbor(self, coordinate_in: Coordinate) -> Optional[Coordinate]:
+    def get_nearest_neighbor(self,
+                             coordinate_in: Coordinate) -> Optional[Coordinate]:
         """
         Find the nearest coordinate to the `coordinate_in` among the
         coordinates within the current neighborhood.
@@ -173,15 +171,13 @@ class Neighborhood:
 
         return neighborhood
 
-    def _get_potential_neighborhood(self,
-                                    coordinate: Coordinate,
+    def _get_potential_neighborhood(self, coordinate: Coordinate,
                                     radius: int) -> List[Coordinate]:
         bounds = self._get_bounds(coordinate, radius)
         potential_values = self._enumerate_all_values_in_bounds(bounds)
         return [Coordinate(x) for x in potential_values]
 
-    def _get_bounds(self,
-                    coordinate: Coordinate,
+    def _get_bounds(self, coordinate: Coordinate,
                     radius: int) -> List[List[int]]:
         bounds = []
         for i in range(self._config.get_num_dimensions()):
@@ -193,8 +189,8 @@ class Neighborhood:
             bounds.append([lower_bound, upper_bound])
         return bounds
 
-    def _enumerate_all_values_in_bounds(self,
-                                        bounds: List[List[int]]) -> List[List[int]]:
+    def _enumerate_all_values_in_bounds(
+            self, bounds: List[List[int]]) -> List[List[int]]:
         possible_index_values = []
         for bound in bounds:
             possible_index_values.append(list(range(bound[0], bound[1])))
@@ -242,8 +238,8 @@ class Neighborhood:
         step_vector /= len(vectors)
         return step_vector
 
-    def _compile_neighborhood_measurements(self) -> Tuple[List[Coordinate],
-                                                          List[RunConfigMeasurement]]:
+    def _compile_neighborhood_measurements(
+            self) -> Tuple[List[Coordinate], List[RunConfigMeasurement]]:
         """
         Gather all the vectors (directions from the home coordinate)
         and their corresponding measurements.
@@ -298,10 +294,9 @@ class Neighborhood:
 
         return covered_values_per_dimension
 
-    def _get_num_uncovered_values(self,
-                                  coordinate: Coordinate,
-                                  covered_values_per_dimension: List[Dict[Coordinate, bool]]
-                                  ) -> int:
+    def _get_num_uncovered_values(
+            self, coordinate: Coordinate,
+            covered_values_per_dimension: List[Dict[Coordinate, bool]]) -> int:
         """
         Determine how many of the coordinate dimensions in the input coordinate have values
         that are not covered in covered_values_per_dimension
