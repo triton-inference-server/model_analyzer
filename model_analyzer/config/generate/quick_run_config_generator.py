@@ -310,12 +310,12 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
             throughput = measurements[0].get_non_gpu_metric_value(
                 "perf_throughput")
-            avg_latency = measurements[0].get_non_gpu_metric_value(
-                "perf_latency_avg")
+            latency = measurements[0].get_non_gpu_metric_value(
+                "perf_latency_p99")
 
             logger.debug(
                 f"Measurement for {self._coordinate_to_measure}: "
-                f"throughput = {throughput}, avg_latency = {avg_latency}"
+                f"throughput = {throughput}, latency = {latency}"
             )
         else:
             logger.debug(
