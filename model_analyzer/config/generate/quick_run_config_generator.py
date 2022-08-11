@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import Dict, List, Union, Optional, Generator
 
 from .config_generator_interface import ConfigGeneratorInterface
 
@@ -90,7 +90,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         # Track the best coordinate seen so far that can be used during
         # the back-off stage.
         self._best_coordinate = self._home_coordinate
-        self._best_measurement = None
+        self._best_measurement: Optional[RunConfigMeasurement] = None
 
         self._magnitude_scaler = 1.0
 
@@ -103,7 +103,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _is_done(self) -> bool:
         return self._done
 
-    def get_configs(self) -> RunConfig:
+    def get_configs(self) -> Generator[RunConfig, None, None]:
         """
         Returns
         -------
@@ -135,7 +135,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             logger.info("No coordinate to measure. Exiting")
             self._done = True
 
-    def set_last_results(self, measurements: List[RunConfigMeasurement]):
+    def set_last_results(self, measurements: List[Union[RunConfigMeasurement,
+                                                        None]]):
         """
         Given the results from the last RunConfig, make decisions
         about future configurations to generate
@@ -155,7 +156,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         self._update_best_measurement(measurements)
 
-    def _update_best_measurement(self, measurements: List[RunConfigMeasurement]):
+    def _update_best_measurement(self, measurements: List[Union[RunConfigMeasurement,
+                                                                None]]):
         """Keep track of the best coordinate/measurement seen so far."""
         measurement = measurements[0]
 
@@ -223,7 +225,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def _get_coordinate_values(self,
                                coordinate: Coordinate,
-                               key: int) -> int:
+                               key: int) -> Dict[str, Union[int, float]]:
         dims = self._search_config.get_dimensions()
         values = dims.get_values_for_coordinate(coordinate)
         return values[key]
@@ -301,7 +303,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self._models[model_num].perf_analyzer_flags())
         return perf_analyzer_config
 
-    def _print_debug_logs(self, measurements: List[RunConfigMeasurement]):
+    def _print_debug_logs(self, measurements: List[Union[RunConfigMeasurement,
+                                                         None]]):
         if measurements is not None and measurements[0] is not None:
             assert len(measurements) == 1
 

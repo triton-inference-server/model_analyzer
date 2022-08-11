@@ -17,7 +17,7 @@ from copy import copy
 
 class Coordinate:
     """
-    Class to define a coordinate in n-dimention space
+    Class to define a coordinate in n-dimension space
     """
 
     def __init__(self, val):
@@ -70,11 +70,10 @@ class Coordinate:
                 return False
         return True
 
-    def __round__(self):
-        ret = Coordinate(self._values)
-        for i, _ in enumerate(ret):
-            ret[i] = round(ret[i])
-        return ret
+    def round(self):
+        """ Rounds the coordinate in-place """
+        for i, _ in enumerate(self._values):
+            self._values[i] = round(self._values[i])
 
     def _add_coordinate(self, other):
         ret = Coordinate(self._values)
@@ -111,6 +110,17 @@ class Coordinate:
         for i, v in enumerate(self._values):
             ret[i] = v / other
         return ret
+
+    def __iter__(self):
+        self._idx = 0
+        return self
+
+    def __next__(self):
+        if self._idx < len(self._values):
+            val = self._values[self._idx]
+            self._idx += 1
+            return val
+        raise StopIteration
 
     def __str__(self):
         return str(self._values)

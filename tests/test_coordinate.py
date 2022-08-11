@@ -92,8 +92,8 @@ class TestCoordinate(trc.TestResultCollector):
 
     def test_round(self):
         c1 = Coordinate([0.1, 4.6, 3.9])
-        c2 = round(c1)
-        self.assertEqual(c2, Coordinate([0, 5, 4]))
+        c1.round()
+        self.assertEqual(c1, Coordinate([0, 5, 4]))
 
     def test_iterator(self):
         c1 = Coordinate([2, 4, 1, 7])
