@@ -69,14 +69,6 @@ This ensures the Triton SDK container has access to the model
 config variants that Model Analyzer creates.<br><br>
 **Important:** You must ensure the absolutes paths are identical on both sides of the mounts<br><br>
 
-**3. Add PDF support to the container**  
-Model Analyzer uses `pdfkit` for report generation. Once inside the Triton SDK container, you will need to install
-`wkhtmltopdf`:
-
-```
-apt-get update && apt-get install wkhtmltopdf
-```
-
 ## `Step 3:` Profile the `add_sub` model
 
 ---
