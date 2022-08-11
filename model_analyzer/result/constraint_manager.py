@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, Tuple, Union, TYPE_CHECKING
+from typing import List, Dict, TYPE_CHECKING
 
 from model_analyzer.record.record import Record
 
@@ -72,11 +72,10 @@ class ConstraintManager:
         if constraints:
             for (i, model_metrics) in enumerate(run_config_measurement.data()):
                 for metric in model_metrics:
-                    matches, constraint = ConstraintManager._metric_matches_constraint(
-                        metric, constraints[i])
-                    if matches:
+                    if ConstraintManager._metric_matches_constraint(
+                            metric, constraints[i]):
                         if ConstraintManager._get_failure_percentage(
-                                metric, constraint) > 0:
+                                metric, constraints[i][metric.tag]) > 0:
                             return False
 
         return True
@@ -93,27 +92,25 @@ class ConstraintManager:
         -------
         float
         """
-        failure_percentage = 0.0
+        failure_percentage: float = 0
 
         if constraints:
             for (i, model_metrics) in enumerate(run_config_measurement.data()):
                 for metric in model_metrics:
-                    matches, constraint = ConstraintManager._metric_matches_constraint(
-                        metric, constraints[i])
-                    if matches:
+                    if ConstraintManager._metric_matches_constraint(
+                            metric, constraints[i]):
                         failure_percentage += ConstraintManager._get_failure_percentage(
-                            metric, constraint)
+                            metric, constraints[i][metric.tag])
 
         return failure_percentage * 100
 
     @staticmethod
     def _metric_matches_constraint(
-        metric: Record, constraint: Dict[str, Dict[str, int]]
-    ) -> Tuple[bool, Union[Dict[str, int], None]]:
+            metric: Record, constraint: Dict[str, Dict[str, int]]) -> bool:
         if constraint is not None and metric.tag in constraint:
-            return (True, constraint[metric.tag])
+            return True
         else:
-            return (False, None)
+            return False
 
     @staticmethod
     def _get_failure_percentage(metric: Record, constraint: Dict[str,
