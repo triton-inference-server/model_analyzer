@@ -35,9 +35,6 @@ from .model_analyzer_exceptions \
 from .triton.client.client import TritonClient
 from .device.gpu_device import GPUDevice
 
-from pynvml import nvmlInit, nvmlDeviceGetCount, \
-    nvmlDeviceGetHandleByIndex, nvmlDeviceGetUUID
-
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -104,7 +101,7 @@ class Analyzer:
         self._create_metrics_manager(client, gpus)
         self._create_model_manager(client, gpus)
 
-        self._get_server_only_metrics(client)
+        self._get_server_only_metrics(client, gpus)
 
         self._profile_models()
 
@@ -216,14 +213,14 @@ class Analyzer:
             metrics_manager=self._metrics_manager,
             state_manager=self._state_manager)
 
-    def _get_server_only_metrics(self, client):
-        if self._do_checkpoint_server_metrics_match():
-            logger.info(
-                "GPU devices match checkpoint - skipping server metric acquisition"
-            )
-            return
-
+    def _get_server_only_metrics(self, client, gpus):
         if self._config.triton_launch_mode != 'c_api':
+            if self._do_checkpoint_gpus_match(gpus):
+                logger.info(
+                    "GPU devices match checkpoint - skipping server metric acquisition"
+                )
+                return
+
             logger.info('Profiling server only metrics...')
             self._server.start()
             client.wait_for_server_ready(self._config.client_max_retries)
@@ -355,20 +352,11 @@ class Analyzer:
             for x in self._result_manager.top_n_results(n=n)
         ]
 
-    def _do_checkpoint_server_metrics_match(self) -> bool:
-        foo = nvmlInit()
-        device_count = nvmlDeviceGetCount()
-
-        handles = [
-            nvmlDeviceGetHandleByIndex(device) for device in range(device_count)
-        ]
-
-        uuids = [nvmlDeviceGetUUID(handle) for handle in handles]
-
+    def _do_checkpoint_gpus_match(self, gpus) -> bool:
         server_only_data = self._result_manager.get_server_only_data()
 
-        for uuid in uuids:
-            if uuid not in server_only_data:
+        for gpu in gpus:
+            if gpu._device_uuid not in server_only_data:
                 return False
 
         return True
