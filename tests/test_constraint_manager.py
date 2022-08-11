@@ -322,36 +322,6 @@ class TestConstraintManager(trc.TestResultCollector):
             ConstraintManager.constraint_failure_percentage(constraints, rcm),
             50)
 
-    def test_single_model_max_failure_percentage(self):
-        """
-        Test that constraint_failure_percentage works for a single model
-        with a max style constraint
-        """
-        config = self._create_single_model_with_constraints()
-        constraints = [
-            ConstraintManager.get_constraints_for_all_models(config)['model_A']
-        ]
-
-        # Constraint is P99 Latency max of 100
-        rcm = self._construct_rcm({"perf_latency_p99": 225})
-        self.assertEqual(
-            ConstraintManager.constraint_failure_percentage(constraints, rcm),
-            125)
-        rcm = self._construct_rcm({"perf_latency_p99": 150})
-        self.assertEqual(
-            ConstraintManager.constraint_failure_percentage(constraints, rcm),
-            50)
-
-        rcm = self._construct_rcm({"perf_latency_p99": 100})
-        self.assertEqual(
-            ConstraintManager.constraint_failure_percentage(constraints, rcm),
-            0)
-
-        rcm = self._construct_rcm({"perf_latency_p99": 99})
-        self.assertEqual(
-            ConstraintManager.constraint_failure_percentage(constraints, rcm),
-            0)
-
     def _create_single_model_no_constraints(self):
         args = self._create_args()
         yaml_str = ("""

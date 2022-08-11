@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, TYPE_CHECKING
+from typing import List, Dict, Tuple, Union, TYPE_CHECKING
+
+from model_analyzer.record.record import Record
 
 if TYPE_CHECKING:
     from model_analyzer.result.run_config_measurement import RunConfigMeasurement
@@ -70,15 +72,12 @@ class ConstraintManager:
         if constraints:
             for (i, model_metrics) in enumerate(run_config_measurement.data()):
                 for metric in model_metrics:
-                    if constraints[i] is not None and metric.tag in constraints[
-                            i]:
-                        constraint = constraints[i][metric.tag]
-                        if 'min' in constraint:
-                            if metric.value() < constraint['min']:
-                                return False
-                        if 'max' in constraint:
-                            if metric.value() > constraint['max']:
-                                return False
+                    matches, constraint = ConstraintManager._metric_matches_constraint(
+                        metric, constraints[i])
+                    if matches:
+                        if ConstraintManager._get_failure_percentage(
+                                metric, constraint) > 0:
+                            return False
 
         return True
 
@@ -92,25 +91,43 @@ class ConstraintManager:
         
         Returns
         -------
-        Float
+        float
         """
-        failure_percentage = 0
+        failure_percentage = 0.0
 
         if constraints:
             for (i, model_metrics) in enumerate(run_config_measurement.data()):
                 for metric in model_metrics:
-                    if constraints[i] is not None and metric.tag in constraints[
-                            i]:
-                        constraint = constraints[i][metric.tag]
-                        if 'min' in constraint:
-                            if metric.value() < constraint['min']:
-                                failure_percentage += (
-                                    constraint['min'] -
-                                    metric.value()) / constraint['min']
-                        if 'max' in constraint:
-                            if metric.value() > constraint['max']:
-                                failure_percentage += (
-                                    metric.value() -
-                                    constraint['max']) / constraint['max']
+                    matches, constraint = ConstraintManager._metric_matches_constraint(
+                        metric, constraints[i])
+                    if matches:
+                        failure_percentage += ConstraintManager._get_failure_percentage(
+                            metric, constraint)
 
         return failure_percentage * 100
+
+    @staticmethod
+    def _metric_matches_constraint(
+        metric: Record, constraint: Dict[str, Dict[str, int]]
+    ) -> Tuple[bool, Union[Dict[str, int], None]]:
+        if constraint is not None and metric.tag in constraint:
+            return (True, constraint[metric.tag])
+        else:
+            return (False, None)
+
+    @staticmethod
+    def _get_failure_percentage(metric: Record, constraint: Dict[str,
+                                                                 int]) -> float:
+
+        failure_percentage = 0
+
+        if 'min' in constraint:
+            if metric.value() < constraint['min']:
+                failure_percentage = (constraint['min'] -
+                                      metric.value()) / constraint['min']
+        if 'max' in constraint:
+            if metric.value() > constraint['max']:
+                failure_percentage = (metric.value() -
+                                      constraint['max']) / constraint['max']
+
+        return failure_percentage

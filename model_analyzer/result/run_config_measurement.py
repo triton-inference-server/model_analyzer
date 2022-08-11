@@ -462,7 +462,7 @@ class RunConfigMeasurement:
         -------
         float
            Positive value if other is closer to passing constraints
-           Negative value is self is closer to passing constraints
+           Negative value if self is closer to passing constraints
            Zero if they are equally close to passing constraints
            None if either RCM is passing constraints
         """
