@@ -353,10 +353,8 @@ class Analyzer:
         ]
 
     def _do_checkpoint_gpus_match(self, gpus) -> bool:
-        server_only_data = self._result_manager.get_server_only_data()
+        ckpt_data = self._result_manager.get_server_only_data()
+        ckpt_uuids = [ckpt_uuid for ckpt_uuid in ckpt_data.keys()]
+        gpu_uuids = [gpu._device_uuid for gpu in gpus]
 
-        for gpu in gpus:
-            if gpu._device_uuid not in server_only_data:
-                return False
-
-        return True
+        return sorted(ckpt_uuids) == sorted(gpu_uuids)
