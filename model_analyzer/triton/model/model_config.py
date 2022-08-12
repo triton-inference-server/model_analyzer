@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
 from copy import deepcopy
 
 from numba import cuda
@@ -409,9 +409,8 @@ class ModelConfig:
         default_kind = 'GPU' if cuda.is_available() else 'CPU'
         default_count = 1
 
-        if 'instance_group' not in model_config:
-            instance_group_list = [{}]
-        else:
+        instance_group_list: List[Dict[str, Any]] = [{}]
+        if 'instance_group' in model_config:
             instance_group_list = model_config['instance_group']
 
         kind_to_count = {}
