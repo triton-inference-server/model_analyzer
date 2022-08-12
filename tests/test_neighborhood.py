@@ -145,6 +145,44 @@ class TestNeighborhood(trc.TestResultCollector):
         self.assertEqual(3, len(n._get_visited_coordinates()))
         self.assertTrue(n.enough_coordinates_initialized())
 
+    def test_clip_vector_values(self):
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1]))
+
+        # Test if it catches negative clip value.
+        with self.assertRaises(AssertionError):
+            n._clip_vector_values(Coordinate([0, 0]), clip_value=-3)
+
+        # Test if it clips large, positive values.
+        c = n._clip_vector_values(Coordinate([10, 5]), clip_value=2)
+        self.assertEqual(c, Coordinate([2, 1]))
+        c = n._clip_vector_values(Coordinate([100, 5]), clip_value=2)
+        self.assertEqual(c, Coordinate([2, 0]))
+
+        # Test if it clips large, negative values
+        c = n._clip_vector_values(Coordinate([-10, 5]), clip_value=2)
+        self.assertEqual(c, Coordinate([-2, 1]))
+        c = n._clip_vector_values(Coordinate([-10, -5]), clip_value=2)
+        self.assertEqual(c, Coordinate([-2, -1]))
+        c = n._clip_vector_values(Coordinate([-100, 5]), clip_value=2)
+        self.assertEqual(c, Coordinate([-2, 0]))
+
+        # Test if it skips clipping if values are within range
+        c = n._clip_vector_values(Coordinate([1, 0]), clip_value=2)
+        self.assertEqual(c, Coordinate([1, 0]))
+        c = n._clip_vector_values(Coordinate([-1, 0]), clip_value=2)
+        self.assertEqual(c, Coordinate([-1, 0]))
+        c = n._clip_vector_values(Coordinate([-1, 2]), clip_value=2)
+        self.assertEqual(c, Coordinate([-1, 2]))
+        c = n._clip_vector_values(Coordinate([0, 0]), clip_value=2)
+        self.assertEqual(c, Coordinate([0, 0]))
+
     def test_step_vector(self):
         """
         Test _get_step_vector method that determines the direction to step
@@ -381,7 +419,7 @@ class TestNeighborhood(trc.TestResultCollector):
         on the positive coordinate values when computing the new coordinate.
 
             -Unclipped step vector: floor(5 * [1/2, 3/4]) = [2, 4]
-            -Clipped w/ clip_value of 2: [2, 2]
+            -Clipped w/ clip_value of 2: [1, 2]
             -Clipped w/ clip_value of 3: [2, 3]
         """
         dims = SearchDimensions()
@@ -415,7 +453,7 @@ class TestNeighborhood(trc.TestResultCollector):
         new_coord = n.calculate_new_coordinate(magnitude,
                                                enable_clipping=True,
                                                clip_value=2)
-        self.assertEqual(new_coord, Coordinate([2, 2]))
+        self.assertEqual(new_coord, Coordinate([1, 2]))
 
         new_coord = n.calculate_new_coordinate(magnitude,
                                                enable_clipping=True,
@@ -429,7 +467,7 @@ class TestNeighborhood(trc.TestResultCollector):
         on the negative coordinate values when computing the new coordinate.
 
             - Unclipped step vector: floor(5 * [-2/5, -3/4]) = [-2, -4]
-            - Clipped w/ clip_value of 2: [-2, -2]
+            - Clipped w/ clip_value of 2: [-1, -2]
             - Clipped w/ clip_value of 3: [-2, -3]
         """
         dims = SearchDimensions()
@@ -463,7 +501,7 @@ class TestNeighborhood(trc.TestResultCollector):
         new_coord = n.calculate_new_coordinate(magnitude,
                                                enable_clipping=True,
                                                clip_value=2)
-        self.assertEqual(new_coord, Coordinate([8, 8]))
+        self.assertEqual(new_coord, Coordinate([9, 8]))
 
         new_coord = n.calculate_new_coordinate(magnitude,
                                                enable_clipping=True,
