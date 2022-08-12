@@ -100,24 +100,42 @@ class Neighborhood:
         step_vector.round()
 
         if enable_clipping:
-            step_vector = self._clip_coordinate_values(coordinate=step_vector,
-                                                       clip_value=clip_value)
+            step_vector = self._clip_vector_values(vector=step_vector,
+                                                   clip_value=clip_value)
 
         tmp_new_coordinate = self._home_coordinate + step_vector
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
         return new_coordinate
 
-    def _clip_coordinate_values(self, coordinate: Coordinate,
-                                clip_value: int) -> Coordinate:
+    def _clip_vector_values(self, vector: Coordinate,
+                            clip_value: int) -> Coordinate:
         """
-        Clip the coordinate values to be within the interval range of
-        [-clip_value, clip_value].
+        Clip the values of the vector to be within the range of
+        [-clip_value, clip_value]. The clipping **approximately** preserves
+        the direction of the vector (e.g. if the clip_value is 2, then
+        [10, 5] will be clipped to [2, 1] instead of [2, 2]). It may not
+        be exact due to the rounding of the values at the end.
+
+        Parameters
+        ----------
+        vector
+            an input vector that may require clipping
+        clip_value
+            a non-negative integer that bounds the values of the input vector
+
+        Returns
+        -------
+        vector
+            a vector with all of its values within [-clip_value, clip_value]
         """
         assert clip_value >= 0, "clip_value must be non-negative number."
 
-        for i in range(len(coordinate)):
-            coordinate[i] = max(-clip_value, min(coordinate[i], clip_value))
-        return coordinate
+        max_value = max(abs(c) for c in vector)
+
+        if max_value > clip_value and max_value != 0:
+            for i in range(len(vector)):
+                vector[i] = round(clip_value * vector[i]/max_value)
+        return vector
 
     def pick_coordinate_to_initialize(self) -> Optional[Coordinate]:
         """
