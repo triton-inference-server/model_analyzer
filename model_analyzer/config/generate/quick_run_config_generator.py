@@ -145,8 +145,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         ----------
         measurements: List of Measurements from the last run(s)
         """
-        self._print_debug_logs(measurements)
-
         self._coordinate_data.increment_visit_count(self._coordinate_to_measure)
         self._neighborhood.coordinate_data.increment_visit_count(
             coordinate=self._coordinate_to_measure)
@@ -154,16 +152,31 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._neighborhood.coordinate_data.set_measurement(
             coordinate=self._coordinate_to_measure, measurement=measurements[0])
 
-        self._update_best_measurement(measurements)
+        if measurements[0] is not None:
+            self._update_best_measurement(measurement=measurements[0])
 
-    def _update_best_measurement(self, measurements: List[Union[RunConfigMeasurement,
-                                                                None]]):
+        self._print_debug_logs(measurements)
+
+    def _update_best_measurement(self, measurement: RunConfigMeasurement):
         """Keep track of the best coordinate/measurement seen so far."""
-        measurement = measurements[0]
-
         if self._best_measurement is None:
+            self._best_coordinate = self._coordinate_to_measure
             self._best_measurement = measurement
-        elif measurement and measurement.is_better_than(self._best_measurement):
+
+        elif not self._best_measurement.is_passing_constraints() \
+            and measurement.is_passing_constraints():
+            self._best_coordinate = self._coordinate_to_measure
+            self._best_measurement = measurement
+
+        elif not self._best_measurement.is_passing_constraints() \
+            and not measurement.is_passing_constraints() \
+            and self._best_measurement.compare_constraints(measurement) > 0:
+            self._best_coordinate = self._coordinate_to_measure
+            self._best_measurement = measurement
+
+        elif self._best_measurement.is_passing_constraints() \
+            and measurement.is_passing_constraints() \
+            and self._best_measurement.compare_measurements(measurement) > 0:
             self._best_coordinate = self._coordinate_to_measure
             self._best_measurement = measurement
 
@@ -313,9 +326,15 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             latency = measurements[0].get_non_gpu_metric_value(
                 "perf_latency_p99")
 
+            best_throughput = self._best_measurement.get_non_gpu_metric_value(
+                "perf_throughput")
+            best_latency = self._best_measurement.get_non_gpu_metric_value(
+                "perf_latency_p99")
+
             logger.debug(
                 f"Measurement for {self._coordinate_to_measure}: "
-                f"throughput = {throughput}, latency = {latency}"
+                f"throughput = {throughput}, latency = {latency} "
+                f"(best throughput: {best_throughput}, best_latency: {best_latency})"
             )
         else:
             logger.debug(
