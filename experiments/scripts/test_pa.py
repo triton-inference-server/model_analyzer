@@ -33,8 +33,6 @@ from pynvml import *
 #
 
 ### RUN CONFIGURATION ###
-# Number of times to run each pa configuration
-num_times = 1
 
 # Path to the model repository
 model_repository = "output_model_repository"
@@ -50,6 +48,19 @@ pa_configurations = {
     "protocol": ["grpc", "http"],
     "is_async": [False, True]
 }
+
+# How long to wait between gathering statistics
+measurement_interval = 0.1
+
+# Timeout for each PA run
+pa_timeout = 30
+
+# Number of times to run each pa configuration
+num_times = 1
+
+# Switch to turn on/off printing of PA output
+print_pa_output = False
+
 ##########################
 
 
@@ -129,7 +140,8 @@ class RunResultData:
 class PARunner:
     """ Runs PA and gathers GPU, CPU-PA, and CPU-Triton statistics """
 
-    def __init__(self, triton_pid, gpu_handle):
+    def __init__(self, triton_pid, gpu_handle, timeout, measurement_interval,
+                 print_pa_output):
         self._pa_output = ""
         self._time = 0
         self._pa_cpu_usages = []
@@ -138,7 +150,9 @@ class PARunner:
         self._triton_mem_pcts = []
         self._gpu_utilizations = []
         self._gpu_mem_pcts = []
-        self._timeout = 30
+        self._timeout = timeout
+        self._print_pa_output = print_pa_output
+        self._measurement_interval = measurement_interval
         self._run_result = RunResultData()
         self._triton_pid = triton_pid
         self._gpu_handle = gpu_handle
@@ -213,7 +227,6 @@ class PARunner:
         return process
 
     def _resolve_process(self, process):
-        INTERVAL = 0.1
         NUM_CORES = psutil.cpu_count()
         pa_process_util = psutil.Process(process.pid)
         triton_process_util = psutil.Process(self._triton_pid)
@@ -221,7 +234,8 @@ class PARunner:
         while self._time < self._timeout:
             if process.poll() is not None:
                 self._pa_output = self._get_process_output()
-                #print(f"PA output is {self._pa_output}")
+                if self._print_pa_output:
+                    print(f"PA output is {self._pa_output}")
                 break
 
             with pa_process_util.oneshot():
@@ -245,8 +259,8 @@ class PARunner:
             self._triton_mem_pcts.append(triton_mem_percent)
             # JUNK: Other subprocesses do the IO: print(f"TKG: PA net_io {pa_process_util.io_counters()}")
             # JUNK: print(f"TKG: PA connections: {pa_process_util.connections()}")
-            self._time += INTERVAL
-            sleep(INTERVAL)
+            self._time += self._measurement_interval
+            sleep(self._measurement_interval)
 
         else:
             print('perf_analyzer took very long to exit, killing perf_analyzer')
@@ -262,8 +276,13 @@ class PARunner:
 class PATester():
     """ Primary class that runs through and tests PA configurations """
 
-    def __init__(self, triton_pid, gpu_handle):
-        self._runner = PARunner(triton_pid=triton_pid, gpu_handle=gpu_handle)
+    def __init__(self, triton_pid, gpu_handle, timeout, measurement_interval,
+                 print_pa_output):
+        self._runner = PARunner(triton_pid=triton_pid,
+                                gpu_handle=gpu_handle,
+                                timeout=timeout,
+                                measurement_interval=measurement_interval,
+                                print_pa_output=print_pa_output)
         self._results = []
 
     def run(self, config: dict, num_tries: int):
@@ -355,6 +374,10 @@ class TritonServer():
         cmd = self._get_cmd(model_repo, model)
         self._proc = self._create_process(cmd)
         sleep(5)
+        if self._proc.poll() is not None:
+            output = self._get_process_output()
+            raise Exception(f"Tritonserver failed to launch: {output}")
+
         return self._proc.pid
 
     def stop(self):
@@ -368,6 +391,12 @@ class TritonServer():
                 self._proc.communicate()
         else:
             print(f"TritonServer does not exist?!")
+
+    def _get_process_output(self):
+        self._triton_log.seek(0)
+        tmp_output = self._triton_log.read()
+        self._triton_log.close()
+        return tmp_output.decode('utf-8')
 
     def _create_process(self, cmd):
         self._triton_log = tempfile.NamedTemporaryFile()
@@ -401,7 +430,11 @@ triton_pid = server.start(model_repository, model_name)
 
 try:
 
-    tester = PATester(triton_pid=triton_pid, gpu_handle=gpu_handle)
+    tester = PATester(triton_pid=triton_pid,
+                      gpu_handle=gpu_handle,
+                      timeout=pa_timeout,
+                      measurement_interval=measurement_interval,
+                      print_pa_output=print_pa_output)
     tester.run(pa_configurations, num_times)
     tester.print_results()
 except Exception as e:
