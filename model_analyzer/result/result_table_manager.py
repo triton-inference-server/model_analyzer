@@ -286,6 +286,9 @@ class ResultTableManager:
                 table.to_formatted_string(separator=column_separator,
                                           ignore_widths=ignore_widths) + "\n\n")
 
+    def _get_gpu_count(self):
+        return self._result_tables[self.server_only_table_key].size()
+
     def _add_server_data(self):
         """
         Adds data to directly to the server only table
@@ -366,7 +369,7 @@ class ResultTableManager:
             run_config_result.run_config().model_run_configs()
         ]
         instance_groups = [
-            model_config.instance_group_string()
+            model_config.instance_group_string(self._get_gpu_count())
             for model_config in model_configs
         ]
         max_batch_sizes = [

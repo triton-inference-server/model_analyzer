@@ -228,7 +228,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 "<strong>test_model_config_10</strong> provides the best throughput: <strong>200 infer/sec</strong>.<br><br>"
                 "This is a <strong>100% gain</strong> over the default configuration "
                 "(100 infer/sec), under the given constraints.<UL><LI> "
-                "<strong>test_model_config_10</strong>: 1/GPU model instances with a max batch size of 8 on platform tensorflow_graphdef "
+                "<strong>test_model_config_10</strong>: 1 GPU instance with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>")
         else:
             expected_summary_sentence = (
@@ -236,7 +236,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 "<strong>test_model_config_10</strong> provides the best throughput: <strong>200 infer/sec</strong>.<br><br>"
                 "This is a <strong>100% gain</strong> over the default configuration "
                 "(100 infer/sec), under the given constraints on GPU(s) TITAN RTX.<UL><LI> "
-                "<strong>test_model_config_10</strong>: 1/GPU model instances with a max batch size of 8 on platform tensorflow_graphdef "
+                "<strong>test_model_config_10</strong>: 1 GPU instance with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>")
 
         self.assertEqual(len(expected_summary_sentence), len(summary_sentence))
@@ -292,13 +292,13 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         if cpu_only:
             expected_sentence = (
-                f"The model config \"test_model_config_10\" uses 1 GPU instance(s) with "
+                f"The model config \"test_model_config_10\" uses 1 GPU instance with "
                 f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
                 f"were obtained for the model config on CPU. "
                 f"This model uses the platform tensorflow_graphdef.")
         else:
             expected_sentence = (
-                f"The model config \"test_model_config_10\" uses 1 GPU instance(s) with "
+                f"The model config \"test_model_config_10\" uses 1 GPU instance with "
                 f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
                 f"were obtained for the model config on GPU(s) fake_gpu_name with memory limit(s) 1.0 GB. "
                 f"This model uses the platform tensorflow_graphdef.")
@@ -395,6 +395,43 @@ class TestReportManagerMethods(trc.TestResultCollector):
         top_models_throughput = self.report_manager._find_default_configs_throughput(
             TOP_MODELS_REPORT_KEY)
         self.assertEqual(top_models_throughput, 0)
+
+    def test_create_instance_group_phrase(self):
+        """ Test all corner cases of _create_instance_group_phrase() """
+        self._init_managers("test_model")
+
+        model_config_dict = {
+            'instance_group': [{
+                'count': 1,
+                'kind': 'KIND_GPU',
+            }]
+        }
+        self._test_instance_group_helper(model_config_dict, "1 GPU instance")
+
+        model_config_dict = {
+            'instance_group': [{
+                'count': 2,
+                'kind': 'KIND_GPU',
+            }]
+        }
+        self._test_instance_group_helper(model_config_dict, "2 GPU instances")
+
+        model_config_dict = {
+            'instance_group': [{
+                'count': 3,
+                'kind': 'KIND_GPU',
+            }, {
+                'count': 2,
+                'kind': 'KIND_CPU',
+            }]
+        }
+        self._test_instance_group_helper(model_config_dict,
+                                         "3 GPU instances and 2 CPU instances")
+
+    def _test_instance_group_helper(self, model_config_dict, expected_output):
+        model_config = ModelConfig.create_from_dictionary(model_config_dict)
+        output = self.report_manager._create_instance_group_phrase(model_config)
+        self.assertEqual(output, expected_output)
 
     def tearDown(self):
         self.matplotlib_mock.stop()

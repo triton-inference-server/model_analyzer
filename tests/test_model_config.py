@@ -162,6 +162,75 @@ instance_group [
             '../model_config_0/output0_labels.txt',
             './output_model_repository/model_config_1/output0_labels.txt')
 
+    def test_instance_group_string(self):
+        """ Test out all corner cases of instance_group_string() """
+
+        def _test_helper(config_dict, expected_result, gpu_count=None):
+            model_config = ModelConfig.create_from_dictionary(config_dict)
+            if gpu_count:
+                instance_group_str = model_config.instance_group_string(
+                    gpu_count)
+            else:
+                instance_group_str = model_config.instance_group_string()
+            self.assertEqual(instance_group_str, expected_result)
+
+        # No instance group info in model_config_dict:
+        #  - default to 1 per GPU
+        model_config_dict = {}
+        _test_helper(model_config_dict, "1:GPU", gpu_count=1)
+
+        # No instance group info in model_config_dict:
+        #  - 1 per GPU -- if 2 gpus then 2 total
+        model_config_dict = {}
+        _test_helper(model_config_dict, "2:GPU", gpu_count=2)
+
+        # No instance group info in model_config_dict:
+        #  - default to 1 on CPU if cuda not available
+        model_config_dict = {}
+        with patch('numba.cuda.is_available', MagicMock(return_value=False)):
+            _test_helper(model_config_dict, "1:CPU", gpu_count=5)
+
+        # 2 per GPU, 3 gpus in the system = 6 total
+        model_config_dict = {
+            'instance_group': [{
+                'count': 2,
+                'kind': 'KIND_GPU',
+            }]
+        }
+        _test_helper(model_config_dict, "6:GPU", gpu_count=3)
+
+        # 1 on GPU0 only = 1 total despite 2 GPUs in the system
+        model_config_dict = {
+            'instance_group': [{
+                'count': 1,
+                'kind': 'KIND_GPU',
+                'gpus': [0]
+            }]
+        }
+        _test_helper(model_config_dict, "1:GPU", gpu_count=2)
+
+        # 1 on ALL gpus + 2 each on [1 and 3] + 3 more on CPUs
+        # with 4 GPUs in the system:
+        #   8 on GPU and 3 on CPU
+        model_config_dict = {
+            'instance_group': [
+                {
+                    'count': 1,
+                    'kind': 'KIND_GPU'
+                },
+                {
+                    'count': 2,
+                    'kind': 'KIND_GPU',
+                    'gpus': [1, 3]
+                },
+                {
+                    'count': 3,
+                    'kind': 'KIND_CPU'
+                },
+            ]
+        }
+        _test_helper(model_config_dict, "8:GPU + 3:CPU", gpu_count=4)
+
 
 if __name__ == '__main__':
     unittest.main()
