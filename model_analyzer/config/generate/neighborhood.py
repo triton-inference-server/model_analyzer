@@ -48,7 +48,6 @@ class Neighborhood:
 
         self._config = neighborhood_config
         self._home_coordinate = home_coordinate
-        self._home_measurement = None
         self._coordinate_data = CoordinateData()
 
         self._radius = self._config.get_radius()
@@ -259,19 +258,27 @@ class Neighborhood:
             a coordinate that tells the direction to move.
         """
         vectors, measurements = self._get_constraints_passing_measurements()
-        self._home_measurement = self._coordinate_data.get_measurement(
+        home_measurement = self._coordinate_data.get_measurement(
             coordinate=self._home_coordinate)
 
-        if self._home_measurement.is_passing_constraints():
-            logger.debug(f"(Measurement) Home Coordinate passed constraints.")
-            return self._optimize_for_better_objectives(
-                vectors=vectors, measurements=measurements)
+        assert home_measurement is not None, "Home measurement cannot be NoneType."
 
-        logger.debug(f"(Measurement) Home Coordinate falied constraints.")
-        return self._optimize_for_passing_constraints(
-            vectors=vectors, measurements=measurements)
+        if home_measurement.is_passing_constraints():
+            logger.debug(f"(Measurement) Home Coordinate passed constraints.")
+            step_vector = self._optimize_for_better_objectives(
+                home_measurement=home_measurement,
+                vectors=vectors,
+                measurements=measurements)
+        else:
+            logger.debug(f"(Measurement) Home Coordinate falied constraints.")
+            step_vector = self._optimize_for_passing_constraints(
+                home_measurement=home_measurement,
+                vectors=vectors,
+                measurements=measurements)
+        return step_vector
 
     def _optimize_for_better_objectives(self,
+                                        home_measurement: RunConfigMeasurement,
                                         vectors: List[Coordinate],
                                         measurements: List[RunConfigMeasurement]
                                         ) -> Coordinate:
@@ -303,7 +310,7 @@ class Neighborhood:
         logger.debug(f"(Measurement) Neigbors with passing constraints exists.")
         logger.debug(f"(Measurement) Optimizing for objective...")
         for vector, measurement in zip(vectors, measurements):
-            weight = self._home_measurement.compare_measurements(measurement)
+            weight = home_measurement.compare_measurements(measurement)
             step_vector += vector * weight
             logger.debug(f"(Measurement)\t vector: {vector}, weight: {weight}")
 
@@ -312,6 +319,7 @@ class Neighborhood:
         return step_vector
 
     def _optimize_for_passing_constraints(self,
+                                          home_measurement: RunConfigMeasurement,
                                           vectors: List[Coordinate],
                                           measurements: List[RunConfigMeasurement]
                                           ) -> Coordinate:
@@ -343,15 +351,13 @@ class Neighborhood:
             logger.debug(f"(Measurement) Compare failing constraints.")
             vectors, measurements = self._get_all_visited_measurements()
             return self._optimize_for_passing_constraints(
-                vectors=vectors, measurements=measurements)
+                home_measurement, vectors=vectors, measurements=measurements)
 
         logger.debug(f"(Measurement) Optimizing for constraints...")
         for vector, measurement in zip(vectors, measurements):
+            weight = home_measurement.compare_constraints(measurement)
             if measurement.is_passing_constraints():
                 weight = 1.0  # when home fails & neighbor passes
-            else:
-                weight = self._home_measurement.compare_constraints(
-                    other=measurement)
 
             step_vector += vector * weight
             logger.debug(f"(Measurement)\t vector: {vector}, weight: {weight}")

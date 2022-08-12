@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple
+from typing import Tuple, Optional
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
@@ -27,16 +27,16 @@ class CoordinateData:
         self._measurements = {}
         self._visit_counts = {}
 
-    def get_measurement(self, coordinate: Coordinate) -> RunConfigMeasurement:
+    def get_measurement(
+            self, coordinate: Coordinate) -> Optional[RunConfigMeasurement]:
         """
         Return the measurement data of the given coordinate.
         """
         key: Tuple[Coordinate, ...] = tuple(coordinate)
         return self._measurements.get(key, None)
 
-    def set_measurement(self,
-                        coordinate: Coordinate,
-                        measurement: RunConfigMeasurement):
+    def set_measurement(self, coordinate: Coordinate,
+                        measurement: Optional[RunConfigMeasurement]):
         """
         Set the measurement for the given coordinate.
         """
