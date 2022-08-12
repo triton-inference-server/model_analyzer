@@ -23,6 +23,10 @@ from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
+from model_analyzer.constants import LOGGER_NAME
+import logging
+logger = logging.getLogger(LOGGER_NAME)
+
 
 class Neighborhood:
     """
@@ -35,9 +39,9 @@ class Neighborhood:
         """
         Parameters
         ----------
-        neighborhood_config: 
+        neighborhood_config:
             NeighborhoodConfig object
-        home_coordinate: 
+        home_coordinate:
             Coordinate object to center the neighborhood around
         """
         assert type(neighborhood_config) == NeighborhoodConfig
@@ -57,7 +61,7 @@ class Neighborhood:
     @classmethod
     def calc_distance(cls, coordinate1: Coordinate,
                       coordinate2: Coordinate) -> float:
-        """ 
+        """
         Return the euclidean distance between two coordinates
         """
 
@@ -99,10 +103,12 @@ class Neighborhood:
         """
         step_vector = self._get_step_vector() * magnitude
         step_vector.round()
+        logger.debug(f"(Measurement) Step vector: {step_vector}")
 
         if enable_clipping:
             step_vector = self._clip_vector_values(vector=step_vector,
                                                    clip_value=clip_value)
+            logger.debug(f"(Measurement) Clipped Step vector: {step_vector}")
 
         tmp_new_coordinate = self._home_coordinate + step_vector
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
@@ -257,9 +263,11 @@ class Neighborhood:
             coordinate=self._home_coordinate)
 
         if self._home_measurement.is_passing_constraints():
+            logger.debug(f"(Measurement) Home Coordinate passed constraints.")
             return self._optimize_for_better_objectives(
                 vectors=vectors, measurements=measurements)
 
+        logger.debug(f"(Measurement) Home Coordinate falied constraints.")
         return self._optimize_for_passing_constraints(
             vectors=vectors, measurements=measurements)
 
@@ -288,13 +296,19 @@ class Neighborhood:
         step_vector = Coordinate([0] * self._config.get_num_dimensions())
 
         if not vectors:
+            logger.debug(f"(Measurement) No neighbors passing constraints. ")
+            logger.debug(f"(Measurement) Returning zero step vector.")
             return step_vector
 
+        logger.debug(f"(Measurement) Neigbors with passing constraints exists.")
+        logger.debug(f"(Measurement) Optimizing for objective...")
         for vector, measurement in zip(vectors, measurements):
             weight = self._home_measurement.compare_measurements(measurement)
             step_vector += vector * weight
+            logger.debug(f"(Measurement)\t vector: {vector}, weight: {weight}")
 
         step_vector /= len(vectors)
+        logger.debug(f"(Measurement)\t Initial step vector: {step_vector}")
         return step_vector
 
     def _optimize_for_passing_constraints(self,
@@ -325,10 +339,13 @@ class Neighborhood:
         step_vector = Coordinate([0] * self._config.get_num_dimensions())
 
         if not vectors:
+            logger.debug(f"(Measurement) No neighbors passing constraints. ")
+            logger.debug(f"(Measurement) Compare failing constraints.")
             vectors, measurements = self._get_all_visited_measurements()
             return self._optimize_for_passing_constraints(
                 vectors=vectors, measurements=measurements)
 
+        logger.debug(f"(Measurement) Optimizing for constraints...")
         for vector, measurement in zip(vectors, measurements):
             if measurement.is_passing_constraints():
                 weight = 1.0  # when home fails & neighbor passes
@@ -337,8 +354,10 @@ class Neighborhood:
                     other=measurement)
 
             step_vector += vector * weight
+            logger.debug(f"(Measurement)\t vector: {vector}, weight: {weight}")
 
         step_vector /= len(vectors)
+        logger.debug(f"(Measurement)\t Initial step vector: {step_vector}")
         return step_vector
 
     def _get_all_visited_measurements(
