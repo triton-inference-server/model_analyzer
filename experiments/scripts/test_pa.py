@@ -257,8 +257,7 @@ class PARunner:
             self._pa_cpu_usages.append(pa_cpu_util)
             self._triton_cpu_usages.append(triton_cpu_util)
             self._triton_mem_pcts.append(triton_mem_percent)
-            # JUNK: Other subprocesses do the IO: print(f"TKG: PA net_io {pa_process_util.io_counters()}")
-            # JUNK: print(f"TKG: PA connections: {pa_process_util.connections()}")
+
             self._time += self._measurement_interval
             sleep(self._measurement_interval)
 
