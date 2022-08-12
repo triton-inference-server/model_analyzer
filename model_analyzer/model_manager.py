@@ -99,6 +99,11 @@ class ModelManager:
             else:
                 logger.info("Skipping illegal run configuration")
                 measurement = None
+
+            if measurement:
+                measurement.set_model_config_constraints(
+                    model_config_constraints=[self._config.constraints])
+
             rcg.set_last_results([measurement])
 
         self._metrics_manager.finalize()
