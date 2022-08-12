@@ -252,6 +252,71 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         }])
         self.assertFalse(self.rcm5.is_passing_constraints())
 
+    def test_compare_constraints_none(self):
+        """
+        Checks case where either self or other is passing constraints
+        """
+        # RCM4's throughput is 1000
+        # RCM5's throughput is 2000
+        self.rcm4.set_model_config_constraints([{
+            "perf_throughput": {
+                "min": 500
+            }
+        }])
+        self.rcm5.set_model_config_constraints([{
+            "perf_throughput": {
+                "min": 2500
+            }
+        }])
+
+        self.assertEqual(self.rcm4.compare_constraints(self.rcm5), None)
+        self.assertEqual(self.rcm5.compare_constraints(self.rcm4), None)
+
+    def test_compare_constraints_equal(self):
+        """
+        Test to ensure compare constraints reports zero when both
+        RCMs are missing constraints by the same amount
+        """
+        # RCM4's throughput is 1000
+        # RCM5's throughput is 2000
+        self.rcm4.set_model_config_constraints([{
+            "perf_throughput": {
+                "min": 1250
+            }
+        }])
+        self.rcm5.set_model_config_constraints([{
+            "perf_throughput": {
+                "min": 2500
+            }
+        }])
+
+        # RCM4 is failing by 20%, RCM5 is failing by 20%
+        self.assertEqual(self.rcm4.compare_constraints(self.rcm5), 0)
+        self.assertEqual(self.rcm5.compare_constraints(self.rcm4), 0)
+
+    def test_compare_constraints_unequal(self):
+        """
+        Test to ensure compare constraints reports the correct
+        value when the RCMs are both failing constraints by different
+        amounts
+        """
+        # RCM4's throughput is 1000
+        # RCM5's throughput is 2000
+        self.rcm4.set_model_config_constraints([{
+            "perf_throughput": {
+                "min": 2000
+            }
+        }])
+        self.rcm5.set_model_config_constraints([{
+            "perf_throughput": {
+                "min": 2500
+            }
+        }])
+
+        # RCM4 is failing by 50%, RCM5 is failing by 20%
+        self.assertEqual(self.rcm4.compare_constraints(self.rcm5), 0.30)
+        self.assertEqual(self.rcm5.compare_constraints(self.rcm4), -0.30)
+
     def test_from_dict(self):
         """
         Test to ensure class can be correctly restored from a dictionary

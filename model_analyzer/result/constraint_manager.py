@@ -12,8 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Dict, TYPE_CHECKING
 
-#TODO-TMA-573: This class has no unit testing
+from model_analyzer.record.record import Record
+
+if TYPE_CHECKING:
+    from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+
+
 class ConstraintManager:
     """
     Handles processing and applying
@@ -42,7 +48,9 @@ class ConstraintManager:
         return constraints
 
     @staticmethod
-    def satisfies_constraints(constraints, run_config_measurement):
+    def satisfies_constraints(
+            constraints: List[Dict[str, Dict[str, int]]],
+            run_config_measurement: 'RunConfigMeasurement') -> bool:
         """
         Checks that the measurements, for every model, satisfy 
         the provided list of constraints
@@ -55,8 +63,8 @@ class ConstraintManager:
         run_config_measurement : RunConfigMeasurement
             The measurement to check against the constraints
 
-        Return
-        ------
+        Returns
+        -------
         True if measurement passes constraints
         False otherwise
         """
@@ -64,14 +72,59 @@ class ConstraintManager:
         if constraints:
             for (i, model_metrics) in enumerate(run_config_measurement.data()):
                 for metric in model_metrics:
-                    if constraints[i] is not None and type(
-                            metric).tag in constraints[i]:
-                        constraint = constraints[i][type(metric).tag]
-                        if 'min' in constraint:
-                            if metric.value() < constraint['min']:
-                                return False
-                        if 'max' in constraint:
-                            if metric.value() > constraint['max']:
-                                return False
+                    if ConstraintManager._metric_matches_constraint(
+                            metric, constraints[i]):
+                        if ConstraintManager._get_failure_percentage(
+                                metric, constraints[i][metric.tag]) > 0:
+                            return False
 
         return True
+
+    @staticmethod
+    def constraint_failure_percentage(
+            constraints: List[Dict[str, Dict[str, int]]],
+            run_config_measurement: 'RunConfigMeasurement') -> float:
+        """
+        Additive percentage, for every measurement, in every model, of how much 
+        the RCM is failing the constraints by
+        
+        Returns
+        -------
+        float
+        """
+        failure_percentage: float = 0
+
+        if constraints:
+            for (i, model_metrics) in enumerate(run_config_measurement.data()):
+                for metric in model_metrics:
+                    if ConstraintManager._metric_matches_constraint(
+                            metric, constraints[i]):
+                        failure_percentage += ConstraintManager._get_failure_percentage(
+                            metric, constraints[i][metric.tag])
+
+        return failure_percentage * 100
+
+    @staticmethod
+    def _metric_matches_constraint(
+            metric: Record, constraint: Dict[str, Dict[str, int]]) -> bool:
+        if constraint is not None and metric.tag in constraint:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def _get_failure_percentage(metric: Record, constraint: Dict[str,
+                                                                 int]) -> float:
+
+        failure_percentage = 0
+
+        if 'min' in constraint:
+            if metric.value() < constraint['min']:
+                failure_percentage = (constraint['min'] -
+                                      metric.value()) / constraint['min']
+        if 'max' in constraint:
+            if metric.value() > constraint['max']:
+                failure_percentage = (metric.value() -
+                                      constraint['max']) / constraint['max']
+
+        return failure_percentage

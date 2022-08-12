@@ -435,7 +435,7 @@ class RunConfigMeasurement:
         -------
         float
            Positive value if other is better
-           Negaive value is self is better
+           Negative value is self is better
            Zero if they are equal 
         """
         # Step 1: for each ModelConfig determine the weighted score
@@ -447,6 +447,34 @@ class RunConfigMeasurement:
 
         # Step 3: Reverse the polarity to match what is expected in the docstring return
         return -1 * weighted_rcm_score
+
+    def compare_constraints(
+            self, other: 'RunConfigMeasurement') -> Union[float, None]:
+        """
+        Compares two RunConfigMeasurements based on how close
+        each RCM is to passing their constraints
+
+        Parameters
+        ----------
+        other: RunConfigMeasurement
+            
+        Returns
+        -------
+        float
+           Positive value if other is closer to passing constraints
+           Negative value if self is closer to passing constraints
+           Zero if they are equally close to passing constraints
+           None if either RCM is passing constraints
+        """
+        if self.is_passing_constraints() or other.is_passing_constraints():
+            return None
+
+        self_failing_pct = ConstraintManager.constraint_failure_percentage(
+            self._model_config_constraints, self)
+        other_failing_pct = ConstraintManager.constraint_failure_percentage(
+            other._model_config_constraints, other)
+
+        return (self_failing_pct - other_failing_pct) / 100
 
     def _compare_measurements(self, other: 'RunConfigMeasurement') -> int:
         """
@@ -553,7 +581,7 @@ class RunConfigMeasurement:
         return gpu_data
 
     def _get_avg_gpu_data_from_tag(self) -> Dict[str, Record]:
-        return {type(metric).tag: metric for metric in self._avg_gpu_data}
+        return {metric.tag: metric for metric in self._avg_gpu_data}
 
     def _deserialize_model_config_measurements(
         self, serialized_model_config_measurements: List[Dict]
