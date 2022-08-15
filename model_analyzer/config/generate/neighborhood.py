@@ -111,10 +111,9 @@ class Neighborhood:
                             clip_value: int) -> Coordinate:
         """
         Clip the values of the vector to be within the range of
-        [-clip_value, clip_value]. The clipping **approximately** preserves
-        the direction of the vector (e.g. if the clip_value is 2, then
-        [10, 5] will be clipped to [2, 1] instead of [2, 2]). It may not
-        be exact due to the rounding of the values at the end.
+        [-clip_value, clip_value]. The clipping preserves the direction
+        of the vector (e.g. if the clip_value is 2, then [10, 5] will be
+        clipped to [2, 1] instead of [2, 2]).
 
         Parameters
         ----------
