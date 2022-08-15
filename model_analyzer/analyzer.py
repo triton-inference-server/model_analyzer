@@ -220,6 +220,10 @@ class Analyzer:
                     "GPU devices match checkpoint - skipping server metric acquisition"
                 )
                 return
+            elif gpus is not None:
+                sys.exit(
+                    "GPU devices do not match checkpoint - Remove checkpoint file and rerun profile"
+                )
 
             logger.info('Profiling server only metrics...')
             self._server.start()
