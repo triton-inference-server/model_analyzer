@@ -177,7 +177,7 @@ class TestNeighborhood(trc.TestResultCollector):
         c = n._clip_vector_values(Coordinate([10, 5]), clip_value=2)
         self.assertEqual(c, Coordinate([2, 1]))
         c = n._clip_vector_values(Coordinate([100, 5]), clip_value=2)
-        self.assertEqual(c, Coordinate([2, 0]))
+        self.assertEqual(c, Coordinate([2, 0.1]))
 
         # Test if it clips large, negative values
         c = n._clip_vector_values(Coordinate([-10, 5]), clip_value=2)
@@ -185,7 +185,7 @@ class TestNeighborhood(trc.TestResultCollector):
         c = n._clip_vector_values(Coordinate([-10, -5]), clip_value=2)
         self.assertEqual(c, Coordinate([-2, -1]))
         c = n._clip_vector_values(Coordinate([-100, 5]), clip_value=2)
-        self.assertEqual(c, Coordinate([-2, 0]))
+        self.assertEqual(c, Coordinate([-2, 0.1]))
 
         # Test if it skips clipping if values are within range
         c = n._clip_vector_values(Coordinate([1, 0]), clip_value=2)
@@ -298,7 +298,7 @@ class TestNeighborhood(trc.TestResultCollector):
         ]
         expected_measurements = [rcm3, rcm2]
 
-        vectors, measurements = n._get_constraints_passing_measurements()
+        vectors, measurements = n._get_measurements_passing_constraints()
         for ev, em in zip(expected_vectors, expected_measurements):
             self.assertTrue(ev in vectors)
             self.assertTrue(em in measurements)
