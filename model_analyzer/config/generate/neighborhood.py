@@ -97,11 +97,11 @@ class Neighborhood:
             The new coordinate computed based on the neighborhood measurements.
         """
         step_vector = self._get_step_vector() * magnitude
-        step_vector.round()
 
         if enable_clipping:
             step_vector = self._clip_vector_values(vector=step_vector,
                                                    clip_value=clip_value)
+        step_vector.round()
 
         tmp_new_coordinate = self._home_coordinate + step_vector
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
@@ -134,7 +134,7 @@ class Neighborhood:
 
         if max_value > clip_value and max_value != 0:
             for i in range(len(vector)):
-                vector[i] = round(clip_value * vector[i]/max_value)
+                vector[i] = clip_value * vector[i]/max_value
         return vector
 
     def pick_coordinate_to_initialize(self) -> Optional[Coordinate]:
