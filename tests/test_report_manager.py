@@ -300,7 +300,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             expected_sentence = (
                 f"The model config \"test_model_config_10\" uses 1 GPU instance with "
                 f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
-                f"were obtained for the model config on GPU(s) fake_gpu_name with memory limit(s) 1.0 GB. "
+                f"were obtained for the model config on GPU(s) 1 x fake_gpu_name with total memory 1.0 GB. "
                 f"This model uses the platform tensorflow_graphdef.")
 
         self.assertEqual(expected_sentence, sentence)
@@ -432,6 +432,61 @@ class TestReportManagerMethods(trc.TestResultCollector):
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
         output = self.report_manager._create_instance_group_phrase(model_config)
         self.assertEqual(output, expected_output)
+
+    def test_gpu_name_and_memory(self):
+        gpu_info = {
+            'gpu_uuid1': {
+                'name': 'fake_gpu_name',
+                'total_memory': 2**30 * 2  # 2GB
+            },
+            'gpu_uuid2': {
+                'name': 'fake_gpu_name',
+                'total_memory': 2**30 * 2  # 2GB
+            },
+            'gpu_uuid3': {
+                'name': 'fake_gpu_name_2',
+                'total_memory': 2**30 * 4  # 4GB
+            },
+            'gpu_uuid4': {
+                'name': 'fake_gpu_name_3',
+                'total_memory': 2**30 * 8  # 8GB
+            }
+        }
+
+        report_manager = ReportManager(mode=MagicMock(),
+                                       config=MagicMock(),
+                                       gpu_info=gpu_info,
+                                       result_manager=MagicMock())
+
+        avg_gpu_metrics = {
+            'gpu_uuid1': {
+                "gpu_used_memory": 6000,
+                "gpu_utilization": 60
+            },
+            'gpu_uuid2': {
+                "gpu_used_memory": 6000,
+                "gpu_utilization": 60
+            },
+            'gpu_uuid4': {
+                "gpu_used_memory": 6000,
+                "gpu_utilization": 60
+            },
+        }
+
+        measurement = construct_run_config_measurement(
+            model_name=MagicMock(),
+            model_config_names=MagicMock(),
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values=avg_gpu_metrics,
+            non_gpu_metric_values=MagicMock(),
+            metric_objectives=MagicMock(),
+            model_config_weights=MagicMock())
+
+        measurements = [measurement]
+        (names,
+         max_gpu) = report_manager._get_gpu_stats(measurements=measurements)
+        self.assertEqual(names, "2 x fake_gpu_name, 1 x fake_gpu_name_3")
+        self.assertEqual(max_gpu, "12.0 GB")
 
     def tearDown(self):
         self.matplotlib_mock.stop()
