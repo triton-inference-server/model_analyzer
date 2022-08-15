@@ -97,12 +97,24 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
             cat $ANALYZER_LOG
             RET=1
         fi
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS"
-        
+        rm $ANALYZER_LOG
+
+        echo -e "\n*** Re-running profile\n***"
+        ANALYZER_LOG=analyzer.${launch_mode}.${config}_rerun.log
+        run_analyzer
+        if [ $? -ne 0 ]; then
+            echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
+            cat $ANALYZER_LOG
+            RET=1
+        fi
+
         if [ $launch_mode == 'remote' ]; then
             kill $SERVER_PID
             wait $SERVER_PID
         fi
+
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS"
+        
         SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
         MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
         MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}

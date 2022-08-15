@@ -215,15 +215,16 @@ class Analyzer:
 
     def _get_server_only_metrics(self, client, gpus):
         if self._config.triton_launch_mode != 'c_api':
-            if self._do_checkpoint_gpus_match(gpus):
-                logger.info(
-                    "GPU devices match checkpoint - skipping server metric acquisition"
-                )
-                return
-            elif gpus is not None:
-                sys.exit(
-                    "GPU devices do not match checkpoint - Remove checkpoint file and rerun profile"
-                )
+            if not self._state_manager._starting_fresh_run:
+                if self._do_checkpoint_gpus_match(gpus):
+                    logger.info(
+                        "GPU devices match checkpoint - skipping server metric acquisition"
+                    )
+                    return
+                elif gpus is not None:
+                    sys.exit(
+                        "GPU devices do not match checkpoint - Remove checkpoint file and rerun profile"
+                    )
 
             logger.info('Profiling server only metrics...')
             self._server.start()
