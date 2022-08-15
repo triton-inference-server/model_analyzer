@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-from typing import Dict, Any
+from typing import Dict, Any, List
 from copy import deepcopy
 
 from numba import cuda
@@ -371,7 +371,7 @@ class ModelConfig:
         model_config = self._model_config
         return getattr(model_config, name)
 
-    def max_batch_size(self):
+    def max_batch_size(self) -> int:
         """
         Returns the max batch size (int)
         """
@@ -379,7 +379,7 @@ class ModelConfig:
         model_config = self.get_config()
         return model_config.get('max_batch_size', 0)
 
-    def dynamic_batching_string(self):
+    def dynamic_batching_string(self) -> str:
         """
         Returns
         -------
@@ -394,7 +394,7 @@ class ModelConfig:
         else:
             return "Disabled"
 
-    def instance_group_string(self):
+    def instance_group_string(self, system_gpu_count: int) -> str:
         """
         Returns
         -------
@@ -406,23 +406,38 @@ class ModelConfig:
         model_config = self.get_config()
 
         # TODO change when remote mode is fixed
-        # Set default count/kind
-        count = 1
-        if cuda.is_available():
-            kind = 'GPU'
-        else:
-            kind = 'CPU'
+        default_kind = 'GPU' if cuda.is_available() else 'CPU'
+        default_count = 1
 
+        instance_group_list: List[Dict[str, Any]] = [{}]
         if 'instance_group' in model_config:
             instance_group_list = model_config['instance_group']
-            group_str_list = []
-            for group in instance_group_list:
-                group_kind, group_count = kind, count
-                # Update with instance group values
-                if 'kind' in group:
-                    group_kind = group['kind'].split('_')[1]
-                if 'count' in group:
-                    group_count = group['count']
-                group_str_list.append(f"{group_count}/{group_kind}")
-            return ','.join(group_str_list)
-        return f"{count}/{kind}"
+
+        kind_to_count = {}
+
+        for group in instance_group_list:
+            group_kind = default_kind
+            group_count = default_count
+            group_gpus_count = system_gpu_count
+            # Update with instance group values
+            if 'kind' in group:
+                group_kind = group['kind'].split('_')[1]
+            if 'count' in group:
+                group_count = group['count']
+            if 'gpus' in group:
+                group_gpus_count = len(group['gpus'])
+
+            group_total_count = group_count
+            if group_kind == "GPU":
+                group_total_count *= group_gpus_count
+
+            if group_kind not in kind_to_count:
+                kind_to_count[group_kind] = 0
+            kind_to_count[group_kind] += group_total_count
+
+        ret_str = ""
+        for k, v in kind_to_count.items():
+            if ret_str != "":
+                ret_str += " + "
+            ret_str += f'{v}:{k}'
+        return ret_str

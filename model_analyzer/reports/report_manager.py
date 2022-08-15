@@ -533,8 +533,20 @@ class ReportManager:
     def _create_summary_max_batch_size_phrase(self, model_config):
         return f"max batch size of {model_config.max_batch_size()}"
 
-    def _create_summary_instance_group_phrase(self, model_config):
-        return f"{model_config.instance_group_string()} model instances"
+    def _create_instance_group_phrase(self, model_config):
+        instance_group_str = model_config.instance_group_string(
+            self._get_gpu_count())
+        kind_counts = instance_group_str.split('+')
+        ret_str = ""
+        for kind_count in kind_counts:
+            kind_count = kind_count.strip()
+            count, kind = kind_count.split(':')
+            if ret_str != "":
+                ret_str += " and "
+            ret_str += f"{count} {kind} instance"
+            if int(count) > 1:
+                ret_str += "s"
+        return ret_str
 
     def _create_summary_gpu_name_phrase(self, gpu_name, cpu_only):
         return f" on GPU(s) {gpu_name}" if not cpu_only else ""
@@ -616,7 +628,8 @@ class ReportManager:
         ])
 
         instance_group_strings = ', '.join([
-            model_run_config.model_config().instance_group_string()
+            model_run_config.model_config().instance_group_string(
+                self._get_gpu_count())
             for model_run_config in run_config.model_run_configs()
         ])
 
@@ -647,7 +660,8 @@ class ReportManager:
         ])
 
         instance_group_string = self._create_summary_string([
-            model_run_config.model_config().instance_group_string()
+            model_run_config.model_config().instance_group_string(
+                self._get_gpu_count())
             for model_run_config in run_config.model_run_configs()
         ])
 
@@ -727,7 +741,7 @@ class ReportManager:
 
     def _create_summary_config_info(self, model_config):
         config_info = f"<strong>{model_config.get_field('name')}</strong>: "
-        config_info = config_info + f"{self._create_summary_instance_group_phrase(model_config)} with a "
+        config_info = config_info + f"{self._create_instance_group_phrase(model_config)} with a "
         config_info = config_info + f"{self._create_summary_max_batch_size_phrase(model_config)} on "
         config_info = config_info + f"{self._create_summary_platform_phrase(model_config)}"
 
@@ -828,7 +842,7 @@ class ReportManager:
 
         # TODO-TMA-568 - add support for multi-model
         model_config = run_config.model_run_configs()[0].model_config()
-        instance_group_string = model_config.instance_group_string()
+        instance_group_string = self._create_instance_group_phrase(model_config)
         dynamic_batching = model_config.dynamic_batching_string()
         max_batch_size = model_config.max_batch_size()
         platform = model_config.get_field('platform')
@@ -848,13 +862,16 @@ class ReportManager:
             max_memories = ','.join([str(x) + ' GB' for x in gpu_dict.values()])
             gpu_cpu_string = f"GPU(s) {gpu_names} with memory limit(s) {max_memories}"
         sentence = (
-            f"The model config \"{model_config_name}\" uses {instance_group_string.replace('/', ' ')} "
-            f"instance(s) with {max_batch_size_string} and has {dynamic_batching_string}. "
+            f"The model config \"{model_config_name}\" uses {instance_group_string} "
+            f"with {max_batch_size_string} and has {dynamic_batching_string}. "
             f"{len(measurements)} measurement(s) were obtained for the model config on "
             f"{gpu_cpu_string}. "
             f"This model uses the platform {platform}.")
 
         return sentence
+
+    def _get_gpu_count(self):
+        return len(self._gpu_info)
 
     def _get_gpu_stats(self, measurements):
         """
