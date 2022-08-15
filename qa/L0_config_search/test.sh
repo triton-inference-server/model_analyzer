@@ -122,6 +122,14 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         INFERENCE_NUM_COLUMNS=9
         SERVER_METRICS_NUM_COLUMNS=5
         
+        # Check that rerun skipped 
+        grep "GPU devices match checkpoint" $ANALYZER_LOG | wc -l
+        if [ $? -eq 0]; then
+            echo -e "\n***\n*** Test Verification Failed - GPU devices did not match checkpoint on rerun.\n***"
+            cat $ANALYZER_LOG
+            RET=1
+        fi
+
         check_table_row_column \
             $ANALYZER_LOG $ANALYZER_LOG $ANALYZER_LOG \
             $MODEL_METRICS_INFERENCE_FILE $MODEL_METRICS_GPU_FILE $SERVER_METRICS_FILE \

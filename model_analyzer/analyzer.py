@@ -222,7 +222,7 @@ class Analyzer:
                     )
                     return
                 elif gpus is not None:
-                    sys.exit(
+                    raise TritonModelAnalyzerException(
                         "GPU devices do not match checkpoint - Remove checkpoint file and rerun profile"
                     )
 
