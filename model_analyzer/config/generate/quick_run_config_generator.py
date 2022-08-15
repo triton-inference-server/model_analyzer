@@ -81,7 +81,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         # This is an initial center that the neighborhood is built around.
         # It is updated every new creation of the neighborhood.
-        self._home_coordinate  = self._get_starting_coordinate()
+        self._home_coordinate = self._get_starting_coordinate()
 
         # This is the coordinate that we want to measure next. It is
         # updated every step of this generator
@@ -163,22 +163,28 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self._best_coordinate = self._coordinate_to_measure
             self._best_measurement = measurement
 
-        elif not self._best_measurement.is_passing_constraints() \
-            and measurement.is_passing_constraints():
+        elif not self._best_measurement.is_passing_constraints(
+        ) and measurement.is_passing_constraints():
             self._best_coordinate = self._coordinate_to_measure
             self._best_measurement = measurement
 
-        elif not self._best_measurement.is_passing_constraints() \
-            and not measurement.is_passing_constraints() \
-            and self._best_measurement.compare_constraints(measurement) > 0:
-            self._best_coordinate = self._coordinate_to_measure
-            self._best_measurement = measurement
+        elif not self._best_measurement.is_passing_constraints(
+        ) and not measurement.is_passing_constraints():
+            comparison = self._best_measurement.compare_constraints(
+                other=measurement)
 
-        elif self._best_measurement.is_passing_constraints() \
-            and measurement.is_passing_constraints() \
-            and self._best_measurement.compare_measurements(measurement) > 0:
-            self._best_coordinate = self._coordinate_to_measure
-            self._best_measurement = measurement
+            if comparison and comparison > 0:
+                self._best_coordinate = self._coordinate_to_measure
+                self._best_measurement = measurement
+
+        elif self._best_measurement.is_passing_constraints(
+        ) and measurement.is_passing_constraints():
+            comparison = self._best_measurement.compare_measurements(
+                other=measurement)
+
+            if comparison and comparison > 0:
+                self._best_coordinate = self._coordinate_to_measure
+                self._best_measurement = measurement
 
     def _get_last_results(self) -> RunConfigMeasurement:
         return self._neighborhood.coordinate_data.get_measurement(
@@ -326,10 +332,14 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             latency = measurements[0].get_non_gpu_metric_value(
                 "perf_latency_p99")
 
-            best_throughput = self._best_measurement.get_non_gpu_metric_value(
-                "perf_throughput")
-            best_latency = self._best_measurement.get_non_gpu_metric_value(
-                "perf_latency_p99")
+            if self._best_measurement:
+                best_throughput = self._best_measurement.get_non_gpu_metric_value(
+                    "perf_throughput")
+                best_latency = self._best_measurement.get_non_gpu_metric_value(
+                    "perf_latency_p99")
+            else:
+                best_throughput = None
+                best_latency = None
 
             logger.debug(
                 f"Measurement for {self._coordinate_to_measure}: "
