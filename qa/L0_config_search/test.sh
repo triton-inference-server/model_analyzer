@@ -152,6 +152,12 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
                 cat $ANALYZER_LOG
                 RET=1
             fi
+            grep "GPU devices do not match checkpoint" $ANALYZER_LOG | wc -l
+            if [ $? -eq 0]; then
+                echo -e "\n***\n*** Test Verification Failed - GPU did not mismatch checkpoint on rerun.\n***"
+                cat $ANALYZER_LOG
+                RET=1
+            fi
         fi
 
         rm $ANALYZER_LOG
