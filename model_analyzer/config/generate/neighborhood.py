@@ -250,29 +250,18 @@ class Neighborhood:
         step_vector
             a coordinate that tells the direction to move.
         """
-        vectors, measurements = self._get_constraints_passing_measurements()
         home_measurement = self._coordinate_data.get_measurement(
             coordinate=self._home_coordinate)
 
         assert home_measurement is not None, "Home measurement cannot be NoneType."
 
         if home_measurement.is_passing_constraints():
-            step_vector = self._optimize_for_better_objectives(
-                home_measurement=home_measurement,
-                vectors=vectors,
-                measurements=measurements)
-        else:
-            step_vector = self._optimize_for_passing_constraints(
-                home_measurement=home_measurement,
-                vectors=vectors,
-                measurements=measurements)
-        return step_vector
+            return self._optimize_for_objectives(home_measurement)
 
-    def _optimize_for_better_objectives(self,
-                                        home_measurement: RunConfigMeasurement,
-                                        vectors: List[Coordinate],
-                                        measurements: List[RunConfigMeasurement]
-                                        ) -> Coordinate:
+        return self._optimize_for_constraints(home_measurement)
+
+    def _optimize_for_objectives(
+            self, home_measurement: RunConfigMeasurement) -> Coordinate:
         """
         Calculate a step vector that maximizes the current objectives.
         If no vectors are provided, return zero vector.
@@ -291,6 +280,7 @@ class Neighborhood:
         step_vector
             a coordinate that tells the direction to move.
         """
+        vectors, measurements = self._get_measurements_passing_constraints()
         step_vector = Coordinate([0] * self._config.get_num_dimensions())
 
         if not vectors:
@@ -303,11 +293,8 @@ class Neighborhood:
         step_vector /= len(vectors)
         return step_vector
 
-    def _optimize_for_passing_constraints(self,
-                                          home_measurement: RunConfigMeasurement,
-                                          vectors: List[Coordinate],
-                                          measurements: List[RunConfigMeasurement]
-                                          ) -> Coordinate:
+    def _optimize_for_constraints(
+            self, home_measurement: RunConfigMeasurement) -> Coordinate:
         """
         Calculate a step vector that steps toward the coordinates that
         pass the constraints (set default weights to 1.0). When no vectors
@@ -329,12 +316,11 @@ class Neighborhood:
         step_vector
             a coordinate that tells the direction to move.
         """
+        vectors, measurements = self._get_measurements_passing_constraints()
         step_vector = Coordinate([0] * self._config.get_num_dimensions())
 
         if not vectors:
             vectors, measurements = self._get_all_visited_measurements()
-            return self._optimize_for_passing_constraints(
-                home_measurement, vectors=vectors, measurements=measurements)
 
         for vector, measurement in zip(vectors, measurements):
             weight = home_measurement.compare_constraints(measurement)
@@ -368,8 +354,8 @@ class Neighborhood:
                 measurements.append(measurement)
         return vectors, measurements
 
-    def _get_constraints_passing_measurements(self) -> Tuple[List[Coordinate],
-                                                             List[RunConfigMeasurement]]:
+    def _get_measurements_passing_constraints(
+            self) -> Tuple[List[Coordinate], List[RunConfigMeasurement]]:
         """
         Gather all the vectors (directions from the home coordinate)
         and their corresponding measurements that are passing constraints.
