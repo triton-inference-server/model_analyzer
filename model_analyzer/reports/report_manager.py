@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.constants import LOGGER_NAME, TOP_MODELS_REPORT_KEY
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.metrics_manager import MetricsManager
@@ -301,11 +305,8 @@ class ReportManager:
         run_config = self._summary_data[report_key][0][0]
         cpu_only = run_config.cpu_only()
 
-        gpu_dict = self._get_gpu_stats(
+        (gpu_names, max_memories) = self._get_gpu_stats(
             measurements=[v for _, v in self._summary_data[report_key]])
-
-        gpu_names = ','.join(list(gpu_dict.keys()))
-        max_memories = ','.join([str(x) + ' GB' for x in gpu_dict.values()])
 
         # Get constraints
         constraint_strs = self._build_constraint_strings()
@@ -857,10 +858,8 @@ class ReportManager:
         gpu_cpu_string = "CPU"
 
         if not run_config.cpu_only():
-            gpu_dict = self._get_gpu_stats(measurements=measurements)
-            gpu_names = ','.join(list(gpu_dict.keys()))
-            max_memories = ','.join([str(x) + ' GB' for x in gpu_dict.values()])
-            gpu_cpu_string = f"GPU(s) {gpu_names} with memory limit(s) {max_memories}"
+            gpu_names, max_memories = self._get_gpu_stats(measurements)
+            gpu_cpu_string = f"GPU(s) {gpu_names} with total memory {max_memories}"
         sentence = (
             f"The model config \"{model_config_name}\" uses {instance_group_string} "
             f"with {max_batch_size_string} and has {dynamic_batching_string}. "
@@ -873,20 +872,43 @@ class ReportManager:
     def _get_gpu_count(self):
         return len(self._gpu_info)
 
-    def _get_gpu_stats(self, measurements):
+    def _get_gpu_stats(
+            self,
+            measurements: List["RunConfigMeasurement"]) -> Tuple[str, str]:
         """
-        Gets names and memory infos of GPUs used in measurements
+        Gets names and max total memory of GPUs used in measurements as a 
+        tuple of strings
+
+        Returns
+        -------
+        (gpu_names_str, max_memory_str):
+            The GPU names as a string, and the total combined memory as a string
         """
 
         gpu_dict = {}
-        for measurement in measurements:
-            for gpu_uuid, gpu_info in self._gpu_info.items():
+        for gpu_uuid, gpu_info in self._gpu_info.items():
+            for measurement in measurements:
                 if gpu_uuid in measurement.gpus_used():
                     gpu_name = gpu_info['name']
                     max_memory = round(gpu_info['total_memory'] / (2**30), 1)
                     if gpu_name not in gpu_dict:
-                        gpu_dict[gpu_name] = max_memory
-        return gpu_dict
+                        gpu_dict[gpu_name] = {"memory": max_memory, "count": 1}
+                    else:
+                        gpu_dict[gpu_name]["count"] += 1
+                    break
+
+        gpu_names = ""
+        max_memory = 0
+        for name in gpu_dict.keys():
+            count = gpu_dict[name]["count"]
+            memory = gpu_dict[name]["memory"]
+            if gpu_names != "":
+                gpu_names += ", "
+            gpu_names += f"{count} x {name}"
+            max_memory += memory * count
+
+        max_mem_str = f"{max_memory} GB"
+        return (gpu_names, max_mem_str)
 
     def _build_constraint_strings(self):
         """
