@@ -46,6 +46,10 @@ class CheckpointExperimentData(ExperimentData):
             for (perf_analyzer_string,
                  run_config_measurement) in run_config_measurements.items():
 
+                run_config_measurement.set_model_config_constraints(
+                    model_config_constraints=[config.constraints])
+
                 pa_key = self._make_pa_key_from_cli_string(perf_analyzer_string)
+
                 self._add_run_config_measurement_from_keys(
                     ma_key, pa_key, run_config, run_config_measurement)

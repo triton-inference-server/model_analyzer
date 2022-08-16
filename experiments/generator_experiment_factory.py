@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.config.generate.quick_run_config_generator import QuickRunConfigGenerator
 from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
@@ -65,10 +66,11 @@ class GeneratorExperimentFactory:
                 step_magnitude=config_command.magnitude,
                 min_initialized=config_command.min_initialized)
 
+            mvn = ModelVariantNameManager()
             generator = QuickRunConfigGenerator(search_config, config_command,
                                                 MagicMock(),
                                                 config_command.profile_models,
-                                                MagicMock())
+                                                MagicMock(), mvn)
             return generator
         else:
             raise Exception(f"Unknown generator {generator_name}")

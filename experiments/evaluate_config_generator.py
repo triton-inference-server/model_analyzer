@@ -59,11 +59,12 @@ class EvaluateConfigGenerator:
         for run_config in cg.get_configs():
             run_config_measurement = self._checkpoint_data.get_run_config_measurement(
                 run_config)
-            self._profile_data.add_run_config_measurement(
-                run_config, run_config_measurement)
 
             if run_config_measurement:
                 run_config_measurement.set_model_config_constraints(
                     model_config_constraints=[self._config_command.constraints])
+
+            self._profile_data.add_run_config_measurement(
+                run_config, run_config_measurement)
 
             cg.set_last_results([run_config_measurement])

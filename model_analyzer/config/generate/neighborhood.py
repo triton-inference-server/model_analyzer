@@ -23,6 +23,12 @@ from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
+from model_analyzer.constants import LOGGER_NAME
+
+import logging
+
+logger = logging.getLogger(LOGGER_NAME)
+
 
 class Neighborhood:
     """
@@ -101,10 +107,15 @@ class Neighborhood:
         if enable_clipping:
             step_vector = self._clip_vector_values(vector=step_vector,
                                                    clip_value=clip_value)
+            logger.debug(f"(Measurement) Clipped step vector: {step_vector}")
+
+        logger.debug(f"(Measurement) Scaled step vector: {step_vector}")
         step_vector.round()
+        logger.debug(f"(Measurement) Rounded step vector: {step_vector}")
 
         tmp_new_coordinate = self._home_coordinate + step_vector
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
+        logger.debug(f"(Measurement) New coordinate: {new_coordinate}")
         return new_coordinate
 
     def _clip_vector_values(self, vector: Coordinate,
@@ -133,7 +144,7 @@ class Neighborhood:
 
         if max_value > clip_value and max_value != 0:
             for i in range(len(vector)):
-                vector[i] = clip_value * vector[i]/max_value
+                vector[i] = clip_value * vector[i] / max_value
         return vector
 
     def pick_coordinate_to_initialize(self) -> Optional[Coordinate]:
@@ -256,8 +267,10 @@ class Neighborhood:
         assert home_measurement is not None, "Home measurement cannot be NoneType."
 
         if home_measurement.is_passing_constraints():
+            logger.debug(f"(Measurement) Home passed constraints.")
             return self._optimize_for_objectives(home_measurement)
 
+        logger.debug(f"(Measurement) Home failed constraints.")
         return self._optimize_for_constraints(home_measurement)
 
     def _optimize_for_objectives(
@@ -284,13 +297,19 @@ class Neighborhood:
         step_vector = Coordinate([0] * self._config.get_num_dimensions())
 
         if not vectors:
+            logger.debug(f"(Measurement) All neighbors failed constraints."
+                         f"Returning zero step vector.")
             return step_vector
 
+        logger.debug(f"(Measurement) Optimizing for objective...")
         for vector, measurement in zip(vectors, measurements):
             weight = home_measurement.compare_measurements(measurement)
             step_vector += vector * weight
+            logger.debug(
+                f"(Measurement)\t\t-vector: {vector}, weight: {weight}")
 
         step_vector /= len(vectors)
+        logger.debug(f"(Measurement) Initial step vector: {step_vector}")
         return step_vector
 
     def _optimize_for_constraints(
@@ -320,16 +339,21 @@ class Neighborhood:
         step_vector = Coordinate([0] * self._config.get_num_dimensions())
 
         if not vectors:
+            logger.debug(f"(Measurement) All neighbors failed constraints.")
             vectors, measurements = self._get_all_visited_measurements()
 
+        logger.debug(f"(Measurement) Optimizing for constraints...")
         for vector, measurement in zip(vectors, measurements):
             weight = home_measurement.compare_constraints(measurement)
             if measurement.is_passing_constraints():
                 weight = 1.0  # when home fails & neighbor passes
 
             step_vector += vector * weight
+            logger.debug(
+                f"(Measurement)\t\t-vector: {vector}, weight: {weight}")
 
         step_vector /= len(vectors)
+        logger.debug(f"(Measurement) Initial step vector: {step_vector}")
         return step_vector
 
     def _get_all_visited_measurements(

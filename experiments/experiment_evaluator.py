@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from experiment_data import ExperimentData
+
 
 class ExperimentEvaluator:
     """ 
@@ -19,7 +21,7 @@ class ExperimentEvaluator:
     a checkpoint of raw data
     """
 
-    def __init__(self, raw_data, profile_data):
+    def __init__(self, raw_data: ExperimentData, profile_data: ExperimentData):
         self._raw_data = raw_data
         self._profile_data = profile_data
 
@@ -43,6 +45,9 @@ class ExperimentEvaluator:
         print(
             f"Overall best throughput: {overall_best_measurement.get_non_gpu_metric_value('perf_throughput')}"
         )
+        print(
+            f"Overall best latency: {overall_best_measurement.get_non_gpu_metric_value('perf_latency_p99')}"
+        )
         print()
         print(
             f"Generator num measurements: {self._profile_data.get_run_config_measurement_count()}"
@@ -58,6 +63,9 @@ class ExperimentEvaluator:
         )
         print(
             f"Generator best throughput: {generator_best_measurement.get_non_gpu_metric_value('perf_throughput')}"
+        )
+        print(
+            f"Generator best latency: {generator_best_measurement.get_non_gpu_metric_value('perf_latency_p99')}"
         )
         print()
 
