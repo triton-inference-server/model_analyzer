@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple
+from typing import List, Tuple, TYPE_CHECKING
 
-from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+if TYPE_CHECKING:
+    from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.constants import LOGGER_NAME, TOP_MODELS_REPORT_KEY
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.metrics_manager import MetricsManager
@@ -873,7 +874,8 @@ class ReportManager:
         return len(self._gpu_info)
 
     def _get_gpu_stats(
-            self, measurements: List[RunConfigMeasurement]) -> Tuple[str, str]:
+            self,
+            measurements: List["RunConfigMeasurement"]) -> Tuple[str, str]:
         """
         Gets names and max total memory of GPUs used in measurements
 
@@ -881,8 +883,8 @@ class ReportManager:
         """
 
         gpu_dict = {}
-        for measurement in measurements:
-            for gpu_uuid, gpu_info in self._gpu_info.items():
+        for gpu_uuid, gpu_info in self._gpu_info.items():
+            for measurement in measurements:
                 if gpu_uuid in measurement.gpus_used():
                     gpu_name = gpu_info['name']
                     max_memory = round(gpu_info['total_memory'] / (2**30), 1)
@@ -890,6 +892,7 @@ class ReportManager:
                         gpu_dict[gpu_name] = {"memory": max_memory, "count": 1}
                     else:
                         gpu_dict[gpu_name]["count"] += 1
+                    break
 
         gpu_names = ""
         max_memory = 0

@@ -482,7 +482,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             metric_objectives=MagicMock(),
             model_config_weights=MagicMock())
 
-        measurements = [measurement]
+        measurements = [measurement, measurement]
         (names,
          max_gpu) = report_manager._get_gpu_stats(measurements=measurements)
         self.assertEqual(names, "2 x fake_gpu_name, 1 x fake_gpu_name_3")
