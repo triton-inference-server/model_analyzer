@@ -253,10 +253,6 @@ class Analyzer:
                     self._state_manager.save_checkpoint()
 
     def _analyze_models(self):
-        # TODO: TMA-792: Until we get rid of analysis we need to copy some values from profile
-        self._config._fields["analysis_models"] = self._config._fields[
-            "profile_models"]
-
         self._result_manager.compile_and_sort_results()
 
     def _create_summary_tables(self, verbose: bool):

@@ -35,7 +35,7 @@ class ResultManager:
         """
         Parameters
         ----------
-        config :ConfigCommandProfile
+        config :ConfigCommandProfile/ConfigCommandReport
             the model analyzer config
         state_manager: AnalyzerStateManager
             The object that allows control and update of state
@@ -50,6 +50,19 @@ class ResultManager:
         # Data structures for sorting results
         self._per_model_sorted_results = defaultdict(ResultHeap)
         self._across_model_sorted_results = ResultHeap()
+
+        # TODO: TMA-792: Until we get rid of analysis we need to copy some values from profile
+        if 'profile_models' in self._config._fields:
+            self._config._fields["analysis_models"] = self._config._fields[
+                "profile_models"]
+
+        if 'analysis_models' in self._config._fields:
+            self._create_concurrent_analysis_model_name()
+
+            if self._analyzing_models_concurrently():
+                self._setup_for_concurrent_analysis()
+            else:
+                self._setup_for_sequential_analysis()
 
     def get_model_names(self):
         """
@@ -129,14 +142,6 @@ class ResultManager:
         filters them according to constraints
         and objectives.
         """
-
-        self._create_concurrent_analysis_model_name()
-
-        if self._analyzing_models_concurrently():
-            self._setup_for_concurrent_analysis()
-        else:
-            self._setup_for_sequential_analysis()
-
         self._add_results_to_heaps()
 
     def get_model_configs_run_config_measurements(self, model_variants_name):
