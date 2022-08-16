@@ -100,7 +100,8 @@ class Analyzer:
 
         self._create_metrics_manager(client, gpus)
         self._create_model_manager(client, gpus)
-        self._get_server_only_metrics(client)
+
+        self._get_server_only_metrics(client, gpus)
 
         self._profile_models()
 
@@ -212,8 +213,19 @@ class Analyzer:
             metrics_manager=self._metrics_manager,
             state_manager=self._state_manager)
 
-    def _get_server_only_metrics(self, client):
+    def _get_server_only_metrics(self, client, gpus):
         if self._config.triton_launch_mode != 'c_api':
+            if not self._state_manager._starting_fresh_run:
+                if self._do_checkpoint_gpus_match(gpus):
+                    logger.info(
+                        "GPU devices match checkpoint - skipping server metric acquisition"
+                    )
+                    return
+                elif gpus is not None:
+                    raise TritonModelAnalyzerException(
+                        "GPU devices do not match checkpoint - Remove checkpoint file and rerun profile"
+                    )
+
             logger.info('Profiling server only metrics...')
             self._server.start()
             client.wait_for_server_ready(self._config.client_max_retries)
@@ -344,3 +356,10 @@ class Analyzer:
             x.run_config().model_variants_name()
             for x in self._result_manager.top_n_results(n=n)
         ]
+
+    def _do_checkpoint_gpus_match(self, gpus) -> bool:
+        ckpt_data = self._result_manager.get_server_only_data()
+        ckpt_uuids = [ckpt_uuid for ckpt_uuid in ckpt_data.keys()]
+        gpu_uuids = [gpu._device_uuid for gpu in gpus]
+
+        return sorted(ckpt_uuids) == sorted(gpu_uuids)

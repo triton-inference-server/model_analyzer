@@ -28,7 +28,7 @@ EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
-TRITON_LAUNCH_MODES="remote local"
+TRITON_LAUNCH_MODES="local remote"
 CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
 http_port="${PORTS[0]}"
@@ -97,12 +97,24 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
             cat $ANALYZER_LOG
             RET=1
         fi
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS"
-        
+        rm $ANALYZER_LOG
+
+        echo -e "\n*** Re-running profile\n***"
+        ANALYZER_LOG=analyzer.${launch_mode}.${config}_rerun.log
+        run_analyzer
+        if [ $? -ne 0 ]; then
+            echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
+            cat $ANALYZER_LOG
+            RET=1
+        fi
+
         if [ $launch_mode == 'remote' ]; then
             kill $SERVER_PID
             wait $SERVER_PID
         fi
+
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS"
+        
         SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
         MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
         MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
@@ -110,6 +122,14 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         INFERENCE_NUM_COLUMNS=9
         SERVER_METRICS_NUM_COLUMNS=5
         
+        # Check that rerun skipped getting server metrics
+        grep "GPU devices match checkpoint" $ANALYZER_LOG | wc -l
+        if [ $? -eq 0]; then
+            echo -e "\n***\n*** Test Verification Failed - GPU devices did not match checkpoint on rerun.\n***"
+            cat $ANALYZER_LOG
+            RET=1
+        fi
+
         check_table_row_column \
             $ANALYZER_LOG $ANALYZER_LOG $ANALYZER_LOG \
             $MODEL_METRICS_INFERENCE_FILE $MODEL_METRICS_GPU_FILE $SERVER_METRICS_FILE \
@@ -120,6 +140,24 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
             echo -e "\n***\n*** Test Output Verification Failed.\n***"
             cat $ANALYZER_LOG
             RET=1
+        fi
+
+        # Check that GPUs don't match and we return an error
+        if [ $launch_mode != 'remote' ]; then
+            sed -i 's/GPU-/GPU-1-/g' $CHECKPOINT_DIRECTORY/1.ckpt
+            
+            run_analyzer
+            if [ $? -e 0 ]; then
+                echo -e "\n***\n*** Test Output Verification Failed. model-analyzer exited sucessfully, but GPUs did not match checkpoint. \n***"
+                cat $ANALYZER_LOG
+                RET=1
+            fi
+            grep "GPU devices do not match checkpoint" $ANALYZER_LOG | wc -l
+            if [ $? -eq 0]; then
+                echo -e "\n***\n*** Test Verification Failed - GPU did not mismatch checkpoint on rerun.\n***"
+                cat $ANALYZER_LOG
+                RET=1
+            fi
         fi
 
         rm $ANALYZER_LOG
