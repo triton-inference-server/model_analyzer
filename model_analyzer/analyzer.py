@@ -113,9 +113,6 @@ class Analyzer:
         logger.info("")
 
         if not self._config.skip_summary_reports:
-            # TODO: TMA-792: This won't be needed once the Results class is used in profile
-            self._analyze_models()
-
             self._create_summary_tables(verbose)
             self._create_summary_reports(mode)
             logger.info(self._get_report_command_help_string())

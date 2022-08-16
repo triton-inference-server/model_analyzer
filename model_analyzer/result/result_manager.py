@@ -19,6 +19,7 @@ from model_analyzer.model_analyzer_exceptions \
 
 from .result_heap import ResultHeap
 from .run_config_result_comparator import RunConfigResultComparator
+from .run_config_measurement import RunConfigMeasurement
 from .run_config_result import RunConfigResult
 from .results import Results
 
@@ -133,6 +134,31 @@ class ResultManager:
         # Use set_state_variable to record that state may have been changed
         self._state_manager.set_state_variable(name='ResultManager.results',
                                                value=results)
+
+    def add_measurement_to_heaps(self, run_config,
+                                 run_config_measurement: RunConfigMeasurement):
+        """
+        Add measurement to individual result heaps 
+        as well as global result heap
+        """
+        for model_name in self._analysis_model_names:
+            run_config_result = RunConfigResult(
+                model_name=model_name,
+                run_config=run_config,
+                comparator=self._run_comparators[model_name],
+                constraints=self._run_constraints[model_name])
+
+            run_config_measurement.set_metric_weightings(
+                self._run_comparators[model_name]._metric_weights)
+
+            run_config_measurement.set_model_config_weighting(
+                self._run_comparators[model_name]._model_weights)
+
+            run_config_result.add_run_config_measurement(run_config_measurement)
+
+            self._per_model_sorted_results[model_name].add_result(
+                run_config_result)
+            self._across_model_sorted_results.add_result(run_config_result)
 
     def compile_and_sort_results(self):
         """
