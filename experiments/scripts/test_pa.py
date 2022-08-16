@@ -18,6 +18,7 @@ from statistics import mean
 from itertools import product
 from time import sleep
 from pynvml import *
+from copy import deepcopy
 
 # This script will sweep through PA configurations, gather statistics, and then
 # print out a csv to stdout. It does not take any options -- for now everything
@@ -94,12 +95,6 @@ class RunConfigData:
             str += f"\n{member}: {getattr(self, member)}"
         return str
 
-    def dict(self) -> dict:
-        d = {}
-        for member in RunConfigData.MEMBERS:
-            d[member] = getattr(self, member)
-        return d
-
 
 class RunResultData:
     """ Holds the results for one run """
@@ -123,12 +118,6 @@ class RunResultData:
         self.throughput = 0
         self.latency = 0
         self.average_batch_size = 0
-
-    def dict(self) -> dict:
-        d = {}
-        for member in RunResultData.MEMBERS:
-            d[member] = getattr(self, member)
-        return d
 
     def __repr__(self) -> str:
         str = ""
@@ -295,8 +284,8 @@ class PATester():
         writer = csv.DictWriter(f=sys.stdout, fieldnames=fieldnames)
         writer.writeheader()
         for config, result in self._results:
-            dict1 = config.dict()
-            dict2 = result.dict()
+            dict1 = deepcopy(vars(config))
+            dict2 = deepcopy(vars(result))
             dict1.update(dict2)
             for k, v in dict1.items():
                 if isinstance(v, float):
