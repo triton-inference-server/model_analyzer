@@ -434,6 +434,16 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.assertEqual(output, expected_output)
 
     def test_gpu_name_and_memory(self):
+        """ 
+        Test return value of _get_gpu_stats() 
+        
+        Creates a scenario where 4 GPUs are visable, but only 3 are 
+        used (1 measurement uses 1 and 2, other uses 1 and 4)
+
+        The function should note that 1 and 2 are the same GPU type and combine
+        them in the name string, and it should combine the total memory of the used
+        GPUs
+        """
         gpu_info = {
             'gpu_uuid1': {
                 'name': 'fake_gpu_name',
@@ -458,12 +468,19 @@ class TestReportManagerMethods(trc.TestResultCollector):
                                        gpu_info=gpu_info,
                                        result_manager=MagicMock())
 
-        avg_gpu_metrics = {
+        avg_gpu_metrics1 = {
             'gpu_uuid1': {
                 "gpu_used_memory": 6000,
                 "gpu_utilization": 60
             },
             'gpu_uuid2': {
+                "gpu_used_memory": 6000,
+                "gpu_utilization": 60
+            },
+        }
+
+        avg_gpu_metrics2 = {
+            'gpu_uuid1': {
                 "gpu_used_memory": 6000,
                 "gpu_utilization": 60
             },
@@ -473,16 +490,25 @@ class TestReportManagerMethods(trc.TestResultCollector):
             },
         }
 
-        measurement = construct_run_config_measurement(
+        measurement1 = construct_run_config_measurement(
             model_name=MagicMock(),
             model_config_names=MagicMock(),
             model_specific_pa_params=MagicMock(),
-            gpu_metric_values=avg_gpu_metrics,
+            gpu_metric_values=avg_gpu_metrics1,
             non_gpu_metric_values=MagicMock(),
             metric_objectives=MagicMock(),
             model_config_weights=MagicMock())
 
-        measurements = [measurement, measurement]
+        measurement2 = construct_run_config_measurement(
+            model_name=MagicMock(),
+            model_config_names=MagicMock(),
+            model_specific_pa_params=MagicMock(),
+            gpu_metric_values=avg_gpu_metrics2,
+            non_gpu_metric_values=MagicMock(),
+            metric_objectives=MagicMock(),
+            model_config_weights=MagicMock())
+
+        measurements = [measurement1, measurement2]
         names, max_mem = report_manager._get_gpu_stats(measurements)
         self.assertEqual(names, "2 x fake_gpu_name, 1 x fake_gpu_name_3")
         self.assertEqual(max_mem, "12.0 GB")
