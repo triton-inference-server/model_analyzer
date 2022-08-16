@@ -33,7 +33,7 @@ class TestNeighborhood(trc.TestResultCollector):
         # yapf: disable
         non_gpu_metric_values = [{
             "perf_throughput": throughput,
-            "perf_latency_avg": latency
+            "perf_latency_p99": latency
         }]
         # yapf: enable
 
@@ -107,42 +107,56 @@ class TestNeighborhood(trc.TestResultCollector):
 
         # Start with 0 initialized
         self.assertEqual(0, len(n._get_visited_coordinates()))
+        self.assertEqual(0, len(n._get_initialized_coordinates()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Home coordinate is ignored. No change to num initialized/visited.
         n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm)
         n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
         self.assertEqual(0, len(n._get_visited_coordinates()))
+        self.assertEqual(0, len(n._get_initialized_coordinates()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Incremented to 1 initialized
         n.coordinate_data.set_measurement(Coordinate([0, 0, 0]), rcm)
         n.coordinate_data.increment_visit_count(Coordinate([0, 0, 0]))
         self.assertEqual(1, len(n._get_visited_coordinates()))
+        self.assertEqual(1, len(n._get_initialized_coordinates()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Set same point. No change to num initialized
         n.coordinate_data.set_measurement(Coordinate([0, 0, 0]), rcm)
         n.coordinate_data.increment_visit_count(Coordinate([0, 0, 0]))
         self.assertEqual(1, len(n._get_visited_coordinates()))
+        self.assertEqual(1, len(n._get_initialized_coordinates()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Set a point outside of neighborhood
         n.coordinate_data.set_measurement(Coordinate([0, 0, 4]), rcm)
         n.coordinate_data.increment_visit_count(Coordinate([0, 0, 4]))
         self.assertEqual(1, len(n._get_visited_coordinates()))
+        self.assertEqual(1, len(n._get_initialized_coordinates()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Set a third point inside of neighborhood
         n.coordinate_data.set_measurement(Coordinate([1, 0, 0]), rcm)
         n.coordinate_data.increment_visit_count(Coordinate([1, 0, 0]))
         self.assertEqual(2, len(n._get_visited_coordinates()))
+        self.assertEqual(2, len(n._get_initialized_coordinates()))
+        self.assertFalse(n.enough_coordinates_initialized())
+
+        # Set the none measurement. No changed to num initialized.
+        n.coordinate_data.set_measurement(Coordinate([0, 1, 1]), None)
+        n.coordinate_data.increment_visit_count(Coordinate([0, 1, 1]))
+        self.assertEqual(3, len(n._get_visited_coordinates()))
+        self.assertEqual(2, len(n._get_initialized_coordinates()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Set the last point inside of neighborhood
         n.coordinate_data.set_measurement(Coordinate([1, 1, 0]), rcm)
         n.coordinate_data.increment_visit_count(Coordinate([1, 1, 0]))
-        self.assertEqual(3, len(n._get_visited_coordinates()))
+        self.assertEqual(4, len(n._get_visited_coordinates()))
+        self.assertEqual(3, len(n._get_initialized_coordinates()))
         self.assertTrue(n.enough_coordinates_initialized())
 
     def test_clip_vector_values(self):
@@ -163,7 +177,7 @@ class TestNeighborhood(trc.TestResultCollector):
         c = n._clip_vector_values(Coordinate([10, 5]), clip_value=2)
         self.assertEqual(c, Coordinate([2, 1]))
         c = n._clip_vector_values(Coordinate([100, 5]), clip_value=2)
-        self.assertEqual(c, Coordinate([2, 0]))
+        self.assertEqual(c, Coordinate([2, 0.1]))
 
         # Test if it clips large, negative values
         c = n._clip_vector_values(Coordinate([-10, 5]), clip_value=2)
@@ -171,7 +185,7 @@ class TestNeighborhood(trc.TestResultCollector):
         c = n._clip_vector_values(Coordinate([-10, -5]), clip_value=2)
         self.assertEqual(c, Coordinate([-2, -1]))
         c = n._clip_vector_values(Coordinate([-100, 5]), clip_value=2)
-        self.assertEqual(c, Coordinate([-2, 0]))
+        self.assertEqual(c, Coordinate([-2, 0.1]))
 
         # Test if it skips clipping if values are within range
         c = n._clip_vector_values(Coordinate([1, 0]), clip_value=2)
@@ -183,7 +197,113 @@ class TestNeighborhood(trc.TestResultCollector):
         c = n._clip_vector_values(Coordinate([0, 0]), clip_value=2)
         self.assertEqual(c, Coordinate([0, 0]))
 
-    def test_step_vector(self):
+    def test_get_all_visited_measurements(self):
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("foobar",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+
+        rcm0 = self._construct_rcm(throughput=100, latency=50)
+        rcm1 = self._construct_rcm(throughput=700, latency=350)
+        rcm2 = self._construct_rcm(throughput=300, latency=130)
+
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 2]), None)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 2]))
+
+        expected_vectors = [
+            Coordinate([1, 2, 1]) - Coordinate([1, 1, 1]),
+            Coordinate([2, 1, 1]) - Coordinate([1, 1, 1])
+        ]
+        expected_measurements = [rcm2, rcm1]
+
+        vectors, measurements = n._get_all_visited_measurements()
+        for ev, em in zip(expected_vectors, expected_measurements):
+            self.assertTrue(ev in vectors)
+            self.assertTrue(em in measurements)
+
+
+    def test_get_constraints_passing_measurements(self):
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("foobar",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+
+        # Constraints:
+        #   - Minimum throughput of 100 infer/sec
+        #   - Maximum latency of 300 ms
+        constraints = {
+            "perf_throughput" : {
+                "min": 100
+            },
+            "perf_latency_p99" : {
+                "max": 300
+            }
+        }
+
+        rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
+        rcm0.set_model_config_constraints([constraints])
+
+        rcm1 = self._construct_rcm(throughput=700, latency=350)  # fail
+        rcm1.set_model_config_constraints([constraints])
+
+        rcm2 = self._construct_rcm(throughput=300, latency=130)  # pass
+        rcm2.set_model_config_constraints([constraints])
+
+        rcm3 = self._construct_rcm(throughput=400, latency=290)  # pass
+        rcm3.set_model_config_constraints([constraints])
+
+        rcm4 = self._construct_rcm(throughput=850, latency=400)  # fail
+        rcm4.set_model_config_constraints([constraints])
+
+
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 2]), rcm3)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 2]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 2]), rcm4)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 2]))
+
+        expected_vectors = [
+            Coordinate([1, 1, 2]) - Coordinate([1, 1, 1]),
+            Coordinate([1, 2, 1]) - Coordinate([1, 1, 1])
+        ]
+        expected_measurements = [rcm3, rcm2]
+
+        vectors, measurements = n._get_measurements_passing_constraints()
+        for ev, em in zip(expected_vectors, expected_measurements):
+            self.assertTrue(ev in vectors)
+            self.assertTrue(em in measurements)
+
+    def test_step_vector_no_constraints(self):
         """
         Test _get_step_vector method that determines the direction to step
         towards from the home coordinate using the collected coordinates
@@ -227,6 +347,287 @@ class TestNeighborhood(trc.TestResultCollector):
 
         step_vector = n._get_step_vector()
         expected_step_vector = Coordinate([3/4, 1/2, 0])
+        self.assertEqual(step_vector, expected_step_vector)
+
+    def test_step_vector_both_home_and_neighbors_passing_constraints(self):
+        """
+        Test _get_step_vector method with constraints specified. Tests if
+        the method properly handles the following case:
+            - the home coordinate passes the constraints
+            - some neighbor coordinates pass the constraints
+
+          1. Get vectors and measurements tuples that are passing constraints.
+                [1, 2, 1] - [1, 1, 1] = [0, 1, 0] (throughput=300, latency=130)
+                [1, 1, 2] - [1, 1, 1] = [0, 0, 1] (throughput=400, latency=290)
+
+          2. Multiply each vectors by its weights (**objective comparison**):
+                [0, 1, 0] * 1.0 = [0, 1, 0]
+                [0, 0, 1] * 1.2 = [0, 0, 1.2]
+
+          2. Compute the average of the vectors:
+                ([0, 1, 0] + [0, 0, 1.2]) / 2 = [0, 1/2, 3/5]
+        """
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("foobar",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+
+        # Constraints:
+        #   - Minimum throughput of 100 infer/sec
+        #   - Maximum latency of 300 ms
+        constraints = {
+            "perf_throughput" : {
+                "min": 100
+            },
+            "perf_latency_p99" : {
+                "max": 300
+            }
+        }
+
+        rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
+        rcm0.set_model_config_constraints([constraints])
+
+        rcm1 = self._construct_rcm(throughput=700, latency=350)  # fail
+        rcm1.set_model_config_constraints([constraints])
+
+        rcm2 = self._construct_rcm(throughput=300, latency=130)  # pass
+        rcm2.set_model_config_constraints([constraints])
+
+        rcm3 = self._construct_rcm(throughput=400, latency=290)  # pass
+        rcm3.set_model_config_constraints([constraints])
+
+        rcm4 = self._construct_rcm(throughput=850, latency=400)  # fail
+        rcm4.set_model_config_constraints([constraints])
+
+
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 2]), rcm3)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 2]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 2]), rcm4)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 2]))
+
+        hm = n.coordinate_data.get_measurement(Coordinate([1, 1, 1]))
+        self.assertTrue(hm.is_passing_constraints())
+
+        step_vector = n._get_step_vector()
+        expected_step_vector = Coordinate([0, 1/2, 3/5])
+        self.assertEqual(step_vector, expected_step_vector)
+
+    def test_step_vector_only_home_passing_constraints(self):
+        """
+        Test _get_step_vector method with constraints specified. Tests if
+        the method properly handles the following case:
+            - the home coordinate passes the constraints
+            - neighbor coordinates all fail the constraints
+        """
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("foobar",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+
+        # Constraints:
+        #   - Minimum throughput of 100 infer/sec
+        #   - Maximum latency of 300 ms
+        constraints = {
+            "perf_throughput" : {
+                "min": 100
+            },
+            "perf_latency_p99" : {
+                "max": 300
+            }
+        }
+
+        rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
+        rcm0.set_model_config_constraints([constraints])
+
+        rcm1 = self._construct_rcm(throughput=700, latency=350)  # fail
+        rcm1.set_model_config_constraints([constraints])
+
+        rcm2 = self._construct_rcm(throughput=850, latency=400)  # fail
+        rcm2.set_model_config_constraints([constraints])
+
+
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 2]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 2]))
+
+        hm = n.coordinate_data.get_measurement(Coordinate([1, 1, 1]))
+        self.assertTrue(hm.is_passing_constraints())
+
+        step_vector = n._get_step_vector()
+        expected_step_vector = Coordinate([0, 0, 0])
+        self.assertEqual(step_vector, expected_step_vector)
+
+    def test_step_vector_only_home_failing_constraints(self):
+        """
+        Test _get_step_vector method with constraints specified. Tests if
+        the method properly handles the following case:
+            - the home coordinate fails the constraints
+            - some neighbor coordinates pass the constraints
+
+          1. Get vectors and measurements tuples that are passing constraints.
+                [1, 2, 1] - [1, 1, 1] = [0, 1, 0] (throughput=300, latency=130)
+                [1, 1, 2] - [1, 1, 1] = [0, 0, 1] (throughput=400, latency=290)
+
+          2. Multiply each vectors by its weights (set default to 1.0):
+                [0, 1, 0] * 1.0 = [0, 1, 0]
+                [0, 0, 1] * 1.0 = [0, 0, 1]
+
+          2. Compute the average of the vectors:
+                ([0, 1, 0] + [0, 0, 1]) / 2 = [0, 1/2, 1/2]
+        """
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("foobar",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+
+        # Constraints:
+        #   - Minimum throughput of 100 infer/sec
+        #   - Maximum latency of 300 ms
+        constraints = {
+            "perf_throughput" : {
+                "min": 100
+            },
+            "perf_latency_p99" : {
+                "max": 300
+            }
+        }
+
+        rcm0 = self._construct_rcm(throughput=80, latency=50)  # fail
+        rcm0.set_model_config_constraints([constraints])
+
+        rcm1 = self._construct_rcm(throughput=700, latency=350)  # fail
+        rcm1.set_model_config_constraints([constraints])
+
+        rcm2 = self._construct_rcm(throughput=300, latency=130)  # pass
+        rcm2.set_model_config_constraints([constraints])
+
+        rcm3 = self._construct_rcm(throughput=400, latency=290)  # pass
+        rcm3.set_model_config_constraints([constraints])
+
+        rcm4 = self._construct_rcm(throughput=850, latency=400)  # fail
+        rcm4.set_model_config_constraints([constraints])
+
+
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 2]), rcm3)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 2]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 2]), rcm4)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 2]))
+
+        hm = n.coordinate_data.get_measurement(Coordinate([1, 1, 1]))
+        self.assertFalse(hm.is_passing_constraints())
+
+        step_vector = n._get_step_vector()
+        expected_step_vector = Coordinate([0, 1/2, 1/2])
+        self.assertEqual(step_vector, expected_step_vector)
+
+    def test_step_vector_both_home_and_neighbors_failing_constraints(self):
+        """
+        Test _get_step_vector method with constraints specified. Tests if
+        the method properly handles the following case:
+            - the home coordinate fails the constraints
+            - neighbor coordinates all fails the constraints
+
+          1. Get vectors and measurements tuples that are failing constraints.
+                [2, 1, 1] - [1, 1, 1] = [1, 0, 0] (throughput=700, latency=360)
+                [1, 2, 1] - [1, 1, 1] = [0, 1, 0] (throughput=850, latency=540)
+
+          2. Multiply each vectors by its weights (**constraint comparison**):
+                [1, 0, 0] *  0.3 = [0.3,    0, 0]
+                [0, 1, 0] * -0.3 = [  0, -0.3, 0]
+
+          2. Compute the average of the vectors:
+                ([0.3, 0, 0] + [0, -0.3, 0]) / 2 = [0.15, -0.15, 0]
+        """
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("foobar",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+
+        # Constraints:
+        #   - Minimum throughput of 100 infer/sec
+        #   - Maximum latency of 300 ms
+        constraints = {
+            "perf_throughput" : {
+                "min": 100
+            },
+            "perf_latency_p99" : {
+                "max": 300
+            }
+        }
+
+        rcm0 = self._construct_rcm(throughput=500, latency=450)  # fail
+        rcm0.set_model_config_constraints([constraints])
+
+        rcm1 = self._construct_rcm(throughput=700, latency=360)  # fail
+        rcm1.set_model_config_constraints([constraints])
+
+        rcm2 = self._construct_rcm(throughput=850, latency=540)  # fail
+        rcm2.set_model_config_constraints([constraints])
+
+
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
+
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
+
+        hm = n.coordinate_data.get_measurement(Coordinate([1, 1, 1]))
+        self.assertFalse(hm.is_passing_constraints())
+
+        step_vector = n._get_step_vector()
+        expected_step_vector = Coordinate([0.15, -0.15, 0])
         self.assertEqual(step_vector, expected_step_vector)
 
     def test_calculate_new_coordinate_one_dimension(self):

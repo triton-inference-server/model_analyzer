@@ -73,7 +73,7 @@ class Neighborhood:
         have been initialized. Else false
         """
         min_initialized = self._config.get_min_initialized()
-        num_initialized = len(self._get_visited_coordinates())
+        num_initialized = len(self._get_initialized_coordinates())
         return num_initialized >= min_initialized
 
     def calculate_new_coordinate(self,
@@ -97,11 +97,11 @@ class Neighborhood:
             The new coordinate computed based on the neighborhood measurements.
         """
         step_vector = self._get_step_vector() * magnitude
-        step_vector.round()
 
         if enable_clipping:
             step_vector = self._clip_vector_values(vector=step_vector,
                                                    clip_value=clip_value)
+        step_vector.round()
 
         tmp_new_coordinate = self._home_coordinate + step_vector
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
@@ -111,10 +111,9 @@ class Neighborhood:
                             clip_value: int) -> Coordinate:
         """
         Clip the values of the vector to be within the range of
-        [-clip_value, clip_value]. The clipping **approximately** preserves
-        the direction of the vector (e.g. if the clip_value is 2, then
-        [10, 5] will be clipped to [2, 1] instead of [2, 2]). It may not
-        be exact due to the rounding of the values at the end.
+        [-clip_value, clip_value]. The clipping preserves the direction
+        of the vector (e.g. if the clip_value is 2, then [10, 5] will be
+        clipped to [2, 1] instead of [2, 2]).
 
         Parameters
         ----------
@@ -134,7 +133,7 @@ class Neighborhood:
 
         if max_value > clip_value and max_value != 0:
             for i in range(len(vector)):
-                vector[i] = round(clip_value * vector[i]/max_value)
+                vector[i] = clip_value * vector[i]/max_value
         return vector
 
     def pick_coordinate_to_initialize(self) -> Optional[Coordinate]:
@@ -228,38 +227,115 @@ class Neighborhood:
                 visited_coordinates.append(deepcopy(coordinate))
         return visited_coordinates
 
+    def _get_initialized_coordinates(self) -> List[Coordinate]:
+        initialized_coordinates = []
+        for coordinate in self._neighborhood:
+            if coordinate != self._home_coordinate \
+                    and self._is_coordinate_initialized(coordinate):
+                initialized_coordinates.append(deepcopy(coordinate))
+        return initialized_coordinates
+
     def _get_step_vector(self) -> Coordinate:
         """
         Calculate a vector that indicates a direction to step from the
         home coordinate (current center).
+
+        If the home coordinate is passing the constraints, the method
+        calculates the step vector based on the objectives given.
+        Otherwise, it calculates the step vector based on the constraints
+        so that it steps toward the region that passes the constraints.
 
         Returns
         -------
         step_vector
             a coordinate that tells the direction to move.
         """
-        step_vector = Coordinate([0] * self._config.get_num_dimensions())
-
-        vectors, measurements = self._compile_neighborhood_measurements()
         home_measurement = self._coordinate_data.get_measurement(
             coordinate=self._home_coordinate)
 
+        assert home_measurement is not None, "Home measurement cannot be NoneType."
+
+        if home_measurement.is_passing_constraints():
+            return self._optimize_for_objectives(home_measurement)
+
+        return self._optimize_for_constraints(home_measurement)
+
+    def _optimize_for_objectives(
+            self, home_measurement: RunConfigMeasurement) -> Coordinate:
+        """
+        Calculate a step vector that maximizes the current objectives.
+        If no vectors are provided, return zero vector.
+
+        Parameters
+        ----------
+        vectors
+            list of vectors from home coordinate to the neighboring
+            coordinates that are passing constraints
+        measurements
+            list of measurements of the neighboring coordinates that
+            are passing constraints
+
+        Returns
+        -------
+        step_vector
+            a coordinate that tells the direction to move.
+        """
+        vectors, measurements = self._get_measurements_passing_constraints()
+        step_vector = Coordinate([0] * self._config.get_num_dimensions())
+
+        if not vectors:
+            return step_vector
+
         for vector, measurement in zip(vectors, measurements):
-            if measurement:
-                weight = home_measurement.compare_measurements(measurement)
-            else:
-                # Minimize the effect of None measurement on the step vector.
-                weight = 0.0
+            weight = home_measurement.compare_measurements(measurement)
+            step_vector += vector * weight
+
+        step_vector /= len(vectors)
+        return step_vector
+
+    def _optimize_for_constraints(
+            self, home_measurement: RunConfigMeasurement) -> Coordinate:
+        """
+        Calculate a step vector that steps toward the coordinates that
+        pass the constraints (set default weights to 1.0). When no vectors
+        are provided (meaning there are no neighbors passing constraints),
+        continue with the neighbors that are not passing constraints by
+        comparing how much they are close to passing constraints.
+
+        Parameters
+        ----------
+        vectors
+            list of vectors from home coordinate to the neighboring
+            coordinates that are passing constraints
+        measurements
+            list of measurements of the neighboring coordinates that
+            are passing constraints
+
+        Returns
+        -------
+        step_vector
+            a coordinate that tells the direction to move.
+        """
+        vectors, measurements = self._get_measurements_passing_constraints()
+        step_vector = Coordinate([0] * self._config.get_num_dimensions())
+
+        if not vectors:
+            vectors, measurements = self._get_all_visited_measurements()
+
+        for vector, measurement in zip(vectors, measurements):
+            weight = home_measurement.compare_constraints(measurement)
+            if measurement.is_passing_constraints():
+                weight = 1.0  # when home fails & neighbor passes
 
             step_vector += vector * weight
 
         step_vector /= len(vectors)
         return step_vector
 
-    def _compile_neighborhood_measurements(
+    def _get_all_visited_measurements(
             self) -> Tuple[List[Coordinate], List[RunConfigMeasurement]]:
         """
-        Gather all the vectors (directions from the home coordinate)
+        Gather all the visited vectors (directions from the home coordinate)
         and their corresponding measurements.
 
         Returns
@@ -273,12 +349,38 @@ class Neighborhood:
         measurements = []
         for coordinate in visited_coordinates:
             measurement = self._coordinate_data.get_measurement(coordinate)
-            vectors.append(coordinate - self._home_coordinate)
-            measurements.append(measurement)
+            if measurement:
+                vectors.append(coordinate - self._home_coordinate)
+                measurements.append(measurement)
+        return vectors, measurements
+
+    def _get_measurements_passing_constraints(
+            self) -> Tuple[List[Coordinate], List[RunConfigMeasurement]]:
+        """
+        Gather all the vectors (directions from the home coordinate)
+        and their corresponding measurements that are passing constraints.
+
+        Returns
+        -------
+        (vectors, measurements)
+            collection of vectors and their measurements.
+        """
+        visited_coordinates = self._get_visited_coordinates()
+
+        vectors = []
+        measurements = []
+        for coordinate in visited_coordinates:
+            measurement = self._coordinate_data.get_measurement(coordinate)
+            if measurement and measurement.is_passing_constraints():
+                vectors.append(coordinate - self._home_coordinate)
+                measurements.append(measurement)
         return vectors, measurements
 
     def _is_coordinate_visited(self, coordinate: Coordinate) -> bool:
         return self._coordinate_data.get_visit_count(coordinate) > 0
+
+    def _is_coordinate_initialized(self, coordinate: Coordinate) -> bool:
+        return self._coordinate_data.get_measurement(coordinate) is not None
 
     def _clamp_coordinate_to_bounds(self, coordinate: Coordinate) -> Coordinate:
 

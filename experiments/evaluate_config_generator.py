@@ -62,4 +62,8 @@ class EvaluateConfigGenerator:
             self._profile_data.add_run_config_measurement(
                 run_config, run_config_measurement)
 
+            if run_config_measurement:
+                run_config_measurement.set_model_config_constraints(
+                    model_config_constraints=[self._config_command.constraints])
+
             cg.set_last_results([run_config_measurement])

@@ -81,7 +81,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         # This is an initial center that the neighborhood is built around.
         # It is updated every new creation of the neighborhood.
-        self._home_coordinate  = self._get_starting_coordinate()
+        self._home_coordinate = self._get_starting_coordinate()
 
         # This is the coordinate that we want to measure next. It is
         # updated every step of this generator
@@ -145,8 +145,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         ----------
         measurements: List of Measurements from the last run(s)
         """
-        self._print_debug_logs(measurements)
-
         self._coordinate_data.increment_visit_count(self._coordinate_to_measure)
         self._neighborhood.coordinate_data.increment_visit_count(
             coordinate=self._coordinate_to_measure)
@@ -154,18 +152,39 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._neighborhood.coordinate_data.set_measurement(
             coordinate=self._coordinate_to_measure, measurement=measurements[0])
 
-        self._update_best_measurement(measurements)
+        if measurements[0] is not None:
+            self._update_best_measurement(measurement=measurements[0])
 
-    def _update_best_measurement(self, measurements: List[Union[RunConfigMeasurement,
-                                                                None]]):
+        self._print_debug_logs(measurements)
+
+    def _update_best_measurement(self, measurement: RunConfigMeasurement):
         """Keep track of the best coordinate/measurement seen so far."""
-        measurement = measurements[0]
-
         if self._best_measurement is None:
-            self._best_measurement = measurement
-        elif measurement and measurement.is_better_than(self._best_measurement):
             self._best_coordinate = self._coordinate_to_measure
             self._best_measurement = measurement
+
+        elif not self._best_measurement.is_passing_constraints(
+        ) and measurement.is_passing_constraints():
+            self._best_coordinate = self._coordinate_to_measure
+            self._best_measurement = measurement
+
+        elif not self._best_measurement.is_passing_constraints(
+        ) and not measurement.is_passing_constraints():
+            comparison = self._best_measurement.compare_constraints(
+                other=measurement)
+
+            if comparison and comparison > 0:
+                self._best_coordinate = self._coordinate_to_measure
+                self._best_measurement = measurement
+
+        elif self._best_measurement.is_passing_constraints(
+        ) and measurement.is_passing_constraints():
+            comparison = self._best_measurement.compare_measurements(
+                other=measurement)
+
+            if comparison and comparison > 0:
+                self._best_coordinate = self._coordinate_to_measure
+                self._best_measurement = measurement
 
     def _get_last_results(self) -> RunConfigMeasurement:
         return self._neighborhood.coordinate_data.get_measurement(
@@ -310,12 +329,22 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
             throughput = measurements[0].get_non_gpu_metric_value(
                 "perf_throughput")
-            avg_latency = measurements[0].get_non_gpu_metric_value(
-                "perf_latency_avg")
+            latency = measurements[0].get_non_gpu_metric_value(
+                "perf_latency_p99")
+
+            if self._best_measurement:
+                best_throughput = self._best_measurement.get_non_gpu_metric_value(
+                    "perf_throughput")
+                best_latency = self._best_measurement.get_non_gpu_metric_value(
+                    "perf_latency_p99")
+            else:
+                best_throughput = None
+                best_latency = None
 
             logger.debug(
                 f"Measurement for {self._coordinate_to_measure}: "
-                f"throughput = {throughput}, avg_latency = {avg_latency}"
+                f"throughput = {throughput}, latency = {latency} "
+                f"(best throughput: {best_throughput}, best_latency: {best_latency})"
             )
         else:
             logger.debug(
