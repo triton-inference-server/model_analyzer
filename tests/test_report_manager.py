@@ -483,10 +483,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
             model_config_weights=MagicMock())
 
         measurements = [measurement, measurement]
-        (names,
-         max_gpu) = report_manager._get_gpu_stats(measurements=measurements)
+        names, max_mem = report_manager._get_gpu_stats(measurements)
         self.assertEqual(names, "2 x fake_gpu_name, 1 x fake_gpu_name_3")
-        self.assertEqual(max_gpu, "12.0 GB")
+        self.assertEqual(max_mem, "12.0 GB")
 
     def tearDown(self):
         self.matplotlib_mock.stop()

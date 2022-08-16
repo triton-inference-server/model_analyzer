@@ -858,8 +858,7 @@ class ReportManager:
         gpu_cpu_string = "CPU"
 
         if not run_config.cpu_only():
-            (gpu_names,
-             max_memories) = self._get_gpu_stats(measurements=measurements)
+            gpu_names, max_memories = self._get_gpu_stats(measurements)
             gpu_cpu_string = f"GPU(s) {gpu_names} with total memory {max_memories}"
         sentence = (
             f"The model config \"{model_config_name}\" uses {instance_group_string} "
@@ -877,9 +876,13 @@ class ReportManager:
             self,
             measurements: List["RunConfigMeasurement"]) -> Tuple[str, str]:
         """
-        Gets names and max total memory of GPUs used in measurements
+        Gets names and max total memory of GPUs used in measurements as a 
+        tuple of strings
 
-        Returns Tuple(Names(string), MaxMemory(string))
+        Returns
+        -------
+        (gpu_names_str, max_memory_str):
+            The GPU names as a string, and the total combined memory as a string
         """
 
         gpu_dict = {}
