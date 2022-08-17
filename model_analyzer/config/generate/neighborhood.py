@@ -143,8 +143,7 @@ class Neighborhood:
         JUST_CLIP = False  # FIXME
         if JUST_CLIP:
             for i, v in enumerate(vector):
-                if v > clip_value:
-                    vector[i] = clip_value
+                vector[i] = max(-clip_value, min(vector[i], clip_value))
         else:
             max_value = max(abs(c) for c in vector)
 
