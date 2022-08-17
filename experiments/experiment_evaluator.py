@@ -68,6 +68,10 @@ class ExperimentEvaluator:
             f"Generator best latency: {generator_best_measurement.get_non_gpu_metric_value('perf_latency_p99')}"
         )
         print()
+        percentile = generator_best_measurement.get_non_gpu_metric_value(
+            'perf_throughput'
+        ) / overall_best_measurement.get_non_gpu_metric_value('perf_throughput')
+        print(f"Percentile: {percentile:0.2}")
 
     def _run_config_to_string(self, run_config):
         str = "\n".join([
