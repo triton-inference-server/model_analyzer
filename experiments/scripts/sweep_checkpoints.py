@@ -82,6 +82,7 @@ def parse_experiment_output(output):
             pair = line.split(":", 1)
             if pair[0] != "WARNING":
                 ret[pair[0]] = pair[1].lstrip()
+
     return ret
 
 
@@ -92,11 +93,14 @@ def run_all_models():
     ckpts = find_all_checkpoints(PATH)
     total_models = 0
 
+    # FIXME
+    #ckpts = ckpts[80:]
     for i, ckpt in enumerate(ckpts):
 
         # FIXME -- infinite loop
-        if ckpt == "/mnt/nvdl/datasets/mnaas-checkpoints/bert-base-cased-pyt/gcp-n1-standard-8-with-nvidia-tesla-t4/0.ckpt":
+        if re.search("bert-base-cased-pyt", ckpt):
             continue
+
         # FIXME -- they don't use max_batch
         if re.search("ncf", ckpt):
             continue
@@ -109,6 +113,11 @@ def run_all_models():
             cmd_list = cmd.split(' ')
             result = subprocess.run(cmd_list, stdout=subprocess.PIPE)
             result_data = parse_experiment_output(result.stdout)
+
+            if 'Percentile' not in result_data:
+                print(f"{model} failed! Skipping")
+                continue
+
             percentile = float(result_data['Percentile'])
             print(f"  {model}: Percentile = {result_data['Percentile']}")
             percentiles.append(percentile)

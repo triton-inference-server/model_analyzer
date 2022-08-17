@@ -67,3 +67,7 @@ class CheckpointExperimentData(ExperimentData):
 
                 self._add_run_config_measurement_from_keys(
                     ma_key, pa_key, run_config, run_config_measurement)
+
+        if self._default_run_config is None:
+            print(f"No default config for {model_name}")
+            exit(1)
