@@ -57,19 +57,14 @@ class TestAnalyzer(trc.TestResultCollector):
     def mock_get_list_of_models(self):
         return ['model1']
 
-    @patch.multiple(
-        f'{AnalyzerStateManager.__module__}.AnalyzerStateManager',
-        get_state_variable=mock_get_state_variable,
-        exiting=lambda _: False
-    )
-    @patch.multiple(
-        f'{Analyzer.__module__}.Analyzer',
-        _create_metrics_manager=MagicMock(),
-        _create_model_manager=MagicMock(),
-        _get_server_only_metrics=MagicMock(),
-        _analyze_models=MagicMock(),
-        _profile_models=MagicMock()
-    )
+    @patch.multiple(f'{AnalyzerStateManager.__module__}.AnalyzerStateManager',
+                    get_state_variable=mock_get_state_variable,
+                    exiting=lambda _: False)
+    @patch.multiple(f'{Analyzer.__module__}.Analyzer',
+                    _create_metrics_manager=MagicMock(),
+                    _create_model_manager=MagicMock(),
+                    _get_server_only_metrics=MagicMock(),
+                    _profile_models=MagicMock())
     def test_profile_skip_summary_reports(self, **mocks):
         """
         Tests when the skip_summary_reports config option is turned on,
@@ -81,7 +76,8 @@ class TestAnalyzer(trc.TestResultCollector):
         args = [
             'model-analyzer', 'profile', '--model-repository', '/tmp',
             '--profile-models', 'model1', '--config-file', '/tmp/my_config.yml',
-            '--checkpoint-directory', '/tmp/my_checkpoints', '--skip-summary-reports'
+            '--checkpoint-directory', '/tmp/my_checkpoints',
+            '--skip-summary-reports'
         ]
         config = evaluate_mock_config(args, '', subcommand="profile")
         state_manager = AnalyzerStateManager(config, None)
@@ -89,10 +85,7 @@ class TestAnalyzer(trc.TestResultCollector):
                             None,
                             state_manager,
                             checkpoint_required=False)
-        analyzer.profile(client=None,
-                         gpus=None,
-                         mode=None,
-                         verbose=False)
+        analyzer.profile(client=None, gpus=None, mode=None, verbose=False)
 
         path = os.getcwd()
         self.assertFalse(os.path.exists(os.path.join(path, "plots")))

@@ -121,25 +121,25 @@ class ResultManager:
         Add measurement to individual result heap,
         global result heap and results class
         """
-        for model_name in self._analysis_model_names:
-            run_config_result = RunConfigResult(
-                model_name=model_name,
-                run_config=run_config,
-                comparator=self._run_comparators[model_name],
-                constraints=self._run_constraints[model_name])
+        model_name = run_config.models_name()
 
-            run_config_measurement.set_metric_weightings(
-                self._run_comparators[model_name]._metric_weights)
+        run_config_result = RunConfigResult(
+            model_name=model_name,
+            run_config=run_config,
+            comparator=self._run_comparators[model_name],
+            constraints=self._run_constraints[model_name])
 
-            run_config_measurement.set_model_config_weighting(
-                self._run_comparators[model_name]._model_weights)
+        run_config_measurement.set_metric_weightings(
+            self._run_comparators[model_name]._metric_weights)
 
-            self._add_rcm_to_results(run_config, run_config_measurement)
-            run_config_result.add_run_config_measurement(run_config_measurement)
+        run_config_measurement.set_model_config_weighting(
+            self._run_comparators[model_name]._model_weights)
 
-            self._per_model_sorted_results[model_name].add_result(
-                run_config_result)
-            self._across_model_sorted_results.add_result(run_config_result)
+        self._add_rcm_to_results(run_config, run_config_measurement)
+        run_config_result.add_run_config_measurement(run_config_measurement)
+
+        self._per_model_sorted_results[model_name].add_result(run_config_result)
+        self._across_model_sorted_results.add_result(run_config_result)
 
     def get_model_configs_run_config_measurements(self, model_variants_name):
         """
