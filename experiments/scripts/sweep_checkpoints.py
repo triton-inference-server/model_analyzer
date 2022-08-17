@@ -18,7 +18,7 @@ import subprocess
 import re
 from statistics import mean
 
-PATH = "/mnt/nvdl/datasets/mnaas-checkpoints"
+PATH = "/mnt/nvdl/datasets/inferenceserver/mnaas-checkpoints"
 
 
 def find_all_checkpoints(path):
@@ -91,14 +91,13 @@ def run_all_models():
     CUTOFF = 0.70
     ckpts = find_all_checkpoints(PATH)
     total_models = 0
-    # FIXME
-    ckpts = ckpts[30:40]
 
     for i, ckpt in enumerate(ckpts):
 
-        # FIXME
+        # FIXME -- infinite loop
         if ckpt == "/mnt/nvdl/datasets/mnaas-checkpoints/bert-base-cased-pyt/gcp-n1-standard-8-with-nvidia-tesla-t4/0.ckpt":
             continue
+        # FIXME -- they don't use max_batch
         if re.search("ncf", ckpt):
             continue
 
