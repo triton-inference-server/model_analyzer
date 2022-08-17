@@ -36,15 +36,19 @@ class ExperimentConfigCommandCreator:
             'model-analyzer', 'profile',
             '--profile-models', model_name,
             '--model-repository', data_path,
-            '--checkpoint-directory', checkpoint_dir,
-            '-f', 'path-to-config-file'
+            '--checkpoint-directory', checkpoint_dir
         ]
         args += other_args
 
-        yaml_content = convert_to_bytes("")
+        if '-f' not in other_args and '--config-file' not in other_args:
+            args += ['-f', 'path-to-config-file']
 
-        mock_config = MockConfig(args, yaml_content)
-        mock_config.start()
+            yaml_content = convert_to_bytes("")
+            mock_config = MockConfig(args, yaml_content)
+            mock_config.start()
+        else:
+            mock_config = None
+
         config = ConfigCommandExperiment()
         cli = CLI()
         cli.add_subcommand(
@@ -53,7 +57,9 @@ class ExperimentConfigCommandCreator:
             'config options.',
             config=config)
         cli.parse()
-        mock_config.stop()
+
+        if mock_config:
+            mock_config.stop()
 
         mock_model_config.stop()
         return config

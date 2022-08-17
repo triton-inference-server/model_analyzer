@@ -63,6 +63,8 @@ class EvaluateConfigGenerator:
                 run_config, run_config_measurement)
 
             if run_config_measurement:
+                run_config_measurement.set_metric_weightings(
+                    metric_objectives=[self._config_command.objectives])
                 run_config_measurement.set_model_config_constraints(
                     model_config_constraints=[self._config_command.constraints])
 
