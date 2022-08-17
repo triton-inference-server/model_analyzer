@@ -16,7 +16,7 @@ import os
 import json
 import subprocess
 import re
-from statistics import mean
+from statistics import mean, median, mode
 
 PATH = "/mnt/nvdl/datasets/inferenceserver/mnaas-checkpoints"
 
@@ -126,9 +126,13 @@ def run_all_models():
                 below_cutoff.append(f"{percentile}: {cmd}")
 
     avg_percentile = mean(percentiles)
+    median_percentile = median(percentiles)
+    mode_percentile = mode(percentiles)
 
     print()
     print(f"Average percentile = {avg_percentile:0.2f}")
+    print(f"Median percentile = {median_percentile:0.2f}")
+    print(f"Mode percentile = {mode_percentile:0.2f}")
 
     print(
         f"{len(below_cutoff)} out of {total_models} are below the cutoff of {100*CUTOFF}%:"
