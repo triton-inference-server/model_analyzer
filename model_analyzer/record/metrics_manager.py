@@ -181,6 +181,10 @@ class MetricsManager:
         if measurement:
             logger.info(
                 "Existing measurement found for run config. Skipping profile")
+
+            self._result_manager.add_run_config_measurement(
+                run_config, measurement)
+
             return measurement
 
         current_model_variants = run_config.model_variants_name()
@@ -262,8 +266,8 @@ class MetricsManager:
                     perf_config['model-name'], model_specific_pa_params,
                     model_non_gpu_metrics)
 
-            # self._result_manager.add_run_config_measurement(
-            #     run_config, run_config_measurement)
+            self._result_manager.add_run_config_measurement(
+                run_config, run_config_measurement)
 
         return run_config_measurement
 

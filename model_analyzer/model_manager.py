@@ -96,10 +96,6 @@ class ModelManager:
             if run_config.is_legal_combination():
                 measurement = self._metrics_manager.execute_run_config(
                     run_config)
-
-                if measurement:
-                    self._result_manager.add_run_config_measurement(
-                        run_config, measurement)
             else:
                 logger.info("Skipping illegal run configuration")
                 measurement = None
