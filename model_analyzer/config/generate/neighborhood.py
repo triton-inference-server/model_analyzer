@@ -104,12 +104,12 @@ class Neighborhood:
         """
         step_vector = self._get_step_vector() * magnitude
 
+        logger.debug(f"(Measurement) Scaled step vector: {step_vector}")
         if enable_clipping:
             step_vector = self._clip_vector_values(vector=step_vector,
                                                    clip_value=clip_value)
             logger.debug(f"(Measurement) Clipped step vector: {step_vector}")
 
-        logger.debug(f"(Measurement) Scaled step vector: {step_vector}")
         step_vector.round()
         logger.debug(f"(Measurement) Rounded step vector: {step_vector}")
 
@@ -140,11 +140,17 @@ class Neighborhood:
         """
         assert clip_value >= 0, "clip_value must be non-negative number."
 
-        max_value = max(abs(c) for c in vector)
+        JUST_CLIP = False  # FIXME
+        if JUST_CLIP:
+            for i, v in enumerate(vector):
+                if v > clip_value:
+                    vector[i] = clip_value
+        else:
+            max_value = max(abs(c) for c in vector)
 
-        if max_value > clip_value and max_value != 0:
-            for i in range(len(vector)):
-                vector[i] = clip_value * vector[i] / max_value
+            if max_value > clip_value and max_value != 0:
+                for i in range(len(vector)):
+                    vector[i] = clip_value * vector[i] / max_value
         return vector
 
     def pick_coordinate_to_initialize(self) -> Optional[Coordinate]:
