@@ -102,7 +102,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         run_config = RunConfig({})
         run_config.add_model_run_config(mrc)
 
-        self.result_manager._add_rcm_to_results(run_config, measurement)
+        self.result_manager.add_run_config_measurement(run_config, measurement)
 
     def setUp(self):
         self.model_config = {
@@ -174,7 +174,6 @@ class TestReportManagerMethods(trc.TestResultCollector):
                                              avg_non_gpu_metrics,
                                              result_comparator)
 
-            self.result_manager.compile_and_sort_results()
             self.report_manager.create_summaries()
             self.assertEqual(self.report_manager.report_keys(),
                              ["test_model1", "test_model2"])
@@ -211,7 +210,6 @@ class TestReportManagerMethods(trc.TestResultCollector):
                                          avg_gpu_metrics, avg_non_gpu_metrics,
                                          result_comparator, cpu_only)
 
-        self.result_manager.compile_and_sort_results()
         self.report_manager.create_summaries()
 
         summary_table, summary_sentence = \
@@ -381,7 +379,6 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 name = f"test_model1_config_default"
             self._add_result_measurement(name, "test_model1", avg_gpu_metrics,
                                          avg_non_gpu_metrics, result_comparator)
-        self.result_manager.compile_and_sort_results()
         self.report_manager.create_summaries()
 
         self.assertEqual(expected_plot_count, add_plot_fn.call_count)

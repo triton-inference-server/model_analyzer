@@ -105,13 +105,11 @@ class TestResultManager(trc.TestResultCollector):
     def test_get_single_model_names(self):
         """ Test get_model_names for a single-model run """
         result_manager, _ = load_single_model_result_manager()
-        result_manager.compile_and_sort_results()
         self.assertEqual(result_manager.get_model_names(), ["add_sub"])
 
     def test_get_multi_model_names(self):
         """ Test get_model_names for a multi-model run """
         result_manager, _ = load_multi_model_result_manager()
-        result_manager.compile_and_sort_results()
         self.assertEqual(result_manager.get_model_names(),
                          ["resnet50_libtorch,vgg19_libtorch"])
 
@@ -122,7 +120,6 @@ class TestResultManager(trc.TestResultCollector):
         """
 
         result_manager, _ = load_multi_model_result_manager()
-        result_manager.compile_and_sort_results()
         with self.assertRaises(TritonModelAnalyzerException):
             result_manager.get_model_sorted_results("SHOULD_ERROR")
 
@@ -133,7 +130,6 @@ class TestResultManager(trc.TestResultCollector):
         """
         result_manager, _ = load_single_model_result_manager()
         result_manager._add_rcm_to_results(MagicMock(), MagicMock())
-        result_manager.compile_and_sort_results()
         sorted_results = result_manager.get_model_sorted_results("add_sub")
         self.assertTrue(isinstance(sorted_results, ResultHeap))
         self.assertEqual(5, len(sorted_results.results()))
@@ -141,7 +137,6 @@ class TestResultManager(trc.TestResultCollector):
     def test_get_multi_model_sorted_results(self):
         """ Test get_model_sorted_results returns a valid ResultHeap """
         result_manager, _ = load_multi_model_result_manager()
-        result_manager.compile_and_sort_results()
         sorted_results = result_manager.get_model_sorted_results(
             "resnet50_libtorch,vgg19_libtorch")
         self.assertTrue(isinstance(sorted_results, ResultHeap))

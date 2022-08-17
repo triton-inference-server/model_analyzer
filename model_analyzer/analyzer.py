@@ -147,7 +147,6 @@ class Analyzer:
                                                         self._result_manager)
 
         # Create result tables, put top results and get stats
-        self._result_manager.compile_and_sort_results()
         self._report_manager.create_summaries()
         self._report_manager.export_summaries()
 
@@ -248,9 +247,6 @@ class Analyzer:
                     self._model_manager.run_models(models=[model])
                 finally:
                     self._state_manager.save_checkpoint()
-
-    def _analyze_models(self):
-        self._result_manager.compile_and_sort_results()
 
     def _create_summary_tables(self, verbose: bool):
         self._result_table_manager = ResultTableManager(self._config,

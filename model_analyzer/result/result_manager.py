@@ -65,6 +65,9 @@ class ResultManager:
             else:
                 self._setup_for_sequential_analysis()
 
+            if not self._state_manager.starting_fresh_run():
+                self._add_results_to_heaps()
+
     def get_model_names(self):
         """
         Returns a list of model names that have sorted results
@@ -137,16 +140,6 @@ class ResultManager:
             self._per_model_sorted_results[model_name].add_result(
                 run_config_result)
             self._across_model_sorted_results.add_result(run_config_result)
-
-    def compile_and_sort_results(self):
-        """
-        Collects objectives and constraints for
-        each model, constructs results from the
-        measurements obtained, and sorts and 
-        filters them according to constraints
-        and objectives.
-        """
-        self._add_results_to_heaps()
 
     def get_model_configs_run_config_measurements(self, model_variants_name):
         """

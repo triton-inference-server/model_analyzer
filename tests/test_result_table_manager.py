@@ -192,13 +192,11 @@ class TestResultTableManager(trc.TestResultCollector):
 
     def _create_single_model_result_table_manager(self):
         result_manager, config = load_single_model_result_manager()
-        result_manager.compile_and_sort_results()
 
         return ResultTableManager(config, result_manager)
 
     def _create_multi_model_result_table_manager(self):
         result_manager, config = load_multi_model_result_manager()
-        result_manager.compile_and_sort_results()
 
         return ResultTableManager(config, result_manager)
 

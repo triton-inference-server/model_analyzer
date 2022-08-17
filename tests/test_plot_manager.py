@@ -103,8 +103,6 @@ class TestPlotManager(trc.TestResultCollector):
 
         self._single_model_config = config
 
-        self._single_model_result_manager.compile_and_sort_results()
-
     def _create_multi_model_result_manager(self):
         args = [
             'model-analyzer', 'analyze', '-f', 'config.yml',
@@ -122,8 +120,6 @@ class TestPlotManager(trc.TestResultCollector):
             config=config, state_manager=state_manager)
 
         self._multi_model_config = config
-
-        self._multi_model_result_manager.compile_and_sort_results()
 
     def _plot_manager_to_dict(self, plot_manager):
         plot_manager_dict = {}
