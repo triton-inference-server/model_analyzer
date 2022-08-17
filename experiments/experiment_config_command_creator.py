@@ -17,6 +17,7 @@ from tests.mocks.mock_config import MockConfig
 from tests.mocks.mock_model_config import MockModelConfig
 from model_analyzer.cli.cli import CLI
 from config_command_experiment import ConfigCommandExperiment
+import re
 
 
 class ExperimentConfigCommandCreator:
@@ -29,7 +30,11 @@ class ExperimentConfigCommandCreator:
         mock_model_config = MockModelConfig("")
         mock_model_config.start()
 
-        checkpoint_dir = f"{data_path}/{model_name}"
+        ckpt = re.search('(.+)\/(\d\.ckpt)', data_path)
+        if ckpt:
+            checkpoint_dir = ckpt.group(1)
+        else:
+            checkpoint_dir = f"{data_path}/{model_name}"
 
         #yapf: disable
         args = [

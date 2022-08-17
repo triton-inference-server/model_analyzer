@@ -15,6 +15,7 @@
 from experiments.experiment_data import ExperimentData
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from unittest.mock import MagicMock
+from copy import deepcopy
 
 
 class CheckpointExperimentData(ExperimentData):
@@ -24,17 +25,30 @@ class CheckpointExperimentData(ExperimentData):
 
     def __init__(self, config):
         super().__init__()
+        self._default_run_config = None
         self._load_checkpoint(config)
+
+    def get_default_config_dict(self):
+        ret = self._default_run_config.model_run_configs()[0].model_config(
+        ).to_dict()
+        ret = deepcopy(ret)
+        del ret["cpu_only"]
+        return ret
 
     def _load_checkpoint(self, config):
         state_manager = AnalyzerStateManager(config, MagicMock())
         state_manager.load_checkpoint(checkpoint_required=True)
 
         results = state_manager.get_state_variable('ResultManager.results')
+
         model_name = ",".join([x.model_name() for x in config.profile_models])
         model_measurements = results.get_model_measurements_dict(model_name)
         for (run_config,
              run_config_measurements) in model_measurements.values():
+
+            if run_config.model_variants_name(
+            ) == model_name + "_config_default":
+                self._default_run_config = run_config
 
             # Due to the way that data is stored in the AnalyzerStateManager, the
             # run_config only represents the model configuration used. The
