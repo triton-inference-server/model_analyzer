@@ -45,28 +45,21 @@ class ResultManager:
         self._config = config
         self._state_manager = state_manager
 
-        if state_manager.starting_fresh_run():
-            self._init_state()
-
         # Data structures for sorting results
         self._per_model_sorted_results = defaultdict(ResultHeap)
         self._across_model_sorted_results = ResultHeap()
 
-        # TODO: TMA-792: Until we get rid of analysis we need to copy some values from profile
+        # TODO: TMA-792: Until we get rid of analysis we need to model names from profile
         if 'profile_models' in self._config._fields:
             self._config._fields["analysis_models"] = self._config._fields[
                 "profile_models"]
 
-        if 'analysis_models' in self._config._fields:
-            self._create_concurrent_analysis_model_name()
-
-            if self._analyzing_models_concurrently():
-                self._setup_for_concurrent_analysis()
-            else:
-                self._setup_for_sequential_analysis()
-
-            if not self._state_manager.starting_fresh_run():
-                self._add_results_to_heaps()
+        if state_manager.starting_fresh_run():
+            self._init_state()
+            self._setup_for_analysis()
+        else:
+            self._setup_for_analysis()
+            self._add_results_to_heaps()
 
     def get_model_names(self):
         """
@@ -253,6 +246,16 @@ class ResultManager:
                                                Results())
         self._state_manager.set_state_variable('ResultManager.server_only_data',
                                                {})
+
+    def _setup_for_analysis(self):
+        # Skip if the report subcommand is being executed
+        if 'analysis_models' in self._config._fields:
+            self._create_concurrent_analysis_model_name()
+
+            if self._analyzing_models_concurrently():
+                self._setup_for_concurrent_analysis()
+            else:
+                self._setup_for_sequential_analysis()
 
     def _create_concurrent_analysis_model_name(self):
         analysis_model_names = [
