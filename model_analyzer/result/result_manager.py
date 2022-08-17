@@ -112,34 +112,11 @@ class ResultManager:
         self._state_manager.set_state_variable('ResultManager.server_only_data',
                                                data)
 
-    def add_run_config_measurement(self, run_config, run_config_measurement):
+    def add_run_config_measurement(
+            self, run_config, run_config_measurement: RunConfigMeasurement):
         """
-        This function adds model inference
-        measurements to the required result
-
-        Parameters
-        ----------
-        run_config : RunConfig
-            Contains the parameters used to generate the measurment
-        run_config_measurement: RunConfigMeasurement
-            the measurement to be added
-        """
-
-        # Get reference to results state and modify it
-        results = self._state_manager.get_state_variable(
-            'ResultManager.results')
-
-        results.add_run_config_measurement(run_config, run_config_measurement)
-
-        # Use set_state_variable to record that state may have been changed
-        self._state_manager.set_state_variable(name='ResultManager.results',
-                                               value=results)
-
-    def add_measurement_to_heaps(self, run_config,
-                                 run_config_measurement: RunConfigMeasurement):
-        """
-        Add measurement to individual result heaps 
-        as well as global result heap
+        Add measurement to individual result heap,
+        global result heap and results class
         """
         for model_name in self._analysis_model_names:
             run_config_result = RunConfigResult(
@@ -154,7 +131,7 @@ class ResultManager:
             run_config_measurement.set_model_config_weighting(
                 self._run_comparators[model_name]._model_weights)
 
-            self.add_run_config_measurement(run_config, run_config_measurement)
+            self._add_rcm_to_results(run_config, run_config_measurement)
             run_config_result.add_run_config_measurement(run_config_measurement)
 
             self._per_model_sorted_results[model_name].add_result(
@@ -341,6 +318,29 @@ class ResultManager:
             model.model_name(): model.constraints()
             for model in self._config.analysis_models
         }
+
+    def _add_rcm_to_results(self, run_config, run_config_measurement):
+        """
+        This function adds model inference
+        measurements to the required result
+
+        Parameters
+        ----------
+        run_config : RunConfig
+            Contains the parameters used to generate the measurment
+        run_config_measurement: RunConfigMeasurement
+            the measurement to be added
+        """
+
+        # Get reference to results state and modify it
+        results = self._state_manager.get_state_variable(
+            'ResultManager.results')
+
+        results.add_run_config_measurement(run_config, run_config_measurement)
+
+        # Use set_state_variable to record that state may have been changed
+        self._state_manager.set_state_variable(name='ResultManager.results',
+                                               value=results)
 
     def _add_results_to_heaps(self):
         """

@@ -98,7 +98,7 @@ class ModelManager:
                     run_config)
 
                 if measurement:
-                    self._result_manager.add_measurement_to_heaps(
+                    self._result_manager.add_run_config_measurement(
                         run_config, measurement)
             else:
                 logger.info("Skipping illegal run configuration")

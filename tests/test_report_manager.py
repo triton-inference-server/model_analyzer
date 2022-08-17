@@ -102,7 +102,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         run_config = RunConfig({})
         run_config.add_model_run_config(mrc)
 
-        self.result_manager.add_run_config_measurement(run_config, measurement)
+        self.result_manager._add_rcm_to_results(run_config, measurement)
 
     def setUp(self):
         self.model_config = {

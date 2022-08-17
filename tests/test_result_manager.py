@@ -78,14 +78,14 @@ class TestResultManager(trc.TestResultCollector):
         rcm1c = MagicMock()
         rcm2 = MagicMock()
 
-        result_manager.add_run_config_measurement(run_config=fake_run_config1a,
-                                                  run_config_measurement=rcm1a)
-        result_manager.add_run_config_measurement(run_config=fake_run_config1b,
-                                                  run_config_measurement=rcm1b)
-        result_manager.add_run_config_measurement(run_config=fake_run_config1c,
-                                                  run_config_measurement=rcm1c)
-        result_manager.add_run_config_measurement(run_config=fake_run_config2,
-                                                  run_config_measurement=rcm2)
+        result_manager._add_rcm_to_results(run_config=fake_run_config1a,
+                                           run_config_measurement=rcm1a)
+        result_manager._add_rcm_to_results(run_config=fake_run_config1b,
+                                           run_config_measurement=rcm1b)
+        result_manager._add_rcm_to_results(run_config=fake_run_config1c,
+                                           run_config_measurement=rcm1c)
+        result_manager._add_rcm_to_results(run_config=fake_run_config2,
+                                           run_config_measurement=rcm2)
 
         config, measurements = result_manager.get_model_configs_run_config_measurements(
             "Model1_config_default")
@@ -132,7 +132,7 @@ class TestResultManager(trc.TestResultCollector):
         with only results for that model 
         """
         result_manager, _ = load_single_model_result_manager()
-        result_manager.add_run_config_measurement(MagicMock(), MagicMock())
+        result_manager._add_rcm_to_results(MagicMock(), MagicMock())
         result_manager.compile_and_sort_results()
         sorted_results = result_manager.get_model_sorted_results("add_sub")
         self.assertTrue(isinstance(sorted_results, ResultHeap))
