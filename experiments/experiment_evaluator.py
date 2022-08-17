@@ -61,21 +61,29 @@ class ExperimentEvaluator:
         print(
             f"Generator best config: {self._run_config_to_string(generator_best_run_config)}"
         )
-        print(
-            f"Generator best throughput: {generator_best_measurement.get_non_gpu_metric_value('perf_throughput')}"
-        )
-        print(
-            f"Generator best latency: {generator_best_measurement.get_non_gpu_metric_value('perf_latency_p99')}"
-        )
+
+        if generator_best_measurement:
+            best_throughput = generator_best_measurement.get_non_gpu_metric_value(
+                'perf_throughput')
+            best_latency = generator_best_measurement.get_non_gpu_metric_value(
+                'perf_latency_p99')
+            overall_best_throughput = overall_best_measurement.get_non_gpu_metric_value(
+                'perf_throughput')
+            percentile = round(best_throughput / overall_best_throughput, 2)
+        else:
+            best_throughput = None
+            best_latency = None
+            percentile = None
+
+        print(f"Generator best throughput: {best_throughput}")
+        print(f"Generator best latency: {best_latency}")
+        print(f"Percentile: {percentile}")
         print()
-        percentile = generator_best_measurement.get_non_gpu_metric_value(
-            'perf_throughput'
-        ) / overall_best_measurement.get_non_gpu_metric_value('perf_throughput')
-        print(f"Percentile: {percentile:0.2}")
 
     def _run_config_to_string(self, run_config):
-        str = "\n".join([
-            f"{x.model_config().get_config()}"
-            for x in run_config.model_run_configs()
-        ])
-        return str
+        if run_config:
+            str = "\n".join([
+                f"{x.model_config().get_config()}"
+                for x in run_config.model_run_configs()
+            ])
+            return str

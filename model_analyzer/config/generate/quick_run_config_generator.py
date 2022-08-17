@@ -205,6 +205,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         new_coordinate = self._neighborhood.get_nearest_neighbor(
             coordinate_in=self._best_coordinate)
 
+        # TODO: TMA-871: handle back-off (and its termination) better.
+        if new_coordinate == self._home_coordinate:
+            self._done = True
+
         logger.debug(
             f"Stepping back: {self._home_coordinate}->{new_coordinate}"
         )
