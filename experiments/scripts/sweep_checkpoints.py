@@ -94,7 +94,7 @@ def run_all_models():
     total_models = 0
 
     # FIXME
-    #ckpts = ckpts[80:]
+    #ckpts = ckpts[:1]
     for i, ckpt in enumerate(ckpts):
 
         # FIXME -- infinite loop
@@ -122,6 +122,7 @@ def run_all_models():
             print(f"  {model}: Percentile = {result_data['Percentile']}")
             percentiles.append(percentile)
             if percentile < CUTOFF:
+                cmd = cmd.replace("main.py", "main.py -v")
                 below_cutoff.append(f"{percentile}: {cmd}")
 
     avg_percentile = mean(percentiles)
