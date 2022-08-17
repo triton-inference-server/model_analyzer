@@ -154,6 +154,7 @@ class ResultManager:
             run_config_measurement.set_model_config_weighting(
                 self._run_comparators[model_name]._model_weights)
 
+            self.add_run_config_measurement(run_config, run_config_measurement)
             run_config_result.add_run_config_measurement(run_config_measurement)
 
             self._per_model_sorted_results[model_name].add_result(
