@@ -26,9 +26,6 @@ class ExperimentConfigCommandCreator:
 
     @staticmethod
     def make_config(data_path, model_name, other_args):
-        mock_model_config = MockModelConfig("")
-        mock_model_config.start()
-
         checkpoint_dir = f"{data_path}/{model_name}"
 
         #yapf: disable
@@ -40,15 +37,22 @@ class ExperimentConfigCommandCreator:
         ]
         args += other_args
 
-        if '-f' not in other_args and '--config-file' not in other_args:
+        if '-f' not in args and '--config-file' not in args:
             args += ['-f', 'path-to-config-file']
-
             yaml_content = convert_to_bytes("")
-            mock_config = MockConfig(args, yaml_content)
-            mock_config.start()
         else:
-            mock_config = None
+            index = args.index('-f') if '-f' in args else args.index('--config-file')
+            yaml_file = args[index + 1]
 
+            with open(yaml_file, 'r') as f:
+                yaml_content = f.read()
+                yaml_content = convert_to_bytes(yaml_content)
+
+        mock_model_config = MockModelConfig("")
+        mock_model_config.start()
+
+        mock_config = MockConfig(args, yaml_content)
+        mock_config.start()
         config = ConfigCommandExperiment()
         cli = CLI()
         cli.add_subcommand(
@@ -58,8 +62,6 @@ class ExperimentConfigCommandCreator:
             config=config)
         cli.parse()
 
-        if mock_config:
-            mock_config.stop()
-
+        mock_config.stop()
         mock_model_config.stop()
         return config
