@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tests.common.test_utils import convert_to_bytes
 from tests.mocks.mock_config import MockConfig
 from tests.mocks.mock_model_config import MockModelConfig
+from tests.common.test_utils import convert_to_bytes
 from model_analyzer.cli.cli import CLI
 from config_command_experiment import ConfigCommandExperiment
 import re

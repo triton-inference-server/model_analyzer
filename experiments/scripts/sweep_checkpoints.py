@@ -89,12 +89,18 @@ def parse_experiment_output(output):
 def run_all_models():
     percentiles = []
     below_cutoff = []
-    CUTOFF = 0.70
+    num_measurements = []
+    too_many_measurements = []
+    too_few_measurements = []
+
+    PERCENTILE_CUTOFF = 0.70
+    NUM_MEASUREMENTS_MAX = 15
+    NUM_MEASUREMENTS_MIN = 5
     ckpts = find_all_checkpoints(PATH)
     total_models = 0
 
     # FIXME
-    #ckpts = ckpts[:1]
+    #ckpts = ckpts[:5]
     for i, ckpt in enumerate(ckpts):
 
         # FIXME -- infinite loop
@@ -117,13 +123,26 @@ def run_all_models():
             if 'Percentile' not in result_data:
                 print(f"{model} failed! Skipping")
                 continue
+            if 'Generator num configs' not in result_data:
+                print(f"{model} failed! Skipping")
+                continue
 
             percentile = float(result_data['Percentile'])
-            print(f"  {model}: Percentile = {result_data['Percentile']}")
+            num_measurement = int(result_data['Generator num configs'])
+
+            print(
+                f"  {model}: Percentile = {percentile}, measurements = {num_measurement}"
+            )
             percentiles.append(percentile)
-            if percentile < CUTOFF:
-                cmd = cmd.replace("main.py", "main.py -v")
+            num_measurements.append(num_measurement)
+
+            cmd = cmd.replace("main.py", "main.py -v")
+            if percentile < PERCENTILE_CUTOFF:
                 below_cutoff.append(f"{percentile}: {cmd}")
+            if num_measurement > NUM_MEASUREMENTS_MAX:
+                too_many_measurements.append(f"{num_measurement}: {cmd}")
+            if num_measurement < NUM_MEASUREMENTS_MIN:
+                too_few_measurements.append(f"{num_measurement}: {cmd}")
 
     avg_percentile = mean(percentiles)
     median_percentile = median(percentiles)
@@ -134,10 +153,35 @@ def run_all_models():
     print(f"Median percentile = {median_percentile:0.2f}")
     print(f"Mode percentile = {mode_percentile:0.2f}")
 
+    avg_measurements = mean(num_measurements)
+    median_measurements = median(num_measurements)
+    mode_measurements = mode(num_measurements)
+
+    print()
+    print(f"Average measurements = {avg_measurements:0.2f}")
+    print(f"Median measurements = {median_measurements:0.2f}")
+    print(f"Mode measurements = {mode_measurements:0.2f}")
+
     print(
-        f"{len(below_cutoff)} out of {total_models} are below the cutoff of {100*CUTOFF}%:"
+        f"{len(below_cutoff)} out of {total_models} are below the cutoff of {100*PERCENTILE_CUTOFF}%:"
     )
     for x in sorted(below_cutoff):
+        print(f"  {x}")
+
+    print()
+    print()
+    print(
+        f"{len(too_many_measurements)} out of {total_models} are taking more than {NUM_MEASUREMENTS_MAX} measurements:"
+    )
+    for x in sorted(too_many_measurements, reverse=True):
+        print(f"  {x}")
+
+    print()
+    print()
+    print(
+        f"{len(too_few_measurements)} out of {total_models} are taking less than {NUM_MEASUREMENTS_MIN} measurements:"
+    )
+    for x in sorted(too_few_measurements):
         print(f"  {x}")
 
 
