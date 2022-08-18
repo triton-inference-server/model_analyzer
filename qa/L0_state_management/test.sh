@@ -61,12 +61,14 @@ if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
     cat $ANALYZER_LOG
     RET=1
+    exit $RET
 else
     python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $CHECKPOINT_DIRECTORY -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
         RET=1
+        exit $RET
     fi
 fi
 set -e
@@ -81,12 +83,14 @@ if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
     cat $ANALYZER_LOG
     RET=1
+    exit $RET
 else
     python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $CHECKPOINT_DIRECTORY -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
         RET=1
+        exit $RET
     fi
 fi
 set -e
@@ -118,12 +122,13 @@ if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
         RET=1
+        exit $RET
     fi
 else
     echo -e "\n***\n*** Test Failed. model-analyzer exited with ZERO exit code when SIGINT occurred. \n***"
     cat $ANALYZER_LOG
     RET=1
-    
+    exit $RET
 fi
 
 TEST_NAME="continue_after_checkpoint"
@@ -134,12 +139,14 @@ if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
     cat $ANALYZER_LOG
     RET=1
+    exit $RET
 else
     python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $CHECKPOINT_DIRECTORY -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
         RET=1
+        exit $RET
     fi
 fi
 set -e
@@ -172,12 +179,14 @@ if [ $? -ne 1 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer did not exit with expected exit code (1). \n***"
     cat $ANALYZER_LOG
     RET=1
+    exit $RET
 else
     python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $CHECKPOINT_DIRECTORY -l $ANALYZER_LOG
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
         cat $ANALYZER_LOG
         RET=1
+        exit $RET
     fi
 fi
 
@@ -195,6 +204,7 @@ if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
     cat $ANALYZER_LOG
     RET=1
+    exit $RET
 fi
 
 TEST_NAME="measurements_consistent_with_config"
@@ -207,6 +217,7 @@ if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
     cat $ANALYZER_LOG
     RET=1
+    exit $RET
 fi
 
 python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -d $CHECKPOINT_DIRECTORY -l $ANALYZER_LOG
@@ -214,6 +225,7 @@ if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
     cat $ANALYZER_LOG
     RET=1
+    exit $RET
 fi
 
 rm -rf $EXPORT_PATH/*
