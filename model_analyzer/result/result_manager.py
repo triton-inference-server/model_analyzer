@@ -256,6 +256,8 @@ class ResultManager:
                 self._setup_for_concurrent_analysis()
             else:
                 self._setup_for_sequential_analysis()
+        else:
+            self._analysis_model_names = []
 
     def _create_concurrent_analysis_model_name(self):
         analysis_model_names = [
