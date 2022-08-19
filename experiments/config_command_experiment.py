@@ -34,7 +34,7 @@ class ConfigCommandExperiment(ConfigCommandProfile):
             ConfigField('magnitude',
                         field_type=ConfigPrimitive(int),
                         flags=['--magnitude'],
-                        default_value=5,
+                        default_value=20,
                         description='The size of each step'))
         self._add_config(
             ConfigField(

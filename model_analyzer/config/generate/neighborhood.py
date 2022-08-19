@@ -307,13 +307,41 @@ class Neighborhood:
             return step_vector
 
         logger.debug(f"(Measurement) Optimizing for objective...")
-        for vector, measurement in zip(vectors, measurements):
-            weight = home_measurement.compare_measurements(measurement)
-            step_vector += vector * weight
-            logger.debug(
-                f"(Measurement)\t\t-vector: {vector}, weight: {weight}")
 
-        step_vector /= len(vectors)
+        NEW_STEP = True
+
+        if NEW_STEP:
+            # For each dimension -
+            #   if non zero, sum up weights
+            #   divide by sum of coordinate of that dimension
+            dim_sum_vector = Coordinate([0] * self._config.get_num_dimensions())
+
+            for vector, measurement in zip(vectors, measurements):
+                weight = home_measurement.compare_measurements(measurement)
+                logger.debug(
+                    f"(Measurement)\t\t-vector: {vector}, weight: {weight}")
+                for dim, v in enumerate(vector):
+                    if v:
+                        step_vector[dim] += weight
+                        dim_sum_vector[dim] += v
+
+            print(f"TKG: step vector is now {step_vector}")
+            print(f"TKG: dim sum vector is now {dim_sum_vector}")
+
+            for dim, v in enumerate(dim_sum_vector):
+                # Note: This can be 0 (from [-1] and [1] combined for example)
+                if v:
+                    step_vector[dim] /= v
+
+            print(f"TKG: step vector is finally {step_vector}")
+        else:
+            for vector, measurement in zip(vectors, measurements):
+                weight = home_measurement.compare_measurements(measurement)
+                step_vector += vector * weight
+                logger.debug(
+                    f"(Measurement)\t\t-vector: {vector}, weight: {weight}")
+            step_vector /= len(vectors)
+
         logger.debug(f"(Measurement) Initial step vector: {step_vector}")
         return step_vector
 
