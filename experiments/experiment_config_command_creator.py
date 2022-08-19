@@ -27,8 +27,6 @@ class ExperimentConfigCommandCreator:
 
     @staticmethod
     def make_config(data_path, model_name, other_args):
-        mock_model_config = MockModelConfig("")
-        mock_model_config.start()
 
         ckpt = re.search('(.+)\/(\d\.ckpt)', data_path)
         if ckpt:
@@ -41,12 +39,23 @@ class ExperimentConfigCommandCreator:
             'model-analyzer', 'profile',
             '--profile-models', model_name,
             '--model-repository', data_path,
-            '--checkpoint-directory', checkpoint_dir,
-            '-f', 'path-to-config-file'
+            '--checkpoint-directory', checkpoint_dir
         ]
         args += other_args
 
-        yaml_content = convert_to_bytes("")
+        if '-f' not in args and '--config-file' not in args:
+            args += ['-f', 'path-to-config-file']
+            yaml_content = convert_to_bytes("")
+        else:
+            index = args.index('-f') if '-f' in args else args.index('--config-file')
+            yaml_file = args[index + 1]
+
+            with open(yaml_file, 'r') as f:
+                yaml_content = f.read()
+                yaml_content = convert_to_bytes(yaml_content)
+
+        mock_model_config = MockModelConfig("")
+        mock_model_config.start()
 
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
