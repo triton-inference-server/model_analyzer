@@ -71,3 +71,27 @@ class CheckpointExperimentData(ExperimentData):
         if self._default_run_config is None:
             print(f"No default config for {model_name}")
             exit(1)
+
+        self._print_map()
+
+    def _print_map(self):
+        for i in range(0, 10):
+            row_str = ""
+            for j in range(0, 10):
+                instance_count = j + 1
+                max_batch_size = 2**i
+
+                ma_key = f"instance_count={instance_count},max_batch_size={max_batch_size}"
+                pa_key = str(2 * instance_count * max_batch_size)
+
+                measurement = self._get_run_config_measurement_from_keys(
+                    ma_key, pa_key, skip_warn=True)
+                tput = 0
+                lat = 0
+                if measurement:
+                    tput = measurement.get_non_gpu_metric_value(
+                        'perf_throughput')
+                    lat = measurement.get_non_gpu_metric_value(
+                        'perf_latency_p99')
+                row_str += f"\t{tput:4.1f}:{lat:4.1f}"
+            print(row_str)

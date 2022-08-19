@@ -93,15 +93,20 @@ class ExperimentData:
             self._best_run_config_measurement = run_config_measurement
             self._best_run_config = run_config
 
-    def _get_run_config_measurement_from_keys(self, ma_key, pa_key):
+    def _get_run_config_measurement_from_keys(self,
+                                              ma_key,
+                                              pa_key,
+                                              skip_warn=False):
         if ma_key not in self._data:
-            print(f"WARNING: Model config {ma_key} not in results")
+            if not skip_warn:
+                print(f"WARNING: Model config {ma_key} not in results")
             self._missing_measurement_count += 1
             return None
         if pa_key not in self._data[ma_key]:
-            print(
-                f"WARNING: Model config {ma_key}, concurrency={pa_key} not in results"
-            )
+            if not skip_warn:
+                print(
+                    f"WARNING: Model config {ma_key}, concurrency={pa_key} not in results"
+                )
             self._missing_measurement_count += 1
             return None
 
