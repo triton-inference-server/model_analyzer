@@ -181,7 +181,6 @@ class MetricsManager:
         if measurement:
             logger.info(
                 "Existing measurement found for run config. Skipping profile")
-
             return measurement
 
         current_model_variants = run_config.model_variants_name()
