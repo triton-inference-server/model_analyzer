@@ -108,6 +108,17 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(self.mcmA.get_metric_value("XXXXX"), 0)
         self.assertEqual(self.mcmA.get_metric_value("XXXXX", 100), 100)
 
+    def test_set_metric_weighting(self):
+        # Default
+        self.assertEqual({"perf_throughput": 1}, self.mcmA._metric_weights)
+
+        self.mcmA.set_metric_weighting({
+            "perf_throughput": 2,
+            "perf_latency_p99": 3
+        })
+        expected_mw = {"perf_throughput": 2/5, "perf_latency_p99": 3/5}
+        self.assertEqual(expected_mw, self.mcmA._metric_weights)
+
     def test_is_better_than(self):
         """
         Test that individual metric comparison works as expected
