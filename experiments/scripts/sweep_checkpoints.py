@@ -100,7 +100,7 @@ def run_all_models():
     total_models = 0
 
     # FIXME
-    #ckpts = ckpts[:5]
+    #ckpts = ckpts[80:82]
     for i, ckpt in enumerate(ckpts):
 
         # FIXME -- infinite loop
@@ -113,9 +113,18 @@ def run_all_models():
 
         print(f"{i+1} out of {len(ckpts)} checkpoints")
         print(ckpt)
+
+        is_linear_inst = False
+        with open(ckpt) as f:
+            contents = f.read()
+            if re.search('instanceGroup": \[{"count": 3,', contents):
+                is_linear_inst = True
         for model in get_models_in_checkpoint(ckpt):
             total_models += 1
             cmd = f"python3 /home/tgerdes/Code/model_analyzer/experiments/main.py --model-name {model} --generator QuickRunConfigGenerator --data-path {ckpt}"
+
+            if not is_linear_inst:
+                cmd = f"{cmd} --exponential-inst-count"
             cmd_list = cmd.split(' ')
             result = subprocess.run(cmd_list, stdout=subprocess.PIPE)
             result_data = parse_experiment_output(result.stdout)

@@ -25,6 +25,16 @@ class ConfigCommandExperiment(ConfigCommandProfile):
     def _fill_config(self):
         super()._fill_config()
         self._add_config(
+            ConfigField(
+                'exponential_inst_count',
+                field_type=ConfigPrimitive(bool),
+                flags=['--exponential-inst-count'],
+                parser_args={'action': 'store_true'},
+                default_value=False,
+                description=
+                'Whether or not the inst count dimension should be linear or exponential'
+            ))
+        self._add_config(
             ConfigField('radius',
                         field_type=ConfigPrimitive(int),
                         flags=['--radius'],

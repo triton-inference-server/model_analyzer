@@ -62,11 +62,15 @@ class CheckpointExperimentData(ExperimentData):
 
                 run_config_measurement.set_model_config_constraints(
                     model_config_constraints=[config.constraints])
-
+                run_config_measurement.set_metric_weightings(
+                    metric_objectives=[config.objectives])
                 pa_key = self._make_pa_key_from_cli_string(perf_analyzer_string)
 
-                self._add_run_config_measurement_from_keys(
-                    ma_key, pa_key, run_config, run_config_measurement)
+                existing_measurement = self._get_run_config_measurement_from_keys(
+                    ma_key, pa_key, skip_warn=True)
+                if not existing_measurement or run_config_measurement > existing_measurement:
+                    self._add_run_config_measurement_from_keys(
+                        ma_key, pa_key, run_config, run_config_measurement)
 
         if self._default_run_config is None:
             print(f"No default config for {model_name}")
@@ -82,7 +86,11 @@ class CheckpointExperimentData(ExperimentData):
                 max_batch_size = 2**i
 
                 ma_key = f"instance_count={instance_count},max_batch_size={max_batch_size}"
-                pa_key = str(2 * instance_count * max_batch_size)
+
+                clamped_int = self._clamp_to_power_of_two(2 * instance_count *
+                                                          max_batch_size)
+
+                pa_key = str(clamped_int)
 
                 measurement = self._get_run_config_measurement_from_keys(
                     ma_key, pa_key, skip_warn=True)

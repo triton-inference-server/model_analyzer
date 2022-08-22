@@ -54,10 +54,17 @@ class GeneratorExperimentFactory:
 
             #yapf: disable
             for i, _ in enumerate(config_command.profile_models):
-                dimensions.add_dimensions(i, [
-                    SearchDimension(f"max_batch_size", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-                    SearchDimension(f"instance_count", SearchDimension.DIMENSION_TYPE_LINEAR)
-                ])
+                if config_command.exponential_inst_count:
+                    dimensions.add_dimensions(i, [
+                        SearchDimension(f"max_batch_size", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                        SearchDimension(f"instance_count", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+                    ])
+                else:
+                    dimensions.add_dimensions(i, [
+                        SearchDimension(f"max_batch_size", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                        SearchDimension(f"instance_count", SearchDimension.DIMENSION_TYPE_LINEAR)
+                    ])
+
             #yapf: enable
 
             search_config = SearchConfig(
