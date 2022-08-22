@@ -101,6 +101,8 @@ class ModelManager:
                 measurement = None
 
             if measurement:
+                measurement.set_metric_weightings(
+                    metric_objectives=[self._config.objectives])
                 measurement.set_model_config_constraints(
                     model_config_constraints=[self._config.constraints])
 
