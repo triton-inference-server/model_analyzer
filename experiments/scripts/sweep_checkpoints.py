@@ -137,8 +137,10 @@ def run_all_models():
                 continue
 
             percentile = float(result_data['Percentile'])
-            num_measurement = int(result_data['Generator num configs'])
 
+            num_measurement = int(result_data['Generator num measurements'])
+            num_measurement += int(
+                result_data['Generator missing num measurements'])
             print(
                 f"  {model}: Percentile = {percentile}, measurements = {num_measurement}"
             )
