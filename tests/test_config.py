@@ -44,6 +44,8 @@ from model_analyzer.config.input.objects.config_model_profile_spec \
 from model_analyzer.constants import \
     CONFIG_PARSER_FAILURE
 
+from copy import deepcopy
+
 from unittest.mock import patch
 
 
@@ -1710,6 +1712,31 @@ profile_models:
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(args, yaml_content, subcommand='profile')
         self.mock_os.set_os_path_exists_return_value(True)
+
+    def test_copy(self):
+        """
+        Test that deepcopy works correctly
+        """
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--profile-models', 'vgg11'
+        ]
+        yaml_content = 'model_repository: yaml_repository'
+        configA = self._evaluate_config(args, yaml_content)
+
+        configB = deepcopy(configA)
+
+        self._assert_equality_of_model_configs(
+            configA.get_all_config()['profile_models'],
+            configB.get_all_config()['profile_models'])
+
+        self.assertEqual(configA.run_config_search_mode,
+                         configB.run_config_search_mode)
+
+        configB.run_config_search_mode = 'quick'
+
+        self.assertNotEqual(configA.run_config_search_mode,
+                            configB.run_config_search_mode)
 
 
 if __name__ == '__main__':
