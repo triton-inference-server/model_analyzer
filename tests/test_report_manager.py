@@ -80,7 +80,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
                                 avg_gpu_metrics,
                                 avg_non_gpu_metrics,
                                 result_comparator,
-                                cpu_only=False):
+                                cpu_only=False,
+                                add_to_results_only=False):
 
         config_pb = self.model_config.copy()
         config_pb["name"] = model_config_name
@@ -102,7 +103,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
         run_config = RunConfig({})
         run_config.add_model_run_config(mrc)
 
-        self.result_manager.add_run_config_measurement(run_config, measurement)
+        if add_to_results_only:
+            self.result_manager._add_rcm_to_results(run_config, measurement)
+        else:
+            self.result_manager.add_run_config_measurement(
+                run_config, measurement)
 
     def setUp(self):
         self.model_config = {
@@ -252,10 +257,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
             self.assertGreaterEqual(current_row[throughput_index],
                                     next_row[throughput_index])
 
-    # FIXME: You can't add results if the config is REPORT
-    # def test_build_detailed_info(self):
-    #     for cpu_only in [True, False]:
-    #         self._subtest_build_detailed_info(cpu_only)
+    def test_build_detailed_info(self):
+        for cpu_only in [True, False]:
+            self._subtest_build_detailed_info(cpu_only)
 
     def _subtest_build_detailed_info(self, cpu_only):
         self._init_managers(models="test_model_config_10", subcommand="report")
@@ -282,7 +286,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
                                          avg_gpu_metrics,
                                          avg_non_gpu_metrics,
                                          result_comparator,
-                                         cpu_only=cpu_only)
+                                         cpu_only=cpu_only,
+                                         add_to_results_only=True)
 
         self.report_manager._add_detailed_report_data()
         self.report_manager._build_detailed_table("test_model_config_10")
