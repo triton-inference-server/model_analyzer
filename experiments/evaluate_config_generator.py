@@ -18,6 +18,7 @@ from experiment_config_command_creator import ExperimentConfigCommandCreator
 from experiment_data import ExperimentData
 from checkpoint_experiment_data import CheckpointExperimentData
 from experiment_file_writer import ExperimentFileWriter
+from unittest.mock import MagicMock, patch
 
 
 class EvaluateConfigGenerator:
@@ -34,6 +35,13 @@ class EvaluateConfigGenerator:
 
         self._checkpoint_data = CheckpointExperimentData(self._config_command)
         self._profile_data = ExperimentData()
+
+        self._default_config_dict = self._checkpoint_data.get_default_config_dict(
+        )
+        p = patch(
+            'model_analyzer.config.generate.base_model_config_generator.BaseModelConfigGenerator.get_base_model_config_dict',
+            MagicMock(return_value=self._default_config_dict))
+        p.start()
 
     def execute_generator(self, generator_name):
 
@@ -59,11 +67,14 @@ class EvaluateConfigGenerator:
         for run_config in cg.get_configs():
             run_config_measurement = self._checkpoint_data.get_run_config_measurement(
                 run_config)
-            self._profile_data.add_run_config_measurement(
-                run_config, run_config_measurement)
 
             if run_config_measurement:
+                run_config_measurement.set_metric_weightings(
+                    metric_objectives=[self._config_command.objectives])
                 run_config_measurement.set_model_config_constraints(
                     model_config_constraints=[self._config_command.constraints])
+
+            self._profile_data.add_run_config_measurement(
+                run_config, run_config_measurement)
 
             cg.set_last_results([run_config_measurement])

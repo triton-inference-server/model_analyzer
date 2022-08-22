@@ -87,23 +87,27 @@ class ExperimentData:
         curr_dict[ma_key][pa_key] = run_config_measurement
 
     def _update_best_trackers(self, run_config, run_config_measurement):
-        if not self._best_run_config_measurement or run_config_measurement.get_non_gpu_metric_value(
-                'perf_throughput'
-        ) > self._best_run_config_measurement.get_non_gpu_metric_value(
-                'perf_throughput'):
+        if run_config_measurement.is_passing_constraints() and \
+            (not self._best_run_config_measurement or (run_config_measurement > self._best_run_config_measurement)):
+
             self._best_run_config_measurement = run_config_measurement
             self._best_run_config = run_config
 
-    def _get_run_config_measurement_from_keys(self, ma_key, pa_key):
+    def _get_run_config_measurement_from_keys(self,
+                                              ma_key,
+                                              pa_key,
+                                              skip_warn=False):
         if ma_key not in self._data:
-            print(f"WARNING: Model config {ma_key} not in results")
-            self._missing_measurement_count += 1
+            if not skip_warn:
+                print(f"WARNING: Model config {ma_key} not in results")
+                self._missing_measurement_count += 1
             return None
         if pa_key not in self._data[ma_key]:
-            print(
-                f"WARNING: Model config {ma_key}, concurrency={pa_key} not in results"
-            )
-            self._missing_measurement_count += 1
+            if not skip_warn:
+                print(
+                    f"WARNING: Model config {ma_key}, concurrency={pa_key} not in results"
+                )
+                self._missing_measurement_count += 1
             return None
 
         return self._data[ma_key][pa_key]

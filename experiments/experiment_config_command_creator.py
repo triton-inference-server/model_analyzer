@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tests.common.test_utils import convert_to_bytes
 from tests.mocks.mock_config import MockConfig
 from tests.mocks.mock_model_config import MockModelConfig
+from tests.common.test_utils import convert_to_bytes
 from model_analyzer.cli.cli import CLI
 from config_command_experiment import ConfigCommandExperiment
+import re
 
 
 class ExperimentConfigCommandCreator:
@@ -26,22 +27,35 @@ class ExperimentConfigCommandCreator:
 
     @staticmethod
     def make_config(data_path, model_name, other_args):
-        mock_model_config = MockModelConfig("")
-        mock_model_config.start()
 
-        checkpoint_dir = f"{data_path}/{model_name}"
+        ckpt = re.search('(.+)\/(\d\.ckpt)', data_path)
+        if ckpt:
+            checkpoint_dir = ckpt.group(1)
+        else:
+            checkpoint_dir = f"{data_path}/{model_name}"
 
         #yapf: disable
         args = [
             'model-analyzer', 'profile',
             '--profile-models', model_name,
             '--model-repository', data_path,
-            '--checkpoint-directory', checkpoint_dir,
-            '-f', 'path-to-config-file'
+            '--checkpoint-directory', checkpoint_dir
         ]
         args += other_args
 
-        yaml_content = convert_to_bytes("")
+        if '-f' not in args and '--config-file' not in args:
+            args += ['-f', 'path-to-config-file']
+            yaml_content = convert_to_bytes("")
+        else:
+            index = args.index('-f') if '-f' in args else args.index('--config-file')
+            yaml_file = args[index + 1]
+
+            with open(yaml_file, 'r') as f:
+                yaml_content = f.read()
+                yaml_content = convert_to_bytes(yaml_content)
+
+        mock_model_config = MockModelConfig("")
+        mock_model_config.start()
 
         mock_config = MockConfig(args, yaml_content)
         mock_config.start()
