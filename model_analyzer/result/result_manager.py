@@ -23,6 +23,10 @@ from .run_config_measurement import RunConfigMeasurement
 from .run_config_result import RunConfigResult
 from .results import Results
 
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
+
 from collections import defaultdict
 
 
@@ -49,17 +53,10 @@ class ResultManager:
         self._per_model_sorted_results = defaultdict(ResultHeap)
         self._across_model_sorted_results = ResultHeap()
 
-        # TODO: TMA-792: Until we get rid of analysis we need to model names from profile
-        if 'profile_models' in self._config._fields:
-            self._config._fields["analysis_models"] = self._config._fields[
-                "profile_models"]
-
         if state_manager.starting_fresh_run():
             self._init_state()
-            self._setup_for_analysis()
-        else:
-            self._setup_for_analysis()
-            self._add_results_to_heaps()
+
+        self._complete_setup()
 
     def get_model_names(self):
         """
@@ -247,17 +244,36 @@ class ResultManager:
         self._state_manager.set_state_variable('ResultManager.server_only_data',
                                                {})
 
-    def _setup_for_analysis(self):
-        # Skip if the report subcommand is being executed
-        if 'analysis_models' in self._config._fields:
-            self._create_concurrent_analysis_model_name()
+    def _complete_setup(self):
+        # The Report subcommand can init, but nothing needs to be done
+        if isinstance(self._config, ConfigCommandProfile):
+            self._complete_profile_setup()
+        elif isinstance(self._config, ConfigCommandAnalyze):
+            self._complete_analyze_setup()
 
-            if self._analyzing_models_concurrently():
-                self._setup_for_concurrent_analysis()
-            else:
-                self._setup_for_sequential_analysis()
+    def _complete_profile_setup(self):
+        #TODO: TMA-792: Until we get rid of analysis we need this
+        self._config._fields["analysis_models"] = self._config._fields[
+            "profile_models"]
+
+        self._create_concurrent_analysis_model_name()
+
+        if self._config.run_config_profile_models_concurrently_enable:
+            self._setup_for_concurrent_analysis()
         else:
-            self._analysis_model_names = []
+            self._setup_for_sequential_analysis()
+
+        self._add_results_to_heaps()
+
+    def _complete_analyze_setup(self):
+        self._create_concurrent_analysis_model_name()
+
+        if self._analyzing_models_concurrently():
+            self._setup_for_concurrent_analysis()
+        else:
+            self._setup_for_sequential_analysis()
+
+        self._add_results_to_heaps()
 
     def _create_concurrent_analysis_model_name(self):
         analysis_model_names = [
