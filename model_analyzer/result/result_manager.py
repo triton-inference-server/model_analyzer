@@ -120,10 +120,10 @@ class ResultManager:
             constraints=self._run_constraints[model_name])
 
         run_config_measurement.set_metric_weightings(
-            self._run_comparators[model_name]._metric_weights)
+            self._run_comparators[model_name].get_metric_weights())
 
         run_config_measurement.set_model_config_weighting(
-            self._run_comparators[model_name]._model_weights)
+            self._run_comparators[model_name].get_model_weights())
 
         self._add_rcm_to_results(run_config, run_config_measurement)
         run_config_result.add_run_config_measurement(run_config_measurement)
@@ -382,10 +382,10 @@ class ResultManager:
 
                 for run_config_measurement in run_config_measurements.values():
                     run_config_measurement.set_metric_weightings(
-                        self._run_comparators[model_name]._metric_weights)
+                        self._run_comparators[model_name].get_metric_weights())
 
                     run_config_measurement.set_model_config_weighting(
-                        self._run_comparators[model_name]._model_weights)
+                        self._run_comparators[model_name].get_model_weights())
 
                     run_config_result.add_run_config_measurement(
                         run_config_measurement)
