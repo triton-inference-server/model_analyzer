@@ -364,13 +364,14 @@ class ResultManager:
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        for model_name in results.get_list_of_models():
-            # Only add in models from the checkpoint that
-            # are being profiled/analyzed
-            if model_name not in self._analysis_model_names:
-                continue
-
-            model_measurements = results.get_model_measurements_dict(model_name)
+        for model_name in self._analysis_model_names:
+            try:
+                model_measurements = results.get_model_measurements_dict(
+                    model_name)
+            except:
+                raise TritonModelAnalyzerException(
+                    f"The model {model_name} was not found in the loaded checkpoint."
+                )
 
             for (run_config,
                  run_config_measurements) in model_measurements.values():
