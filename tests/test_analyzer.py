@@ -148,6 +148,9 @@ class TestAnalyzer(trc.TestResultCollector):
             RunConfigResult("fake_model_name", rc3, MagicMock())
         ]
 
+    def mock_check_for_models_in_checkpoint(self):
+        return True
+
     @patch(
         'model_analyzer.config.input.config_command_analyze.file_path_validator',
         lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
@@ -156,6 +159,9 @@ class TestAnalyzer(trc.TestResultCollector):
         lambda _: None)
     @patch('model_analyzer.result.result_manager.ResultManager.top_n_results',
            mock_top_n_results)
+    @patch(
+        'model_analyzer.result.result_manager.ResultManager._check_for_models_in_checkpoint',
+        mock_check_for_models_in_checkpoint)
     def test_get_report_command_help_string(self):
         """
         Tests that the member function returning the report command help string
