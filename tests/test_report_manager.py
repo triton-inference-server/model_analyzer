@@ -138,7 +138,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
             "model_analyzer.reports.report_manager",
             "model_analyzer.config.input.config_command_analyze",
             "model_analyzer.state.analyzer_state_manager",
-            "model_analyzer.config.input.config_utils"
+            "model_analyzer.config.input.config_utils",
+            "model_analyzer.config.input.config_command_profile"
         ])
         self.os_mock.start()
         # Required patch ordering here
