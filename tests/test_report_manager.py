@@ -70,14 +70,6 @@ class TestReportManagerMethods(trc.TestResultCollector):
         config = evaluate_mock_config(args, yaml_str, subcommand=subcommand)
         state_manager = AnalyzerStateManager(config=config, server=None)
 
-        # Add models to checkpoint
-        state_manager.set_state_variable('ResultManager.results', Results())
-        results = state_manager.get_state_variable('ResultManager.results')
-        for model in models.split(','):
-            results._results[model] = {}
-
-        state_manager._starting_fresh_run = False
-
         gpu_info = {
             'gpu_uuid': {
                 'name': 'fake_gpu_name',
@@ -139,10 +131,12 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         self.os_mock = MockOSMethods(mock_paths=[
             "model_analyzer.reports.report_manager",
-            "model_analyzer.config.input.config_command_analyze",
+            "model_analyzer.plots.plot_manager",
             "model_analyzer.state.analyzer_state_manager",
             "model_analyzer.config.input.config_utils",
-            "model_analyzer.config.input.config_command_profile"
+            "model_analyzer.config.input.config_command_profile",
+            "model_analyzer.config.input.config_command_analyze",
+            "model_analyzer.config.input.config_command_report"
         ])
         self.os_mock.start()
         # Required patch ordering here
@@ -160,8 +154,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.json_mock = MockJSONMethods()
         self.json_mock.start()
 
-        if not os.path.exists("/test/export/path"):
-            os.makedirs("/test/export/path")
+        # if not os.path.exists("/test/export/path"):
+        #     os.makedirs("/test/export/path")
 
     def test_add_results(self, *args):
         for mode in ['online', 'offline']:
@@ -553,7 +547,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.os_mock.stop()
         self.json_mock.stop()
         patch.stopall()
-        shutil.rmtree("/test")
+        # shutil.rmtree("/test")
 
 
 if __name__ == '__main__':
