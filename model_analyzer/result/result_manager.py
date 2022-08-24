@@ -273,6 +273,7 @@ class ResultManager:
         else:
             self._setup_for_sequential_analysis()
 
+        self._check_for_models_in_checkpoint()
         self._add_results_to_heaps()
 
     def _create_concurrent_analysis_model_name(self):
@@ -356,6 +357,16 @@ class ResultManager:
         self._state_manager.set_state_variable(name='ResultManager.results',
                                                value=results)
 
+    def _check_for_models_in_checkpoint(self):
+        results = self._state_manager.get_state_variable(
+            'ResultManager.results')
+
+        for model_name in self._analysis_model_names:
+            if not results.get_model_measurements_dict(model_name):
+                raise TritonModelAnalyzerException(
+                    f"The model {model_name} was not found in the loaded checkpoint."
+                )
+
     def _add_results_to_heaps(self):
         """
         Construct and add results to individual result heaps 
@@ -365,13 +376,11 @@ class ResultManager:
             'ResultManager.results')
 
         for model_name in self._analysis_model_names:
-            try:
-                model_measurements = results.get_model_measurements_dict(
-                    model_name)
-            except:
-                raise TritonModelAnalyzerException(
-                    f"The model {model_name} was not found in the loaded checkpoint."
-                )
+            model_measurements = results.get_model_measurements_dict(model_name)
+
+            # Only add in models that exist in the checkpoint
+            if not model_measurements:
+                continue
 
             for (run_config,
                  run_config_measurements) in model_measurements.values():

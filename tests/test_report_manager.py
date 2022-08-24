@@ -24,6 +24,8 @@ from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
 
+from model_analyzer.result.results import Results
+
 from .mocks.mock_io import MockIOMethods
 from .mocks.mock_matplotlib import MockMatplotlibMethods
 from .mocks.mock_os import MockOSMethods
@@ -44,7 +46,10 @@ class TestReportManagerMethods(trc.TestResultCollector):
                        mode='online',
                        subcommand='analyze'):
         args = ["model-analyzer", subcommand, "-f", "path-to-config-file"]
-        if subcommand == 'analyze':
+        if subcommand == 'profile':
+            args.extend(["--profile-models", models])
+            args.extend(["--model-repository", "/tmp"])
+        elif subcommand == 'analyze':
             args.extend(["--analysis-models", models])
         else:
             args.extend(["--report-model-configs", models])
@@ -61,6 +66,15 @@ class TestReportManagerMethods(trc.TestResultCollector):
         """)
         config = evaluate_mock_config(args, yaml_str, subcommand=subcommand)
         state_manager = AnalyzerStateManager(config=config, server=None)
+
+        # Add models to checkpoint
+        state_manager.set_state_variable('ResultManager.results', Results())
+        results = state_manager.get_state_variable('ResultManager.results')
+        for model in models.split(','):
+            results._results[model] = {}
+
+        state_manager._starting_fresh_run = False
+
         gpu_info = {
             'gpu_uuid': {
                 'name': 'fake_gpu_name',
@@ -144,7 +158,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
     def test_add_results(self, *args):
         for mode in ['online', 'offline']:
-            self._init_managers("test_model1,test_model2", mode=mode)
+            self._init_managers(models="test_model1,test_model2",
+                                mode=mode,
+                                subcommand='profile')
             result_comparator = RunConfigResultComparator(
                 metric_objectives_list=[{
                     "perf_throughput": 10
@@ -164,9 +180,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
                     "cpu_used_ram": 1000
                 }
                 self._add_result_measurement(f"test_model1_report_{i}",
-                                             "test_model1", avg_gpu_metrics,
+                                             "test_model1",
+                                             avg_gpu_metrics,
                                              avg_non_gpu_metrics,
-                                             result_comparator)
+                                             result_comparator,
+                                             add_to_results_only=False)
 
             for i in range(5):
                 avg_non_gpu_metrics = {
@@ -175,9 +193,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
                     "cpu_used_ram": 1000
                 }
                 self._add_result_measurement(f"test_model2_report_{i}",
-                                             "test_model2", avg_gpu_metrics,
+                                             "test_model2",
+                                             avg_gpu_metrics,
                                              avg_non_gpu_metrics,
-                                             result_comparator)
+                                             result_comparator,
+                                             add_to_results_only=False)
 
             self.report_manager.create_summaries()
             self.assertEqual(self.report_manager.report_keys(),
@@ -198,7 +218,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 self.subtest_build_summary_table(mode, cpu_only)
 
     def subtest_build_summary_table(self, mode, cpu_only):
-        self._init_managers(mode=mode)
+        self._init_managers(models="test_model",
+                            mode=mode,
+                            subcommand='profile')
         result_comparator = RunConfigResultComparator(metric_objectives_list=[{
             "perf_throughput": 10
         }])
@@ -356,7 +378,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
         expected_plot_count = num_plots_in_summary_report * expected_config_count
         expected_table_count = num_tables_in_summary_report * expected_config_count
 
-        self._init_managers("test_model1", num_configs_per_model=top_n)
+        self._init_managers(models="test_model1",
+                            num_configs_per_model=top_n,
+                            subcommand='profile')
         result_comparator = RunConfigResultComparator(metric_objectives_list=[{
             "perf_throughput": 10
         }])
@@ -401,7 +425,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
     def test_create_instance_group_phrase(self):
         """ Test all corner cases of _create_instance_group_phrase() """
-        self._init_managers("test_model")
+        self._init_managers(models="test_model", subcommand='profile')
 
         model_config_dict = {
             'instance_group': [{
