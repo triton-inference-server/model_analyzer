@@ -250,6 +250,12 @@ class ResultManager:
             self._complete_profile_setup()
         elif isinstance(self._config, ConfigCommandAnalyze):
             self._complete_analyze_setup()
+        elif isinstance(self._config, ConfigCommandReport):
+            pass
+        else:
+            raise TritonModelAnalyzerException(
+                f"Expected config of type ConfigCommandProfile/ConfigCommandAnalyze/ConfigCommandReport,"
+                f" got {type(self._config)}.")
 
     def _complete_profile_setup(self):
         #TODO: TMA-792: Until we get rid of analysis we need this

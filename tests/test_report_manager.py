@@ -35,7 +35,6 @@ from .common.test_utils import construct_run_config_measurement, evaluate_mock_c
 from .common import test_result_collector as trc
 
 import os
-import shutil
 
 import unittest
 from unittest.mock import MagicMock, patch
@@ -153,9 +152,6 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.matplotlib_mock.start()
         self.json_mock = MockJSONMethods()
         self.json_mock.start()
-
-        # if not os.path.exists("/test/export/path"):
-        #     os.makedirs("/test/export/path")
 
     def test_add_results(self, *args):
         for mode in ['online', 'offline']:
@@ -547,7 +543,6 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.os_mock.stop()
         self.json_mock.stop()
         patch.stopall()
-        # shutil.rmtree("/test")
 
 
 if __name__ == '__main__':
