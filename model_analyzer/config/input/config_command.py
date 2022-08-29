@@ -17,6 +17,8 @@ from model_analyzer.model_analyzer_exceptions \
 import yaml
 from .yaml_config_validator import YamlConfigValidator
 
+from copy import deepcopy
+
 
 class ConfigCommand:
     """
@@ -166,6 +168,14 @@ class ConfigCommand:
             config_dict[config.name()] = config.value()
 
         return config_dict
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        return result
 
     def __getattr__(self, name):
         return self._fields[name].value()
