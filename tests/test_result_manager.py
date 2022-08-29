@@ -23,6 +23,7 @@ from unittest.mock import patch, MagicMock
 from model_analyzer.result.result_heap import ResultHeap
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
 
 class TestResultManager(trc.TestResultCollector):
@@ -33,7 +34,7 @@ class TestResultManager(trc.TestResultCollector):
         are effectively mirrored set/get functions
         """
         state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
-        result_manager = ResultManager(config=MagicMock(),
+        result_manager = ResultManager(config=ConfigCommandReport(),
                                        state_manager=state_manager)
 
         server_data = {'a': 5, 'b': 7}
@@ -50,7 +51,7 @@ class TestResultManager(trc.TestResultCollector):
         Confirm that the measurements can be read out via get_model_configs_run_config_measurements()
         """
         state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
-        result_manager = ResultManager(config=MagicMock(),
+        result_manager = ResultManager(config=ConfigCommandReport(),
                                        state_manager=state_manager)
 
         fake_run_config1a = MagicMock()
