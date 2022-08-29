@@ -85,12 +85,9 @@ class TestResultTableManager(trc.TestResultCollector):
 
         rmtree(f"{ROOT_DIR}/multi-model-ckpt/results/")
 
-    def mock_check_for_models_in_checkpoint(self):
-        return True
-
     @patch(
         'model_analyzer.result.result_manager.ResultManager._check_for_models_in_checkpoint',
-        mock_check_for_models_in_checkpoint)
+        MagicMock(return_value=True))
     def test_create_inference_table_with_backend_parameters(self):
         args = ['model-analyzer', 'analyze', '-f', 'config.yml']
         yaml_str = ("""
@@ -112,7 +109,7 @@ class TestResultTableManager(trc.TestResultCollector):
 
     @patch(
         'model_analyzer.result.result_manager.ResultManager._check_for_models_in_checkpoint',
-        mock_check_for_models_in_checkpoint)
+        MagicMock(return_value=True))
     def test_get_common_row_items_with_backend_parameters(self):
         """
         This tests that a metrics model inference table row can be created with
