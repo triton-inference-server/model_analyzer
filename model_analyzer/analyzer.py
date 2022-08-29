@@ -113,9 +113,6 @@ class Analyzer:
         logger.info("")
 
         if not self._config.skip_summary_reports:
-            # TODO: TMA-792: This won't be needed once the Results class is used in profile
-            self._analyze_models()
-
             self._create_summary_tables(verbose)
             self._create_summary_reports(mode)
             logger.info(self._get_report_command_help_string())
@@ -150,7 +147,6 @@ class Analyzer:
                                                         self._result_manager)
 
         # Create result tables, put top results and get stats
-        self._result_manager.compile_and_sort_results()
         self._report_manager.create_summaries()
         self._report_manager.export_summaries()
 
@@ -251,13 +247,6 @@ class Analyzer:
                     self._model_manager.run_models(models=[model])
                 finally:
                     self._state_manager.save_checkpoint()
-
-    def _analyze_models(self):
-        # TODO: TMA-792: Until we get rid of analysis we need to copy some values from profile
-        self._config._fields["analysis_models"] = self._config._fields[
-            "profile_models"]
-
-        self._result_manager.compile_and_sort_results()
 
     def _create_summary_tables(self, verbose: bool):
         self._result_table_manager = ResultTableManager(self._config,

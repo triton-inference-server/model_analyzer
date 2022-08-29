@@ -85,6 +85,9 @@ class TestResultTableManager(trc.TestResultCollector):
 
         rmtree(f"{ROOT_DIR}/multi-model-ckpt/results/")
 
+    @patch(
+        'model_analyzer.result.result_manager.ResultManager._check_for_models_in_checkpoint',
+        MagicMock(return_value=True))
     def test_create_inference_table_with_backend_parameters(self):
         args = ['model-analyzer', 'analyze', '-f', 'config.yml']
         yaml_str = ("""
@@ -104,6 +107,9 @@ class TestResultTableManager(trc.TestResultCollector):
             'backend_parameter/parameter_2'
         ])
 
+    @patch(
+        'model_analyzer.result.result_manager.ResultManager._check_for_models_in_checkpoint',
+        MagicMock(return_value=True))
     def test_get_common_row_items_with_backend_parameters(self):
         """
         This tests that a metrics model inference table row can be created with
@@ -192,13 +198,11 @@ class TestResultTableManager(trc.TestResultCollector):
 
     def _create_single_model_result_table_manager(self):
         result_manager, config = load_single_model_result_manager()
-        result_manager.compile_and_sort_results()
 
         return ResultTableManager(config, result_manager)
 
     def _create_multi_model_result_table_manager(self):
         result_manager, config = load_multi_model_result_manager()
-        result_manager.compile_and_sort_results()
 
         return ResultTableManager(config, result_manager)
 

@@ -23,6 +23,7 @@ from unittest.mock import patch, MagicMock
 from model_analyzer.result.result_heap import ResultHeap
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
 
 class TestResultManager(trc.TestResultCollector):
@@ -33,7 +34,7 @@ class TestResultManager(trc.TestResultCollector):
         are effectively mirrored set/get functions
         """
         state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
-        result_manager = ResultManager(config=MagicMock(),
+        result_manager = ResultManager(config=ConfigCommandReport(),
                                        state_manager=state_manager)
 
         server_data = {'a': 5, 'b': 7}
@@ -50,7 +51,7 @@ class TestResultManager(trc.TestResultCollector):
         Confirm that the measurements can be read out via get_model_configs_run_config_measurements()
         """
         state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
-        result_manager = ResultManager(config=MagicMock(),
+        result_manager = ResultManager(config=ConfigCommandReport(),
                                        state_manager=state_manager)
 
         fake_run_config1a = MagicMock()
@@ -78,14 +79,14 @@ class TestResultManager(trc.TestResultCollector):
         rcm1c = MagicMock()
         rcm2 = MagicMock()
 
-        result_manager.add_run_config_measurement(run_config=fake_run_config1a,
-                                                  run_config_measurement=rcm1a)
-        result_manager.add_run_config_measurement(run_config=fake_run_config1b,
-                                                  run_config_measurement=rcm1b)
-        result_manager.add_run_config_measurement(run_config=fake_run_config1c,
-                                                  run_config_measurement=rcm1c)
-        result_manager.add_run_config_measurement(run_config=fake_run_config2,
-                                                  run_config_measurement=rcm2)
+        result_manager._add_rcm_to_results(run_config=fake_run_config1a,
+                                           run_config_measurement=rcm1a)
+        result_manager._add_rcm_to_results(run_config=fake_run_config1b,
+                                           run_config_measurement=rcm1b)
+        result_manager._add_rcm_to_results(run_config=fake_run_config1c,
+                                           run_config_measurement=rcm1c)
+        result_manager._add_rcm_to_results(run_config=fake_run_config2,
+                                           run_config_measurement=rcm2)
 
         config, measurements = result_manager.get_model_configs_run_config_measurements(
             "Model1_config_default")
@@ -105,13 +106,11 @@ class TestResultManager(trc.TestResultCollector):
     def test_get_single_model_names(self):
         """ Test get_model_names for a single-model run """
         result_manager, _ = load_single_model_result_manager()
-        result_manager.compile_and_sort_results()
         self.assertEqual(result_manager.get_model_names(), ["add_sub"])
 
     def test_get_multi_model_names(self):
         """ Test get_model_names for a multi-model run """
         result_manager, _ = load_multi_model_result_manager()
-        result_manager.compile_and_sort_results()
         self.assertEqual(result_manager.get_model_names(),
                          ["resnet50_libtorch,vgg19_libtorch"])
 
@@ -122,7 +121,6 @@ class TestResultManager(trc.TestResultCollector):
         """
 
         result_manager, _ = load_multi_model_result_manager()
-        result_manager.compile_and_sort_results()
         with self.assertRaises(TritonModelAnalyzerException):
             result_manager.get_model_sorted_results("SHOULD_ERROR")
 
@@ -132,8 +130,7 @@ class TestResultManager(trc.TestResultCollector):
         with only results for that model 
         """
         result_manager, _ = load_single_model_result_manager()
-        result_manager.add_run_config_measurement(MagicMock(), MagicMock())
-        result_manager.compile_and_sort_results()
+        result_manager._add_rcm_to_results(MagicMock(), MagicMock())
         sorted_results = result_manager.get_model_sorted_results("add_sub")
         self.assertTrue(isinstance(sorted_results, ResultHeap))
         self.assertEqual(5, len(sorted_results.results()))
@@ -141,20 +138,18 @@ class TestResultManager(trc.TestResultCollector):
     def test_get_multi_model_sorted_results(self):
         """ Test get_model_sorted_results returns a valid ResultHeap """
         result_manager, _ = load_multi_model_result_manager()
-        result_manager.compile_and_sort_results()
         sorted_results = result_manager.get_model_sorted_results(
             "resnet50_libtorch,vgg19_libtorch")
         self.assertTrue(isinstance(sorted_results, ResultHeap))
         self.assertEqual(17, len(sorted_results.results()))
 
     def test_get_across_model_sorted_results(self):
-        """ 
+        """
         Test get_across_model_sorted_results returns a valid ResultHeap
-        with all results across all models 
+        with all results across all models
         """
         result_manager, _ = load_single_model_result_manager()
         self._add_a_fake_result(result_manager)
-        result_manager.compile_and_sort_results()
 
         sorted_results = result_manager.get_across_model_sorted_results()
         self.assertTrue(isinstance(sorted_results, ResultHeap))
@@ -166,6 +161,10 @@ class TestResultManager(trc.TestResultCollector):
         old_analysis_models = result_manager._config.analysis_models
         old_analysis_models.append(fake_model)
         result_manager._config.analysis_models = old_analysis_models
+        result_manager._run_comparators[
+            'FakeModel'] = result_manager._run_comparators['add_sub']
+        result_manager._run_constraints[
+            'FakeModel'] = result_manager._run_constraints['add_sub']
 
         fake_run_config = MagicMock()
         fake_run_config.models_name.return_value = "FakeModel"

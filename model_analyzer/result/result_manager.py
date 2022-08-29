@@ -19,8 +19,13 @@ from model_analyzer.model_analyzer_exceptions \
 
 from .result_heap import ResultHeap
 from .run_config_result_comparator import RunConfigResultComparator
+from .run_config_measurement import RunConfigMeasurement
 from .run_config_result import RunConfigResult
 from .results import Results
+
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
 from collections import defaultdict
 
@@ -35,7 +40,7 @@ class ResultManager:
         """
         Parameters
         ----------
-        config :ConfigCommandProfile
+        config :ConfigCommandProfile/ConfigCommandReport
             the model analyzer config
         state_manager: AnalyzerStateManager
             The object that allows control and update of state
@@ -44,12 +49,14 @@ class ResultManager:
         self._config = config
         self._state_manager = state_manager
 
-        if state_manager.starting_fresh_run():
-            self._init_state()
-
         # Data structures for sorting results
         self._per_model_sorted_results = defaultdict(ResultHeap)
         self._across_model_sorted_results = ResultHeap()
+
+        if state_manager.starting_fresh_run():
+            self._init_state()
+
+        self._complete_setup()
 
     def get_model_names(self):
         """
@@ -98,46 +105,31 @@ class ResultManager:
         self._state_manager.set_state_variable('ResultManager.server_only_data',
                                                data)
 
-    def add_run_config_measurement(self, run_config, run_config_measurement):
+    def add_run_config_measurement(
+            self, run_config, run_config_measurement: RunConfigMeasurement):
         """
-        This function adds model inference
-        measurements to the required result
-
-        Parameters
-        ----------
-        run_config : RunConfig
-            Contains the parameters used to generate the measurment
-        run_config_measurement: RunConfigMeasurement
-            the measurement to be added
+        Add measurement to individual result heap,
+        global result heap and results class
         """
+        model_name = run_config.models_name()
 
-        # Get reference to results state and modify it
-        results = self._state_manager.get_state_variable(
-            'ResultManager.results')
+        run_config_result = RunConfigResult(
+            model_name=model_name,
+            run_config=run_config,
+            comparator=self._run_comparators[model_name],
+            constraints=self._run_constraints[model_name])
 
-        results.add_run_config_measurement(run_config, run_config_measurement)
+        run_config_measurement.set_metric_weightings(
+            self._run_comparators[model_name].get_metric_weights())
 
-        # Use set_state_variable to record that state may have been changed
-        self._state_manager.set_state_variable(name='ResultManager.results',
-                                               value=results)
+        run_config_measurement.set_model_config_weighting(
+            self._run_comparators[model_name].get_model_weights())
 
-    def compile_and_sort_results(self):
-        """
-        Collects objectives and constraints for
-        each model, constructs results from the
-        measurements obtained, and sorts and 
-        filters them according to constraints
-        and objectives.
-        """
+        self._add_rcm_to_results(run_config, run_config_measurement)
+        run_config_result.add_run_config_measurement(run_config_measurement)
 
-        self._create_concurrent_analysis_model_name()
-
-        if self._analyzing_models_concurrently():
-            self._setup_for_concurrent_analysis()
-        else:
-            self._setup_for_sequential_analysis()
-
-        self._add_results_to_heaps()
+        self._per_model_sorted_results[model_name].add_result(run_config_result)
+        self._across_model_sorted_results.add_result(run_config_result)
 
     def get_model_configs_run_config_measurements(self, model_variants_name):
         """
@@ -252,6 +244,44 @@ class ResultManager:
         self._state_manager.set_state_variable('ResultManager.server_only_data',
                                                {})
 
+    def _complete_setup(self):
+        # The Report subcommand can init, but nothing needs to be done
+        if isinstance(self._config, ConfigCommandProfile):
+            self._complete_profile_setup()
+        elif isinstance(self._config, ConfigCommandAnalyze):
+            self._complete_analyze_setup()
+        elif isinstance(self._config, ConfigCommandReport):
+            pass
+        else:
+            raise TritonModelAnalyzerException(
+                f"Expected config of type ConfigCommandProfile/ConfigCommandAnalyze/ConfigCommandReport,"
+                f" got {type(self._config)}.")
+
+    def _complete_profile_setup(self):
+        #TODO: TMA-792: Until we get rid of analysis we need this
+        self._config._fields["analysis_models"] = self._config._fields[
+            "profile_models"]
+
+        self._create_concurrent_analysis_model_name()
+
+        if self._config.run_config_profile_models_concurrently_enable:
+            self._setup_for_concurrent_analysis()
+        else:
+            self._setup_for_sequential_analysis()
+
+        self._add_results_to_heaps()
+
+    def _complete_analyze_setup(self):
+        self._create_concurrent_analysis_model_name()
+
+        if self._analyzing_models_concurrently():
+            self._setup_for_concurrent_analysis()
+        else:
+            self._setup_for_sequential_analysis()
+
+        self._check_for_models_in_checkpoint()
+        self._add_results_to_heaps()
+
     def _create_concurrent_analysis_model_name(self):
         analysis_model_names = [
             model.model_name() for model in self._config.analysis_models
@@ -310,6 +340,39 @@ class ResultManager:
             for model in self._config.analysis_models
         }
 
+    def _add_rcm_to_results(self, run_config, run_config_measurement):
+        """
+        This function adds model inference
+        measurements to the required result
+
+        Parameters
+        ----------
+        run_config : RunConfig
+            Contains the parameters used to generate the measurment
+        run_config_measurement: RunConfigMeasurement
+            the measurement to be added
+        """
+
+        # Get reference to results state and modify it
+        results = self._state_manager.get_state_variable(
+            'ResultManager.results')
+
+        results.add_run_config_measurement(run_config, run_config_measurement)
+
+        # Use set_state_variable to record that state may have been changed
+        self._state_manager.set_state_variable(name='ResultManager.results',
+                                               value=results)
+
+    def _check_for_models_in_checkpoint(self):
+        results = self._state_manager.get_state_variable(
+            'ResultManager.results')
+
+        for model_name in self._analysis_model_names:
+            if not results.get_model_measurements_dict(model_name):
+                raise TritonModelAnalyzerException(
+                    f"The model {model_name} was not found in the loaded checkpoint."
+                )
+
     def _add_results_to_heaps(self):
         """
         Construct and add results to individual result heaps 
@@ -321,10 +384,9 @@ class ResultManager:
         for model_name in self._analysis_model_names:
             model_measurements = results.get_model_measurements_dict(model_name)
 
+            # Only add in models that exist in the checkpoint
             if not model_measurements:
-                raise TritonModelAnalyzerException(
-                    f"The model {model_name} was not found in the loaded checkpoint."
-                )
+                continue
 
             for (run_config,
                  run_config_measurements) in model_measurements.values():
@@ -336,10 +398,10 @@ class ResultManager:
 
                 for run_config_measurement in run_config_measurements.values():
                     run_config_measurement.set_metric_weightings(
-                        self._run_comparators[model_name]._metric_weights)
+                        self._run_comparators[model_name].get_metric_weights())
 
                     run_config_measurement.set_model_config_weighting(
-                        self._run_comparators[model_name]._model_weights)
+                        self._run_comparators[model_name].get_model_weights())
 
                     run_config_result.add_run_config_measurement(
                         run_config_measurement)

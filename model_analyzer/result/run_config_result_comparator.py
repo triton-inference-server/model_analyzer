@@ -42,6 +42,12 @@ class RunConfigResultComparator:
             # TODO-TMA-571: Need to add support for model weighting
             self._model_weights.append(1)
 
+    def get_metric_weights(self):
+        return self._metric_weights
+
+    def get_model_weights(self):
+        return self._model_weights
+
     def is_better_than(self, run_config_result1, run_config_result2):
         """
         Aggregates and compares the score for two RunConfigResults 
