@@ -51,9 +51,8 @@ logger = logging.getLogger(LOGGER_NAME)
 
 class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     """
-    Uses QuickRunConfigGenerator to create RunConfigs,
-    then uses Brute to search the concurrency space
-    for the top N results 
+    First run QuickRunConfigGenerator for a hill climbing search, then use 
+    Brute for a concurrency sweep of the default and Top N results
     """
 
     def __init__(self, search_config: SearchConfig,
@@ -130,39 +129,8 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             self, result: RunConfigResult) -> ConfigCommandProfile:
         new_config = deepcopy(self._config)
 
-        new_config._fields[
-            'run_config_search_mode']._field_type._value = 'brute'
-        new_config._fields[
-            'run_config_search_disable']._field_type._value = False
-        new_config._fields['early_exit_enable']._field_type._value = True
-
-        batch_size = result.run_config().model_run_configs()[0].model_config(
-        ).get_field('max_batch_size')
-        instance_group = result.run_config().model_run_configs(
-        )[0].model_config().get_field('instance_group')
-
-        model_config = result.run_config().model_run_configs()[0].model_config(
-        ).get_config()
-
-        instance_group_list = model_config['instance_group']
-
-        new_config._fields[
-            'run_config_search_min_model_batch_size']._field_type._value = model_config[
-                'max_batch_size']
-        new_config._fields[
-            'run_config_search_max_model_batch_size']._field_type._value = model_config[
-                'max_batch_size']
-        new_config._fields[
-            'run_config_search_min_instance_count']._field_type._value = model_config[
-                'instance_group'][0]['count']
-        new_config._fields[
-            'run_config_search_max_instance_count']._field_type._value = model_config[
-                'instance_group'][0]['count']
-
-        new_config._fields[
-            'run_config_search_min_concurrency']._field_type._value = DEFAULT_RUN_CONFIG_MIN_CONCURRENCY
-        new_config._fields[
-            'run_config_search_max_concurrency']._field_type._value = DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+        self._set_search_mode(new_config)
+        self._set_parameters(result, new_config)
 
         return new_config
 
@@ -174,3 +142,43 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             models=self._models,
             client=self._client,
             model_variant_name_manager=self._model_variant_name_manager)
+
+    def _set_search_mode(self, config: ConfigCommandProfile):
+        config._fields['run_config_search_mode']._field_type._value = 'brute'
+        config._fields['run_config_search_disable']._field_type._value = False
+        config._fields['early_exit_enable']._field_type._value = True
+
+    def _set_parameters(self, result: RunConfigResult,
+                        config: ConfigCommandProfile):
+        batch_size = self._find_batch_size(result)
+        instance_count = self._find_instance_count(result)
+        self._set_batch_size(config, batch_size)
+        self._set_instance_count(config, instance_count)
+        self._set_concurrency(config)
+
+    def _find_batch_size(self, result: RunConfigResult) -> int:
+        return result.run_config().model_run_configs()[0].model_config(
+        ).get_config()['max_batch_size']
+
+    def _find_instance_count(self, result: RunConfigResult) -> int:
+        return result.run_config().model_run_configs()[0].model_config(
+        ).get_config()['instance_group'][0]['count']
+
+    def _set_batch_size(self, config: ConfigCommandProfile, batch_size: int):
+        config._fields[
+            'run_config_search_min_model_batch_size']._field_type._value = batch_size
+        config._fields[
+            'run_config_search_max_model_batch_size']._field_type._value = batch_size
+
+    def _set_instance_count(self, config: ConfigCommandProfile,
+                            instance_count: int):
+        config._fields[
+            'run_config_search_min_instance_count']._field_type._value = instance_count
+        config._fields[
+            'run_config_search_max_instance_count']._field_type._value = instance_count
+
+    def _set_concurrency(self, config: ConfigCommandProfile):
+        config._fields[
+            'run_config_search_min_concurrency']._field_type._value = DEFAULT_RUN_CONFIG_MIN_CONCURRENCY
+        config._fields[
+            'run_config_search_max_concurrency']._field_type._value = DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
