@@ -74,7 +74,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
           - concurrency = 32*8*2 = 512
 
         Also
-        - rate limiter priority should be 1, even for single model
         - dynamic batching should be on
         - existing values from the base model config should persist if they aren't overwritten
         """
@@ -98,7 +97,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             'instanceGroup': [{
                 'count': 8,
                 'kind': 'KIND_GPU',
-                'rateLimiter': { 'priority' : 1 }
             }],
             'maxBatchSize': 32,
             'name': 'fake_model_name_config_0',
@@ -136,7 +134,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
           - model 2 concurrency = 16*6*2 = 192
 
         Also,
-        - rate limiter priority should be 1
         - dynamic batching should be on
         - existing values from the base model config should persist if they aren't overwritten
         - existing values for perf-analyzer config should persist if they aren't overwritten
@@ -198,7 +195,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             'instanceGroup': [{
                 'count': 3,
                 'kind': 'KIND_GPU',
-                'rateLimiter': { 'priority' : 1 }
             }],
             'maxBatchSize': 2,
             'name': 'fake_model_name1_config_0',
@@ -215,7 +211,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             'instanceGroup': [{
                 'count': 6,
                 'kind': 'KIND_GPU',
-                'rateLimiter': { 'priority' : 1 }
             }],
             'maxBatchSize': 16,
             'name': 'fake_model_name2_config_0',

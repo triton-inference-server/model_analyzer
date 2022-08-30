@@ -119,9 +119,10 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         top_results = self._result_manager.top_n_results(
             n=DEFAULT_NUM_CONFIGS_PER_MODEL)
 
-        for result in top_results:
+        for count, result in enumerate(top_results):
             new_config = self._create_new_config_command_profile(result)
-            self._rcg = self._create_brute_run_config_generator(new_config)
+            self._rcg = self._create_brute_run_config_generator(
+                new_config, skip_default_config=(count != 0))
 
             yield from self._rcg.get_configs()
 
@@ -135,13 +136,15 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         return new_config
 
     def _create_brute_run_config_generator(
-            self, new_config: ConfigCommandProfile) -> BruteRunConfigGenerator:
+            self, new_config: ConfigCommandProfile,
+            skip_default_config: bool) -> BruteRunConfigGenerator:
         return BruteRunConfigGenerator(
             config=new_config,
             gpus=self._gpus,
             models=self._models,
             client=self._client,
-            model_variant_name_manager=self._model_variant_name_manager)
+            model_variant_name_manager=self._model_variant_name_manager,
+            skip_default_config=skip_default_config)
 
     def _set_search_mode(self, config: ConfigCommandProfile):
         config._fields['run_config_search_mode']._field_type._value = 'brute'
