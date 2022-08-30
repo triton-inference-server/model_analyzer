@@ -46,12 +46,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     Hill climbing algorithm to create RunConfigs
     """
 
-    def __init__(self,
-                 search_config: SearchConfig,
-                 config: ConfigCommandProfile,
-                 gpus: List[GPUDevice],
-                 models: List[ConfigModelProfileSpec],
-                 client: TritonClient,
+    def __init__(self, search_config: SearchConfig,
+                 config: ConfigCommandProfile, gpus: List[GPUDevice],
+                 models: List[ConfigModelProfileSpec], client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
@@ -124,7 +121,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         Determine self._coordinate_to_measure, which is what is used to
         create the next RunConfig
         """
-        if self._measuring_home_coordinate() and self._get_last_results() is None:
+        if self._measuring_home_coordinate(
+        ) and self._get_last_results() is None:
             self._take_step_back()
         elif self._neighborhood.enough_coordinates_initialized():
             self._take_step()
@@ -206,8 +204,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             coordinate_in=self._best_coordinate)
 
         logger.debug(
-            f"Stepping back: {self._home_coordinate}->{new_coordinate}"
-        )
+            f"Stepping back: {self._home_coordinate}->{new_coordinate}")
         self._home_coordinate = new_coordinate
         self._coordinate_to_measure = new_coordinate
         self._recreate_neighborhood()
@@ -242,8 +239,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         min_indexes = self._search_config.get_min_indexes()
         return Coordinate(min_indexes)
 
-    def _get_coordinate_values(self,
-                               coordinate: Coordinate,
+    def _get_coordinate_values(self, coordinate: Coordinate,
                                key: int) -> Dict[str, Union[int, float]]:
         dims = self._search_config.get_dimensions()
         values = dims.get_values_for_coordinate(coordinate)
@@ -282,9 +278,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             'instance_group': [{
                 'count': dimension_values['instance_count'],
                 'kind': "KIND_GPU",
-                'rate_limiter': {
-                    'priority': 1
-                }
             }]
         }
 
@@ -298,8 +291,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_variant_name_manager=self._model_variant_name_manager)
         return model_config
 
-    def _get_next_perf_analyzer_config(self,
-                                       model_variant_name: str,
+    def _get_next_perf_analyzer_config(self, model_variant_name: str,
                                        model_num: int) -> PerfAnalyzerConfig:
         dimension_values = self._get_coordinate_values(
             self._coordinate_to_measure, model_num)
@@ -348,5 +340,4 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             )
         else:
             logger.debug(
-                f"Measurement for {self._coordinate_to_measure}: None."
-            )
+                f"Measurement for {self._coordinate_to_measure}: None.")

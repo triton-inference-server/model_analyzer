@@ -32,10 +32,17 @@ from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.record.metrics_manager import MetricsManager
+from model_analyzer.result.results import Results
+from model_analyzer.result.run_config_result import RunConfigResult
 
 from model_analyzer.constants import LOGGER_NAME, MAGNITUDE_DECAY_RATE
+from model_analyzer.config.input.config_defaults import DEFAULT_NUM_CONFIGS_PER_MODEL, \
+    DEFAULT_RUN_CONFIG_MIN_CONCURRENCY, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+
+from copy import deepcopy
 
 import logging
 
@@ -52,6 +59,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
                  models: List[ConfigModelProfileSpec], client: TritonClient,
+                 result_manager: ResultManager,
                  model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
@@ -64,6 +72,11 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         models: List of ConfigModelProfileSpec
             List of models to profile
         client: TritonClient
+        result_manager: ResultManager
+            The object that handles storing and sorting the results from the perf analyzer
+        model_variant_name_manager: ModelVariantNameManager
+            Maps model variants to config names
+        
         model_variant_name_manager: ModelVariantNameManager
         """
         self._search_config = search_config
@@ -71,6 +84,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         self._gpus = gpus
         self._models = models
         self._client = client
+        self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
         self._rcg = None
 
@@ -89,12 +103,86 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
         yield from self._rcg.get_configs()
 
-        print("Made it here!")
+        top_results = self._result_manager.top_n_results(
+            n=DEFAULT_NUM_CONFIGS_PER_MODEL)
 
-    def _create_quick_run_config_generator(self):
+        for result in top_results:
+            new_config = self._create_new_config_command_profile(result)
+            self._rcg = self._create_brute_run_config_generator(new_config)
+
+            yield from self._rcg.get_configs()
+
+        # yield from self._execute_quick_search()
+        # yield from self._sweep_concurrency_over_top_results()
+
+    def _execute_quick_search(self):
+        self._rcg = self._create_quick_run_config_generator()
+
+        # yield from self._rcg._execute_quick_search()
+
+    def _create_quick_run_config_generator(self) -> QuickRunConfigGenerator:
         return QuickRunConfigGenerator(
             search_config=self._search_config,
             config=self._config,
+            gpus=self._gpus,
+            models=self._models,
+            client=self._client,
+            model_variant_name_manager=self._model_variant_name_manager)
+
+    def _sweep_concurrency_over_top_results(self):
+        top_results = self._result_manager.top_n_results(
+            n=DEFAULT_NUM_CONFIGS_PER_MODEL)
+
+        for result in top_results:
+            new_config = self._create_new_config_command_profile(result)
+            self._rcg = self._create_brute_run_config_generator(new_config)
+
+            yield from self._rcg._sweep_concurrency_over_top_results()
+
+    def _create_new_config_command_profile(
+            self, result: RunConfigResult) -> ConfigCommandProfile:
+        new_config = deepcopy(self._config)
+
+        new_config._fields[
+            'run_config_search_mode']._field_type._value = 'brute'
+        new_config._fields[
+            'run_config_search_disable']._field_type._value = False
+        new_config._fields['early_exit_enable']._field_type._value = True
+
+        batch_size = result.run_config().model_run_configs()[0].model_config(
+        ).get_field('max_batch_size')
+        instance_group = result.run_config().model_run_configs(
+        )[0].model_config().get_field('instance_group')
+
+        model_config = result.run_config().model_run_configs()[0].model_config(
+        ).get_config()
+
+        instance_group_list = model_config['instance_group']
+
+        new_config._fields[
+            'run_config_search_min_model_batch_size']._field_type._value = model_config[
+                'max_batch_size']
+        new_config._fields[
+            'run_config_search_max_model_batch_size']._field_type._value = model_config[
+                'max_batch_size']
+        new_config._fields[
+            'run_config_search_min_instance_count']._field_type._value = model_config[
+                'instance_group'][0]['count']
+        new_config._fields[
+            'run_config_search_max_instance_count']._field_type._value = model_config[
+                'instance_group'][0]['count']
+
+        new_config._fields[
+            'run_config_search_min_concurrency']._field_type._value = DEFAULT_RUN_CONFIG_MIN_CONCURRENCY
+        new_config._fields[
+            'run_config_search_max_concurrency']._field_type._value = DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+
+        return new_config
+
+    def _create_brute_run_config_generator(
+            self, new_config: ConfigCommandProfile) -> BruteRunConfigGenerator:
+        return BruteRunConfigGenerator(
+            config=new_config,
             gpus=self._gpus,
             models=self._models,
             client=self._client,

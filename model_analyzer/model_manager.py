@@ -87,6 +87,7 @@ class ModelManager:
             gpus=self._gpus,
             models=models,
             client=self._client,
+            result_manager=self._result_manager,
             model_variant_name_manager=self._model_variant_name_manager)
 
         for run_config in rcg.get_configs():
