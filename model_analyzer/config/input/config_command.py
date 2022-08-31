@@ -184,4 +184,4 @@ class ConfigCommand:
         if name == '_fields':
             self.__dict__[name] = value
         else:
-            self._fields[name]._field_type._value = value
+            self._fields[name].set_value(value)
