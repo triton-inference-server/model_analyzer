@@ -49,6 +49,8 @@ class Neighborhood:
         self._radius = self._config.get_radius()
         self._neighborhood = self._create_neighborhood()
 
+        self._force_slow_mode = False
+
     @property
     def coordinate_data(self):
         return self._coordinate_data
@@ -71,10 +73,22 @@ class Neighborhood:
         """
         Returns true if enough coordinates inside of the neighborhood
         have been initialized. Else false
+
+        If the neighborhood is in slow mode, this means all next door neighbors
+        must be visited
         """
-        min_initialized = self._config.get_min_initialized()
-        num_initialized = len(self._get_initialized_coordinates())
-        return num_initialized >= min_initialized
+        if self._is_slow_mode():
+            return self._are_all_next_door_neighbors_visited()
+        else:
+            min_initialized = self._config.get_min_initialized()
+            num_initialized = len(self._get_initialized_coordinates())
+            return num_initialized >= min_initialized
+
+    def force_slow_mode(self):
+        """
+        When called, forces the neighborhood into slow mode
+        """
+        self._force_slow_mode = True
 
     def calculate_new_coordinate(self,
                                  magnitude: int,
@@ -82,20 +96,58 @@ class Neighborhood:
                                  clip_value: int = 2) -> Coordinate:
         """
         Based on the measurements in the neighborhood, determine where
-        the next location should be
+        the next location should be.
+
+        If the neighborhood is in slow mode, return the best found measurement
+        Otherwise calculate a new coordinate from the measurements
 
         Parameters
         ----------
         magnitude
             How large of a step to take
-        disable_clipping
+        enable_clipping
             Determines whether or not to clip the final step vector.
+        clip_value
+            What value to clip the vector at, if it is enabled
 
         Returns
         -------
         new_coordinate
             The new coordinate computed based on the neighborhood measurements.
         """
+
+        if self._is_slow_mode():
+            return self._get_best_coordinate_found()
+        else:
+            return self._calculate_new_coordinate(magnitude, enable_clipping,
+                                                  clip_value)
+
+    def _get_best_coordinate_found(self) -> Coordinate:
+        vectors, measurements = self._get_measurements_passing_constraints()
+
+        if len(vectors) == 0:
+            return self._home_coordinate
+
+        home_measurement = self._get_home_measurement()
+
+        if home_measurement.is_passing_constraints():
+            vectors.append(Coordinate([0] * self._config.get_num_dimensions()))
+            measurements.append(home_measurement)
+
+        best_vector = vectors[0]
+        best_measurement = measurements[0]
+
+        for v, m in zip(vectors, measurements):
+            if m > best_measurement:
+                best_vector = v
+                best_measurement = m
+
+        best_coordinate = self._home_coordinate + best_vector
+        return best_coordinate
+
+    def _calculate_new_coordinate(self, magnitude, enable_clipping,
+                                  clip_value) -> Coordinate:
+
         step_vector = self._get_step_vector() * magnitude
 
         if enable_clipping:
@@ -133,14 +185,30 @@ class Neighborhood:
 
         if max_value > clip_value and max_value != 0:
             for i in range(len(vector)):
-                vector[i] = clip_value * vector[i]/max_value
+                vector[i] = clip_value * vector[i] / max_value
         return vector
 
     def pick_coordinate_to_initialize(self) -> Optional[Coordinate]:
         """
         Based on the initialized coordinate values, pick an unvisited
         coordinate to initialize next.
+
+        If the neighborhood is in slow mode, only pick from within the next door neighbors
         """
+
+        if self._is_slow_mode():
+            return self._pick_slow_mode_coordinate_to_initialize()
+        else:
+            return self._pick_fast_mode_coordinate_to_initialize()
+
+    def _pick_slow_mode_coordinate_to_initialize(self):
+        for neighbor in self._get_all_next_door_neighbors():
+            if not self._is_coordinate_visited(neighbor):
+                return neighbor
+
+        raise Exception("Picking slow mode coordinate, but none are unvisited")
+
+    def _pick_fast_mode_coordinate_to_initialize(self):
         covered_values_per_dimension = self._get_covered_values_per_dimension()
 
         max_num_uncovered = -1
@@ -250,12 +318,11 @@ class Neighborhood:
         step_vector
             a coordinate that tells the direction to move.
         """
-        home_measurement = self._coordinate_data.get_measurement(
-            coordinate=self._home_coordinate)
+        home_measurement = self._get_home_measurement()
 
         assert home_measurement is not None, "Home measurement cannot be NoneType."
 
-        if home_measurement.is_passing_constraints():
+        if self._is_home_passing_constraints():
             return self._optimize_for_objectives(home_measurement)
 
         return self._optimize_for_constraints(home_measurement)
@@ -428,3 +495,64 @@ class Neighborhood:
                 num_uncovered += 1
 
         return num_uncovered
+
+    def _is_slow_mode(self):
+        """ 
+        Returns true if any of the following are true:
+        - force_slow_mode() has been called
+        - Home is passing and anyone in the neighborhood is failing
+        - Home is failing and anyone in the neighborhood is passing
+        """
+        if self._force_slow_mode:
+            return True
+
+        if not self._is_home_measured():
+            return False
+
+        passing_vectors, _ = self._get_measurements_passing_constraints()
+        all_vectors, _ = self._get_all_visited_measurements()
+
+        any_failing = len(all_vectors) != len(passing_vectors)
+        any_passing = len(passing_vectors) != 0
+        home_passing = self._is_home_passing_constraints()
+
+        return (home_passing and any_failing) or (not home_passing and
+                                                  any_passing)
+
+    def _are_all_next_door_neighbors_visited(self):
+        for neighbor in self._get_all_next_door_neighbors():
+            if not self._is_coordinate_visited(neighbor):
+                return False
+        return True
+
+    def _get_all_next_door_neighbors(self):
+        next_door_neighbors = []
+
+        for dim in range(self._config.get_num_dimensions()):
+            dimension = self._config.get_dimension(dim)
+
+            down_neighbor = Coordinate(self._home_coordinate)
+            down_neighbor[dim] -= 1
+            if down_neighbor[dim] >= dimension.get_min_idx():
+                next_door_neighbors.append(down_neighbor)
+
+            up_neighbor = Coordinate(self._home_coordinate)
+            up_neighbor[dim] += 1
+            if up_neighbor[dim] <= dimension.get_max_idx():
+                next_door_neighbors.append(up_neighbor)
+
+        return next_door_neighbors
+
+    def _get_home_measurement(self):
+        return self._coordinate_data.get_measurement(
+            coordinate=self._home_coordinate)
+
+    def _is_home_measured(self):
+        return self._get_home_measurement() is not None
+
+    def _is_home_passing_constraints(self):
+        if not self._is_home_measured():
+            raise Exception("Can't check home passing if it isn't measured yet")
+
+        home_measurement = self._get_home_measurement()
+        return home_measurement.is_passing_constraints()

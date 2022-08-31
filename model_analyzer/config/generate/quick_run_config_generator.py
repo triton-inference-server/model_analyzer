@@ -95,6 +95,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self._search_config.get_neighborhood_config(),
             self._home_coordinate)
 
+        # Sticky bit. Once true, we should never stay at a home that is failing or None
+        self._home_has_passed = False
+
         self._done = False
 
     def _is_done(self) -> bool:
@@ -121,8 +124,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         Determine self._coordinate_to_measure, which is what is used to
         create the next RunConfig
         """
-        if self._measuring_home_coordinate(
-        ) and self._get_last_results() is None:
+        if self._should_step_back():
             self._take_step_back()
         elif self._neighborhood.enough_coordinates_initialized():
             self._take_step()
@@ -152,6 +154,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         if measurements[0] is not None:
             self._update_best_measurement(measurement=measurements[0])
+
+            if self._measuring_home_coordinate(
+            ) and measurements[0].is_passing_constraints():
+                self._home_has_passed = True
 
         self._print_debug_logs(measurements)
 
@@ -197,19 +203,37 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         logger.debug(f"Stepping {self._home_coordinate}->{new_coordinate}")
         self._home_coordinate = new_coordinate
         self._coordinate_to_measure = new_coordinate
-        self._recreate_neighborhood()
+        self._recreate_neighborhood(force_slow_mode=False)
 
     def _take_step_back(self):
         new_coordinate = self._neighborhood.get_nearest_neighbor(
             coordinate_in=self._best_coordinate)
 
+        # TODO: TMA-871: handle back-off (and its termination) better.
+        if new_coordinate == self._home_coordinate:
+            self._done = True
+
         logger.debug(
             f"Stepping back: {self._home_coordinate}->{new_coordinate}")
         self._home_coordinate = new_coordinate
         self._coordinate_to_measure = new_coordinate
-        self._recreate_neighborhood()
+        self._recreate_neighborhood(force_slow_mode=True)
 
         self._magnitude_scaler *= MAGNITUDE_DECAY_RATE
+
+    def _should_step_back(self):
+        """
+        Step back if take any of the following steps:
+          - Step from a passing home to a failing home
+          - Step from any home to home with a None measurement
+        """
+        if self._measuring_home_coordinate():
+            if self._get_last_results() is None:
+                return True
+            last_results_passed = self._get_last_results(
+            ).is_passing_constraints()
+            if not last_results_passed and self._home_has_passed:
+                return True
 
     def _measuring_home_coordinate(self):
         return self._coordinate_to_measure == self._home_coordinate
@@ -224,11 +248,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         if self._coordinate_data.get_visit_count(new_coordinate) >= 2:
             self._done = True
 
-    def _recreate_neighborhood(self):
+    def _recreate_neighborhood(self, force_slow_mode: bool):
         neighborhood_config = self._search_config.get_neighborhood_config()
 
         self._neighborhood = Neighborhood(neighborhood_config,
                                           self._home_coordinate)
+        if force_slow_mode:
+            self._neighborhood.force_slow_mode()
 
     def _pick_coordinate_to_initialize(self):
         self._coordinate_to_measure = self._neighborhood.pick_coordinate_to_initialize(

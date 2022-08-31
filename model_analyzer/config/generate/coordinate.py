@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from copy import copy
+from copy import deepcopy
 
 
 class Coordinate:
@@ -25,7 +25,7 @@ class Coordinate:
         val: list
             List of floats or integers cooresponding to the location in space
         """
-        self._values = copy(val)
+        self._values = deepcopy(val)
 
     def __getitem__(self, idx):
         return self._values[idx]
