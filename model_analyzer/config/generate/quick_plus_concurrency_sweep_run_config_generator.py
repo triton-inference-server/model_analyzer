@@ -164,6 +164,9 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
         return config
 
+    # TODO: TMA-879 - This approach isn't going to work for multi-model
+    # We will need to create a yaml config to set each models
+    # batch size/instances seperately
     def _find_batch_size(self, result: RunConfigResult) -> int:
         return result.run_config().model_run_configs()[0].model_config(
         ).get_config()['max_batch_size']
