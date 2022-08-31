@@ -153,9 +153,11 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     def _set_parameters(self, result: RunConfigResult,
                         config: ConfigCommandProfile):
         batch_size = self._find_batch_size(result)
-        instance_count = self._find_instance_count(result)
         self._set_batch_size(config, batch_size)
+
+        instance_count = self._find_instance_count(result)
         self._set_instance_count(config, instance_count)
+
         self._set_concurrency(config)
 
     def _find_batch_size(self, result: RunConfigResult) -> int:
