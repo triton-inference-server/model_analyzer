@@ -85,9 +85,9 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         self._client = client
         self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
-        self._rcg = None
 
-    def set_last_results(self, measurements):
+    def set_last_results(self,
+                         measurements: List[Optional[RunConfigMeasurement]]):
         self._rcg.set_last_results(measurements)
 
     def get_configs(self) -> Generator[RunConfig, None, None]:
@@ -145,7 +145,8 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             model_variant_name_manager=self._model_variant_name_manager,
             skip_default_config=skip_default_config)
 
-    def _set_search_mode(self, config: ConfigCommandProfile):
+    def _set_search_mode(self,
+                         config: ConfigCommandProfile) -> ConfigCommandProfile:
         config.run_config_search_mode = 'brute'
         config.run_config_search_disable = False
         config.early_exit_enable = True
@@ -153,7 +154,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         return config
 
     def _set_parameters(self, result: RunConfigResult,
-                        config: ConfigCommandProfile):
+                        config: ConfigCommandProfile) -> ConfigCommandProfile:
         batch_size = self._find_batch_size(result)
         config = self._set_batch_size(config, batch_size)
 
@@ -175,20 +176,22 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         return result.run_config().model_run_configs()[0].model_config(
         ).get_config()['instance_group'][0]['count']
 
-    def _set_batch_size(self, config: ConfigCommandProfile, batch_size: int):
+    def _set_batch_size(self, config: ConfigCommandProfile,
+                        batch_size: int) -> ConfigCommandProfile:
         config.run_config_search_min_model_batch_size = batch_size
         config.run_config_search_max_model_batch_size = batch_size
 
         return config
 
     def _set_instance_count(self, config: ConfigCommandProfile,
-                            instance_count: int):
+                            instance_count: int) -> ConfigCommandProfile:
         config.run_config_search_min_instance_count = instance_count
         config.run_config_search_max_instance_count = instance_count
 
         return config
 
-    def _set_concurrency(self, config: ConfigCommandProfile):
+    def _set_concurrency(self,
+                         config: ConfigCommandProfile) -> ConfigCommandProfile:
         config.run_config_search_min_concurrency = DEFAULT_RUN_CONFIG_MIN_CONCURRENCY
         config.run_config_search_max_concurrency = DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
 

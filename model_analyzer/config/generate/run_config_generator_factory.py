@@ -52,7 +52,7 @@ class RunConfigGeneratorFactory:
         """
 
         if (command_config.run_config_search_mode == "quick"):
-            return RunConfigGeneratorFactory.create_quick_plus_concurrency_sweep_run_config_generator(
+            return RunConfigGeneratorFactory._create_quick_plus_concurrency_sweep_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
                 models=models,
@@ -82,7 +82,7 @@ class RunConfigGeneratorFactory:
             model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod
-    def create_quick_plus_concurrency_sweep_run_config_generator(
+    def _create_quick_plus_concurrency_sweep_run_config_generator(
             command_config, gpus, models, client, result_manager,
             model_variant_name_manager):
         search_config = RunConfigGeneratorFactory._create_search_config(
