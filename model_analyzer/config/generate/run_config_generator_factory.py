@@ -19,7 +19,7 @@ from .quick_plus_concurrency_sweep_run_config_generator import QuickPlusConcurre
 from .search_dimensions import SearchDimensions
 from .search_dimension import SearchDimension
 from .search_config import SearchConfig
-
+from typing import List
 from model_analyzer.constants import RADIUS, MAGNITUDE, MIN_INITIALIZED
 
 
@@ -86,7 +86,7 @@ class RunConfigGeneratorFactory:
             command_config, gpus, models, client, result_manager,
             model_variant_name_manager):
         search_config = RunConfigGeneratorFactory._create_search_config(
-            command_config)
+            command_config, client=client, gpus=gpus)
         return QuickPlusConcurrencySweepRunConfigGenerator(
             search_config=search_config,
             config=command_config,
@@ -97,15 +97,13 @@ class RunConfigGeneratorFactory:
             model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod
-    def _create_search_config(command_config):
+    def _create_search_config(command_config, client, gpus):
         dimensions = SearchDimensions()
 
         #yapf: disable
-        for i, _ in enumerate(command_config.profile_models):
-            dimensions.add_dimensions(i, [
-                SearchDimension(f"max_batch_size", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-                SearchDimension(f"instance_count", SearchDimension.DIMENSION_TYPE_LINEAR)
-            ])
+        for i, model in enumerate(command_config.profile_models):
+            dims = RunConfigGeneratorFactory._get_dimensions_for_model(config=command_config, client=client, gpus=gpus, model_name=model.model_name())
+            dimensions.add_dimensions(i, dims)
         #yapf: enable
 
         search_config = SearchConfig(dimensions=dimensions,
@@ -114,3 +112,37 @@ class RunConfigGeneratorFactory:
                                      min_initialized=MIN_INITIALIZED)
 
         return search_config
+
+    @staticmethod
+    def _get_dimensions_for_model(config, client, gpus,
+                                  model_name) -> List[SearchDimension]:
+
+        batching_supported = True
+        # TODO: TMA-875 - add proper batching support detection
+        #batching_supported = BaseModelConfigGenerator.is_batching_supported(
+        #    config=config, client=client, gpus=gpus, model_name=model_name)
+
+        if (batching_supported):  # If support max batch size
+            return RunConfigGeneratorFactory._get_batching_supported_dimensions(
+            )
+        else:
+            return RunConfigGeneratorFactory._get_batching_not_supported_dimensions(
+            )
+
+    @staticmethod
+    def _get_batching_supported_dimensions() -> List[SearchDimension]:
+        return [
+            SearchDimension(f"max_batch_size",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension(f"instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR)
+        ]
+
+    @staticmethod
+    def _get_batching_not_supported_dimensions() -> List[SearchDimension]:
+        return [
+            SearchDimension(f"concurrency",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension(f"instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR)
+        ]

@@ -19,6 +19,8 @@ from experiment_data import ExperimentData
 from checkpoint_experiment_data import CheckpointExperimentData
 from experiment_file_writer import ExperimentFileWriter
 from unittest.mock import MagicMock, patch
+from model_analyzer.state.analyzer_state import AnalyzerState
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 
 
 class EvaluateConfigGenerator:
@@ -28,6 +30,9 @@ class EvaluateConfigGenerator:
     """
 
     def __init__(self, model_name, data_path, output_path, other_args):
+
+        self._patch_checkpoint_load()
+
         self._output_path = output_path
         self._model_name = model_name
         self._config_command = ExperimentConfigCommandCreator.make_config(
@@ -43,16 +48,17 @@ class EvaluateConfigGenerator:
             MagicMock(return_value=self._default_config_dict))
         p.start()
 
-    def execute_generator(self, generator_name):
+    def execute_generator(self):
 
         generator = GeneratorExperimentFactory.create_generator(
-            generator_name, self._config_command)
+            self._config_command)
 
         self._run_generator(generator)
 
     def print_results(self):
         result_evaluator = ExperimentEvaluator(self._checkpoint_data,
-                                               self._profile_data)
+                                               self._profile_data,
+                                               self._config_command)
         result_evaluator.print_results()
 
     def store_results(self):
@@ -78,3 +84,18 @@ class EvaluateConfigGenerator:
                 run_config, run_config_measurement)
 
             cg.set_last_results([run_config_measurement])
+
+    def _patch_checkpoint_load(self):
+
+        old_fn = AnalyzerState.from_dict
+
+        def patched_analyzer_state_from_dict(state_dict):
+            if 'ModelManager.model_variant_name_manager' not in state_dict:
+                state_dict[
+                    "ModelManager.model_variant_name_manager"] = ModelVariantNameManager(
+                    )
+            return old_fn(state_dict)
+
+        p = patch('model_analyzer.state.analyzer_state.AnalyzerState.from_dict',
+                  patched_analyzer_state_from_dict)
+        p.start()
