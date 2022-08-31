@@ -413,7 +413,7 @@ class ModelConfig:
         if 'instance_group' in model_config:
             instance_group_list = model_config['instance_group']
 
-        kind_to_count = {}
+        kind_to_count: Dict[str, Any] = {}
 
         for group in instance_group_list:
             group_kind = default_kind

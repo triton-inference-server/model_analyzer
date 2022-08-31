@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Optional
+
 from .config_generator_interface import ConfigGeneratorInterface
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 
 class BruteRunConfigGenerator(ConfigGeneratorInterface):
@@ -24,8 +27,13 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
     Generates all RunConfigs to execute via brute force given a list of models
     """
 
-    def __init__(self, config, gpus, models, client,
-                 model_variant_name_manager):
+    def __init__(self,
+                 config,
+                 gpus,
+                 models,
+                 client,
+                 model_variant_name_manager,
+                 skip_default_config: bool = False):
         """
         Parameters
         ----------
@@ -39,6 +47,8 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         client: TritonClient
         
         model_variant_name_manager: ModelVariantNameManager
+        
+        skip_default_config: bool
         """
         self._config = config
         self._gpus = gpus
@@ -52,8 +62,10 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         self._num_models = len(models)
 
         self._curr_model_run_configs = [None for n in range(self._num_models)]
-        self._curr_results = [[] for n in range(self._num_models)]
+        self._curr_results: List = [[] for n in range(self._num_models)]
         self._curr_generators = [None for n in range(self._num_models)]
+
+        self._skip_default_config = skip_default_config
 
     def set_last_results(self, measurements):
         for index in range(self._num_models):
@@ -70,7 +82,9 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         yield from self._get_next_config()
 
     def _get_next_config(self):
-        yield from self._generate_subset(0, default_only=True)
+        if not self._skip_default_config:
+            yield from self._generate_subset(0, default_only=True)
+
         if self._should_generate_non_default_configs():
             yield from self._generate_subset(0, default_only=False)
 

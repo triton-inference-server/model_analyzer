@@ -179,3 +179,9 @@ class ConfigCommand:
 
     def __getattr__(self, name):
         return self._fields[name].value()
+
+    def __setattr__(self, name, value):
+        if name == '_fields':
+            self.__dict__[name] = value
+        else:
+            self._fields[name].set_value(value)

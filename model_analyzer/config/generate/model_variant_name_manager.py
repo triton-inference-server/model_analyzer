@@ -55,11 +55,11 @@ class ModelVariantNameManager:
 
         variant_found, model_variant_name = self._find_existing_variant(mcd)
 
-        if variant_found:
-            return (True, model_variant_name)
-
         if self._is_default_config(param_combo):
             return (False, model_name + '_config_default')
+
+        if variant_found:
+            return (True, model_variant_name)
 
         model_variant_name = self._create_new_model_variant(model_name, mcd)
 

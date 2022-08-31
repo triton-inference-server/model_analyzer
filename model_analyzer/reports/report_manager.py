@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, TYPE_CHECKING
+from typing import List, Tuple, Dict, Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from model_analyzer.result.run_config_measurement import RunConfigMeasurement
@@ -885,7 +885,7 @@ class ReportManager:
             The GPU names as a string, and the total combined memory as a string
         """
 
-        gpu_dict = {}
+        gpu_dict: Dict[str, Any] = {}
         for gpu_uuid, gpu_info in self._gpu_info.items():
             for measurement in measurements:
                 if gpu_uuid in measurement.gpus_used():

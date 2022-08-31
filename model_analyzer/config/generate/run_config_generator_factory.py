@@ -15,6 +15,7 @@
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from .brute_run_config_generator import BruteRunConfigGenerator
 from .quick_run_config_generator import QuickRunConfigGenerator
+from .quick_plus_concurrency_sweep_run_config_generator import QuickPlusConcurrencySweepRunConfigGenerator
 from .search_dimensions import SearchDimensions
 from .search_dimension import SearchDimension
 from .search_config import SearchConfig
@@ -29,7 +30,7 @@ class RunConfigGeneratorFactory:
 
     @staticmethod
     def create_run_config_generator(command_config, gpus, models, client,
-                                    model_variant_name_manager):
+                                    result_manager, model_variant_name_manager):
         """
         Parameters
         ----------
@@ -40,6 +41,8 @@ class RunConfigGeneratorFactory:
             The models to generate RunConfigs for
         client: TritonClient
             The client handle used to send requests to Triton
+        result_manager: ResultManager
+            The object that handles storing and sorting the results from the perf analyzer
         model_variant_name_manager: ModelVariantNameManager
             Maps model variants to config names
 
@@ -49,11 +52,12 @@ class RunConfigGeneratorFactory:
         """
 
         if (command_config.run_config_search_mode == "quick"):
-            return RunConfigGeneratorFactory.create_quick_run_config_generator(
+            return RunConfigGeneratorFactory._create_quick_plus_concurrency_sweep_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
                 models=models,
                 client=client,
+                result_manager=result_manager,
                 model_variant_name_manager=model_variant_name_manager)
         elif (command_config.run_config_search_mode == "brute"):
             return RunConfigGeneratorFactory._create_brute_run_config_generator(
@@ -78,16 +82,18 @@ class RunConfigGeneratorFactory:
             model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod
-    def create_quick_run_config_generator(command_config, gpus, models, client,
-                                          model_variant_name_manager):
+    def _create_quick_plus_concurrency_sweep_run_config_generator(
+            command_config, gpus, models, client, result_manager,
+            model_variant_name_manager):
         search_config = RunConfigGeneratorFactory._create_search_config(
             command_config)
-        return QuickRunConfigGenerator(
+        return QuickPlusConcurrencySweepRunConfigGenerator(
             search_config=search_config,
             config=command_config,
             gpus=gpus,
             models=models,
             client=client,
+            result_manager=result_manager,
             model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod
