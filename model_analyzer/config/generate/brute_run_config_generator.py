@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Optional
+
 from .config_generator_interface import ConfigGeneratorInterface
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 
 class BruteRunConfigGenerator(ConfigGeneratorInterface):
@@ -59,7 +62,7 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         self._num_models = len(models)
 
         self._curr_model_run_configs = [None for n in range(self._num_models)]
-        self._curr_results = [[] for n in range(self._num_models)]
+        self._curr_results: List = [[] for n in range(self._num_models)]
         self._curr_generators = [None for n in range(self._num_models)]
 
         self._skip_default_config = skip_default_config

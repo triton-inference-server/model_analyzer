@@ -330,8 +330,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                 best_latency = self._best_measurement.get_non_gpu_metric_value(
                     "perf_latency_p99")
             else:
-                best_throughput = None
-                best_latency = None
+                best_throughput = 0
+                best_latency = 0
 
             logger.debug(
                 f"Measurement for {self._coordinate_to_measure}: "
