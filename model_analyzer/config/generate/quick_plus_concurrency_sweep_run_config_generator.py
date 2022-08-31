@@ -146,9 +146,9 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             skip_default_config=skip_default_config)
 
     def _set_search_mode(self, config: ConfigCommandProfile):
-        config._fields['run_config_search_mode']._field_type._value = 'brute'
-        config._fields['run_config_search_disable']._field_type._value = False
-        config._fields['early_exit_enable']._field_type._value = True
+        config.run_config_search_mode = 'brute'
+        config.run_config_search_disable = False
+        config.early_exit_enable = True
 
         return config
 
