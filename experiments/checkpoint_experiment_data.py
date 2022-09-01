@@ -138,7 +138,7 @@ class CheckpointExperimentData(ExperimentData):
             ret = True
         return ret
 
-    def _are_keys_visable_to_algorithm(self, ma_key, pa_key):
+    def _are_keys_visable_to_algorithm(self, ma_key, pa_key) -> bool:
         # The quick algorithm can only see meaurements where the
         # concurrency is 2 * inst_count * max_batch_size.
         results = re.search("instance_count=(\d+),max_batch_size=(\d+)", ma_key)

@@ -53,7 +53,6 @@ class SweepCheckpoints:
         }
 
     def run(self):
-
         self._run_all_models("normal")
         if not THROUGHPUT_ONLY:
             self._run_all_models("latency_budget")
