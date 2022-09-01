@@ -646,11 +646,10 @@ class TestNeighborhood(trc.TestResultCollector):
         new_coord = n.determine_new_home()
         self.assertEqual(new_coord, Coordinate([2, 2]))
 
-    def test_determine_new_home_larger_magnitude(self):
+    def test_determine_new_home(self):
         """
         Test determine_new_home for a case where both of the
-        dimensions increases the measurement equally, and magnitude is
-        larger.
+        dimensions increases the measurement equally
         """
         dims = SearchDimensions()
         dims.add_dimensions(0, [

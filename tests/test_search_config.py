@@ -31,14 +31,10 @@ class TestSearchConfig(trc.TestResultCollector):
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
 
-        sc = SearchConfig(dimensions=dims,
-                          radius=4,
-                          step_magnitude=6,
-                          min_initialized=2)
+        sc = SearchConfig(dimensions=dims, radius=4, min_initialized=2)
 
         self.assertEqual(2, sc.get_num_dimensions())
         self.assertEqual(4, sc.get_radius())
-        self.assertEqual(6, sc.get_step_magnitude())
         self.assertEqual(2, sc.get_min_initialized())
 
         self.assertEqual("foo", sc.get_dimension(0).get_name())
@@ -68,10 +64,7 @@ class TestSearchConfig(trc.TestResultCollector):
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
 
-        sc = SearchConfig(dimensions=dims,
-                          radius=4,
-                          step_magnitude=6,
-                          min_initialized=2)
+        sc = SearchConfig(dimensions=dims, radius=4, min_initialized=2)
 
         nc = sc.get_neighborhood_config(radius=5)
         self.assertEqual(2, nc.get_num_dimensions())

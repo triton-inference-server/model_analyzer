@@ -25,7 +25,7 @@ class ExperimentFileWriter:
     field_names = [
         "overall_num_measurements", "overall_best_throughput",
         "quick_num_measurements", "missing_num_measurements",
-        "quick_throughput", "radius", "magnitude", "min_initialized"
+        "quick_throughput", "radius", "min_initialized"
     ]
 
     def __init__(self, output_path, file_name="output_vgg19_libtorch.csv"):
@@ -38,8 +38,7 @@ class ExperimentFileWriter:
                 writer = csv.DictWriter(csv_file, fieldnames=self.field_names)
                 writer.writeheader()
 
-    def write(self, checkpoint_data, profile_data, radius, magnitude,
-              min_initialized):
+    def write(self, checkpoint_data, profile_data, radius, min_initialized):
         try:
             with open(self._filename, mode="a") as csv_file:
                 writer = csv.DictWriter(csv_file, fieldnames=self.field_names)
@@ -62,7 +61,6 @@ class ExperimentFileWriter:
                     "quick_throughput":
                         quick_best_measurement.get_non_gpu_metric_value("perf_throughput"),
                     "radius": radius,
-                    "magnitude": magnitude,
                     "min_initialized": min_initialized
                 })
                 # yapf: enable

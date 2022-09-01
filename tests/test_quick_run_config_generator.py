@@ -40,10 +40,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
 
-        sc = SearchConfig(dimensions=dims,
-                          radius=5,
-                          step_magnitude=7,
-                          min_initialized=2)
+        sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
         self._qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
                                              mock_models, MagicMock(),
                                              ModelVariantNameManager())
@@ -57,7 +54,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 SearchDimension("y", SearchDimension.DIMENSION_TYPE_LINEAR, min=1),
                 SearchDimension("z", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=3)
         ])
-        sc = SearchConfig(dimensions=dims,radius=2, step_magnitude=2, min_initialized=2)
+        sc = SearchConfig(dimensions=dims,radius=2, min_initialized=2)
         #yapf: enable
         qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
                                        MagicMock(), MagicMock(),
@@ -159,10 +156,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                             SearchDimension.DIMENSION_TYPE_LINEAR)
         ])
 
-        sc = SearchConfig(dimensions=dims,
-                          radius=5,
-                          step_magnitude=7,
-                          min_initialized=2)
+        sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
         qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
                                        mock_models, MagicMock(),
                                        ModelVariantNameManager())
@@ -242,19 +236,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(pc2['concurrency-range'], 192)
         self.assertEqual(pc2['batch-size'], 1)
         self.assertEqual(pc2['model-version'], 3)
-
-    def test_magnitude(self):
-        """
-        Test that _get_magnitude works correctly.
-        """
-        qrcg = self._qrcg
-        self.assertEqual(qrcg._get_magnitude(), 7)  # initial value
-
-        qrcg._magnitude_scaler = 0.5
-        self.assertEqual(qrcg._get_magnitude(), 3.5)
-
-        qrcg._magnitude_scaler = 0.1
-        self.assertAlmostEqual(qrcg._get_magnitude(), 0.7)
 
     def tearDown(self):
         patch.stopall()

@@ -41,12 +41,6 @@ class ConfigCommandExperiment(ConfigCommandProfile):
                         default_value=3,
                         description='The size of the neighborhood radius'))
         self._add_config(
-            ConfigField('magnitude',
-                        field_type=ConfigPrimitive(int),
-                        flags=['--magnitude'],
-                        default_value=20,
-                        description='The size of each step'))
-        self._add_config(
             ConfigField('min_mbs_index',
                         field_type=ConfigPrimitive(int),
                         flags=['--min-mbs-index'],

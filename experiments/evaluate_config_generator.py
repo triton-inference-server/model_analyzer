@@ -66,8 +66,7 @@ class EvaluateConfigGenerator:
         file_writer = ExperimentFileWriter(
             self._output_path, file_name=f"output_{self._model_name}.csv")
         file_writer.write(self._checkpoint_data, self._profile_data,
-                          configs["radius"], configs["magnitude"],
-                          configs["min_initialized"])
+                          configs["radius"], configs["min_initialized"])
 
     def _run_generator(self, cg):
         for run_config in cg.get_configs():
