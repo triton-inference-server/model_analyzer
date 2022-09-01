@@ -49,10 +49,6 @@ parser.add_argument("--output-path",
                     required=False,
                     default="./output",
                     help="The path to the output csv files")
-parser.add_argument("--generator",
-                    type=str,
-                    required=True,
-                    help="The name of the config generator to evaluate")
 args, other_args = parser.parse_known_args()
 
 if args.verbose:
@@ -63,7 +59,7 @@ if args.verbose:
 
 ecg = EvaluateConfigGenerator(args.model_name, args.data_path, args.output_path,
                               other_args)
-ecg.execute_generator(args.generator)
+ecg.execute_generator()
 ecg.print_results()
 
 if args.save:

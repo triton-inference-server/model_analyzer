@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from experiment_data import ExperimentData
+from experiments.config_command_experiment import ConfigCommandExperiment
 
 
 class ExperimentEvaluator:
@@ -21,9 +22,14 @@ class ExperimentEvaluator:
     a checkpoint of raw data
     """
 
-    def __init__(self, raw_data: ExperimentData, profile_data: ExperimentData):
+    def __init__(self, raw_data: ExperimentData, profile_data: ExperimentData,
+                 config_command: ConfigCommandExperiment):
         self._raw_data = raw_data
         self._profile_data = profile_data
+
+        self._maximize_throughput = True
+        if config_command.min_throughput is not None:
+            self._maximize_throughput = False
 
     def print_results(self):
         overall_best_measurement = self._raw_data.get_best_run_config_measurement(
@@ -69,7 +75,13 @@ class ExperimentEvaluator:
                 'perf_latency_p99')
             overall_best_throughput = overall_best_measurement.get_non_gpu_metric_value(
                 'perf_throughput')
-            percentile = round(best_throughput / overall_best_throughput, 2)
+            overall_best_latency = overall_best_measurement.get_non_gpu_metric_value(
+                'perf_latency_p99')
+
+            if self._maximize_throughput:
+                percentile = round(best_throughput / overall_best_throughput, 2)
+            else:
+                percentile = round(overall_best_latency / best_latency, 2)
         else:
             best_throughput = None
             best_latency = None

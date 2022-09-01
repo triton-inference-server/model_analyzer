@@ -47,6 +47,13 @@ class ConfigCommandExperiment(ConfigCommandProfile):
                         default_value=20,
                         description='The size of each step'))
         self._add_config(
+            ConfigField('min_mbs_index',
+                        field_type=ConfigPrimitive(int),
+                        flags=['--min-mbs-index'],
+                        default_value=0,
+                        description='The minimum index for max batch size'))
+
+        self._add_config(
             ConfigField(
                 'min_initialized',
                 field_type=ConfigPrimitive(int),

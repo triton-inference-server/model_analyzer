@@ -16,12 +16,15 @@ from experiments.experiment_data import ExperimentData
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from unittest.mock import MagicMock
 from copy import deepcopy
+import re
 
 
 class CheckpointExperimentData(ExperimentData):
     """
     Extends ExperimentData to be able to preload data from a checkpoint
     """
+
+    LOAD_ONLY_VISABLE = True
 
     def __init__(self, config):
         super().__init__()
@@ -66,6 +69,10 @@ class CheckpointExperimentData(ExperimentData):
                     metric_objectives=[config.objectives])
                 pa_key = self._make_pa_key_from_cli_string(perf_analyzer_string)
 
+                if CheckpointExperimentData.LOAD_ONLY_VISABLE:
+                    if not self._are_keys_visable_to_algorithm(ma_key, pa_key):
+                        continue
+
                 existing_measurement = self._get_run_config_measurement_from_keys(
                     ma_key, pa_key, skip_warn=True)
                 if not existing_measurement or run_config_measurement > existing_measurement:
@@ -79,10 +86,18 @@ class CheckpointExperimentData(ExperimentData):
         self._print_map()
 
     def _print_map(self):
-        for i in range(0, 10):
-            row_str = ""
+        row_str = "\t\t"
+        for j in range(0, 10):
+            row_str += f"    [{j}]\t\t"
+        print(row_str)
+
+        has_exponential_inst_count = self._has_exponential_inst_count()
+
+        for i in range(0, 100):
+            row_has_data = False
+            row_str = f"\t[{i}]"
             for j in range(0, 10):
-                instance_count = j + 1
+                instance_count = 2**j if has_exponential_inst_count else j + 1
                 max_batch_size = 2**i
 
                 ma_key = f"instance_count={instance_count},max_batch_size={max_batch_size}"
@@ -97,9 +112,38 @@ class CheckpointExperimentData(ExperimentData):
                 tput = 0
                 lat = 0
                 if measurement:
+                    row_has_data = True
                     tput = measurement.get_non_gpu_metric_value(
                         'perf_throughput')
                     lat = measurement.get_non_gpu_metric_value(
                         'perf_latency_p99')
                 row_str += f"\t{tput:4.1f}:{lat:4.1f}"
-            print(row_str)
+
+            # Print at least the first 7 rows, and then stop when we hit an empty row
+            # (Some databases don't have data for the first 6 rows)
+            if row_has_data or i < 7:
+                print(row_str)
+            else:
+                break
+
+    def _has_exponential_inst_count(self) -> bool:
+        # See if instance count of 3 is in the database. If not, it is exponential (1,2,4,8)
+        ret = False
+        ma_key = f"instance_count=3,max_batch_size=1"
+        pa_key = "8"
+        measurement = self._get_run_config_measurement_from_keys(ma_key,
+                                                                 pa_key,
+                                                                 skip_warn=True)
+        if not measurement:
+            ret = True
+        return ret
+
+    def _are_keys_visable_to_algorithm(self, ma_key, pa_key) -> bool:
+        # The quick algorithm can only see meaurements where the
+        # concurrency is 2 * inst_count * max_batch_size.
+        results = re.search("instance_count=(\d+),max_batch_size=(\d+)", ma_key)
+        inst_count = int(results.group(1))
+        max_batch_size = int(results.group(2))
+        expected_pa_key = self._clamp_to_power_of_two(2 * inst_count *
+                                                      max_batch_size)
+        return expected_pa_key == int(pa_key)
