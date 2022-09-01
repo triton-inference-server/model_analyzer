@@ -497,12 +497,6 @@ class Neighborhood:
         return num_uncovered
 
     def _is_slow_mode(self):
-        """ 
-        Returns true if any of the following are true:
-        - force_slow_mode() has been called
-        - Home is passing and anyone in the neighborhood is failing
-        - Home is failing and anyone in the neighborhood is passing
-        """
         if self._force_slow_mode:
             return True
 
