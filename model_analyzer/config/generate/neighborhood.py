@@ -15,6 +15,7 @@
 import math
 from itertools import product
 from copy import deepcopy
+from re import M
 
 from typing import List, Tuple, Dict, Optional
 
@@ -29,6 +30,9 @@ class Neighborhood:
     Defines and operates on a set of coordinates within a radius around
     a 'home' coordinate
     """
+
+    # FIXME where to put this?
+    TRANSLATION_LIST = [0.09, 0.3, 1.0]
 
     def __init__(self, neighborhood_config: NeighborhoodConfig,
                  home_coordinate: Coordinate):
@@ -90,25 +94,13 @@ class Neighborhood:
         """
         self._force_slow_mode = True
 
-    def calculate_new_coordinate(self,
-                                 magnitude: int,
-                                 enable_clipping: bool = True,
-                                 clip_value: int = 2) -> Coordinate:
+    def determine_new_home(self) -> Coordinate:
         """
         Based on the measurements in the neighborhood, determine where
         the next location should be.
 
         If the neighborhood is in slow mode, return the best found measurement
         Otherwise calculate a new coordinate from the measurements
-
-        Parameters
-        ----------
-        magnitude
-            How large of a step to take
-        enable_clipping
-            Determines whether or not to clip the final step vector.
-        clip_value
-            What value to clip the vector at, if it is enabled
 
         Returns
         -------
@@ -119,8 +111,7 @@ class Neighborhood:
         if self._is_slow_mode():
             return self._get_best_coordinate_found()
         else:
-            return self._calculate_new_coordinate(magnitude, enable_clipping,
-                                                  clip_value)
+            return self._calculate_new_home()
 
     def _get_best_coordinate_found(self) -> Coordinate:
         vectors, measurements = self._get_measurements_passing_constraints()
@@ -139,48 +130,31 @@ class Neighborhood:
         best_coordinate = self._home_coordinate + best_vector
         return best_coordinate
 
-    def _calculate_new_coordinate(self, magnitude, enable_clipping,
-                                  clip_value) -> Coordinate:
-
-        step_vector = self._get_step_vector() * magnitude
-
-        if enable_clipping:
-            step_vector = self._clip_vector_values(vector=step_vector,
-                                                   clip_value=clip_value)
-        step_vector.round()
-
+    def _calculate_new_home(self) -> Coordinate:
+        step_vector = self._get_step_vector()
+        step_vector = self._translate_step_vector(step_vector,
+                                                  Neighborhood.TRANSLATION_LIST)
         tmp_new_coordinate = self._home_coordinate + step_vector
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
         return new_coordinate
 
-    def _clip_vector_values(self, vector: Coordinate,
-                            clip_value: int) -> Coordinate:
-        """
-        Clip the values of the vector to be within the range of
-        [-clip_value, clip_value]. The clipping preserves the direction
-        of the vector (e.g. if the clip_value is 2, then [10, 5] will be
-        clipped to [2, 1] instead of [2, 2]).
+    def _translate_step_vector(self, step_vector: Coordinate,
+                               translate_list: List[float]):
 
-        Parameters
-        ----------
-        vector
-            an input vector that may require clipping
-        clip_value
-            a non-negative integer that bounds the values of the input vector
+        for i, v in enumerate(step_vector):
+            step_vector[i] = self._translate_value(v, translate_list)
 
-        Returns
-        -------
-        vector
-            a vector with all of its values within [-clip_value, clip_value]
-        """
-        assert clip_value >= 0, "clip_value must be non-negative number."
+        return step_vector
 
-        max_value = max(abs(c) for c in vector)
-
-        if max_value > clip_value and max_value != 0:
-            for i in range(len(vector)):
-                vector[i] = clip_value * vector[i] / max_value
-        return vector
+    def _translate_value(self, value: float,
+                         translation_list: List[float]) -> int:
+        ret = 0
+        for index, bound in enumerate(translation_list):
+            if value > 0 and value > bound:
+                ret = index + 1
+            if value < 0 and value < -1 * bound:
+                ret = -1 * (index + 1)
+        return ret
 
     def pick_coordinate_to_initialize(self) -> Optional[Coordinate]:
         """
@@ -272,8 +246,7 @@ class Neighborhood:
             self, bounds: List[List[int]]) -> List[List[int]]:
         possible_index_values = []
         for bound in bounds:
-            possible_index_values.append(list(range(bound[0], bound[1])))
-
+            possible_index_values.append(list(range(bound[0], bound[1] + 1)))
         tuples = list(product(*possible_index_values))
         return [list(x) for x in tuples]
 
@@ -302,95 +275,62 @@ class Neighborhood:
         Calculate a vector that indicates a direction to step from the
         home coordinate (current center).
 
-        If the home coordinate is passing the constraints, the method
-        calculates the step vector based on the objectives given.
-        Otherwise, it calculates the step vector based on the constraints
-        so that it steps toward the region that passes the constraints.
-
         Returns
         -------
         step_vector
             a coordinate that tells the direction to move.
         """
+
+        compare_constraints = not self._is_home_passing_constraints()
+        return self._calculate_step_vector_from_measurements(
+            compare_constraints=compare_constraints)
+
+    def _calculate_step_vector_from_measurements(
+            self, compare_constraints: bool) -> Coordinate:
+
         home_measurement = self._get_home_measurement()
+        vectors, measurements = self._get_all_visited_measurements()
 
-        assert home_measurement is not None, "Home measurement cannot be NoneType."
-
-        if self._is_home_passing_constraints():
-            return self._optimize_for_objectives(home_measurement)
-
-        return self._optimize_for_constraints(home_measurement)
-
-    def _optimize_for_objectives(
-            self, home_measurement: RunConfigMeasurement) -> Coordinate:
-        """
-        Calculate a step vector that maximizes the current objectives.
-        If no vectors are provided, return zero vector.
-
-        Parameters
-        ----------
-        vectors
-            list of vectors from home coordinate to the neighboring
-            coordinates that are passing constraints
-        measurements
-            list of measurements of the neighboring coordinates that
-            are passing constraints
-
-        Returns
-        -------
-        step_vector
-            a coordinate that tells the direction to move.
-        """
-        vectors, measurements = self._get_measurements_passing_constraints()
-        step_vector = Coordinate([0] * self._config.get_num_dimensions())
+        # This function should only ever be called if all are passing or none are passing
+        _, p = self._get_measurements_passing_constraints()
+        assert (len(p) == 0 or len(p) == len(measurements))
 
         if not vectors:
-            return step_vector
+            return Coordinate([0] * self._config.get_num_dimensions())
 
-        for vector, measurement in zip(vectors, measurements):
-            weight = home_measurement.compare_measurements(measurement)
-            step_vector += vector * weight
+        weights = []
+        for m in measurements:
+            if compare_constraints:
+                weight = home_measurement.compare_constraints(m)
+            else:
+                weight = home_measurement.compare_measurements(m)
+            weights.append(weight)
 
-        step_vector /= len(vectors)
-        return step_vector
+        return self._calculate_step_vector_from_vectors_and_weights(
+            vectors, weights)
 
-    def _optimize_for_constraints(
-            self, home_measurement: RunConfigMeasurement) -> Coordinate:
-        """
-        Calculate a step vector that steps toward the coordinates that
-        pass the constraints (set default weights to 1.0). When no vectors
-        are provided (meaning there are no neighbors passing constraints),
-        continue with the neighbors that are not passing constraints by
-        comparing how much they are close to passing constraints.
-
-        Parameters
-        ----------
-        vectors
-            list of vectors from home coordinate to the neighboring
-            coordinates that are passing constraints
-        measurements
-            list of measurements of the neighboring coordinates that
-            are passing constraints
-
-        Returns
-        -------
-        step_vector
-            a coordinate that tells the direction to move.
-        """
-        vectors, measurements = self._get_measurements_passing_constraints()
+    def _calculate_step_vector_from_vectors_and_weights(self, vectors, weights):
         step_vector = Coordinate([0] * self._config.get_num_dimensions())
+        dim_sum_vector = Coordinate([0] * self._config.get_num_dimensions())
 
-        if not vectors:
-            vectors, measurements = self._get_all_visited_measurements()
+        # For each dimension -
+        #   if non zero, add weight (inverting if dimension is negative)
+        #   divide by sum of coordinate of that dimension
+        for vector, weight in zip(vectors, weights):
 
-        for vector, measurement in zip(vectors, measurements):
-            weight = home_measurement.compare_constraints(measurement)
-            if measurement.is_passing_constraints():
-                weight = 1.0  # when home fails & neighbor passes
+            for dim, v in enumerate(vector):
+                if v:
+                    if v > 0:
+                        step_vector[dim] += weight
+                        dim_sum_vector[dim] += v
+                    else:
+                        step_vector[dim] -= weight
+                        dim_sum_vector[dim] -= v
 
-            step_vector += vector * weight
+        for dim, v in enumerate(dim_sum_vector):
+            if v:
+                step_vector[dim] /= v
 
-        step_vector /= len(vectors)
         return step_vector
 
     def _get_all_visited_measurements(
@@ -405,7 +345,6 @@ class Neighborhood:
             collection of vectors and their measurements.
         """
         visited_coordinates = self._get_visited_coordinates()
-
         vectors = []
         measurements = []
         for coordinate in visited_coordinates:

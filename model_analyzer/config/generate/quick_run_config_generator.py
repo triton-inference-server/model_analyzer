@@ -195,9 +195,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             coordinate=self._coordinate_to_measure)
 
     def _take_step(self):
-        magnitude = self._get_magnitude()
-
-        new_coordinate = self._neighborhood.calculate_new_coordinate(magnitude)
+        new_coordinate = self._neighborhood.determine_new_home()
         self._determine_if_done(new_coordinate)
 
         logger.debug(f"Stepping {self._home_coordinate}->{new_coordinate}")

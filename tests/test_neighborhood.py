@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from cmath import exp
 from unittest.mock import MagicMock, patch
 
 from model_analyzer.config.generate.neighborhood import Neighborhood
@@ -340,44 +341,6 @@ class TestNeighborhood(trc.TestResultCollector):
         for p in patches:
             p.stop()
 
-    def test_clip_vector_values(self):
-        dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
-
-        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1]))
-
-        # Test if it catches negative clip value.
-        with self.assertRaises(AssertionError):
-            n._clip_vector_values(Coordinate([0, 0]), clip_value=-3)
-
-        # Test if it clips large, positive values.
-        c = n._clip_vector_values(Coordinate([10, 5]), clip_value=2)
-        self.assertEqual(c, Coordinate([2, 1]))
-        c = n._clip_vector_values(Coordinate([100, 5]), clip_value=2)
-        self.assertEqual(c, Coordinate([2, 0.1]))
-
-        # Test if it clips large, negative values
-        c = n._clip_vector_values(Coordinate([-10, 5]), clip_value=2)
-        self.assertEqual(c, Coordinate([-2, 1]))
-        c = n._clip_vector_values(Coordinate([-10, -5]), clip_value=2)
-        self.assertEqual(c, Coordinate([-2, -1]))
-        c = n._clip_vector_values(Coordinate([-100, 5]), clip_value=2)
-        self.assertEqual(c, Coordinate([-2, 0.1]))
-
-        # Test if it skips clipping if values are within range
-        c = n._clip_vector_values(Coordinate([1, 0]), clip_value=2)
-        self.assertEqual(c, Coordinate([1, 0]))
-        c = n._clip_vector_values(Coordinate([-1, 0]), clip_value=2)
-        self.assertEqual(c, Coordinate([-1, 0]))
-        c = n._clip_vector_values(Coordinate([-1, 2]), clip_value=2)
-        self.assertEqual(c, Coordinate([-1, 2]))
-        c = n._clip_vector_values(Coordinate([0, 0]), clip_value=2)
-        self.assertEqual(c, Coordinate([0, 0]))
-
     def test_get_all_visited_measurements(self):
         dims = SearchDimensions()
         dims.add_dimensions(0, [
@@ -484,70 +447,23 @@ class TestNeighborhood(trc.TestResultCollector):
             self.assertTrue(ev in vectors)
             self.assertTrue(em in measurements)
 
-    def test_step_vector_no_constraints(self):
-        """
-        Test _get_step_vector method that determines the direction to step
-        towards from the home coordinate using the collected coordinates
-        and their measurements.
-
-          1. Get vectors from home to the candidate coordinates
-             and their measurements.
-                [2, 1, 1] - [1, 1, 1] = [1, 0, 0]
-                [1, 2, 1] - [1, 1, 1] = [0, 1, 0]
-
-          2. Multiply each vectors by its weights:
-                [1, 0, 0] * 1.5 = [1.5, 0, 0]
-                [0, 1, 0] * 1.0 = [  0, 1, 0]
-
-          2. Compute the average of the vectors:
-                ([1.5, 0, 0] + [0, 1, 0]) / 2 = [3/4, 1/2, 0]
-        """
-        dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
-
-        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
-
-        rcm0 = self._construct_rcm(throughput=1, latency=5)
-        rcm1 = self._construct_rcm(throughput=7, latency=5)
-        rcm2 = self._construct_rcm(throughput=3, latency=5)
-
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
-
-        step_vector = n._get_step_vector()
-        expected_step_vector = Coordinate([3 / 4, 1 / 2, 0])
-        self.assertEqual(step_vector, expected_step_vector)
-
     def test_step_vector_both_home_and_neighbors_passing_constraints(self):
         """
-        Test _get_step_vector method with constraints specified. Tests if
-        the method properly handles the following case:
-            - the home coordinate passes the constraints
-            - some neighbor coordinates pass the constraints
+        Test _get_step_vector method where home and neighbors are passing
 
-          1. Get vectors and measurements tuples that are passing constraints.
-                [1, 2, 1] - [1, 1, 1] = [0, 1, 0] (throughput=300, latency=130)
+          1. Get all vectors and measurements
+                [2, 3, 1] - [1, 1, 1] = [1, 2, 0] (throughput=300, latency=130)
                 [1, 1, 2] - [1, 1, 1] = [0, 0, 1] (throughput=400, latency=290)
 
-          2. Multiply each vectors by its weights (**objective comparison**):
-                [0, 1, 0] * 1.0 = [0, 1, 0]
-                [0, 0, 1] * 1.2 = [0, 0, 1.2]
-
-          2. Compute the average of the vectors:
-                ([0, 1, 0] + [0, 0, 1.2]) / 2 = [0, 1/2, 3/5]
+          2. Apply the objective-comparison weights to any non-zero dimensions
+                [1,2,0] with weight 1.0 -> [1.0, 1.0, 0.0]
+                [0,0,1] with weight 1.2 -> [0.0, 0.0, 1.2]
+          
+          3. Sum the results
+                [1.0, 1.0, 0.0] + [0.0, 0.0, 1.2] = [1.0, 1.0, 1.2]
+          
+          4. Divide by the sum of the vectors:
+                [1.0, 1.0, 1.2] / [1,2,1] = [1.0, 0.5, 1.2]
         """
         dims = SearchDimensions()
         dims.add_dimensions(0, [
@@ -557,7 +473,7 @@ class TestNeighborhood(trc.TestResultCollector):
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
 
-        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
         n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
 
         # Constraints:
@@ -575,193 +491,49 @@ class TestNeighborhood(trc.TestResultCollector):
         rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
         rcm0.set_model_config_constraints([constraints])
 
-        rcm1 = self._construct_rcm(throughput=700, latency=350)  # fail
+        rcm1 = self._construct_rcm(throughput=300, latency=130)  # pass
         rcm1.set_model_config_constraints([constraints])
 
-        rcm2 = self._construct_rcm(throughput=300, latency=130)  # pass
+        rcm2 = self._construct_rcm(throughput=400, latency=290)  # pass
         rcm2.set_model_config_constraints([constraints])
-
-        rcm3 = self._construct_rcm(throughput=400, latency=290)  # pass
-        rcm3.set_model_config_constraints([constraints])
-
-        rcm4 = self._construct_rcm(throughput=850, latency=400)  # fail
-        rcm4.set_model_config_constraints([constraints])
 
         n.coordinate_data.set_measurement(Coordinate([1, 1, 1]),
                                           rcm0)  # home coordinate
         n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
 
-        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
+        n.coordinate_data.set_measurement(Coordinate([2, 3, 1]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([2, 3, 1]))
 
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 2]), rcm3)
+        n.coordinate_data.set_measurement(Coordinate([1, 1, 2]), rcm2)
         n.coordinate_data.increment_visit_count(Coordinate([1, 1, 2]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 2]), rcm4)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 2]))
 
         hm = n.coordinate_data.get_measurement(Coordinate([1, 1, 1]))
         self.assertTrue(hm.is_passing_constraints())
 
         step_vector = n._get_step_vector()
-        expected_step_vector = Coordinate([0, 1 / 2, 3 / 5])
-        self.assertEqual(step_vector, expected_step_vector)
-
-    def test_step_vector_only_home_passing_constraints(self):
-        """
-        Test _get_step_vector method with constraints specified. Tests if
-        the method properly handles the following case:
-            - the home coordinate passes the constraints
-            - neighbor coordinates all fail the constraints
-        """
-        dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
-
-        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
-
-        # Constraints:
-        #   - Minimum throughput of 100 infer/sec
-        #   - Maximum latency of 300 ms
-        constraints = {
-            "perf_throughput": {
-                "min": 100
-            },
-            "perf_latency_p99": {
-                "max": 300
-            }
-        }
-
-        rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
-        rcm0.set_model_config_constraints([constraints])
-
-        rcm1 = self._construct_rcm(throughput=700, latency=350)  # fail
-        rcm1.set_model_config_constraints([constraints])
-
-        rcm2 = self._construct_rcm(throughput=850, latency=400)  # fail
-        rcm2.set_model_config_constraints([constraints])
-
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 2]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 2]))
-
-        hm = n.coordinate_data.get_measurement(Coordinate([1, 1, 1]))
-        self.assertTrue(hm.is_passing_constraints())
-
-        step_vector = n._get_step_vector()
-        expected_step_vector = Coordinate([0, 0, 0])
-        self.assertEqual(step_vector, expected_step_vector)
-
-    def test_step_vector_only_home_failing_constraints(self):
-        """
-        Test _get_step_vector method with constraints specified. Tests if
-        the method properly handles the following case:
-            - the home coordinate fails the constraints
-            - some neighbor coordinates pass the constraints
-
-          1. Get vectors and measurements tuples that are passing constraints.
-                [1, 2, 1] - [1, 1, 1] = [0, 1, 0] (throughput=300, latency=130)
-                [1, 1, 2] - [1, 1, 1] = [0, 0, 1] (throughput=400, latency=290)
-
-          2. Multiply each vectors by its weights (set default to 1.0):
-                [0, 1, 0] * 1.0 = [0, 1, 0]
-                [0, 0, 1] * 1.0 = [0, 0, 1]
-
-          2. Compute the average of the vectors:
-                ([0, 1, 0] + [0, 0, 1]) / 2 = [0, 1/2, 1/2]
-        """
-        dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
-
-        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
-
-        # Constraints:
-        #   - Minimum throughput of 100 infer/sec
-        #   - Maximum latency of 300 ms
-        constraints = {
-            "perf_throughput": {
-                "min": 100
-            },
-            "perf_latency_p99": {
-                "max": 300
-            }
-        }
-
-        rcm0 = self._construct_rcm(throughput=80, latency=50)  # fail
-        rcm0.set_model_config_constraints([constraints])
-
-        rcm1 = self._construct_rcm(throughput=700, latency=350)  # fail
-        rcm1.set_model_config_constraints([constraints])
-
-        rcm2 = self._construct_rcm(throughput=300, latency=130)  # pass
-        rcm2.set_model_config_constraints([constraints])
-
-        rcm3 = self._construct_rcm(throughput=400, latency=290)  # pass
-        rcm3.set_model_config_constraints([constraints])
-
-        rcm4 = self._construct_rcm(throughput=850, latency=400)  # fail
-        rcm4.set_model_config_constraints([constraints])
-
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 2]), rcm3)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 2]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 2]), rcm4)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 2]))
-
-        hm = n.coordinate_data.get_measurement(Coordinate([1, 1, 1]))
-        self.assertFalse(hm.is_passing_constraints())
-
-        step_vector = n._get_step_vector()
-        expected_step_vector = Coordinate([0, 1 / 2, 1 / 2])
+        expected_step_vector = Coordinate([1.0, 0.5, 1.2])
         self.assertEqual(step_vector, expected_step_vector)
 
     def test_step_vector_both_home_and_neighbors_failing_constraints(self):
         """
-        Test _get_step_vector method with constraints specified. Tests if
-        the method properly handles the following case:
-            - the home coordinate fails the constraints
-            - neighbor coordinates all fails the constraints
+        Test _get_step_vector method where home and neighbors are failing
 
-          1. Get vectors and measurements tuples that are failing constraints.
-                [2, 1, 1] - [1, 1, 1] = [1, 0, 0] (throughput=700, latency=360)
-                [1, 2, 1] - [1, 1, 1] = [0, 1, 0] (throughput=850, latency=540)
+          1. Get all vectors and measurements
+                Home latency is 450
+                [3, 2, 1] - [1, 1, 1] = [2, 1, 0] (latency=360)
+                [1, 2, 0] - [1, 1, 1] = [0, 1, -1] (latency=540)
 
-          2. Multiply each vectors by its weights (**constraint comparison**):
-                [1, 0, 0] *  0.3 = [0.3,    0, 0]
-                [0, 1, 0] * -0.3 = [  0, -0.3, 0]
+          2. Apply the constraint-comparison weights to any non-zero dimensions,
+             inverting the weight if coordinate is negative
+                [2,1,0] with weight 0.3 -> [0.3, 0.3, 0.0]
+                [0,1,-1] with weight -0.3 -> [0.0, -0.3, 0.3]
+          
+          3. Sum the results
+                [0.3, 0.3, 0.0] + [0.0, -0.3, 0.3] = [0.3, 0.0, 0.3]
+          
+          4. Divide by the sum of the absolute value of the vectors:
+                [0.3, 0.0, 0.3] / [2,2,1] = [0.15, 0.0, 0.3]
 
-          2. Compute the average of the vectors:
-                ([0.3, 0, 0] + [0, -0.3, 0]) / 2 = [0.15, -0.15, 0]
         """
         dims = SearchDimensions()
         dims.add_dimensions(0, [
@@ -771,7 +543,7 @@ class TestNeighborhood(trc.TestResultCollector):
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
 
-        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
         n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
 
         # Constraints:
@@ -799,22 +571,22 @@ class TestNeighborhood(trc.TestResultCollector):
                                           rcm0)  # home coordinate
         n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
 
-        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
+        n.coordinate_data.set_measurement(Coordinate([3, 2, 1]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([3, 2, 1]))
 
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
+        n.coordinate_data.set_measurement(Coordinate([1, 2, 0]), rcm2)
+        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 0]))
 
         hm = n.coordinate_data.get_measurement(Coordinate([1, 1, 1]))
         self.assertFalse(hm.is_passing_constraints())
 
         step_vector = n._get_step_vector()
-        expected_step_vector = Coordinate([0.15, -0.15, 0])
+        expected_step_vector = Coordinate([0.15, 0.0, 0.3])
         self.assertEqual(step_vector, expected_step_vector)
 
-    def test_calculate_new_coordinate_one_dimension(self):
+    def test_determine_new_home_one_dimension(self):
         """
-        Test calculate_new_coordinate for a case where only
+        Test determine_new_home for a case where only
         one of the dimensions increases the measurement.
         """
         dims = SearchDimensions()
@@ -840,13 +612,12 @@ class TestNeighborhood(trc.TestResultCollector):
         n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
         n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
 
-        magnitude = 5
-        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        new_coord = n.determine_new_home()
         self.assertEqual(new_coord, Coordinate([2, 0]))
 
-    def test_calculate_new_coordinate_two_dimensions(self):
+    def test_determine_new_home_two_dimensions(self):
         """
-        Test calculate_new_coordinate for a case where both of the
+        Test determine_new_home for a case where both of the
         dimensions increases the measurement equally.
         """
         dims = SearchDimensions()
@@ -872,13 +643,12 @@ class TestNeighborhood(trc.TestResultCollector):
         n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
         n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
 
-        magnitude = 5
-        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        new_coord = n.determine_new_home()
         self.assertEqual(new_coord, Coordinate([2, 2]))
 
-    def test_calculate_new_coordinate_larger_magnitude(self):
+    def test_determine_new_home_larger_magnitude(self):
         """
-        Test calculate_new_coordinate for a case where both of the
+        Test determine_new_home for a case where both of the
         dimensions increases the measurement equally, and magnitude is
         larger.
         """
@@ -905,35 +675,21 @@ class TestNeighborhood(trc.TestResultCollector):
         n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
         n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
 
-        magnitude = 7
+        # 7x increase in throughputs will result in the maximum step of [3,3]
+        new_coord = n.determine_new_home()
+        self.assertEqual(new_coord, Coordinate([3, 3]))
 
-        # Run it multiple times to make sure no values are changing
-        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
-        self.assertEqual(new_coord, Coordinate([5, 5]))
+        new_coord = n.determine_new_home()
+        self.assertEqual(new_coord, Coordinate([3, 3]))
 
-        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
-        self.assertEqual(new_coord, Coordinate([5, 5]))
-
-    def test_calculate_new_coordinate_out_of_bounds(self):
+    def test_determine_new_home_out_of_bounds(self):
         """
-        Test that calculate_new_coordinate will clamp the result to
+        Test that determine_new_home will clamp the result to
         the search dimension bounds.
 
         Both dimensions are defined to only be from 2-7. The test sets up
-        the case where the next step WOULD be to [11, -2] if not for bounding
-        into the defined range.
-
-          1. Compute the candidate vectors:
-              [4, 5] - [3, 6] = [1, -1]
-
-          2. Compute the step vector:
-              8 * [1, -1] = [8, -8]
-
-          3. Calculate new coordinate:
-              [3, 6] + [8, -8] = [11, -2]
-
-          4. Clamp the new coordinate within bounds:
-              [11, -2] -> [7, 2]
+        the case where the next step WOULD be from [3,6] -> [0,9] if not
+        for bounding into the defined range.
         """
         dims = SearchDimensions()
         dims.add_dimensions(0, [
@@ -947,18 +703,17 @@ class TestNeighborhood(trc.TestResultCollector):
         n = Neighborhood(nc, home_coordinate=Coordinate([3, 6]))
 
         rcm0 = self._construct_rcm(throughput=1, latency=5)
-        rcm1 = self._construct_rcm(throughput=3, latency=5)
+        rcm1 = self._construct_rcm(throughput=7, latency=5)
 
         n.coordinate_data.set_measurement(Coordinate([3, 6]),
                                           rcm0)  # home coordinate
         n.coordinate_data.increment_visit_count(Coordinate([3, 6]))
 
-        n.coordinate_data.set_measurement(Coordinate([4, 5]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([4, 5]))
+        n.coordinate_data.set_measurement(Coordinate([2, 7]), rcm1)
+        n.coordinate_data.increment_visit_count(Coordinate([2, 7]))
 
-        magnitude = 8
-        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
-        self.assertEqual(new_coord, Coordinate([7, 2]))
+        new_coord = n.determine_new_home()
+        self.assertEqual(new_coord, Coordinate([2, 7]))
 
     def test_all_same_throughputs(self):
         """
@@ -998,100 +753,78 @@ class TestNeighborhood(trc.TestResultCollector):
         step_vector = n._get_step_vector()
         self.assertEqual(step_vector, Coordinate([0, 0, 0]))
 
-        magnitude = 5
-        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
+        new_coord = n.determine_new_home()
         self.assertEqual(new_coord, Coordinate([1, 1, 1]))
 
-    def test_clipping_positive_values(self):
+    def test_translate_step_vector(self):
         """
-        Test that clipping on the step vector calculation works correctly
-        on the positive coordinate values when computing the new coordinate.
+        Test the functionality of translate_step_vector()
 
-            -Unclipped step vector: floor(5 * [1/2, 3/4]) = [2, 4]
-            -Clipped w/ clip_value of 2: [1, 2]
-            -Clipped w/ clip_value of 3: [2, 3]
+        Any dimension value that is less than translation_list[0] will get 0
+
+        Any dimension value that is between translation_list[i] and translation_list[i+1]
+        will get i+1
+        """
+
+        # Test generic
+        self._test_translate_step_vector_helper(
+            input_vector=[0.35, 0.25, 0.15, 0.05],
+            translation_list=[0.1, 0.2, 0.3],
+            expected_vector=[3, 2, 1, 0])
+
+        # Test negative
+        self._test_translate_step_vector_helper(
+            input_vector=[-0.35, -0.25, -0.15, -0.05],
+            translation_list=[0.1, 0.2, 0.3],
+            expected_vector=[-3, -2, -1, 0])
+
+        # Test boundary case. Exact match rounds down
+        self._test_translate_step_vector_helper(
+            input_vector=[0.099, 0.100, 0.101],
+            translation_list=[0.1],
+            expected_vector=[0, 0, 1])
+
+    def _test_translate_step_vector_helper(self, input_vector, translation_list,
+                                           expected_vector):
+        dims = SearchDimensions()
+        dims.add_dimensions(
+            0, [SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR)])
+        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0]))
+
+        input_coord = Coordinate(input_vector)
+        expected_coord = Coordinate(expected_vector)
+        output_coord = n._translate_step_vector(input_coord, translation_list)
+
+        self.assertEqual(expected_coord, output_coord)
+
+    def _test_calculate_step_vector_from_vectors_and_weights(self):
+        """
+        Test the functionality of __test_calculate_step_vector_from_vectors_and_weights()
         """
         dims = SearchDimensions()
         dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("foobar",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
-
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]))
+        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0, 0]))
 
-        rcm0 = self._construct_rcm(throughput=1, latency=5)
-        rcm1 = self._construct_rcm(throughput=3, latency=5)
-        rcm2 = self._construct_rcm(throughput=7, latency=5)
+        vectors = [[0, 0, 1], [1, -3, 2], [-4, 2, 0], [3, 2, 6]]
+        weights = [0.5, -3.0, -1, 0]
 
-        n.coordinate_data.set_measurement(Coordinate([0, 0]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([0, 0]))
+        # Sum up weights into vectors:
+        # [0,0,0.5] + [-3,3,-3] + [1, -1, 0] + [0,0,0] = [-2, 2, -2.5]
+        #
+        # Sum up absolute value of vectors:
+        # [0,0,1] + [1,3,2] + [4,2,0] + [3,2,6] = [8, 7, 9]
+        #
+        # Divide:
+        # [-2, 2, -2.5] / [8, 7, 9] = [-2/8, 2/7, -2.5/9]
 
-        n.coordinate_data.set_measurement(Coordinate([1, 0]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 0]))
-
-        n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
-
-        magnitude = 5
-
-        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
-        self.assertEqual(new_coord, Coordinate([2, 4]))
-
-        new_coord = n.calculate_new_coordinate(magnitude,
-                                               enable_clipping=True,
-                                               clip_value=2)
-        self.assertEqual(new_coord, Coordinate([1, 2]))
-
-        new_coord = n.calculate_new_coordinate(magnitude,
-                                               enable_clipping=True,
-                                               clip_value=3)
-        self.assertEqual(new_coord, Coordinate([2, 3]))
-
-    def test_clipping_negative_values(self):
-        """
-        Test that clipping on the step vector calculation works correctly
-        on the negative coordinate values when computing the new coordinate.
-
-            - Unclipped step vector: floor(5 * [-2/5, -3/4]) = [-2, -4]
-            - Clipped w/ clip_value of 2: [-1, -2]
-            - Clipped w/ clip_value of 3: [-2, -3]
-        """
-        dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
-
-        nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([10, 10]))
-
-        rcm0 = self._construct_rcm(throughput=7, latency=5)
-        rcm1 = self._construct_rcm(throughput=3, latency=5)
-        rcm2 = self._construct_rcm(throughput=1, latency=5)
-
-        n.coordinate_data.set_measurement(Coordinate([10, 10]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([10, 10]))
-
-        n.coordinate_data.set_measurement(Coordinate([11, 10]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([11, 10]))
-
-        n.coordinate_data.set_measurement(Coordinate([10, 11]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([10, 11]))
-
-        magnitude = 5
-
-        new_coord = n.calculate_new_coordinate(magnitude, enable_clipping=False)
-        self.assertEqual(new_coord, Coordinate([8, 6]))
-
-        new_coord = n.calculate_new_coordinate(magnitude,
-                                               enable_clipping=True,
-                                               clip_value=2)
-        self.assertEqual(new_coord, Coordinate([9, 8]))
-
-        new_coord = n.calculate_new_coordinate(magnitude,
-                                               enable_clipping=True,
-                                               clip_value=3)
-        self.assertEqual(new_coord, Coordinate([8, 7]))
+        step_vector = n._calculate_step_vector_from_vectors_and_weights(
+            vectors, weights)
+        expected_result = [-2 / 8, 2 / 7, -2.5 / 9]
+        self.assertEqual(step_vector, expected_result)
