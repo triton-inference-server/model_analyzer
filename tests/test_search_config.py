@@ -21,7 +21,7 @@ from .common import test_result_collector as trc
 class TestSearchConfig(trc.TestResultCollector):
 
     def test_basic(self):
-        sc = SearchConfig(SearchDimensions(), 0, 0, 0)
+        sc = SearchConfig(SearchDimensions(), 0, 0)
         self.assertEqual(0, sc.get_num_dimensions())
 
     def test_config(self):
@@ -50,7 +50,7 @@ class TestSearchConfig(trc.TestResultCollector):
                             10),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
-        sc = SearchConfig(dims, 0, 0, 0)
+        sc = SearchConfig(dims, 0, 0)
 
         self.assertEqual([1, 0], sc.get_min_indexes())
 
