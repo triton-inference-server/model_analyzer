@@ -74,11 +74,11 @@ class Neighborhood:
         Returns true if enough coordinates inside of the neighborhood
         have been initialized. Else false
 
-        If the neighborhood is in slow mode, this means all next door neighbors
+        If the neighborhood is in slow mode, this means all adjacent neighbors
         must be visited
         """
         if self._is_slow_mode():
-            return self._are_all_next_door_neighbors_visited()
+            return self._are_all_adjacent_neighbors_visited()
         else:
             min_initialized = self._config.get_min_initialized()
             num_initialized = len(self._get_initialized_coordinates())
@@ -193,7 +193,7 @@ class Neighborhood:
         Based on the initialized coordinate values, pick an unvisited
         coordinate to initialize next.
 
-        If the neighborhood is in slow mode, only pick from within the next door neighbors
+        If the neighborhood is in slow mode, only pick from within the adjacent neighbors
         """
 
         if self._is_slow_mode():
@@ -202,7 +202,7 @@ class Neighborhood:
             return self._pick_fast_mode_coordinate_to_initialize()
 
     def _pick_slow_mode_coordinate_to_initialize(self):
-        for neighbor in self._get_all_next_door_neighbors():
+        for neighbor in self._get_all_adjacent_neighbors():
             if not self._is_coordinate_visited(neighbor):
                 return neighbor
 
@@ -519,14 +519,14 @@ class Neighborhood:
         return (home_passing and any_failing) or (not home_passing and
                                                   any_passing)
 
-    def _are_all_next_door_neighbors_visited(self):
-        for neighbor in self._get_all_next_door_neighbors():
+    def _are_all_adjacent_neighbors_visited(self):
+        for neighbor in self._get_all_adjacent_neighbors():
             if not self._is_coordinate_visited(neighbor):
                 return False
         return True
 
-    def _get_all_next_door_neighbors(self):
-        next_door_neighbors = []
+    def _get_all_adjacent_neighbors(self):
+        adjacent_neighbors = []
 
         for dim in range(self._config.get_num_dimensions()):
             dimension = self._config.get_dimension(dim)
@@ -534,14 +534,14 @@ class Neighborhood:
             down_neighbor = Coordinate(self._home_coordinate)
             down_neighbor[dim] -= 1
             if down_neighbor[dim] >= dimension.get_min_idx():
-                next_door_neighbors.append(down_neighbor)
+                adjacent_neighbors.append(down_neighbor)
 
             up_neighbor = Coordinate(self._home_coordinate)
             up_neighbor[dim] += 1
             if up_neighbor[dim] <= dimension.get_max_idx():
-                next_door_neighbors.append(up_neighbor)
+                adjacent_neighbors.append(up_neighbor)
 
-        return next_door_neighbors
+        return adjacent_neighbors
 
     def _get_home_measurement(self):
         return self._coordinate_data.get_measurement(

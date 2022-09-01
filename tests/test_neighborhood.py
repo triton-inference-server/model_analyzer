@@ -161,13 +161,13 @@ class TestNeighborhood(trc.TestResultCollector):
         self.assertEqual(3, len(n._get_initialized_coordinates()))
         self.assertTrue(n.enough_coordinates_initialized())
 
-    def test_get_all_next_door_neighbors(self):
+    def test_get_all_adjacent_neighbors(self):
         """
-        Test that _get_all_next_door_neighbors() works, and understands dimension bounds 
+        Test that _get_all_adjacent_neighbors() works, and understands dimension bounds 
 
         For this test, home is [0,1,4]. 
         
-        The possible next door neighbors are:
+        The possible adjacent neighbors are:
           [-1,1,4], [1,1,4], [0,0,4], [0,2,4], [0,1,3], [0,1,5]
         
         However, [-1,1,4] and [0,1,5] are outside of the dimension bounds and should not
@@ -184,7 +184,7 @@ class TestNeighborhood(trc.TestResultCollector):
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         n = Neighborhood(nc, home_coordinate=Coordinate([0, 1, 4]))
 
-        next_door_neighbors = n._get_all_next_door_neighbors()
+        adjacent_neighbors = n._get_all_adjacent_neighbors()
         expected_list = [
             Coordinate([1, 1, 4]),
             Coordinate([0, 0, 4]),
@@ -192,17 +192,17 @@ class TestNeighborhood(trc.TestResultCollector):
             Coordinate([0, 1, 3])
         ]
 
-        self.assertEqual(next_door_neighbors, expected_list)
+        self.assertEqual(adjacent_neighbors, expected_list)
 
     def test_num_initialized_slow_mode(self):
         """ 
         Test that _enough_coordinates_initialized() works in slow mode
 
         Start with home=[0,0,1] in slow mode.
-        Only once all of the next door neighbors are added should 
+        Only once all of the adjacent neighbors are added should 
         enough_coordinates_initialized() return true
 
-        Those next door neighbors are [1,0,1], [0,1,1], [0,0,0], [0,0,2]
+        Those adjacent neighbors are [1,0,1], [0,1,1], [0,0,0], [0,0,2]
         """
 
         dims = SearchDimensions()
