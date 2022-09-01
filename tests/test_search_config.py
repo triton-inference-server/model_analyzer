@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.search_config import SearchConfig, NeighborhoodConfig
+from model_analyzer.config.generate.base_model_config_generator import ModelBatchingConfig
+from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
 from model_analyzer.config.generate.search_dimensions import SearchDimensions
 from .common import test_result_collector as trc
@@ -21,7 +22,7 @@ from .common import test_result_collector as trc
 class TestSearchConfig(trc.TestResultCollector):
 
     def test_basic(self):
-        sc = SearchConfig(SearchDimensions(), 0, 0)
+        sc = SearchConfig(SearchDimensions(), [], 0, 0)
         self.assertEqual(0, sc.get_num_dimensions())
 
     def test_config(self):
@@ -31,7 +32,16 @@ class TestSearchConfig(trc.TestResultCollector):
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
 
-        sc = SearchConfig(dimensions=dims, radius=4, min_initialized=2)
+        model_batching_configs = [
+            ModelBatchingConfig(batching_supported=False,
+                                dynamic_batching_supported=True),
+            ModelBatchingConfig(batching_supported=True,
+                                dynamic_batching_supported=False),
+        ]
+        sc = SearchConfig(dimensions=dims,
+                          model_batching_configs=model_batching_configs,
+                          radius=4,
+                          min_initialized=2)
 
         self.assertEqual(2, sc.get_num_dimensions())
         self.assertEqual(4, sc.get_radius())
@@ -43,6 +53,17 @@ class TestSearchConfig(trc.TestResultCollector):
         self.assertEqual(7, sc.get_dimension(0).get_value_at_idx(6))
         self.assertEqual(64, sc.get_dimension(1).get_value_at_idx(6))
 
+        self.assertEqual(False,
+                         sc.get_model_batching_config(0).batching_supported)
+        self.assertEqual(
+            True,
+            sc.get_model_batching_config(0).dynamic_batching_supported)
+        self.assertEqual(True,
+                         sc.get_model_batching_config(1).batching_supported)
+        self.assertEqual(
+            False,
+            sc.get_model_batching_config(1).dynamic_batching_supported)
+
     def test_get_min_indexes(self):
         dims = SearchDimensions()
         dims.add_dimensions(0, [
@@ -50,7 +71,7 @@ class TestSearchConfig(trc.TestResultCollector):
                             10),
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
-        sc = SearchConfig(dims, 0, 0)
+        sc = SearchConfig(dims, [], 0, 0)
 
         self.assertEqual([1, 0], sc.get_min_indexes())
 
@@ -64,7 +85,10 @@ class TestSearchConfig(trc.TestResultCollector):
             SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
 
-        sc = SearchConfig(dimensions=dims, radius=4, min_initialized=2)
+        sc = SearchConfig(dimensions=dims,
+                          model_batching_configs=[],
+                          radius=4,
+                          min_initialized=2)
 
         nc = sc.get_neighborhood_config(radius=5)
         self.assertEqual(2, nc.get_num_dimensions())

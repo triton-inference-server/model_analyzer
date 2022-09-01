@@ -288,14 +288,19 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         kind = "KIND_CPU" if self._models[model_num].cpu_only() else "KIND_GPU"
         param_combo = {
-            'dynamic_batching': {},
-            'max_batch_size':
-                dimension_values['max_batch_size'],
             'instance_group': [{
                 'count': dimension_values['instance_count'],
                 'kind': kind,
             }]
         }
+
+        if 'max_batch_size' in dimension_values:
+            param_combo['max_batch_size'] = dimension_values['max_batch_size']
+
+        batching_config = self._search_config.get_model_batching_config(
+            model_num)
+        if batching_config.dynamic_batching_supported:
+            param_combo['dynamic_batching'] = {}
 
         model_config = BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
@@ -317,13 +322,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config_from_profile_config(
             model_variant_name, self._config)
 
-        perf_config_params = {
-            'batch-size':
-                1,
-            'concurrency-range':
-                2 * dimension_values['instance_count'] *
-                dimension_values['max_batch_size']
-        }
+        if 'concurrency-range' in dimension_values:
+            concurrency = dimension_values['concurrency']
+        else:
+            concurrency = 2 * dimension_values[
+                'instance_count'] * dimension_values['max_batch_size']
+
+        perf_config_params = {'batch-size': 1, 'concurrency-range': concurrency}
         perf_analyzer_config.update_config(perf_config_params)
 
         perf_analyzer_config.update_config(

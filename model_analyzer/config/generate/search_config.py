@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.search_dimensions import SearchDimensions
+from .search_dimensions import SearchDimensions
+from .base_model_config_generator import ModelBatchingConfig
+from typing import List
 
 
 class NeighborhoodConfig:
@@ -20,11 +22,12 @@ class NeighborhoodConfig:
     Defines the configuration for a Neighborhood object
     """
 
-    def __init__(self, dimensions, radius, min_initialized):
+    def __init__(self, dimensions: SearchDimensions, radius: int,
+                 min_initialized: int):
         """
         Parameters
         ----------
-        dimensions: list of SearchDimension
+        dimensions: SearchDimensions
         radius: int
             All points within distance=radius from a location will be in
             its neighborhood
@@ -32,7 +35,6 @@ class NeighborhoodConfig:
             Minimum number of initialized values in a neighborhood
             before a step can be taken
         """
-        assert (isinstance(dimensions, SearchDimensions))
         self._dimensions = dimensions
         self._radius = radius
         self._min_initialized = min_initialized
@@ -75,21 +77,29 @@ class SearchConfig(NeighborhoodConfig):
     Defines all dimensions to search
     """
 
-    def __init__(self, dimensions, radius, min_initialized):
+    def __init__(self, dimensions: SearchDimensions,
+                 model_batching_configs: List[ModelBatchingConfig], radius: int,
+                 min_initialized: int):
         """
         Parameters
         ----------
-        dimensions: list of SearchDimension
+        dimensions: SearchDimensions
+        model_batching_configs: per-model List of ModelBatchingConfig
         radius: int
             All points within distance=radius from a location will be in
             each neighborhood
         min_initialized: int
             Minimum number of initialized values in a neighborhood
             before a step can be taken
+        
         """
         super().__init__(dimensions=dimensions,
                          radius=radius,
                          min_initialized=min_initialized)
+        self._model_batching_configs = model_batching_configs
+
+    def get_model_batching_config(self, model_num: int) -> ModelBatchingConfig:
+        return self._model_batching_configs[model_num]
 
     def get_neighborhood_config(self, radius=None):
         """

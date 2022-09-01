@@ -15,6 +15,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+from model_analyzer.config.generate.base_model_config_generator import ModelBatchingConfig
+
 from .common import test_result_collector as trc
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.search_config import SearchConfig
@@ -40,7 +42,11 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
 
-        sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
+        sc = SearchConfig(
+            dimensions=dims,
+            model_batching_configs=[ModelBatchingConfig(True, False)],
+            radius=5,
+            min_initialized=2)
         self._qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
                                              mock_models, MagicMock(),
                                              ModelVariantNameManager())
@@ -54,7 +60,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 SearchDimension("y", SearchDimension.DIMENSION_TYPE_LINEAR, min=1),
                 SearchDimension("z", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=3)
         ])
-        sc = SearchConfig(dimensions=dims,radius=2, min_initialized=2)
+        sc = SearchConfig(dimensions=dims,model_batching_configs=[ModelBatchingConfig(True,True)],radius=2, min_initialized=2)
         #yapf: enable
         qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
                                        MagicMock(), MagicMock(),
@@ -90,7 +96,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         expected_model_config = {
             'cpu_only': False,
-            'dynamicBatching': {},
             'instanceGroup': [{
                 'count': 8,
                 'kind': 'KIND_GPU',
@@ -131,7 +136,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
           - model 2 concurrency = 16*6*2 = 192
 
         Also,
-        - dynamic batching should be on
+        - dynamic batching should be on for model 2
         - existing values from the base model config should persist if they aren't overwritten
         - existing values for perf-analyzer config should persist if they aren't overwritten
         """
@@ -156,7 +161,13 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                             SearchDimension.DIMENSION_TYPE_LINEAR)
         ])
 
-        sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
+        sc = SearchConfig(dimensions=dims,
+                          model_batching_configs=[
+                              ModelBatchingConfig(True, False),
+                              ModelBatchingConfig(True, True)
+                          ],
+                          radius=5,
+                          min_initialized=2)
         qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
                                        mock_models, MagicMock(),
                                        ModelVariantNameManager())
@@ -185,7 +196,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         expected_model_config1 = {
             'cpu_only': False,
-            'dynamicBatching': {},
             'instanceGroup': [{
                 'count': 3,
                 'kind': 'KIND_GPU',

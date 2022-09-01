@@ -14,7 +14,7 @@
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from .brute_run_config_generator import BruteRunConfigGenerator
-from .quick_run_config_generator import QuickRunConfigGenerator
+from .base_model_config_generator import BaseModelConfigGenerator
 from .quick_plus_concurrency_sweep_run_config_generator import QuickPlusConcurrencySweepRunConfigGenerator
 from .search_dimensions import SearchDimensions
 from .search_dimension import SearchDimension
@@ -99,29 +99,28 @@ class RunConfigGeneratorFactory:
     @staticmethod
     def _create_search_config(command_config, client, gpus):
         dimensions = SearchDimensions()
-
+        batching_configs = []
         #yapf: disable
         for i, model in enumerate(command_config.profile_models):
-            dims = RunConfigGeneratorFactory._get_dimensions_for_model(config=command_config, client=client, gpus=gpus, model_name=model.model_name())
+            batching_config = BaseModelConfigGenerator.get_model_batching_support(config=command_config, client=client, gpus=gpus, model_name=model.model_name())
+            batching_configs.append(batching_config)
+
+            dims = RunConfigGeneratorFactory._get_dimensions_for_model(batching_supported=batching_config.batching_supported)
             dimensions.add_dimensions(i, dims)
         #yapf: enable
 
         search_config = SearchConfig(dimensions=dimensions,
                                      radius=RADIUS,
-                                     min_initialized=MIN_INITIALIZED)
+                                     min_initialized=MIN_INITIALIZED,
+                                     batching_configs=batching_configs)
 
         return search_config
 
     @staticmethod
-    def _get_dimensions_for_model(config, client, gpus,
-                                  model_name) -> List[SearchDimension]:
+    def _get_dimensions_for_model(
+            is_batching_supported: bool) -> List[SearchDimension]:
 
-        batching_supported = True
-        # TODO: TMA-875 - add proper batching support detection
-        #batching_supported = BaseModelConfigGenerator.is_batching_supported(
-        #    config=config, client=client, gpus=gpus, model_name=model_name)
-
-        if (batching_supported):  # If support max batch size
+        if (is_batching_supported):  # If support max batch size
             return RunConfigGeneratorFactory._get_batching_supported_dimensions(
             )
         else:

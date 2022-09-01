@@ -54,8 +54,11 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         self._curr_instance_count = self._min_instance_count
         self._curr_max_batch_size = 0
 
-        self._max_batch_size_disabled = self._determine_max_batch_size_disabled(
-        )
+        self._batching_support = BaseModelConfigGenerator.get_model_batching_support(
+            config=config,
+            client=client,
+            gpus=gpus,
+            model_name=self._base_model_name)
 
         self._reset_max_batch_size()
 
@@ -102,10 +105,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     def _reset_max_batch_size(self):
         super()._reset_max_batch_size()
 
-        if self._max_batch_size_disabled:
-            self._curr_max_batch_size = self._max_model_batch_size
-        else:
+        if self._batching_support.batching_supported:
             self._curr_max_batch_size = self._min_model_batch_size
+        else:
+            self._curr_max_batch_size = self._max_model_batch_size
 
     def _get_next_model_config(self):
         param_combo = self._get_curr_param_combo()
@@ -123,17 +126,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             }]
         }
 
-        if not self._max_batch_size_disabled:
+        if self._batching_support.batching_supported:
             config['max_batch_size'] = self._curr_max_batch_size
+
+        if self._batching_support.dynamic_batching_supported:
             config['dynamic_batching'] = {}
 
         return config
-
-    def _determine_max_batch_size_disabled(self):
-        config = BaseModelConfigGenerator.get_base_model_config_dict(
-            self._config, self._client, self._gpus, self._model_repository,
-            self._base_model_name)
-        max_batch_size_disabled = False
-        if "max_batch_size" not in config or config['max_batch_size'] == 0:
-            max_batch_size_disabled = True
-        return max_batch_size_disabled

@@ -16,11 +16,17 @@ from .config_generator_interface import ConfigGeneratorInterface
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
+from typing import NamedTuple
 
 import abc
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
+
+
+class ModelBatchingConfig(NamedTuple):
+    batching_supported: bool
+    dynamic_batching_supported: bool
 
 
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
@@ -208,8 +214,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
         return model_config
 
-    @classmethod
-    def get_base_model_config_dict(cls, config, client, gpus, model_repository,
+    @staticmethod
+    def get_base_model_config_dict(config, client, gpus, model_repository,
                                    model_name):
         """
         Attempts to create a base model config dict from config.pbtxt, if one exists
@@ -230,6 +236,29 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             config, client, gpus, model_repository, model_name)
 
         return model_config_dict
+
+    @staticmethod
+    def get_model_batching_support(config, client, gpus,
+                                   model_name) -> ModelBatchingConfig:
+        base_model_config = BaseModelConfigGenerator.get_base_model_config_dict(
+            config=config,
+            client=client,
+            gpus=gpus,
+            model_repository=config.model_repository,
+            model_name=model_name)
+
+        is_batching_supported = True
+        if "max_batch_size" not in base_model_config or base_model_config[
+                'max_batch_size'] == 0:
+            is_batching_supported = False
+
+        is_dynamic_batching_supported = is_batching_supported
+        if "sequence_batching" in base_model_config:
+            is_dynamic_batching_supported = False
+
+        return ModelBatchingConfig(
+            batching_supported=is_batching_supported,
+            dynamic_batching_supported=is_dynamic_batching_supported)
 
     def _reset_max_batch_size(self):
         self._max_batch_size_warning_printed = False
