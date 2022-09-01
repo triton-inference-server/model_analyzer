@@ -134,13 +134,7 @@ class Neighborhood:
             vectors.append(Coordinate([0] * self._config.get_num_dimensions()))
             measurements.append(home_measurement)
 
-        best_vector = vectors[0]
-        best_measurement = measurements[0]
-
-        for v, m in zip(vectors, measurements):
-            if m > best_measurement:
-                best_vector = v
-                best_measurement = m
+        _, best_vector = sorted(zip(measurements, vectors))[-1]
 
         best_coordinate = self._home_coordinate + best_vector
         return best_coordinate
