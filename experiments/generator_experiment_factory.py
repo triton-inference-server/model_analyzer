@@ -55,7 +55,7 @@ class GeneratorExperimentFactory:
         mvn = ModelVariantNameManager()
         generator = RunConfigGeneratorFactory.create_run_config_generator(
             config_command, MagicMock(), config_command.profile_models,
-            MagicMock(), mvn)
+            MagicMock(), MagicMock(), mvn)
         return generator
 
     @staticmethod
