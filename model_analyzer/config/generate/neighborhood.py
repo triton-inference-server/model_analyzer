@@ -175,7 +175,7 @@ class Neighborhood:
 
     def _pick_slow_mode_coordinate_to_initialize(self):
         for neighbor in self._get_all_adjacent_neighbors():
-            if not self._coordinate_data.is_measured(neighbor):
+            if not self._is_coordinate_measured(neighbor):
                 return neighbor
 
         raise Exception("Picking slow mode coordinate, but none are unvisited")
@@ -186,7 +186,7 @@ class Neighborhood:
         max_num_uncovered = -1
         best_coordinate = None
         for coordinate in self._neighborhood:
-            if not self._coordinate_data.is_measured(coordinate):
+            if not self._is_coordinate_measured(coordinate):
                 num_uncovered = self._get_num_uncovered_values(
                     coordinate, covered_values_per_dimension)
 
