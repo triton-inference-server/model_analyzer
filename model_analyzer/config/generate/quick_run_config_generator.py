@@ -90,7 +90,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         self._neighborhood = Neighborhood(
             self._search_config.get_neighborhood_config(),
-            self._home_coordinate)
+            self._home_coordinate, self._coordinate_data)
 
         # Sticky bit. Once true, we should never stay at a home that is failing or None
         self._home_has_passed = False
@@ -142,11 +142,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         ----------
         measurements: List of Measurements from the last run(s)
         """
-        self._coordinate_data.increment_visit_count(self._coordinate_to_measure)
-        self._neighborhood.coordinate_data.increment_visit_count(
-            coordinate=self._coordinate_to_measure)
-
-        self._neighborhood.coordinate_data.set_measurement(
+        self._coordinate_data.set_measurement(
             coordinate=self._coordinate_to_measure, measurement=measurements[0])
 
         if measurements[0] is not None:
@@ -187,8 +183,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                 self._best_coordinate = self._coordinate_to_measure
                 self._best_measurement = measurement
 
-    def _get_last_results(self) -> RunConfigMeasurement:
-        return self._neighborhood.coordinate_data.get_measurement(
+    def _get_last_results(self) -> Optional[RunConfigMeasurement]:
+        return self._coordinate_data.get_measurement(
             coordinate=self._coordinate_to_measure)
 
     def _take_step(self):
@@ -245,7 +241,11 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         neighborhood_config = self._search_config.get_neighborhood_config()
 
         self._neighborhood = Neighborhood(neighborhood_config,
-                                          self._home_coordinate)
+                                          self._home_coordinate,
+                                          self._coordinate_data)
+
+        self._coordinate_data.increment_visit_count(self._home_coordinate)
+
         if force_slow_mode:
             self._neighborhood.force_slow_mode()
 

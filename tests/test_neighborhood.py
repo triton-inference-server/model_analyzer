@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cmath import exp
 from unittest.mock import MagicMock, patch
 
 from model_analyzer.config.generate.neighborhood import Neighborhood
@@ -77,7 +76,9 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([1, 1, 1]),
+                         coordinate_data=CoordinateData())
 
         # These are all values within radius of 2 from [1,1,1]
         # but within the bounds (no negative values)
@@ -104,62 +105,50 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([1, 1, 1]),
+                         coordinate_data=cd)
 
         rcm = self._construct_rcm(throughput=100, latency=80)
 
         # Start with 0 initialized
-        self.assertEqual(0, len(n._get_visited_coordinates()))
-        self.assertEqual(0, len(n._get_initialized_coordinates()))
+        self.assertEqual(0, len(n._get_coordinates_with_valid_measurements()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Home coordinate is ignored. No change to num initialized/visited.
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]), rcm)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
-        self.assertEqual(0, len(n._get_visited_coordinates()))
-        self.assertEqual(0, len(n._get_initialized_coordinates()))
+        cd.set_measurement(Coordinate([1, 1, 1]), rcm)
+        self.assertEqual(0, len(n._get_coordinates_with_valid_measurements()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Incremented to 1 initialized
-        n.coordinate_data.set_measurement(Coordinate([0, 0, 0]), rcm)
-        n.coordinate_data.increment_visit_count(Coordinate([0, 0, 0]))
-        self.assertEqual(1, len(n._get_visited_coordinates()))
-        self.assertEqual(1, len(n._get_initialized_coordinates()))
+        cd.set_measurement(Coordinate([0, 0, 0]), rcm)
+        self.assertEqual(1, len(n._get_coordinates_with_valid_measurements()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Set same point. No change to num initialized
-        n.coordinate_data.set_measurement(Coordinate([0, 0, 0]), rcm)
-        n.coordinate_data.increment_visit_count(Coordinate([0, 0, 0]))
-        self.assertEqual(1, len(n._get_visited_coordinates()))
-        self.assertEqual(1, len(n._get_initialized_coordinates()))
+        cd.set_measurement(Coordinate([0, 0, 0]), rcm)
+        self.assertEqual(1, len(n._get_coordinates_with_valid_measurements()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Set a point outside of neighborhood
-        n.coordinate_data.set_measurement(Coordinate([0, 0, 4]), rcm)
-        n.coordinate_data.increment_visit_count(Coordinate([0, 0, 4]))
-        self.assertEqual(1, len(n._get_visited_coordinates()))
-        self.assertEqual(1, len(n._get_initialized_coordinates()))
+        cd.set_measurement(Coordinate([0, 0, 4]), rcm)
+        self.assertEqual(1, len(n._get_coordinates_with_valid_measurements()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Set a third point inside of neighborhood
-        n.coordinate_data.set_measurement(Coordinate([1, 0, 0]), rcm)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 0, 0]))
-        self.assertEqual(2, len(n._get_visited_coordinates()))
-        self.assertEqual(2, len(n._get_initialized_coordinates()))
+        cd.set_measurement(Coordinate([1, 0, 0]), rcm)
+        self.assertEqual(2, len(n._get_coordinates_with_valid_measurements()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Set the none measurement. No changed to num initialized.
-        n.coordinate_data.set_measurement(Coordinate([0, 1, 1]), None)
-        n.coordinate_data.increment_visit_count(Coordinate([0, 1, 1]))
-        self.assertEqual(3, len(n._get_visited_coordinates()))
-        self.assertEqual(2, len(n._get_initialized_coordinates()))
+        cd.set_measurement(Coordinate([0, 1, 1]), None)
+        self.assertEqual(2, len(n._get_coordinates_with_valid_measurements()))
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Set the last point inside of neighborhood
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 0]), rcm)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 0]))
-        self.assertEqual(4, len(n._get_visited_coordinates()))
-        self.assertEqual(3, len(n._get_initialized_coordinates()))
+        cd.set_measurement(Coordinate([1, 1, 0]), rcm)
+        self.assertEqual(3, len(n._get_coordinates_with_valid_measurements()))
         self.assertTrue(n.enough_coordinates_initialized())
 
     def test_get_all_adjacent_neighbors(self):
@@ -183,7 +172,9 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([0, 1, 4]))
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([0, 1, 4]),
+                         coordinate_data=CoordinateData())
 
         adjacent_neighbors = n._get_all_adjacent_neighbors()
         expected_list = [
@@ -215,26 +206,29 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0, 1]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([0, 0, 1]),
+                         coordinate_data=cd)
         n.force_slow_mode()
 
         # Start with None initialized
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Home coordinate is ignored
-        n.coordinate_data.increment_visit_count(Coordinate([0, 0, 1]))
+        cd.set_measurement(Coordinate([0, 0, 1]), MagicMock())
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Add 3 of the 4 neighbors
-        n.coordinate_data.increment_visit_count(Coordinate([1, 0, 1]))
+        cd.set_measurement(Coordinate([1, 0, 1]), MagicMock())
         self.assertFalse(n.enough_coordinates_initialized())
-        n.coordinate_data.increment_visit_count(Coordinate([0, 1, 1]))
+        cd.set_measurement(Coordinate([0, 1, 1]), MagicMock())
         self.assertFalse(n.enough_coordinates_initialized())
-        n.coordinate_data.increment_visit_count(Coordinate([0, 0, 0]))
+        cd.set_measurement(Coordinate([0, 0, 0]), MagicMock())
         self.assertFalse(n.enough_coordinates_initialized())
 
         # Add the final neighbor
-        n.coordinate_data.increment_visit_count(Coordinate([0, 0, 2]))
+        cd.set_measurement(Coordinate([0, 0, 2]), MagicMock())
         self.assertTrue(n.enough_coordinates_initialized())
 
     def test_is_slow_mode(self):
@@ -315,7 +309,7 @@ class TestNeighborhood(trc.TestResultCollector):
             patch.object(Neighborhood, "_get_measurements_passing_constraints",
                          MagicMock(return_value=passing_ret_val)))
         patches.append(
-            patch.object(Neighborhood, "_get_all_visited_measurements",
+            patch.object(Neighborhood, "_get_all_measurements",
                          MagicMock(return_value=all_ret_val)))
         patches.append(
             patch.object(Neighborhood, "_is_home_passing_constraints",
@@ -328,7 +322,9 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1]))
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([1, 1]),
+                         coordinate_data=CoordinateData())
 
         for p in patches:
             p.start()
@@ -341,7 +337,7 @@ class TestNeighborhood(trc.TestResultCollector):
         for p in patches:
             p.stop()
 
-    def test_get_all_visited_measurements(self):
+    def test_get_all_measurements(self):
         dims = SearchDimensions()
         dims.add_dimensions(0, [
             SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
@@ -351,24 +347,19 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([1, 1, 1]),
+                         coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=100, latency=50)
         rcm1 = self._construct_rcm(throughput=700, latency=350)
         rcm2 = self._construct_rcm(throughput=300, latency=130)
 
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 2]), None)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 2]))
+        cd.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        cd.set_measurement(Coordinate([2, 1, 1]), rcm1)
+        cd.set_measurement(Coordinate([1, 2, 1]), rcm2)
+        cd.set_measurement(Coordinate([1, 2, 2]), None)
 
         expected_vectors = [
             Coordinate([1, 2, 1]) - Coordinate([1, 1, 1]),
@@ -376,7 +367,7 @@ class TestNeighborhood(trc.TestResultCollector):
         ]
         expected_measurements = [rcm2, rcm1]
 
-        vectors, measurements = n._get_all_visited_measurements()
+        vectors, measurements = n._get_all_measurements()
         for ev, em in zip(expected_vectors, expected_measurements):
             self.assertTrue(ev in vectors)
             self.assertTrue(em in measurements)
@@ -391,7 +382,10 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([1, 1, 1]),
+                         coordinate_data=cd)
 
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
@@ -420,21 +414,11 @@ class TestNeighborhood(trc.TestResultCollector):
         rcm4 = self._construct_rcm(throughput=850, latency=400)  # fail
         rcm4.set_model_config_constraints([constraints])
 
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([2, 1, 1]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([2, 1, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 1]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 2]), rcm3)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 2]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 2]), rcm4)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 2]))
+        cd.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        cd.set_measurement(Coordinate([2, 1, 1]), rcm1)
+        cd.set_measurement(Coordinate([1, 2, 1]), rcm2)
+        cd.set_measurement(Coordinate([1, 1, 2]), rcm3)
+        cd.set_measurement(Coordinate([1, 2, 2]), rcm4)
 
         expected_vectors = [
             Coordinate([1, 1, 2]) - Coordinate([1, 1, 1]),
@@ -474,7 +458,10 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([1, 1, 1]),
+                         coordinate_data=cd)
 
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
@@ -497,21 +484,16 @@ class TestNeighborhood(trc.TestResultCollector):
         rcm2 = self._construct_rcm(throughput=400, latency=290)  # pass
         rcm2.set_model_config_constraints([constraints])
 
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
+        cd.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        cd.set_measurement(Coordinate([2, 3, 1]), rcm1)
+        cd.set_measurement(Coordinate([1, 1, 2]), rcm2)
 
-        n.coordinate_data.set_measurement(Coordinate([2, 3, 1]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([2, 3, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 2]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 2]))
-
-        hm = n.coordinate_data.get_measurement(Coordinate([1, 1, 1]))
+        hm = cd.get_measurement(Coordinate([1, 1, 1]))
         self.assertTrue(hm.is_passing_constraints())
 
         step_vector = n._get_step_vector()
         expected_step_vector = Coordinate([1.0, 0.5, 1.2])
+
         self.assertEqual(step_vector, expected_step_vector)
 
     def test_step_vector_both_home_and_neighbors_failing_constraints(self):
@@ -544,7 +526,10 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([1, 1, 1]),
+                         coordinate_data=cd)
 
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
@@ -567,17 +552,11 @@ class TestNeighborhood(trc.TestResultCollector):
         rcm2 = self._construct_rcm(throughput=850, latency=540)  # fail
         rcm2.set_model_config_constraints([constraints])
 
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
+        cd.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        cd.set_measurement(Coordinate([3, 2, 1]), rcm1)
+        cd.set_measurement(Coordinate([1, 2, 0]), rcm2)
 
-        n.coordinate_data.set_measurement(Coordinate([3, 2, 1]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([3, 2, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 2, 0]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 2, 0]))
-
-        hm = n.coordinate_data.get_measurement(Coordinate([1, 1, 1]))
+        hm = cd.get_measurement(Coordinate([1, 1, 1]))
         self.assertFalse(hm.is_passing_constraints())
 
         step_vector = n._get_step_vector()
@@ -596,21 +575,18 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([0, 0]),
+                         coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=1, latency=5)
         rcm1 = self._construct_rcm(throughput=3, latency=5)
         rcm2 = self._construct_rcm(throughput=1, latency=5)
 
-        n.coordinate_data.set_measurement(Coordinate([0, 0]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([0, 0]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 0]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 0]))
-
-        n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
+        cd.set_measurement(Coordinate([0, 0]), rcm0)  # home coordinate
+        cd.set_measurement(Coordinate([1, 0]), rcm1)
+        cd.set_measurement(Coordinate([0, 1]), rcm2)
 
         new_coord = n.determine_new_home()
         self.assertEqual(new_coord, Coordinate([2, 0]))
@@ -627,21 +603,18 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([0, 0]),
+                         coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=1, latency=5)
         rcm1 = self._construct_rcm(throughput=3, latency=5)
         rcm2 = self._construct_rcm(throughput=3, latency=5)
 
-        n.coordinate_data.set_measurement(Coordinate([0, 0]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([0, 0]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 0]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 0]))
-
-        n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
+        cd.set_measurement(Coordinate([0, 0]), rcm0)  # home coordinate
+        cd.set_measurement(Coordinate([1, 0]), rcm1)
+        cd.set_measurement(Coordinate([0, 1]), rcm2)
 
         new_coord = n.determine_new_home()
         self.assertEqual(new_coord, Coordinate([2, 2]))
@@ -658,21 +631,18 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([0, 0]),
+                         coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=1, latency=5)
         rcm1 = self._construct_rcm(throughput=7, latency=5)
         rcm2 = self._construct_rcm(throughput=7, latency=5)
 
-        n.coordinate_data.set_measurement(Coordinate([0, 0]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([0, 0]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 0]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 0]))
-
-        n.coordinate_data.set_measurement(Coordinate([0, 1]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([0, 1]))
+        cd.set_measurement(Coordinate([0, 0]), rcm0)  # home coordinate
+        cd.set_measurement(Coordinate([1, 0]), rcm1)
+        cd.set_measurement(Coordinate([0, 1]), rcm2)
 
         # 7x increase in throughputs will result in the maximum step of [3,3]
         new_coord = n.determine_new_home()
@@ -699,17 +669,16 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=8, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([3, 6]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([3, 6]),
+                         coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=1, latency=5)
         rcm1 = self._construct_rcm(throughput=7, latency=5)
 
-        n.coordinate_data.set_measurement(Coordinate([3, 6]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([3, 6]))
-
-        n.coordinate_data.set_measurement(Coordinate([2, 7]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([2, 7]))
+        cd.set_measurement(Coordinate([3, 6]), rcm0)  # home coordinate
+        cd.set_measurement(Coordinate([2, 7]), rcm1)
 
         new_coord = n.determine_new_home()
         self.assertEqual(new_coord, Coordinate([2, 7]))
@@ -729,25 +698,20 @@ class TestNeighborhood(trc.TestResultCollector):
         ])
 
         nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([1, 1, 1]),
+                         coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=10, latency=5)
         rcm1 = self._construct_rcm(throughput=10, latency=5)
         rcm2 = self._construct_rcm(throughput=10, latency=5)
         rcm3 = self._construct_rcm(throughput=10, latency=5)
 
-        n.coordinate_data.set_measurement(Coordinate([1, 1, 1]),
-                                          rcm0)  # home coordinate
-        n.coordinate_data.increment_visit_count(Coordinate([1, 1, 1]))
-
-        n.coordinate_data.set_measurement(Coordinate([1, 0, 0]), rcm1)
-        n.coordinate_data.increment_visit_count(Coordinate([1, 0, 0]))
-
-        n.coordinate_data.set_measurement(Coordinate([0, 1, 0]), rcm2)
-        n.coordinate_data.increment_visit_count(Coordinate([0, 1, 0]))
-
-        n.coordinate_data.set_measurement(Coordinate([0, 0, 1]), rcm3)
-        n.coordinate_data.increment_visit_count(Coordinate([0, 0, 1]))
+        cd.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
+        cd.set_measurement(Coordinate([1, 0, 0]), rcm1)
+        cd.set_measurement(Coordinate([0, 1, 0]), rcm2)
+        cd.set_measurement(Coordinate([0, 0, 1]), rcm3)
 
         step_vector = n._get_step_vector()
         self.assertEqual(step_vector, Coordinate([0, 0, 0]))
@@ -789,7 +753,10 @@ class TestNeighborhood(trc.TestResultCollector):
         dims.add_dimensions(
             0, [SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR)])
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([0]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([0]),
+                         coordinate_data=cd)
 
         input_coord = Coordinate(input_vector)
         expected_coord = Coordinate(expected_vector)
@@ -809,7 +776,10 @@ class TestNeighborhood(trc.TestResultCollector):
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0, 0]))
+        cd = CoordinateData()
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([0, 0, 0]),
+                         coordinate_data=cd)
 
         vectors = [[0, 0, 1], [1, -3, 2], [-4, 2, 0], [3, 2, 6]]
         weights = [0.5, -3.0, -1, 0]

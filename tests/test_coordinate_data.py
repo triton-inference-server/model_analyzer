@@ -24,9 +24,7 @@ from .common import test_result_collector as trc
 
 class TestCoordinateData(trc.TestResultCollector):
 
-    def _construct_rcm(self,
-                       throughput: float,
-                       latency: float,
+    def _construct_rcm(self, throughput: float, latency: float,
                        config_name: str):
         model_config_name = [config_name]
 
@@ -47,8 +45,7 @@ class TestCoordinateData(trc.TestResultCollector):
             gpu_metric_values={},
             non_gpu_metric_values=non_gpu_metric_values,
             metric_objectives=metric_objectives,
-            model_config_weights=weights
-        )
+            model_config_weights=weights)
         return rcm
 
     def test_basic(self):
@@ -57,6 +54,8 @@ class TestCoordinateData(trc.TestResultCollector):
         coordinate = Coordinate([0, 0, 0])
         self.assertEqual(result_data.get_measurement(coordinate), None)
         self.assertEqual(result_data.get_visit_count(coordinate), 0)
+        self.assertEqual(result_data.is_measured(coordinate), False)
+        self.assertEqual(result_data.has_valid_measurement(coordinate), False)
 
     def test_visit_count(self):
         result_data = CoordinateData()
@@ -77,24 +76,49 @@ class TestCoordinateData(trc.TestResultCollector):
 
     def test_measurement(self):
         """
-        Test if CoordinateData can properly set and get the measurements.
+        Test if CoordinateData can properly set and get measurements
+
+        Also confirm that is_measured() and has_valid_measurement() work properly
         """
         coordinate_data = CoordinateData()
 
         coordinate0 = Coordinate([0, 0, 0])
         coordinate1 = Coordinate([0, 4, 1])
+        coordinate2 = Coordinate([1, 2, 3])
 
         rcm0 = self._construct_rcm(10, 5, config_name="modelA_config_0")
         rcm1 = self._construct_rcm(20, 8, config_name="modelB_config_0")
+        rcm2 = None
 
         coordinate_data.set_measurement(coordinate0, rcm0)
+        coordinate_data.set_measurement(coordinate1, rcm1)
+        coordinate_data.set_measurement(coordinate2, rcm2)
+
+        self.assertEqual(coordinate_data.is_measured(coordinate0), True)
+        self.assertEqual(coordinate_data.is_measured(coordinate1), True)
+        self.assertEqual(coordinate_data.is_measured(coordinate2), True)
+
+        self.assertEqual(coordinate_data.has_valid_measurement(coordinate0),
+                         True)
+        self.assertEqual(coordinate_data.has_valid_measurement(coordinate1),
+                         True)
+        self.assertEqual(coordinate_data.has_valid_measurement(coordinate2),
+                         False)
+
         measurement0 = coordinate_data.get_measurement(coordinate0)
         self.assertEqual("modelA_config_0", measurement0.model_variants_name())
-        self.assertEqual(10, measurement0.get_non_gpu_metric_value("perf_throughput"))
-        self.assertEqual(5, measurement0.get_non_gpu_metric_value("perf_latency_avg"))
+        self.assertEqual(
+            10, measurement0.get_non_gpu_metric_value("perf_throughput"))
+        self.assertEqual(
+            5, measurement0.get_non_gpu_metric_value("perf_latency_avg"))
+        self.assertTrue(coordinate_data.is_measured(coordinate0))
 
-        coordinate_data.set_measurement(coordinate1, rcm1)
         measurement1 = coordinate_data.get_measurement(coordinate1)
         self.assertEqual("modelB_config_0", measurement1.model_variants_name())
-        self.assertEqual(20, measurement1.get_non_gpu_metric_value("perf_throughput"))
-        self.assertEqual(8, measurement1.get_non_gpu_metric_value("perf_latency_avg"))
+        self.assertEqual(
+            20, measurement1.get_non_gpu_metric_value("perf_throughput"))
+        self.assertEqual(
+            8, measurement1.get_non_gpu_metric_value("perf_latency_avg"))
+
+        measurement2 = coordinate_data.get_measurement(coordinate2)
+        self.assertEqual(measurement2, None)
