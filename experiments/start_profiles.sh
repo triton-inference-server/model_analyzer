@@ -21,7 +21,7 @@ for model in inception_v1_graphdef resnet50_libtorch vgg19_libtorch; do
       echo "Profiling $model (radius = $radius, min-initialized = $min_initialized)"
       python3 main.py --save \
           --model-name $model \
-          --generator QuickRunConfigGenerator \
+          --run-config-search-mode quick \
           --data-path $CHECKPOINT_DIR \
           --output-path output \
           --radius $radius \

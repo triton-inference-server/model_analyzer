@@ -30,7 +30,15 @@ class Neighborhood:
     a 'home' coordinate
     """
 
-    # FIXME where to put this?
+    # This defines the bounds of how the vector calculated from
+    # measurements is converted to a step vector.
+    #
+    # The translation will return the lowest index that has a value greater
+    # than the input value.
+    #
+    # For example, if the input is greater than the value in index 1 but less than
+    # the value in index 2, the resulting step will be 1
+    #
     TRANSLATION_LIST = [0.09, 0.3, 1.0]
 
     def __init__(self, neighborhood_config: NeighborhoodConfig,
