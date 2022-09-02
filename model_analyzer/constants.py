@@ -35,9 +35,7 @@ THROUGHPUT_MINIMUM_CONSECUTIVE_BATCH_SIZE_TRIES = 4
 
 # Quick search algorithm constants
 RADIUS = 3
-MAGNITUDE = 5
 MIN_INITIALIZED = 3
-MAGNITUDE_DECAY_RATE = 0.5
 
 # Reports
 TOP_MODELS_REPORT_KEY = "Best Configs Across All Models"

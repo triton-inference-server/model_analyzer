@@ -20,7 +20,7 @@ from .search_dimensions import SearchDimensions
 from .search_dimension import SearchDimension
 from .search_config import SearchConfig
 from typing import List
-from model_analyzer.constants import RADIUS, MAGNITUDE, MIN_INITIALIZED
+from model_analyzer.constants import RADIUS, MIN_INITIALIZED
 
 
 class RunConfigGeneratorFactory:
@@ -108,7 +108,6 @@ class RunConfigGeneratorFactory:
 
         search_config = SearchConfig(dimensions=dimensions,
                                      radius=RADIUS,
-                                     step_magnitude=MAGNITUDE,
                                      min_initialized=MIN_INITIALIZED)
 
         return search_config

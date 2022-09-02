@@ -12,35 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Union, Optional, Generator
+from typing import List, Optional, Generator
 
 from .config_generator_interface import ConfigGeneratorInterface
 
-from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 from model_analyzer.config.generate.search_config import SearchConfig
-from model_analyzer.config.generate.coordinate import Coordinate
-from model_analyzer.config.generate.coordinate_data import CoordinateData
-from model_analyzer.config.generate.neighborhood import Neighborhood
 from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
 from model_analyzer.config.generate.quick_run_config_generator import QuickRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
-from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
-from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.record.metrics_manager import MetricsManager
-from model_analyzer.result.results import Results
 from model_analyzer.result.run_config_result import RunConfigResult
 
-from model_analyzer.constants import LOGGER_NAME, MAGNITUDE_DECAY_RATE
-from model_analyzer.config.input.config_defaults import DEFAULT_NUM_CONFIGS_PER_MODEL, \
-    DEFAULT_RUN_CONFIG_MIN_CONCURRENCY, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.config.input.config_defaults import DEFAULT_RUN_CONFIG_MIN_CONCURRENCY, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
 
 from copy import deepcopy
 

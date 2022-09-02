@@ -75,7 +75,7 @@ class SearchConfig(NeighborhoodConfig):
     Defines all dimensions to search
     """
 
-    def __init__(self, dimensions, radius, step_magnitude, min_initialized):
+    def __init__(self, dimensions, radius, min_initialized):
         """
         Parameters
         ----------
@@ -83,8 +83,6 @@ class SearchConfig(NeighborhoodConfig):
         radius: int
             All points within distance=radius from a location will be in
             each neighborhood
-        step_magnitude: int
-            When a step is taken, this is the distance it will step
         min_initialized: int
             Minimum number of initialized values in a neighborhood
             before a step can be taken
@@ -92,11 +90,6 @@ class SearchConfig(NeighborhoodConfig):
         super().__init__(dimensions=dimensions,
                          radius=radius,
                          min_initialized=min_initialized)
-        self._step_magnitude = step_magnitude
-
-    def get_step_magnitude(self):
-        """ Returns the base magnitude of a step """
-        return self._step_magnitude
 
     def get_neighborhood_config(self, radius=None):
         """

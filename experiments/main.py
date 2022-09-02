@@ -16,8 +16,8 @@
 #
 # Example usage:
 #
-# python3 main.py --model-name resnet50_libtorch --generator BruteRunConfigGenerator --run-config-search-max-model-batch-size 2
-# python3 main.py --model-name resnet50_libtorch --generator QuickRunConfigGenerator --magnitude 5
+# python3 main.py --model-name resnet50_libtorch --run-config-search-mode=brute --run-config-search-max-model-batch-size 2
+# python3 main.py --model-name resnet50_libtorch --run-config-search-mode=quick --radius 5
 #####################
 
 from evaluate_config_generator import EvaluateConfigGenerator

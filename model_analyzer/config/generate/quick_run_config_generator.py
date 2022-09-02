@@ -32,9 +32,8 @@ from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.record.metrics_manager import MetricsManager
 
-from model_analyzer.constants import LOGGER_NAME, MAGNITUDE_DECAY_RATE
+from model_analyzer.constants import LOGGER_NAME
 
 import logging
 
@@ -88,8 +87,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         # the back-off stage.
         self._best_coordinate = self._home_coordinate
         self._best_measurement: Optional[RunConfigMeasurement] = None
-
-        self._magnitude_scaler = 1.0
 
         self._neighborhood = Neighborhood(
             self._search_config.get_neighborhood_config(),
@@ -195,9 +192,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             coordinate=self._coordinate_to_measure)
 
     def _take_step(self):
-        magnitude = self._get_magnitude()
-
-        new_coordinate = self._neighborhood.calculate_new_coordinate(magnitude)
+        new_coordinate = self._neighborhood.determine_new_home()
         self._determine_if_done(new_coordinate)
 
         logger.debug(f"Stepping {self._home_coordinate}->{new_coordinate}")
@@ -218,8 +213,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._home_coordinate = new_coordinate
         self._coordinate_to_measure = new_coordinate
         self._recreate_neighborhood(force_slow_mode=True)
-
-        self._magnitude_scaler *= MAGNITUDE_DECAY_RATE
 
     def _should_step_back(self):
         """
@@ -270,10 +263,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         dims = self._search_config.get_dimensions()
         values = dims.get_values_for_coordinate(coordinate)
         return values[key]
-
-    def _get_magnitude(self) -> float:
-        magnitude = self._search_config.get_step_magnitude()
-        return self._magnitude_scaler * magnitude
 
     def _get_next_run_config(self) -> RunConfig:
         run_config = RunConfig(self._triton_env)
