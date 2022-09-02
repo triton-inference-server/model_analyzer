@@ -26,6 +26,7 @@ class CoordinateData:
     def __init__(self):
         self._measurements = {}
         self._visit_counts = {}
+        self._is_measured = {}
 
     def get_measurement(
             self, coordinate: Coordinate) -> Optional[RunConfigMeasurement]:
@@ -42,6 +43,20 @@ class CoordinateData:
         """
         key: Tuple[Coordinate, ...] = tuple(coordinate)
         self._measurements[key] = measurement
+        self._is_measured[key] = True
+
+    def is_measured(self, coordinate: Coordinate) -> bool:
+        """
+        Returns true if a measurement has been set for the given Coordinate
+        """
+        key: Tuple[Coordinate, ...] = tuple(coordinate)
+        return self._is_measured.get(key, False)
+
+    def has_valid_measurement(self, coordinate: Coordinate) -> bool:
+        """
+        Returns true if there is a valid measurement for the given Coordinate
+        """
+        return self.get_measurement(coordinate) is not None
 
     def reset_measurements(self):
         """

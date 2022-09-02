@@ -42,7 +42,7 @@ class Neighborhood:
     TRANSLATION_LIST = [0.09, 0.3, 1.0]
 
     def __init__(self, neighborhood_config: NeighborhoodConfig,
-                 home_coordinate: Coordinate):
+                 home_coordinate: Coordinate, coordinate_data: CoordinateData):
         """
         Parameters
         ----------
@@ -55,16 +55,12 @@ class Neighborhood:
 
         self._config = neighborhood_config
         self._home_coordinate = home_coordinate
-        self._coordinate_data = CoordinateData()
+        self._coordinate_data = coordinate_data
 
         self._radius = self._config.get_radius()
         self._neighborhood = self._create_neighborhood()
 
         self._force_slow_mode = False
-
-    @property
-    def coordinate_data(self):
-        return self._coordinate_data
 
     @classmethod
     def calc_distance(cls, coordinate1: Coordinate,
@@ -83,16 +79,17 @@ class Neighborhood:
     def enough_coordinates_initialized(self) -> bool:
         """
         Returns true if enough coordinates inside of the neighborhood
-        have been initialized. Else false
+        have been initialized with valid measurements. Else false
 
         If the neighborhood is in slow mode, this means all adjacent neighbors
         must be visited
         """
         if self._is_slow_mode():
-            return self._are_all_adjacent_neighbors_visited()
+            return self._are_all_adjacent_neighbors_measured()
         else:
             min_initialized = self._config.get_min_initialized()
-            num_initialized = len(self._get_initialized_coordinates())
+            num_initialized = len(
+                self._get_coordinates_with_valid_measurements())
             return num_initialized >= min_initialized
 
     def force_slow_mode(self):
@@ -178,7 +175,7 @@ class Neighborhood:
 
     def _pick_slow_mode_coordinate_to_initialize(self):
         for neighbor in self._get_all_adjacent_neighbors():
-            if not self._is_coordinate_visited(neighbor):
+            if not self._coordinate_data.is_measured(neighbor):
                 return neighbor
 
         raise Exception("Picking slow mode coordinate, but none are unvisited")
@@ -189,7 +186,7 @@ class Neighborhood:
         max_num_uncovered = -1
         best_coordinate = None
         for coordinate in self._neighborhood:
-            if not self._is_coordinate_visited(coordinate):
+            if not self._coordinate_data.is_measured(coordinate):
                 num_uncovered = self._get_num_uncovered_values(
                     coordinate, covered_values_per_dimension)
 
@@ -257,23 +254,11 @@ class Neighborhood:
         tuples = list(product(*possible_index_values))
         return [list(x) for x in tuples]
 
-    def _get_visited_coordinates(self) -> List[Coordinate]:
-        """
-        Returns the list of coordinates in the neighborhood that have been
-        visited (except the home coordinate).
-        """
-        visited_coordinates = []
-        for coordinate in self._neighborhood:
-            if coordinate != self._home_coordinate \
-                    and self._is_coordinate_visited(coordinate):
-                visited_coordinates.append(deepcopy(coordinate))
-        return visited_coordinates
-
-    def _get_initialized_coordinates(self) -> List[Coordinate]:
+    def _get_coordinates_with_valid_measurements(self) -> List[Coordinate]:
         initialized_coordinates = []
         for coordinate in self._neighborhood:
-            if coordinate != self._home_coordinate \
-                    and self._is_coordinate_initialized(coordinate):
+            if coordinate != self._home_coordinate and self._coordinate_data.has_valid_measurement(
+                    coordinate):
                 initialized_coordinates.append(deepcopy(coordinate))
         return initialized_coordinates
 
@@ -296,7 +281,7 @@ class Neighborhood:
             self, compare_constraints: bool) -> Coordinate:
 
         home_measurement = self._get_home_measurement()
-        vectors, measurements = self._get_all_visited_measurements()
+        vectors, measurements = self._get_all_measurements()
 
         # This function should only ever be called if all are passing or none are passing
         _, p = self._get_measurements_passing_constraints()
@@ -340,7 +325,7 @@ class Neighborhood:
 
         return step_vector
 
-    def _get_all_visited_measurements(
+    def _get_all_measurements(
             self) -> Tuple[List[Coordinate], List[RunConfigMeasurement]]:
         """
         Gather all the visited vectors (directions from the home coordinate)
@@ -351,10 +336,11 @@ class Neighborhood:
         (vectors, measurements)
             collection of vectors and their measurements.
         """
-        visited_coordinates = self._get_visited_coordinates()
+        coordinates = self._get_coordinates_with_valid_measurements()
+
         vectors = []
         measurements = []
-        for coordinate in visited_coordinates:
+        for coordinate in coordinates:
             measurement = self._coordinate_data.get_measurement(coordinate)
             if measurement:
                 vectors.append(coordinate - self._home_coordinate)
@@ -372,22 +358,19 @@ class Neighborhood:
         (vectors, measurements)
             collection of vectors and their measurements.
         """
-        visited_coordinates = self._get_visited_coordinates()
+        coordinates = self._get_coordinates_with_valid_measurements()
 
         vectors = []
         measurements = []
-        for coordinate in visited_coordinates:
+        for coordinate in coordinates:
             measurement = self._coordinate_data.get_measurement(coordinate)
             if measurement and measurement.is_passing_constraints():
                 vectors.append(coordinate - self._home_coordinate)
                 measurements.append(measurement)
         return vectors, measurements
 
-    def _is_coordinate_visited(self, coordinate: Coordinate) -> bool:
-        return self._coordinate_data.get_visit_count(coordinate) > 0
-
-    def _is_coordinate_initialized(self, coordinate: Coordinate) -> bool:
-        return self._coordinate_data.get_measurement(coordinate) is not None
+    def _is_coordinate_measured(self, coordinate: Coordinate) -> bool:
+        return self._coordinate_data.is_measured(coordinate)
 
     def _clamp_coordinate_to_bounds(self, coordinate: Coordinate) -> Coordinate:
 
@@ -409,13 +392,13 @@ class Neighborhood:
         (e.g.)
             covered_values_per_dimension[dimension][value] = bool
         """
-        visited_coordinates = self._get_visited_coordinates()
+        measured_coordinates = self._get_coordinates_with_valid_measurements()
 
         covered_values_per_dimension: List[Dict[Coordinate, bool]] = [
             {} for _ in range(self._config.get_num_dimensions())
         ]
 
-        for coordinate in visited_coordinates:
+        for coordinate in measured_coordinates:
             for i, v in enumerate(coordinate):
                 covered_values_per_dimension[i][v] = True
 
@@ -444,7 +427,7 @@ class Neighborhood:
             return False
 
         passing_vectors, _ = self._get_measurements_passing_constraints()
-        all_vectors, _ = self._get_all_visited_measurements()
+        all_vectors, _ = self._get_all_measurements()
 
         any_failing = len(all_vectors) != len(passing_vectors)
         any_passing = len(passing_vectors) != 0
@@ -453,9 +436,9 @@ class Neighborhood:
         return (home_passing and any_failing) or (not home_passing and
                                                   any_passing)
 
-    def _are_all_adjacent_neighbors_visited(self):
+    def _are_all_adjacent_neighbors_measured(self):
         for neighbor in self._get_all_adjacent_neighbors():
-            if not self._is_coordinate_visited(neighbor):
+            if not self._is_coordinate_measured(neighbor):
                 return False
         return True
 
