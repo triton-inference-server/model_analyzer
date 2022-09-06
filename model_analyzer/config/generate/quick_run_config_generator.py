@@ -286,13 +286,14 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         dimension_values = self._get_coordinate_values(
             self._coordinate_to_measure, model_num)
 
+        kind = "KIND_CPU" if self._models[model_num].cpu_only() else "KIND_GPU"
         param_combo = {
             'dynamic_batching': {},
             'max_batch_size':
                 dimension_values['max_batch_size'],
             'instance_group': [{
                 'count': dimension_values['instance_count'],
-                'kind': "KIND_GPU",
+                'kind': kind,
             }]
         }
 
