@@ -106,7 +106,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
     def _sweep_concurrency_over_top_results(self):
         top_results = self._result_manager.top_n_results(
-            n=self._config.num_top_model_configs)
+            n=self._config.num_configs_per_model)
 
         for count, result in enumerate(top_results):
             new_config = self._create_new_config_command_profile(result)
