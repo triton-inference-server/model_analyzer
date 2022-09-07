@@ -151,7 +151,7 @@ as the range for the `max_batch_size` to `[1]`, it will no longer be a valid
 Triton Model Configuration.
 
 The configuration sweep described above, will sweep through 8 configs = (2
-`max_batch_size`) _ (2 `max_queue_delay_microseconds`) _ (2 `instance_group`) values.
+`max_batch_size`) \* (2 `max_queue_delay_microseconds`) \* (2 `instance_group`) values.
 
 ## Quick Search
 
