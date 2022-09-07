@@ -19,6 +19,10 @@ limitations under the License.
 Model Analyzer's `profile` subcommand supports **automatic** and **manual**
 sweeping through different configurations for Triton models.
 
+Model Analyzer also supports a **quick** search, using a hill climbing algorithm. In the majority of cases
+this will find greater than 90% of the maximum objective value (that could be found using a brute force search),
+while needing to search less than 10% of the configuration space.
+
 ## Automatic Configuration Search
 
 Automatic configuration search is the default behavior when running Model
@@ -29,7 +33,6 @@ that are automatically searched are
 and
 [`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups).
 Additionally, [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher) will be enabled.
-
 
 An example model analyzer config that performs automatic config search looks
 like below:
@@ -50,7 +53,7 @@ For each `instance_group`, Model Analyzer will sweep values 1 through 128 increa
 [`Dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)
 will be enabled for all model configs generated using automatic search.
 
-For each model config that is generated in automatic search, Model Analyzer will gather data for 
+For each model config that is generated in automatic search, Model Analyzer will gather data for
 [`concurrency`](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md#request-concurrency)
 values 1 through 1024 increased exponentially (i.e. 1, 2, 4, 8, ...). The maximum value can be configured
 using the `run_config_search_max_concurrency` key in the Model Analyzer Config.
@@ -68,7 +71,7 @@ profile_models:
   - model_2
 ```
 
-If any `model_config_parameters` are specified for a model, it will disable 
+If any `model_config_parameters` are specified for a model, it will disable
 automatic searching of model configs and will only search within the values specified.
 If `concurrency` is specified then only those values will be tried instead of the default concurrency sweep.
 If both `concurrency` and `model_config_parameters` are specified, automatic
@@ -94,10 +97,9 @@ model_repository: /path/to/model/repository/
 profile_models:
   model_1:
     model_config_parameters:
-        instance_group:
-        -
-            kind: KIND_GPU
-            count: [1, 2]
+      instance_group:
+        - kind: KIND_GPU
+          count: [1, 2]
 ```
 
 ### Important Note about Remote Mode
@@ -131,13 +133,12 @@ run_config_search_disable: True
 profile_models:
   model_1:
     model_config_parameters:
-        max_batch_size: [6, 8]
-        dynamic_batching:
-            max_queue_delay_microseconds: [200, 300]
-        instance_group:
-        -
-            kind: KIND_GPU
-            count: [1, 2]
+      max_batch_size: [6, 8]
+      dynamic_batching:
+        max_queue_delay_microseconds: [200, 300]
+      instance_group:
+        - kind: KIND_GPU
+          count: [1, 2]
 ```
 
 In this mode, Model Analyzer can sweep through every Triton model configuration
@@ -150,7 +151,19 @@ as the range for the `max_batch_size` to `[1]`, it will no longer be a valid
 Triton Model Configuration.
 
 The configuration sweep described above, will sweep through 8 configs = (2
-`max_batch_size`) * (2 `max_queue_delay_microseconds`) * (2 `instance_group`) values.
+`max_batch_size`) _ (2 `max_queue_delay_microseconds`) _ (2 `instance_group`) values.
+
+## Quick Search
+
+Quick search is enabled by adding the parameter `--run-config-search-mode quick` to the CLI.
+
+It uses a hill climbing algorithm to search the configuration space, looking for
+the maximal objective value within the specified constraints. In the majority of cases
+this will find greater than 90% of the maximum objective value (that could be found using a brute force search),
+while needing to search less than 10% of the configuration space.
+
+We will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency
+range (powers of 2, 1-1024) before generation of the summary reports.
 
 ### Examples of Additional Model Config Parameters
 
@@ -159,6 +172,6 @@ sweep on every parameter that can be specified in Triton model configuration. In
 this section, we describe some of the parameters that might be of interest for
 manual sweep:
 
-* [Rate limiter](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#rate-limiter-config) setting
-* If the model is using [ONNX](https://github.com/triton-inference-server/onnxruntime_backend) or [Tensorflow backend](https://github.com/triton-inference-server/tensorflow_backend), the "execution_accelerators" parameters. More information about this parameter is
-available in the [Triton Optimization Guide](https://github.com/triton-inference-server/server/blob/main/docs/optimization.md#framework-specific-optimization)
+- [Rate limiter](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#rate-limiter-config) setting
+- If the model is using [ONNX](https://github.com/triton-inference-server/onnxruntime_backend) or [Tensorflow backend](https://github.com/triton-inference-server/tensorflow_backend), the "execution_accelerators" parameters. More information about this parameter is
+  available in the [Triton Optimization Guide](https://github.com/triton-inference-server/server/blob/main/docs/optimization.md#framework-specific-optimization)

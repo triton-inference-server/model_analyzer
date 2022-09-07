@@ -86,8 +86,8 @@ $ model-analyzer profile -h
 
 Depending on the command line or YAML config options provided, the `profile`
 subcommand will either perform a
-[manual](./config_search.md#manual-configuration-search) or [automatic
-search](./config_search.md#automatic-configuration-search) over perf analyzer
+[manual](./config_search.md#manual-configuration-search), [automatic](./config_search.md#automatic-configuration-search), or
+[quick](./config_search.md#quick-configuration-search) search over perf analyzer
 and model config file parameters. For each combination of [model config
 parameters](./config.md#model-config-parameters) (e.g. _max batch size_, _dynamic batching_, and _instance count_), it will run tritonserver and perf analyzer instances with
 all the specified run parameters (client request concurrency and static batch
@@ -112,19 +112,25 @@ Some example profile commands are shown here. For a full example see the
 $ model-analyzer profile -m /home/model_repo --profile-models resnet50_libtorch
 ```
 
-2. Run auto config search on 2 models called `resnet50_libtorch` and `vgg16_graphdef` located in `/home/model_repo` and save checkpoints to `checkpoints`
+2. Run quick search on a model called `resnet50_libtorch` located in `/home/model_repo`
+
+```
+$ model-analyzer profile -m /home/model_repo --profile-models resnet50_libtorch --run-config-search-mode quick
+```
+
+3. Run auto config search on 2 models called `resnet50_libtorch` and `vgg16_graphdef` located in `/home/model_repo` and save checkpoints to `checkpoints`
 
 ```
 $ model-analyzer profile -m /home/model_repo --profile-models resnet50_libtorch,vgg16_graphdef --checkpoint-directory=checkpoints
 ```
 
-3.  Run auto config search on a model called `resnet50_libtorch` located in `/home/model_repo`, but change the repository where model config variants are stored to `/home/output_repo`
+4.  Run auto config search on a model called `resnet50_libtorch` located in `/home/model_repo`, but change the repository where model config variants are stored to `/home/output_repo`
 
 ```
 $ model-analyzer profile -m /home/model_repo --output-model-repository-path=/home/output_repo --profile-models resnet50_libtorch
 ```
 
-4. Run profile over manually defined configurations for a models `classification_malaria_v1` and `classification_chestxray_v1` located in `/home/model_repo` using the YAML config file
+5. Run profile over manually defined configurations for a models `classification_malaria_v1` and `classification_chestxray_v1` located in `/home/model_repo` using the YAML config file
 
 ```
 $ model-analyzer profile -f /path/to/config.yaml
