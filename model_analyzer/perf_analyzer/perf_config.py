@@ -51,7 +51,9 @@ class PerfAnalyzerConfig:
 
     additive_args = ['input-data', 'shape', 'streaming']
 
-    boolean_args = ['ssl-grpc-use-ssl']
+    boolean_args = [
+        'streaming', 'async', 'sync', 'binary-search', 'ssl-grpc-use-ssl'
+    ]
 
     def __init__(self):
         """
