@@ -279,7 +279,7 @@ class ResultManager:
         else:
             self._setup_for_sequential_analysis()
 
-        self._add_results_to_heaps()
+        self._add_results_to_heaps(suppress_warnings=True)
 
     def _complete_analyze_setup(self):
         self._create_concurrent_analysis_model_name()
@@ -290,7 +290,7 @@ class ResultManager:
             self._setup_for_sequential_analysis()
 
         self._check_for_models_in_checkpoint()
-        self._add_results_to_heaps()
+        self._add_results_to_heaps(suppress_warnings=False)
 
     def _create_concurrent_analysis_model_name(self):
         analysis_model_names = [
@@ -383,7 +383,7 @@ class ResultManager:
                     f"The model {model_name} was not found in the loaded checkpoint."
                 )
 
-    def _add_results_to_heaps(self):
+    def _add_results_to_heaps(self, suppress_warnings=False):
         """
         Construct and add results to individual result heaps 
         as well as global result heap
@@ -392,7 +392,8 @@ class ResultManager:
             'ResultManager.results')
 
         for model_name in self._analysis_model_names:
-            model_measurements = results.get_model_measurements_dict(model_name)
+            model_measurements = results.get_model_measurements_dict(
+                model_name, suppress_warnings)
 
             # Only add in models that exist in the checkpoint
             if not model_measurements:
