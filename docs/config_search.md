@@ -16,14 +16,14 @@ limitations under the License.
 
 # Model Config Search
 
-Model Analyzer's `profile` subcommand supports **automatic** and **manual**
+Model Analyzer's `profile` subcommand supports [Brute](config_search.md#brute-search-mode) and [Quick](config_search.md#quick-search-mode) search modes.
+
+## Brute Search Mode
+
+Model Analyzer's brute search mode supposts **automatic** and **manual**
 sweeping through different configurations for Triton models.
 
-Model Analyzer also supports a **quick** search, using a hill climbing algorithm. In the majority of cases
-this will find greater than 90% of the maximum objective value (that could be found using a brute force search),
-while needing to search less than 10% of the configuration space.
-
-## Automatic Configuration Search
+### Automatic Configuration Search
 
 Automatic configuration search is the default behavior when running Model
 Analyzer. This mode is enabled when there is not any parameters specified for the
@@ -102,13 +102,13 @@ profile_models:
           count: [1, 2]
 ```
 
-### Important Note about Remote Mode
+#### Important Note about Remote Mode
 
 In the remote mode, `model_config_parameters` are always ignored because Model
 Analyzer has no way of accessing the model repository of the remote Triton
 Server. In this mode, only concurrency values can be swept.
 
-## Manual Configuration Search
+### Manual Configuration Search
 
 In addition to the automatic config search, Model Analyzer supports a manual
 config search mode. To enable this mode, `--run-config-search-disable` flag
@@ -153,18 +153,6 @@ Triton Model Configuration.
 The configuration sweep described above, will sweep through 8 configs = (2
 `max_batch_size`) \* (2 `max_queue_delay_microseconds`) \* (2 `instance_group`) values.
 
-## Quick Search
-
-Quick search is enabled by adding the parameter `--run-config-search-mode quick` to the CLI.
-
-It uses a hill climbing algorithm to search the configuration space, looking for
-the maximal objective value within the specified constraints. In the majority of cases
-this will find greater than 90% of the maximum objective value (that could be found using a brute force search),
-while needing to search less than 10% of the configuration space.
-
-It will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency
-range before generation of the summary reports.
-
 ### Examples of Additional Model Config Parameters
 
 As mentioned in the previous section, manual configuration search allows you to
@@ -175,3 +163,15 @@ manual sweep:
 - [Rate limiter](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#rate-limiter-config) setting
 - If the model is using [ONNX](https://github.com/triton-inference-server/onnxruntime_backend) or [Tensorflow backend](https://github.com/triton-inference-server/tensorflow_backend), the "execution_accelerators" parameters. More information about this parameter is
   available in the [Triton Optimization Guide](https://github.com/triton-inference-server/server/blob/main/docs/optimization.md#framework-specific-optimization)
+
+## Quick Search Mode
+
+Quick search is enabled by adding the parameter `--run-config-search-mode quick` to the CLI.
+
+It uses a hill climbing algorithm to search the configuration space, looking for
+the maximal objective value within the specified constraints. In the majority of cases
+this will find greater than 90% of the maximum objective value (that could be found using a brute force search),
+while needing to search less than 10% of the configuration space.
+
+It will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency
+range before generation of the summary reports.
