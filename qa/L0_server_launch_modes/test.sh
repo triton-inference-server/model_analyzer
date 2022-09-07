@@ -199,6 +199,7 @@ function _run_analyzer_and_check_results() {
     set -e
 
     rm -rf $OUTPUT_MODEL_REPOSITORY
+    rm -rf checkpoints && mkdir checkpoints
 }
 
 function _check_analyzer_exit_status() {
