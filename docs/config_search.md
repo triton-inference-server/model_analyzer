@@ -20,8 +20,11 @@ Model Analyzer's `profile` subcommand supports [Brute](config_search.md#brute-se
 
 ## Brute Search Mode
 
-Model Analyzer's brute search mode supposts **automatic** and **manual**
-sweeping through different configurations for Triton models.
+Model Analyzer's brute search mode supports [Automatic](config_search.md#automatic-configuration-search) and [Manual](config_search.md#manual-configuration-search) sweeping through different configurations for Triton models.
+
+Automatic configuration search is the default behavior when running Model
+Analyzer. To enable manual configuration search, the `--run-config-search-disable` flag
+should be provided in the CLI.
 
 ### Automatic Configuration Search
 
