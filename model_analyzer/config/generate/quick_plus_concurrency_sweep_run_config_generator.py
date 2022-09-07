@@ -171,8 +171,13 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     # We will need to create a yaml config to set each models
     # batch size/instances seperately
     def _find_batch_size(self, result: RunConfigResult) -> int:
-        return result.run_config().model_run_configs()[0].model_config(
-        ).get_config()['max_batch_size']
+        mc = result.run_config().model_run_configs()[0].model_config(
+        ).get_config()
+
+        batch_size = 1
+        if 'max_batch_size' in mc:
+            batch_size = mc['max_batch_size']
+        return batch_size
 
     def _find_instance_count(self, result: RunConfigResult) -> int:
         return result.run_config().model_run_configs()[0].model_config(

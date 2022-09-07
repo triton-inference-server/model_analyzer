@@ -105,14 +105,14 @@ class RunConfigGeneratorFactory:
             batching_config = BaseModelConfigGenerator.get_model_batching_support(config=command_config, client=client, gpus=gpus, model_name=model.model_name())
             batching_configs.append(batching_config)
 
-            dims = RunConfigGeneratorFactory._get_dimensions_for_model(batching_supported=batching_config.batching_supported)
+            dims = RunConfigGeneratorFactory._get_dimensions_for_model(is_batching_supported=batching_config.batching_supported)
             dimensions.add_dimensions(i, dims)
         #yapf: enable
 
         search_config = SearchConfig(dimensions=dimensions,
                                      radius=RADIUS,
                                      min_initialized=MIN_INITIALIZED,
-                                     batching_configs=batching_configs)
+                                     model_batching_configs=batching_configs)
 
         return search_config
 
@@ -139,8 +139,6 @@ class RunConfigGeneratorFactory:
     @staticmethod
     def _get_batching_not_supported_dimensions() -> List[SearchDimension]:
         return [
-            SearchDimension(f"concurrency",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension(f"instance_count",
                             SearchDimension.DIMENSION_TYPE_LINEAR)
         ]

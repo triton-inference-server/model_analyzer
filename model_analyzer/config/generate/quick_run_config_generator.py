@@ -322,11 +322,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config_from_profile_config(
             model_variant_name, self._config)
 
-        if 'concurrency-range' in dimension_values:
-            concurrency = dimension_values['concurrency']
-        else:
-            concurrency = 2 * dimension_values[
-                'instance_count'] * dimension_values['max_batch_size']
+        model_batch_size = dimension_values.get("max_batch_size", 1)
+        instance_count = dimension_values.get("instance_count", 1)
+
+        concurrency = 2 * model_batch_size * instance_count
 
         perf_config_params = {'batch-size': 1, 'concurrency-range': concurrency}
         perf_analyzer_config.update_config(perf_config_params)
