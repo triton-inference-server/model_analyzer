@@ -162,8 +162,8 @@ the maximal objective value within the specified constraints. In the majority of
 this will find greater than 90% of the maximum objective value (that could be found using a brute force search),
 while needing to search less than 10% of the configuration space.
 
-We will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency
-range (powers of 2, 1-1024) before generation of the summary reports.
+It will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency
+range before generation of the summary reports.
 
 ### Examples of Additional Model Config Parameters
 
