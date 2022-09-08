@@ -16,13 +16,14 @@ from typing import Dict, List, Union, Optional, Generator
 
 from .config_generator_interface import ConfigGeneratorInterface
 
-from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
-from model_analyzer.config.generate.search_config import SearchConfig
-from model_analyzer.config.generate.coordinate import Coordinate
-from model_analyzer.config.generate.coordinate_data import CoordinateData
-from model_analyzer.config.generate.neighborhood import Neighborhood
-from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
-from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from .base_model_config_generator import BaseModelConfigGenerator
+from .search_config import SearchConfig
+from .coordinate import Coordinate
+from .coordinate_data import CoordinateData
+from .neighborhood import Neighborhood
+from .brute_run_config_generator import BruteRunConfigGenerator
+from .model_variant_name_manager import ModelVariantNameManager
+from .model_profile_spec import ModelProfileSpec
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
@@ -30,7 +31,6 @@ from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 from model_analyzer.constants import LOGGER_NAME
@@ -47,7 +47,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 models: List[ConfigModelProfileSpec], client: TritonClient,
+                 models: List[ModelProfileSpec], client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
@@ -297,9 +297,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         if 'max_batch_size' in dimension_values:
             param_combo['max_batch_size'] = dimension_values['max_batch_size']
 
-        batching_config = self._search_config.get_model_batching_config(
-            model_num)
-        if batching_config.dynamic_batching_supported:
+        if self._models[model_num].supports_dynamic_batching():
             param_combo['dynamic_batching'] = {}
 
         model_config = BaseModelConfigGenerator.make_model_config(

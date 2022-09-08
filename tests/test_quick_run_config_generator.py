@@ -15,8 +15,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from model_analyzer.config.generate.base_model_config_generator import ModelBatchingConfig
-
 from .common import test_result_collector as trc
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.search_config import SearchConfig
@@ -25,12 +23,29 @@ from model_analyzer.config.generate.search_dimensions import SearchDimensions
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.config.generate.quick_run_config_generator import QuickRunConfigGenerator
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 
 
 class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
     def setUp(self):
-        mock_models = [ConfigModelProfileSpec(model_name="fake_model_name")]
+        fake_config = {
+            "name": "fake_model_name1",
+            "input": [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": [16]
+            }],
+            "max_batch_size": 4
+        }
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                return_value=fake_config):
+            self._mock_models = [
+                ModelProfileSpec(
+                    ConfigModelProfileSpec(model_name="fake_model_name"),
+                    MagicMock(), MagicMock(), MagicMock())
+            ]
 
         dims = SearchDimensions()
         dims.add_dimensions(0, [
@@ -42,13 +57,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
 
-        sc = SearchConfig(
-            dimensions=dims,
-            model_batching_configs=[ModelBatchingConfig(True, False)],
-            radius=5,
-            min_initialized=2)
+        sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
         self._qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                             mock_models, MagicMock(),
+                                             self._mock_models, MagicMock(),
                                              ModelVariantNameManager())
 
     def test_get_starting_coordinate(self):
@@ -60,10 +71,10 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 SearchDimension("y", SearchDimension.DIMENSION_TYPE_LINEAR, min=1),
                 SearchDimension("z", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=3)
         ])
-        sc = SearchConfig(dimensions=dims,model_batching_configs=[ModelBatchingConfig(True,True)],radius=2, min_initialized=2)
+        sc = SearchConfig(dimensions=dims,radius=2, min_initialized=2)
         #yapf: enable
         qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                       MagicMock(), MagicMock(),
+                                       self._mock_models, MagicMock(),
                                        ModelVariantNameManager())
         self.assertEqual(qrcg._get_starting_coordinate(), Coordinate([2, 1, 3]))
 
@@ -101,6 +112,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_GPU',
             }],
             'maxBatchSize': 32,
+            'dynamicBatching': {},
             'name': 'fake_model_name_config_0',
             'input': [{
                 "name": "INPUT__0",
@@ -111,7 +123,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         #yapf: enable
 
         with patch(
-                "model_analyzer.config.generate.base_model_config_generator.BaseModelConfigGenerator.get_base_model_config_dict",
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
                 return_value=fake_base_config):
             rc = qrcg._get_next_run_config()
 
@@ -136,43 +148,11 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
           - model 2 concurrency = 16*6*2 = 192
 
         Also,
+        - sequence batching should be on for model 1
         - dynamic batching should be on for model 2
         - existing values from the base model config should persist if they aren't overwritten
         - existing values for perf-analyzer config should persist if they aren't overwritten
         """
-        mock_models = [
-            ConfigModelProfileSpec(model_name="fake_model_name1",
-                                   perf_analyzer_flags={"model-version": 2}),
-            ConfigModelProfileSpec(model_name="fake_model_name2",
-                                   perf_analyzer_flags={"model-version": 3})
-        ]
-
-        dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("max_batch_size",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("instance_count",
-                            SearchDimension.DIMENSION_TYPE_LINEAR)
-        ])
-        dims.add_dimensions(1, [
-            SearchDimension("max_batch_size",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("instance_count",
-                            SearchDimension.DIMENSION_TYPE_LINEAR)
-        ])
-
-        sc = SearchConfig(dimensions=dims,
-                          model_batching_configs=[
-                              ModelBatchingConfig(True, False),
-                              ModelBatchingConfig(True, True)
-                          ],
-                          radius=5,
-                          min_initialized=2)
-        qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                       mock_models, MagicMock(),
-                                       ModelVariantNameManager())
-
-        qrcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
 
         #yapf: disable
         fake_base_config1 = {
@@ -182,7 +162,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 "dataType": "TYPE_FP32",
                 "dims": [16]
             }],
-            "max_batch_size": 4
+            "max_batch_size": 4,
+            "sequence_batching": {}
         }
         fake_base_config2 = {
             "name": "fake_model_name2",
@@ -201,6 +182,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_GPU',
             }],
             'maxBatchSize': 2,
+            'sequenceBatching': {},
             'name': 'fake_model_name1_config_0',
             'input': [{
                 "name": "INPUT__0",
@@ -226,8 +208,49 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         }
         #yapf: enable
 
+        mock_models = []
         with patch(
-                "model_analyzer.config.generate.base_model_config_generator.BaseModelConfigGenerator.get_base_model_config_dict"
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                return_value=fake_base_config1):
+            mock_models.append(
+                ModelProfileSpec(
+                    ConfigModelProfileSpec(
+                        model_name="fake_model_name1",
+                        perf_analyzer_flags={"model-version": 2}), MagicMock(),
+                    MagicMock(), MagicMock()))
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                return_value=fake_base_config2):
+            mock_models.append(
+                ModelProfileSpec(
+                    ConfigModelProfileSpec(
+                        model_name="fake_model_name2",
+                        perf_analyzer_flags={"model-version": 3}), MagicMock(),
+                    MagicMock(), MagicMock()))
+
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("max_batch_size",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR)
+        ])
+        dims.add_dimensions(1, [
+            SearchDimension("max_batch_size",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR)
+        ])
+
+        sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
+        qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
+                                       mock_models, MagicMock(),
+                                       ModelVariantNameManager())
+
+        qrcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict"
         ) as f:
             f.side_effect = [fake_base_config1, fake_base_config2]
             rc = qrcg._get_next_run_config()

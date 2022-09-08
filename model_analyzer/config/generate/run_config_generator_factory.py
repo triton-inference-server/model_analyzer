@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from .brute_run_config_generator import BruteRunConfigGenerator
 from .base_model_config_generator import BaseModelConfigGenerator
@@ -51,11 +52,16 @@ class RunConfigGeneratorFactory:
         A generator that implements ConfigGeneratorInterface and creates RunConfigs        
         """
 
+        new_models = []
+        for model in models:
+            new_models.append(
+                ModelProfileSpec(model, command_config, client, gpus))
+
         if (command_config.run_config_search_mode == "quick"):
             return RunConfigGeneratorFactory._create_quick_plus_concurrency_sweep_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
-                models=models,
+                models=new_models,
                 client=client,
                 result_manager=result_manager,
                 model_variant_name_manager=model_variant_name_manager)
@@ -63,7 +69,7 @@ class RunConfigGeneratorFactory:
             return RunConfigGeneratorFactory._create_brute_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
-                models=models,
+                models=new_models,
                 client=client,
                 model_variant_name_manager=model_variant_name_manager)
         else:
@@ -85,8 +91,7 @@ class RunConfigGeneratorFactory:
     def _create_quick_plus_concurrency_sweep_run_config_generator(
             command_config, gpus, models, client, result_manager,
             model_variant_name_manager):
-        search_config = RunConfigGeneratorFactory._create_search_config(
-            command_config, client=client, gpus=gpus)
+        search_config = RunConfigGeneratorFactory._create_search_config(models)
         return QuickPlusConcurrencySweepRunConfigGenerator(
             search_config=search_config,
             config=command_config,
@@ -97,22 +102,18 @@ class RunConfigGeneratorFactory:
             model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod
-    def _create_search_config(command_config, client, gpus):
+    def _create_search_config(models: List[ModelProfileSpec]) -> SearchConfig:
         dimensions = SearchDimensions()
-        batching_configs = []
-        #yapf: disable
-        for i, model in enumerate(command_config.profile_models):
-            batching_config = BaseModelConfigGenerator.get_model_batching_support(config=command_config, client=client, gpus=gpus, model_name=model.model_name())
-            batching_configs.append(batching_config)
 
-            dims = RunConfigGeneratorFactory._get_dimensions_for_model(is_batching_supported=batching_config.batching_supported)
+        #yapf: disable
+        for i, model in enumerate(models):
+            dims = RunConfigGeneratorFactory._get_dimensions_for_model(model.batching_supported())
             dimensions.add_dimensions(i, dims)
         #yapf: enable
 
         search_config = SearchConfig(dimensions=dimensions,
                                      radius=RADIUS,
-                                     min_initialized=MIN_INITIALIZED,
-                                     model_batching_configs=batching_configs)
+                                     min_initialized=MIN_INITIALIZED)
 
         return search_config
 

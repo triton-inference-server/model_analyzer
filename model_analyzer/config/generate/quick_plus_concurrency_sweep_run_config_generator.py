@@ -24,7 +24,7 @@ from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.run_config_result import RunConfigResult
@@ -47,7 +47,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 models: List[ConfigModelProfileSpec], client: TritonClient,
+                 models: List[ModelProfileSpec], client: TritonClient,
                  result_manager: ResultManager,
                  model_variant_name_manager: ModelVariantNameManager):
         """

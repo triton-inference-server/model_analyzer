@@ -13,8 +13,6 @@
 # limitations under the License.
 
 from .search_dimensions import SearchDimensions
-from .base_model_config_generator import ModelBatchingConfig
-from typing import List
 
 
 class NeighborhoodConfig:
@@ -77,14 +75,12 @@ class SearchConfig(NeighborhoodConfig):
     Defines all dimensions to search
     """
 
-    def __init__(self, dimensions: SearchDimensions,
-                 model_batching_configs: List[ModelBatchingConfig], radius: int,
+    def __init__(self, dimensions: SearchDimensions, radius: int,
                  min_initialized: int):
         """
         Parameters
         ----------
         dimensions: SearchDimensions
-        model_batching_configs: per-model List of ModelBatchingConfig
         radius: int
             All points within distance=radius from a location will be in
             each neighborhood
@@ -96,10 +92,6 @@ class SearchConfig(NeighborhoodConfig):
         super().__init__(dimensions=dimensions,
                          radius=radius,
                          min_initialized=min_initialized)
-        self._model_batching_configs = model_batching_configs
-
-    def get_model_batching_config(self, model_num: int) -> ModelBatchingConfig:
-        return self._model_batching_configs[model_num]
 
     def get_neighborhood_config(self, radius=None):
         """

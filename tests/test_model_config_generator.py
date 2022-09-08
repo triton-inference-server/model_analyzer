@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.config.generate.model_config_generator_factory import ModelConfigGeneratorFactory
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.triton.model.model_config import ModelConfig
 from .common import test_result_collector as trc
@@ -814,6 +815,11 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         self.mock_model_config.start()
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
+        profile_models = []
+        for model in config.profile_models:
+            profile_models.append(
+                ModelProfileSpec(model, config, MagicMock(), MagicMock()))
+
         # Fake out a client that can return a 'model_config' dict with
         # a valid name (only used by remote mode)
         #
@@ -824,7 +830,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             mcg = ModelConfigGeneratorFactory.create_model_config_generator(
                 config,
                 MagicMock(),
-                config.profile_models[0],
+                profile_models[0],
                 fake_client,
                 ModelVariantNameManager(),
                 default_only=default_only,
