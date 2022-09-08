@@ -1,4 +1,4 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,33 +18,29 @@ from model_analyzer.triton.model.model_config import ModelConfig
 
 
 class ModelProfileSpec(ConfigModelProfileSpec):
-    # FIXME docs
-    def __init__(self, spec, config, client, gpus):
+    """
+    The profile configuration and default model config for a single model to be profiled
+    """
 
-        # FIXME proper way to do this
-        self._model_name = spec._model_name
-        self._cpu_only = spec._cpu_only
-        self._objectives = spec._objectives
-        self._constraints = spec._constraints
-        self._parameters = spec._parameters
-        self._model_config_parameters = spec._model_config_parameters
-        self._perf_analyzer_flags = spec._perf_analyzer_flags
-        self._triton_server_flags = spec._triton_server_flags
-        self._triton_server_environment = spec._triton_server_environment
+    def __init__(self, spec: ConfigModelProfileSpec, config, client, gpus):
+        self.__dict__ = deepcopy(spec.__dict__)
 
         self._default_model_config = ModelConfig.create_model_config_dict(
             config, client, gpus, config.model_repository, spec.model_name())
 
     def get_default_config(self) -> dict:
+        """ Returns the default configuration for this model """
         return deepcopy(self._default_model_config)
 
     def supports_batching(self) -> bool:
+        """ Returns True if this model supports batching. Else False """
         if "max_batch_size" not in self._default_model_config or self._default_model_config[
                 'max_batch_size'] == 0:
             return False
         return True
 
     def supports_dynamic_batching(self) -> bool:
+        """ Returns True if this model supports dynamic batching. Else False """
         supports_dynamic_batching = self.supports_batching()
 
         if "sequence_batching" in self._default_model_config:
