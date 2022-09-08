@@ -33,7 +33,7 @@ Triton Inference Server.
 
 ## Features
 
-* [Automatic and manual configuration search](docs/config_search.md): Model Analyzer can
+* [Brute and Quick search](docs/config_search.md): Model Analyzer can
 help you automatically find the optimal settings for
 [Max Batch Size](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#maximum-batch-size),
 [Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#dynamic-batcher), and
@@ -41,7 +41,7 @@ help you automatically find the optimal settings for
 parameters of your model configuration. Model Analyzer utilizes 
 [Performance Analyzer](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md) 
 to test the model with different concurrency and batch sizes of requests. Using
-[Manual Config Search](docs/config_search.md#manual-configuration-search), you can create manual sweeps for every parameter that can be specified in the model configuration.
+[Manual Config Search](docs/config_search.md#manual-brute-search), you can create manual sweeps for every parameter that can be specified in the model configuration.
 
 * [Detailed and summary reports](docs/report.md): Model Analyzer is able to generate
 summarized and detailed reports that can help you better understand the trade-offs
