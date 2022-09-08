@@ -64,7 +64,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         """
         self._search_config = search_config
         self._config = config
-        self._gpus = gpus
         self._models = models
         self._client = client
         self._model_variant_name_manager = model_variant_name_manager
@@ -302,11 +301,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         model_config = BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
-            config=self._config,
-            client=self._client,
-            gpus=self._gpus,
             model=self._models[model_num],
-            model_repository=self._config.model_repository,
             model_variant_name_manager=self._model_variant_name_manager)
         return model_config
 

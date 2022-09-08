@@ -16,7 +16,7 @@ from .config_generator_interface import ConfigGeneratorInterface
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
-
+from .model_profile_spec import ModelProfileSpec
 import abc
 import logging
 
@@ -26,8 +26,8 @@ logger = logging.getLogger(LOGGER_NAME)
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
     """ Base class for generating model configs """
 
-    def __init__(self, config, gpus, model, client, model_variant_name_manager,
-                 default_only, early_exit_enable):
+    def __init__(self, config, gpus, model: ModelProfileSpec, client,
+                 model_variant_name_manager, default_only, early_exit_enable):
         """
         Parameters
         ----------
@@ -44,10 +44,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             If true, the generator can early exit if throughput plateaus
         """
         self._config = config
-        self._gpus = gpus
         self._client = client
         self._model_variant_name_manager = model_variant_name_manager
-        self._model_repository = config.model_repository
         self._base_model = model
         self._base_model_name = model.model_name()
         self._remote_mode = config.triton_launch_mode == 'remote'
@@ -145,16 +143,12 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     def _make_direct_mode_model_config(self, param_combo):
         return BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
-            config=self._config,
-            client=self._client,
-            gpus=self._gpus,
             model=self._base_model,
-            model_repository=self._model_repository,
             model_variant_name_manager=self._model_variant_name_manager)
 
     @staticmethod
-    def make_model_config(param_combo, config, client, gpus, model,
-                          model_repository, model_variant_name_manager):
+    def make_model_config(param_combo, model: ModelProfileSpec,
+                          model_variant_name_manager):
         """
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config
@@ -174,8 +168,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         """
         model_name = model.model_name()
 
-        model_config_dict = BaseModelConfigGenerator.get_base_model_config_dict(
-            config, client, gpus, model_repository, model_name)
+        model_config_dict = model.get_default_config()
 
         logger_str = []
         if param_combo is not None:
@@ -208,29 +201,6 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_config.set_cpu_only(model.cpu_only())
 
         return model_config
-
-    @staticmethod
-    def get_base_model_config_dict(config, client, gpus, model_repository,
-                                   model_name):
-        """
-        Attempts to create a base model config dict from config.pbtxt, if one exists
-        If the config.pbtxt is not present, we will load a Triton Server with the
-        base model and have it create a default config for MA, if possible
-
-        Parameters:
-        -----------
-        config: ModelAnalyzerConfig
-        client: TritonClient
-        gpus: List of GPUDevices
-        model_repository: str
-            path to the model repository on the file system
-        model_name: str
-            name of the base model
-        """
-        model_config_dict = ModelConfig.create_model_config_dict(
-            config, client, gpus, model_repository, model_name)
-
-        return model_config_dict
 
     def _reset_max_batch_size(self):
         self._max_batch_size_warning_printed = False

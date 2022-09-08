@@ -107,7 +107,7 @@ class RunConfigGeneratorFactory:
 
         #yapf: disable
         for i, model in enumerate(models):
-            dims = RunConfigGeneratorFactory._get_dimensions_for_model(model.batching_supported())
+            dims = RunConfigGeneratorFactory._get_dimensions_for_model(model.supports_batching())
             dimensions.add_dimensions(i, dims)
         #yapf: enable
 
