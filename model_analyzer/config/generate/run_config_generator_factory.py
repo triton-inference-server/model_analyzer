@@ -121,7 +121,7 @@ class RunConfigGeneratorFactory:
     def _get_dimensions_for_model(
             is_batching_supported: bool) -> List[SearchDimension]:
 
-        if (is_batching_supported):  # If support max batch size
+        if (is_batching_supported):
             return RunConfigGeneratorFactory._get_batching_supported_dimensions(
             )
         else:
