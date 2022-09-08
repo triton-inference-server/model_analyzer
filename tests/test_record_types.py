@@ -52,7 +52,7 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         self.more_is_better_types = {
             record_types[k] for k in [
                 'perf_throughput', 'gpu_free_memory', 'gpu_utilization',
-                'cpu_available_ram', 'gpu_power_usage'
+                'cpu_available_ram', 'gpu_power_usage', 'gpu_total_memory'
             ]
         }
 

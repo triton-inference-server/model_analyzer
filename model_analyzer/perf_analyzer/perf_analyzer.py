@@ -33,6 +33,11 @@ from model_analyzer.record.types.perf_server_compute_infer \
 from model_analyzer.record.types.perf_server_compute_output \
     import PerfServerComputeOutput
 
+from model_analyzer.record.types.gpu_utilization import GPUUtilization
+from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
+from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
+from model_analyzer.record.types.gpu_total_memory import GPUTotalMemory
+
 from model_analyzer.constants import \
     INTERVAL_SLEEP_TIME, LOGGER_NAME, MEASUREMENT_REQUEST_COUNT_STEP, \
     MEASUREMENT_WINDOW_STEP, PERF_ANALYZER_MEASUREMENT_WINDOW, \
@@ -56,6 +61,9 @@ class PerfAnalyzer:
     with perf_analyzer.
     """
 
+    GPU_METRIC_UUID = 0
+    GPU_METRIC_VALUE = 1
+
     #yapf: disable
     PA_SUCCESS, PA_FAIL, PA_RETRY = 0, 1, 2
 
@@ -74,6 +82,13 @@ class PerfAnalyzer:
         ["perf_server_compute_input",  "Server Compute Input",  PerfServerComputeInput,  1000],
         ["perf_server_compute_output", "Server Compute Output", PerfServerComputeOutput, 1000]
     ]
+
+    gpu_metric_table = [
+        ["gpu_utilization",            "Avg GPU Utilizations",    GPUUtilization],
+        ["gpu_power_usage",            "Avg GPU Power Usages",    GPUPowerUsage],
+        ["gpu_used_memory",            "Max GPU Memory Usages",   GPUUsedMemory],
+        ["gpu_total_memory",           "Total GPU Memory Usages", GPUTotalMemory]
+    ]
     #yapf: enable
 
     @staticmethod
@@ -83,6 +98,14 @@ class PerfAnalyzer:
             for perf_metric in PerfAnalyzer.perf_metric_table
         ]
         return perf_metrics
+
+    @staticmethod
+    def get_gpu_metrics():
+        gpu_metrics = [
+            gpu_metric[PerfAnalyzer.RECORD_CLASS]
+            for gpu_metric in PerfAnalyzer.gpu_metric_table
+        ]
+        return gpu_metrics
 
     def __init__(self, path, config, max_retries, timeout, max_cpu_util):
         """
@@ -407,21 +430,80 @@ class PerfAnalyzer:
         Extracts the requested metrics from the CSV's row and creates a list of Records
         """
         perf_records = []
-        for perf_metric in PerfAnalyzer.perf_metric_table:
-            if self._is_perf_metric_requested_and_in_row(
-                    perf_metric, requested_metrics, row_metrics):
-                value = float(row_metrics[perf_metric[PerfAnalyzer.CSV_STRING]]
-                             ) / perf_metric[PerfAnalyzer.REDUCTION_FACTOR]
 
-                perf_records.append(
-                    perf_metric[PerfAnalyzer.RECORD_CLASS](value))
+        perf_metrics, perf_values = self._find_requested_perf_metrics(
+            requested_metrics, row_metrics)
+        perf_records = self._add_perf_metrics_to_records(
+            perf_metrics, perf_values, perf_records)
+
+        gpu_metrics, gpu_values = self._find_requested_gpu_metrics(
+            requested_metrics, row_metrics)
+        perf_records = self._add_gpu_metrics_to_records(gpu_metrics, gpu_values,
+                                                        perf_records)
 
         return perf_records
 
-    def _is_perf_metric_requested_and_in_row(self, perf_metric,
-                                             requested_metrics, row_metrics):
-        tag_match = any(
-            perf_metric[PerfAnalyzer.METRIC_TAG] in requested_metric.tag
-            for requested_metric in requested_metrics)
+    def _find_requested_perf_metrics(self, requested_metrics, row_metrics):
+        perf_metrics = []
+        values = []
+        for perf_metric in PerfAnalyzer.perf_metric_table:
+            if self._is_metric_requested_and_in_row(perf_metric,
+                                                    requested_metrics,
+                                                    row_metrics):
+                value = float(row_metrics[perf_metric[PerfAnalyzer.CSV_STRING]]
+                             ) / perf_metric[PerfAnalyzer.REDUCTION_FACTOR]
 
-        return tag_match and perf_metric[PerfAnalyzer.CSV_STRING] in row_metrics
+                perf_metrics.append(perf_metric)
+                values.append(value)
+
+        return perf_metrics, values
+
+    def _add_perf_metrics_to_records(self, perf_metrics, perf_values,
+                                     perf_records):
+        for i, perf_metric in enumerate(perf_metrics):
+            perf_records.append(perf_metric[PerfAnalyzer.RECORD_CLASS](
+                perf_values[i]))
+
+        return perf_records
+
+    def _find_requested_gpu_metrics(self, requested_metrics, row_metrics):
+        # GPU metrics have the following format: UUID0:value0;UUID1:value1...
+        gpu_metrics = []
+        gpu_values = []
+        for gpu_metric in PerfAnalyzer.gpu_metric_table:
+            if self._is_metric_requested_and_in_row(gpu_metric,
+                                                    requested_metrics,
+                                                    row_metrics):
+                gpu_metric_string = row_metrics[gpu_metric[
+                    PerfAnalyzer.CSV_STRING]]
+
+                gpu_metric_string_tuples = gpu_metric_string.split(';')
+
+                gpu_tuples = []
+                for gpu_metric_string_tuple in gpu_metric_string_tuples:
+                    gpu_metric_tuple = gpu_metric_string_tuple.split(':')
+                    gpu_tuples.append(
+                        (gpu_metric_tuple[PerfAnalyzer.GPU_METRIC_UUID],
+                         gpu_metric_tuple[PerfAnalyzer.GPU_METRIC_VALUE]))
+
+                gpu_metrics.append(gpu_metric)
+                gpu_values.append(gpu_tuples)
+
+        return gpu_metrics, gpu_values
+
+    def _add_gpu_metrics_to_records(self, gpu_metrics, gpu_values,
+                                    perf_records):
+        for i, gpu_metric in enumerate(gpu_metrics):
+            for gpu_tuple in gpu_values[i]:
+                perf_records.append(gpu_metric[PerfAnalyzer.RECORD_CLASS](
+                    value=float(gpu_tuple[PerfAnalyzer.GPU_METRIC_VALUE]),
+                    device_uuid=int(gpu_tuple[PerfAnalyzer.GPU_METRIC_UUID])))
+
+        return perf_records
+
+    def _is_metric_requested_and_in_row(self, metric, requested_metrics,
+                                        row_metrics):
+        tag_match = any(metric[PerfAnalyzer.METRIC_TAG] in requested_metric.tag
+                        for requested_metric in requested_metrics)
+
+        return tag_match and metric[PerfAnalyzer.CSV_STRING] in row_metrics

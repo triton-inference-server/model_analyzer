@@ -50,6 +50,12 @@ from model_analyzer.record.types.perf_server_compute_infer \
     import PerfServerComputeInfer
 from model_analyzer.record.types.perf_server_compute_output \
     import PerfServerComputeOutput
+
+from model_analyzer.record.types.gpu_utilization import GPUUtilization
+from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
+from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
+from model_analyzer.record.types.gpu_total_memory import GPUTotalMemory
+
 from .common import test_result_collector as trc
 from model_analyzer.constants import PERF_ANALYZER_MEASUREMENT_WINDOW, MEASUREMENT_WINDOW_STEP, PERF_ANALYZER_MINIMUM_REQUEST_COUNT, MEASUREMENT_REQUEST_COUNT_STEP
 
@@ -237,7 +243,11 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.server.start()
         self.client.wait_for_server_ready(num_retries=1)
 
-        pa_csv_mock = """Concurrency,Inferences/Second,Client Send,Network+Server Send/Recv,Server Queue,Server Compute Input,Server Compute Infer,Server Compute Output,Client Recv,p50 latency,p90 latency,p95 latency,p99 latency,Avg latency,request/response,response wait\n1,46.8,2,187,18,34,65,16,1,4600,4700,4800,4900,5000,3,314"""
+        pa_csv_mock = """Concurrency,Inferences/Second,Client Send,Network+Server Send/Recv,Server Queue,Server Compute Input,Server Compute Infer,Server Compute Output,"""
+        pa_csv_mock += """Client Recv,p50 latency,p90 latency,p95 latency,p99 latency,Avg latency,request/response,response wait,"""
+        pa_csv_mock += """Avg GPU Utilizations,Avg GPU Power Usages,Max GPU Memory Usages,Total GPU Memory Usages\n"""
+        pa_csv_mock += """1,46.8,2,187,18,34,65,16,1,4600,4700,4800,4900,5000,3,314,"""
+        pa_csv_mock += """1:80.9;2:90.1;3:74.5,1:91.2;2:100,1:1000,7:1500"""
 
         # Test avg latency parsing
         perf_metrics = [PerfLatencyAvg]
@@ -359,10 +369,68 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.016)
 
+        # Test Avg GPU Utilizations
+        gpu_metrics = [GPUUtilization]
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(gpu_metrics)
+
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 3)
+        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 80.9)
+        self.assertEqual(records[TEST_MODEL_NAME][1].device_uuid(), 2)
+        self.assertEqual(records[TEST_MODEL_NAME][1].value(), 90.1)
+        self.assertEqual(records[TEST_MODEL_NAME][2].device_uuid(), 3)
+        self.assertEqual(records[TEST_MODEL_NAME][2].value(), 74.5)
+
+        # Test GPU Power Usages
+        gpu_metrics = [GPUPowerUsage]
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(gpu_metrics)
+
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 2)
+        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 91.2)
+        self.assertEqual(records[TEST_MODEL_NAME][1].device_uuid(), 2)
+        self.assertEqual(records[TEST_MODEL_NAME][1].value(), 100)
+
+        # Test Max GPU Memory Usages
+        gpu_metrics = [GPUUsedMemory]
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(gpu_metrics)
+
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 1000)
+
+        # Test Total GPU Memory
+        gpu_metrics = [GPUTotalMemory]
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(gpu_metrics)
+
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(), 7)
+        self.assertEqual(records[TEST_MODEL_NAME][0].value(), 1500)
+
         # # Test parsing for subset
         perf_metrics = [
             PerfThroughput, PerfLatencyAvg, PerfLatencyP90, PerfLatencyP95,
-            PerfLatencyP99
+            PerfLatencyP99, GPUTotalMemory, GPUPowerUsage
         ]
 
         with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
@@ -371,14 +439,15 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(perf_metrics)
 
         records = perf_analyzer.get_records()
-        self.assertEqual(len(records[TEST_MODEL_NAME]), 5)
+        # GPUPowerUsage has 2 devices, so we have 8 (not 7) records
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 8)
 
         # Test no exceptions are raised when nothing can be parsed
         pa_csv_empty = ""
         perf_metrics = [
             PerfThroughput, PerfClientSendRecv, PerfClientResponseWait,
             PerfServerQueue, PerfServerComputeInfer, PerfServerComputeInput,
-            PerfServerComputeOutput
+            PerfServerComputeOutput, GPUTotalMemory
         ]
         with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
                    mock_open(read_data=pa_csv_mock)), patch(
