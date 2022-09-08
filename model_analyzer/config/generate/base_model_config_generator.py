@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from .config_generator_interface import ConfigGeneratorInterface
-
+from typing import List, Union
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
 from .model_profile_spec import ModelProfileSpec
@@ -55,11 +56,11 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._model_name_index = 0
         self._generator_started = False
         self._max_batch_size_warning_printed = False
-        self._last_results = []
+        self._last_results: List[RunConfigMeasurement] = []
         # Contains the max throughput from each provided list of measurements
         # since the last time we stepped max_batch_size
         #
-        self._curr_max_batch_size_throughputs = []
+        self._curr_max_batch_size_throughputs: List[float] = []
 
     def _is_done(self):
         """ Returns true if this generator is done generating configs """
@@ -118,7 +119,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             lastest_throughput > prev_throughput
             for prev_throughput in self._curr_max_batch_size_throughputs[:-1])
 
-    def _get_last_results_max_throughput(self):
+    def _get_last_results_max_throughput(self) -> Union[float, None]:
         throughputs = [
             m.get_non_gpu_metric_value('perf_throughput')
             for m in self._last_results

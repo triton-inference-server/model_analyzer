@@ -286,7 +286,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self._coordinate_to_measure, model_num)
 
         kind = "KIND_CPU" if self._models[model_num].cpu_only() else "KIND_GPU"
-        param_combo = {
+        param_combo: dict = {
             'instance_group': [{
                 'count': dimension_values['instance_count'],
                 'kind': kind,
