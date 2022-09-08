@@ -84,7 +84,8 @@ class TestConfigGenerator:
             'perf_analyzer_flags': {
                 'measurement-mode': 'count_windows',
                 'measurement-interval': 50,
-                'streaming': ['header1:value1', 'header2:value2']
+                'streaming': True,
+                'shape': ['INPUT__0:1,2,3', 'FAKE_INPUT2:4,5,6']
             }
         }
         with open('./config-additive-args-count-no-adjust.yml', 'w') as f:

@@ -49,7 +49,7 @@ class PerfAnalyzerConfig:
 
     input_to_verbose = ['verbose', 'extra-verbose', 'verbose-csv']
 
-    additive_args = ['input-data', 'shape', 'streaming']
+    additive_args = ['input-data', 'shape']
 
     boolean_args = [
         'streaming', 'async', 'sync', 'binary-search', 'ssl-grpc-use-ssl'
@@ -326,6 +326,9 @@ class PerfAnalyzerConfig:
         """
         Parse perf analyzer long args that should not add a value to the cli string
         """
+        assert type(value) in [
+            str, type(None)
+        ], f"Data type for arg {key} must be a (boolean) string instead of {type(value)}"
         if value != None and value.lower() == "true":
             temp_args.append(f'--{key}')
         return temp_args
