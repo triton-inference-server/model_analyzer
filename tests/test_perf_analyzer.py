@@ -247,7 +247,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         pa_csv_mock += """Client Recv,p50 latency,p90 latency,p95 latency,p99 latency,Avg latency,request/response,response wait,"""
         pa_csv_mock += """Avg GPU Utilizations,Avg GPU Power Usages,Max GPU Memory Usages,Total GPU Memory Usages\n"""
         pa_csv_mock += """1,46.8,2,187,18,34,65,16,1,4600,4700,4800,4900,5000,3,314,"""
-        pa_csv_mock += """1:80.9;2:90.1;3:74.5,1:91.2;2:100,1:1000,7:1500"""
+        pa_csv_mock += """1:80.9;2:90.1;3:74.5;,1:91.2;2:100;,1:1000;,7:1500"""
 
         # Test avg latency parsing
         perf_metrics = [PerfLatencyAvg]
@@ -450,9 +450,27 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             PerfServerComputeOutput, GPUTotalMemory
         ]
         with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
-                   mock_open(read_data=pa_csv_mock)), patch(
+                   mock_open(read_data=pa_csv_empty)), patch(
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             self.assertFalse(perf_analyzer.run(perf_metrics))
+
+        # Test case where PA returns blank values for some GPU metrics
+        pa_csv_mock = """Concurrency,Inferences/Second,Client Send,Network+Server Send/Recv,Server Queue,Server Compute Input,Server Compute Infer,Server Compute Output,"""
+        pa_csv_mock += """Client Recv,p50 latency,p90 latency,p95 latency,p99 latency,Avg latency,request/response,response wait,"""
+        pa_csv_mock += """Avg GPU Utilizations,Avg GPU Power Usages,Max GPU Memory Usages,Total GPU Memory Usages\n"""
+        pa_csv_mock += """1,46.8,2,187,18,34,65,16,1,4600,4700,4800,4900,5000,3,314,"""
+        pa_csv_mock += """,,,7:1500"""
+
+        # Test Max GPU Memory Usages
+        gpu_metrics = [GPUUsedMemory]
+
+        with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
+                   mock_open(read_data=pa_csv_mock)), patch(
+                       'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
+            perf_analyzer.run(gpu_metrics)
+
+        records = perf_analyzer.get_records()
+        self.assertEqual(len(records[TEST_MODEL_NAME]), 0)
 
         # Test exception handling
         self.perf_mock.set_perf_analyzer_return_code(1)
