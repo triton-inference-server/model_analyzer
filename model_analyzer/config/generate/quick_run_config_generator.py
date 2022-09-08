@@ -16,14 +16,14 @@ from typing import Dict, List, Union, Optional, Generator
 
 from .config_generator_interface import ConfigGeneratorInterface
 
-from .base_model_config_generator import BaseModelConfigGenerator
-from .search_config import SearchConfig
-from .coordinate import Coordinate
-from .coordinate_data import CoordinateData
-from .neighborhood import Neighborhood
-from .brute_run_config_generator import BruteRunConfigGenerator
-from .model_variant_name_manager import ModelVariantNameManager
-from .model_profile_spec import ModelProfileSpec
+from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
+from model_analyzer.config.generate.search_config import SearchConfig
+from model_analyzer.config.generate.coordinate import Coordinate
+from model_analyzer.config.generate.coordinate_data import CoordinateData
+from model_analyzer.config.generate.neighborhood import Neighborhood
+from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig

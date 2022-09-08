@@ -14,11 +14,10 @@
 
 from typing import List
 
-from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
-
 from .config_generator_interface import ConfigGeneratorInterface
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 

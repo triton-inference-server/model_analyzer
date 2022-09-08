@@ -107,12 +107,12 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         expected_model_config = {
             'cpu_only': False,
+            'dynamicBatching': {},
             'instanceGroup': [{
                 'count': 8,
                 'kind': 'KIND_GPU',
             }],
             'maxBatchSize': 32,
-            'dynamicBatching': {},
             'name': 'fake_model_name_config_0',
             'input': [{
                 "name": "INPUT__0",
@@ -122,10 +122,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         }
         #yapf: enable
 
-        with patch(
-                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
-                return_value=fake_base_config):
-            rc = qrcg._get_next_run_config()
+        rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
         model_config = rc.model_run_configs()[0].model_config()
@@ -249,11 +246,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         qrcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
 
-        with patch(
-                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict"
-        ) as f:
-            f.side_effect = [fake_base_config1, fake_base_config2]
-            rc = qrcg._get_next_run_config()
+        rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 2)
         mc1 = rc.model_run_configs()[0].model_config()
