@@ -26,7 +26,7 @@ $ model-analyzer -h
 Options like `-q`, `--quiet` and `-v`, `--verbose` are global and apply to all
 model analyzer subcommands.
 
-## Model Analyze Modes
+## Model Analyzer Modes
 
 The `-m` or `--mode` flag is global and is accessible to all subcommands. It tells the model analyzer the context
 in which it is being run. Currently model analyzer supports 2 modes.
@@ -86,7 +86,7 @@ $ model-analyzer profile -h
 
 Depending on the command line or YAML config options provided, the `profile`
 subcommand will either perform a
-[manual](./config_search.md#manual-configuration-search), [automatic](./config_search.md#automatic-configuration-search), or
+[manual](./config_search.md#manual-brute-search), [automatic](./config_search.md#automatic-brute-search), or
 [quick](./config_search.md#quick-configuration-search) search over perf analyzer
 and model config file parameters. For each combination of [model config
 parameters](./config.md#model-config-parameters) (e.g. _max batch size_, _dynamic batching_, and _instance count_), it will run tritonserver and perf analyzer instances with
@@ -163,7 +163,7 @@ profile_models:
         max_queue_delay_microseconds: [100]
 ```
 
-5. Apply objectives and constraints to sort and filter results in summary plots and tables using yaml config file.
+6. Apply objectives and constraints to sort and filter results in summary plots and tables using yaml config file.
 
 ```
 $ model-analyzer profile -f /path/to/config.yaml

@@ -165,6 +165,9 @@ profile_models: <comma-delimited-string-list>
 # List of GPU UUIDs to be used for the profiling. Use 'all' to profile all the GPUs visible by CUDA.
 [ gpus: <string|comma-delimited-list-string> | default: 'all' ]
 
+# Search mode. Options are "brute" and "quick"
+[ run_config_search_mode: <string> | default: brute]
+
 # Minimum concurrency used for the automatic config search.
 [ run_config_search_min_concurrency: <int> | default: 1 ]
 
