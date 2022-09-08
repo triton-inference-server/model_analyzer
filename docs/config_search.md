@@ -28,7 +28,7 @@ let it [Automatically](config_search.md#automatic-brute-search) sweep through co
 ### Automatic Brute Search
 
 Automatic configuration search is the default behavior when running Model
-Analyzer without specifying manually specifying what values to search. The parameters
+Analyzer without manually specifying what values to search. The parameters
 that are automatically searched are
 [`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#maximum-batch-size)
 and
