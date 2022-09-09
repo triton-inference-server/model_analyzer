@@ -256,7 +256,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         pa_csv_mock += """Client Recv,p50 latency,p90 latency,p95 latency,p99 latency,Avg latency,request/response,response wait,"""
         pa_csv_mock += """Avg GPU Utilization,Avg GPU Power Usage,Max GPU Memory Usage,Total GPU Memory\n"""
         pa_csv_mock += """1,46.8,2,187,18,34,65,16,1,4600,4700,4800,4900,5000,3,314,"""
-        pa_csv_mock += """GPU-aaf4fea0:0.809;GPU-aaf4fea1:0.901;GPU-aaf4fea2:0.745;,GPU-aaf4fea0:91.2;GPU-aaf4fea1:100;,GPU-aaf4fea0:1000000000;,GPU-aaf4fea0:1500000000"""
+        pa_csv_mock += """GPU-aaf4fea0:0.809;GPU-aaf4fea1:0.901;GPU-aaf4fea2:0.745;,GPU-aaf4fea0:91.2;GPU-aaf4fea1:100;,GPU-aaf4fea0:1000000000;GPU-aaf4fea1:2000000000,GPU-aaf4fea0:1500000000;GPU-aaf4fea2:3000000000"""
 
         # Test avg latency parsing. GPU metric is ignored for get_records()
         perf_metrics = [PerfLatencyAvg, GPUUtilization]
@@ -410,7 +410,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         self.assertEqual(records[1].device_uuid(), "GPU-aaf4fea1")
         self.assertEqual(records[1].value(), 100)
 
-        # Test Max GPU Memory Usage
+        # Test GPU Memory Usage
         gpu_metrics = [GPUUsedMemory]
 
         with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
@@ -419,12 +419,17 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
-        self.assertEqual(len(records), 1)
+        self.assertEqual(len(records), 2)
         self.assertEqual(records[0].device_uuid(), "GPU-aaf4fea0")
         self.assertEqual(records[0].value(), 1000)
+        self.assertEqual(records[1].device_uuid(), "GPU-aaf4fea1")
+        self.assertEqual(records[1].value(), 2000)
 
-        # Test Free GPU Memory
-        gpu_metrics = [GPUFreeMemory]
+        # Test Free GPU Memory (Must be measured with GPUUsedMemory)
+        # GPU a0 has 1500 total memory and 1000 used memory, so free == 500
+        # GPU a1 has no value reported for total, so it is ignored
+        # GPU a2 has no value reported for used, so it is ignored
+        gpu_metrics = [GPUFreeMemory, GPUUsedMemory]
 
         with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
                    mock_open(read_data=pa_csv_mock)), patch(
@@ -432,14 +437,17 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
             perf_analyzer.run(gpu_metrics)
 
         records = perf_analyzer.get_gpu_records()
-        self.assertEqual(len(records), 1)
-        self.assertEqual(records[0].device_uuid(), "GPU-aaf4fea0")
-        self.assertEqual(records[0].value(), 1500)
+        self.assertEqual(len(records), 3)
+        self.assertTrue(type(records[0]) == GPUUsedMemory)
+        self.assertTrue(type(records[1]) == GPUUsedMemory)
+        self.assertTrue(type(records[2]) == GPUFreeMemory)
+        self.assertEqual(records[2].device_uuid(), "GPU-aaf4fea0")
+        self.assertEqual(records[2].value(), 1500 - 1000)
 
         # # Test parsing for subset
         perf_metrics = [
             PerfThroughput, PerfLatencyAvg, PerfLatencyP90, PerfLatencyP95,
-            PerfLatencyP99, GPUFreeMemory, GPUPowerUsage
+            PerfLatencyP99, GPUUtilization, GPUPowerUsage
         ]
 
         with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
@@ -450,9 +458,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         perf_records = perf_analyzer.get_records()
         gpu_records = perf_analyzer.get_gpu_records()
 
-        # GPUPowerUsage has 2 devices, so we have 3 (not 2) records
         self.assertEqual(len(perf_records[TEST_MODEL_NAME]), 5)
-        self.assertEqual(len(gpu_records), 3)
+        # GPUPowerUsage has 2 devices and GPUUtilization has 3
+        self.assertEqual(len(gpu_records), 5)
 
         # Test no exceptions are raised when nothing can be parsed
         pa_csv_empty = ""

@@ -38,7 +38,6 @@ from model_analyzer.record.record import Record
 from model_analyzer.record.types.gpu_utilization import GPUUtilization
 from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
 from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
-from model_analyzer.record.types.gpu_total_memory import GPUTotalMemory
 from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
 
 from model_analyzer.constants import \
@@ -90,7 +89,6 @@ class PerfAnalyzer:
         ["gpu_utilization",            "Avg GPU Utilization",   GPUUtilization,          "0.01"],
         ["gpu_power_usage",            "Avg GPU Power Usage",   GPUPowerUsage,              "1"],
         ["gpu_used_memory",            "Max GPU Memory Usage",  GPUUsedMemory,        "1000000"],
-        # FIXME free vs total
         ["gpu_free_memory",            "Total GPU Memory",      GPUFreeMemory,        "1000000"]
     ]
     #yapf: enable
@@ -497,7 +495,28 @@ class PerfAnalyzer:
 
                     gpu_records.append(record)
 
+        self._cleanup_gpu_records(gpu_records)
         return gpu_records
+
+    def _cleanup_gpu_records(self, gpu_records):
+        # Recalculate GPUFreeMemory by removing the value of the associated GPUUsedMemory
+        # Remove any GPUFreeMemory records that don't have a matching GPUUsedMemory
+        indexes_to_remove = []
+        for i, record in enumerate(gpu_records):
+            if type(record) == GPUFreeMemory:
+                # Find matching UUID UsedMemory
+                found = False
+                for other_record in gpu_records:
+                    if type(other_record
+                           ) == GPUUsedMemory and record.device_uuid(
+                           ) == other_record.device_uuid():
+                        found = True
+                        record._value = record.value() - other_record.value()
+                        break
+                if not found:
+                    indexes_to_remove.append(i)
+        for i in reversed(indexes_to_remove):
+            del gpu_records[i]
 
     def _is_metric_requested_and_in_row(self, metric: List[object],
                                         requested_metrics: List[Record],
