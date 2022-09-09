@@ -184,18 +184,18 @@ class PerfAnalyzer:
 
         return self.PA_SUCCESS
 
-    def get_records(self):
+    def get_perf_records(self):
         """
         Returns
         -------
         The perf records from the last perf_analyzer run
         """
 
-        if not self._perf_records:
-            raise TritonModelAnalyzerException(
-                "Attempted to get perf_analyzer results"
-                "without calling run first.")
-        return self._perf_records
+        if self._perf_records:
+            return self._perf_records
+        raise TritonModelAnalyzerException(
+            "Attempted to get perf_analyzer results"
+            "without calling run first.")
 
     def get_gpu_records(self):
         """

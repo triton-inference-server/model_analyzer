@@ -51,8 +51,7 @@ class MetricsManager:
         "perf_server_queue", "perf_server_compute_input",
         "perf_server_compute_infer", "perf_server_compute_output",
         "gpu_used_memory", "gpu_free_memory", "gpu_utilization",
-        "gpu_power_usage", "gpu_total_memory", "cpu_available_ram",
-        "cpu_used_ram"
+        "gpu_power_usage", "cpu_available_ram", "cpu_used_ram"
     ]
 
     def __init__(self, config, client, server, gpus, result_manager,
@@ -462,7 +461,7 @@ class MetricsManager:
         if status == 1:
             return None
 
-        perf_records = perf_analyzer.get_records()
+        perf_records = perf_analyzer.get_perf_records()
         gpu_records = perf_analyzer.get_gpu_records()
 
         aggregated_perf_records = self._aggregate_perf_records(perf_records)

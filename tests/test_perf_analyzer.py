@@ -258,7 +258,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         pa_csv_mock += """1,46.8,2,187,18,34,65,16,1,4600,4700,4800,4900,5000,3,314,"""
         pa_csv_mock += """GPU-aaf4fea0:0.809;GPU-aaf4fea1:0.901;GPU-aaf4fea2:0.745;,GPU-aaf4fea0:91.2;GPU-aaf4fea1:100;,GPU-aaf4fea0:1000000000;GPU-aaf4fea1:2000000000,GPU-aaf4fea0:1500000000;GPU-aaf4fea2:3000000000"""
 
-        # Test avg latency parsing. GPU metric is ignored for get_records()
+        # Test avg latency parsing. GPU metric is ignored for get_perf_records()
         perf_metrics = [PerfLatencyAvg, GPUUtilization]
 
         with patch('model_analyzer.perf_analyzer.perf_analyzer.open',
@@ -266,7 +266,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             perf_analyzer.run(perf_metrics)
 
-        records = perf_analyzer.get_records()
+        records = perf_analyzer.get_perf_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 5)
 
@@ -278,7 +278,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             perf_analyzer.run(perf_metrics)
 
-        records = perf_analyzer.get_records()
+        records = perf_analyzer.get_perf_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.7)
 
@@ -290,7 +290,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             perf_analyzer.run(perf_metrics)
 
-        records = perf_analyzer.get_records()
+        records = perf_analyzer.get_perf_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.8)
 
@@ -302,7 +302,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             perf_analyzer.run(perf_metrics)
 
-        records = perf_analyzer.get_records()
+        records = perf_analyzer.get_perf_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 4.9)
 
@@ -314,7 +314,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             perf_analyzer.run(perf_metrics)
 
-        records = perf_analyzer.get_records()
+        records = perf_analyzer.get_perf_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 46.8)
 
@@ -326,7 +326,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             perf_analyzer.run(perf_metrics)
 
-        records = perf_analyzer.get_records()
+        records = perf_analyzer.get_perf_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.314)
 
@@ -338,7 +338,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             perf_analyzer.run(perf_metrics)
 
-        records = perf_analyzer.get_records()
+        records = perf_analyzer.get_perf_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.018)
 
@@ -350,7 +350,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             perf_analyzer.run(perf_metrics)
 
-        records = perf_analyzer.get_records()
+        records = perf_analyzer.get_perf_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.065)
 
@@ -362,7 +362,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             perf_analyzer.run(perf_metrics)
 
-        records = perf_analyzer.get_records()
+        records = perf_analyzer.get_perf_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.034)
 
@@ -374,7 +374,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             perf_analyzer.run(perf_metrics)
 
-        records = perf_analyzer.get_records()
+        records = perf_analyzer.get_perf_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 0.016)
 
@@ -455,7 +455,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
                        'model_analyzer.perf_analyzer.perf_analyzer.os.remove'):
             perf_analyzer.run(perf_metrics)
 
-        perf_records = perf_analyzer.get_records()
+        perf_records = perf_analyzer.get_perf_records()
         gpu_records = perf_analyzer.get_gpu_records()
 
         self.assertEqual(len(perf_records[TEST_MODEL_NAME]), 5)

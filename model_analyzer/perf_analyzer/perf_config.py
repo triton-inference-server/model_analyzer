@@ -15,6 +15,7 @@
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
+from model_analyzer.constants import SECONDS_TO_MILLISECONDS_MULTIPLIER
 
 
 class PerfAnalyzerConfig:
@@ -152,10 +153,11 @@ class PerfAnalyzerConfig:
             'verbose-csv': '--verbose-csv'
         }
 
+        metrics_interval = profile_config.monitoring_interval * SECONDS_TO_MILLISECONDS_MULTIPLIER
         params.update({
             'collect-metrics': 'True',
             'metrics-url': profile_config.triton_metrics_url,
-            'metrics-interval': profile_config.monitoring_interval * 1000
+            'metrics-interval': metrics_interval
         })
 
         if profile_config.triton_launch_mode == 'c_api':
