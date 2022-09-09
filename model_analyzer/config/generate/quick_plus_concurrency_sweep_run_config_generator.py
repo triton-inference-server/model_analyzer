@@ -24,7 +24,7 @@ from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.run_config_result import RunConfigResult
@@ -47,7 +47,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 models: List[ConfigModelProfileSpec], client: TritonClient,
+                 models: List[ModelProfileSpec], client: TritonClient,
                  result_manager: ResultManager,
                  model_variant_name_manager: ModelVariantNameManager):
         """
@@ -171,8 +171,13 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     # We will need to create a yaml config to set each models
     # batch size/instances seperately
     def _find_batch_size(self, result: RunConfigResult) -> int:
-        return result.run_config().model_run_configs()[0].model_config(
-        ).get_config()['max_batch_size']
+        mc = result.run_config().model_run_configs()[0].model_config(
+        ).get_config()
+
+        batch_size = 1
+        if 'max_batch_size' in mc:
+            batch_size = mc['max_batch_size']
+        return batch_size
 
     def _find_instance_count(self, result: RunConfigResult) -> int:
         return result.run_config().model_run_configs()[0].model_config(

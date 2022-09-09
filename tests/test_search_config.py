@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.search_config import SearchConfig, NeighborhoodConfig
+from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
 from model_analyzer.config.generate.search_dimensions import SearchDimensions
 from .common import test_result_collector as trc

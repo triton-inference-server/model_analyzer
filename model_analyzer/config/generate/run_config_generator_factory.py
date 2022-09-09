@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from .brute_run_config_generator import BruteRunConfigGenerator
-from .quick_run_config_generator import QuickRunConfigGenerator
+from .base_model_config_generator import BaseModelConfigGenerator
 from .quick_plus_concurrency_sweep_run_config_generator import QuickPlusConcurrencySweepRunConfigGenerator
 from .search_dimensions import SearchDimensions
 from .search_dimension import SearchDimension
@@ -51,11 +52,16 @@ class RunConfigGeneratorFactory:
         A generator that implements ConfigGeneratorInterface and creates RunConfigs        
         """
 
+        new_models = []
+        for model in models:
+            new_models.append(
+                ModelProfileSpec(model, command_config, client, gpus))
+
         if (command_config.run_config_search_mode == "quick"):
             return RunConfigGeneratorFactory._create_quick_plus_concurrency_sweep_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
-                models=models,
+                models=new_models,
                 client=client,
                 result_manager=result_manager,
                 model_variant_name_manager=model_variant_name_manager)
@@ -63,7 +69,7 @@ class RunConfigGeneratorFactory:
             return RunConfigGeneratorFactory._create_brute_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
-                models=models,
+                models=new_models,
                 client=client,
                 model_variant_name_manager=model_variant_name_manager)
         else:
@@ -85,8 +91,7 @@ class RunConfigGeneratorFactory:
     def _create_quick_plus_concurrency_sweep_run_config_generator(
             command_config, gpus, models, client, result_manager,
             model_variant_name_manager):
-        search_config = RunConfigGeneratorFactory._create_search_config(
-            command_config, client=client, gpus=gpus)
+        search_config = RunConfigGeneratorFactory._create_search_config(models)
         return QuickPlusConcurrencySweepRunConfigGenerator(
             search_config=search_config,
             config=command_config,
@@ -97,12 +102,12 @@ class RunConfigGeneratorFactory:
             model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod
-    def _create_search_config(command_config, client, gpus):
+    def _create_search_config(models: List[ModelProfileSpec]) -> SearchConfig:
         dimensions = SearchDimensions()
 
         #yapf: disable
-        for i, model in enumerate(command_config.profile_models):
-            dims = RunConfigGeneratorFactory._get_dimensions_for_model(config=command_config, client=client, gpus=gpus, model_name=model.model_name())
+        for i, model in enumerate(models):
+            dims = RunConfigGeneratorFactory._get_dimensions_for_model(model.supports_batching())
             dimensions.add_dimensions(i, dims)
         #yapf: enable
 
@@ -113,15 +118,10 @@ class RunConfigGeneratorFactory:
         return search_config
 
     @staticmethod
-    def _get_dimensions_for_model(config, client, gpus,
-                                  model_name) -> List[SearchDimension]:
+    def _get_dimensions_for_model(
+            is_batching_supported: bool) -> List[SearchDimension]:
 
-        batching_supported = True
-        # TODO: TMA-875 - add proper batching support detection
-        #batching_supported = BaseModelConfigGenerator.is_batching_supported(
-        #    config=config, client=client, gpus=gpus, model_name=model_name)
-
-        if (batching_supported):  # If support max batch size
+        if (is_batching_supported):
             return RunConfigGeneratorFactory._get_batching_supported_dimensions(
             )
         else:
@@ -140,8 +140,6 @@ class RunConfigGeneratorFactory:
     @staticmethod
     def _get_batching_not_supported_dimensions() -> List[SearchDimension]:
         return [
-            SearchDimension(f"concurrency",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension(f"instance_count",
                             SearchDimension.DIMENSION_TYPE_LINEAR)
         ]

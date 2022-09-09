@@ -15,8 +15,9 @@
 from .base_model_config_generator import BaseModelConfigGenerator
 
 from model_analyzer.constants import LOGGER_NAME, DEFAULT_CONFIG_PARAMS
-import logging
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from .model_profile_spec import ModelProfileSpec
+import logging
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -24,14 +25,15 @@ logger = logging.getLogger(LOGGER_NAME)
 class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in automatic search mode """
 
-    def __init__(self, config, gpus, model, client, model_variant_name_manager,
-                 default_only, early_exit_enable):
+    def __init__(self, config, gpus, model: ModelProfileSpec, client,
+                 model_variant_name_manager, default_only, early_exit_enable):
         """
         Parameters
         ----------
         config: ModelAnalyzerConfig
         gpus: List of GPUDevices
-        model: The model to generate ModelConfigs for
+        model: ModelProfileSpec
+            The model to generate ModelConfigs for
         client: TritonClient
         model_variant_name_manager: ModelVariantNameManager
         default_only: Bool
@@ -53,9 +55,6 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
         self._curr_instance_count = self._min_instance_count
         self._curr_max_batch_size = 0
-
-        self._max_batch_size_disabled = self._determine_max_batch_size_disabled(
-        )
 
         self._reset_max_batch_size()
 
@@ -102,10 +101,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     def _reset_max_batch_size(self):
         super()._reset_max_batch_size()
 
-        if self._max_batch_size_disabled:
-            self._curr_max_batch_size = self._max_model_batch_size
-        else:
+        if self._base_model.supports_batching():
             self._curr_max_batch_size = self._min_model_batch_size
+        else:
+            self._curr_max_batch_size = self._max_model_batch_size
 
     def _get_next_model_config(self):
         param_combo = self._get_curr_param_combo()
@@ -123,17 +122,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             }]
         }
 
-        if not self._max_batch_size_disabled:
+        if self._base_model.supports_batching():
             config['max_batch_size'] = self._curr_max_batch_size
+
+        if self._base_model.supports_dynamic_batching():
             config['dynamic_batching'] = {}
 
         return config
-
-    def _determine_max_batch_size_disabled(self):
-        config = BaseModelConfigGenerator.get_base_model_config_dict(
-            self._config, self._client, self._gpus, self._model_repository,
-            self._base_model_name)
-        max_batch_size_disabled = False
-        if "max_batch_size" not in config or config['max_batch_size'] == 0:
-            max_batch_size_disabled = True
-        return max_batch_size_disabled

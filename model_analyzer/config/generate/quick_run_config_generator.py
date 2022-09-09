@@ -23,6 +23,7 @@ from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.neighborhood import Neighborhood
 from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
@@ -30,7 +31,6 @@ from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 from model_analyzer.constants import LOGGER_NAME
@@ -47,7 +47,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 models: List[ConfigModelProfileSpec], client: TritonClient,
+                 models: List[ModelProfileSpec], client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
@@ -64,7 +64,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         """
         self._search_config = search_config
         self._config = config
-        self._gpus = gpus
         self._models = models
         self._client = client
         self._model_variant_name_manager = model_variant_name_manager
@@ -287,23 +286,22 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self._coordinate_to_measure, model_num)
 
         kind = "KIND_CPU" if self._models[model_num].cpu_only() else "KIND_GPU"
-        param_combo = {
-            'dynamic_batching': {},
-            'max_batch_size':
-                dimension_values['max_batch_size'],
+        param_combo: dict = {
             'instance_group': [{
                 'count': dimension_values['instance_count'],
                 'kind': kind,
             }]
         }
 
+        if 'max_batch_size' in dimension_values:
+            param_combo['max_batch_size'] = dimension_values['max_batch_size']
+
+        if self._models[model_num].supports_dynamic_batching():
+            param_combo['dynamic_batching'] = {}
+
         model_config = BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
-            config=self._config,
-            client=self._client,
-            gpus=self._gpus,
             model=self._models[model_num],
-            model_repository=self._config.model_repository,
             model_variant_name_manager=self._model_variant_name_manager)
         return model_config
 
@@ -317,13 +315,12 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config_from_profile_config(
             model_variant_name, self._config)
 
-        perf_config_params = {
-            'batch-size':
-                1,
-            'concurrency-range':
-                2 * dimension_values['instance_count'] *
-                dimension_values['max_batch_size']
-        }
+        model_batch_size = dimension_values.get("max_batch_size", 1)
+        instance_count = dimension_values.get("instance_count", 1)
+
+        concurrency = 2 * model_batch_size * instance_count
+
+        perf_config_params = {'batch-size': 1, 'concurrency-range': concurrency}
         perf_analyzer_config.update_config(perf_config_params)
 
         perf_analyzer_config.update_config(

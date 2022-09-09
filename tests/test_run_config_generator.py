@@ -14,6 +14,7 @@
 
 import unittest
 
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
@@ -621,9 +622,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.mock_model_config.start()
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
-        rcg = BruteRunConfigGenerator(config, MagicMock(),
-                                      config.profile_models, MagicMock(),
-                                      ModelVariantNameManager())
+        profile_models = []
+        for model in config.profile_models:
+            profile_models.append(
+                ModelProfileSpec(model, config, MagicMock(), MagicMock()))
+
+        rcg = BruteRunConfigGenerator(config, MagicMock(), profile_models,
+                                      MagicMock(), ModelVariantNameManager())
 
         run_configs = []
         for run_config in rcg.get_configs():

@@ -110,7 +110,7 @@ class ModelConfig:
                 )
 
         ModelConfig._default_config_dict[model_name] = config
-        return config
+        return deepcopy(config)
 
     @staticmethod
     def _get_default_config_from_server(config, client, gpus, model_name,
