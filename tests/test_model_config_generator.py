@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.config.generate.model_config_generator_factory import ModelConfigGeneratorFactory
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.triton.model.model_config import ModelConfig
 from .common import test_result_collector as trc
@@ -359,6 +360,49 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             {'platform': "fake_platform", 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
             {'platform': "fake_platform", 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
             {'platform': "fake_platform", 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]}
+        ]
+        # yapf: enable
+
+        self._run_and_test_model_config_generator(yaml_str, expected_configs,
+                                                  protobuf)
+
+    def test_direct_sequence_batching(self):
+        '''
+        Test direct mode with the the default config specifying sequence_batching
+
+        dynamic_batching should not be part of the resulting configs
+        '''
+
+        # yapf: disable
+        protobuf = """
+            platform: "fake_platform"
+            max_batch_size: 4
+            sequence_batching {}
+            instance_group [
+            {
+                kind: KIND_CPU
+                count: 1
+            }
+            ]
+            """
+
+        yaml_str = ("""
+            run_config_search_max_instance_count: 4
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 16
+            profile_models:
+                - my-model
+            """)
+
+        expected_configs = [
+            {'platform': "fake_platform", 'max_batch_size':  8, 'sequence_batching': {}, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'max_batch_size':  8, 'sequence_batching': {}, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'max_batch_size':  8, 'sequence_batching': {}, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'max_batch_size':  8, 'sequence_batching': {}, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'max_batch_size': 16, 'sequence_batching': {}, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'max_batch_size': 16, 'sequence_batching': {}, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'max_batch_size': 16, 'sequence_batching': {}, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}]},
+            {'platform': "fake_platform", 'max_batch_size': 16, 'sequence_batching': {}, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}]}
         ]
         # yapf: enable
 
@@ -771,6 +815,11 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         self.mock_model_config.start()
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
+        profile_models = []
+        for model in config.profile_models:
+            profile_models.append(
+                ModelProfileSpec(model, config, MagicMock(), MagicMock()))
+
         # Fake out a client that can return a 'model_config' dict with
         # a valid name (only used by remote mode)
         #
@@ -781,7 +830,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             mcg = ModelConfigGeneratorFactory.create_model_config_generator(
                 config,
                 MagicMock(),
-                config.profile_models[0],
+                profile_models[0],
                 fake_client,
                 ModelVariantNameManager(),
                 default_only=default_only,

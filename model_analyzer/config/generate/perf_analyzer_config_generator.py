@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union
+from typing import List, Union, Optional
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 
@@ -121,7 +121,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         # Remove 'NONE' cases, and find single max measurement from the list
         valid_measurements = [m for m in measurements if m]
 
-        measurement: List[Union[RunConfigMeasurement, None]] = [None]
+        measurement: List[Optional[RunConfigMeasurement]] = [None]
         if valid_measurements:
             measurement = [max(valid_measurements)]
 

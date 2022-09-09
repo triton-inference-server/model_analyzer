@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
 
 from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
 from model_analyzer.constants import LOGGER_NAME
@@ -37,7 +37,7 @@ class RunConfigMeasurement:
     in a single RunConfig
     """
 
-    def __init__(self, model_variants_name: Union[str, None],
+    def __init__(self, model_variants_name: Optional[str],
                  gpu_data: Dict[int, List[Record]]):
         """
         model_variants_name: str
@@ -153,7 +153,7 @@ class RunConfigMeasurement:
         for index, measurement in enumerate(self._model_config_measurements):
             measurement.set_metric_weighting(metric_objectives[index])
 
-    def model_variants_name(self) -> Union[str, None]:
+    def model_variants_name(self) -> Optional[str]:
         """
         Returns: str
             The name of the model variants this measurement was collected for
@@ -161,7 +161,7 @@ class RunConfigMeasurement:
 
         return self._model_variants_name
 
-    def model_name(self) -> Union[str, None]:
+    def model_name(self) -> Optional[str]:
         """
         Returns
         -------
@@ -207,7 +207,7 @@ class RunConfigMeasurement:
             for model_config_measurement in self._model_config_measurements
         ]
 
-    def get_gpu_metric(self, tag: str) -> Union[Record, None]:
+    def get_gpu_metric(self, tag: str) -> Optional[Record]:
         """
         Returns the average of Records associated with this GPU metric
         
@@ -448,8 +448,8 @@ class RunConfigMeasurement:
         # Step 3: Reverse the polarity to match what is expected in the docstring return
         return -1 * weighted_rcm_score
 
-    def compare_constraints(
-            self, other: 'RunConfigMeasurement') -> Union[float, None]:
+    def compare_constraints(self,
+                            other: 'RunConfigMeasurement') -> Optional[float]:
         """
         Compares two RunConfigMeasurements based on how close
         each RCM is to passing their constraints

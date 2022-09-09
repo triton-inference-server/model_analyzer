@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional
+from typing import List
 
 from .config_generator_interface import ConfigGeneratorInterface
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 
 class BruteRunConfigGenerator(ConfigGeneratorInterface):
@@ -30,9 +30,9 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
     def __init__(self,
                  config,
                  gpus,
-                 models,
+                 models: List[ModelProfileSpec],
                  client,
-                 model_variant_name_manager,
+                 model_variant_name_manager: ModelVariantNameManager,
                  skip_default_config: bool = False):
         """
         Parameters
