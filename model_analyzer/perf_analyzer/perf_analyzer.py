@@ -454,8 +454,8 @@ class PerfAnalyzer:
                     str(perf_metric[PerfAnalyzer.REDUCTION_FACTOR]))
                 perf_value = value / reduction_factor
 
-                perf_records.append(
-                    perf_metric[PerfAnalyzer.RECORD_CLASS](perf_value))
+                perf_records.append(perf_metric[PerfAnalyzer.RECORD_CLASS](
+                    perf_value))  # type: ignore
 
         return perf_records
 
@@ -488,7 +488,7 @@ class PerfAnalyzer:
                         value=float(
                             gpu_metric_tuple[PerfAnalyzer.GPU_METRIC_VALUE]),
                         device_uuid=gpu_metric_tuple[
-                            PerfAnalyzer.GPU_METRIC_UUID]))
+                            PerfAnalyzer.GPU_METRIC_UUID]))  # type: ignore
 
         return gpu_records
 
