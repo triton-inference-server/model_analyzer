@@ -223,8 +223,8 @@ class MetricsManager:
 
         self._start_monitors(cpu_only=cpu_only)
 
-        perf_analyzer_metrics = self._run_perf_analyzer(run_config,
-                                                        perf_output_writer)
+        perf_analyzer_metrics, model_gpu_metrics = self._run_perf_analyzer(
+            run_config, perf_output_writer)
 
         if not perf_analyzer_metrics:
             self._stop_monitors(cpu_only=cpu_only)
@@ -232,8 +232,7 @@ class MetricsManager:
             return None
 
         # Get metrics for model inference and combine metrics that do not have GPU UUID
-        model_gpu_metrics = {}
-        if not cpu_only:
+        if not cpu_only and not model_gpu_metrics:
             model_gpu_metrics = self._get_gpu_inference_metrics()
         model_cpu_metrics = self._get_cpu_inference_metrics()
 
@@ -446,7 +445,8 @@ class MetricsManager:
             timeout=self._config.perf_analyzer_timeout,
             max_cpu_util=self._config.perf_analyzer_cpu_util)
 
-        status = perf_analyzer.run(self._perf_metrics, env=perf_analyzer_env)
+        metrics_to_gather = self._perf_metrics + self._gpu_metrics
+        status = perf_analyzer.run(metrics_to_gather, env=perf_analyzer_env)
 
         if perf_output_writer:
             perf_output_writer.write(
@@ -461,14 +461,21 @@ class MetricsManager:
         if status == 1:
             return None
 
-        per_model_perf_records = perf_analyzer.get_records()
+        perf_records = perf_analyzer.get_records()
+        gpu_records = perf_analyzer.get_gpu_records()
 
-        for (model, perf_records) in per_model_perf_records.items():
+        aggregated_perf_records = self._aggregate_perf_records(perf_records)
+        aggregated_gpu_records = self._aggregate_gpu_records(gpu_records)
+
+        return aggregated_perf_records, aggregated_gpu_records
+
+    def _aggregate_perf_records(self, perf_records):
+        per_model_perf_records = {}
+        for (model, records) in perf_records.items():
             perf_record_aggregator = RecordAggregator()
-            perf_record_aggregator.insert_all(perf_records)
+            perf_record_aggregator.insert_all(records)
 
             per_model_perf_records[model] = perf_record_aggregator.aggregate()
-
         return per_model_perf_records
 
     def _get_gpu_inference_metrics(self):
@@ -485,6 +492,10 @@ class MetricsManager:
         # Stop and destroy DCGM monitor
         gpu_records = self._gpu_monitor.stop_recording_metrics()
 
+        gpu_metrics = self._aggregate_gpu_records(gpu_records)
+        return gpu_metrics
+
+    def _aggregate_gpu_records(self, gpu_records):
         # Insert all records into aggregator and get aggregated DCGM records
         gpu_record_aggregator = RecordAggregator()
         gpu_record_aggregator.insert_all(gpu_records)
