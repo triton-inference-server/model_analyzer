@@ -51,7 +51,8 @@ class MetricsManager:
         "perf_server_queue", "perf_server_compute_input",
         "perf_server_compute_infer", "perf_server_compute_output",
         "gpu_used_memory", "gpu_free_memory", "gpu_utilization",
-        "gpu_power_usage", "cpu_available_ram", "cpu_used_ram"
+        "gpu_power_usage", "gpu_total_memory", "cpu_available_ram",
+        "cpu_used_ram"
     ]
 
     def __init__(self, config, client, server, gpus, result_manager,
@@ -142,8 +143,7 @@ class MetricsManager:
         gpu_metrics, perf_metrics, cpu_metrics = [], [], []
         # Separates metrics and objectives into related lists
         for metric in MetricsManager.get_metric_types(metric_tags):
-            if metric in DCGMMonitor.model_analyzer_to_dcgm_field or metric in RemoteMonitor.gpu_metrics.values(
-            ):
+            if metric in PerfAnalyzer.get_gpu_metrics():
                 gpu_metrics.append(metric)
             elif metric in PerfAnalyzer.get_perf_metrics():
                 perf_metrics.append(metric)
@@ -368,6 +368,7 @@ class MetricsManager:
         Start any metrics monitors
         """
 
+        self._gpu_monitor = None
         if not cpu_only:
             try:
                 if self._config.use_local_gpu_monitor:

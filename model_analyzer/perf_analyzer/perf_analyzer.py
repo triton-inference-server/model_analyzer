@@ -39,6 +39,7 @@ from model_analyzer.record.types.gpu_utilization import GPUUtilization
 from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
 from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
 from model_analyzer.record.types.gpu_total_memory import GPUTotalMemory
+from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
 
 from model_analyzer.constants import \
     INTERVAL_SLEEP_TIME, LOGGER_NAME, MEASUREMENT_REQUEST_COUNT_STEP, \
@@ -86,10 +87,11 @@ class PerfAnalyzer:
     ]
 
     gpu_metric_table = [
-        ["gpu_utilization",            "Avg GPU utilizations",    GPUUtilization,        "0.01"],
-        ["gpu_power_usage",            "Avg GPU Power Usages",    GPUPowerUsage,            "1"],
-        ["gpu_used_memory",            "Max GPU Memory Usages",   GPUUsedMemory,      "1000000"],
-        ["gpu_total_memory",           "Total GPU Memory Usages", GPUTotalMemory,     "1000000"]
+        ["gpu_utilization",            "Avg GPU Utilization",   GPUUtilization,          "0.01"],
+        ["gpu_power_usage",            "Avg GPU Power Usage",   GPUPowerUsage,              "1"],
+        ["gpu_used_memory",            "Max GPU Memory Usage",  GPUUsedMemory,        "1000000"],
+        # FIXME free vs total
+        ["gpu_free_memory",            "Total GPU Memory",      GPUFreeMemory,        "1000000"]
     ]
     #yapf: enable
 
@@ -191,11 +193,11 @@ class PerfAnalyzer:
         The perf records from the last perf_analyzer run
         """
 
-        if self._perf_records:
-            return self._perf_records
-        raise TritonModelAnalyzerException(
-            "Attempted to get perf_analyzer results"
-            "without calling run first.")
+        if not self._perf_records:
+            raise TritonModelAnalyzerException(
+                "Attempted to get perf_analyzer results"
+                "without calling run first.")
+        return self._perf_records
 
     def get_gpu_records(self):
         """
@@ -204,8 +206,7 @@ class PerfAnalyzer:
         The gpu records from the last perf_analyzer run
         """
 
-        if self._gpu_records:
-            return self._gpu_records
+        return self._gpu_records
 
     def output(self):
         """

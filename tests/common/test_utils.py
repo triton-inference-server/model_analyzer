@@ -29,7 +29,8 @@ from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.config.input.config_defaults import \
     DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_CLIENT_PROTOCOL, \
     DEFAULT_MEASUREMENT_MODE, DEFAULT_TRITON_GRPC_ENDPOINT, DEFAULT_TRITON_HTTP_ENDPOINT, \
-    DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY
+    DEFAULT_TRITON_INSTALL_PATH, DEFAULT_OUTPUT_MODEL_REPOSITORY, DEFAULT_TRITON_METRICS_URL, \
+    DEFAULT_MONITORING_INTERVAL
 
 import os
 
@@ -213,7 +214,9 @@ def construct_perf_analyzer_config(model_name='my-model',
     pa_config._options['-b'] = batch_size
     pa_config._args['concurrency-range'] = concurrency
     pa_config._args['measurement-mode'] = DEFAULT_MEASUREMENT_MODE
-
+    pa_config._args['collect-metrics'] = 'True'
+    pa_config._args['metrics-url'] = DEFAULT_TRITON_METRICS_URL
+    pa_config._args['metrics-interval'] = 1000 * DEFAULT_MONITORING_INTERVAL
     pa_config.update_config(perf_analyzer_flags)
 
     if launch_mode == 'c_api':

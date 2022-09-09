@@ -39,7 +39,7 @@ class PerfAnalyzerConfig:
         'ssl-https-verify-host', 'ssl-https-ca-certificates-file',
         'ssl-https-client-certificate-type',
         'ssl-https-client-certificate-file', 'ssl-https-private-key-type',
-        'ssl-https-private-key-file', 'collect-gpu-metrics', 'metrics-url',
+        'ssl-https-private-key-file', 'collect-metrics', 'metrics-url',
         'metrics-interval'
     ]
 
@@ -54,7 +54,7 @@ class PerfAnalyzerConfig:
 
     boolean_args = [
         'streaming', 'async', 'sync', 'binary-search', 'ssl-grpc-use-ssl',
-        'collect-gpu-metrics'
+        'collect-metrics'
     ]
 
     def __init__(self):
@@ -153,7 +153,7 @@ class PerfAnalyzerConfig:
         }
 
         params.update({
-            'collect-gpu-metrics': 'True',
+            'collect-metrics': 'True',
             'metrics-url': profile_config.triton_metrics_url,
             'metrics-interval': profile_config.monitoring_interval * 1000
         })
