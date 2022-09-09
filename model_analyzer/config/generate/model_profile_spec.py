@@ -13,8 +13,12 @@
 # limitations under the License.
 
 from copy import deepcopy
+from typing import List
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.device.gpu_device import GPUDevice
 
 
 class ModelProfileSpec(ConfigModelProfileSpec):
@@ -22,7 +26,9 @@ class ModelProfileSpec(ConfigModelProfileSpec):
     The profile configuration and default model config for a single model to be profiled
     """
 
-    def __init__(self, spec: ConfigModelProfileSpec, config, client, gpus):
+    def __init__(self, spec: ConfigModelProfileSpec,
+                 config: ConfigCommandProfile, client: TritonClient,
+                 gpus: List[GPUDevice]):
         self.__dict__ = deepcopy(spec.__dict__)
 
         self._default_model_config = ModelConfig.create_model_config_dict(

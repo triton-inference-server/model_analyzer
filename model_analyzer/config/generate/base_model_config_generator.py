@@ -14,7 +14,7 @@
 
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from .config_generator_interface import ConfigGeneratorInterface
-from typing import List, Union
+from typing import List, Optional
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
 from .model_profile_spec import ModelProfileSpec
@@ -119,7 +119,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             lastest_throughput > prev_throughput
             for prev_throughput in self._curr_max_batch_size_throughputs[:-1])
 
-    def _get_last_results_max_throughput(self) -> Union[float, None]:
+    def _get_last_results_max_throughput(self) -> Optional[float]:
         throughputs = [
             m.get_non_gpu_metric_value('perf_throughput')
             for m in self._last_results
