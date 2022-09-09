@@ -432,25 +432,18 @@ class PerfAnalyzer:
         """ 
         Extracts the requested metrics from the CSV's row and creates a list of Records
         """
-        perf_records: List[Record] = []
-
-        perf_metrics, perf_values = self._find_requested_perf_metrics(
+        perf_records = self._create_records_from_perf_metrics(
             requested_metrics, row_metrics)
-        perf_records = self._add_perf_metrics_to_records(
-            perf_metrics, perf_values, perf_records)
 
-        gpu_metrics, gpu_values = self._find_requested_gpu_metrics(
+        gpu_records = self._create_records_from_gpu_metrics(
             requested_metrics, row_metrics)
-        perf_records = self._add_gpu_metrics_to_records(gpu_metrics, gpu_values,
-                                                        perf_records)
 
-        return perf_records
+        return perf_records + gpu_records
 
-    def _find_requested_perf_metrics(
+    def _create_records_from_perf_metrics(
             self, requested_metrics: List[Record],
-            row_metrics: Dict[str, str]) -> Tuple[List[List[Any]], List[float]]:
-        perf_metrics: List[List[Any]] = []
-        values: List[float] = []
+            row_metrics: Dict[str, str]) -> List[Record]:
+        perf_records: List[Record] = []
         for perf_metric in PerfAnalyzer.perf_metric_table:
             if self._is_metric_requested_and_in_row(perf_metric,
                                                     requested_metrics,
@@ -461,26 +454,16 @@ class PerfAnalyzer:
                     str(perf_metric[PerfAnalyzer.REDUCTION_FACTOR]))
                 perf_value = value / reduction_factor
 
-                perf_metrics.append(perf_metric)
-                values.append(perf_value)
-
-        return (perf_metrics, values)
-
-    def _add_perf_metrics_to_records(
-            self, perf_metrics: List[List[Any]], perf_values: List[float],
-            perf_records: List[Record]) -> List[Record]:
-        for i, perf_metric in enumerate(perf_metrics):
-            perf_records.append(perf_metric[PerfAnalyzer.RECORD_CLASS](
-                perf_values[i]))
+                perf_records.append(
+                    perf_metric[PerfAnalyzer.RECORD_CLASS](perf_value))
 
         return perf_records
 
-    def _find_requested_gpu_metrics(
-        self, requested_metrics: List[Record], row_metrics: Dict[str, str]
-    ) -> Tuple[List[List[Any]], List[List[Tuple[str, str]]]]:
+    def _create_records_from_gpu_metrics(
+            self, requested_metrics: List[Record],
+            row_metrics: Dict[str, str]) -> List[Record]:
         # GPU metrics have the following format: UUID0:value0;UUID1:value1;...
-        gpu_metrics: List[List[Any]] = []
-        gpu_values: List[List[Tuple[str, str]]] = []
+        gpu_records: List[Record] = []
         for gpu_metric in PerfAnalyzer.gpu_metric_table:
             if self._is_metric_requested_and_in_row(gpu_metric,
                                                     requested_metrics,
@@ -490,7 +473,7 @@ class PerfAnalyzer:
 
                 # Return immediately if PA didn't provide data
                 if not gpu_metric_string:
-                    return gpu_metrics, gpu_values
+                    return gpu_records
 
                 # Needed because PA might terminate substring with a ;
                 if gpu_metric_string and gpu_metric_string[-1] == ';':
@@ -498,28 +481,16 @@ class PerfAnalyzer:
 
                 gpu_metric_string_tuples = gpu_metric_string.split(';')
 
-                gpu_tuples = []
                 for gpu_metric_string_tuple in gpu_metric_string_tuples:
                     gpu_metric_tuple = gpu_metric_string_tuple.split(':')
-                    gpu_tuples.append(
-                        (gpu_metric_tuple[PerfAnalyzer.GPU_METRIC_UUID],
-                         gpu_metric_tuple[PerfAnalyzer.GPU_METRIC_VALUE]))
 
-                gpu_metrics.append(gpu_metric)
-                gpu_values.append(gpu_tuples)
+                    gpu_records.append(gpu_metric[PerfAnalyzer.RECORD_CLASS](
+                        value=float(
+                            gpu_metric_tuple[PerfAnalyzer.GPU_METRIC_VALUE]),
+                        device_uuid=gpu_metric_tuple[
+                            PerfAnalyzer.GPU_METRIC_UUID]))
 
-        return gpu_metrics, gpu_values
-
-    def _add_gpu_metrics_to_records(self, gpu_metrics: List[List[Any]],
-                                    gpu_values: List[List[Tuple[str, str]]],
-                                    perf_records: List[Record]):
-        for i, gpu_metric in enumerate(gpu_metrics):
-            for gpu_tuple in gpu_values[i]:
-                perf_records.append(gpu_metric[PerfAnalyzer.RECORD_CLASS](
-                    value=float(gpu_tuple[PerfAnalyzer.GPU_METRIC_VALUE]),
-                    device_uuid=gpu_tuple[PerfAnalyzer.GPU_METRIC_UUID]))
-
-        return perf_records
+        return gpu_records
 
     def _is_metric_requested_and_in_row(self, metric: List[object],
                                         requested_metrics: List[Record],
