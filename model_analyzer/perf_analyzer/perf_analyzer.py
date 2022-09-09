@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any, Dict, List, Union, Tuple
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.record.types.perf_latency_avg import PerfLatencyAvg
@@ -32,6 +33,12 @@ from model_analyzer.record.types.perf_server_compute_infer \
     import PerfServerComputeInfer
 from model_analyzer.record.types.perf_server_compute_output \
     import PerfServerComputeOutput
+
+from model_analyzer.record.record import Record
+from model_analyzer.record.types.gpu_utilization import GPUUtilization
+from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
+from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
+from model_analyzer.record.types.gpu_total_memory import GPUTotalMemory
 
 from model_analyzer.constants import \
     INTERVAL_SLEEP_TIME, LOGGER_NAME, MEASUREMENT_REQUEST_COUNT_STEP, \
@@ -56,23 +63,33 @@ class PerfAnalyzer:
     with perf_analyzer.
     """
 
+    GPU_METRIC_UUID = 0
+    GPU_METRIC_VALUE = 1
+
     #yapf: disable
     PA_SUCCESS, PA_FAIL, PA_RETRY = 0, 1, 2
 
     METRIC_TAG,                        CSV_STRING,             RECORD_CLASS,             REDUCTION_FACTOR = 0, 1, 2, 3
     perf_metric_table = [
-        ["perf_latency_avg",           "Avg latency",           PerfLatencyAvg,          1000],
-        ["perf_latency_p90",           "p90 latency",           PerfLatencyP90,          1000],
-        ["perf_latency_p95",           "p95 latency",           PerfLatencyP95,          1000],
-        ["perf_latency_p99",           "p99 latency",           PerfLatencyP99,          1000],
-        ["perf_throughput",            "Inferences/Second",     PerfThroughput,             1],
-        ["perf_client_send_recv",      "request/response",      PerfClientSendRecv,      1000],
-        ["perf_client_send_recv",      "send/recv",             PerfClientSendRecv,      1000],
-        ["perf_client_response_wait",  "response wait",         PerfClientResponseWait,  1000],
-        ["perf_server_queue",          "Server Queue",          PerfServerQueue,         1000],
-        ["perf_server_compute_infer",  "Server Compute Infer",  PerfServerComputeInfer,  1000],
-        ["perf_server_compute_input",  "Server Compute Input",  PerfServerComputeInput,  1000],
-        ["perf_server_compute_output", "Server Compute Output", PerfServerComputeOutput, 1000]
+        ["perf_latency_avg",           "Avg latency",           PerfLatencyAvg,          "1000"],
+        ["perf_latency_p90",           "p90 latency",           PerfLatencyP90,          "1000"],
+        ["perf_latency_p95",           "p95 latency",           PerfLatencyP95,          "1000"],
+        ["perf_latency_p99",           "p99 latency",           PerfLatencyP99,          "1000"],
+        ["perf_throughput",            "Inferences/Second",     PerfThroughput,             "1"],
+        ["perf_client_send_recv",      "request/response",      PerfClientSendRecv,      "1000"],
+        ["perf_client_send_recv",      "send/recv",             PerfClientSendRecv,      "1000"],
+        ["perf_client_response_wait",  "response wait",         PerfClientResponseWait,  "1000"],
+        ["perf_server_queue",          "Server Queue",          PerfServerQueue,         "1000"],
+        ["perf_server_compute_infer",  "Server Compute Infer",  PerfServerComputeInfer,  "1000"],
+        ["perf_server_compute_input",  "Server Compute Input",  PerfServerComputeInput,  "1000"],
+        ["perf_server_compute_output", "Server Compute Output", PerfServerComputeOutput, "1000"]
+    ]
+
+    gpu_metric_table = [
+        ["gpu_utilization",            "Avg GPU Utilizations",    GPUUtilization],
+        ["gpu_power_usage",            "Avg GPU Power Usages",    GPUPowerUsage],
+        ["gpu_used_memory",            "Max GPU Memory Usages",   GPUUsedMemory],
+        ["gpu_total_memory",           "Total GPU Memory Usages", GPUTotalMemory]
     ]
     #yapf: enable
 
@@ -83,6 +100,14 @@ class PerfAnalyzer:
             for perf_metric in PerfAnalyzer.perf_metric_table
         ]
         return perf_metrics
+
+    @staticmethod
+    def get_gpu_metrics():
+        gpu_metrics = [
+            gpu_metric[PerfAnalyzer.RECORD_CLASS]
+            for gpu_metric in PerfAnalyzer.gpu_metric_table
+        ]
+        return gpu_metrics
 
     def __init__(self, path, config, max_retries, timeout, max_cpu_util):
         """
@@ -402,26 +427,75 @@ class PerfAnalyzer:
         ]:
             os.remove(perf_config['latency-report-file'])
 
-    def _extract_metrics_from_row(self, requested_metrics, row_metrics):
+    def _extract_metrics_from_row(self, requested_metrics: List[Record],
+                                  row_metrics: Dict[str, str]) -> List[Record]:
         """ 
         Extracts the requested metrics from the CSV's row and creates a list of Records
         """
-        perf_records = []
-        for perf_metric in PerfAnalyzer.perf_metric_table:
-            if self._is_perf_metric_requested_and_in_row(
-                    perf_metric, requested_metrics, row_metrics):
-                value = float(row_metrics[perf_metric[PerfAnalyzer.CSV_STRING]]
-                             ) / perf_metric[PerfAnalyzer.REDUCTION_FACTOR]
+        perf_records = self._create_records_from_perf_metrics(
+            requested_metrics, row_metrics)
 
-                perf_records.append(
-                    perf_metric[PerfAnalyzer.RECORD_CLASS](value))
+        gpu_records = self._create_records_from_gpu_metrics(
+            requested_metrics, row_metrics)
+
+        return perf_records + gpu_records
+
+    def _create_records_from_perf_metrics(
+            self, requested_metrics: List[Record],
+            row_metrics: Dict[str, str]) -> List[Record]:
+        perf_records: List[Record] = []
+        for perf_metric in PerfAnalyzer.perf_metric_table:
+            if self._is_metric_requested_and_in_row(perf_metric,
+                                                    requested_metrics,
+                                                    row_metrics):
+                value = float(row_metrics[str(
+                    perf_metric[PerfAnalyzer.CSV_STRING])])
+                reduction_factor = float(
+                    str(perf_metric[PerfAnalyzer.REDUCTION_FACTOR]))
+                perf_value = value / reduction_factor
+
+                perf_records.append(perf_metric[PerfAnalyzer.RECORD_CLASS](
+                    perf_value))  # type: ignore
 
         return perf_records
 
-    def _is_perf_metric_requested_and_in_row(self, perf_metric,
-                                             requested_metrics, row_metrics):
-        tag_match = any(
-            perf_metric[PerfAnalyzer.METRIC_TAG] in requested_metric.tag
-            for requested_metric in requested_metrics)
+    def _create_records_from_gpu_metrics(
+            self, requested_metrics: List[Record],
+            row_metrics: Dict[str, str]) -> List[Record]:
+        # GPU metrics have the following format: UUID0:value0;UUID1:value1;...
+        gpu_records: List[Record] = []
+        for gpu_metric in PerfAnalyzer.gpu_metric_table:
+            if self._is_metric_requested_and_in_row(gpu_metric,
+                                                    requested_metrics,
+                                                    row_metrics):
+                gpu_metric_string = row_metrics[str(
+                    gpu_metric[PerfAnalyzer.CSV_STRING])]
 
-        return tag_match and perf_metric[PerfAnalyzer.CSV_STRING] in row_metrics
+                # Covers the case where PA didn't provide data
+                if not gpu_metric_string:
+                    continue
+
+                # Needed because PA might terminate substring with a ;
+                if gpu_metric_string and gpu_metric_string[-1] == ';':
+                    gpu_metric_string = gpu_metric_string[:-1]
+
+                gpu_metric_string_tuples = gpu_metric_string.split(';')
+
+                for gpu_metric_string_tuple in gpu_metric_string_tuples:
+                    gpu_metric_tuple = gpu_metric_string_tuple.split(':')
+
+                    gpu_records.append(gpu_metric[PerfAnalyzer.RECORD_CLASS](
+                        value=float(
+                            gpu_metric_tuple[PerfAnalyzer.GPU_METRIC_VALUE]),
+                        device_uuid=gpu_metric_tuple[
+                            PerfAnalyzer.GPU_METRIC_UUID]))  # type: ignore
+
+        return gpu_records
+
+    def _is_metric_requested_and_in_row(self, metric: List[object],
+                                        requested_metrics: List[Record],
+                                        row_metrics: Dict[str, str]) -> bool:
+        tag_match = any(metric[PerfAnalyzer.METRIC_TAG] in requested_metric.tag
+                        for requested_metric in requested_metrics)
+
+        return tag_match and metric[PerfAnalyzer.CSV_STRING] in row_metrics
