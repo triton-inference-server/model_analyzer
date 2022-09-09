@@ -247,7 +247,7 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
         pa_csv_mock += """Client Recv,p50 latency,p90 latency,p95 latency,p99 latency,Avg latency,request/response,response wait,"""
         pa_csv_mock += """Avg GPU Utilizations,Avg GPU Power Usages,Max GPU Memory Usages,Total GPU Memory Usages\n"""
         pa_csv_mock += """1,46.8,2,187,18,34,65,16,1,4600,4700,4800,4900,5000,3,314,"""
-        pa_csv_mock += """1:80.9;2:90.1;3:74.5;,1:91.2;2:100;,1:1000;,7:1500"""
+        pa_csv_mock += """GPU-aaf4fea0:80.9;GPU-aaf4fea1:90.1;GPU-aaf4fea2:74.5;,GPU-aaf4fea0:91.2;GPU-aaf4fea1:100;,GPU-aaf4fea0:1000;,GPU-aaf4fea0:1500"""
 
         # Test avg latency parsing
         perf_metrics = [PerfLatencyAvg]
@@ -379,11 +379,14 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         records = perf_analyzer.get_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 3)
-        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(),
+                         "GPU-aaf4fea0")
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 80.9)
-        self.assertEqual(records[TEST_MODEL_NAME][1].device_uuid(), 2)
+        self.assertEqual(records[TEST_MODEL_NAME][1].device_uuid(),
+                         "GPU-aaf4fea1")
         self.assertEqual(records[TEST_MODEL_NAME][1].value(), 90.1)
-        self.assertEqual(records[TEST_MODEL_NAME][2].device_uuid(), 3)
+        self.assertEqual(records[TEST_MODEL_NAME][2].device_uuid(),
+                         "GPU-aaf4fea2")
         self.assertEqual(records[TEST_MODEL_NAME][2].value(), 74.5)
 
         # Test GPU Power Usages
@@ -396,9 +399,11 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         records = perf_analyzer.get_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 2)
-        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(),
+                         "GPU-aaf4fea0")
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 91.2)
-        self.assertEqual(records[TEST_MODEL_NAME][1].device_uuid(), 2)
+        self.assertEqual(records[TEST_MODEL_NAME][1].device_uuid(),
+                         "GPU-aaf4fea1")
         self.assertEqual(records[TEST_MODEL_NAME][1].value(), 100)
 
         # Test Max GPU Memory Usages
@@ -411,7 +416,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         records = perf_analyzer.get_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(), 1)
+        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(),
+                         "GPU-aaf4fea0")
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 1000)
 
         # Test Total GPU Memory
@@ -424,7 +430,8 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         records = perf_analyzer.get_records()
         self.assertEqual(len(records[TEST_MODEL_NAME]), 1)
-        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(), 7)
+        self.assertEqual(records[TEST_MODEL_NAME][0].device_uuid(),
+                         "GPU-aaf4fea0")
         self.assertEqual(records[TEST_MODEL_NAME][0].value(), 1500)
 
         # # Test parsing for subset

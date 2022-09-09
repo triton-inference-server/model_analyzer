@@ -517,7 +517,7 @@ class PerfAnalyzer:
             for gpu_tuple in gpu_values[i]:
                 perf_records.append(gpu_metric[PerfAnalyzer.RECORD_CLASS](
                     value=float(gpu_tuple[PerfAnalyzer.GPU_METRIC_VALUE]),
-                    device_uuid=int(gpu_tuple[PerfAnalyzer.GPU_METRIC_UUID])))
+                    device_uuid=gpu_tuple[PerfAnalyzer.GPU_METRIC_UUID]))
 
         return perf_records
 
