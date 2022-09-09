@@ -471,9 +471,9 @@ class PerfAnalyzer:
                 gpu_metric_string = row_metrics[str(
                     gpu_metric[PerfAnalyzer.CSV_STRING])]
 
-                # Return immediately if PA didn't provide data
+                # Covers the case where PA didn't provide data
                 if not gpu_metric_string:
-                    return gpu_records
+                    continue
 
                 # Needed because PA might terminate substring with a ;
                 if gpu_metric_string and gpu_metric_string[-1] == ';':
