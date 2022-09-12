@@ -153,13 +153,6 @@ class PerfAnalyzerConfig:
             'verbose-csv': '--verbose-csv'
         }
 
-        metrics_interval = profile_config.monitoring_interval * SECONDS_TO_MILLISECONDS_MULTIPLIER
-        params.update({
-            'collect-metrics': 'True',
-            'metrics-url': profile_config.triton_metrics_url,
-            'metrics-interval': metrics_interval
-        })
-
         if profile_config.triton_launch_mode == 'c_api':
             params.update({
                 'service-kind': 'triton_c_api',
@@ -176,6 +169,14 @@ class PerfAnalyzerConfig:
                 'protocol': profile_config.client_protocol,
                 'url': url
             })
+
+            metrics_interval = profile_config.monitoring_interval * SECONDS_TO_MILLISECONDS_MULTIPLIER
+            params.update({
+                'collect-metrics': 'True',
+                'metrics-url': profile_config.triton_metrics_url,
+                'metrics-interval': metrics_interval
+            })
+
         self.update_config(params)
 
     @classmethod

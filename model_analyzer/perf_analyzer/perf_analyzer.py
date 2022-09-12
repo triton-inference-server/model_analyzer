@@ -341,7 +341,14 @@ class PerfAnalyzer:
         self._cmd_log.seek(0)
         tmp_output = self._cmd_log.read()
         self._cmd_log.close()
-        return tmp_output.decode('utf-8')
+
+        result = ""
+        try:
+            result = tmp_output.decode('utf-8')
+        except:
+            pass
+
+        return result
 
     def _auto_adjust_parameters(self, process):
         """

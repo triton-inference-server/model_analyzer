@@ -459,7 +459,7 @@ class MetricsManager:
 
         # PerfAnalyzer run was not succesful
         if status == 1:
-            return None
+            return (None, None)
 
         perf_records = perf_analyzer.get_perf_records()
         gpu_records = perf_analyzer.get_gpu_records()

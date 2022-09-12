@@ -214,10 +214,7 @@ def construct_perf_analyzer_config(model_name='my-model',
     pa_config._options['-b'] = batch_size
     pa_config._args['concurrency-range'] = concurrency
     pa_config._args['measurement-mode'] = DEFAULT_MEASUREMENT_MODE
-    pa_config._args['collect-metrics'] = 'True'
-    pa_config._args['metrics-url'] = DEFAULT_TRITON_METRICS_URL
-    pa_config._args[
-        'metrics-interval'] = SECONDS_TO_MILLISECONDS_MULTIPLIER * DEFAULT_MONITORING_INTERVAL
+
     pa_config.update_config(perf_analyzer_flags)
 
     if launch_mode == 'c_api':
@@ -225,6 +222,10 @@ def construct_perf_analyzer_config(model_name='my-model',
         pa_config._args['triton-server-directory'] = DEFAULT_TRITON_INSTALL_PATH
         pa_config._args['model-repository'] = DEFAULT_OUTPUT_MODEL_REPOSITORY
     else:
+        pa_config._args['collect-metrics'] = 'True'
+        pa_config._args['metrics-url'] = DEFAULT_TRITON_METRICS_URL
+        pa_config._args[
+            'metrics-interval'] = SECONDS_TO_MILLISECONDS_MULTIPLIER * DEFAULT_MONITORING_INTERVAL
         pa_config._options['-i'] = client_protocol
         if client_protocol == 'http':
             pa_config._options['-u'] = DEFAULT_TRITON_HTTP_ENDPOINT
