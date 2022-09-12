@@ -235,16 +235,6 @@ class ResultManager:
 
         return result_stats
 
-    # TODO: TMA-898 This is the big hammer to fix the issues that arise because we
-    # can create new measurements inside existing RCR's after the heaps have been
-    # created either when re-profiling or running quick + brute w/ concurrency sweep
-    def add_results_to_heaps(self):
-        # Delete the current heaps
-        self._per_model_sorted_results = defaultdict(ResultList)
-        self._across_model_sorted_results = ResultList()
-
-        self._add_results_to_heaps()
-
     def _init_state(self):
         """
         Sets ResultManager object managed

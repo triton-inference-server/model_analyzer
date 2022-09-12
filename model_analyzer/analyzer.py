@@ -113,7 +113,6 @@ class Analyzer:
         logger.info("")
 
         if not self._config.skip_summary_reports:
-            self._result_manager.add_results_to_heaps()
             self._create_summary_tables(verbose)
             self._create_summary_reports(mode)
             logger.info(self._get_report_command_help_string())
