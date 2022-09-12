@@ -38,7 +38,7 @@ from model_analyzer.record.record import Record
 from model_analyzer.record.types.gpu_utilization import GPUUtilization
 from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
 from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
-from model_analyzer.record.types.gpu_total_memory import GPUTotalMemory
+from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
 
 from model_analyzer.constants import \
     INTERVAL_SLEEP_TIME, LOGGER_NAME, MEASUREMENT_REQUEST_COUNT_STEP, \
@@ -86,10 +86,10 @@ class PerfAnalyzer:
     ]
 
     gpu_metric_table = [
-        ["gpu_utilization",            "Avg GPU Utilizations",    GPUUtilization],
-        ["gpu_power_usage",            "Avg GPU Power Usages",    GPUPowerUsage],
-        ["gpu_used_memory",            "Max GPU Memory Usages",   GPUUsedMemory],
-        ["gpu_total_memory",           "Total GPU Memory Usages", GPUTotalMemory]
+        ["gpu_utilization",            "Avg GPU Utilization",   GPUUtilization,          "0.01"],
+        ["gpu_power_usage",            "Avg GPU Power Usage",   GPUPowerUsage,              "1"],
+        ["gpu_used_memory",            "Max GPU Memory Usage",  GPUUsedMemory,        "1000000"],
+        ["gpu_free_memory",            "Total GPU Memory",      GPUFreeMemory,        "1000000"]
     ]
     #yapf: enable
 
@@ -133,6 +133,7 @@ class PerfAnalyzer:
         self._timeout = timeout
         self._output = ""
         self._perf_records = {}
+        self._gpu_records = []
         self._max_cpu_util = max_cpu_util
 
     def run(self, metrics, env=None):
@@ -183,11 +184,11 @@ class PerfAnalyzer:
 
         return self.PA_SUCCESS
 
-    def get_records(self):
+    def get_perf_records(self):
         """
         Returns
         -------
-        The records from the last perf_analyzer run
+        The perf records from the last perf_analyzer run
         """
 
         if self._perf_records:
@@ -195,6 +196,15 @@ class PerfAnalyzer:
         raise TritonModelAnalyzerException(
             "Attempted to get perf_analyzer results"
             "without calling run first.")
+
+    def get_gpu_records(self):
+        """
+        Returns
+        -------
+        The gpu records from the last perf_analyzer run
+        """
+
+        return self._gpu_records
 
     def output(self):
         """
@@ -331,7 +341,16 @@ class PerfAnalyzer:
         self._cmd_log.seek(0)
         tmp_output = self._cmd_log.read()
         self._cmd_log.close()
-        return tmp_output.decode('utf-8')
+
+        # PA has occasionally output non-UTF-8 bytes which would cause MA
+        # to assert. In that case, just ignore the result instead of asserting
+        result = ""
+        try:
+            result = tmp_output.decode('utf-8')
+        except:
+            pass
+
+        return result
 
     def _auto_adjust_parameters(self, process):
         """
@@ -419,28 +438,17 @@ class PerfAnalyzer:
 
                 for row in csv_reader:
                     self._perf_records[perf_config[
-                        'model-name']] = self._extract_metrics_from_row(
+                        'model-name']] = self._extract_perf_records_from_row(
                             metrics, row)
+                    self._gpu_records = self._extract_gpu_records_from_row(
+                        metrics, row)
 
         for perf_config in [
                 mrc.perf_config() for mrc in self._config.model_run_configs()
         ]:
             os.remove(perf_config['latency-report-file'])
 
-    def _extract_metrics_from_row(self, requested_metrics: List[Record],
-                                  row_metrics: Dict[str, str]) -> List[Record]:
-        """ 
-        Extracts the requested metrics from the CSV's row and creates a list of Records
-        """
-        perf_records = self._create_records_from_perf_metrics(
-            requested_metrics, row_metrics)
-
-        gpu_records = self._create_records_from_gpu_metrics(
-            requested_metrics, row_metrics)
-
-        return perf_records + gpu_records
-
-    def _create_records_from_perf_metrics(
+    def _extract_perf_records_from_row(
             self, requested_metrics: List[Record],
             row_metrics: Dict[str, str]) -> List[Record]:
         perf_records: List[Record] = []
@@ -459,7 +467,7 @@ class PerfAnalyzer:
 
         return perf_records
 
-    def _create_records_from_gpu_metrics(
+    def _extract_gpu_records_from_row(
             self, requested_metrics: List[Record],
             row_metrics: Dict[str, str]) -> List[Record]:
         # GPU metrics have the following format: UUID0:value0;UUID1:value1;...
@@ -484,13 +492,40 @@ class PerfAnalyzer:
                 for gpu_metric_string_tuple in gpu_metric_string_tuples:
                     gpu_metric_tuple = gpu_metric_string_tuple.split(':')
 
-                    gpu_records.append(gpu_metric[PerfAnalyzer.RECORD_CLASS](
-                        value=float(
-                            gpu_metric_tuple[PerfAnalyzer.GPU_METRIC_VALUE]),
-                        device_uuid=gpu_metric_tuple[
-                            PerfAnalyzer.GPU_METRIC_UUID]))  # type: ignore
+                    uuid = gpu_metric_tuple[PerfAnalyzer.GPU_METRIC_UUID]
+                    tmp_value = float(
+                        gpu_metric_tuple[PerfAnalyzer.GPU_METRIC_VALUE])
+                    reduction_factor = float(
+                        str(gpu_metric[PerfAnalyzer.REDUCTION_FACTOR]))
+                    value = tmp_value / reduction_factor
 
+                    record = gpu_metric[PerfAnalyzer.RECORD_CLASS](
+                        value=value, device_uuid=uuid)  # type: ignore
+
+                    gpu_records.append(record)
+
+        self._cleanup_gpu_records(gpu_records)
         return gpu_records
+
+    def _cleanup_gpu_records(self, gpu_records):
+        # Recalculate GPUFreeMemory by removing the value of the associated GPUUsedMemory
+        # Remove any GPUFreeMemory records that don't have a matching GPUUsedMemory
+        indexes_to_remove = []
+        for i, record in enumerate(gpu_records):
+            if type(record) == GPUFreeMemory:
+                # Find matching UUID UsedMemory
+                found = False
+                for other_record in gpu_records:
+                    if type(other_record
+                           ) == GPUUsedMemory and record.device_uuid(
+                           ) == other_record.device_uuid():
+                        found = True
+                        record._value = record.value() - other_record.value()
+                        break
+                if not found:
+                    indexes_to_remove.append(i)
+        for i in reversed(indexes_to_remove):
+            del gpu_records[i]
 
     def _is_metric_requested_and_in_row(self, metric: List[object],
                                         requested_metrics: List[Record],

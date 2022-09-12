@@ -15,6 +15,7 @@
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
+from model_analyzer.constants import SECONDS_TO_MILLISECONDS_MULTIPLIER
 
 
 class PerfAnalyzerConfig:
@@ -39,7 +40,8 @@ class PerfAnalyzerConfig:
         'ssl-https-verify-host', 'ssl-https-ca-certificates-file',
         'ssl-https-client-certificate-type',
         'ssl-https-client-certificate-file', 'ssl-https-private-key-type',
-        'ssl-https-private-key-file'
+        'ssl-https-private-key-file', 'collect-metrics', 'metrics-url',
+        'metrics-interval'
     ]
 
     input_to_options = [
@@ -52,7 +54,8 @@ class PerfAnalyzerConfig:
     additive_args = ['input-data', 'shape']
 
     boolean_args = [
-        'streaming', 'async', 'sync', 'binary-search', 'ssl-grpc-use-ssl'
+        'streaming', 'async', 'sync', 'binary-search', 'ssl-grpc-use-ssl',
+        'collect-metrics'
     ]
 
     def __init__(self):
@@ -166,6 +169,14 @@ class PerfAnalyzerConfig:
                 'protocol': profile_config.client_protocol,
                 'url': url
             })
+
+            metrics_interval = profile_config.monitoring_interval * SECONDS_TO_MILLISECONDS_MULTIPLIER
+            params.update({
+                'collect-metrics': 'True',
+                'metrics-url': profile_config.triton_metrics_url,
+                'metrics-interval': metrics_interval
+            })
+
         self.update_config(params)
 
     @classmethod
