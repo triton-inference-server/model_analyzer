@@ -14,13 +14,12 @@
 
 from model_analyzer.constants import LOGGER_NAME
 
-import heapq
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
 
 
-class ResultHeap:
+class ResultList:
     """
     A data structure used by the result manager 
     to store and sort results
@@ -35,7 +34,7 @@ class ResultHeap:
         """
         Returns
         -------
-        True if this heap has no results
+        True if this list has no results
         False otherwise
         """
 
@@ -45,7 +44,7 @@ class ResultHeap:
         """
         Returns
         -------
-        All the results in this result heap
+        All the results in this result list
         """
 
         return self._sorted_results
@@ -53,7 +52,7 @@ class ResultHeap:
     def add_result(self, result):
         """
         Adds a result to the result 
-        heaps
+        lists
 
         Parameters
         ----------
@@ -61,25 +60,26 @@ class ResultHeap:
             The result to be added
         """
 
-        heapq.heappush(self._sorted_results, result)
+        self._sorted_results.append(result)
         if result.failing():
-            heapq.heappush(self._failing_results, result)
+            self._failing_results.append(result)
         else:
-            heapq.heappush(self._passing_results, result)
+            self._passing_results.append(result)
 
     def next_best_result(self):
         """
         Removes and returns the 
         next best item in this 
-        result heap
+        result list
 
         Returns
         -------
         ModelResult
-            The next best result in this heap
+            The next best result in this list
         """
 
-        return heapq.heappop(self._sorted_results)
+        self._sorted_results.sort()
+        return self._sorted_results.pop(0)
 
     def top_n_results(self, n):
         """
@@ -95,6 +95,8 @@ class ResultHeap:
             The n best results for this model,
             must all be passing results
         """
+        self._passing_results.sort()
+        self._failing_results.sort()
 
         if len(self._passing_results) == 0:
             logger.warning(
@@ -102,20 +104,19 @@ class ResultHeap:
                 "Showing available constraint failing configs for this model.")
 
             if n == -1:
-                return heapq.nsmallest(len(self._failing_results),
-                                       self._failing_results)
+                return self._failing_results
             if n > len(self._failing_results):
                 logger.warning(
                     f"Requested top {n} failing configs, "
                     f"but found only {len(self._failing_results)}. "
                     "Showing all available constraint failing configs for this model."
                 )
-            return heapq.nsmallest(min(n, len(self._failing_results)),
-                                   self._failing_results)
+
+            result_len = min(n, len(self._failing_results))
+            return self._failing_results[0:result_len]
 
         if n == -1:
-            return heapq.nsmallest(len(self._passing_results),
-                                   self._passing_results)
+            return self._passing_results
         if n > len(self._passing_results):
             logger.warning(
                 f"Requested top {n} configs, "
@@ -123,5 +124,5 @@ class ResultHeap:
                 "Showing all available constraint satisfying configs for this model."
             )
 
-        return heapq.nsmallest(min(n, len(self._passing_results)),
-                               self._passing_results)
+        result_len = min(n, len(self._passing_results))
+        return self._passing_results[0:result_len]
