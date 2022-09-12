@@ -342,6 +342,8 @@ class PerfAnalyzer:
         tmp_output = self._cmd_log.read()
         self._cmd_log.close()
 
+        # PA has occasionally output non-UTF-8 bytes which would cause MA
+        # to assert. In that case, just ignore the result instead of asserting
         result = ""
         try:
             result = tmp_output.decode('utf-8')
