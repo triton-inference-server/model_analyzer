@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Optional
 
 from copy import deepcopy
 from bisect import insort
@@ -131,8 +131,8 @@ class ResultList:
         result_len = min(n, len(self._passing_results))
         return self._passing_results[0:result_len]
 
-    def _find_existing_run_config(self,
-                                  result: RunConfigResult) -> RunConfigResult:
+    def _find_existing_run_config(
+            self, result: RunConfigResult) -> Optional[RunConfigResult]:
         if not result.run_config():
             return None
 
