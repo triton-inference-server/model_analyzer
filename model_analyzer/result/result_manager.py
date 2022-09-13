@@ -18,7 +18,7 @@ from model_analyzer.constants import TOP_MODELS_REPORT_KEY
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
-from .result_list import ResultList
+from .sorted_results import SortedResults
 from .run_config_result_comparator import RunConfigResultComparator
 from .run_config_measurement import RunConfigMeasurement
 from .run_config_result import RunConfigResult
@@ -51,8 +51,8 @@ class ResultManager:
         self._state_manager = state_manager
 
         # Data structures for sorting results
-        self._per_model_sorted_results = defaultdict(ResultList)
-        self._across_model_sorted_results = ResultList()
+        self._per_model_sorted_results = defaultdict(SortedResults)
+        self._across_model_sorted_results = SortedResults()
 
         if state_manager.starting_fresh_run():
             self._init_state()
@@ -213,11 +213,11 @@ class ResultManager:
         manager's heap
         """
 
-        def _update_stats(statistics, result_list, stats_key):
+        def _update_stats(statistics, sorted_results, stats_key):
             passing_measurements = 0
             failing_measurements = 0
             total_configs = 0
-            for result in result_list.results():
+            for result in sorted_results.results():
                 total_configs += 1
                 passing_measurements += len(result.passing_measurements())
                 failing_measurements += len(result.failing_measurements())
@@ -227,8 +227,9 @@ class ResultManager:
             statistics.set_failing_measurements(stats_key, failing_measurements)
 
         result_stats = ResultStatistics()
-        for model_name, result_list in self._per_model_sorted_results.items():
-            _update_stats(result_stats, result_list, model_name)
+        for model_name, sorted_results in self._per_model_sorted_results.items(
+        ):
+            _update_stats(result_stats, sorted_results, model_name)
 
         _update_stats(result_stats, self._across_model_sorted_results,
                       TOP_MODELS_REPORT_KEY)
@@ -413,7 +414,7 @@ class ResultManager:
                     run_config_result)
                 self._across_model_sorted_results.add_result(run_config_result)
 
-    def _add_default_to_results(self, model_name, results, result_list):
+    def _add_default_to_results(self, model_name, results, sorted_results):
         '''
         If default config is already in results, keep it there. Else, find and
         add it from the result heap
@@ -432,7 +433,7 @@ class ResultManager:
             ) == default_model_name:
                 return
 
-        for run_config_result in result_list.results():
+        for run_config_result in sorted_results.results():
             if run_config_result.run_config().model_variants_name(
             ) == default_model_name:
                 results.append(run_config_result)

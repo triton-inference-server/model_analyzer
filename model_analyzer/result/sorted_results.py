@@ -25,7 +25,7 @@ import logging
 logger = logging.getLogger(LOGGER_NAME)
 
 
-class ResultList:
+class SortedResults:
     """
     A data structure used by the result manager 
     to store and sort results

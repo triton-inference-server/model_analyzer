@@ -20,7 +20,7 @@ from .common import test_result_collector as trc
 from .common.test_utils import load_single_model_result_manager, load_multi_model_result_manager
 
 from unittest.mock import patch, MagicMock
-from model_analyzer.result.result_list import ResultList
+from model_analyzer.result.sorted_results import SortedResults
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
@@ -132,7 +132,7 @@ class TestResultManager(trc.TestResultCollector):
         result_manager, _ = load_single_model_result_manager()
         result_manager._add_rcm_to_results(MagicMock(), MagicMock())
         sorted_results = result_manager.get_model_sorted_results("add_sub")
-        self.assertTrue(isinstance(sorted_results, ResultList))
+        self.assertTrue(isinstance(sorted_results, SortedResults))
         self.assertEqual(5, len(sorted_results.results()))
 
     def test_get_multi_model_sorted_results(self):
@@ -140,7 +140,7 @@ class TestResultManager(trc.TestResultCollector):
         result_manager, _ = load_multi_model_result_manager()
         sorted_results = result_manager.get_model_sorted_results(
             "resnet50_libtorch,vgg19_libtorch")
-        self.assertTrue(isinstance(sorted_results, ResultList))
+        self.assertTrue(isinstance(sorted_results, SortedResults))
         self.assertEqual(17, len(sorted_results.results()))
 
     def test_get_across_model_sorted_results(self):
@@ -152,7 +152,7 @@ class TestResultManager(trc.TestResultCollector):
         self._add_a_fake_result(result_manager)
 
         sorted_results = result_manager.get_across_model_sorted_results()
-        self.assertTrue(isinstance(sorted_results, ResultList))
+        self.assertTrue(isinstance(sorted_results, SortedResults))
         self.assertEqual(6, len(sorted_results.results()))
 
     def _add_a_fake_result(self, result_manager):

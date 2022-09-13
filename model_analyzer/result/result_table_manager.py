@@ -75,11 +75,11 @@ class ResultTableManager:
 
         # Fill rows in descending order
         for model in self._result_manager.get_model_names():
-            result_list = deepcopy(
+            sorted_results = deepcopy(
                 self._result_manager.get_model_sorted_results(model))
 
-            while not result_list.empty():
-                self._tabulate_measurements(result_list.next_best_result())
+            while not sorted_results.empty():
+                self._tabulate_measurements(sorted_results.next_best_result())
 
     def write_results(self):
         """

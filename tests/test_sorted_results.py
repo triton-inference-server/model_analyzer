@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.result.result_list import ResultList
+from model_analyzer.result.sorted_results import SortedResults
 from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
 from .common import test_result_collector as trc
 from .common.test_utils import construct_run_config, construct_run_config_result
@@ -23,11 +23,11 @@ from random import sample
 from unittest.mock import patch
 
 
-class TestResultListMethods(trc.TestResultCollector):
+class TestSortedResultsMethods(trc.TestResultCollector):
 
     def setUp(self):
         objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
-        self.result_list = ResultList()
+        self.sorted_results = SortedResults()
         self.result_comparator = RunConfigResultComparator(
             metric_objectives_list=[objective_spec])
 
@@ -43,23 +43,23 @@ class TestResultListMethods(trc.TestResultCollector):
             avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
             comparator=self.result_comparator)
 
-        self.assertTrue(self.result_list.empty())
-        self.result_list.add_result(result=result)
-        self.assertFalse(self.result_list.empty())
-        self.result_list.next_best_result()
-        self.assertTrue(self.result_list.empty())
+        self.assertTrue(self.sorted_results.empty())
+        self.sorted_results.add_result(result=result)
+        self.assertFalse(self.sorted_results.empty())
+        self.sorted_results.next_best_result()
+        self.assertTrue(self.sorted_results.empty())
 
     def test_add_results(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency_p99': 4000}
         for _ in range(10):
-            self.result_list.add_result(
+            self.sorted_results.add_result(
                 construct_run_config_result(
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator))
 
-        results = self.result_list.results()
+        results = self.sorted_results.results()
         self.assertEqual(len(results), 10)
 
     def test_add_results_same_config(self):
@@ -72,14 +72,14 @@ class TestResultListMethods(trc.TestResultCollector):
         for _ in range(10):
             run_config = construct_run_config('modelA', 'model_config_0',
                                               'key_A')
-            self.result_list.add_result(
+            self.sorted_results.add_result(
                 construct_run_config_result(
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
                     run_config=run_config))
 
-        results = self.result_list.results()
+        results = self.sorted_results.results()
         self.assertEqual(len(results), 1)
 
     def test_next_best_result(self):
@@ -89,16 +89,20 @@ class TestResultListMethods(trc.TestResultCollector):
                 'perf_throughput': 100 + 10 * i,
                 'perf_latency_p99': 4000
             }
-            self.result_list.add_result(
+            self.sorted_results.add_result(
                 construct_run_config_result(
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
                     model_name=str(i)))
-        self.assertEqual(self.result_list.next_best_result().model_name(), '10')
-        self.assertEqual(self.result_list.next_best_result().model_name(), '9')
-        self.assertEqual(self.result_list.next_best_result().model_name(), '8')
-        self.assertEqual(self.result_list.next_best_result().model_name(), '7')
+        self.assertEqual(self.sorted_results.next_best_result().model_name(),
+                         '10')
+        self.assertEqual(self.sorted_results.next_best_result().model_name(),
+                         '9')
+        self.assertEqual(self.sorted_results.next_best_result().model_name(),
+                         '8')
+        self.assertEqual(self.sorted_results.next_best_result().model_name(),
+                         '7')
 
     def test_top_n_results(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
@@ -107,21 +111,21 @@ class TestResultListMethods(trc.TestResultCollector):
                 'perf_throughput': 100 + 10 * i,
                 'perf_latency_p99': 4000
             }
-            self.result_list.add_result(
+            self.sorted_results.add_result(
                 construct_run_config_result(
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
                     model_name=str(i)))
 
-        top_5_results = self.result_list.top_n_results(n=5)
+        top_5_results = self.sorted_results.top_n_results(n=5)
         self.assertEqual(top_5_results[0].model_name(), '9')
         self.assertEqual(top_5_results[1].model_name(), '8')
         self.assertEqual(top_5_results[2].model_name(), '7')
         self.assertEqual(top_5_results[3].model_name(), '6')
         self.assertEqual(top_5_results[4].model_name(), '5')
 
-        all_results = self.result_list.top_n_results(n=-1)
+        all_results = self.sorted_results.top_n_results(n=-1)
         self.assertEqual(all_results[0].model_name(), '9')
         self.assertEqual(all_results[1].model_name(), '8')
         self.assertEqual(all_results[2].model_name(), '7')
