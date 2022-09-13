@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
+from copy import deepcopy
+from bisect import insort
+
 from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.result.run_config_result import RunConfigResult
 
 import logging
 
@@ -40,7 +46,7 @@ class ResultList:
 
         return not bool(self._sorted_results)
 
-    def results(self):
+    def results(self) -> List[RunConfigResult]:
         """
         Returns
         -------
@@ -49,10 +55,11 @@ class ResultList:
 
         return self._sorted_results
 
-    def add_result(self, result):
+    def add_result(self, result: RunConfigResult):
         """
-        Adds a result to the result 
-        lists
+        Adds a result to the result lists
+        This can either be a new result or new measurements added
+        to an existing result
 
         Parameters
         ----------
@@ -60,13 +67,14 @@ class ResultList:
             The result to be added
         """
 
-        self._sorted_results.append(result)
-        if result.failing():
-            self._failing_results.append(result)
-        else:
-            self._passing_results.append(result)
+        existing_run_config = self._find_existing_run_config(result)
 
-    def next_best_result(self):
+        if existing_run_config:
+            self._add_result_to_existing_run_config(existing_run_config, result)
+        else:
+            self._add_new_results(result)
+
+    def next_best_result(self) -> RunConfigResult:
         """
         Removes and returns the 
         next best item in this 
@@ -78,10 +86,9 @@ class ResultList:
             The next best result in this list
         """
 
-        self._sorted_results.sort()
         return self._sorted_results.pop(0)
 
-    def top_n_results(self, n):
+    def top_n_results(self, n: int) -> List[RunConfigResult]:
         """
         Parameters
         ----------
@@ -91,13 +98,10 @@ class ResultList:
 
         Returns
         -------
-        list of ModelResults
+        list of RunConfigResults
             The n best results for this model,
             must all be passing results
         """
-        self._passing_results.sort()
-        self._failing_results.sort()
-
         if len(self._passing_results) == 0:
             logger.warning(
                 f"Requested top {n} configs, but none satisfied constraints. "
@@ -126,3 +130,30 @@ class ResultList:
 
         result_len = min(n, len(self._passing_results))
         return self._passing_results[0:result_len]
+
+    def _find_existing_run_config(self,
+                                  result: RunConfigResult) -> RunConfigResult:
+        if not result.run_config():
+            return None
+
+        for rcr in self._sorted_results:
+            if result.run_config().model_variants_name() == rcr.run_config(
+            ).model_variants_name():
+                return rcr
+
+        return None
+
+    def _add_result_to_existing_run_config(self,
+                                           existing_run_config: RunConfigResult,
+                                           result: RunConfigResult):
+        for rcm in result.run_config_measurements():
+            existing_run_config.add_run_config_measurement(rcm)
+
+    def _add_new_results(self, result: RunConfigResult):
+        new_result = deepcopy(result)
+
+        insort(self._sorted_results, new_result)
+        if result.failing():
+            insort(self._failing_results, new_result)
+        else:
+            insort(self._passing_results, new_result)
