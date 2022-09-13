@@ -15,7 +15,7 @@
 from model_analyzer.result.result_list import ResultList
 from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
 from .common import test_result_collector as trc
-from .common.test_utils import construct_run_config_result
+from .common.test_utils import construct_run_config, construct_run_config_result
 
 import unittest
 from random import sample
@@ -61,6 +61,26 @@ class TestResultListMethods(trc.TestResultCollector):
 
         results = self.result_list.results()
         self.assertEqual(len(results), 10)
+
+    def test_add_results_same_config(self):
+        """
+        Test that additonal results with the same model config variant
+        will be added to the same entry in the list
+        """
+        avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
+        avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency_p99': 4000}
+        for _ in range(10):
+            run_config = construct_run_config('modelA', 'model_config_0',
+                                              'key_A')
+            self.result_list.add_result(
+                construct_run_config_result(
+                    avg_gpu_metric_values=avg_gpu_metrics,
+                    avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
+                    comparator=self.result_comparator,
+                    run_config=run_config))
+
+        results = self.result_list.results()
+        self.assertEqual(len(results), 1)
 
     def test_next_best_result(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
