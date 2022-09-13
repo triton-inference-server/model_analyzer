@@ -132,7 +132,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self._done = True
 
     def set_last_results(self, measurements: List[Union[RunConfigMeasurement,
-                                                        None]]):
+                                                        None]]) -> None:
         """
         Given the results from the last RunConfig, make decisions
         about future configurations to generate
@@ -153,7 +153,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         self._print_debug_logs(measurements)
 
-    def _update_best_measurement(self, measurement: RunConfigMeasurement):
+    def _update_best_measurement(self, measurement: RunConfigMeasurement) -> None:
         """Keep track of the best coordinate/measurement seen so far."""
         if self._best_measurement is None:
             self._best_coordinate = self._coordinate_to_measure
@@ -186,7 +186,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         return self._coordinate_data.get_measurement(
             coordinate=self._coordinate_to_measure)
 
-    def _take_step(self):
+    def _take_step(self) -> None:
         new_coordinate = self._neighborhood.determine_new_home()
         self._determine_if_done(new_coordinate)
 
@@ -195,7 +195,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._coordinate_to_measure = new_coordinate
         self._recreate_neighborhood(force_slow_mode=False)
 
-    def _take_step_back(self):
+    def _take_step_back(self) -> None:
         new_coordinate = self._neighborhood.get_nearest_neighbor(
             coordinate_in=self._best_coordinate)
 
@@ -226,7 +226,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _measuring_home_coordinate(self):
         return self._coordinate_to_measure == self._home_coordinate
 
-    def _determine_if_done(self, new_coordinate: Coordinate):
+    def _determine_if_done(self, new_coordinate: Coordinate) -> None:
         """
         Based on the new coordinate picked, determine if the generator is done
         and if so, update self._done
@@ -236,7 +236,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         if self._coordinate_data.get_visit_count(new_coordinate) >= 2:
             self._done = True
 
-    def _recreate_neighborhood(self, force_slow_mode: bool):
+    def _recreate_neighborhood(self, force_slow_mode: bool) -> None:
         neighborhood_config = self._search_config.get_neighborhood_config()
 
         self._neighborhood = Neighborhood(neighborhood_config,
@@ -328,7 +328,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         return perf_analyzer_config
 
     def _print_debug_logs(self, measurements: List[Union[RunConfigMeasurement,
-                                                         None]]):
+                                                         None]]) -> None:
         if measurements is not None and measurements[0] is not None:
             assert len(measurements) == 1
 

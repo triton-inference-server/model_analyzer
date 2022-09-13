@@ -77,7 +77,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         self._model_variant_name_manager = model_variant_name_manager
 
     def set_last_results(self,
-                         measurements: List[Optional[RunConfigMeasurement]]):
+                         measurements: List[Optional[RunConfigMeasurement]]) -> None:
         self._rcg.set_last_results(measurements)
 
     def get_configs(self) -> Generator[RunConfig, None, None]:

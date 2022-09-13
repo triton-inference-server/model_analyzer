@@ -92,7 +92,7 @@ class RunConfigMeasurement:
 
         return run_config_measurement
 
-    def set_model_config_weighting(self, model_config_weights: List[int]):
+    def set_model_config_weighting(self, model_config_weights: List[int]) -> None:
         """
         Sets the model config weightings used when calculating 
         weighted metrics
@@ -109,7 +109,7 @@ class RunConfigMeasurement:
         ]
 
     def set_model_config_constraints(
-            self, model_config_constraints: List[Dict[str, Dict[str, int]]]):
+            self, model_config_constraints: List[Dict[str, Dict[str, int]]]) -> None:
         """
 
         Parameters
@@ -121,7 +121,7 @@ class RunConfigMeasurement:
 
     def add_model_config_measurement(self, model_config_name: str,
                                      model_specific_pa_params: Dict[str, int],
-                                     non_gpu_data: List[Record]):
+                                     non_gpu_data: List[Record]) -> None:
         """ 
         Adds a measurement from a single model config in this PA's run 
         
@@ -141,7 +141,7 @@ class RunConfigMeasurement:
         # By default setting all models to have equal weighting
         self._model_config_weights.append(1)
 
-    def set_metric_weightings(self, metric_objectives: List[Dict[str, int]]):
+    def set_metric_weightings(self, metric_objectives: List[Dict[str, int]]) -> None:
         """
         Sets the metric weighting for all non-GPU measurements
         
@@ -390,14 +390,15 @@ class RunConfigMeasurement:
         # seems like this should be == -1 but we're using a min heap
         return self._compare_measurements(other) == 1
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Check whether two sets of measurements are equivalent
         """
-
+        if not isinstance(other, RunConfigMeasurement):
+            return NotImplemented
         return self._compare_measurements(other) == 0
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: 'RunConfigMeasurement') -> bool:
         """
         Checks whether a measurement is better than another
         by using the weighted average across all model configs in the
@@ -530,7 +531,7 @@ class RunConfigMeasurement:
                                            other._model_config_measurements)
         ]
 
-    def _calculate_weighted_rcm_score(self, weighted_mcm_scores) -> float:
+    def _calculate_weighted_rcm_score(self, weighted_mcm_scores: List[float]) -> float:
         """
         Parameters
         ----------

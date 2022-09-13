@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from .config_generator_interface import ConfigGeneratorInterface
 from typing import List, Optional
 from model_analyzer.constants import LOGGER_NAME
@@ -27,7 +28,7 @@ logger = logging.getLogger(LOGGER_NAME)
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
     """ Base class for generating model configs """
 
-    def __init__(self, config, gpus, model: ModelProfileSpec, client,
+    def __init__(self, config, gpus, model, client,
                  model_variant_name_manager, default_only, early_exit_enable):
         """
         Parameters
@@ -148,8 +149,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model_variant_name_manager=self._model_variant_name_manager)
 
     @staticmethod
-    def make_model_config(param_combo, model: ModelProfileSpec,
-                          model_variant_name_manager):
+    def make_model_config(param_combo: dict, model: ModelProfileSpec,
+                          model_variant_name_manager: ModelVariantNameManager) -> ModelConfig:
         """
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config

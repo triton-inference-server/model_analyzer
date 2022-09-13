@@ -37,7 +37,7 @@ class CoordinateData:
         return self._measurements.get(key, None)
 
     def set_measurement(self, coordinate: Coordinate,
-                        measurement: Optional[RunConfigMeasurement]):
+                        measurement: Optional[RunConfigMeasurement]) -> None:
         """
         Set the measurement for the given coordinate.
         """
@@ -72,7 +72,7 @@ class CoordinateData:
         key: Tuple[Coordinate, ...] = tuple(coordinate)
         return self._visit_counts.get(key, 0)
 
-    def increment_visit_count(self, coordinate: Coordinate):
+    def increment_visit_count(self, coordinate: Coordinate) -> None:
         """
         Increase the visit count for the given coordinate by 1
         """

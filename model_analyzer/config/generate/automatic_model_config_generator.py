@@ -25,7 +25,7 @@ logger = logging.getLogger(LOGGER_NAME)
 class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in automatic search mode """
 
-    def __init__(self, config, gpus, model: ModelProfileSpec, client,
+    def __init__(self, config, gpus, model, client,
                  model_variant_name_manager, default_only, early_exit_enable):
         """
         Parameters

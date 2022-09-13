@@ -108,7 +108,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._step()
 
     def set_last_results(self, measurements: List[Union[RunConfigMeasurement,
-                                                        None]]):
+                                                        None]]) -> None:
         """
         Given the results from the last PerfAnalyzerConfig, make decisions
         about future configurations to generate

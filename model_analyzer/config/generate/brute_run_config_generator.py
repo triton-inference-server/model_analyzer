@@ -20,7 +20,9 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.device.gpu_device import GPUDevice
 
 class BruteRunConfigGenerator(ConfigGeneratorInterface):
     """
@@ -28,10 +30,10 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
     """
 
     def __init__(self,
-                 config,
-                 gpus,
+                 config: ConfigCommandProfile,
+                 gpus: List[GPUDevice],
                  models: List[ModelProfileSpec],
-                 client,
+                 client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager,
                  skip_default_config: bool = False):
         """

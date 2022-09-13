@@ -143,7 +143,7 @@ class Neighborhood:
         return new_coordinate
 
     def _translate_step_vector(self, step_vector: Coordinate,
-                               translate_list: List[float]):
+                               translate_list: List[float]) -> Coordinate:
 
         for i, v in enumerate(step_vector):
             step_vector[i] = self._translate_value(v, translate_list)
@@ -197,13 +197,13 @@ class Neighborhood:
         return best_coordinate
 
     def get_nearest_neighbor(self,
-                             coordinate_in: Coordinate) -> Optional[Coordinate]:
+                             coordinate_in: Coordinate) -> Coordinate:
         """
         Find the nearest coordinate to the `coordinate_in` among the
         coordinates within the current neighborhood.
         """
         min_distance = float('inf')
-        nearest_neighbor = None
+        nearest_neighbor = self._home_coordinate
 
         for coordinate in self._neighborhood:
             distance = Neighborhood.calc_distance(coordinate, coordinate_in)

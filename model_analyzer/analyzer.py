@@ -70,7 +70,7 @@ class Analyzer:
                                              state_manager=self._state_manager)
 
     def profile(self, client: TritonClient, gpus: List[GPUDevice], mode: str,
-                verbose: bool):
+                verbose: bool) -> None:
         """
         Subcommand: PROFILE
 
@@ -118,7 +118,7 @@ class Analyzer:
             self._create_summary_reports(mode)
             logger.info(self._get_report_command_help_string())
 
-    def analyze(self, mode: str, verbose: bool):
+    def analyze(self, mode: str, verbose: bool) -> None:
         """
         subcommand: ANALYZE
 
@@ -161,7 +161,7 @@ class Analyzer:
         logger.info("")
         logger.info(self._get_report_command_help_string())
 
-    def report(self, mode: str):
+    def report(self, mode: str) -> None:
         """
         Subcommand: REPORT
 
@@ -249,7 +249,7 @@ class Analyzer:
                 finally:
                     self._state_manager.save_checkpoint()
 
-    def _create_summary_tables(self, verbose: bool):
+    def _create_summary_tables(self, verbose: bool) -> None:
         self._result_table_manager = ResultTableManager(self._config,
                                                         self._result_manager)
         self._result_table_manager.create_tables()
@@ -259,7 +259,7 @@ class Analyzer:
         if verbose:
             self._result_table_manager.write_results()
 
-    def _create_summary_reports(self, mode: str):
+    def _create_summary_reports(self, mode: str) -> None:
         gpu_info = self._state_manager.get_state_variable('MetricsManager.gpus')
         if not gpu_info:
             gpu_info = {}
@@ -347,7 +347,7 @@ class Analyzer:
             for x in self._result_manager.top_n_results(n=n)
         ]
 
-    def _do_checkpoint_gpus_match(self, gpus) -> bool:
+    def _do_checkpoint_gpus_match(self, gpus: dict) -> bool:
         ckpt_data = self._result_manager.get_server_only_data()
         ckpt_uuids = [ckpt_uuid for ckpt_uuid in ckpt_data.keys()]
         gpu_uuids = [gpu._device_uuid for gpu in gpus]
