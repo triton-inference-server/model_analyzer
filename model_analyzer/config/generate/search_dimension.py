@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import math
-
+import sys
 
 class SearchDimension:
     """
@@ -23,9 +23,9 @@ class SearchDimension:
 
     DIMENSION_TYPE_LINEAR = 0
     DIMENSION_TYPE_EXPONENTIAL = 1
-    DIMENSION_NO_MAX = float('inf')
+    DIMENSION_NO_MAX = sys.maxsize
 
-    def __init__(self, name, type, min=0, max=DIMENSION_NO_MAX):
+    def __init__(self, name: str, type: int, min: int=0, max: int=DIMENSION_NO_MAX):
         """
         Parameters
         ----------
@@ -43,19 +43,19 @@ class SearchDimension:
         self._min = min
         self._max = max
 
-    def get_min_idx(self):
+    def get_min_idx(self) -> int:
         """ Return the minimum index for this dimension"""
         return self._min
 
-    def get_max_idx(self):
+    def get_max_idx(self) -> int:
         """ Return the maximum index for this dimension"""
         return self._max
 
-    def get_name(self):
+    def get_name(self) -> str:
         """ Return the name for this dimension """
         return self._name
 
-    def get_value_at_idx(self, idx):
+    def get_value_at_idx(self, idx: int) -> int:
         """ Return the value of the dimension at the given index """
         if idx < self._min or idx > self._max:
             raise IndexError(

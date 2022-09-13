@@ -13,14 +13,13 @@
 # limitations under the License.
 
 from itertools import product
-from math import log2
-
+from typing import Dict, List
 
 class GeneratorUtils:
     ''' Class for utility functions for Generators  '''
 
     @staticmethod
-    def generate_combinations(value):
+    def generate_combinations(value: object) -> List:
         """
         Generates all the alternative fields for
         a given value.
@@ -76,7 +75,8 @@ class GeneratorUtils:
         # always return a list.
         return [value]
 
-    def generate_parameter_combinations(params):
+    @staticmethod
+    def generate_parameter_combinations(params: Dict) -> List[Dict]:
         """
         Generate a list of all possible subdictionaries
         from given dictionary. The subdictionaries will
@@ -92,7 +92,8 @@ class GeneratorUtils:
         param_combinations = list(product(*tuple(params.values())))
         return [dict(zip(params.keys(), vals)) for vals in param_combinations]
 
-    def generate_doubled_list(min_value, max_value):
+    @staticmethod
+    def generate_doubled_list(min_value: int, max_value: int) -> List[int]:
         """
         Generates a list of values from min_value -> max_value doubling 
         min_value for each entry
