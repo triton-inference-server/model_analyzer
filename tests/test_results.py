@@ -14,10 +14,7 @@
 
 from model_analyzer.result.results import Results
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.triton.model.model_config import ModelConfig
-from model_analyzer.config.run.run_config import RunConfig
-from model_analyzer.config.run.model_run_config import ModelRunConfig
-from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from .common.test_utils import construct_run_config
 
 import unittest
 from unittest.mock import MagicMock, patch
@@ -148,15 +145,15 @@ class TestResults(trc.TestResultCollector):
         self._result = Results()
 
         self._run_configs = [
-            self._create_run_config('modelA', 'model_config_0', 'key_A'),
-            self._create_run_config('modelA', 'model_config_0', 'key_B'),
-            self._create_run_config('modelA', 'model_config_0', 'key_C'),
-            self._create_run_config('modelA', 'model_config_1', 'key_D'),
-            self._create_run_config('modelA', 'model_config_1', 'key_E'),
-            self._create_run_config('modelA', 'model_config_1', 'key_F'),
-            self._create_run_config('modelA', 'model_config_2', 'key_G'),
-            self._create_run_config('modelA', 'model_config_2', 'key_H'),
-            self._create_run_config('modelA', 'model_config_2', 'key_I'),
+            construct_run_config('modelA', 'model_config_0', 'key_A'),
+            construct_run_config('modelA', 'model_config_0', 'key_B'),
+            construct_run_config('modelA', 'model_config_0', 'key_C'),
+            construct_run_config('modelA', 'model_config_1', 'key_D'),
+            construct_run_config('modelA', 'model_config_1', 'key_E'),
+            construct_run_config('modelA', 'model_config_1', 'key_F'),
+            construct_run_config('modelA', 'model_config_2', 'key_G'),
+            construct_run_config('modelA', 'model_config_2', 'key_H'),
+            construct_run_config('modelA', 'model_config_2', 'key_I'),
         ]
 
         self._measurements = []
@@ -188,22 +185,22 @@ class TestResults(trc.TestResultCollector):
         self._result.add_run_config_measurement(self._run_configs[7], "8")
         self._result.add_run_config_measurement(self._run_configs[8], "9")
 
-        model_run_config_0f = self._create_run_config('modelB',
-                                                      'model_config_0', "key_F")
-        model_run_config_0e = self._create_run_config('modelB',
-                                                      'model_config_0', "key_E")
-        model_run_config_0d = self._create_run_config('modelB',
-                                                      'model_config_0', "key_D")
+        model_run_config_0f = construct_run_config('modelB', 'model_config_0',
+                                                   "key_F")
+        model_run_config_0e = construct_run_config('modelB', 'model_config_0',
+                                                   "key_E")
+        model_run_config_0d = construct_run_config('modelB', 'model_config_0',
+                                                   "key_D")
         self._result.add_run_config_measurement(model_run_config_0f, "6")
         self._result.add_run_config_measurement(model_run_config_0e, "5")
         self._result.add_run_config_measurement(model_run_config_0d, "4")
 
-        model_run_config_1c = self._create_run_config('modelB',
-                                                      'model_config_1', "key_C")
-        model_run_config_1b = self._create_run_config('modelB',
-                                                      'model_config_1', "key_B")
-        model_run_config_1a = self._create_run_config('modelB',
-                                                      'model_config_1', "key_A")
+        model_run_config_1c = construct_run_config('modelB', 'model_config_1',
+                                                   "key_C")
+        model_run_config_1b = construct_run_config('modelB', 'model_config_1',
+                                                   "key_B")
+        model_run_config_1a = construct_run_config('modelB', 'model_config_1',
+                                                   "key_A")
         self._result.add_run_config_measurement(model_run_config_1c, "3")
         self._result.add_run_config_measurement(model_run_config_1b, "2")
         self._result.add_run_config_measurement(model_run_config_1a, "1")
@@ -212,18 +209,6 @@ class TestResults(trc.TestResultCollector):
             '1', '2', '3', '4', '5', '6', '7', '8', '9', '6', '5', '4', '3',
             '2', '1'
         ]
-
-    def _create_run_config(self, model_name, model_config_name, pa_config_name):
-        model_config_dict = {'name': model_config_name}
-        self._model_config = ModelConfig.create_from_dictionary(
-            model_config_dict)
-
-        perf_config = PerfAnalyzerConfig()
-        perf_config.update_config({'model-name': pa_config_name})
-        mrc = ModelRunConfig(model_name, self._model_config, perf_config)
-        rc = RunConfig({})
-        rc.add_model_run_config(mrc)
-        return rc
 
 
 if __name__ == '__main__':

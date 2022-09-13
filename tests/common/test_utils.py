@@ -19,6 +19,11 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.cli.cli import CLI
 
+from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.config.run.model_run_config import ModelRunConfig
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.run_config_result import RunConfigResult
@@ -233,6 +238,23 @@ def construct_perf_analyzer_config(model_name='my-model',
             pa_config._options['-u'] = DEFAULT_TRITON_GRPC_ENDPOINT
 
     return pa_config
+
+
+def construct_run_config(model_name: str, model_config_name: str,
+                         pa_config_name: str) -> RunConfig:
+    """
+    Constructs a Perf Analyzer Config
+    """
+
+    model_config_dict = {'name': model_config_name}
+    model_config = ModelConfig.create_from_dictionary(model_config_dict)
+
+    perf_config = PerfAnalyzerConfig()
+    perf_config.update_config({'model-name': pa_config_name})
+    mrc = ModelRunConfig(model_name, model_config, perf_config)
+    rc = RunConfig({})
+    rc.add_model_run_config(mrc)
+    return rc
 
 
 def construct_run_config_measurement(model_name,
