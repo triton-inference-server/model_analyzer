@@ -38,16 +38,6 @@ class SortedResults:
         self._failing_results = []
         self._passing_results = []
 
-    def empty(self):
-        """
-        Returns
-        -------
-        True if sorted_results is empty
-        False otherwise
-        """
-
-        return not bool(self._sorted_results)
-
     def results(self) -> List[RunConfigResult]:
         """
         Returns
@@ -75,20 +65,6 @@ class SortedResults:
             self._add_result_to_existing_run_config(existing_run_config, result)
         else:
             self._add_new_results(result)
-
-    def next_best_result(self) -> RunConfigResult:
-        """
-        Removes and returns the 
-        next best item in this 
-        result list
-
-        Returns
-        -------
-        ModelResult
-            The next best result in this list
-        """
-
-        return self._sorted_results.pop(0)
 
     def top_n_results(self, n: int) -> List[RunConfigResult]:
         """

@@ -34,21 +34,6 @@ class TestSortedResultsMethods(trc.TestResultCollector):
     def tearDown(self):
         patch.stopall()
 
-    def test_empty(self):
-        avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
-        avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency_p99': 4000}
-
-        result = construct_run_config_result(
-            avg_gpu_metric_values=avg_gpu_metrics,
-            avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
-            comparator=self.result_comparator)
-
-        self.assertTrue(self.sorted_results.empty())
-        self.sorted_results.add_result(result=result)
-        self.assertFalse(self.sorted_results.empty())
-        self.sorted_results.next_best_result()
-        self.assertTrue(self.sorted_results.empty())
-
     def test_add_results(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency_p99': 4000}
@@ -81,28 +66,6 @@ class TestSortedResultsMethods(trc.TestResultCollector):
 
         results = self.sorted_results.results()
         self.assertEqual(len(results), 1)
-
-    def test_next_best_result(self):
-        avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
-        for i in range(10, 0, -1):
-            avg_non_gpu_metrics = {
-                'perf_throughput': 100 + 10 * i,
-                'perf_latency_p99': 4000
-            }
-            self.sorted_results.add_result(
-                construct_run_config_result(
-                    avg_gpu_metric_values=avg_gpu_metrics,
-                    avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
-                    comparator=self.result_comparator,
-                    model_name=str(i)))
-        self.assertEqual(self.sorted_results.next_best_result().model_name(),
-                         '10')
-        self.assertEqual(self.sorted_results.next_best_result().model_name(),
-                         '9')
-        self.assertEqual(self.sorted_results.next_best_result().model_name(),
-                         '8')
-        self.assertEqual(self.sorted_results.next_best_result().model_name(),
-                         '7')
 
     def test_top_n_results(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
