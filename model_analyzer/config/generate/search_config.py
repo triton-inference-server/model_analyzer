@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.generate.search_dimension import SearchDimension
 from .search_dimensions import SearchDimensions
-
+from typing import List
 
 class NeighborhoodConfig:
     """
@@ -37,19 +38,19 @@ class NeighborhoodConfig:
         self._radius = radius
         self._min_initialized = min_initialized
 
-    def get_num_dimensions(self):
+    def get_num_dimensions(self) -> int:
         """ Returns the number of dimensions in this search """
         return len(self._dimensions)
 
-    def get_dimensions(self):
+    def get_dimensions(self) -> SearchDimensions:
         """ Returns the SearchDimensions """
         return self._dimensions
 
-    def get_dimension(self, idx):
+    def get_dimension(self, idx: int) -> SearchDimension:
         """ Returns the SearchDimension at the given index """
         return self._dimensions[idx]
 
-    def get_min_indexes(self):
+    def get_min_indexes(self) -> List[int]:
         """ 
         Returns a list cooresponding to the minimum index of all SearchDimensions
         """
@@ -58,14 +59,14 @@ class NeighborhoodConfig:
             min_indexes.append(dimension.get_min_idx())
         return min_indexes
 
-    def get_min_initialized(self):
+    def get_min_initialized(self) -> int:
         """ 
         Returns the minimun number of initialized coordinates needed
         in a neighborhood before a step can be taken
         """
         return self._min_initialized
 
-    def get_radius(self):
+    def get_radius(self) -> int:
         """ Returns the base radius of a neighborhood """
         return self._radius
 
@@ -93,7 +94,7 @@ class SearchConfig(NeighborhoodConfig):
                          radius=radius,
                          min_initialized=min_initialized)
 
-    def get_neighborhood_config(self, radius=None):
+    def get_neighborhood_config(self, radius: int=None) -> NeighborhoodConfig:
         """
         Return a NeighborhoodConfig with an optional override to the radius
         """

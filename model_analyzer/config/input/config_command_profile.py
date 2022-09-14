@@ -76,7 +76,7 @@ class ConfigCommandProfile(ConfigCommand):
     Model Analyzer config object.
     """
 
-    def _resolve_protobuf_field(self, field: FieldDescriptor):
+    def _resolve_protobuf_field(self, field: FieldDescriptor) -> ConfigSweep:
         """
         Recursively resolve protobuf fields.
 
@@ -845,7 +845,7 @@ class ConfigCommandProfile(ConfigCommand):
                 description="Shorthand flag for specifying a minimum throughput."
             ))
 
-    def set_config_values(self, args: argparse.Namespace):
+    def set_config_values(self, args: argparse.Namespace) -> None:
         """
         Set the config values. This function sets all the values for the
         config. CLI arguments have the highest priority, then YAML config

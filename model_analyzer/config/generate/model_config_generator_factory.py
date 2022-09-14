@@ -14,7 +14,13 @@
 
 from .automatic_model_config_generator import AutomaticModelConfigGenerator
 from .manual_model_config_generator import ManualModelConfigGenerator
-
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from .model_profile_spec import ModelProfileSpec
+from typing import List
+from .config_generator_interface import ConfigGeneratorInterface
 
 class ModelConfigGeneratorFactory:
     """
@@ -22,9 +28,14 @@ class ModelConfigGeneratorFactory:
     """
 
     @staticmethod
-    def create_model_config_generator(config, gpus, model, client,
-                                      model_variant_name_manager, default_only,
-                                      early_exit_enable):
+    def create_model_config_generator(
+                 config: ConfigCommandProfile, 
+                 gpus: List[GPUDevice], 
+                 model: ModelProfileSpec, 
+                 client: TritonClient,
+                 model_variant_name_manager: ModelVariantNameManager, 
+                 default_only: bool, 
+                 early_exit_enable: bool) -> ConfigGeneratorInterface:
         """
         Parameters
         ----------

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union, Optional
+from typing import List, Generator, Optional
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 
@@ -36,8 +36,12 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     earlier depending on results that it receives
     """
 
-    def __init__(self, cli_config, model_name, model_perf_analyzer_flags,
-                 model_parameters, early_exit_enable):
+    def __init__(self, 
+                cli_config: ConfigCommandProfile, 
+                model_name: str, 
+                model_perf_analyzer_flags: dict,
+                model_parameters: dict, 
+                early_exit_enable: bool) -> None:
         """
         Parameters
         ----------
@@ -65,16 +69,16 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         #
         self._curr_concurrency_index = 0
         self._curr_batch_size_index = 0
-        self._configs = []
+        self._configs: List[List[PerfAnalyzerConfig]] = []
         self._concurrency_warning_printed = False
 
         # Flag to indicate we have started to return results
         #
         self._generator_started = False
 
-        self._last_results = ["valid"]
-        self._concurrency_results = []
-        self._batch_size_results = []
+        self._last_results: List[RunConfigMeasurement] = []
+        self._concurrency_results: List[RunConfigMeasurement] = []
+        self._batch_size_results: List[RunConfigMeasurement] = []
 
         self._model_name = model_name
         self._perf_analyzer_flags = model_perf_analyzer_flags
@@ -91,7 +95,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         """ Returns true if this generator is done generating configs """
         return self._generator_started and self._done_walking()
 
-    def get_configs(self):
+    def get_configs(self) -> Generator[PerfAnalyzerConfig, None, None]:
         """ Returns the next generated config """
         while True:
             if self._is_done():
@@ -107,8 +111,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
             self._step()
 
-    def set_last_results(self, measurements: List[Union[RunConfigMeasurement,
-                                                        None]]):
+    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         """
         Given the results from the last PerfAnalyzerConfig, make decisions
         about future configurations to generate
@@ -121,12 +124,12 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         # Remove 'NONE' cases, and find single max measurement from the list
         valid_measurements = [m for m in measurements if m]
 
-        measurement: List[Optional[RunConfigMeasurement]] = [None]
+        self._last_results = []
         if valid_measurements:
             measurement = [max(valid_measurements)]
 
-        self._last_results = measurement
-        self._concurrency_results.extend(measurement)
+            self._last_results = measurement
+            self._concurrency_results.extend(measurement)
 
     def _create_concurrency_list(self, cli_config: ConfigCommandProfile,
                                  model_parameters: dict) -> List[int]:
@@ -139,7 +142,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 cli_config.run_config_search_min_concurrency,
                 cli_config.run_config_search_max_concurrency)
 
-    def _generate_perf_configs(self):
+    def _generate_perf_configs(self) -> None:
         perf_config_non_concurrency_params = self._create_non_concurrency_perf_config_params(
         )
 
@@ -169,7 +172,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         return perf_config_params
 
-    def _step(self):
+    def _step(self) -> None:
         self._step_concurrency()
 
         if self._done_walking_concurrencies():
@@ -177,19 +180,20 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._reset_concurrencies()
             self._step_batch_size()
 
-    def _add_best_throughput_to_batch_sizes(self):
-        best = max(self._concurrency_results)
-        self._batch_size_results.append(best)
+    def _add_best_throughput_to_batch_sizes(self) -> None:
+        if self._concurrency_results:
+            best = max(self._concurrency_results)
+            self._batch_size_results.append(best)
 
-    def _reset_concurrencies(self):
+    def _reset_concurrencies(self) -> None:
         self._curr_concurrency_index = 0
         self._concurrency_warning_printed = False
         self._concurrency_results = []
 
-    def _step_concurrency(self):
+    def _step_concurrency(self) -> None:
         self._curr_concurrency_index += 1
 
-    def _step_batch_size(self):
+    def _step_batch_size(self) -> None:
         self._curr_batch_size_index += 1
 
     def _done_walking(self) -> bool:
@@ -223,7 +227,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return False
 
     def _last_results_erroneous(self) -> bool:
-        return self._last_results is None or self._last_results[-1] is None
+        return not self._last_results or self._last_results[-1] is None
 
     def _concurrency_throughput_gain_valid(self) -> bool:
         """ Check if any of the last X concurrency results resulted in valid gain """

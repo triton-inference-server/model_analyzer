@@ -20,7 +20,7 @@ from model_analyzer.constants import DEFAULT_CONFIG_PARAMS
 
 class ModelVariantNameManager:
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         # Dict of {model_config_name: model_config_dict}
         self._model_config_dicts: Dict[str, Dict] = {}

@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
+CoordinateKey = Tuple[Coordinate, ...]
 
 class CoordinateData:
     """
@@ -23,25 +24,25 @@ class CoordinateData:
     and the visit counts of all the coordinates in the coordinate space.
     """
 
-    def __init__(self):
-        self._measurements = {}
-        self._visit_counts = {}
-        self._is_measured = {}
+    def __init__(self) -> None:
+        self._measurements: Dict[CoordinateKey, Optional[RunConfigMeasurement]] = {}
+        self._visit_counts: Dict[CoordinateKey, int] = {}
+        self._is_measured: Dict[CoordinateKey, bool] = {}
 
     def get_measurement(
             self, coordinate: Coordinate) -> Optional[RunConfigMeasurement]:
         """
         Return the measurement data of the given coordinate.
         """
-        key: Tuple[Coordinate, ...] = tuple(coordinate)
+        key: CoordinateKey = tuple(coordinate)
         return self._measurements.get(key, None)
 
     def set_measurement(self, coordinate: Coordinate,
-                        measurement: Optional[RunConfigMeasurement]):
+                        measurement: Optional[RunConfigMeasurement]) -> None:
         """
         Set the measurement for the given coordinate.
         """
-        key: Tuple[Coordinate, ...] = tuple(coordinate)
+        key: CoordinateKey = tuple(coordinate)
         self._measurements[key] = measurement
         self._is_measured[key] = True
 
@@ -49,7 +50,7 @@ class CoordinateData:
         """
         Returns true if a measurement has been set for the given Coordinate
         """
-        key: Tuple[Coordinate, ...] = tuple(coordinate)
+        key: CoordinateKey = tuple(coordinate)
         return self._is_measured.get(key, False)
 
     def has_valid_measurement(self, coordinate: Coordinate) -> bool:
@@ -58,7 +59,7 @@ class CoordinateData:
         """
         return self.get_measurement(coordinate) is not None
 
-    def reset_measurements(self):
+    def reset_measurements(self) -> None:
         """
         Resets the collection of measurements.
         """
@@ -69,13 +70,13 @@ class CoordinateData:
         Get the visit count for the given coordinate. 
         Returns 0 if the coordinate hasn't been visited yet
         """
-        key: Tuple[Coordinate, ...] = tuple(coordinate)
+        key: CoordinateKey = tuple(coordinate)
         return self._visit_counts.get(key, 0)
 
-    def increment_visit_count(self, coordinate: Coordinate):
+    def increment_visit_count(self, coordinate: Coordinate) -> None:
         """
         Increase the visit count for the given coordinate by 1
         """
-        key: Tuple[Coordinate, ...] = tuple(coordinate)
+        key: CoordinateKey = tuple(coordinate)
         new_count = self.get_visit_count(coordinate) + 1
         self._visit_counts[key] = new_count

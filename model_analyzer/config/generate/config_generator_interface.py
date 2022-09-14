@@ -13,9 +13,8 @@
 # limitations under the License.
 
 import abc
-from typing import List, Union
+from typing import List, Optional, Generator, Any
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-
 
 class ConfigGeneratorInterface(abc.ABC):
     """
@@ -23,7 +22,7 @@ class ConfigGeneratorInterface(abc.ABC):
     """
 
     @classmethod
-    def __subclasshook__(cls, subclass):
+    def __subclasshook__(cls, subclass: Any) -> bool:
         return (hasattr(subclass, '__init__') and \
                 callable(subclass.__init__) and \
                 hasattr(subclass, 'get_configs') and \
@@ -33,14 +32,13 @@ class ConfigGeneratorInterface(abc.ABC):
                 NotImplemented)
 
     @abc.abstractmethod
-    def __init__(self):
+    def __init__(self) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_configs(self):
+    def get_configs(self) -> Generator[Any, None, None]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def set_last_results(self, measurements: List[Union[RunConfigMeasurement,
-                                                        None]]):
+    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         raise NotImplementedError

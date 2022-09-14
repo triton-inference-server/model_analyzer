@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Generator, Optional, Dict
+
+from model_analyzer.config.run.model_run_config import ModelRunConfig
 
 from .config_generator_interface import ConfigGeneratorInterface
 from model_analyzer.config.run.run_config import RunConfig
@@ -20,7 +22,10 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 class BruteRunConfigGenerator(ConfigGeneratorInterface):
     """
@@ -28,10 +33,10 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
     """
 
     def __init__(self,
-                 config,
-                 gpus,
+                 config: ConfigCommandProfile,
+                 gpus: List[GPUDevice],
                  models: List[ModelProfileSpec],
-                 client,
+                 client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager,
                  skip_default_config: bool = False):
         """
@@ -61,17 +66,17 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
 
         self._num_models = len(models)
 
-        self._curr_model_run_configs = [None for n in range(self._num_models)]
+        self._curr_model_run_configs: List[Optional[ModelRunConfig]] = [None for n in range(self._num_models)]
         self._curr_results: List = [[] for n in range(self._num_models)]
-        self._curr_generators = [None for n in range(self._num_models)]
+        self._curr_generators: Dict[int, ConfigGeneratorInterface] = {}
 
         self._skip_default_config = skip_default_config
 
-    def set_last_results(self, measurements):
+    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         for index in range(self._num_models):
             self._curr_results[index].extend(measurements)
 
-    def get_configs(self):
+    def get_configs(self) -> Generator[RunConfig, None, None]:
         """
         Returns
         -------
@@ -81,7 +86,7 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
 
         yield from self._get_next_config()
 
-    def _get_next_config(self):
+    def _get_next_config(self) -> Generator[RunConfig, None, None]:
         if not self._skip_default_config:
             yield from self._generate_subset(0, default_only=True)
 
@@ -91,7 +96,7 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
     def _should_generate_non_default_configs(self) -> bool:
         return self._config.triton_launch_mode != 'remote'
 
-    def _generate_subset(self, index, default_only):
+    def _generate_subset(self, index: int, default_only: bool) -> Generator[RunConfig, None, None]:
         mrcg = ModelRunConfigGenerator(self._config, self._gpus,
                                        self._models[index], self._client,
                                        self._model_variant_name_manager,
@@ -109,18 +114,18 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
 
             self._send_results_to_generator(index)
 
-    def _make_run_config(self):
+    def _make_run_config(self) -> RunConfig:
         run_config = RunConfig(self._triton_env)
         for index in range(len(self._models)):
             run_config.add_model_run_config(self._curr_model_run_configs[index])
         return run_config
 
-    def _send_results_to_generator(self, index):
+    def _send_results_to_generator(self, index: int) -> None:
         self._curr_generators[index].set_last_results(self._curr_results[index])
         self._curr_results[index] = []
 
     @classmethod
-    def determine_triton_server_env(cls, models):
+    def determine_triton_server_env(cls, models: List[ModelProfileSpec]) -> Dict:
         """
         Given a list of models, return the triton environment
         """

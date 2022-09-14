@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from .config_generator_interface import ConfigGeneratorInterface
-from typing import List, Optional
+from typing import List, Optional, Generator, Dict, Any
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
 from .model_profile_spec import ModelProfileSpec
@@ -27,12 +31,18 @@ logger = logging.getLogger(LOGGER_NAME)
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
     """ Base class for generating model configs """
 
-    def __init__(self, config, gpus, model: ModelProfileSpec, client,
-                 model_variant_name_manager, default_only, early_exit_enable):
+    def __init__(self, 
+                 config: ConfigCommandProfile, 
+                 gpus: List[GPUDevice], 
+                 model: ModelProfileSpec, 
+                 client: TritonClient,
+                 model_variant_name_manager: ModelVariantNameManager, 
+                 default_only: bool, 
+                 early_exit_enable: bool) -> None:
         """
         Parameters
         ----------
-        config: ModelAnalyzerConfig
+        config: ConfigCommandProfile
         gpus: List of GPUDevices
         model: ModelProfileSpec
             The model to generate ModelConfigs for
@@ -56,18 +66,18 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._model_name_index = 0
         self._generator_started = False
         self._max_batch_size_warning_printed = False
-        self._last_results: List[RunConfigMeasurement] = []
+        self._last_results: List[Optional[RunConfigMeasurement]] = []
         # Contains the max throughput from each provided list of measurements
         # since the last time we stepped max_batch_size
         #
         self._curr_max_batch_size_throughputs: List[float] = []
 
-    def _is_done(self):
+    def _is_done(self) -> bool:
         """ Returns true if this generator is done generating configs """
         return self._generator_started and (self._default_only or
                                             self._done_walking())
 
-    def get_configs(self):
+    def get_configs(self) -> Generator[ModelConfig, None, None]:
         """
         Returns
         -------
@@ -83,7 +93,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             yield (config)
             self._step()
 
-    def set_last_results(self, measurements):
+    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         """
         Given the results from the last ModelConfig, make decisions
         about future configurations to generate
@@ -95,22 +105,22 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._last_results = measurements
 
     @abc.abstractmethod
-    def _done_walking(self):
+    def _done_walking(self) -> bool:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _step(self):
+    def _step(self) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get_next_model_config(self):
+    def _get_next_model_config(self) -> ModelConfig:
         raise NotImplementedError
 
-    def _last_results_erroneous(self):
+    def _last_results_erroneous(self) -> bool:
         last_max_throughput = self._get_last_results_max_throughput()
         return last_max_throughput is None
 
-    def _last_results_increased_throughput(self):
+    def _last_results_increased_throughput(self) -> bool:
         if len(self._curr_max_batch_size_throughputs) < 2:
             return True
 
@@ -130,26 +140,26 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         else:
             return max(throughputs)
 
-    def _make_remote_model_config(self):
-        if not self._reload_model_disable:
+    def _make_remote_model_config(self) -> ModelConfig:
+        if not self._config.reload_model_disable:
             self._client.load_model(self._base_model_name)
         model_config = ModelConfig.create_from_triton_api(
-            self._client, self._base_model_name, self._num_retries)
+            self._client, self._base_model_name, self._config.client_max_retries)
         model_config.set_cpu_only(self._cpu_only)
-        if not self._reload_model_disable:
+        if not self._config.reload_model_disable:
             self._client.unload_model(self._base_model_name)
 
         return model_config
 
-    def _make_direct_mode_model_config(self, param_combo):
+    def _make_direct_mode_model_config(self, param_combo: Dict) -> ModelConfig:
         return BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
             model=self._base_model,
             model_variant_name_manager=self._model_variant_name_manager)
 
     @staticmethod
-    def make_model_config(param_combo, model: ModelProfileSpec,
-                          model_variant_name_manager):
+    def make_model_config(param_combo: dict, model: ModelProfileSpec,
+                          model_variant_name_manager: ModelVariantNameManager) -> ModelConfig:
         """
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config
@@ -203,20 +213,19 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
         return model_config
 
-    def _reset_max_batch_size(self):
+    def _reset_max_batch_size(self) -> None:
         self._max_batch_size_warning_printed = False
         self._curr_max_batch_size_throughputs = []
 
-    def _print_max_batch_size_plateau_warning(self):
+    def _print_max_batch_size_plateau_warning(self) -> None:
         if not self._max_batch_size_warning_printed:
             logger.info(
                 "No longer increasing max_batch_size because throughput has plateaued"
             )
             self._max_batch_size_warning_printed = True
-        return True
 
     @staticmethod
-    def _apply_value_to_dict(key, value, dict_in):
+    def _apply_value_to_dict(key: Any, value: Any, dict_in: Dict) -> None:
         """
         Apply the supplied value at the given key into the provided dict.
 

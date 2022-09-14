@@ -12,23 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .search_dimension import SearchDimension
+from .coordinate import Coordinate
+
+from typing import Any, Iterator, List, Dict
 
 class SearchDimensions:
     """
     Data class that holds one or more dimensions and associates each one to a key
     """
 
-    def __init__(self):
-        self._dimensions = []
-        self._dimension_keys = []
+    def __init__(self) -> None:
+        self._dimensions: List[SearchDimension] = []
+        self._dimension_keys: List[Any] = []
 
-    def add_dimensions(self, key, dimensions):
+    def add_dimensions(self, key: Any, dimensions: List[SearchDimension]) -> None:
         """ 
         Add dimensions and associate them all with the given key
 
         Parameters
         ----------
-        Key: str or int
+        Key: int
             The key to associate the dimensions with
 
         Dimensions: List of SearchDimension
@@ -38,7 +42,7 @@ class SearchDimensions:
             self._dimensions.append(dim)
             self._dimension_keys.append(key)
 
-    def get_values_for_coordinate(self, coordinate):
+    def get_values_for_coordinate(self, coordinate: Coordinate) -> Dict[Any, Dict[str, Any]]:
         """
         Given a Coordinate, return all dimension_name:dimension_value pairs associated with 
         that coordinate, organized by the dimension's key
@@ -53,7 +57,7 @@ class SearchDimensions:
             ret[key][SearchDimension name] = value
 
         """
-        vals = {}
+        vals: Dict[Any, Dict[str, Any]] = {}
         for i, v in enumerate(coordinate):
             key = self._dimension_keys[i]
             if key not in vals:
@@ -66,11 +70,11 @@ class SearchDimensions:
 
         return vals
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         return iter(self._dimensions)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._dimensions)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> SearchDimension:
         return self._dimensions[index]

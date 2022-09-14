@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.result.result_statistics import ResultStatistics
+from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import TOP_MODELS_REPORT_KEY
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
@@ -106,7 +107,7 @@ class ResultManager:
                                                data)
 
     def add_run_config_measurement(
-            self, run_config, run_config_measurement: RunConfigMeasurement):
+            self, run_config: RunConfig, run_config_measurement: RunConfigMeasurement) -> None:
         """
         Add measurement to individual result heap,
         global result heap and results class
