@@ -149,6 +149,10 @@ class SortedResults:
         for rcm in result.run_config_measurements():
             existing_run_config.add_run_config_measurement(rcm)
 
+        self._sorted_results.sort()
+        self._passing_results.sort()
+        self._failing_results.sort()
+
     def _add_new_results(self, result: RunConfigResult):
         new_result = deepcopy(result)
 
