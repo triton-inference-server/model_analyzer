@@ -67,6 +67,56 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         results = self.sorted_results.results()
         self.assertEqual(len(results), 1)
 
+    def test_add_results_dynamic_sortig(self):
+        """
+        Tests the case where configs A & B where A is better than B
+        Then add a new measurement to B, which now makes B better than A
+        """
+        avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
+
+        run_config_A = construct_run_config('model', 'model_config_A', 'key_A')
+        run_config_B = construct_run_config('model', 'model_config_B', 'key_B')
+        run_config_list = [run_config_A, run_config_B]
+
+        for i in sample(range(2), 2):
+            avg_non_gpu_metrics = {
+                'perf_throughput': 100 - 10 * i,
+                'perf_latency_p99': 4000
+            }
+            self.sorted_results.add_result(
+                construct_run_config_result(
+                    avg_gpu_metric_values=avg_gpu_metrics,
+                    avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
+                    comparator=self.result_comparator,
+                    model_name='model',
+                    run_config=run_config_list[i]))
+
+        all_results = self.sorted_results.top_n_results(
+            n=SortedResults.GET_ALL_RESULTS)
+
+        self.assertEqual(all_results[0].run_config().model_variants_name(),
+                         'model_config_A')
+        self.assertEqual(all_results[1].run_config().model_variants_name(),
+                         'model_config_B')
+
+        avg_non_gpu_metrics = {'perf_throughput': 200, 'perf_latency_p99': 4000}
+
+        self.sorted_results.add_result(
+            construct_run_config_result(
+                avg_gpu_metric_values=avg_gpu_metrics,
+                avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
+                comparator=self.result_comparator,
+                model_name='model',
+                run_config=run_config_B))
+
+        all_results = self.sorted_results.top_n_results(
+            n=SortedResults.GET_ALL_RESULTS)
+
+        self.assertEqual(all_results[0].run_config().model_variants_name(),
+                         'model_config_B')
+        self.assertEqual(all_results[1].run_config().model_variants_name(),
+                         'model_config_A')
+
     def test_top_n_results(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         for i in sample(range(10), 10):
