@@ -16,7 +16,7 @@ limitations under the License.
 
 # Quick Start
 
-The steps below will guide you through using model analyzer to analyze a simple PyTorch model: add_sub.
+The steps below will guide you through using Model Analyzer in Docker mode to analyze a simple PyTorch model: add_sub.
 
 ## `Step 1:` Download the add_sub model
 
