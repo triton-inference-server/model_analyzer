@@ -34,22 +34,21 @@ class SortedResults:
     GET_ALL_RESULTS = -1
 
     def __init__(self):
-        self._sorted_results = []
-        self._failing_results = []
-        self._passing_results = []
+        self._run_config_results = []
 
     def results(self) -> List[RunConfigResult]:
         """
         Returns
         -------
-        All the sorted_results
+        All the results
         """
 
-        return self._sorted_results
+        self._run_config_results.sort()
+        return self._run_config_results
 
-    def add_result(self, result: RunConfigResult):
+    def add_result(self, run_config_result: RunConfigResult):
         """
-        Adds a result to the result lists
+        Adds a run_config_result to the result lists
         This can either be a new result or new measurements added
         to an existing result
 
@@ -59,12 +58,14 @@ class SortedResults:
             The result to be added
         """
 
-        existing_run_config = self._find_existing_run_config(result)
+        existing_run_config_result = self._find_existing_run_config_result(
+            run_config_result)
 
-        if existing_run_config:
-            self._add_result_to_existing_run_config(existing_run_config, result)
+        if existing_run_config_result:
+            self._add_measurements_to_existing_run_config_result(
+                existing_run_config_result, run_config_result)
         else:
-            self._add_new_results(result)
+            self._add_new_run_config_result(run_config_result)
 
     def top_n_results(self, n: int) -> List[RunConfigResult]:
         """
@@ -80,62 +81,70 @@ class SortedResults:
             The n best results for this model,
             must all be passing results
         """
-        if len(self._passing_results) == 0:
+        self._run_config_results.sort()
+        passing_results, failing_results = self._create_passing_and_failing_lists(
+        )
+
+        if len(passing_results) == 0:
             logger.warning(
                 f"Requested top {n} configs, but none satisfied constraints. "
                 "Showing available constraint failing configs for this model.")
 
             if n == SortedResults.GET_ALL_RESULTS:
-                return self._failing_results
-            if n > len(self._failing_results):
+                return failing_results
+            if n > len(failing_results):
                 logger.warning(
                     f"Requested top {n} failing configs, "
-                    f"but found only {len(self._failing_results)}. "
+                    f"but found only {len(failing_results)}. "
                     "Showing all available constraint failing configs for this model."
                 )
 
-            result_len = min(n, len(self._failing_results))
-            return self._failing_results[0:result_len]
+            result_len = min(n, len(failing_results))
+            return failing_results[0:result_len]
 
         if n == SortedResults.GET_ALL_RESULTS:
-            return self._passing_results
-        if n > len(self._passing_results):
+            return passing_results
+        if n > len(passing_results):
             logger.warning(
                 f"Requested top {n} configs, "
-                f"but found only {len(self._passing_results)} passing configs. "
+                f"but found only {len(passing_results)} passing configs. "
                 "Showing all available constraint satisfying configs for this model."
             )
 
-        result_len = min(n, len(self._passing_results))
-        return self._passing_results[0:result_len]
+        result_len = min(n, len(passing_results))
+        return passing_results[0:result_len]
 
-    def _find_existing_run_config(
-            self, result: RunConfigResult) -> Optional[RunConfigResult]:
-        if not result.run_config():
+    def _find_existing_run_config_result(
+            self,
+            run_config_result: RunConfigResult) -> Optional[RunConfigResult]:
+        if not run_config_result.run_config():
             return None
 
-        for rcr in self._sorted_results:
-            if result.run_config().model_variants_name() == rcr.run_config(
-            ).model_variants_name():
+        for rcr in self._run_config_results:
+            if run_config_result.run_config().model_variants_name(
+            ) == rcr.run_config().model_variants_name():
                 return rcr
 
         return None
 
-    def _add_result_to_existing_run_config(self,
-                                           existing_run_config: RunConfigResult,
-                                           result: RunConfigResult):
-        for rcm in result.run_config_measurements():
-            existing_run_config.add_run_config_measurement(rcm)
+    def _add_measurements_to_existing_run_config_result(
+            self, existing_run_config_result: RunConfigResult,
+            new_run_config_result: RunConfigResult):
+        for rcm in new_run_config_result.run_config_measurements():
+            existing_run_config_result.add_run_config_measurement(rcm)
 
-        self._sorted_results.sort()
-        self._passing_results.sort()
-        self._failing_results.sort()
+    def _add_new_run_config_result(self, run_config_result: RunConfigResult):
+        new_run_config_result = deepcopy(run_config_result)
 
-    def _add_new_results(self, result: RunConfigResult):
-        new_result = deepcopy(result)
+        self._run_config_results.append(new_run_config_result)
 
-        insort(self._sorted_results, new_result)
-        if result.failing():
-            insort(self._failing_results, new_result)
-        else:
-            insort(self._passing_results, new_result)
+    def _create_passing_and_failing_lists(self):
+        passing = []
+        failing = []
+        for rcr in self._run_config_results:
+            if rcr.failing():
+                failing.append(rcr)
+            else:
+                passing.append(rcr)
+
+        return passing, failing
