@@ -125,7 +125,8 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         self.assertEqual(top_5_results[3].model_name(), '6')
         self.assertEqual(top_5_results[4].model_name(), '5')
 
-        all_results = self.sorted_results.top_n_results(n=-1)
+        all_results = self.sorted_results.top_n_results(
+            n=SortedResults.GET_ALL_RESULTS)
         self.assertEqual(all_results[0].model_name(), '9')
         self.assertEqual(all_results[1].model_name(), '8')
         self.assertEqual(all_results[2].model_name(), '7')

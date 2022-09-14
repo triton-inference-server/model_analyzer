@@ -31,6 +31,8 @@ class SortedResults:
     to store and sort results
     """
 
+    GET_ALL_RESULTS = -1
+
     def __init__(self):
         self._sorted_results = []
         self._failing_results = []
@@ -40,7 +42,7 @@ class SortedResults:
         """
         Returns
         -------
-        True if this list has no results
+        True if sorted_results is empty
         False otherwise
         """
 
@@ -50,7 +52,7 @@ class SortedResults:
         """
         Returns
         -------
-        All the results in this result list
+        All the sorted_results
         """
 
         return self._sorted_results
@@ -94,7 +96,7 @@ class SortedResults:
         ----------
         n : int
             The number of  top results
-            to retrieve, get all if n==-1
+            to retrieve
 
         Returns
         -------
@@ -107,7 +109,7 @@ class SortedResults:
                 f"Requested top {n} configs, but none satisfied constraints. "
                 "Showing available constraint failing configs for this model.")
 
-            if n == -1:
+            if n == SortedResults.GET_ALL_RESULTS:
                 return self._failing_results
             if n > len(self._failing_results):
                 logger.warning(
@@ -119,7 +121,7 @@ class SortedResults:
             result_len = min(n, len(self._failing_results))
             return self._failing_results[0:result_len]
 
-        if n == -1:
+        if n == SortedResults.GET_ALL_RESULTS:
             return self._passing_results
         if n > len(self._passing_results):
             logger.warning(

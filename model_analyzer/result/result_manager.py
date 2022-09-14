@@ -170,7 +170,10 @@ class ResultManager:
                 "Double check the name and ensure that this model config was actually profiled."
             )
 
-    def top_n_results(self, model_name=None, n=-1, include_default=False):
+    def top_n_results(self,
+                      model_name=None,
+                      n=SortedResults.GET_ALL_RESULTS,
+                      include_default=False):
         """
         Parameters
         ----------
