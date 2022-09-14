@@ -12,9 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Dict
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from .model_profile_spec import ModelProfileSpec
 from .base_model_config_generator import BaseModelConfigGenerator
 from .generator_utils import GeneratorUtils
 from model_analyzer.constants import LOGGER_NAME, DEFAULT_CONFIG_PARAMS
+from model_analyzer.triton.model.model_config import ModelConfig
 
 import logging
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -26,8 +33,14 @@ from copy import deepcopy
 class ManualModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in manual search mode """
 
-    def __init__(self, config, gpus, model, client, model_variant_name_manager,
-                 default_only, early_exit_enable):
+    def __init__(self, 
+                 config: ConfigCommandProfile, 
+                 gpus: List[GPUDevice], 
+                 model: ModelProfileSpec, 
+                 client: TritonClient,
+                 model_variant_name_manager: ModelVariantNameManager, 
+                 default_only: bool, 
+                 early_exit_enable: bool) -> None:
         """
         Parameters
         ----------
@@ -46,14 +59,12 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
                          model_variant_name_manager, default_only,
                          early_exit_enable)
 
-        self._reload_model_disable = config.reload_model_disable
-        self._num_retries = config.client_max_retries
         self._search_disabled = config.run_config_search_disable
         self._curr_config_index = 0
         self._curr_max_batch_size_index = 0
 
         self._max_batch_sizes = None
-        self._non_max_batch_size_param_combos = []
+        self._non_max_batch_size_param_combos: List[Dict] = []
         self._determine_max_batch_sizes_and_param_combos()
 
         # All configs are pregenerated in _configs[][]
@@ -62,10 +73,10 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         #
         self._configs = self._generate_model_configs()
 
-    def _done_walking(self):
+    def _done_walking(self) -> bool:
         return len(self._configs) == self._curr_config_index
 
-    def _done_walking_max_batch_size(self):
+    def _done_walking_max_batch_size(self) -> bool:
         if (self._max_batch_sizes is None or
                 len(self._max_batch_sizes) == self._curr_max_batch_size_index):
             return True
@@ -79,31 +90,32 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
             return True
         return False
 
-    def _step(self):
+    def _step(self) -> None:
         self._step_max_batch_size()
 
         if self._done_walking_max_batch_size():
             self._reset_max_batch_size()
             self._step_config()
 
-    def _reset_max_batch_size(self):
+    def _reset_max_batch_size(self) -> None:
         super()._reset_max_batch_size()
         self._curr_max_batch_size_index = 0
 
-    def _step_config(self):
+    def _step_config(self) -> None:
         self._curr_config_index += 1
 
-    def _step_max_batch_size(self):
+    def _step_max_batch_size(self) -> None:
         self._curr_max_batch_size_index += 1
 
         last_max_throughput = self._get_last_results_max_throughput()
-        self._curr_max_batch_size_throughputs.append(last_max_throughput)
+        if last_max_throughput:
+            self._curr_max_batch_size_throughputs.append(last_max_throughput)
 
-    def _get_next_model_config(self):
+    def _get_next_model_config(self) -> ModelConfig:
         return self._configs[self._curr_config_index][
             self._curr_max_batch_size_index]
 
-    def _generate_model_configs(self):
+    def _generate_model_configs(self) -> List[List[ModelConfig]]:
         """ Generate all model config combinations """
         if self._remote_mode:
             configs = self._generate_remote_mode_model_configs()
@@ -112,11 +124,11 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
 
         return configs
 
-    def _generate_remote_mode_model_configs(self):
+    def _generate_remote_mode_model_configs(self) -> List[List[ModelConfig]]:
         """ Generate model configs for remote mode """
         return [[self._make_remote_model_config()]]
 
-    def _generate_direct_modes_model_configs(self):
+    def _generate_direct_modes_model_configs(self) -> List[List[ModelConfig]]:
         """ Generate model configs for direct (non-remote) modes """
         model_configs = []
         for param_combo in self._non_max_batch_size_param_combos:
@@ -135,7 +147,7 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
 
         return model_configs
 
-    def _determine_max_batch_sizes_and_param_combos(self):
+    def _determine_max_batch_sizes_and_param_combos(self) -> None:
         """
         Determine self._max_batch_sizes and self._non_max_batch_size_param_combos
         """
@@ -161,6 +173,6 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
                         f"Automatic search not supported in ManualModelConfigGenerator"
                     )
 
-    def _generate_search_disabled_param_combos(self):
+    def _generate_search_disabled_param_combos(self) -> List[Dict]:
         """ Return the configs when we want to search but searching is disabled """
         return [DEFAULT_CONFIG_PARAMS]

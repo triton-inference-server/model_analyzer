@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Dict, Any
 from .base_model_config_generator import BaseModelConfigGenerator
-
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.constants import LOGGER_NAME, DEFAULT_CONFIG_PARAMS
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.triton.model.model_config import ModelConfig
 from .model_profile_spec import ModelProfileSpec
 import logging
 
@@ -25,8 +30,14 @@ logger = logging.getLogger(LOGGER_NAME)
 class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in automatic search mode """
 
-    def __init__(self, config, gpus, model, client,
-                 model_variant_name_manager, default_only, early_exit_enable):
+    def __init__(self, 
+                 config: ConfigCommandProfile, 
+                 gpus: List[GPUDevice], 
+                 model: ModelProfileSpec, 
+                 client: TritonClient,
+                 model_variant_name_manager: ModelVariantNameManager, 
+                 default_only: bool, 
+                 early_exit_enable: bool) -> None:
         """
         Parameters
         ----------
@@ -63,26 +74,27 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
                 "Early exit disable is not supported in automatic model config generator"
             )
 
-    def _done_walking(self):
+    def _done_walking(self) -> bool:
         return self._curr_instance_count > self._max_instance_count
 
-    def _step(self):
+    def _step(self) -> None:
         self._step_max_batch_size()
 
         if self._done_walking_max_batch_size():
             self._reset_max_batch_size()
             self._step_instance_count()
 
-    def _step_max_batch_size(self):
+    def _step_max_batch_size(self) -> None:
         self._curr_max_batch_size *= 2
 
         last_max_throughput = self._get_last_results_max_throughput()
-        self._curr_max_batch_size_throughputs.append(last_max_throughput)
+        if last_max_throughput:
+            self._curr_max_batch_size_throughputs.append(last_max_throughput)
 
-    def _step_instance_count(self):
+    def _step_instance_count(self) -> None:
         self._curr_instance_count += 1
 
-    def _done_walking_max_batch_size(self):
+    def _done_walking_max_batch_size(self) -> bool:
         if self._last_results_erroneous():
             return True
 
@@ -95,10 +107,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
 
         return False
 
-    def _max_batch_size_limit_reached(self):
+    def _max_batch_size_limit_reached(self) -> bool:
         return self._curr_max_batch_size > self._max_model_batch_size
 
-    def _reset_max_batch_size(self):
+    def _reset_max_batch_size(self) -> None:
         super()._reset_max_batch_size()
 
         if self._base_model.supports_batching():
@@ -106,16 +118,16 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         else:
             self._curr_max_batch_size = self._max_model_batch_size
 
-    def _get_next_model_config(self):
+    def _get_next_model_config(self) -> ModelConfig:
         param_combo = self._get_curr_param_combo()
         model_config = self._make_direct_mode_model_config(param_combo)
         return model_config
 
-    def _get_curr_param_combo(self):
+    def _get_curr_param_combo(self) -> Dict:
         if self._default_only:
             return DEFAULT_CONFIG_PARAMS
 
-        config = {
+        config: Dict[str, Any] = {
             'instance_group': [{
                 'count': self._curr_instance_count,
                 'kind': self._instance_kind

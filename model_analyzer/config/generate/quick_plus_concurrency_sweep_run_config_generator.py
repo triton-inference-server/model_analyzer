@@ -76,8 +76,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
 
-    def set_last_results(self,
-                         measurements: List[Optional[RunConfigMeasurement]]) -> None:
+    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         self._rcg.set_last_results(measurements)
 
     def get_configs(self) -> Generator[RunConfig, None, None]:
@@ -102,7 +101,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         logger.info("Done gathering concurrency sweep measurements for reports")
         logger.info("")
 
-    def _execute_quick_search(self):
+    def _execute_quick_search(self) -> Generator[RunConfig, None, None]:
         self._rcg = self._create_quick_run_config_generator()
 
         yield from self._rcg.get_configs()
@@ -116,16 +115,16 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             client=self._client,
             model_variant_name_manager=self._model_variant_name_manager)
 
-    def _sweep_concurrency_over_top_results(self):
+    def _sweep_concurrency_over_top_results(self) -> Generator[RunConfig, None, None]:
         top_results = self._result_manager.top_n_results(
             n=self._config.num_configs_per_model)
 
         for count, result in enumerate(top_results):
             new_config = self._create_new_config_command_profile(result)
-            self._rcg = self._create_brute_run_config_generator(
+            self._brcg = self._create_brute_run_config_generator(
                 new_config, skip_default_config=(count != 0))
 
-            yield from self._rcg.get_configs()
+            yield from self._brcg.get_configs()
 
     def _create_new_config_command_profile(
             self, result: RunConfigResult) -> ConfigCommandProfile:

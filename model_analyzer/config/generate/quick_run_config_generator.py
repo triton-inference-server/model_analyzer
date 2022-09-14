@@ -80,7 +80,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         # This is the coordinate that we want to measure next. It is
         # updated every step of this generator
-        self._coordinate_to_measure = self._home_coordinate
+        self._coordinate_to_measure: Coordinate = self._home_coordinate
 
         # Track the best coordinate seen so far that can be used during
         # the back-off stage.
@@ -115,7 +115,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             yield (config)
             self._step()
 
-    def _step(self):
+    def _step(self) -> None:
         """
         Determine self._coordinate_to_measure, which is what is used to
         create the next RunConfig
@@ -127,12 +127,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         else:
             self._pick_coordinate_to_initialize()
 
-        if self._coordinate_to_measure is None:
-            logger.info("No coordinate to measure. Exiting")
-            self._done = True
-
-    def set_last_results(self, measurements: List[Union[RunConfigMeasurement,
-                                                        None]]) -> None:
+    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         """
         Given the results from the last RunConfig, make decisions
         about future configurations to generate
@@ -209,21 +204,22 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._coordinate_to_measure = new_coordinate
         self._recreate_neighborhood(force_slow_mode=True)
 
-    def _should_step_back(self):
+    def _should_step_back(self) -> bool:
         """
         Step back if take any of the following steps:
           - Step from a passing home to a failing home
           - Step from any home to home with a None measurement
         """
         if self._measuring_home_coordinate():
-            if self._get_last_results() is None:
+            last_results = self._get_last_results()
+            if not last_results:
                 return True
-            last_results_passed = self._get_last_results(
-            ).is_passing_constraints()
+            last_results_passed = last_results.is_passing_constraints()
             if not last_results_passed and self._home_has_passed:
                 return True
+        return False
 
-    def _measuring_home_coordinate(self):
+    def _measuring_home_coordinate(self) -> bool:
         return self._coordinate_to_measure == self._home_coordinate
 
     def _determine_if_done(self, new_coordinate: Coordinate) -> None:
@@ -248,10 +244,16 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         if force_slow_mode:
             self._neighborhood.force_slow_mode()
 
-    def _pick_coordinate_to_initialize(self):
-        self._coordinate_to_measure = self._neighborhood.pick_coordinate_to_initialize(
-        )
-        logger.debug(f"Need more data. Measuring {self._coordinate_to_measure}")
+    def _pick_coordinate_to_initialize(self) -> None:
+        next_coordinate = self._neighborhood.pick_coordinate_to_initialize()
+
+        if next_coordinate:
+            self._coordinate_to_measure = next_coordinate
+            logger.debug(f"Need more data. Measuring {self._coordinate_to_measure}")            
+        else:
+            logger.info("No coordinate to measure. Exiting")
+            self._done = True
+        
 
     def _get_starting_coordinate(self) -> Coordinate:
         min_indexes = self._search_config.get_min_indexes()

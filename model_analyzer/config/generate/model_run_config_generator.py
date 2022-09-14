@@ -12,11 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Generator, Optional
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from .config_generator_interface import ConfigGeneratorInterface
 from .model_config_generator_factory import ModelConfigGeneratorFactory
 from .perf_analyzer_config_generator import PerfAnalyzerConfigGenerator
-
+from .model_profile_spec import ModelProfileSpec
 from model_analyzer.config.run.model_run_config import ModelRunConfig
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.triton.model.model_config import ModelConfig
 
 
 class ModelRunConfigGenerator(ConfigGeneratorInterface):
@@ -24,9 +32,13 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
     Given a model, generates all ModelRunConfigs (combination of
     ModelConfig and PerfConfig)
     """
-
-    def __init__(self, config, gpus, model, client, model_variant_name_manager,
-                 default_only):
+    def __init__(self, 
+                 config: ConfigCommandProfile, 
+                 gpus: List[GPUDevice], 
+                 model: ModelProfileSpec, 
+                 client: TritonClient,
+                 model_variant_name_manager: ModelVariantNameManager, 
+                 default_only: bool) -> None:
         """
         Parameters
         ----------
@@ -62,9 +74,9 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
             self._model_variant_name_manager, default_only,
             self._mcg_early_exit_enable)
 
-        self._curr_mc_measurements = []
+        self._curr_mc_measurements: List[Optional[RunConfigMeasurement]] = []
 
-    def get_configs(self):
+    def get_configs(self) -> Generator[ModelRunConfig, None, None]:
         """
         Returns
         -------
@@ -84,7 +96,7 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
 
             self._set_last_results_model_config_generator()
 
-    def set_last_results(self, measurements):
+    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         """
         Given the results from the last ModelRunConfig, make decisions
         about future configurations to generate
@@ -96,17 +108,17 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
         self._pacg.set_last_results(measurements)
         self._curr_mc_measurements.extend(measurements)
 
-    def _set_last_results_model_config_generator(self):
+    def _set_last_results_model_config_generator(self) -> None:
         self._mcg.set_last_results(self._curr_mc_measurements)
         self._curr_mc_measurements = []
 
-    def _generate_model_run_config(self, model_config, perf_analyzer_config):
+    def _generate_model_run_config(self, model_config: ModelConfig, perf_analyzer_config: PerfAnalyzerConfig) -> ModelRunConfig:
         run_config = ModelRunConfig(self._model_name, model_config,
                                     perf_analyzer_config)
 
         return run_config
 
-    def _determine_early_exit_enables(self, config, model):
+    def _determine_early_exit_enables(self, config: ConfigCommandProfile, model: ModelProfileSpec) -> None:
         early_exit_enable = config.early_exit_enable
         concurrency_specified = model.parameters()['concurrency']
         config_parameters_exist = model.model_config_parameters()
