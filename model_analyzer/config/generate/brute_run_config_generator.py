@@ -68,7 +68,7 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
 
         self._curr_model_run_configs: List[Optional[ModelRunConfig]] = [None for n in range(self._num_models)]
         self._curr_results: List = [[] for n in range(self._num_models)]
-        self._curr_generators: Dict[int: ConfigGeneratorInterface] = {}
+        self._curr_generators: Dict[int, ConfigGeneratorInterface] = {}
 
         self._skip_default_config = skip_default_config
 
