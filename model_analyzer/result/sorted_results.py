@@ -81,7 +81,6 @@ class SortedResults:
             The n best results for this model,
             must all be passing results
         """
-        self._run_config_results.sort()
         passing_results, failing_results = self._create_passing_and_failing_lists(
         )
 
@@ -115,6 +114,8 @@ class SortedResults:
         self._run_config_results.append(new_run_config_result)
 
     def _create_passing_and_failing_lists(self):
+        self._run_config_results.sort()
+
         passing = []
         failing = []
         for rcr in self._run_config_results:
