@@ -42,7 +42,7 @@ echo 'examples' >> .git/info/sparse-checkout && \
 git pull origin main
 ```
 
-## `Step 2:` Build and Run Model Analyzer Container
+## `Step 2:` Pull and Run the SDK Container
 
 ---
 
