@@ -320,6 +320,7 @@ def construct_run_config_measurement(model_name,
 def construct_run_config_result(avg_gpu_metric_values,
                                 avg_non_gpu_metric_values_list,
                                 comparator,
+                                constraints=None,
                                 value_step=1,
                                 model_name="test_model",
                                 model_config_names=["test_model"],
@@ -357,7 +358,8 @@ def construct_run_config_result(avg_gpu_metric_values,
     # Construct a result
     run_config_result = RunConfigResult(model_name=model_name,
                                         run_config=run_config,
-                                        comparator=comparator)
+                                        comparator=comparator,
+                                        constraints=constraints)
 
     # Get dict of list of metric values
     gpu_metric_values = {}

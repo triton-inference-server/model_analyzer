@@ -67,7 +67,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         results = self.sorted_results.results()
         self.assertEqual(len(results), 1)
 
-    def test_add_results_dynamic_sortig(self):
+    def test_add_results_dynamic_sorting(self):
         """
         Tests the case where configs A & B where A is better than B
         Then add a new measurement to B, which now makes B better than A
@@ -116,6 +116,72 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                          'model_config_B')
         self.assertEqual(all_results[1].run_config().model_variants_name(),
                          'model_config_A')
+
+    def test_add_results_all_failing(self):
+        """
+        Test the case where we have only failing results
+        """
+        constraints = {'perf_throughput': {'min': 1000}}
+        avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
+        for i in sample(range(10), 10):
+            avg_non_gpu_metrics = {
+                'perf_throughput': 100 + 10 * i,
+                'perf_latency_p99': 4000
+            }
+            self.sorted_results.add_result(
+                construct_run_config_result(
+                    avg_gpu_metric_values=avg_gpu_metrics,
+                    avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
+                    comparator=self.result_comparator,
+                    constraints=constraints,
+                    model_name=str(i)))
+
+        top_5_results = self.sorted_results.top_n_results(n=5)
+        self.assertEqual(top_5_results[0].model_name(), '9')
+        self.assertEqual(top_5_results[1].model_name(), '8')
+        self.assertEqual(top_5_results[2].model_name(), '7')
+        self.assertEqual(top_5_results[3].model_name(), '6')
+        self.assertEqual(top_5_results[4].model_name(), '5')
+
+    def test_add_results_failing_to_passing(self):
+        """
+        Test the case where we have only failing results
+        and then a measurement makes one of the results passing
+        """
+
+        # Create 10 failing results
+        constraints = {'perf_throughput': {'min': 1000}}
+        avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
+        for i in sample(range(10), 10):
+            avg_non_gpu_metrics = {
+                'perf_throughput': 100 + 10 * i,
+                'perf_latency_p99': 4000
+            }
+            self.sorted_results.add_result(
+                construct_run_config_result(
+                    avg_gpu_metric_values=avg_gpu_metrics,
+                    avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
+                    comparator=self.result_comparator,
+                    constraints=constraints,
+                    model_name=str(i)))
+
+        # Now add a measurment to the last result so that it now passes the constraint
+        avg_non_gpu_metrics = {
+            'perf_throughput': 2000,
+            'perf_latency_p99': 4000
+        }
+
+        self.sorted_results.add_result(
+            construct_run_config_result(
+                avg_gpu_metric_values=avg_gpu_metrics,
+                avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
+                comparator=self.result_comparator,
+                constraints=constraints,
+                model_name="9"))
+
+        top_5_results = self.sorted_results.top_n_results(n=5)
+        self.assertEqual(len(top_5_results), 1)
+        self.assertEqual(top_5_results[0].model_name(), '9')
 
     def test_top_n_results(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
