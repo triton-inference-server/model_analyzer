@@ -22,17 +22,6 @@ mode, the Triton Inference Server is launched locally via a C API. In the
 `remote` mode, it is assumed there is an already running instance of Triton
 Inference Server.
 
-### Local
-
-| CLI Option | **`--triton-launch-mode=local`** |
-| - | - |
-
-Local mode is the default mode if no `triton-launch-mode` is specified. 
-
-In this mode, Model Analyzer will launch Triton Server using the local binary
-supplied using `--triton-server-path`, or if none is supplied, the
-`tritonserver` binary in `$PATH`.
-
 ### Docker
 
 | CLI Option | **`--triton-launch-mode=docker`** |
@@ -72,6 +61,21 @@ directory need not exist.
 
 This mode is useful if you want to use the Model Analyzer installed in the
 Triton SDK Container. You will need Docker installed, though.
+
+### Local
+
+| CLI Option | **`--triton-launch-mode=local`** |
+| - | - |
+
+Local mode is the default mode if no `triton-launch-mode` is specified. 
+
+In this mode, Model Analyzer will launch Triton Server using the local binary
+supplied using `--triton-server-path`, or if none is supplied, the
+`tritonserver` binary in `$PATH`. 
+
+There are multiple ways to get Model Analyzer and TritonServer executables together for local mode, 
+such as [building a container](install.md#specific-version-with-local-launch-mode) that contains both, or [pip installing](install.md#pip) Model analyzer wherever you already
+have a TritonServer executable
 
 ### C API
 
