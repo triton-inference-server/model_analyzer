@@ -33,8 +33,8 @@ class SortedResults:
 
     GET_ALL_RESULTS = -1
 
-    def __init__(self):
-        self._run_config_results = []
+    def __init__(self) -> None:
+        self._run_config_results: List[RunConfigResult] = []
 
     def results(self) -> List[RunConfigResult]:
         """
@@ -46,7 +46,7 @@ class SortedResults:
         self._run_config_results.sort()
         return self._run_config_results
 
-    def add_result(self, run_config_result: RunConfigResult):
+    def add_result(self, run_config_result: RunConfigResult) -> None:
         """
         Adds a run_config_result to the result lists
         This can either be a new result or new measurements added
@@ -104,11 +104,12 @@ class SortedResults:
 
     def _add_measurements_to_existing_run_config_result(
             self, existing_run_config_result: RunConfigResult,
-            new_run_config_result: RunConfigResult):
+            new_run_config_result: RunConfigResult) -> None:
         for rcm in new_run_config_result.run_config_measurements():
             existing_run_config_result.add_run_config_measurement(rcm)
 
-    def _add_new_run_config_result(self, run_config_result: RunConfigResult):
+    def _add_new_run_config_result(self,
+                                   run_config_result: RunConfigResult) -> None:
         new_run_config_result = deepcopy(run_config_result)
 
         self._run_config_results.append(new_run_config_result)
