@@ -86,33 +86,9 @@ class SortedResults:
         )
 
         if len(passing_results) == 0:
-            logger.warning(
-                f"Requested top {n} configs, but none satisfied constraints. "
-                "Showing available constraint failing configs for this model.")
-
-            if n == SortedResults.GET_ALL_RESULTS:
-                return failing_results
-            if n > len(failing_results):
-                logger.warning(
-                    f"Requested top {n} failing configs, "
-                    f"but found only {len(failing_results)}. "
-                    "Showing all available constraint failing configs for this model."
-                )
-
-            result_len = min(n, len(failing_results))
-            return failing_results[0:result_len]
-
-        if n == SortedResults.GET_ALL_RESULTS:
-            return passing_results
-        if n > len(passing_results):
-            logger.warning(
-                f"Requested top {n} configs, "
-                f"but found only {len(passing_results)} passing configs. "
-                "Showing all available constraint satisfying configs for this model."
-            )
-
-        result_len = min(n, len(passing_results))
-        return passing_results[0:result_len]
+            return self._get_top_n_failing_results(failing_results, n)
+        else:
+            return self._get_top_n_passing_results(passing_results, n)
 
     def _find_existing_run_config_result(
             self,
@@ -148,3 +124,35 @@ class SortedResults:
                 passing.append(rcr)
 
         return passing, failing
+
+    def _get_top_n_failing_results(self, failing_results: List[RunConfigResult],
+                                   n: int) -> List[RunConfigResult]:
+        logger.warning(
+            f"Requested top {n} configs, but none satisfied constraints. "
+            "Showing available constraint failing configs for this model.")
+
+        if n == SortedResults.GET_ALL_RESULTS:
+            return failing_results
+        if n > len(failing_results):
+            logger.warning(
+                f"Requested top {n} failing configs, "
+                f"but found only {len(failing_results)}. "
+                "Showing all available constraint failing configs for this model."
+            )
+
+        result_len = min(n, len(failing_results))
+        return failing_results[0:result_len]
+
+    def _get_top_n_passing_results(self, passing_results: List[RunConfigResult],
+                                   n: int) -> List[RunConfigResult]:
+        if n == SortedResults.GET_ALL_RESULTS:
+            return passing_results
+        if n > len(passing_results):
+            logger.warning(
+                f"Requested top {n} configs, "
+                f"but found only {len(passing_results)} passing configs. "
+                "Showing all available constraint satisfying configs for this model."
+            )
+
+        result_len = min(n, len(passing_results))
+        return passing_results[0:result_len]
