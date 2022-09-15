@@ -22,23 +22,12 @@ mode, the Triton Inference Server is launched locally via a C API. In the
 `remote` mode, it is assumed there is an already running instance of Triton
 Inference Server.
 
-### Local
-
-| CLI Option | **`--triton-launch-mode=local`** |
-| - | - |
-
-In this mode, Model Analyzer will launch Triton Server using the local binary
-supplied using `--triton-server-path`, or if none is supplied, the
-`tritonserver` binary in `$PATH`.
-
-Local mode is the recommended method of getting started with Model Analyzer.
-There are detailed instructions about using this mode in the
-[Quick Start Guide](quick_start.md).
-
 ### Docker
 
 | CLI Option | **`--triton-launch-mode=docker`** |
 | - | - |
+
+Note: A full step by step example of docker mode can be found in the [Quick Start Guide](quick_start.md).
 
 In this mode, Model Analyzer uses the Python Docker API to launch the Triton
 Inference Server container. If you are running Model Analyzer inside a Docker
@@ -73,19 +62,41 @@ directory need not exist.
 This mode is useful if you want to use the Model Analyzer installed in the
 Triton SDK Container. You will need Docker installed, though.
 
+### Local
+
+| CLI Option | **`--triton-launch-mode=local`** |
+| - | - |
+
+Local mode is the default mode if no `triton-launch-mode` is specified. 
+
+In this mode, Model Analyzer will launch Triton Server using the local binary
+supplied using `--triton-server-path`, or if none is supplied, the
+`tritonserver` binary in `$PATH`. 
+
+There are multiple ways to get Model Analyzer and TritonServer executables together for local mode, 
+such as [building a container](install.md#specific-version-with-local-launch-mode) that contains both, or [pip installing](install.md#pip) Model analyzer wherever you already
+have a TritonServer executable
+
 ### C API
 
 | CLI Option | **`--triton-launch-mode=c_api`** |
 | - | - |
 
 In this mode, Triton server is launched locally via the
-[C_API](https://github.com/triton-inference-server/server/blob/main/docs/inference_protocols.md#c-api)
-by the perf_analyzer instances launched by Model Analyzer.
+[C_API](https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/inference_protocols.md#in-process-triton-server-api)
+by the perf_analyzer instances launched by Model Analyzer. Inference requests are
+sent directly via C-API function calls instead of going through the network via
+GRPC or HTTP.
 
 This mode is useful if you want to run with the Triton Server installed locally
 and want the increased performance from the C API. Similar to the
 [local mode](#local), Triton Server must be installed in the environment that
 the Model Analyzer is being used.
+
+The server metrics that Model Analyzer gathers and reports are not available directly
+from the triton server when running in C-API mode. Instead, Model Analyzer will attempt to 
+gather this information itself. This can lead to less precise results, and will generally result
+in GPU utilization and power numbers being underreported. 
 
 ### Remote
 
