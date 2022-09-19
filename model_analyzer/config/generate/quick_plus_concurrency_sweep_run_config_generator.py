@@ -102,7 +102,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         logger.info("")
 
     def _execute_quick_search(self) -> Generator[RunConfig, None, None]:
-        self._rcg = self._create_quick_run_config_generator()
+        self._rcg: ConfigGeneratorInterface = self._create_quick_run_config_generator()
 
         yield from self._rcg.get_configs()
 
@@ -121,10 +121,10 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
         for count, result in enumerate(top_results):
             new_config = self._create_new_config_command_profile(result)
-            self._brcg = self._create_brute_run_config_generator(
+            self._rcg = self._create_brute_run_config_generator(
                 new_config, skip_default_config=(count != 0))
 
-            yield from self._brcg.get_configs()
+            yield from self._rcg.get_configs()
 
     def _create_new_config_command_profile(
             self, result: RunConfigResult) -> ConfigCommandProfile:
