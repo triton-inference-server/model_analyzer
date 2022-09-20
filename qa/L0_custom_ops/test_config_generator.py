@@ -64,7 +64,19 @@ class TestConfigGenerator:
 
         self.config = {}
         self.config['run_config_search_disable'] = True
-        self.config['profile_models'] = self.profile_models
+
+        # Multiple model configs to confirm we don't lose any information
+        # bewteen launches of triton server
+        self.config["profile_models"] = {
+                model: {
+                    "model_config_parameters": {
+                        "instance_group": [{
+                            "count": [1, 2],
+                            "kind": "KIND_CPU"
+                        }]
+                    }
+                } for model in self.profile_models
+        }
         self.config['batch_sizes'] = 1
         self.config['concurrency'] = 1
 
