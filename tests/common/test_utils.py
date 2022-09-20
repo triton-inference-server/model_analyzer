@@ -19,6 +19,11 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.cli.cli import CLI
 
+from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.config.run.model_run_config import ModelRunConfig
+from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.run_config_result import RunConfigResult
@@ -235,6 +240,23 @@ def construct_perf_analyzer_config(model_name='my-model',
     return pa_config
 
 
+def construct_run_config(model_name: str, model_config_name: str,
+                         pa_config_name: str) -> RunConfig:
+    """
+    Constructs a Perf Analyzer Config
+    """
+
+    model_config_dict = {'name': model_config_name}
+    model_config = ModelConfig.create_from_dictionary(model_config_dict)
+
+    perf_config = PerfAnalyzerConfig()
+    perf_config.update_config({'model-name': pa_config_name})
+    mrc = ModelRunConfig(model_name, model_config, perf_config)
+    rc = RunConfig({})
+    rc.add_model_run_config(mrc)
+    return rc
+
+
 def construct_run_config_measurement(model_name,
                                      model_config_names,
                                      model_specific_pa_params,
@@ -298,6 +320,7 @@ def construct_run_config_measurement(model_name,
 def construct_run_config_result(avg_gpu_metric_values,
                                 avg_non_gpu_metric_values_list,
                                 comparator,
+                                constraints=None,
                                 value_step=1,
                                 model_name="test_model",
                                 model_config_names=["test_model"],
@@ -335,7 +358,8 @@ def construct_run_config_result(avg_gpu_metric_values,
     # Construct a result
     run_config_result = RunConfigResult(model_name=model_name,
                                         run_config=run_config,
-                                        comparator=comparator)
+                                        comparator=comparator,
+                                        constraints=constraints)
 
     # Get dict of list of metric values
     gpu_metric_values = {}

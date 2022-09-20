@@ -19,6 +19,7 @@ from model_analyzer.analyzer import Analyzer
 from model_analyzer.config.input.config_status import ConfigStatus
 from model_analyzer.constants import CONFIG_PARSER_SUCCESS
 from model_analyzer.result.results import Results
+from model_analyzer.result.sorted_results import SortedResults
 from model_analyzer.result.run_config_result import RunConfigResult
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.config.run.run_config import RunConfig
@@ -121,7 +122,9 @@ class TestAnalyzer(trc.TestResultCollector):
             '--config-file /tmp/my_config.yml --checkpoint-directory '
             '/tmp/my_checkpoints`')
 
-    def mock_top_n_results(self, model_name=None, n=-1):
+    def mock_top_n_results(self,
+                           model_name=None,
+                           n=SortedResults.GET_ALL_RESULTS):
 
         rc1 = RunConfig({})
         rc1.add_model_run_config(
