@@ -87,7 +87,7 @@ $ model-analyzer profile -h
 Depending on the command line or YAML config options provided, the `profile`
 subcommand will either perform a
 [manual](./config_search.md#manual-brute-search), [automatic](./config_search.md#automatic-brute-search), or
-[quick](./config_search.md#quick-configuration-search) search over perf analyzer
+[quick](./config_search.md#quick-search-mode) search over perf analyzer
 and model config file parameters. For each combination of [model config
 parameters](./config.md#model-config-parameters) (e.g. _max batch size_, _dynamic batching_, and _instance count_), it will run tritonserver and perf analyzer instances with
 all the specified run parameters (client request concurrency and static batch
