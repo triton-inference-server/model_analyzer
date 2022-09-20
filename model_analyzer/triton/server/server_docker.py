@@ -94,7 +94,6 @@ class TritonServerDocker(TritonServer):
             # Set all environment variables inside the container
             for env_variable in list(env):
                 env_cmds.append(f"{env_variable}={env[env_variable]}")
-                del env[env_variable]
 
         # Mount required directories
         volumes = {}
