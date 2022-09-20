@@ -16,7 +16,7 @@ LOG="`pwd`/log.txt"
 CONFIG="`pwd`/mkdocs.yml"
 RET=0
 
-rm $LOG
+#rm $LOG
 
 exec mkdocs serve -f $CONFIG > $LOG &
 PID=$!
