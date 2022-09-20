@@ -30,10 +30,10 @@ let it [Automatically](config_search.md#automatic-brute-search) sweep through co
 Automatic configuration search is the default behavior when running Model
 Analyzer without manually specifying what values to search. The parameters
 that are automatically searched are
-[`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#maximum-batch-size)
+[`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#maximum-batch-size)
 and
-[`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups).
-Additionally, [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher) will be enabled if it is legal to do so.
+[`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#instance-groups).
+Additionally, [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#dynamic-batcher) will be enabled if it is legal to do so.
 
 An example model analyzer config that performs automatic config search looks
 like below:
@@ -47,15 +47,15 @@ profile_models:
 ```
 
 In the default mode, automatic config search will try values 1 through 5 for
-[`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups).
+[`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#instance-groups).
 The maximum value can be changed using the `run_config_search_max_instance_count` key in the Model Analyzer Config.
 For each `instance_group`, Model Analyzer will sweep values 1 through 128 increasing exponentially (i.e. 1, 2, 4, 8, ...) for
-[`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#maximum-batch-size). The start and end values can be changed using `run_config_search_min_model_batch_size` and `run_config_search_max_model_batch_size`.
-[`Dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)
+[`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#maximum-batch-size). The start and end values can be changed using `run_config_search_min_model_batch_size` and `run_config_search_max_model_batch_size`.
+[`Dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#dynamic-batcher)
 will be enabled for all model configs generated using automatic search.
 
 For each model config that is generated in automatic search, Model Analyzer will gather data for
-[`concurrency`](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md#request-concurrency)
+[`concurrency`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/perf_analyzer.md#request-concurrency)
 values 1 through 1024 increased exponentially (i.e. 1, 2, 4, 8, ...). The maximum value can be configured
 using the `run_config_search_max_concurrency` key in the Model Analyzer Config.
 
@@ -145,7 +145,7 @@ profile_models:
 In this mode, Model Analyzer can sweep through every Triton model configuration
 parameter available. For a complete list of parameters allowed under
 `model_config_parameters`, refer to the [Triton Model
-Configuration](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md).
+Configuration](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md).
 It is your responsibility to make sure that the sweep configuration specified
 works with your model. For example, in the above config, if we change `[6, 8]`
 as the range for the `max_batch_size` to `[1]`, it will no longer be a valid
@@ -161,9 +161,9 @@ sweep on every parameter that can be specified in Triton model configuration. In
 this section, we describe some of the parameters that might be of interest for
 manual sweep:
 
-- [Rate limiter](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md#rate-limiter-config) setting
+- [Rate limiter](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#rate-limiter-config) setting
 - If the model is using [ONNX](https://github.com/triton-inference-server/onnxruntime_backend) or [Tensorflow backend](https://github.com/triton-inference-server/tensorflow_backend), the "execution_accelerators" parameters. More information about this parameter is
-  available in the [Triton Optimization Guide](https://github.com/triton-inference-server/server/blob/main/docs/optimization.md#framework-specific-optimization)
+  available in the [Triton Optimization Guide](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/optimization.md#framework-specific-optimization)
 
 ## Quick Search Mode
 

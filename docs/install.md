@@ -125,7 +125,7 @@ default, as all the dependencies will be available.<br><br>
 
 **1. Build Triton SDK Container from Main**  
 Follow the instructions found at
-[Build SDK Image](https://github.com/triton-inference-server/server/blob/main/docs/test.md#build-sdk-image)<br><br>
+[Build SDK Image](https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/test.md#build-sdk-image)<br><br>
 
 **2. Build Model Analyzer's Main Docker Image**
 

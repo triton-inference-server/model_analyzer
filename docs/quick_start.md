@@ -74,7 +74,7 @@ config variants that Model Analyzer creates.<br><br>
 ---
 
 The [examples/quick-start](../examples/quick-start) directory is an example
-[Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/model_repository.md) that contains a simple libtorch model which calculates
+[Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md) that contains a simple libtorch model which calculates
 the sum and difference of two inputs.
 
 Run the Model Analyzer `profile` subcommand inside the container with:
