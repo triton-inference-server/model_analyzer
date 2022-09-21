@@ -66,7 +66,7 @@ converting the `snake_case` options to `--kebab-case`. For example,
 `profile_models` in the YAML would be `--profile-models` in the CLI.
 
 ```yaml
-# Path to the Triton Model Repository (https://github.com/triton-inference-server/server/blob/main/docs/model_repository.md)
+# Path to the Triton Model Repository (https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md)
 model_repository: <string>
 
 # List of the model names to be profiled
@@ -575,7 +575,7 @@ This will result in 27 individual test runs of the model.
 
 This field represents the values that can be changed or swept through using
 Model Analyzer. All the values supported in the [Triton
-Config](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md)
+Config](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md)
 can be specified or swept through here. `<model-config-parameters>` should be
 specified on a per model basis and cannot be specified globally (like
 `<parameter>`).
@@ -585,9 +585,9 @@ sweeping:
 
 |                                                              Option                                                              |                                                                                                                                                               Description                                                                                                                                                               |
 | :------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-| [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#dynamic-batcher)  |                                                                                              Dynamic batching is a feature of Triton that allows inference requests to be combined by the server, so that a batch is created dynamically.                                                                                               |
-| [`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#maximum-batch-size) |                                       The max_batch_size property indicates the maximum batch size that the model supports for the [types of batching](https://github.com/triton-inference-server/server/blob/master/docs/architecture.md#models-and-schedulers) that can be exploited by Triton.                                       |
-|  [`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/model_configuration.md#instance-groups)   | Triton can provide multiple instances of a model so that multiple inference requests for that model can be handled simultaneously. The model configuration ModelInstanceGroup property is used to specify the number of execution instances that should be made available and what compute resource should be used for those instances. |
+| [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#dynamic-batcher)  |                                                                                              Dynamic batching is a feature of Triton that allows inference requests to be combined by the server, so that a batch is created dynamically.                                                                                               |
+| [`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#maximum-batch-size) |                                       The max_batch_size property indicates the maximum batch size that the model supports for the [types of batching](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/architecture.md#models-and-schedulers) that can be exploited by Triton.                                       |
+|  [`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#instance-groups)   | Triton can provide multiple instances of a model so that multiple inference requests for that model can be handled simultaneously. The model configuration ModelInstanceGroup property is used to specify the number of execution instances that should be made available and what compute resource should be used for those instances. |
 
 An example `<model-config-parameters>` look like below:
 
@@ -676,25 +676,15 @@ but profile `model_2` using GPU.
 
 ### `<perf-analyzer-flags>`
 
-This field allows fine-grained control over the behavior of the `perf_analyzer`
-instances launched by Model Analyzer. `perf_analyzer` options and their values
-can be specified here, and will be passed to `perf_analyzer`. Refer to [the
+This field allows the user to pass `perf_analyzer` any CLI options it needs to
+execute properly. Refer to [the
 `perf_analyzer`
-docs](https://github.com/triton-inference-server/server/blob/master/docs/perf_analyzer.md)
+docs](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/perf_analyzer.md)
 for more information on these options.
 
-#### Example
+#### Global options to apply to all instances of Perf Analyzer
 
-```yaml
-model_repository: /path/to/model/repository/
-profile_models:
-  model_1:
-    perf_analyzer_flags:
-      percentile: 95
-      latency-report-file: /path/to/latency/report/file
-```
-
-The `perf_analyzer_flags` section can also be specified globally to affect
+The `perf_analyzer_flags` section can be specified globally to affect
 perf_analyzer instances across all models in the following way:
 
 ```yaml
@@ -707,6 +697,22 @@ perf_analyzer_flags:
   percentile: 95
   latency-report-file: /path/to/latency/report/file
 ```
+
+#### Model-specific options for Perf Analyzer
+
+In order to set flags only for a specific model, you can specify 
+the flags in the following way:
+
+```yaml
+model_repository: /path/to/model/repository/
+profile_models:
+  model_1:
+    perf_analyzer_flags:
+      percentile: 95
+      latency-report-file: /path/to/latency/report/file
+```
+
+#### Shape, Input-Data, and Streaming
 
 The `input-data`, `shape`, and `streaming` perf_analyzer options are additive and can take either
 a single string (non-list) or a list of strings. Below is an example for `shape` argument:
@@ -723,13 +729,16 @@ perf_analyzer_flags:
     - INPUT1:1024,1024
 ```
 
+#### Variable-sized dimensions
+
 If a model configuration has variable-sized dimensions in the inputs section,
 then the `shape` option of the `perf_analyzer_flags` option must be specified.
 More information about this can be found in the
-[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#input-data).
+[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/perf_analyzer.md#input-data).
 
-**Note**:
-Perf Analyzer now supports SSL via GRPC and HTTP. It can be enabled via Model Analyzer configuration file updates.
+
+#### SSL Support:
+Perf Analyzer supports SSL via GRPC and HTTP. It can be enabled via Model Analyzer configuration file updates.
 
 GRPC example:
 
@@ -754,9 +763,9 @@ profile_models:
 ```
 
 More information about this can be found in the
-[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#ssltls-support).
+[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/perf_analyzer.md#ssltls-support).
 
-**Important Notes**:
+#### Important Notes:
 
 - Only a subset of flags can be specified on the command line. Use `model-analyzer profile --help` to see the list of flags that can be specified on the command line. If a flag isn't listed there, it can be specified via the yaml file.
 - When providing arguments under `perf_analyzer_flags`, you must use `-` instead
@@ -818,7 +827,7 @@ profile_models:
 ```
 
 **Note**:
-Triton Server now supports SSL via GRPC. It can be enabled via Model Analyzer configuration file updates.
+Triton Server supports SSL via GRPC. It can be enabled via Model Analyzer configuration file updates.
 
 GRPC example:
 
@@ -842,7 +851,7 @@ triton_server_flags:
 ```
 
 More information about this can be found in the
-[Triton Server documentation](https://github.com/triton-inference-server/server/blob/main/docs/inference_protocols.md#ssltls).
+[Triton Server documentation](https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/inference_protocols.md#ssltls).
 
 **Important Notes**:
 
@@ -856,7 +865,7 @@ More information about this can be found in the
 This section enables setting environment variables for the tritonserver
 instances launched by Model Analyzer. For example, when a custom operation is
 required by a model, Triton requires the LD_PRELOAD and LD_LIBRARY_PATH
-environment variables to be set. See [this link](https://github.com/triton-inference-server/server/blob/main/docs/custom_operations.md)
+environment variables to be set. See [this link](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/custom_operations.md)
 for details. The value for this section is a dictionary where the
 keys are the environment variable names and their values are the values to be
 set.
