@@ -738,7 +738,7 @@ More information about this can be found in the
 
 
 #### SSL Support:
-Perf Analyzer now supports SSL via GRPC and HTTP. It can be enabled via Model Analyzer configuration file updates.
+Perf Analyzer supports SSL via GRPC and HTTP. It can be enabled via Model Analyzer configuration file updates.
 
 GRPC example:
 
@@ -827,7 +827,7 @@ profile_models:
 ```
 
 **Note**:
-Triton Server now supports SSL via GRPC. It can be enabled via Model Analyzer configuration file updates.
+Triton Server supports SSL via GRPC. It can be enabled via Model Analyzer configuration file updates.
 
 GRPC example:
 
