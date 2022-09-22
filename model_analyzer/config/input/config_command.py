@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict, List
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 import yaml
@@ -103,6 +104,8 @@ class ConfigCommand:
         for key, value in self._fields.items():
             self._fields[key].set_name(key)
             if key in args:
+                self._check_for_duplicate_profile_models_option(
+                    yaml_config, key)
                 self._fields[key].set_value(getattr(args, key))
             elif yaml_config is not None and key in yaml_config:
                 self._fields[key].set_value(yaml_config[key])
@@ -115,6 +118,16 @@ class ConfigCommand:
                 )
         self._preprocess_and_verify_arguments()
         self._autofill_values()
+
+    def _check_for_duplicate_profile_models_option(self,
+                                                   yaml_config: Dict[str, List],
+                                                   key: str) -> None:
+        if yaml_config is not None and key in yaml_config and key == 'profile_models':
+            raise TritonModelAnalyzerException(
+                f'\n The profile model option is specified on both '
+                'the CLI (--profile-models) and in the YAML config file.'
+                '\n Please remove the option from one of the locations and try again'
+            )
 
     def _preprocess_and_verify_arguments(self):
         """

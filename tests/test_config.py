@@ -256,6 +256,23 @@ class TestConfig(trc.TestResultCollector):
         yaml_content = 'model_repository: yaml_repository'
         self._assert_error_on_evaluate_config(args, yaml_content)
 
+    def test_missing_config(self):
+        ''' Test that we fail if the required option profile-models is omitted '''
+
+        args = ['model-analyzer', 'profile', '-f', 'path-to-config-file']
+        yaml_content = 'model_repository: yaml_repository'
+        self._assert_error_on_evaluate_config(args, yaml_content)
+
+    def test_conflicting_configs(self):
+        ''' Test that we fail if an option is specified in both CLI and YAML '''
+
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--profile-models', 'vgg11'
+        ]
+        yaml_content = 'profile_models: add_sub'
+        self._assert_error_on_evaluate_config(args, yaml_content)
+
     def test_range_and_list_values(self):
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli_repository',
