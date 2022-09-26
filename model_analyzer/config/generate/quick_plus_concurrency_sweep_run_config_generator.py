@@ -76,7 +76,8 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
 
-    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
+    def set_last_results(
+            self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         self._rcg.set_last_results(measurements)
 
     def get_configs(self) -> Generator[RunConfig, None, None]:
@@ -102,7 +103,8 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         logger.info("")
 
     def _execute_quick_search(self) -> Generator[RunConfig, None, None]:
-        self._rcg: ConfigGeneratorInterface = self._create_quick_run_config_generator()
+        self._rcg: ConfigGeneratorInterface = self._create_quick_run_config_generator(
+        )
 
         yield from self._rcg.get_configs()
 
@@ -115,33 +117,51 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             client=self._client,
             model_variant_name_manager=self._model_variant_name_manager)
 
-    def _sweep_concurrency_over_top_results(self) -> Generator[RunConfig, None, None]:
+    def _sweep_concurrency_over_top_results(
+            self) -> Generator[RunConfig, None, None]:
         top_results = self._result_manager.top_n_results(
-            n=self._config.num_configs_per_model)
+            n=self._config.num_configs_per_model, include_default=True)
 
         for count, result in enumerate(top_results):
-            new_config = self._create_new_config_command_profile(result)
-            self._rcg = self._create_brute_run_config_generator(
-                new_config, skip_default_config=(count != 0))
+            # new_config = self._create_new_config_command_profile(result)
+            # new_models = self._create_new_models(result, self._models)
 
-            yield from self._rcg.get_configs()
+            run_config = deepcopy(result.run_config())
+            for concurrency in (2**i for i in range(0, 10)):
+                run_config = self._set_concurrency(run_config, concurrency)
+
+                # this is to get the default
+                if count == 0:
+                    self._rcg = self._create_brute_run_config_generator(
+                        self._config, self._models, skip_default_config=False)
+
+                    yield from self._rcg.get_configs()
+                else:
+                    yield run_config
 
     def _create_new_config_command_profile(
             self, result: RunConfigResult) -> ConfigCommandProfile:
         new_config = deepcopy(self._config)
-
         new_config = self._set_search_mode(new_config)
-        new_config = self._set_parameters(result, new_config)
 
         return new_config
 
+    def _create_new_models(
+            self, result: RunConfigResult,
+            models: List[ModelProfileSpec]) -> List[ModelProfileSpec]:
+        new_models = deepcopy(self._models)
+        new_models = self._set_parameters(result, new_models)
+
+        return new_models
+
     def _create_brute_run_config_generator(
             self, new_config: ConfigCommandProfile,
+            new_models: List[ModelProfileSpec],
             skip_default_config: bool) -> BruteRunConfigGenerator:
         return BruteRunConfigGenerator(
             config=new_config,
             gpus=self._gpus,
-            models=self._models,
+            models=new_models,
             client=self._client,
             model_variant_name_manager=self._model_variant_name_manager,
             skip_default_config=skip_default_config)
@@ -149,56 +169,61 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     def _set_search_mode(self,
                          config: ConfigCommandProfile) -> ConfigCommandProfile:
         config.run_config_search_mode = 'brute'
-        config.run_config_search_disable = False
+        config.run_config_search_disable = True
         config.early_exit_enable = True
 
         return config
 
-    def _set_parameters(self, result: RunConfigResult,
-                        config: ConfigCommandProfile) -> ConfigCommandProfile:
-        batch_size = self._find_batch_size(result)
-        config = self._set_batch_size(config, batch_size)
+    def _set_parameters(
+            self, result: RunConfigResult,
+            models: List[ModelProfileSpec]) -> List[ModelProfileSpec]:
+        batch_sizes = self._find_batch_sizes(result)
+        models = self._set_batch_sizes(models, batch_sizes)
 
-        instance_count = self._find_instance_count(result)
-        config = self._set_instance_count(config, instance_count)
+        instance_counts = self._find_instance_counts(result)
+        models = self._set_instance_counts(models, instance_counts)
 
-        config = self._set_concurrency(config)
+        return models
 
-        return config
+    def _find_batch_sizes(self, result: RunConfigResult) -> List[int]:
+        batch_sizes = []
+        for model_run_config in result.run_config().model_run_configs():
+            model_config = model_run_config.model_config().get_config()
 
-    # TODO: TMA-879 - This approach isn't going to work for multi-model
-    # We will need to create a yaml config to set each models
-    # batch size/instances seperately
-    def _find_batch_size(self, result: RunConfigResult) -> int:
-        mc = result.run_config().model_run_configs()[0].model_config(
-        ).get_config()
+            if 'max_batch_size' in model_config:
+                batch_sizes.append(model_config['max_batch_size'])
+            else:
+                batch_sizes.append(1)
 
-        batch_size = 1
-        if 'max_batch_size' in mc:
-            batch_size = mc['max_batch_size']
-        return batch_size
+        return batch_sizes
 
-    def _find_instance_count(self, result: RunConfigResult) -> int:
-        return result.run_config().model_run_configs()[0].model_config(
-        ).get_config()['instance_group'][0]['count']
+    def _find_instance_counts(self, result: RunConfigResult) -> List[int]:
+        instance_counts = []
+        for model_run_config in result.run_config().model_run_configs():
+            model_config = model_run_config.model_config().get_config()
+            instance_counts.append(model_config['instance_group'][0]['count'])
 
-    def _set_batch_size(self, config: ConfigCommandProfile,
-                        batch_size: int) -> ConfigCommandProfile:
-        config.run_config_search_min_model_batch_size = batch_size
-        config.run_config_search_max_model_batch_size = batch_size
+        return instance_counts
 
-        return config
+    def _set_batch_sizes(self, models: List[ModelProfileSpec],
+                         batch_sizes: List[int]) -> List[ModelProfileSpec]:
+        for i, model in enumerate(models):
+            parameters = model.parameters()
+            parameters['batch_sizes'] = [batch_sizes[i]]
 
-    def _set_instance_count(self, config: ConfigCommandProfile,
-                            instance_count: int) -> ConfigCommandProfile:
-        config.run_config_search_min_instance_count = instance_count
-        config.run_config_search_max_instance_count = instance_count
+        return models
 
-        return config
+    def _set_instance_counts(
+            self, models: List[ModelProfileSpec],
+            instance_counts: List[int]) -> List[ModelProfileSpec]:
+        # FIXME: TODO
 
-    def _set_concurrency(self,
-                         config: ConfigCommandProfile) -> ConfigCommandProfile:
-        config.run_config_search_min_concurrency = DEFAULT_RUN_CONFIG_MIN_CONCURRENCY
-        config.run_config_search_max_concurrency = DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+        return models
 
-        return config
+    def _set_concurrency(self, run_config: RunConfig,
+                         concurrency: int) -> RunConfig:
+        for model_run_config in run_config.model_run_configs():
+            perf_config = model_run_config.perf_config()
+            perf_config.update_config({'concurrency-range': concurrency})
+
+        return run_config

@@ -16,6 +16,7 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.config.generate.run_config_generator_factory import RunConfigGeneratorFactory
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from model_analyzer.result.constraint_manager import ConstraintManager
 
 import logging
 
@@ -102,10 +103,14 @@ class ModelManager:
                 measurement = None
 
             if measurement:
-                measurement.set_metric_weightings(
-                    metric_objectives=[self._config.objectives])
+                objectives = [model.objectives() for model in models]
+                constraints = [model.constraints() for model in models]
+                constraints2 = ConstraintManager.get_constraints_for_all_models(
+                    self._config)
+
+                measurement.set_metric_weightings(metric_objectives=objectives)
                 measurement.set_model_config_constraints(
-                    model_config_constraints=[self._config.constraints])
+                    model_config_constraints=constraints)
 
             rcg.set_last_results([measurement])
 

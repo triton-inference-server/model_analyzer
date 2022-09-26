@@ -325,44 +325,44 @@ class TestConstraintManager(trc.TestResultCollector):
     def _create_single_model_no_constraints(self):
         args = self._create_args()
         yaml_str = ("""
-            analysis_models: 
+            profile_models: 
               model_A
         """)
-        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
         return config
 
     def _create_single_model_with_constraints(self):
         args = self._create_args()
         yaml_str = ("""
-            analysis_models: 
+            profile_models: 
               model_A:
                 constraints:
                   perf_latency_p99:
                     max: 100
         """)
-        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
         return config
 
     def _create_single_model_global_constraints(self):
         args = self._create_args()
         yaml_str = ("""
-            analysis_models: 
+            profile_models: 
               model_A
                 
             constraints:
                 perf_throughput:
                   min: 100
         """)
-        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
         return config
 
     def _create_single_model_both_constraints(self):
         args = self._create_args()
         yaml_str = ("""
-            analysis_models: 
+            profile_models: 
               model_A:
                 constraints:
                   perf_latency_p99:
@@ -372,14 +372,14 @@ class TestConstraintManager(trc.TestResultCollector):
                 perf_latency_p99:
                   max: 100
         """)
-        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
         return config
 
     def _create_multi_model_both_constraints(self):
         args = self._create_args()
         yaml_str = ("""
-            analysis_models:
+            profile_models:
               model_A:
                 constraints:
                   perf_latency_p99:
@@ -404,7 +404,7 @@ class TestConstraintManager(trc.TestResultCollector):
                 gpu_used_memory:
                   max: 100
         """)
-        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
         return config
 
@@ -430,10 +430,8 @@ class TestConstraintManager(trc.TestResultCollector):
 
     def _create_args(self):
         return [
-            'model-analyzer',
-            'analyze',
-            '-f',
-            'config.yml',
+            'model-analyzer', 'profile', '-f', 'config.yml', '-m',
+            '/swdev/profile_models'
         ]
 
 
