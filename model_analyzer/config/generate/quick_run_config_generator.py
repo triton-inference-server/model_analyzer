@@ -344,7 +344,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
             default_perf_analyzer_config = PerfAnalyzerConfig()
             default_perf_analyzer_config.update_config_from_profile_config(
-                default_model_config._model_config.name, self._config)
+                default_model_config.get_field('name'), self._config)
 
             perf_config_params = {'batch-size': 1, 'concurrency-range': 1}
             default_perf_analyzer_config.update_config(perf_config_params)
