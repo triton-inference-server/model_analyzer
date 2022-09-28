@@ -429,10 +429,7 @@ class TestConstraintManager(trc.TestResultCollector):
         return rcm
 
     def _create_args(self):
-        return [
-            'model-analyzer', 'profile', '-f', 'config.yml', '-m',
-            '/swdev/profile_models'
-        ]
+        return ['model-analyzer', 'profile', '-f', 'config.yml', '-m', '.']
 
 
 if __name__ == '__main__':
