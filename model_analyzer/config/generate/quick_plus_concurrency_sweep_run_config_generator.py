@@ -119,16 +119,17 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
     def _sweep_concurrency_over_top_results(
             self) -> Generator[RunConfig, None, None]:
-        top_results = self._result_manager.top_n_results(
-            model_name=self._result_manager.get_model_names()[0],
-            n=self._config.num_configs_per_model,
-            include_default=True)
+        for model_name in self._result_manager.get_model_names():
+            top_results = self._result_manager.top_n_results(
+                model_name=model_name,
+                n=self._config.num_configs_per_model,
+                include_default=True)
 
-        for count, result in enumerate(top_results):
-            run_config = deepcopy(result.run_config())
-            for concurrency in (2**i for i in range(0, 10)):
-                run_config = self._set_concurrency(run_config, concurrency)
-                yield run_config
+            for count, result in enumerate(top_results):
+                run_config = deepcopy(result.run_config())
+                for concurrency in (2**i for i in range(0, 10)):
+                    run_config = self._set_concurrency(run_config, concurrency)
+                    yield run_config
 
     def _set_concurrency(self, run_config: RunConfig,
                          concurrency: int) -> RunConfig:
