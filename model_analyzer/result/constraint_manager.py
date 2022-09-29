@@ -41,7 +41,7 @@ class ConstraintManager:
         """
 
         constraints = {}
-        for model in config.analysis_models:
+        for model in config.profile_models:
             constraints[model.model_name()] = model.constraints()
         if "constraints" in config.get_all_config():
             constraints["default"] = config.get_all_config()["constraints"]
