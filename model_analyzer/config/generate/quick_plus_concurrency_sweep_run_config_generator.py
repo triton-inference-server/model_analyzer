@@ -20,6 +20,7 @@ from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
 from model_analyzer.config.generate.quick_run_config_generator import QuickRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from model_analyzer.config.generate.perf_analyzer_config_generator import PerfAnalyzerConfigGenerator
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
@@ -127,9 +128,21 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
             for count, result in enumerate(top_results):
                 run_config = deepcopy(result.run_config())
+
+                run_config_measurements = []
                 for concurrency in (2**i for i in range(0, 10)):
                     run_config = self._set_concurrency(run_config, concurrency)
                     yield run_config
+
+                    run_config_measurements.append(
+                        self._rcg._get_last_results())
+
+                    if not PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
+                            throughputs=run_config_measurements):
+                        logger.info(
+                            "Terminating concurrency sweep - throughput is decreasing"
+                        )
+                        break
 
     def _set_concurrency(self, run_config: RunConfig,
                          concurrency: int) -> RunConfig:
