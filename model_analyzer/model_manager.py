@@ -105,8 +105,6 @@ class ModelManager:
             if measurement:
                 objectives = [model.objectives() for model in models]
                 constraints = [model.constraints() for model in models]
-                constraints2 = ConstraintManager.get_constraints_for_all_models(
-                    self._config)
 
                 measurement.set_metric_weightings(metric_objectives=objectives)
                 measurement.set_model_config_constraints(
