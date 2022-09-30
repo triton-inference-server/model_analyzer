@@ -101,6 +101,9 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         """
         self._last_results = measurements
 
+    def get_last_results(self) -> Optional[RunConfigMeasurement]:
+        return self._last_results[-1]
+
     @abc.abstractmethod
     def _done_walking(self) -> bool:
         raise NotImplementedError

@@ -16,6 +16,7 @@ import abc
 from typing import List, Optional, Generator, Any
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
+
 class ConfigGeneratorInterface(abc.ABC):
     """
     An interface class for config generators
@@ -40,5 +41,10 @@ class ConfigGeneratorInterface(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
+    def set_last_results(
+            self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_last_results(self) -> Optional[RunConfigMeasurement]:
         raise NotImplementedError
