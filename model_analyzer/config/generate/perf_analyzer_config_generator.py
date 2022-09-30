@@ -74,8 +74,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._generator_started = False
 
         self._last_results: List[RunConfigMeasurement] = []
-        self._concurrency_results: List[RunConfigMeasurement] = []
-        self._batch_size_results: List[RunConfigMeasurement] = []
+        self._concurrency_results: List[Optional[RunConfigMeasurement]] = []
+        self._batch_size_results: List[Optional[RunConfigMeasurement]] = []
 
         self._model_name = model_name
         self._perf_analyzer_flags = model_perf_analyzer_flags
@@ -90,7 +90,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     @staticmethod
     def throughput_gain_valid_helper(
-            throughputs: List[RunConfigMeasurement],
+            throughputs: List[Optional[RunConfigMeasurement]],
             min_tries: int = THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES,
             min_gain: float = THROUGHPUT_MINIMUM_GAIN) -> bool:
         if len(throughputs) < min_tries:
@@ -109,8 +109,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return gain > min_gain
 
     @staticmethod
-    def get_throughput(measurement: RunConfigMeasurement) -> float:
-        return measurement.get_non_gpu_metric_value('perf_throughput')
+    def get_throughput(measurement: Optional[RunConfigMeasurement]) -> float:
+        if measurement:
+            return measurement.get_non_gpu_metric_value('perf_throughput')
+        else:
+            return 0.0
 
     def _is_done(self) -> bool:
         """ Returns true if this generator is done generating configs """
@@ -206,8 +209,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._step_batch_size()
 
     def _add_best_throughput_to_batch_sizes(self) -> None:
-        if self._concurrency_results:
-            best = max(self._concurrency_results)
+        if self._concurrency_results and not any(
+                x is None for x in self._concurrency_results):
+            # type is List[Optional[RCM]], but static checking doesn't understand
+            # max can't be called if any entry is None
+            best = max(self._concurrency_results)  #type: ignore
             self._batch_size_results.append(best)
 
     def _reset_concurrencies(self) -> None:
