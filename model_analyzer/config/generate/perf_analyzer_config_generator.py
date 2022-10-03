@@ -206,10 +206,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._step_batch_size()
 
     def _add_best_throughput_to_batch_sizes(self) -> None:
-        if self._concurrency_results and not any(
-                x is None for x in self._concurrency_results):
-            # type is List[Optional[RCM]], but static checking doesn't understand
-            # max can't be called if any entry is None
+        if self._concurrency_results:
+            # type is List[Optional[RCM]]
             best = max(self._concurrency_results)  #type: ignore
             self._batch_size_results.append(best)
 
