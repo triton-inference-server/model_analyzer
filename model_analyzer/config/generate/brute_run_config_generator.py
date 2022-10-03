@@ -80,9 +80,6 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         for index in range(self._num_models):
             self._curr_results[index].extend(measurements)
 
-    def get_last_results(self) -> Optional[RunConfigMeasurement]:
-        raise NotImplementedError
-
     def get_configs(self) -> Generator[RunConfig, None, None]:
         """
         Returns

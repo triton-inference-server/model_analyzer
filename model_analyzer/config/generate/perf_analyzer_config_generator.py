@@ -156,9 +156,6 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._last_results = measurement
             self._concurrency_results.extend(measurement)
 
-    def get_last_results(self) -> Optional[RunConfigMeasurement]:
-        return self._last_results[-1]
-
     def _create_concurrency_list(self, cli_config: ConfigCommandProfile,
                                  model_parameters: dict) -> List[int]:
         if model_parameters['concurrency']:

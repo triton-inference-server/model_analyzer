@@ -107,9 +107,6 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
         self._pacg.set_last_results(measurements)
         self._curr_mc_measurements.extend(measurements)
 
-    def get_last_results(self) -> Optional[RunConfigMeasurement]:
-        return self._pacg.get_last_results()
-
     def _set_last_results_model_config_generator(self) -> None:
         self._mcg.set_last_results(self._curr_mc_measurements)
         self._curr_mc_measurements = []

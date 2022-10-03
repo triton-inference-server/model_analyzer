@@ -44,7 +44,3 @@ class ConfigGeneratorInterface(abc.ABC):
     def set_last_results(
             self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         raise NotImplementedError
-
-    @abc.abstractmethod
-    def get_last_results(self) -> Optional[RunConfigMeasurement]:
-        raise NotImplementedError

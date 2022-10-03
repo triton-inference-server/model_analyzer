@@ -151,7 +151,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         self._print_debug_logs(measurements)
 
-    def get_last_results(self) -> Optional[RunConfigMeasurement]:
+    def _get_last_results(self) -> Optional[RunConfigMeasurement]:
         return self._coordinate_data.get_measurement(
             coordinate=self._coordinate_to_measure)
 
@@ -215,7 +215,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
           - Step from any home to home with a None measurement
         """
         if self._measuring_home_coordinate():
-            last_results = self.get_last_results()
+            last_results = self._get_last_results()
             if not last_results:
                 return True
             last_results_passed = last_results.is_passing_constraints()

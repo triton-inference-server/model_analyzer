@@ -79,10 +79,8 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
     def set_last_results(
             self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
+        self._last_measurement = measurements[-1]
         self._rcg.set_last_results(measurements)
-
-    def get_last_results(self) -> Optional[RunConfigMeasurement]:
-        return self._rcg.get_last_results()
 
     def get_configs(self) -> Generator[RunConfig, None, None]:
         """
@@ -137,7 +135,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
                     run_config = self._set_concurrency(run_config, concurrency)
                     yield run_config
 
-                    run_config_measurements.append(self._rcg.get_last_results())
+                    run_config_measurements.append(self._last_measurement)
 
                     if not PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
                             throughputs=run_config_measurements):
