@@ -27,7 +27,6 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
-
 class BruteRunConfigGenerator(ConfigGeneratorInterface):
     """
     Generates all RunConfigs to execute via brute force given a list of models
@@ -67,16 +66,13 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
 
         self._num_models = len(models)
 
-        self._curr_model_run_configs: List[Optional[ModelRunConfig]] = [
-            None for n in range(self._num_models)
-        ]
+        self._curr_model_run_configs: List[Optional[ModelRunConfig]] = [None for n in range(self._num_models)]
         self._curr_results: List = [[] for n in range(self._num_models)]
         self._curr_generators: Dict[int, ConfigGeneratorInterface] = {}
 
         self._skip_default_config = skip_default_config
 
-    def set_last_results(
-            self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
+    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         for index in range(self._num_models):
             self._curr_results[index].extend(measurements)
 
@@ -100,9 +96,7 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
     def _should_generate_non_default_configs(self) -> bool:
         return self._config.triton_launch_mode != 'remote'
 
-    def _generate_subset(
-            self, index: int,
-            default_only: bool) -> Generator[RunConfig, None, None]:
+    def _generate_subset(self, index: int, default_only: bool) -> Generator[RunConfig, None, None]:
         mrcg = ModelRunConfigGenerator(self._config, self._gpus,
                                        self._models[index], self._client,
                                        self._model_variant_name_manager,
@@ -131,8 +125,7 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         self._curr_results[index] = []
 
     @classmethod
-    def determine_triton_server_env(cls,
-                                    models: List[ModelProfileSpec]) -> Dict:
+    def determine_triton_server_env(cls, models: List[ModelProfileSpec]) -> Dict:
         """
         Given a list of models, return the triton environment
         """

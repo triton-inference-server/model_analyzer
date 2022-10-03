@@ -31,10 +31,14 @@ logger = logging.getLogger(LOGGER_NAME)
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
     """ Base class for generating model configs """
 
-    def __init__(self, config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 model: ModelProfileSpec, client: TritonClient,
-                 model_variant_name_manager: ModelVariantNameManager,
-                 default_only: bool, early_exit_enable: bool) -> None:
+    def __init__(self, 
+                 config: ConfigCommandProfile, 
+                 gpus: List[GPUDevice], 
+                 model: ModelProfileSpec, 
+                 client: TritonClient,
+                 model_variant_name_manager: ModelVariantNameManager, 
+                 default_only: bool, 
+                 early_exit_enable: bool) -> None:
         """
         Parameters
         ----------
@@ -89,8 +93,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             yield (config)
             self._step()
 
-    def set_last_results(
-            self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
+    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         """
         Given the results from the last ModelConfig, make decisions
         about future configurations to generate
@@ -141,8 +144,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         if not self._config.reload_model_disable:
             self._client.load_model(self._base_model_name)
         model_config = ModelConfig.create_from_triton_api(
-            self._client, self._base_model_name,
-            self._config.client_max_retries)
+            self._client, self._base_model_name, self._config.client_max_retries)
         model_config.set_cpu_only(self._cpu_only)
         if not self._config.reload_model_disable:
             self._client.unload_model(self._base_model_name)
@@ -156,9 +158,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model_variant_name_manager=self._model_variant_name_manager)
 
     @staticmethod
-    def make_model_config(
-            param_combo: dict, model: ModelProfileSpec,
-            model_variant_name_manager: ModelVariantNameManager) -> ModelConfig:
+    def make_model_config(param_combo: dict, model: ModelProfileSpec,
+                          model_variant_name_manager: ModelVariantNameManager) -> ModelConfig:
         """
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config

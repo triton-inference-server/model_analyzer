@@ -151,10 +151,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         self._print_debug_logs(measurements)
 
-    def _get_last_results(self) -> Optional[RunConfigMeasurement]:
-        return self._coordinate_data.get_measurement(
-            coordinate=self._coordinate_to_measure)
-
     def _update_best_measurement(self,
                                  measurement: RunConfigMeasurement) -> None:
         """Keep track of the best coordinate/measurement seen so far."""
@@ -184,6 +180,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             if comparison and comparison > 0:
                 self._best_coordinate = self._coordinate_to_measure
                 self._best_measurement = measurement
+
+    def _get_last_results(self) -> Optional[RunConfigMeasurement]:
+        return self._coordinate_data.get_measurement(
+            coordinate=self._coordinate_to_measure)
 
     def _take_step(self) -> None:
         new_coordinate = self._neighborhood.determine_new_home()
