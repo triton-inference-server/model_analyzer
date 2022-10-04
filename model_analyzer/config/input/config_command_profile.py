@@ -229,7 +229,8 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(bool),
                 parser_args={'action': 'store_true'},
                 default_value=DEFAULT_SKIP_SUMMARY_REPORTS,
-                description='Skips the generation of analysis summary reports and tables.'))
+                description=
+                'Skips the generation of analysis summary reports and tables.'))
 
         self._add_repository_configs()
         self._add_client_configs()

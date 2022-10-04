@@ -22,6 +22,7 @@ from .model_profile_spec import ModelProfileSpec
 from typing import List
 from .config_generator_interface import ConfigGeneratorInterface
 
+
 class ModelConfigGeneratorFactory:
     """
     Factory that creates the correct Config Generators
@@ -29,13 +30,11 @@ class ModelConfigGeneratorFactory:
 
     @staticmethod
     def create_model_config_generator(
-                 config: ConfigCommandProfile, 
-                 gpus: List[GPUDevice], 
-                 model: ModelProfileSpec, 
-                 client: TritonClient,
-                 model_variant_name_manager: ModelVariantNameManager, 
-                 default_only: bool, 
-                 early_exit_enable: bool) -> ConfigGeneratorInterface:
+            config: ConfigCommandProfile, gpus: List[GPUDevice],
+            model: ModelProfileSpec, client: TritonClient,
+            model_variant_name_manager: ModelVariantNameManager,
+            default_only: bool,
+            early_exit_enable: bool) -> ConfigGeneratorInterface:
         """
         Parameters
         ----------

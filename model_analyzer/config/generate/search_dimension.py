@@ -15,6 +15,7 @@
 import math
 import sys
 
+
 class SearchDimension:
     """
     Defines a single dimension to search, and how the values
@@ -25,7 +26,11 @@ class SearchDimension:
     DIMENSION_TYPE_EXPONENTIAL = 1
     DIMENSION_NO_MAX = sys.maxsize
 
-    def __init__(self, name: str, type: int, min: int=0, max: int=DIMENSION_NO_MAX):
+    def __init__(self,
+                 name: str,
+                 type: int,
+                 min: int = 0,
+                 max: int = DIMENSION_NO_MAX):
         """
         Parameters
         ----------

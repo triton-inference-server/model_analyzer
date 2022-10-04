@@ -107,7 +107,8 @@ class ResultManager:
                                                data)
 
     def add_run_config_measurement(
-            self, run_config: RunConfig, run_config_measurement: RunConfigMeasurement) -> None:
+            self, run_config: RunConfig,
+            run_config_measurement: RunConfigMeasurement) -> None:
         """
         Add measurement to individual result heap,
         global result heap and results class

@@ -15,6 +15,7 @@
 from copy import deepcopy
 from typing import Iterator, Any, Union, List
 
+
 class Coordinate:
     """
     Class to define a coordinate in n-dimension space

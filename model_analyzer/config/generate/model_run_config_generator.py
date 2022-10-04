@@ -32,12 +32,10 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
     Given a model, generates all ModelRunConfigs (combination of
     ModelConfig and PerfConfig)
     """
-    def __init__(self, 
-                 config: ConfigCommandProfile, 
-                 gpus: List[GPUDevice], 
-                 model: ModelProfileSpec, 
-                 client: TritonClient,
-                 model_variant_name_manager: ModelVariantNameManager, 
+
+    def __init__(self, config: ConfigCommandProfile, gpus: List[GPUDevice],
+                 model: ModelProfileSpec, client: TritonClient,
+                 model_variant_name_manager: ModelVariantNameManager,
                  default_only: bool) -> None:
         """
         Parameters
@@ -96,7 +94,8 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
 
             self._set_last_results_model_config_generator()
 
-    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
+    def set_last_results(
+            self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         """
         Given the results from the last ModelRunConfig, make decisions
         about future configurations to generate
@@ -112,13 +111,16 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
         self._mcg.set_last_results(self._curr_mc_measurements)
         self._curr_mc_measurements = []
 
-    def _generate_model_run_config(self, model_config: ModelConfig, perf_analyzer_config: PerfAnalyzerConfig) -> ModelRunConfig:
+    def _generate_model_run_config(
+            self, model_config: ModelConfig,
+            perf_analyzer_config: PerfAnalyzerConfig) -> ModelRunConfig:
         run_config = ModelRunConfig(self._model_name, model_config,
                                     perf_analyzer_config)
 
         return run_config
 
-    def _determine_early_exit_enables(self, config: ConfigCommandProfile, model: ModelProfileSpec) -> None:
+    def _determine_early_exit_enables(self, config: ConfigCommandProfile,
+                                      model: ModelProfileSpec) -> None:
         early_exit_enable = config.early_exit_enable
         concurrency_specified = model.parameters()['concurrency']
         config_parameters_exist = model.model_config_parameters()

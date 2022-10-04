@@ -17,6 +17,7 @@ from .coordinate import Coordinate
 
 from typing import Any, Iterator, List, Dict
 
+
 class SearchDimensions:
     """
     Data class that holds one or more dimensions and associates each one to a key
@@ -26,7 +27,8 @@ class SearchDimensions:
         self._dimensions: List[SearchDimension] = []
         self._dimension_keys: List[Any] = []
 
-    def add_dimensions(self, key: Any, dimensions: List[SearchDimension]) -> None:
+    def add_dimensions(self, key: Any,
+                       dimensions: List[SearchDimension]) -> None:
         """ 
         Add dimensions and associate them all with the given key
 
@@ -42,7 +44,8 @@ class SearchDimensions:
             self._dimensions.append(dim)
             self._dimension_keys.append(key)
 
-    def get_values_for_coordinate(self, coordinate: Coordinate) -> Dict[Any, Dict[str, Any]]:
+    def get_values_for_coordinate(
+            self, coordinate: Coordinate) -> Dict[Any, Dict[str, Any]]:
         """
         Given a Coordinate, return all dimension_name:dimension_value pairs associated with 
         that coordinate, organized by the dimension's key

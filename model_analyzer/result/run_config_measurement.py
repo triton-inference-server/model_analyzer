@@ -92,7 +92,8 @@ class RunConfigMeasurement:
 
         return run_config_measurement
 
-    def set_model_config_weighting(self, model_config_weights: List[int]) -> None:
+    def set_model_config_weighting(self,
+                                   model_config_weights: List[int]) -> None:
         """
         Sets the model config weightings used when calculating 
         weighted metrics
@@ -109,7 +110,8 @@ class RunConfigMeasurement:
         ]
 
     def set_model_config_constraints(
-            self, model_config_constraints: List[Dict[str, Dict[str, int]]]) -> None:
+            self, model_config_constraints: List[Dict[str, Dict[str,
+                                                                int]]]) -> None:
         """
 
         Parameters
@@ -141,7 +143,8 @@ class RunConfigMeasurement:
         # By default setting all models to have equal weighting
         self._model_config_weights.append(1)
 
-    def set_metric_weightings(self, metric_objectives: List[Dict[str, int]]) -> None:
+    def set_metric_weightings(self, metric_objectives: List[Dict[str,
+                                                                 int]]) -> None:
         """
         Sets the metric weighting for all non-GPU measurements
         
@@ -531,7 +534,8 @@ class RunConfigMeasurement:
                                            other._model_config_measurements)
         ]
 
-    def _calculate_weighted_rcm_score(self, weighted_mcm_scores: List[float]) -> float:
+    def _calculate_weighted_rcm_score(
+            self, weighted_mcm_scores: List[float]) -> float:
         """
         Parameters
         ----------

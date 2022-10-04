@@ -81,8 +81,8 @@ if __name__ == '__main__':
 
     # Check the version of yapf. Needs a consistent version
     # of yapf to prevent unneccessary changes in the code.
-    if (yapf.__version__ != '0.30.0'):
-        print("Needs yapf 0.30.0, but got yapf {}".format(yapf.__version__))
+    if (yapf.__version__ != '0.32.0'):
+        print("Needs yapf 0.32.0, but got yapf {}".format(yapf.__version__))
 
     if (FLAGS.paths is None) or (len(FLAGS.paths) == 0):
         parser.print_help()
