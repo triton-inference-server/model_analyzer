@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Any
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 import yaml
@@ -133,8 +133,7 @@ class ConfigCommand:
 
     def _get_config_value(
             self, key: str, args: Namespace,
-            yaml_config: Optional[Dict[str,
-                                       List]]) -> Optional[Union[int, float]]:
+            yaml_config: Optional[Dict[str, List]]) -> Optional[Any]:
         if key in args:
             return getattr(args, key)
         elif yaml_config is not None and key in yaml_config:
