@@ -23,6 +23,7 @@ from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
+
 class Neighborhood:
     """
     Defines and operates on a set of coordinates within a radius around
@@ -135,8 +136,8 @@ class Neighborhood:
 
     def _calculate_new_home(self) -> Coordinate:
         step_vector = self._get_step_vector()
-        step_vector_coordinate = self._translate_step_vector(step_vector,
-                                                  Neighborhood.TRANSLATION_LIST)
+        step_vector_coordinate = self._translate_step_vector(
+            step_vector, Neighborhood.TRANSLATION_LIST)
         tmp_new_coordinate = self._home_coordinate + step_vector_coordinate
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
         return new_coordinate
@@ -196,8 +197,7 @@ class Neighborhood:
 
         return best_coordinate
 
-    def get_nearest_neighbor(self,
-                             coordinate_in: Coordinate) -> Coordinate:
+    def get_nearest_neighbor(self, coordinate_in: Coordinate) -> Coordinate:
         """
         Find the nearest coordinate to the `coordinate_in` among the
         coordinates within the current neighborhood.
@@ -240,7 +240,8 @@ class Neighborhood:
         for i in range(self._config.get_num_dimensions()):
             dimension = self._config.get_dimension(i)
 
-            lower_bound = max(dimension.get_min_idx(), int(coordinate[i]) - radius)
+            lower_bound = max(dimension.get_min_idx(),
+                              int(coordinate[i]) - radius)
             upper_bound = min(dimension.get_max_idx(),
                               int(coordinate[i]) + radius + 1)
             bounds.append([lower_bound, upper_bound])
@@ -284,7 +285,7 @@ class Neighborhood:
 
         home_measurement = self._get_home_measurement()
         if not home_measurement:
-            raise Exception("Can't step from home if it has no measurement") 
+            raise Exception("Can't step from home if it has no measurement")
 
         vectors, measurements = self._get_all_measurements()
 
@@ -308,7 +309,9 @@ class Neighborhood:
         return self._calculate_step_vector_from_vectors_and_weights(
             vectors, weights)
 
-    def _calculate_step_vector_from_vectors_and_weights(self, vectors: List[Coordinate], weights: List[float]) -> List[float]:
+    def _calculate_step_vector_from_vectors_and_weights(
+            self, vectors: List[Coordinate],
+            weights: List[float]) -> List[float]:
         step_vector = [0.0] * self._config.get_num_dimensions()
         dim_sum_vector = [0.0] * self._config.get_num_dimensions()
 

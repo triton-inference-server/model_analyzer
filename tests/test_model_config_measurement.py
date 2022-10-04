@@ -116,7 +116,7 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
             "perf_throughput": 2,
             "perf_latency_p99": 3
         })
-        expected_mw = {"perf_throughput": 2/5, "perf_latency_p99": 3/5}
+        expected_mw = {"perf_throughput": 2 / 5, "perf_latency_p99": 3 / 5}
         self.assertEqual(expected_mw, self.mcmA._metric_weights)
 
     def test_is_better_than(self):

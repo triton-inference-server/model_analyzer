@@ -81,6 +81,7 @@ RUN python3 -m pip install types-requests
 RUN python3 -m pip install types-protobuf
 RUN python3 -m pip install mkdocs
 RUN python3 -m pip install mkdocs-htmlproofer-plugin
+RUN python3 -m pip install yapf==0.32.0
 
 RUN apt-get install -y wkhtmltopdf
 

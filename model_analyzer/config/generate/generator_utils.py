@@ -15,6 +15,7 @@
 from itertools import product
 from typing import Dict, List
 
+
 class GeneratorUtils:
     ''' Class for utility functions for Generators  '''
 

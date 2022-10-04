@@ -33,14 +33,10 @@ from copy import deepcopy
 class ManualModelConfigGenerator(BaseModelConfigGenerator):
     """ Given a model, generates model configs in manual search mode """
 
-    def __init__(self, 
-                 config: ConfigCommandProfile, 
-                 gpus: List[GPUDevice], 
-                 model: ModelProfileSpec, 
-                 client: TritonClient,
-                 model_variant_name_manager: ModelVariantNameManager, 
-                 default_only: bool, 
-                 early_exit_enable: bool) -> None:
+    def __init__(self, config: ConfigCommandProfile, gpus: List[GPUDevice],
+                 model: ModelProfileSpec, client: TritonClient,
+                 model_variant_name_manager: ModelVariantNameManager,
+                 default_only: bool, early_exit_enable: bool) -> None:
         """
         Parameters
         ----------

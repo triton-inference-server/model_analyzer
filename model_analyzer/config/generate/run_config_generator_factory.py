@@ -33,14 +33,14 @@ class RunConfigGeneratorFactory:
     """
     Factory that creates the correct RunConfig Generators
     """
+
     @staticmethod
     def create_run_config_generator(
-                 command_config: ConfigCommandProfile,
-                 gpus: List[GPUDevice],
-                 models: List[ModelProfileSpec],
-                 client: TritonClient,
-                 result_manager: ResultManager,
-                 model_variant_name_manager: ModelVariantNameManager) -> ConfigGeneratorInterface:
+        command_config: ConfigCommandProfile, gpus: List[GPUDevice],
+        models: List[ModelProfileSpec], client: TritonClient,
+        result_manager: ResultManager,
+        model_variant_name_manager: ModelVariantNameManager
+    ) -> ConfigGeneratorInterface:
         """
         Parameters
         ----------
@@ -86,14 +86,12 @@ class RunConfigGeneratorFactory:
                 f"Unexpected search mode {command_config.run_config_search_mode}"
             )
 
-
     @staticmethod
     def _create_brute_run_config_generator(
-                 command_config: ConfigCommandProfile,
-                 gpus: List[GPUDevice],
-                 models: List[ModelProfileSpec],
-                 client: TritonClient,
-                 model_variant_name_manager: ModelVariantNameManager) -> ConfigGeneratorInterface:
+        command_config: ConfigCommandProfile, gpus: List[GPUDevice],
+        models: List[ModelProfileSpec], client: TritonClient,
+        model_variant_name_manager: ModelVariantNameManager
+    ) -> ConfigGeneratorInterface:
         return BruteRunConfigGenerator(
             config=command_config,
             gpus=gpus,
@@ -103,12 +101,11 @@ class RunConfigGeneratorFactory:
 
     @staticmethod
     def _create_quick_plus_concurrency_sweep_run_config_generator(
-                 command_config: ConfigCommandProfile,
-                 gpus: List[GPUDevice],
-                 models: List[ModelProfileSpec],
-                 client: TritonClient,
-                 result_manager: ResultManager,
-                 model_variant_name_manager: ModelVariantNameManager) -> ConfigGeneratorInterface:
+        command_config: ConfigCommandProfile, gpus: List[GPUDevice],
+        models: List[ModelProfileSpec], client: TritonClient,
+        result_manager: ResultManager,
+        model_variant_name_manager: ModelVariantNameManager
+    ) -> ConfigGeneratorInterface:
         search_config = RunConfigGeneratorFactory._create_search_config(models)
         return QuickPlusConcurrencySweepRunConfigGenerator(
             search_config=search_config,

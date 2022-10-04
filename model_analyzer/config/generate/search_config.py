@@ -16,6 +16,7 @@ from model_analyzer.config.generate.search_dimension import SearchDimension
 from .search_dimensions import SearchDimensions
 from typing import List
 
+
 class NeighborhoodConfig:
     """
     Defines the configuration for a Neighborhood object
@@ -94,7 +95,7 @@ class SearchConfig(NeighborhoodConfig):
                          radius=radius,
                          min_initialized=min_initialized)
 
-    def get_neighborhood_config(self, radius: int=None) -> NeighborhoodConfig:
+    def get_neighborhood_config(self, radius: int = None) -> NeighborhoodConfig:
         """
         Return a NeighborhoodConfig with an optional override to the radius
         """

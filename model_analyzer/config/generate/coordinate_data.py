@@ -18,6 +18,7 @@ from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 CoordinateKey = Tuple[Coordinate, ...]
 
+
 class CoordinateData:
     """
     A class that tracks the measurement data in the current neighborhood
@@ -25,7 +26,8 @@ class CoordinateData:
     """
 
     def __init__(self) -> None:
-        self._measurements: Dict[CoordinateKey, Optional[RunConfigMeasurement]] = {}
+        self._measurements: Dict[CoordinateKey,
+                                 Optional[RunConfigMeasurement]] = {}
         self._visit_counts: Dict[CoordinateKey, int] = {}
         self._is_measured: Dict[CoordinateKey, bool] = {}
 
