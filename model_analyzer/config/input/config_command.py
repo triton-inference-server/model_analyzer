@@ -114,6 +114,8 @@ class ConfigCommand:
     def _check_for_illegal_config_settings(
             self, args: Namespace, yaml_config: Dict[str, List]) -> None:
         self._check_for_duplicate_profile_models_option(args, yaml_config)
+        self._check_for_multi_model_incompatability(args, yaml_config)
+        self._check_for_quick_search_incompatability(args, yaml_config)
 
     def _set_field_values(self, args: Namespace,
                           yaml_config: Dict[str, List]) -> None:
@@ -152,6 +154,77 @@ class ConfigCommand:
                 f'\n The profile model option is specified on both '
                 'the CLI (--profile-models) and in the YAML config file.'
                 '\n Please remove the option from one of the locations and try again'
+            )
+
+    def _check_for_multi_model_incompatability(
+            self, args: Namespace, yaml_config: Optional[Dict[str,
+                                                              List]]) -> None:
+        if not self._get_config_value(
+                'run_config_profile_models_concurrently_enable', args,
+                yaml_config):
+            return
+
+        self._check_search_mode(args, yaml_config)
+
+    def _check_search_mode(self, args: Namespace,
+                           yaml_config: Optional[Dict[str, List]]) -> None:
+        if self._get_config_value('run_config_search_mode', args,
+                                  yaml_config) != 'quick':
+            raise TritonModelAnalyzerException(
+                f'\nConcurrent profiling of models is only supported in quick search mode.'
+                '\nPlease use quick search mode or disable concurrent model profiling.'
+            )
+
+    def _check_for_quick_search_incompatability(
+            self, args: Namespace, yaml_config: Optional[Dict[str,
+                                                              List]]) -> None:
+        if self._get_config_value('run_config_search_mode', args,
+                                  yaml_config) != 'quick':
+            return
+
+        self._check_no_search_values(args, yaml_config)
+        self._check_no_list_values(args, yaml_config)
+
+    def _check_no_search_values(self, args: Namespace,
+                                yaml_config: Optional[Dict[str, List]]) -> None:
+        max_concurrency = self._get_config_value(
+            'run_config_search_max_concurrency', args, yaml_config)
+        min_concurrency = self._get_config_value(
+            'run_config_search_min_concurrency', args, yaml_config)
+        max_instance = self._get_config_value(
+            'run_config_search_max_instance_count', args, yaml_config)
+        min_instance = self._get_config_value(
+            'run_config_search_min_instance_count', args, yaml_config)
+        max_batch_size = self._get_config_value(
+            'run_config_search_max_model_batch_size', args, yaml_config)
+        min_batch_size = self._get_config_value(
+            'run_config_search_min_model_batch_size', args, yaml_config)
+
+        if max_concurrency or min_concurrency:
+            raise TritonModelAnalyzerException(
+                f'\nProfiling of models in quick search mode is not supported with min/max concurrency search values.'
+                '\nPlease use brute search mode or remove concurrency search values.'
+            )
+        if max_instance or min_instance:
+            raise TritonModelAnalyzerException(
+                f'\nProfiling of models in quick search mode is not supported with min/max instance search values.'
+                '\nPlease use brute search mode or remove instance search values.'
+            )
+        if max_batch_size or min_batch_size:
+            raise TritonModelAnalyzerException(
+                f'\nProfiling of models in quick search mode is not supported with min/max batch size search values.'
+                '\nPlease use brute search mode or remove batch size search values.'
+            )
+
+    def _check_no_list_values(self, args: Namespace,
+                              yaml_config: Optional[Dict[str, List]]) -> None:
+        concurrency = self._get_config_value('concurrency', args, yaml_config)
+        batch_sizes = self._get_config_value('batch_sizes', args, yaml_config)
+
+        if concurrency or batch_sizes:
+            raise TritonModelAnalyzerException(
+                f'\nProfiling of models in quick search mode is not supported with lists of concurrencies or batch sizes.'
+                '\nPlease use brute search mode or remove concurrency/batch_sizes list.'
             )
 
     def _preprocess_and_verify_arguments(self):
