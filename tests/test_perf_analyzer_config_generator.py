@@ -567,9 +567,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                                            MagicMock(),
                                            early_exit_enable=False)
 
-        result = pacg._throughput_gain_valid_helper(throughputs=throughputs,
-                                                    min_tries=4,
-                                                    min_gain=0.05)
+        result = PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
+            throughputs=throughputs, min_tries=4, min_gain=0.05)
 
         self.assertEqual(result, expected_result)
 

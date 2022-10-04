@@ -36,12 +36,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     earlier depending on results that it receives
     """
 
-    def __init__(self, 
-                cli_config: ConfigCommandProfile, 
-                model_name: str, 
-                model_perf_analyzer_flags: dict,
-                model_parameters: dict, 
-                early_exit_enable: bool) -> None:
+    def __init__(self, cli_config: ConfigCommandProfile, model_name: str,
+                 model_perf_analyzer_flags: dict, model_parameters: dict,
+                 early_exit_enable: bool) -> None:
         """
         Parameters
         ----------
@@ -77,8 +74,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._generator_started = False
 
         self._last_results: List[RunConfigMeasurement] = []
-        self._concurrency_results: List[RunConfigMeasurement] = []
-        self._batch_size_results: List[RunConfigMeasurement] = []
+        self._concurrency_results: List[Optional[RunConfigMeasurement]] = []
+        self._batch_size_results: List[Optional[RunConfigMeasurement]] = []
 
         self._model_name = model_name
         self._perf_analyzer_flags = model_perf_analyzer_flags
@@ -90,6 +87,33 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._cli_config = cli_config
 
         self._generate_perf_configs()
+
+    @staticmethod
+    def throughput_gain_valid_helper(
+            throughputs: List[Optional[RunConfigMeasurement]],
+            min_tries: int = THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES,
+            min_gain: float = THROUGHPUT_MINIMUM_GAIN) -> bool:
+        if len(throughputs) < min_tries:
+            return True
+
+        tputs_in_range = [
+            PerfAnalyzerConfigGenerator.get_throughput(throughputs[x])
+            for x in range(-min_tries, 0)
+        ]
+
+        first = tputs_in_range[0]
+        best = max(tputs_in_range)
+
+        gain = (best - first) / first
+
+        return gain > min_gain
+
+    @staticmethod
+    def get_throughput(measurement: Optional[RunConfigMeasurement]) -> float:
+        if measurement:
+            return measurement.get_non_gpu_metric_value('perf_throughput')
+        else:
+            return 0.0
 
     def _is_done(self) -> bool:
         """ Returns true if this generator is done generating configs """
@@ -111,7 +135,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
             self._step()
 
-    def set_last_results(self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
+    def set_last_results(
+            self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
         """
         Given the results from the last PerfAnalyzerConfig, make decisions
         about future configurations to generate
@@ -182,7 +207,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _add_best_throughput_to_batch_sizes(self) -> None:
         if self._concurrency_results:
-            best = max(self._concurrency_results)
+            # type is List[Optional[RCM]]
+            best = max(self._concurrency_results)  #type: ignore
             self._batch_size_results.append(best)
 
     def _reset_concurrencies(self) -> None:
@@ -231,34 +257,14 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _concurrency_throughput_gain_valid(self) -> bool:
         """ Check if any of the last X concurrency results resulted in valid gain """
-        return self._throughput_gain_valid_helper(
+        return PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
             throughputs=self._concurrency_results,
             min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES,
             min_gain=THROUGHPUT_MINIMUM_GAIN)
 
     def _batch_size_throughput_gain_valid(self) -> bool:
         """ Check if any of the last X batch_size results resulted in valid gain """
-        return self._throughput_gain_valid_helper(
+        return PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
             throughputs=self._batch_size_results,
             min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_BATCH_SIZE_TRIES,
             min_gain=THROUGHPUT_MINIMUM_GAIN)
-
-    def _throughput_gain_valid_helper(self,
-                                      throughputs: List[RunConfigMeasurement],
-                                      min_tries: int, min_gain: float) -> bool:
-        if len(throughputs) < min_tries:
-            return True
-
-        tputs_in_range = [
-            self._get_throughput(throughputs[x]) for x in range(-min_tries, 0)
-        ]
-
-        first = tputs_in_range[0]
-        best = max(tputs_in_range)
-
-        gain = (best - first) / first
-
-        return gain > min_gain
-
-    def _get_throughput(self, measurement: RunConfigMeasurement) -> float:
-        return measurement.get_non_gpu_metric_value('perf_throughput')
