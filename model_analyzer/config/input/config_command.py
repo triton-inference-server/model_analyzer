@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List
+from typing import Dict, List, Optional, Union
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 import yaml
+from argparse import Namespace
 from .yaml_config_validator import YamlConfigValidator
 
 from copy import deepcopy
@@ -76,7 +77,7 @@ class ConfigCommand:
             config = yaml.safe_load(config_file)
             return config
 
-    def set_config_values(self, args):
+    def set_config_values(self, args: Namespace) -> None:
         """
         Set the config values. This function sets all the values for the
         config. CLI arguments have the highest priority, then YAML config
@@ -95,20 +96,33 @@ class ConfigCommand:
         """
 
         # Config file has been specified
+        yaml_config = self._load_yaml_config(args)
+        self._check_for_illegal_config_settings(args, yaml_config)
+        self._set_field_values(args, yaml_config)
+        self._preprocess_and_verify_arguments()
+        self._autofill_values()
+
+    def _load_yaml_config(self, args: Namespace) -> Dict[str, List]:
         if 'config_file' in args:
             yaml_config = self._load_config_file(args.config_file)
             YamlConfigValidator.validate(yaml_config)
         else:
             yaml_config = None
 
+        return yaml_config
+
+    def _check_for_illegal_config_settings(
+            self, args: Namespace, yaml_config: Dict[str, List]) -> None:
+        self._check_for_duplicate_profile_models_option(args, yaml_config)
+
+    def _set_field_values(self, args: Namespace,
+                          yaml_config: Dict[str, List]) -> None:
         for key, value in self._fields.items():
             self._fields[key].set_name(key)
-            if key in args:
-                self._check_for_duplicate_profile_models_option(
-                    yaml_config, key)
-                self._fields[key].set_value(getattr(args, key))
-            elif yaml_config is not None and key in yaml_config:
-                self._fields[key].set_value(yaml_config[key])
+            config_value = self._get_config_value(key, args, yaml_config)
+
+            if config_value:
+                self._fields[key].set_value(config_value)
             elif value.default_value() is not None:
                 self._fields[key].set_value(value.default_value())
             elif value.required():
@@ -116,13 +130,25 @@ class ConfigCommand:
                 raise TritonModelAnalyzerException(
                     f'Config for {value.name()} is not specified. You need to specify it using the YAML config file or using the {flags} flags in CLI.'
                 )
-        self._preprocess_and_verify_arguments()
-        self._autofill_values()
 
-    def _check_for_duplicate_profile_models_option(self,
-                                                   yaml_config: Dict[str, List],
-                                                   key: str) -> None:
-        if yaml_config is not None and key in yaml_config and key == 'profile_models':
+    def _get_config_value(
+            self, key: str, args: Namespace,
+            yaml_config: Optional[Dict[str,
+                                       List]]) -> Optional[Union[int, float]]:
+        if key in args:
+            return getattr(args, key)
+        elif yaml_config is not None and key in yaml_config:
+            return yaml_config[key]
+        else:
+            return None
+
+    def _check_for_duplicate_profile_models_option(
+            self, args: Namespace, yaml_config: Optional[Dict[str,
+                                                              List]]) -> None:
+        key_in_args = 'profile_models' in args
+        key_in_yaml = yaml_config is not None and 'profile_models' in yaml_config
+
+        if key_in_args and key_in_yaml:
             raise TritonModelAnalyzerException(
                 f'\n The profile model option is specified on both '
                 'the CLI (--profile-models) and in the YAML config file.'
