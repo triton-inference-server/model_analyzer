@@ -132,16 +132,16 @@ profile_models: <comma-delimited-string-list>
 # Triton Docker image tag used when launching using Docker mode
 [ triton_docker_image: <string> | default: nvcr.io/nvidia/tritonserver:22.09-py3 ]
 
-# Triton Server HTTP endpoint url used by Model Analyzer client. Will be ignored if server-launch-mode is not 'remote'".
+# Triton Server HTTP endpoint url used by Model Analyzer client.".
 [ triton_http_endpoint: <string> | default: localhost:8000 ]
 
 # The full path to the parent directory of 'lib/libtritonserver.so. Only required when using triton_launch_mode=c_api.
 [ triton_install_path: <string> | default: /opt/tritonserver ]
 
-# Triton Server GRPC endpoint url used by Model Analyzer client. Will be ignored if server-launch-mode is not 'remote'".
+# Triton Server GRPC endpoint url used by Model Analyzer client.".
 [ triton_grpc_endpoint: <string> | default: localhost:8001 ]
 
-# Triton Server metrics endpoint url used by Model Analyzer client. Will be ignored if server-launch-mode is not 'remote'".
+# Triton Server metrics endpoint url used by Model Analyzer client.".
 [ triton_metrics_url: <string> | default: http://localhost:8002/metrics ]
 
 # The full path to the tritonserver binary executable
@@ -188,6 +188,9 @@ profile_models: <comma-delimited-string-list>
 
 # Disables automatic config search
 [ run_config_search_disable: <bool> | default: false ]
+
+# Enables the profiling of all supplied models concurrently
+[ run_config_profile_models_concurrently_enable: <bool> | default: false]
 
 # Skips the generation of analysis summary reports and tables
 [ skip_summary_reports: <bool> | default: false]
@@ -583,10 +586,10 @@ specified on a per model basis and cannot be specified globally (like
 Table below presents the list of common parameters that can be used for manual
 sweeping:
 
-|                                                              Option                                                              |                                                                                                                                                               Description                                                                                                                                                               |
-| :------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|                                                                   Option                                                                    |                                                                                                                                                               Description                                                                                                                                                               |
+| :-----------------------------------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | [`dynamic_batching`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#dynamic-batcher)  |                                                                                              Dynamic batching is a feature of Triton that allows inference requests to be combined by the server, so that a batch is created dynamically.                                                                                               |
-| [`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#maximum-batch-size) |                                       The max_batch_size property indicates the maximum batch size that the model supports for the [types of batching](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/architecture.md#models-and-schedulers) that can be exploited by Triton.                                       |
+| [`max_batch_size`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#maximum-batch-size) |                                 The max_batch_size property indicates the maximum batch size that the model supports for the [types of batching](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/architecture.md#models-and-schedulers) that can be exploited by Triton.                                  |
 |  [`instance_group`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#instance-groups)   | Triton can provide multiple instances of a model so that multiple inference requests for that model can be handled simultaneously. The model configuration ModelInstanceGroup property is used to specify the number of execution instances that should be made available and what compute resource should be used for those instances. |
 
 An example `<model-config-parameters>` look like below:
@@ -700,7 +703,7 @@ perf_analyzer_flags:
 
 #### Model-specific options for Perf Analyzer
 
-In order to set flags only for a specific model, you can specify 
+In order to set flags only for a specific model, you can specify
 the flags in the following way:
 
 ```yaml
@@ -736,8 +739,8 @@ then the `shape` option of the `perf_analyzer_flags` option must be specified.
 More information about this can be found in the
 [Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/perf_analyzer.md#input-data).
 
-
 #### SSL Support:
+
 Perf Analyzer supports SSL via GRPC and HTTP. It can be enabled via Model Analyzer configuration file updates.
 
 GRPC example:

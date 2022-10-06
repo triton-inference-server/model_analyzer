@@ -17,12 +17,17 @@ limitations under the License.
 # Model Config Search
 
 Model Analyzer's `profile` subcommand supports multiple modes when searching to find the best model configuration.
-* [Brute](config_search.md#brute-search-mode) is the default, and will do a brute-force sweep of the cross product of all possible configurations
-* [Quick](config_search.md#quick-search-mode) will use heuristics to try to find the optimal configuration much quicker than brute, and can be enabled via `--run-config-search-mode quick`
+
+- [Brute](config_search.md#brute-search-mode) is the default, and will do a brute-force sweep of the cross product of all possible configurations
+- [Quick](config_search.md#quick-search-mode) will use heuristics to try to find the optimal configuration much quicker than brute, and can be enabled via `--run-config-search-mode quick`
+
+_This is mode is in EARLY ACCESS and is limited in scope:_
+
+- [Multi-model](config_search.md#multi-model-search-mode) will profile mutliple models to find the optimal configurations for all models while they are running concurrently. This feature is enabled via `--run-config-profile-models-concurrently-enable`
 
 ## Brute Search Mode
 
-Model Analyzer's brute search mode will do a brute-force sweep of the cross product of all possible configurations. You can [Manually](config_search.md#manual-brute-search) provide `model_config_parameters` to tell Model Analyzer what to sweep over, or you can 
+Model Analyzer's brute search mode will do a brute-force sweep of the cross product of all possible configurations. You can [Manually](config_search.md#manual-brute-search) provide `model_config_parameters` to tell Model Analyzer what to sweep over, or you can
 let it [Automatically](config_search.md#automatic-brute-search) sweep through configurations expected to have the highest impact on performance for Triton models.
 
 ### Automatic Brute Search
@@ -123,7 +128,7 @@ the configuration that is generated is loadable by Triton.
 
 You can also specify `concurrency` ranges to sweep through. If unspecified, it will
 automatically sweep concurrency for every model configuration (unless `--run-config-search-disable`
- is set, in which case it will only use the concurrency value of 1)
+is set, in which case it will only use the concurrency value of 1)
 
 An example Model Analyzer Config that performs manual sweeping looks like below:
 
@@ -174,3 +179,21 @@ the maximal objective value within the specified constraints. In the majority of
 this will find greater than 95% of the maximum objective value (that could be found using a brute force search), while needing to search less than 10% of the configuration space.
 
 After it has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency range before generation of the summary reports.
+
+## Multi-Model Search Mode
+
+_This mode is in EARLY ACCESS and has the following limitations:_
+
+- Can only be run in `quick` search mode
+- Cannot set limitations on min/max batch size, concurrency or instance count
+- Does not support individual model constraints, only global
+- Does not support individual model weighting, all models are treated with equal priority when trying to maximize objective value
+- Does not support detailed reporting, only summary reports
+
+Multi-model concurrent search mode can be enabled by adding the parameter `--run-config-profile-models-concurrently-enable` to the CLI.
+
+It uses Quick Search mode's hill climbing algorithm to search all models configurations spaces in parallel, looking for the maximal objective value within the specified constraints. In limited testing, we have observed positive outcomes towards finding the maximum objective value; with runtimes of less than one hour (compared to the days it would take a brute force run to complete).
+
+After it has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency range before generation of the summary reports.
+
+\*Note: The algorithm attempts to find the most fair and optimal result for all models, by evaluating each model objective's gain/loss. In many cases this will results in the algorithm choosing a configuration that has a lower total combined throughput (if that was the objective), if this more better balances the throughputs through all the models.
