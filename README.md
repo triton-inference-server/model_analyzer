@@ -33,7 +33,7 @@ Triton Inference Server.
 
 ## Features
 
-- [Multi-Model Search](docs/config_search.md): _Early Access: this feature is limited in scope_ - Model Analyzer can help you
+- [Multi-Model Search](docs/config_search.md#multi-model-search-mode): **EARLY ACCESS** - Model Analyzer can help you
   find the optimal settings when profiling multiple concurrent models, utilizing our Quick Search alogrithm
 - [Brute and Quick search](docs/config_search.md): Model Analyzer can
   help you automatically find the optimal settings for

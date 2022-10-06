@@ -21,7 +21,7 @@ Model Analyzer's `profile` subcommand supports multiple modes when searching to 
 - [Brute](config_search.md#brute-search-mode) is the default, and will do a brute-force sweep of the cross product of all possible configurations
 - [Quick](config_search.md#quick-search-mode) will use heuristics to try to find the optimal configuration much quicker than brute, and can be enabled via `--run-config-search-mode quick`
 
-_This is mode is in EARLY ACCESS and is limited in scope:_
+_This is mode is in **EARLY ACCESS** and is limited in scope:_
 
 - [Multi-model](config_search.md#multi-model-search-mode) will profile mutliple models to find the optimal configurations for all models while they are running concurrently. This feature is enabled via `--run-config-profile-models-concurrently-enable`
 
@@ -196,4 +196,4 @@ It uses Quick Search mode's hill climbing algorithm to search all models configu
 
 After it has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency range before generation of the summary reports.
 
-\*Note: The algorithm attempts to find the most fair and optimal result for all models, by evaluating each model objective's gain/loss. In many cases this will results in the algorithm choosing a configuration that has a lower total combined throughput (if that was the objective), if this more better balances the throughputs through all the models.
+_Note:_ The algorithm attempts to find the most fair and optimal result for all models, by evaluating each model objective's gain/loss. In many cases this will result in the algorithm ranking higher a configuration that has a lower total combined throughput (if that was the objective), if this better balances the throughputs of all the models.
