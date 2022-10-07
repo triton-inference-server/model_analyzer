@@ -95,7 +95,7 @@ cd ./model_analyzer
 docker build --pull -t model-analyzer .
 ```
 
-Model Analyzer's Dockerfile bases the container on the latest `tritonserver`
+Model Analyzer's Dockerfile bases the container on the corresponding `tritonserver` (from step 1)
 containers from NGC.<br><br>
 
 **3. Run the Container**

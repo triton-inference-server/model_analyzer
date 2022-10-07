@@ -610,8 +610,8 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(str),
                 default_value=DEFAULT_TRITON_HTTP_ENDPOINT,
                 description=
-                "Triton Server HTTP endpoint url used by Model Analyzer client. "
-                "Will be ignored if server-launch-mode is not 'remote'"))
+                "Triton Server HTTP endpoint url used by Model Analyzer client."
+            ))
         self._add_config(
             ConfigField(
                 'triton_grpc_endpoint',
@@ -619,16 +619,14 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(str),
                 default_value=DEFAULT_TRITON_GRPC_ENDPOINT,
                 description=
-                "Triton Server HTTP endpoint url used by Model Analyzer client. "
-                "Will be ignored if server-launch-mode is not 'remote'"))
+                "Triton Server HTTP endpoint url used by Model Analyzer client."
+            ))
         self._add_config(
-            ConfigField(
-                'triton_metrics_url',
-                field_type=ConfigPrimitive(str),
-                flags=['--triton-metrics-url'],
-                default_value=DEFAULT_TRITON_METRICS_URL,
-                description="Triton Server Metrics endpoint url. "
-                "Will be ignored if server-launch-mode is not 'remote'"))
+            ConfigField('triton_metrics_url',
+                        field_type=ConfigPrimitive(str),
+                        flags=['--triton-metrics-url'],
+                        default_value=DEFAULT_TRITON_METRICS_URL,
+                        description="Triton Server Metrics endpoint url. "))
         self._add_config(
             ConfigField(
                 'triton_server_path',
