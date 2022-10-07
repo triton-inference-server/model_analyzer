@@ -193,7 +193,7 @@ _This mode is in EARLY ACCESS and has the following limitations:_
 
 Multi-model concurrent search mode can be enabled by adding the parameter `--run-config-profile-models-concurrently-enable` to the CLI.
 
-It uses Quick Search mode's hill climbing algorithm to search all models configurations spaces in parallel, looking for the maximal objective value within the specified constraints. We have observed positive outcomes towards finding the maximum objective value; with runtimes of less than one hour (compared to the days it would take a brute force run to complete).
+It uses Quick Search mode's hill climbing algorithm to search all models configurations spaces in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes of around 20-30 minutes (compared to the days it would take a brute force run to complete).
 
 After it has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency range before generation of the summary reports.
 
