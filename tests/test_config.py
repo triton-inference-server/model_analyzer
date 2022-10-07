@@ -1803,20 +1803,31 @@ profile_models:
 
         self._evaluate_config(args, yaml_content)
 
-        self._test_quick_search_rcs_value(
-            args, yaml_content, '--run-config-search-min-concurrency')
-        self._test_quick_search_rcs_value(
-            args, yaml_content, '--run-config-search-max-concurrency')
-        self._test_quick_search_rcs_value(
+        self._test_quick_search_with_rcs(args,
+                                         yaml_content,
+                                         '--run-config-search-disable',
+                                         use_value=False,
+                                         use_list=False)
+        self._test_quick_search_with_rcs(args, yaml_content,
+                                         '--run-config-search-min-concurrency')
+        self._test_quick_search_with_rcs(args, yaml_content,
+                                         '--run-config-search-max-concurrency')
+        self._test_quick_search_with_rcs(
             args, yaml_content, '--run-config-search-min-instance-count')
-        self._test_quick_search_rcs_value(
+        self._test_quick_search_with_rcs(
             args, yaml_content, '--run-config-search-max-instance-count')
-        self._test_quick_search_rcs_value(
+        self._test_quick_search_with_rcs(
             args, yaml_content, '--run-config-search-min-model-batch-size')
-        self._test_quick_search_rcs_value(
+        self._test_quick_search_with_rcs(
             args, yaml_content, '--run-config-search-max-model-batch-size')
-        self._test_quick_search_list_value(args, yaml_content, '--batch-sizes')
-        self._test_quick_search_list_value(args, yaml_content, '--concurrency')
+        self._test_quick_search_with_rcs(args,
+                                         yaml_content,
+                                         '--batch-sizes',
+                                         use_value=False)
+        self._test_quick_search_with_rcs(args,
+                                           yaml_content,
+                                           '--concurrency',
+                                           use_value=False)
 
     def test_quick_search_model_specific(self):
         """
@@ -1857,29 +1868,22 @@ profile_models:
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(args, yaml_content, subcommand='profile')
 
-    def _test_quick_search_rcs_value(self, args: Namespace,
-                                     yaml_content: Optional[Dict[str, List]],
-                                     rcs_string: str) -> None:
+    def _test_quick_search_with_rcs(self,
+                                    args: Namespace,
+                                    yaml_content: Optional[Dict[str, List]],
+                                    rcs_string: str,
+                                    use_value: bool = True,
+                                    use_list: bool = True) -> None:
         """
         Tests that run-config-search options raise exceptions 
         in quick search mode
         """
         new_args = deepcopy(args)
         new_args.append(rcs_string)
-        new_args.append('1')
-        with self.assertRaises(TritonModelAnalyzerException):
-            self._evaluate_config(new_args, yaml_content, subcommand='profile')
-
-    def _test_quick_search_list_value(self, args: Namespace,
-                                      yaml_content: Optional[Dict[str, List]],
-                                      rcs_string: str) -> None:
-        """
-        Tests that concurrency/batch lists raise exceptions 
-        in quick search mode
-        """
-        new_args = deepcopy(args)
-        new_args.append(rcs_string)
-        new_args.append(['1', '2', '4'])
+        if use_value:
+            new_args.append('1')
+        elif use_list:
+            new_args.append(['1', '2', '4'])
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(new_args, yaml_content, subcommand='profile')
 

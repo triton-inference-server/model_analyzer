@@ -183,9 +183,20 @@ class ConfigCommand:
                                   yaml_config) != 'quick':
             return
 
+        self._check_no_search_disable(args, yaml_config)
         self._check_no_search_values(args, yaml_config)
         self._check_no_global_list_values(args, yaml_config)
         self._check_no_per_model_list_values(args, yaml_config)
+
+    def _check_no_search_disable(
+            self, args: Namespace, yaml_config: Optional[Dict[str,
+                                                              List]]) -> None:
+        if self._get_config_value('run_config_search_disable', args,
+                                  yaml_config):
+            raise TritonModelAnalyzerException(
+                f'\nDisabling of run config search is not supported in quick search mode.'
+                '\nPlease use brute search mode or remove --run-config-search-disable.'
+            )
 
     def _check_no_search_values(self, args: Namespace,
                                 yaml_config: Optional[Dict[str, List]]) -> None:
