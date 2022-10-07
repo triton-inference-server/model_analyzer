@@ -1774,11 +1774,20 @@ profile_models:
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(args, yaml_content, subcommand='profile')
 
-        args.append('--run-config-search-mode')
-        args.append('brute')
+        # Brute should fail
+        new_args = deepcopy(args)
+        new_args.append('--run-config-search-mode')
+        new_args.append('brute')
 
         with self.assertRaises(TritonModelAnalyzerException):
-            self._evaluate_config(args, yaml_content, subcommand='profile')
+            self._evaluate_config(new_args, yaml_content, subcommand='profile')
+
+        # Quick should pass
+        new_args = deepcopy(args)
+        new_args.append('--run-config-search-mode')
+        new_args.append('quick')
+
+        self._evaluate_config(new_args, yaml_content, subcommand='profile')
 
     def test_quick_search_mode(self):
         """
