@@ -186,13 +186,13 @@ _This mode is in EARLY ACCESS and has the following limitations:_
 
 - Can only be run in `quick` search mode
 - Cannot set limitations on min/max batch size, concurrency or instance count
-- Does not support individual model constraints, only global
+- Does not support individual model constraints, only global constraints
 - Does not support individual model weighting, all models are treated with equal priority when trying to maximize objective value
 - Does not support detailed reporting, only summary reports
 
 Multi-model concurrent search mode can be enabled by adding the parameter `--run-config-profile-models-concurrently-enable` to the CLI.
 
-It uses Quick Search mode's hill climbing algorithm to search all models configurations spaces in parallel, looking for the maximal objective value within the specified constraints. In limited testing, we have observed positive outcomes towards finding the maximum objective value; with runtimes of less than one hour (compared to the days it would take a brute force run to complete).
+It uses Quick Search mode's hill climbing algorithm to search all models configurations spaces in parallel, looking for the maximal objective value within the specified constraints. We have observed positive outcomes towards finding the maximum objective value; with runtimes of less than one hour (compared to the days it would take a brute force run to complete).
 
 After it has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency range before generation of the summary reports.
 
