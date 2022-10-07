@@ -1847,6 +1847,16 @@ profile_models:
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(args, yaml_content, subcommand='profile')
 
+        yaml_content = """
+        profile_models:
+          model_1:
+            model_config_parameters:
+              max batch size: 2
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+
     def _test_quick_search_rcs_value(self, args: Namespace,
                                      yaml_content: Optional[Dict[str, List]],
                                      rcs_string: str) -> None:

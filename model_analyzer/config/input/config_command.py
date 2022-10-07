@@ -251,6 +251,16 @@ class ConfigCommand:
                     '\nPlease use brute search mode or remove concurrency/batch sizes list.'
                 )
 
+        for model in profile_models.values():
+            if not 'model_config_parameters' in model:
+                continue
+
+            if 'max_batch_size' in model['model_config_parameters']:
+                raise TritonModelAnalyzerException(
+                    f'\nProfiling of models in quick search mode is not supported with lists max batch sizes.'
+                    '\nPlease use brute search mode or remov max batch size list.'
+                )
+
     def _preprocess_and_verify_arguments(self):
         """
         Enforces some rules on the config.
