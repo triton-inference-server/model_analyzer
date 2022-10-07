@@ -18,6 +18,9 @@ from .mocks.mock_config import MockConfig
 from .mocks.mock_numba import MockNumba
 from .mocks.mock_os import MockOSMethods
 
+from typing import Dict, List, Optional
+from argparse import Namespace
+
 from .common import test_result_collector as trc
 
 from model_analyzer.model_analyzer_exceptions \
@@ -1754,6 +1757,135 @@ profile_models:
 
         self.assertNotEqual(configA.run_config_search_mode,
                             configB.run_config_search_mode)
+
+    def test_multi_model_search_mode(self):
+        """
+        Test that multi-model is only run in quick
+        """
+        args = [
+            'model-analzyer', 'profile', '--model-repository', 'cli-repository',
+            '--profile-models', 'test_modelA,test_modelB',
+            '--run-config-profile-models-concurrently-enable'
+        ]
+
+        yaml_content = ''
+
+        # Tests the case where no search mode is specified (default is brute)
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+
+        # Brute should fail
+        new_args = deepcopy(args)
+        new_args.append('--run-config-search-mode')
+        new_args.append('brute')
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(new_args, yaml_content, subcommand='profile')
+
+        # Quick should pass
+        new_args = deepcopy(args)
+        new_args.append('--run-config-search-mode')
+        new_args.append('quick')
+
+        self._evaluate_config(new_args, yaml_content, subcommand='profile')
+
+    def test_quick_search_mode(self):
+        """
+        Test that only legal options are specified in quick search
+        """
+        args = [
+            'model-analzyer', 'profile', '--model-repository', 'cli-repository',
+            '--profile-models', 'test_modelA', '--run-config-search-mode',
+            'quick'
+        ]
+
+        yaml_content = ''
+
+        self._evaluate_config(args, yaml_content)
+
+        self._test_quick_search_with_rcs(args,
+                                         yaml_content,
+                                         '--run-config-search-disable',
+                                         use_value=False,
+                                         use_list=False)
+        self._test_quick_search_with_rcs(args, yaml_content,
+                                         '--run-config-search-min-concurrency')
+        self._test_quick_search_with_rcs(args, yaml_content,
+                                         '--run-config-search-max-concurrency')
+        self._test_quick_search_with_rcs(
+            args, yaml_content, '--run-config-search-min-instance-count')
+        self._test_quick_search_with_rcs(
+            args, yaml_content, '--run-config-search-max-instance-count')
+        self._test_quick_search_with_rcs(
+            args, yaml_content, '--run-config-search-min-model-batch-size')
+        self._test_quick_search_with_rcs(
+            args, yaml_content, '--run-config-search-max-model-batch-size')
+        self._test_quick_search_with_rcs(args,
+                                         yaml_content,
+                                         '--batch-sizes',
+                                         use_value=False)
+        self._test_quick_search_with_rcs(args,
+                                           yaml_content,
+                                           '--concurrency',
+                                           use_value=False)
+
+    def test_quick_search_model_specific(self):
+        """
+        Test for illegal model specific options in the YAML during quick search
+        """
+        args = [
+            'model-analzyer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'quick', '-f', 'path-to-config-file'
+        ]
+
+        yaml_content = """
+        profile_models:
+          model_1:
+            parameters:
+              concurrency: 1,2,4,128
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+
+        yaml_content = """
+        profile_models:
+          model_1:
+            parameters:
+              batch size: 1,2,4,128
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+
+        yaml_content = """
+        profile_models:
+          model_1:
+            model_config_parameters:
+              max batch size: 2
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+
+    def _test_quick_search_with_rcs(self,
+                                    args: Namespace,
+                                    yaml_content: Optional[Dict[str, List]],
+                                    rcs_string: str,
+                                    use_value: bool = True,
+                                    use_list: bool = True) -> None:
+        """
+        Tests that run-config-search options raise exceptions 
+        in quick search mode
+        """
+        new_args = deepcopy(args)
+        new_args.append(rcs_string)
+        if use_value:
+            new_args.append('1')
+        elif use_list:
+            new_args.append(['1', '2', '4'])
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(new_args, yaml_content, subcommand='profile')
 
 
 if __name__ == '__main__':

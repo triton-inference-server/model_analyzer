@@ -367,6 +367,9 @@ class TestCLI(trc.TestResultCollector):
     @patch(
         'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file',
         MagicMock())
+    @patch(
+        'model_analyzer.config.input.config_command.ConfigCommand._check_for_illegal_config_settings',
+        MagicMock())
     def test_all_options(self):
 
         options = get_test_options()
