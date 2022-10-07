@@ -91,7 +91,8 @@ model_repository: /path/to/model/repository/
 
 profile_models:
   model_1:
-    concurrency: 1,2,3,128
+    parameters:
+      concurrency: 1,2,3,128
 ```
 
 The config described below will only sweep through different values for
