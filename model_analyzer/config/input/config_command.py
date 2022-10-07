@@ -239,6 +239,9 @@ class ConfigCommand:
         if type(profile_models) is str:
             return
 
+        if not profile_models:
+            return
+
         for model in profile_models.values():
             if not 'parameters' in model:
                 continue
