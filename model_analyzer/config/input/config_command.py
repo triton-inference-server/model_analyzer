@@ -95,14 +95,13 @@ class ConfigCommand:
             this exception
         """
 
-        # Config file has been specified
         yaml_config = self._load_yaml_config(args)
         self._check_for_illegal_config_settings(args, yaml_config)
         self._set_field_values(args, yaml_config)
         self._preprocess_and_verify_arguments()
         self._autofill_values()
 
-    def _load_yaml_config(self, args: Namespace) -> Dict[str, List]:
+    def _load_yaml_config(self, args: Namespace) -> Optional[Dict[str, List]]:
         if 'config_file' in args:
             yaml_config = self._load_config_file(args.config_file)
             YamlConfigValidator.validate(yaml_config)
@@ -112,13 +111,14 @@ class ConfigCommand:
         return yaml_config
 
     def _check_for_illegal_config_settings(
-            self, args: Namespace, yaml_config: Dict[str, List]) -> None:
+            self, args: Namespace, yaml_config: Optional[Dict[str,
+                                                              List]]) -> None:
         self._check_for_duplicate_profile_models_option(args, yaml_config)
         self._check_for_multi_model_incompatability(args, yaml_config)
         self._check_for_quick_search_incompatability(args, yaml_config)
 
     def _set_field_values(self, args: Namespace,
-                          yaml_config: Dict[str, List]) -> None:
+                          yaml_config: Optional[Dict[str, List]]) -> None:
         for key, value in self._fields.items():
             self._fields[key].set_name(key)
             config_value = self._get_config_value(key, args, yaml_config)
@@ -164,10 +164,11 @@ class ConfigCommand:
                 yaml_config):
             return
 
-        self._check_search_mode(args, yaml_config)
+        self._check_multi_model_search_mode_incompatability(args, yaml_config)
 
-    def _check_search_mode(self, args: Namespace,
-                           yaml_config: Optional[Dict[str, List]]) -> None:
+    def _check_multi_model_search_mode_incompatability(
+            self, args: Namespace, yaml_config: Optional[Dict[str,
+                                                              List]]) -> None:
         if self._get_config_value('run_config_search_mode', args,
                                   yaml_config) != 'quick':
             raise TritonModelAnalyzerException(
