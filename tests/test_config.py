@@ -1818,6 +1818,35 @@ profile_models:
         self._test_quick_search_list_value(args, yaml_content, '--batch-sizes')
         self._test_quick_search_list_value(args, yaml_content, '--concurrency')
 
+    def test_quick_search_model_specific(self):
+        """
+        Test for illegal model specific options in the YAML during quick search
+        """
+        args = [
+            'model-analzyer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'quick', '-f', 'path-to-config-file'
+        ]
+
+        yaml_content = """
+        profile_models:
+          model_1:
+            parameters:
+              concurrency: 1,2,4,128
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+
+        yaml_content = """
+        profile_models:
+          model_1:
+            parameters:
+              batch size: 1,2,4,128
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+
     def _test_quick_search_rcs_value(self, args: Namespace,
                                      yaml_content: Optional[Dict[str, List]],
                                      rcs_string: str) -> None:

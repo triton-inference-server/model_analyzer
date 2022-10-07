@@ -184,7 +184,8 @@ class ConfigCommand:
             return
 
         self._check_no_search_values(args, yaml_config)
-        self._check_no_list_values(args, yaml_config)
+        self._check_no_global_list_values(args, yaml_config)
+        self._check_no_per_model_list_values(args, yaml_config)
 
     def _check_no_search_values(self, args: Namespace,
                                 yaml_config: Optional[Dict[str, List]]) -> None:
@@ -217,16 +218,37 @@ class ConfigCommand:
                 '\nPlease use brute search mode or remove batch size search values.'
             )
 
-    def _check_no_list_values(self, args: Namespace,
-                              yaml_config: Optional[Dict[str, List]]) -> None:
+    def _check_no_global_list_values(
+            self, args: Namespace, yaml_config: Optional[Dict[str,
+                                                              List]]) -> None:
         concurrency = self._get_config_value('concurrency', args, yaml_config)
         batch_sizes = self._get_config_value('batch_sizes', args, yaml_config)
 
         if concurrency or batch_sizes:
             raise TritonModelAnalyzerException(
                 f'\nProfiling of models in quick search mode is not supported with lists of concurrencies or batch sizes.'
-                '\nPlease use brute search mode or remove concurrency/batch_sizes list.'
+                '\nPlease use brute search mode or remove concurrency/batch sizes list.'
             )
+
+    def _check_no_per_model_list_values(
+            self, args: Namespace, yaml_config: Optional[Dict[str,
+                                                              List]]) -> None:
+        profile_models = self._get_config_value('profile_models', args,
+                                                yaml_config)
+
+        if type(profile_models) is str:
+            return
+
+        for model in profile_models.values():
+            if not 'parameters' in model:
+                continue
+
+            if 'concurrency' in model['parameters'] or 'batch size' in model[
+                    'parameters']:
+                raise TritonModelAnalyzerException(
+                    f'\nProfiling of models in quick search mode is not supported with lists of concurrencies or batch sizes.'
+                    '\nPlease use brute search mode or remove concurrency/batch sizes list.'
+                )
 
     def _preprocess_and_verify_arguments(self):
         """
