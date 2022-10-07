@@ -236,10 +236,8 @@ class ConfigCommand:
         profile_models = self._get_config_value('profile_models', args,
                                                 yaml_config)
 
-        if type(profile_models) is str:
-            return
-
-        if not profile_models:
+        if not profile_models or type(profile_models) is str or type(
+                profile_models) is list:
             return
 
         for model in profile_models.values():
