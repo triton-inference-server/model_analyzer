@@ -94,8 +94,11 @@ class TestConfigGenerator:
         if 'TRITON_LAUNCH_DOCKER_IMAGE' in os.environ:
             self.config['triton_docker_image'] = os.environ[
                 'TRITON_LAUNCH_DOCKER_IMAGE']
+        preload_paths = self.args.preload_path.split(':')
+        # Only mount the second preload location. The first
+        # location is available in the server container.
         self.config['triton_docker_mounts'] = [
-            f'{self.args.preload_path}:{self.args.preload_path}:ro',
+            f'{preload_paths[1]}:{preload_paths[1]}:ro'
         ]
         self.config['triton_server_environment'] = {
             'LD_PRELOAD': self.args.preload_path,
