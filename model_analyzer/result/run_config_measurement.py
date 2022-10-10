@@ -92,8 +92,8 @@ class RunConfigMeasurement:
 
         return run_config_measurement
 
-    def set_model_config_weighting(
-            self, model_config_weights: [List[Optional[int]]]) -> None:
+    def set_model_config_weighting(self,
+                                   model_config_weights: List[int]) -> None:
         """
         Sets the model config weightings used when calculating 
         weighted metrics

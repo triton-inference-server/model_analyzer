@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Dict
+
+from model_analyzer.record.record import Record
 
 from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
 
@@ -22,7 +24,8 @@ class RunConfigResultComparator:
     Stores information needed to compare two RunConfigResults.
     """
 
-    def __init__(self, metric_objectives_list, model_weights: List[int]):
+    def __init__(self, metric_objectives_list: List[Dict[str, int]],
+                 model_weights: List[int]):
         """
         Parameters
         ----------
