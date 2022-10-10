@@ -140,6 +140,47 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             model_name="test_model",
             model_config_names=["test_model_config0", "test_model_config1"])
 
+    def test_unequal_weight_multi(self):
+        """
+        Tests that changing just the model weighting will result in a different
+        config being selected as better
+        """
+        objective_spec = [{
+            'perf_throughput': 1,
+            'perf_latency_p99': 1
+        }, {
+            'perf_throughput': 1,
+            'perf_latency_p99': 1
+        }]
+
+        # With equal weighting - config 1 is better
+        model_weights = [1, 1]
+        self._check_run_config_result_comparison(
+            objective_spec=objective_spec,
+            model_weights=model_weights,
+            avg_gpu_metrics1=self.avg_gpu_metrics1,
+            avg_non_gpu_metrics1=self.avg_non_gpu_metrics_weighted_multi1,
+            avg_gpu_metrics2=self.avg_gpu_metrics2,
+            avg_non_gpu_metrics2=self.avg_non_gpu_metrics_weighted_multi2,
+            value_step2=2,
+            expected_result=False,
+            model_name="test_model",
+            model_config_names=["test_model_config0", "test_model_config1"])
+
+        # With an unequal weighting - config 0 is better
+        model_weights = [3, 1]
+        self._check_run_config_result_comparison(
+            objective_spec=objective_spec,
+            model_weights=model_weights,
+            avg_gpu_metrics1=self.avg_gpu_metrics1,
+            avg_non_gpu_metrics1=self.avg_non_gpu_metrics_weighted_multi1,
+            avg_gpu_metrics2=self.avg_gpu_metrics2,
+            avg_non_gpu_metrics2=self.avg_non_gpu_metrics_weighted_multi2,
+            value_step2=2,
+            expected_result=True,
+            model_name="test_model",
+            model_config_names=["test_model_config0", "test_model_config1"])
+
     def _check_run_config_result_comparison(self,
                                             objective_spec,
                                             model_weights: List[int],
@@ -221,6 +262,22 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
         }, {
             'perf_throughput': 250,
             'perf_latency_p99': 10000
+        }]
+
+        self.avg_non_gpu_metrics_weighted_multi1 = [{
+            'perf_throughput': 1000,
+            'perf_latency_p99': 50
+        }, {
+            'perf_throughput': 1000,
+            'perf_latency_p99': 100
+        }]
+
+        self.avg_non_gpu_metrics_weighted_multi2 = [{
+            'perf_throughput': 2000,
+            'perf_latency_p99': 200
+        }, {
+            'perf_throughput': 500,
+            'perf_latency_p99': 20
         }]
 
 
