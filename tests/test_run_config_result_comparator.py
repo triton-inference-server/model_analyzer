@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
 from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
 from .common import test_result_collector as trc
 from .common.test_utils import construct_run_config_result
@@ -31,9 +33,11 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
 
     def test_throughput_driven(self):
         objective_spec = [{'perf_throughput': 2, 'perf_latency_p99': 1}]
+        model_weights = [1]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
+            model_weights=model_weights,
             avg_gpu_metrics1=self.avg_gpu_metrics1,
             avg_non_gpu_metrics1=self.avg_non_gpu_metrics1,
             avg_gpu_metrics2=self.avg_gpu_metrics2,
@@ -48,9 +52,11 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             'perf_throughput': 2,
             'perf_latency_p99': 1
         }]
+        model_weights = [1, 1]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
+            model_weights=model_weights,
             avg_gpu_metrics1=self.avg_gpu_metrics1,
             avg_non_gpu_metrics1=self.avg_non_gpu_metrics_multi1,
             avg_gpu_metrics2=self.avg_gpu_metrics2,
@@ -66,9 +72,11 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
                 'perf_latency_p99': 2
             },
         ]
+        model_weights = [1]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
+            model_weights=model_weights,
             avg_gpu_metrics1=self.avg_gpu_metrics1,
             avg_non_gpu_metrics1=self.avg_non_gpu_metrics1,
             avg_gpu_metrics2=self.avg_gpu_metrics2,
@@ -83,9 +91,11 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             'perf_throughput': 1,
             'perf_latency_p99': 2
         }]
+        model_weights = [1, 1]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
+            model_weights=model_weights,
             avg_gpu_metrics1=self.avg_gpu_metrics1,
             avg_non_gpu_metrics1=self.avg_non_gpu_metrics_multi1,
             avg_gpu_metrics2=self.avg_gpu_metrics2,
@@ -96,9 +106,11 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
 
     def test_equal_weight(self):
         objective_spec = [{'perf_throughput': 1, 'perf_latency_p99': 1}]
+        model_weights = [1]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
+            model_weights=model_weights,
             avg_gpu_metrics1=self.avg_gpu_metrics1,
             avg_non_gpu_metrics1=self.avg_non_gpu_metrics1,
             avg_gpu_metrics2=self.avg_gpu_metrics2,
@@ -114,9 +126,11 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             'perf_throughput': 1,
             'perf_latency_p99': 1
         }]
+        model_weights = [1, 1]
 
         self._check_run_config_result_comparison(
             objective_spec=objective_spec,
+            model_weights=model_weights,
             avg_gpu_metrics1=self.avg_gpu_metrics1,
             avg_non_gpu_metrics1=self.avg_non_gpu_metrics_multi1,
             avg_gpu_metrics2=self.avg_gpu_metrics2,
@@ -128,6 +142,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
 
     def _check_run_config_result_comparison(self,
                                             objective_spec,
+                                            model_weights: List[int],
                                             avg_gpu_metrics1,
                                             avg_gpu_metrics2,
                                             avg_non_gpu_metrics1,
@@ -145,7 +160,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
         """
 
         result_comparator = RunConfigResultComparator(
-            metric_objectives_list=objective_spec)
+            metric_objectives_list=objective_spec, model_weights=model_weights)
 
         result1 = construct_run_config_result(
             avg_gpu_metric_values=avg_gpu_metrics1,

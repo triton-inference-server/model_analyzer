@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
 from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
 
 
@@ -20,7 +22,7 @@ class RunConfigResultComparator:
     Stores information needed to compare two RunConfigResults.
     """
 
-    def __init__(self, metric_objectives_list):
+    def __init__(self, metric_objectives_list, model_weights: List[int]):
         """
         Parameters
         ----------
@@ -33,14 +35,13 @@ class RunConfigResultComparator:
         # Normalize metric weights
         self._metric_weights = []
         self._model_weights = []
-        for metric_objectives in metric_objectives_list:
+        for i, metric_objectives in enumerate(metric_objectives_list):
             self._metric_weights.append({
                 key: (val / sum(metric_objectives.values()))
                 for key, val in metric_objectives.items()
             })
 
-            # TODO-TMA-571: Need to add support for model weighting
-            self._model_weights.append(1)
+            self._model_weights.append(model_weights[i])
 
     def get_metric_weights(self):
         return self._metric_weights
