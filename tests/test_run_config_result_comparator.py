@@ -22,7 +22,6 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 
-# TODO-TMA-571: Need to add testing for model weighting
 class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
 
     def setUp(self):

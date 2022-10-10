@@ -321,10 +321,14 @@ class ResultManager:
             model.constraints() for model in self._config.analysis_models
         ]
 
+        # TMA-XXX: This changes once we add support for model weighting to the CLI/YAML
+        model_weights = [1 for model in self._config.analysis_models]
+
         self._run_comparators = {
             self._concurrent_analysis_model_name:
                 RunConfigResultComparator(
-                    metric_objectives_list=model_objectives_list)
+                    metric_objectives_list=model_objectives_list,
+                    model_weights=model_weights)
         }
 
         self._run_constraints = {
@@ -336,9 +340,13 @@ class ResultManager:
             model.model_name() for model in self._config.analysis_models
         ]
 
+        # If analyzing sequentially just set all models to equal weighting (since it won't be used)
+        model_weights = [1 for model in self._config.analysis_models]
+
         self._run_comparators = {
             model.model_name(): RunConfigResultComparator(
-                metric_objectives_list=[model.objectives()])
+                metric_objectives_list=[model.objectives()],
+                model_weights=model_weights)
             for model in self._config.analysis_models
         }
 
