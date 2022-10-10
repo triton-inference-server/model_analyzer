@@ -370,6 +370,13 @@ class ConfigCommandProfile(ConfigCommand):
                 description=
                 'Constraints on the objectives specified in the "objectives" field of the config.'
             ))
+        self._add_config(
+            ConfigField(
+                'weightings',
+                field_type=ConfigListNumeric(int),
+                description=
+                'A list of model weightings used to bias models when determining the best configuration.'
+            ))
 
         model_config_fields = self._get_model_config_fields()
         profile_model_scheme = ConfigObject(
@@ -394,6 +401,8 @@ class ConfigCommandProfile(ConfigCommand):
                                 objectives_scheme,
                             'constraints':
                                 constraints_scheme,
+                            'weightings':
+                                ConfigListNumeric(type_=int),
                             'model_config_parameters':
                                 model_config_fields,
                             'perf_analyzer_flags':
@@ -1012,7 +1021,7 @@ class ConfigCommandProfile(ConfigCommand):
                     }})
 
         new_profile_models = {}
-        for model in self.profile_models:
+        for i, model in enumerate(self.profile_models):
             new_model = {'cpu_only': (model.cpu_only() or cpu_only)}
 
             # Objectives
@@ -1028,6 +1037,13 @@ class ConfigCommandProfile(ConfigCommand):
                     new_model['constraints'] = self.constraints
             else:
                 new_model['constraints'] = model.constraints()
+
+            # Weightings
+            if not model.weightings():
+                if 'weightings' in self._fields and self.weightings:
+                    new_model['weightings'] = self.weightings[i]
+            else:
+                new_model['weightings'] = model.weightings()[i]
 
             # Shorthands
             if self.latency_budget:

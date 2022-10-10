@@ -414,12 +414,20 @@ class ConfigCommandAnalyze(ConfigCommand):
                 new_model['objectives'] = self.objectives
             else:
                 new_model['objectives'] = model.objectives()
+
             # Constraints
             if not model.constraints():
                 if 'constraints' in self._fields and self.constraints:
                     new_model['constraints'] = self.constraints
             else:
                 new_model['constraints'] = model.constraints()
+
+            # Weightings
+            if not model.weightings():
+                if 'weightings' in self._fields and self.weightings:
+                    new_model['weightings'] = self.weightings
+            else:
+                new_model['weightings'] = model.weightings()
 
             # Shorthands
             if self.latency_budget:

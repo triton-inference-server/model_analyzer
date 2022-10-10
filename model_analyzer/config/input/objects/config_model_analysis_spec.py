@@ -19,7 +19,11 @@ class ConfigModelAnalysisSpec:
     a single model.
     """
 
-    def __init__(self, model_name, objectives=None, constraints=None):
+    def __init__(self,
+                 model_name,
+                 objectives=None,
+                 constraints=None,
+                 weightings=None):
         """
         Parameters
         ----------
@@ -29,11 +33,14 @@ class ConfigModelAnalysisSpec:
            List of the objectives required by the model
         constraints : None or dict
             Constraints required by the model
+        weightings: None or int
+            Model weighting value
         """
 
         self._model_name = model_name
         self._objectives = objectives
         self._constraints = constraints
+        self._weightings = weightings
 
     def objectives(self):
         """
@@ -55,6 +62,16 @@ class ConfigModelAnalysisSpec:
 
         return self._constraints
 
+    def weightings(self):
+        """
+        Returns
+        -------
+        int or None
+            Model weighting value
+        """
+
+        return self._weightings
+
     def model_name(self):
         """
         Returns
@@ -70,7 +87,7 @@ class ConfigModelAnalysisSpec:
         Parameters
         -------
         objectives : dict or None
-            A dictionary containing the parameters
+            A list containing the objectives
         """
 
         self._objectives = objectives
@@ -80,10 +97,20 @@ class ConfigModelAnalysisSpec:
         Parameters
         -------
         constraints : dict or None
-            A dictionary containing the parameters
+            A dictionary containing the constraints
         """
 
         self._constraints = constraints
+
+    def set_weightings(self, weightings):
+        """
+        Parameters
+        -------
+        weighting : int or None
+            Model weighting value
+        """
+
+        self._weightings = weightings
 
     def set_model_name(self, model_name):
         """
@@ -192,5 +219,8 @@ class ConfigModelAnalysisSpec:
 
         if self._constraints:
             model_object['constraints'] = self._constraints
+
+        if self._weightings:
+            model_object['weightings'] = self._weightings
 
         return str(model_object)

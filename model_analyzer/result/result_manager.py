@@ -320,15 +320,15 @@ class ResultManager:
         model_constraints_list = [
             model.constraints() for model in self._config.analysis_models
         ]
-
-        # TMA-XXX: This changes once we add support for model weighting to the CLI/YAML
-        model_weights = [1 for model in self._config.analysis_models]
+        model_weightings_list = [
+            model.weightings() for model in self._config.analysis_models
+        ]
 
         self._run_comparators = {
             self._concurrent_analysis_model_name:
                 RunConfigResultComparator(
                     metric_objectives_list=model_objectives_list,
-                    model_weights=model_weights)
+                    model_weights=model_weightings_list)
         }
 
         self._run_constraints = {

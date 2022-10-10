@@ -105,10 +105,13 @@ class ModelManager:
             if measurement:
                 objectives = [model.objectives() for model in models]
                 constraints = [model.constraints() for model in models]
+                weightings = [model.weightings() for model in models]
 
                 measurement.set_metric_weightings(metric_objectives=objectives)
                 measurement.set_model_config_constraints(
                     model_config_constraints=constraints)
+                measurement.set_model_config_weighting(
+                    model_config_weights=weightings)
 
             rcg.set_last_results([measurement])
 
