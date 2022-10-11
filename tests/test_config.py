@@ -1825,9 +1825,9 @@ profile_models:
                                          '--batch-sizes',
                                          use_value=False)
         self._test_quick_search_with_rcs(args,
-                                           yaml_content,
-                                           '--concurrency',
-                                           use_value=False)
+                                         yaml_content,
+                                         '--concurrency',
+                                         use_value=False)
 
     def test_quick_search_model_specific(self):
         """
@@ -1863,6 +1863,46 @@ profile_models:
           model_1:
             model_config_parameters:
               max batch size: 2
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+
+    def test_model_weightings(self):
+        """
+        Test that weightings can be specified only globally in the YAML
+        """
+        args = [
+            'model-analzyer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'quick', '-f', 'path-to-config-file'
+        ]
+
+        # Global weightings - legal
+        yaml_content = """
+        weightings: [3, 1]
+
+        profile_models:
+          resnet50_libtorch:
+            objectives:
+              perf_latency_p99: 1
+          add_sub:
+            objectives:
+              perf_throughput: 1
+        """
+
+        self._evaluate_config(args, yaml_content, subcommand='profile')
+
+        # Model specific weightings - illegal
+        yaml_content = """
+        profile_models:
+          resnet50_libtorch:
+            weightings: 3
+            objectives:
+              perf_latency_p99: 1
+          add_sub:
+            weightings: 1
+            objectives:
+              perf_throughput: 1
         """
 
         with self.assertRaises(TritonModelAnalyzerException):
