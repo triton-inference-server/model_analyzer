@@ -64,6 +64,9 @@ class ConfigModelProfileSpec:
         self._objectives = objectives
         self._constraints = constraints
 
+        # This is needed because weightings is special, it's sent as a single entry list
+        # due to the fact that it's type (set in config_command_profile is a List), but we
+        # need to break the list down and associate each weighting with its model
         if weightings:
             self._weightings = weightings[0]
         else:

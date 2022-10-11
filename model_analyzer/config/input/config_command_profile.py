@@ -1041,10 +1041,13 @@ class ConfigCommandProfile(ConfigCommand):
             # Weightings
             if not model.weightings():
                 if 'weightings' in self._fields and self.weightings:
+                    # This is needed because weightings is read in as a list
+                    # but we need to associate each weighting with its model
                     new_model['weightings'] = self.weightings[i]
             else:
-                new_model['weightings'] = model.weightings()[i]
-
+                raise TritonModelAnalyzerException(
+                    'Weightings can not be specified as a model parameter. Please make this a global parameter.'
+                )
             # Shorthands
             if self.latency_budget:
                 if 'constraints' in new_model:
