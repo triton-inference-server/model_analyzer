@@ -175,7 +175,7 @@ def get_test_options():
         OptionStruct("noop", "report", "--output-formats", "-o", ["pdf", "csv", "png"], "pdf", "SHOULD_FAIL"),
         OptionStruct("noop", "yaml_profile", "constraints"),
         OptionStruct("noop", "yaml_profile", "objectives"),
-        OptionStruct("noop", "yaml_profile", "weightings"),
+        OptionStruct("noop", "yaml_profile", "weighting"),
         OptionStruct("noop", "yaml_profile", "triton_server_flags"),
         OptionStruct("noop", "yaml_profile", "perf_analyzer_flags"),
         OptionStruct("noop", "yaml_profile", "triton_docker_labels"),
@@ -184,7 +184,7 @@ def get_test_options():
 
         OptionStruct("noop", "yaml_analyze", "constraints"),
         OptionStruct("noop", "yaml_analyze", "objectives"),
-        OptionStruct("noop", "yaml_analyze", "weightings"),
+        OptionStruct("noop", "yaml_analyze", "weighting"),
         OptionStruct("noop", "yaml_analyze", "plots"),
     ]
     #yapf: enable

@@ -43,7 +43,7 @@ from .config_defaults import \
     DEFAULT_EXPORT_PATH, DEFAULT_FILENAME_MODEL_INFERENCE, DEFAULT_FILENAME_MODEL_GPU, \
     DEFAULT_FILENAME_SERVER_ONLY, DEFAULT_NUM_CONFIGS_PER_MODEL, DEFAULT_NUM_TOP_MODEL_CONFIGS, \
     DEFAULT_INFERENCE_OUTPUT_FIELDS, DEFAULT_GPU_OUTPUT_FIELDS, DEFAULT_SERVER_OUTPUT_FIELDS, \
-    DEFAULT_ONLINE_OBJECTIVES, DEFAULT_ONLINE_ANALYSIS_PLOTS, DEFAULT_OFFLINE_ANALYSIS_PLOTS
+    DEFAULT_ONLINE_OBJECTIVES, DEFAULT_ONLINE_ANALYSIS_PLOTS, DEFAULT_OFFLINE_ANALYSIS_PLOTS, DEFAULT_MODEL_WEIGHTING
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.server.server_config import \
@@ -372,10 +372,10 @@ class ConfigCommandProfile(ConfigCommand):
             ))
         self._add_config(
             ConfigField(
-                'weightings',
-                field_type=ConfigListNumeric(int),
+                'weighting',
+                field_type=ConfigPrimitive(int),
                 description=
-                'A list of model weightings used to bias models when determining the best configuration.'
+                'A weighting used to bias the model when determining the best configuration'
             ))
 
         model_config_fields = self._get_model_config_fields()
@@ -401,8 +401,8 @@ class ConfigCommandProfile(ConfigCommand):
                                 objectives_scheme,
                             'constraints':
                                 constraints_scheme,
-                            'weightings':
-                                ConfigListNumeric(type_=int),
+                            'weighting':
+                                ConfigPrimitive(type_=int),
                             'model_config_parameters':
                                 model_config_fields,
                             'perf_analyzer_flags':
@@ -1038,16 +1038,17 @@ class ConfigCommandProfile(ConfigCommand):
             else:
                 new_model['constraints'] = model.constraints()
 
-            # Weightings
-            if not model.weightings():
-                if 'weightings' in self._fields and self.weightings:
-                    # This is needed because weightings is read in as a list
-                    # but we need to associate each weighting with its model
-                    new_model['weightings'] = self.weightings[i]
+            # Weighting
+            if not model.weighting():
+                if 'weighting' in self._fields and self.weighting:
+                    raise TritonModelAnalyzerException(
+                        'Weighting can not be specified as a global parameter. Please make this a model parameter.'
+                    )
+                else:
+                    new_model['weighting'] = DEFAULT_MODEL_WEIGHTING
             else:
-                raise TritonModelAnalyzerException(
-                    'Weightings can not be specified as a model parameter. Please make this a global parameter.'
-                )
+                new_model['weighting'] = model.weighting()
+
             # Shorthands
             if self.latency_budget:
                 if 'constraints' in new_model:

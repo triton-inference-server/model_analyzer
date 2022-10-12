@@ -23,7 +23,7 @@ class ConfigModelAnalysisSpec:
                  model_name,
                  objectives=None,
                  constraints=None,
-                 weightings=None):
+                 weighting=None):
         """
         Parameters
         ----------
@@ -33,14 +33,14 @@ class ConfigModelAnalysisSpec:
            List of the objectives required by the model
         constraints : None or dict
             Constraints required by the model
-        weightings: None or int
+        weighting: int
             Model weighting value
         """
 
         self._model_name = model_name
         self._objectives = objectives
         self._constraints = constraints
-        self._weightings = weightings
+        self._weighting = weighting
 
     def objectives(self):
         """
@@ -62,15 +62,15 @@ class ConfigModelAnalysisSpec:
 
         return self._constraints
 
-    def weightings(self):
+    def weighting(self) -> int:
         """
         Returns
         -------
-        int or None
+        int
             Model weighting value
         """
 
-        return self._weightings
+        return self._weighting
 
     def model_name(self):
         """
@@ -102,15 +102,15 @@ class ConfigModelAnalysisSpec:
 
         self._constraints = constraints
 
-    def set_weightings(self, weightings):
+    def set_weighting(self, weighting: int) -> None:
         """
         Parameters
         -------
-        weighting : int or None
+        weighting : int
             Model weighting value
         """
 
-        self._weightings = weightings
+        self._weighting = weighting
 
     def set_model_name(self, model_name):
         """
@@ -220,7 +220,7 @@ class ConfigModelAnalysisSpec:
         if self._constraints:
             model_object['constraints'] = self._constraints
 
-        if self._weightings:
-            model_object['weightings'] = self._weightings
+        if self._weighting:
+            model_object['weighting'] = self._weighting
 
         return str(model_object)

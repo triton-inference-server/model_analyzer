@@ -24,7 +24,7 @@ class ConfigModelProfileSpec:
                  cpu_only=False,
                  objectives=None,
                  constraints=None,
-                 weightings=None,
+                 weighting=None,
                  parameters=None,
                  model_config_parameters=None,
                  perf_analyzer_flags=None,
@@ -41,7 +41,7 @@ class ConfigModelProfileSpec:
            List of the objectives required by the model
         constraints : None or dict
             Constraints required by the model
-        weightings: None or int
+        weighting: int
             Model weighting 
         parameters : None or dict
             Constraints on batch_size and concurrency values need to be
@@ -63,14 +63,7 @@ class ConfigModelProfileSpec:
         self._cpu_only = cpu_only
         self._objectives = objectives
         self._constraints = constraints
-
-        # This is needed because weightings is special, it's sent as a single entry list
-        # due to the fact that it's type (set in config_command_profile is a List), but we
-        # need to break the list down and associate each weighting with its model
-        if weightings:
-            self._weightings = weightings[0]
-        else:
-            self._weightings = None
+        self._weighting = weighting
 
         self._parameters = parameters
         self._model_config_parameters = model_config_parameters
@@ -108,15 +101,15 @@ class ConfigModelProfileSpec:
 
         return self._constraints
 
-    def weightings(self):
+    def weighting(self) -> int:
         """
         Returns
         -------
-        int or None
+        int
            The model weighting
         """
 
-        return self._weightings
+        return self._weighting
 
     def parameters(self):
         """
@@ -208,15 +201,15 @@ class ConfigModelProfileSpec:
 
         self._constraints = constraints
 
-    def set_weightings(self, weightings):
+    def set_weighting(self, weighting: int) -> None:
         """
         Parameters
         -------
-        weighting : int or None
+        weighting : int
             The model weighting value
         """
 
-        self._weightings = weightings
+        self._weighting = weighting
 
     def set_parameters(self, parameters):
         """
@@ -380,8 +373,8 @@ class ConfigModelProfileSpec:
         if self._constraints:
             model_object['constraints'] = self._constraints
 
-        if self._weightings:
-            model_object['weightings'] = self._weightings
+        if self._weighting:
+            model_object['weighting'] = self._weighting
 
         if self._model_config_parameters:
             model_object['model_config_parameters'] = \
