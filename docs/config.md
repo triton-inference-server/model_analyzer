@@ -96,9 +96,6 @@ profile_models: <comma-delimited-string-list>
 # Specifies how long (seconds) to gather server-only metrics
 [ duration_seconds: <int> | default: 3 ]
 
-# Specify whether DCGM should be used by Model Analyzer to collect GPU metrics
-[ use_local_gpu_monitor: <bool> | default: False ]
-
 # Duration of waiting time between each metric measurement in seconds
 [ monitoring_interval: <float> | default: 1 ]
 

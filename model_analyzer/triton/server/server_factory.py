@@ -180,9 +180,8 @@ class TritonServerFactory:
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
         triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
-        if not config.use_local_gpu_monitor:
-            triton_config['metrics-interval-ms'] = int(
-                config.monitoring_interval * 1e3)
+        triton_config['metrics-interval-ms'] = int(config.monitoring_interval *
+                                                   1e3)
         logger.info('Starting a local Triton Server')
         server = TritonServerFactory.create_server_local(
             path=config.triton_server_path,
@@ -211,9 +210,8 @@ class TritonServerFactory:
         triton_config['grpc-port'] = config.triton_grpc_endpoint.split(':')[-1]
         triton_config['metrics-port'] = urlparse(config.triton_metrics_url).port
         triton_config['model-control-mode'] = 'explicit'
-        if not config.use_local_gpu_monitor:
-            triton_config['metrics-interval-ms'] = int(
-                config.monitoring_interval * 1e3)
+        triton_config['metrics-interval-ms'] = int(config.monitoring_interval *
+                                                   1e3)
         logger.info('Starting a Triton Server using docker')
         server = TritonServerFactory.create_server_docker(
             image=config.triton_docker_image,

@@ -370,15 +370,9 @@ class MetricsManager:
         self._gpu_monitor = None
         if not cpu_only:
             try:
-                if self._config.use_local_gpu_monitor:
-                    self._gpu_monitor = DCGMMonitor(
-                        self._gpus, self._config.monitoring_interval,
-                        self._gpu_metrics)
-                    self._check_triton_and_model_analyzer_gpus()
-                else:
-                    self._gpu_monitor = RemoteMonitor(
-                        self._config.triton_metrics_url,
-                        self._config.monitoring_interval, self._gpu_metrics)
+                self._gpu_monitor = RemoteMonitor(
+                    self._config.triton_metrics_url,
+                    self._config.monitoring_interval, self._gpu_metrics)
                 self._gpu_monitor.start_recording_metrics()
             except TritonModelAnalyzerException:
                 self._destroy_monitors()

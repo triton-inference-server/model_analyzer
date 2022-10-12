@@ -61,7 +61,6 @@ def get_test_options():
         # Options format:
         #   (bool, MA step, long_option)
         OptionStruct("bool", "profile","--override-output-model-repository"),
-        OptionStruct("bool", "profile","--use-local-gpu-monitor"),
         OptionStruct("bool", "profile","--collect-cpu-metrics"),
         OptionStruct("bool", "profile","--perf-output"),
         OptionStruct("bool", "profile","--run-config-search-disable"),
