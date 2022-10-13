@@ -575,7 +575,7 @@ This will result in 27 individual test runs of the model.
 
 This field is used to bias a model's objective when performing a multi-model search.
 
-See [Multi-Model Search - Model Weighting](docs/config_search.md#model-weighting) for details and an example YAML configuration.
+See [Multi-Model Search - Model Weighting](config_search.md#model-weighting) for details and an example YAML configuration.
 
 ### `<model-config-parameters>`
 
