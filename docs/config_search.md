@@ -188,7 +188,6 @@ _This mode is in EARLY ACCESS and has the following limitations:_
 - Can only be run in `quick` search mode
 - Cannot set limitations on min/max batch size, concurrency or instance count
 - Does not support individual model constraints, only global constraints
-- Does not support individual model weighting, all models are treated with equal priority when trying to maximize objective value
 - Does not support detailed reporting, only summary reports
 
 Multi-model concurrent search mode can be enabled by adding the parameter `--run-config-profile-models-concurrently-enable` to the CLI.
@@ -198,3 +197,21 @@ It uses Quick Search mode's hill climbing algorithm to search all models configu
 After it has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency range before generation of the summary reports.
 
 _Note:_ The algorithm attempts to find the most fair and optimal result for all models, by evaluating each model objective's gain/loss. In many cases this will result in the algorithm ranking higher a configuration that has a lower total combined throughput (if that was the objective), if this better balances the throughputs of all the models.
+
+### Model Weighting
+
+In additon to setting a model's objectives or constraints, in multi-model search mode, you have the ability to set a model's weighting. By default each model is set for equal weighting (value of 1), but in the YAML you can specify `weighting: <int>` which will bias that model's objectives when evaluating for an optimal result.
+
+In the example below, the resnet50_libtorch model's objective gains (towards maximing latency) will have 3x the importance of the add_sub models throughput gains:
+
+```yaml
+profile_models:
+  resnet50_libtorch:
+    weighting: 3
+    objectives:
+      perf_latency_p99: 1
+  add_sub:
+    weighting: 1
+    objectives:
+      perf_throughput: 1
+```

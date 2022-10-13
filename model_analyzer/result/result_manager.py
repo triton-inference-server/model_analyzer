@@ -320,11 +320,15 @@ class ResultManager:
         model_constraints_list = [
             model.constraints() for model in self._config.analysis_models
         ]
+        model_weighting_list = [
+            model.weighting() for model in self._config.analysis_models
+        ]
 
         self._run_comparators = {
             self._concurrent_analysis_model_name:
                 RunConfigResultComparator(
-                    metric_objectives_list=model_objectives_list)
+                    metric_objectives_list=model_objectives_list,
+                    model_weights=model_weighting_list)
         }
 
         self._run_constraints = {
@@ -338,7 +342,8 @@ class ResultManager:
 
         self._run_comparators = {
             model.model_name(): RunConfigResultComparator(
-                metric_objectives_list=[model.objectives()])
+                metric_objectives_list=[model.objectives()],
+                model_weights=[model.weighting()])
             for model in self._config.analysis_models
         }
 

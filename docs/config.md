@@ -244,6 +244,9 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 # List of objectives that user wants to sort the results by it.
 [ objectives: <objective|list> ]
 
+# Weighting used to bias the model's objectives (agianst the other models) in multi-mode mode
+[ weighting: <int>]
+
 # Specify flags to pass to the Triton instances launched by model analyzer
 [ triton_server_flags: <dict> ]
 
@@ -257,12 +260,6 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 # Dict of name=value pairs containing metadata for the tritonserve docker container
 # launched in docker launch mode
 [ triton_docker_labels: <dict> ]
-
-# List of constraints placed on the config search results.
-[ constraints: <constraint> ]
-
-# List of objectives that user wants to sort the results by it.
-[ objectives: <objective|list> ]
 ```
 
 ## Config Options for `analyze`
@@ -573,6 +570,12 @@ profile_models:
 These parameters will result in testing the concurrency configurations of 2, 10,
 18, 26, 34, 42, 50, 58, and 64, for each of different batch sizes of 1, 2 and 3.
 This will result in 27 individual test runs of the model.
+
+### `<weighting>`
+
+This field is used to bias a model's objective when performing a multi-model search.
+
+See [Multi-Model Search - Model Weighting](config_search.md#model-weighting) for details and an example YAML configuration.
 
 ### `<model-config-parameters>`
 

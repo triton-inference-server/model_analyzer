@@ -1825,9 +1825,9 @@ profile_models:
                                          '--batch-sizes',
                                          use_value=False)
         self._test_quick_search_with_rcs(args,
-                                           yaml_content,
-                                           '--concurrency',
-                                           use_value=False)
+                                         yaml_content,
+                                         '--concurrency',
+                                         use_value=False)
 
     def test_quick_search_model_specific(self):
         """
@@ -1867,6 +1867,83 @@ profile_models:
 
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(args, yaml_content, subcommand='profile')
+
+    def test_model_weightings_profile(self):
+        """
+        Test that weightings can be specified only per model in the YAML
+        """
+        args = [
+            'model-analzyer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'quick', '-f', 'path-to-config-file'
+        ]
+
+        # Global weighting - illegal
+        yaml_content = """
+        weighting: 3
+
+        profile_models:
+          resnet50_libtorch:
+            objectives:
+              perf_latency_p99: 1
+          add_sub:
+            objectives:
+              perf_throughput: 1
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+
+        # Model specific weighting - legal
+        yaml_content = """
+        profile_models:
+          resnet50_libtorch:
+            weighting: 3
+            objectives:
+              perf_latency_p99: 1
+          add_sub:
+            weighting: 1
+            objectives:
+              perf_throughput: 1
+        """
+
+        self._evaluate_config(args, yaml_content, subcommand='profile')
+
+    def test_model_weightings_analyze(self):
+        """
+        Test that weightings can be specified only per model in the YAML
+        """
+        args = ['model-analzyer', 'analyze', '-f', 'path-to-config-file']
+
+        # Global weighting - illegal
+        yaml_content = """
+        weighting: 3
+
+        analysis_models:
+          resnet50_libtorch:
+            objectives:
+              perf_latency_p99: 1
+          add_sub:
+            objectives:
+              perf_throughput: 1
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='analyze')
+
+        # Model specific weighting - legal
+        yaml_content = """
+        analysis_models:
+          resnet50_libtorch:
+            weighting: 3
+            objectives:
+              perf_latency_p99: 1
+          add_sub:
+            weighting: 1
+            objectives:
+              perf_throughput: 1
+        """
+
+        self._evaluate_config(args, yaml_content, subcommand='analyze')
 
     def _test_quick_search_with_rcs(self,
                                     args: Namespace,

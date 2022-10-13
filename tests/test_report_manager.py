@@ -161,7 +161,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
             result_comparator = RunConfigResultComparator(
                 metric_objectives_list=[{
                     "perf_throughput": 10
-                }])
+                }],
+                model_weights=[1])
 
             avg_gpu_metrics = {
                 0: {
@@ -220,7 +221,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
                             subcommand='profile')
         result_comparator = RunConfigResultComparator(metric_objectives_list=[{
             "perf_throughput": 10
-        }])
+        }],
+                                                      model_weights=[1])
 
         avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
 
@@ -285,7 +287,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         result_comparator = RunConfigResultComparator(metric_objectives_list=[{
             "perf_throughput": 10
-        }])
+        }],
+                                                      model_weights=[1])
 
         avg_gpu_metrics = {
             "gpu_uuid": {
@@ -380,7 +383,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
                             subcommand='profile')
         result_comparator = RunConfigResultComparator(metric_objectives_list=[{
             "perf_throughput": 10
-        }])
+        }],
+                                                      model_weights=[1])
         avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
         for i in range(10):
 

@@ -21,6 +21,7 @@ import os
 DEFAULT_CHECKPOINT_DIRECTORY = os.path.join(os.getcwd(), 'checkpoints')
 DEFAULT_ONLINE_OBJECTIVES = {'perf_throughput': 10}
 DEFAULT_OFFLINE_OBJECTIVES = {'perf_throughput': 10}
+DEFAULT_MODEL_WEIGHTING = 1
 
 #
 # Profile Config defaults

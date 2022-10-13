@@ -333,7 +333,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(rcm0_from_dict.data(), self.rcm0.data())
         self.assertEqual(rcm0_from_dict._model_config_measurements,
                          self.rcm0._model_config_measurements)
-        self.assertEqual(rcm0_from_dict._model_config_weights, [1, 1])
+        self.assertEqual(rcm0_from_dict._model_config_weights, [])
         self.assertEqual(rcm0_from_dict._model_config_constraints, [])
 
     def _construct_rcm0(self):

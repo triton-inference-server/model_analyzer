@@ -24,6 +24,7 @@ class ConfigModelProfileSpec:
                  cpu_only=False,
                  objectives=None,
                  constraints=None,
+                 weighting=None,
                  parameters=None,
                  model_config_parameters=None,
                  perf_analyzer_flags=None,
@@ -40,6 +41,8 @@ class ConfigModelProfileSpec:
            List of the objectives required by the model
         constraints : None or dict
             Constraints required by the model
+        weighting: int
+            Model weighting 
         parameters : None or dict
             Constraints on batch_size and concurrency values need to be
             specified here.
@@ -60,6 +63,8 @@ class ConfigModelProfileSpec:
         self._cpu_only = cpu_only
         self._objectives = objectives
         self._constraints = constraints
+        self._weighting = weighting
+
         self._parameters = parameters
         self._model_config_parameters = model_config_parameters
         self._perf_analyzer_flags = perf_analyzer_flags
@@ -95,6 +100,16 @@ class ConfigModelProfileSpec:
         """
 
         return self._constraints
+
+    def weighting(self) -> int:
+        """
+        Returns
+        -------
+        int
+           The model weighting
+        """
+
+        return self._weighting
 
     def parameters(self):
         """
@@ -155,96 +170,6 @@ class ConfigModelProfileSpec:
         """
 
         return self._triton_server_environment
-
-    def set_cpu_only(self, cpu_only):
-        """
-        Parameters
-        -------
-        cpu_only: bool
-            Set whether this model is run on cpu only
-        """
-
-        self._cpu_only = cpu_only
-
-    def set_objectives(self, objectives):
-        """
-        Parameters
-        -------
-        objectives : dict or None
-            A dictionary containing the parameters
-        """
-
-        self._objectives = objectives
-
-    def set_constraints(self, constraints):
-        """
-        Parameters
-        -------
-        constraints : dict or None
-            A dictionary containing the parameters
-        """
-
-        self._constraints = constraints
-
-    def set_parameters(self, parameters):
-        """
-        Parameters
-        -------
-        parameters : dict or None
-            A dictionary containing the parameters
-        """
-
-        self._parameters = parameters
-
-    def set_model_config_parameters(self, model_config_parameters):
-        """
-        Parameters
-        ----------
-        model_config_parameters : dict or None
-            A dictionary containing the model config parameters.
-        """
-
-        self._model_config_parameters = model_config_parameters
-
-    def set_model_name(self, model_name):
-        """
-        Parameters
-        -------
-        model_name : str
-            The model name used for this config.
-        """
-
-        self._model_name = model_name
-
-    def set_perf_analyzer_flags(self, flags):
-        """
-        Parameters
-        -------
-        flags: dict
-             the perf_analyzer_flags
-        """
-
-        self._perf_analyzer_flags = flags
-
-    def set_triton_server_flags(self, flags):
-        """
-        Parameters
-        -------
-        flags: dict
-             the triton_server_flags
-        """
-
-        self._triton_server_flags = flags
-
-    def set_triton_server_environment(self, triton_env):
-        """
-        Parameters
-        -------
-        triton_env: dict
-            The triton server environment
-        """
-
-        self._triton_server_environment = triton_env
 
     @staticmethod
     def model_object_to_config_model_profile_spec(value):
@@ -347,6 +272,9 @@ class ConfigModelProfileSpec:
 
         if self._constraints:
             model_object['constraints'] = self._constraints
+
+        if self._weighting:
+            model_object['weighting'] = self._weighting
 
         if self._model_config_parameters:
             model_object['model_config_parameters'] = \

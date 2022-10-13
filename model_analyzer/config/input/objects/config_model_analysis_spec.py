@@ -19,7 +19,11 @@ class ConfigModelAnalysisSpec:
     a single model.
     """
 
-    def __init__(self, model_name, objectives=None, constraints=None):
+    def __init__(self,
+                 model_name,
+                 objectives=None,
+                 constraints=None,
+                 weighting=None):
         """
         Parameters
         ----------
@@ -29,11 +33,14 @@ class ConfigModelAnalysisSpec:
            List of the objectives required by the model
         constraints : None or dict
             Constraints required by the model
+        weighting: int
+            Model weighting value
         """
 
         self._model_name = model_name
         self._objectives = objectives
         self._constraints = constraints
+        self._weighting = weighting
 
     def objectives(self):
         """
@@ -55,6 +62,16 @@ class ConfigModelAnalysisSpec:
 
         return self._constraints
 
+    def weighting(self) -> int:
+        """
+        Returns
+        -------
+        int
+            Model weighting value
+        """
+
+        return self._weighting
+
     def model_name(self):
         """
         Returns
@@ -64,36 +81,6 @@ class ConfigModelAnalysisSpec:
         """
 
         return self._model_name
-
-    def set_objectives(self, objectives):
-        """
-        Parameters
-        -------
-        objectives : dict or None
-            A dictionary containing the parameters
-        """
-
-        self._objectives = objectives
-
-    def set_constraints(self, constraints):
-        """
-        Parameters
-        -------
-        constraints : dict or None
-            A dictionary containing the parameters
-        """
-
-        self._constraints = constraints
-
-    def set_model_name(self, model_name):
-        """
-        Parameters
-        -------
-        model_name : str
-            The model name used for this config.
-        """
-
-        self._model_name = model_name
 
     @staticmethod
     def model_object_to_config_model_analysis_spec(value):
@@ -192,5 +179,8 @@ class ConfigModelAnalysisSpec:
 
         if self._constraints:
             model_object['constraints'] = self._constraints
+
+        if self._weighting:
+            model_object['weighting'] = self._weighting
 
         return str(model_object)

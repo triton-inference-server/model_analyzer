@@ -43,7 +43,7 @@ from .config_defaults import \
     DEFAULT_EXPORT_PATH, DEFAULT_FILENAME_MODEL_INFERENCE, DEFAULT_FILENAME_MODEL_GPU, \
     DEFAULT_FILENAME_SERVER_ONLY, DEFAULT_NUM_CONFIGS_PER_MODEL, DEFAULT_NUM_TOP_MODEL_CONFIGS, \
     DEFAULT_INFERENCE_OUTPUT_FIELDS, DEFAULT_GPU_OUTPUT_FIELDS, DEFAULT_SERVER_OUTPUT_FIELDS, \
-    DEFAULT_ONLINE_OBJECTIVES, DEFAULT_ONLINE_ANALYSIS_PLOTS, DEFAULT_OFFLINE_ANALYSIS_PLOTS
+    DEFAULT_ONLINE_OBJECTIVES, DEFAULT_ONLINE_ANALYSIS_PLOTS, DEFAULT_OFFLINE_ANALYSIS_PLOTS, DEFAULT_MODEL_WEIGHTING
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.server.server_config import \
@@ -370,6 +370,13 @@ class ConfigCommandProfile(ConfigCommand):
                 description=
                 'Constraints on the objectives specified in the "objectives" field of the config.'
             ))
+        self._add_config(
+            ConfigField(
+                'weighting',
+                field_type=ConfigPrimitive(int),
+                description=
+                'A weighting used to bias the model when determining the best configuration'
+            ))
 
         model_config_fields = self._get_model_config_fields()
         profile_model_scheme = ConfigObject(
@@ -394,6 +401,8 @@ class ConfigCommandProfile(ConfigCommand):
                                 objectives_scheme,
                             'constraints':
                                 constraints_scheme,
+                            'weighting':
+                                ConfigPrimitive(type_=int),
                             'model_config_parameters':
                                 model_config_fields,
                             'perf_analyzer_flags':
@@ -1012,7 +1021,7 @@ class ConfigCommandProfile(ConfigCommand):
                     }})
 
         new_profile_models = {}
-        for model in self.profile_models:
+        for i, model in enumerate(self.profile_models):
             new_model = {'cpu_only': (model.cpu_only() or cpu_only)}
 
             # Objectives
@@ -1028,6 +1037,17 @@ class ConfigCommandProfile(ConfigCommand):
                     new_model['constraints'] = self.constraints
             else:
                 new_model['constraints'] = model.constraints()
+
+            # Weighting
+            if not model.weighting():
+                if 'weighting' in self._fields and self.weighting:
+                    raise TritonModelAnalyzerException(
+                        'Weighting can not be specified as a global parameter. Please make this a model parameter.'
+                    )
+                else:
+                    new_model['weighting'] = DEFAULT_MODEL_WEIGHTING
+            else:
+                new_model['weighting'] = model.weighting()
 
             # Shorthands
             if self.latency_budget:

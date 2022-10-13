@@ -29,7 +29,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
         self.sorted_results = SortedResults()
         self.result_comparator = RunConfigResultComparator(
-            metric_objectives_list=[objective_spec])
+            metric_objectives_list=[objective_spec], model_weights=[1])
 
     def tearDown(self):
         patch.stopall()
