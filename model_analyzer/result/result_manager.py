@@ -340,13 +340,10 @@ class ResultManager:
             model.model_name() for model in self._config.analysis_models
         ]
 
-        # If analyzing sequentially just set all models to equal weighting (since it won't be used)
-        model_weights = [1 for model in self._config.analysis_models]
-
         self._run_comparators = {
             model.model_name(): RunConfigResultComparator(
                 metric_objectives_list=[model.objectives()],
-                model_weights=model_weights)
+                model_weights=[model.weighting()])
             for model in self._config.analysis_models
         }
 
