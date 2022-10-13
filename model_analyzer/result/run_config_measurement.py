@@ -86,10 +86,6 @@ class RunConfigMeasurement:
             run_config_measurement,
             run_config_measurement_dict['_model_config_measurements'])
 
-        # By default set all models to have equal weighting
-        # for mcm in run_config_measurement._model_config_measurements:
-        #     run_config_measurement._model_config_weights.append(1)
-
         return run_config_measurement
 
     def set_model_config_weighting(self,
@@ -104,11 +100,10 @@ class RunConfigMeasurement:
         Weights are the relative importance of the model_configs 
         with respect to one another
         """
-        if not None in model_config_weights:
-            self._model_config_weights = [
-                model_config_weight / sum(model_config_weights)
-                for model_config_weight in model_config_weights
-            ]
+        self._model_config_weights = [
+            model_config_weight / sum(model_config_weights)
+            for model_config_weight in model_config_weights
+        ]
 
     def set_model_config_constraints(
             self, model_config_constraints: List[Dict[str, Dict[str,
@@ -549,8 +544,8 @@ class RunConfigMeasurement:
             The weighted score. A positive value indicates this 
             RunConfig measurement is better than the other
         """
-        if (len(self._model_config_weights) != len(weighted_mcm_scores)):
-            assert len(self._model_config_weights) == len(weighted_mcm_scores)
+
+        assert len(self._model_config_weights) == len(weighted_mcm_scores)
 
         return sum([
             weighted_mcm_score * model_config_weight
