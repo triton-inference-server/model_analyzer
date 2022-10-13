@@ -82,46 +82,6 @@ class ConfigModelAnalysisSpec:
 
         return self._model_name
 
-    def set_objectives(self, objectives):
-        """
-        Parameters
-        -------
-        objectives : dict or None
-            A list containing the objectives
-        """
-
-        self._objectives = objectives
-
-    def set_constraints(self, constraints):
-        """
-        Parameters
-        -------
-        constraints : dict or None
-            A dictionary containing the constraints
-        """
-
-        self._constraints = constraints
-
-    def set_weighting(self, weighting: int) -> None:
-        """
-        Parameters
-        -------
-        weighting : int
-            Model weighting value
-        """
-
-        self._weighting = weighting
-
-    def set_model_name(self, model_name):
-        """
-        Parameters
-        -------
-        model_name : str
-            The model name used for this config.
-        """
-
-        self._model_name = model_name
-
     @staticmethod
     def model_object_to_config_model_analysis_spec(value):
         """
