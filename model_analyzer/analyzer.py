@@ -20,9 +20,6 @@ from .result.result_manager import ResultManager
 from .result.result_table_manager import ResultTableManager
 from .record.metrics_manager import MetricsManager
 from .reports.report_manager import ReportManager
-
-from .config.input.config_command_analyze \
-    import ConfigCommandAnalyze
 from .config.input.config_command_report \
     import ConfigCommandReport
 from .config.input.config_command_profile \
@@ -116,49 +113,6 @@ class Analyzer:
             self._create_summary_tables(verbose)
             self._create_summary_reports(mode)
             logger.info(self._get_report_command_help_string())
-
-    def analyze(self, mode: str, verbose: bool) -> None:
-        """
-        subcommand: ANALYZE
-
-        Constructs results from measurements,
-        sorts them, and dumps them to tables.
-
-        Parameters
-        ----------
-        mode : str
-            Global mode that the analyzer is running on
-        """
-
-        if not isinstance(self._config, ConfigCommandAnalyze):
-            raise TritonModelAnalyzerException(
-                f"Expected config of type {ConfigCommandAnalyze}, got {type(self._config)}."
-            )
-
-        gpu_info = self._state_manager.get_state_variable('MetricsManager.gpus')
-        if not gpu_info:
-            gpu_info = {}
-        self._report_manager = ReportManager(
-            mode=mode,
-            config=self._config,
-            gpu_info=gpu_info,
-            result_manager=self._result_manager)
-        self._result_table_manager = ResultTableManager(self._config,
-                                                        self._result_manager)
-
-        # Create result tables, put top results and get stats
-        self._report_manager.create_summaries()
-        self._report_manager.export_summaries()
-
-        # Dump to tables and write to disk
-        self._result_table_manager.create_tables()
-        self._result_table_manager.tabulate_results()
-        self._result_table_manager.export_results()
-        if verbose:
-            self._result_table_manager.write_results()
-
-        logger.info("")
-        logger.info(self._get_report_command_help_string())
 
     def report(self, mode: str) -> None:
         """
@@ -290,27 +244,6 @@ class Analyzer:
                 'ResultManager.results').
             get_list_of_model_config_measurement_tuples()
         ])
-
-    def _get_analyze_command_help_string(self):
-        return (f'To analyze the profile results and find the best '
-                f'configurations, run `{self._get_analyze_command_string()}`')
-
-    def _get_analyze_command_string(self):
-        profiled_model_list = self._state_manager.get_state_variable(
-            'ResultManager.results').get_list_of_models()
-
-        analyze_command_string = (f'model-analyzer analyze --analysis-models '
-                                  f'{",".join(profiled_model_list)}')
-
-        if self._config.config_file is not None:
-            analyze_command_string += (f' --config-file '
-                                       f'{self._config.config_file}')
-
-        if self._config.checkpoint_directory != DEFAULT_CHECKPOINT_DIRECTORY:
-            analyze_command_string += (f' --checkpoint-directory '
-                                       f'{self._config.checkpoint_directory}')
-
-        return analyze_command_string
 
     def _get_report_command_help_string(self):
         top_3_model_config_names = self._get_top_n_model_config_names(n=3)

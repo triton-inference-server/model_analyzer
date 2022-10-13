@@ -42,16 +42,16 @@ class TestConfigGenerator:
     def generate_config_summaries(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('-m',
-                            '--analysis-models',
+                            '--profile-models',
                             type=str,
                             required=True,
-                            help='The models to be analyzed')
+                            help='The models to be profiled')
 
         args = parser.parse_args()
-        analysis_models = args.analysis_models.split(',')
+        profile_models = args.profile_models.split(',')
 
         self.config = {'constraints': {'perf_latency_p99': {'max': 50}}}
-        self.config['analysis_models'] = analysis_models
+        self.config['profile_models'] = profile_models
 
         self.config['num_top_model_configs'] = 2
         with open('config-summaries.yml', 'w+') as f:

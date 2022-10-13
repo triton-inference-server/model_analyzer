@@ -87,14 +87,15 @@ class TestPlotManager(trc.TestResultCollector):
 
     def _create_single_model_result_manager(self):
         args = [
-            'model-analyzer', 'analyze', '-f', 'config.yml',
+            'model-analyzer', 'profile', '-f', 'config.yml',
             '--checkpoint-directory', f'{ROOT_DIR}/single-model-ckpt/',
-            '--export-path', f'{ROOT_DIR}/single-model-ckpt/'
+            '--export-path', f'{ROOT_DIR}/single-model-ckpt/',
+            '--model-repository', '.'
         ]
         yaml_str = ("""
-            analysis_models: add_sub
+            profile_models: add_sub
         """)
-        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
         state_manager = AnalyzerStateManager(config=config, server=None)
         state_manager.load_checkpoint(checkpoint_required=True)
 
@@ -105,14 +106,17 @@ class TestPlotManager(trc.TestResultCollector):
 
     def _create_multi_model_result_manager(self):
         args = [
-            'model-analyzer', 'analyze', '-f', 'config.yml',
+            'model-analyzer', 'profile', '-f', 'config.yml',
             '--checkpoint-directory', f'{ROOT_DIR}/multi-model-ckpt/',
-            '--export-path', f'{ROOT_DIR}/multi-model-ckpt/'
+            '--export-path', f'{ROOT_DIR}/multi-model-ckpt/',
+            '--model-repository', '.',
+            '--run-config-profile-models-concurrently-enable',
+            '--run-config-search-mode', 'quick'
         ]
         yaml_str = ("""
-            analysis_models: resnet50_libtorch,vgg19_libtorch
+            profile_models: resnet50_libtorch,vgg19_libtorch
         """)
-        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
         state_manager = AnalyzerStateManager(config=config, server=None)
         state_manager.load_checkpoint(checkpoint_required=True)
 

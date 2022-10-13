@@ -14,7 +14,6 @@
 
 from typing import Tuple, Union
 from tests.mocks.mock_config import MockConfig
-from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.cli.cli import CLI
@@ -46,7 +45,7 @@ def evaluate_mock_config(
     args: list,
     yaml_str: str,
     subcommand: str = 'analyze'
-) -> Union[ConfigCommandAnalyze, ConfigCommandProfile, ConfigCommandReport]:
+) -> Union[ConfigCommandProfile, ConfigCommandReport]:
     """
     Return a ConfigCommandReport/Analyze/Profile created from the fake CLI
     'args' list and fake config.yaml contents 'yaml_str'
@@ -57,8 +56,6 @@ def evaluate_mock_config(
 
     if subcommand == 'report':
         config = ConfigCommandReport()
-    elif subcommand == 'analyze':
-        config = ConfigCommandAnalyze()
     else:
         config = ConfigCommandProfile()
 
@@ -70,33 +67,36 @@ def evaluate_mock_config(
 
 
 def load_single_model_result_manager(
-) -> Tuple[ResultManager, ConfigCommandAnalyze]:
+) -> Tuple[ResultManager, ConfigCommandProfile]:
     """
     Return a ResultManager with the single model test checkpoint loaded, as well
-    as the ConfigCommandAnalyze used to fake the analyze step
+    as the ConfigCommandProfile used to fake the profile step
     """
     dir_path = f'{ROOT_DIR}/single-model-ckpt/'
-    yaml_str = "analysis_models: add_sub"
+    yaml_str = "profile_models: add_sub"
     return _load_result_manager_helper(dir_path, yaml_str)
 
 
 def load_multi_model_result_manager(
-) -> Tuple[ResultManager, ConfigCommandAnalyze]:
+) -> Tuple[ResultManager, ConfigCommandProfile]:
     """
     Return a ResultManager with the multi model test checkpoint loaded, as well
-    as the ConfigCommandAnalyze used to fake the analyze step
+    as the ConfigCommandProfile used to fake the profile step
     """
     dir_path = f'{ROOT_DIR}/multi-model-ckpt/'
-    yaml_str = "analysis_models: resnet50_libtorch,vgg19_libtorch"
+    yaml_str = "profile_models: resnet50_libtorch,vgg19_libtorch"
     return _load_result_manager_helper(dir_path, yaml_str)
 
 
 def _load_result_manager_helper(dir_path: str, yaml_str: str):
     args = [
-        'model-analyzer', 'analyze', '-f', 'config.yml',
-        '--checkpoint-directory', dir_path, '--export-path', dir_path
+        'model-analyzer', 'profile', '-f', 'config.yml',
+        '--checkpoint-directory', dir_path, '--export-path', dir_path,
+        '--model-repository', '.',
+        '--run-config-profile-models-concurrently-enable',
+        '--run-config-search-mode', 'quick'
     ]
-    config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
+    config = evaluate_mock_config(args, yaml_str, subcommand="profile")
     state_manager = AnalyzerStateManager(config=config, server=None)
     state_manager.load_checkpoint(checkpoint_required=True)
 

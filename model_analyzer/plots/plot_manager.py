@@ -57,17 +57,11 @@ class PlotManager:
         """
         Constructs simple plots based on config specs
         """
-
-        #TODO: TMA-792: Until we get rid of analysis we need this
-        if not "profile_models" in self._config._fields:
-            self._config._fields["profile_models"] = self._config._fields[
-                "analysis_models"]
-
         # Constraints should be plotted as well
         self._constraints = ConstraintManager.get_constraints_for_all_models(
             self._config)
 
-        model_names = self._result_manager._analysis_model_names
+        model_names = self._result_manager._profile_model_names
 
         for plots_key in model_names:
             self._create_summary_plot_for_model(

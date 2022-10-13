@@ -27,7 +27,7 @@ class TestOutputValidator:
 
     def __init__(self, config, test_name, results_path):
         self._config = config
-        self._models = list(config['analysis_models'].keys())
+        self._models = list(config['profile_models'].keys())
         self._result_path = results_path
 
         check_function = self.__getattribute__(f'check_{test_name}')

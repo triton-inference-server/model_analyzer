@@ -51,7 +51,7 @@ RET=0
 set +e
 CONFIG_FILE='config-summaries.yml'
 TEST_NAME='summaries'
-MODEL_ANALYZER_SUBCOMMAND="analyze"
+MODEL_ANALYZER_SUBCOMMAND="profile"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -f $CONFIG_FILE"
 run_analyzer
 if [ $? -ne 0 ]; then

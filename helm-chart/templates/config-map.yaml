@@ -42,20 +42,6 @@ data:
           dynamic_batching:
 
     ######################
-    # Config for analyze #
-    ######################
-    
-    num_configs_per_model: 3
-
-    analysis_models: 
-      add_sub:
-        objectives:
-          perf_throughput: 10
-        constraints:
-          perf_latency:
-            max: 15
-
-    ######################
     # Config for report #
     ######################
 

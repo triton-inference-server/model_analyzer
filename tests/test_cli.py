@@ -31,7 +31,6 @@ from .common import test_result_collector as trc
 
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.config.input.config_status import ConfigStatus
 from model_analyzer.constants import CONFIG_PARSER_SUCCESS
@@ -91,10 +90,6 @@ def get_test_options():
         OptionStruct("int", "profile", "--latency-budget", None, "200", None),
         OptionStruct("int", "profile", "--min-throughput", None, "300", None),
 
-        OptionStruct("int", "analyze", "--num-configs-per-model", None, "10", "3"),
-        OptionStruct("int", "analyze", "--num-top-model-configs", None, "10", "0"),
-        OptionStruct("int", "analyze", "--latency-budget", None, "200", None),
-        OptionStruct("int", "analyze", "--min-throughput", None, "300", None),
         #String options
         # Options format:
         #   (string, MA step, long_flag, short_flag, test_value, expected_default_value, expected_failing_value, extra_commands)
@@ -124,12 +119,6 @@ def get_test_options():
         OptionStruct("string", "profile", "--filename-server-only", None, "foo", "metrics-server-only.csv", None),
         OptionStruct("string", "profile", "--config-file", "-f", "baz", None, None),
 
-        OptionStruct("string", "analyze", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
-        OptionStruct("string", "analyze", "--export-path", "-e", "./test_dir", os.getcwd(), None),
-        OptionStruct("string", "analyze", "--filename-model-inference", None, "foo", "metrics-model-inference.csv", None),
-        OptionStruct("string", "analyze", "--filename-model-gpu", None, "foo", "metrics-model-gpu.csv", None),
-        OptionStruct("string", "analyze", "--filename-server-only", None, "foo", "metrics-server-only.csv", None),
-        OptionStruct("string", "analyze", "--config-file", "-f", "baz", None, None),
         OptionStruct("string", "report", "--checkpoint-directory", "-s", "./test_dir", os.path.join(os.getcwd(), "checkpoints"), None),
         OptionStruct("string", "report", "--export-path", "-e", "./test_dir", os.getcwd(), None),
         OptionStruct("string", "report", "--config-file", "-f", "baz", None, None),
@@ -153,12 +142,6 @@ def get_test_options():
         OptionStruct("stringlist", "profile", "--server-output-fields", None, "a, b, c",
             "model_name,gpu_uuid,gpu_used_memory,gpu_utilization,gpu_power_usage"),
 
-        OptionStruct("stringlist", "analyze", "--inference-output-fields", None, "a, b, c",
-            "model_name,batch_size,concurrency,model_config_path,instance_group,max_batch_size,satisfies_constraints,perf_throughput,perf_latency_p99"),
-        OptionStruct("stringlist", "analyze", "--gpu-output-fields", None, "a, b, c",
-            "model_name,gpu_uuid,batch_size,concurrency,model_config_path,instance_group,satisfies_constraints,gpu_used_memory,gpu_utilization,gpu_power_usage"),
-        OptionStruct("stringlist", "analyze", "--server-output-fields", None, "a, b, c",
-            "model_name,gpu_uuid,gpu_used_memory,gpu_utilization,gpu_power_usage"),
         # No OP Options:
         # Option format:
         # (noop, any MA step, long_flag)
@@ -169,7 +152,6 @@ def get_test_options():
         OptionStruct("noop", "profile", "--model-repository"),
         OptionStruct("noop", "profile", "--profile-models"),
 
-        OptionStruct("noop", "analyze", "--analysis-models"),
         OptionStruct("noop", "report", "--report-model-configs"),
         OptionStruct("noop", "report", "--output-formats", "-o", ["pdf", "csv", "png"], "pdf", "SHOULD_FAIL"),
         OptionStruct("noop", "yaml_profile", "constraints"),
@@ -179,12 +161,7 @@ def get_test_options():
         OptionStruct("noop", "yaml_profile", "perf_analyzer_flags"),
         OptionStruct("noop", "yaml_profile", "triton_docker_labels"),
         OptionStruct("noop", "yaml_profile", "triton_server_environment"),
-        OptionStruct("noop", "yaml_profile", "plots"),
-
-        OptionStruct("noop", "yaml_analyze", "constraints"),
-        OptionStruct("noop", "yaml_analyze", "objectives"),
-        OptionStruct("noop", "yaml_analyze", "weighting"),
-        OptionStruct("noop", "yaml_analyze", "plots"),
+        OptionStruct("noop", "yaml_profile", "plots")
     ]
     #yapf: enable
     return options
@@ -234,31 +211,9 @@ class CLIConfigProfileStruct():
         return self.cli.parse(self.args)
 
 
-class CLIConfigAnalyzeStruct():
-    """
-    Struct class to hold the common variables shared between analyze tests
-    """
-
-    def __init__(self):
-        #yapf: disable
-        self.args = [
-            '/usr/local/bin/model-analyzer',
-            'analyze',
-            '--analysis-models',
-            'a,b,c'
-        ]
-        #yapf: enable
-        config_analyze = ConfigCommandAnalyze()
-        self.cli = CLISubclass()
-        self.cli.add_subcommand(cmd='analyze', help='', config=config_analyze)
-
-    def parse(self):
-        return self.cli.parse(self.args)
-
-
 class CLIConfigReportStruct():
     """
-    Struct class to hold the common variables shared between analyze tests
+    Struct class to hold the common variables shared between report tests
     """
 
     def __init__(self):
@@ -303,8 +258,6 @@ class OptionStruct():
 
         if stage == "profile":
             self.cli_subcommand = CLIConfigProfileStruct
-        elif stage == "analyze":
-            self.cli_subcommand = CLIConfigAnalyzeStruct
         elif stage == "report":
             self.cli_subcommand = CLIConfigReportStruct
 
@@ -314,8 +267,6 @@ class OptionStruct():
 @patch(
     'model_analyzer.config.input.config_command_profile.binary_path_validator',
     lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
-@patch('model_analyzer.config.input.config_command_analyze.file_path_validator',
-       lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
 @patch('model_analyzer.config.input.config_command_report.file_path_validator',
        lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
 class TestCLI(trc.TestResultCollector):
@@ -355,12 +306,6 @@ class TestCLI(trc.TestResultCollector):
         'model_analyzer.config.input.config_command_report.ConfigCommandReport._preprocess_and_verify_arguments',
         MagicMock())
     @patch(
-        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._load_config_file',
-        MagicMock())
-    @patch(
-        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._preprocess_and_verify_arguments',
-        MagicMock())
-    @patch(
         'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments',
         MagicMock())
     @patch(
@@ -397,10 +342,7 @@ class TestCLI(trc.TestResultCollector):
         cli_option_set = set()
 
         # Get all of the options in the CLI Configs
-        structs = [
-            CLIConfigProfileStruct, CLIConfigAnalyzeStruct,
-            CLIConfigReportStruct
-        ]
+        structs = [CLIConfigProfileStruct, CLIConfigReportStruct]
         for struct in structs:
             cli = struct()
             _, config = cli.parse()

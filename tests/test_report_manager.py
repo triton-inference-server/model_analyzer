@@ -51,8 +51,6 @@ class TestReportManagerMethods(trc.TestResultCollector):
         if subcommand == 'profile':
             args.extend(["--profile-models", models])
             args.extend(["--model-repository", "/tmp"])
-        elif subcommand == 'analyze':
-            args.extend(["--analysis-models", models])
         else:
             args.extend(["--report-model-configs", models])
 
@@ -134,7 +132,6 @@ class TestReportManagerMethods(trc.TestResultCollector):
             "model_analyzer.state.analyzer_state_manager",
             "model_analyzer.config.input.config_utils",
             "model_analyzer.config.input.config_command_profile",
-            "model_analyzer.config.input.config_command_analyze",
             "model_analyzer.config.input.config_command_report"
         ])
         self.os_mock.start()

@@ -62,11 +62,7 @@ DEFAULT_PERF_OUTPUT_FLAG = False
 DEFAULT_PERF_MAX_AUTO_ADJUSTS = 10
 DEFAULT_MEASUREMENT_MODE = 'count_windows'
 
-#
-# Analyze Config defaults
-#
-
-DEFAULT_ONLINE_ANALYSIS_PLOTS = {
+DEFAULT_ONLINE_PLOTS = {
     'throughput_v_latency': {
         'title': 'Throughput vs. Latency',
         'x_axis': 'perf_latency_p99',
@@ -81,7 +77,7 @@ DEFAULT_ONLINE_ANALYSIS_PLOTS = {
     }
 }
 
-DEFAULT_OFFLINE_ANALYSIS_PLOTS = {
+DEFAULT_OFFLINE_PLOTS = {
     'through_v_batch_size': {
         'title': 'Throughput vs. Batch Size',
         'x_axis': 'batch_size',

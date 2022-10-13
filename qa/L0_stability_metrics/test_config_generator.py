@@ -57,15 +57,13 @@ class TestConfigGenerator:
         self.config['batch-size'] = 8
         self.config['profile_models'] = self.models
 
-        # Analyze config
         self.config['collect_cpu_metrics'] = True
         self.config['gpu_output_fields'] = [
             'model_name', 'batch_size', 'concurrency', 'gpu_used_memory',
             'gpu_utilization'
         ]
-        self.config['analysis_models'] = {}
         for model in self.models:
-            self.config['analysis_models'][model] = {
+            self.config['profile_models'][model] = {
                 'objectives': {
                     'perf_throughput': 10
                 }

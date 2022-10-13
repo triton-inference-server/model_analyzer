@@ -38,8 +38,6 @@ from model_analyzer.config.input.config_list_numeric import \
     ConfigListNumeric
 from model_analyzer.config.input.config_command_profile \
     import ConfigCommandProfile
-from model_analyzer.config.input.config_command_analyze \
-    import ConfigCommandAnalyze
 from model_analyzer.config.input.config_command_report \
     import ConfigCommandReport
 from model_analyzer.config.input.objects.config_model_profile_spec \
@@ -64,8 +62,6 @@ class TestConfig(trc.TestResultCollector):
 
         if subcommand == 'report':
             config = ConfigCommandReport()
-        elif subcommand == 'analyze':
-            config = ConfigCommandAnalyze()
         else:
             config = ConfigCommandProfile()
         cli = CLI()
@@ -85,8 +81,6 @@ class TestConfig(trc.TestResultCollector):
         mock_config.start()
         if subcommand == 'report':
             config = ConfigCommandReport()
-        elif subcommand == 'analyze':
-            config = ConfigCommandAnalyze()
         else:
             config = ConfigCommandProfile()
         cli = CLI()
@@ -1356,14 +1350,15 @@ profile_models:
             ('--min-throughput', 'min', 'perf_throughput')
         ]:
             args = [
-                'model-analyzer', 'analyze', '--analysis-models', 'test_model',
-                constraint_shorthand[0], '40'
+                'model-analyzer', 'profile', '--profile-models', 'test_model',
+                constraint_shorthand[0], '40', '--model-repository',
+                'cli_repository'
             ]
             # check that global and model specific constraints are filled
             yaml_content = ""
             config = self._evaluate_config(args,
                                            yaml_content,
-                                           subcommand='analyze')
+                                           subcommand='profile')
             self.assertDictEqual(
                 config.get_all_config()['constraints'],
                 {constraint_shorthand[2]: {
@@ -1371,18 +1366,19 @@ profile_models:
                  }})
 
             self.assertDictEqual(
-                config.get_all_config()['analysis_models'][0].constraints(),
+                config.get_all_config()['profile_models'][0].constraints(),
                 {constraint_shorthand[2]: {
                      constraint_shorthand[1]: 40
                  }})
 
             # check that model specific constraints are appended to
             args = [
-                'model-analyzer', 'analyze', constraint_shorthand[0], '40',
-                '-f', 'path-to-config-file'
+                'model-analyzer', 'profile', constraint_shorthand[0], '40',
+                '-f', 'path-to-config-file', '--model-repository',
+                'cli_repository'
             ]
             yaml_content = """
-            analysis_models:
+            profile_models:
                 test_model:
                     constraints:
                         gpu_used_memory:
@@ -1390,14 +1386,14 @@ profile_models:
             """
             config = self._evaluate_config(args,
                                            yaml_content,
-                                           subcommand='analyze')
+                                           subcommand='profile')
             self.assertDictEqual(
                 config.get_all_config()['constraints'],
                 {constraint_shorthand[2]: {
                      constraint_shorthand[1]: 40
                  }})
             self.assertDictEqual(
-                config.get_all_config()['analysis_models'][0].constraints(), {
+                config.get_all_config()['profile_models'][0].constraints(), {
                     constraint_shorthand[2]: {
                         constraint_shorthand[1]: 40
                     },
@@ -1408,7 +1404,7 @@ profile_models:
 
             # check that model specific constraints are replaced
             yaml_content = f"""
-            analysis_models:
+            profile_models:
                 test_model:
                     constraints:
                         {constraint_shorthand[2]}:
@@ -1416,16 +1412,16 @@ profile_models:
             """
             config = self._evaluate_config(args,
                                            yaml_content,
-                                           subcommand='analyze')
+                                           subcommand='profile')
             self.assertDictEqual(
-                config.get_all_config()['analysis_models'][0].constraints(),
+                config.get_all_config()['profile_models'][0].constraints(),
                 {constraint_shorthand[2]: {
                      constraint_shorthand[1]: 40
                  }})
 
             # check that global constraints are appended to
             yaml_content = """
-            analysis_models: test_model
+            profile_models: test_model
             constraints:
                 gpu_used_memory:
                     max : 100
@@ -1433,7 +1429,7 @@ profile_models:
 
             config = self._evaluate_config(args,
                                            yaml_content,
-                                           subcommand='analyze')
+                                           subcommand='profile')
             self.assertDictEqual(
                 config.get_all_config()['constraints'], {
                     constraint_shorthand[2]: {
@@ -1446,14 +1442,14 @@ profile_models:
 
             # check that global constraints are replaced
             yaml_content = f"""
-            analysis_models: test_model
+            profile_models: test_model
             constraints:
                 {constraint_shorthand[2]}:
                     {constraint_shorthand[1]} : 100
             """
             config = self._evaluate_config(args,
                                            yaml_content,
-                                           subcommand='analyze')
+                                           subcommand='profile')
             self.assertDictEqual(
                 config.get_all_config()['constraints'],
                 {constraint_shorthand[2]: {
@@ -1699,19 +1695,22 @@ profile_models:
             self._evaluate_config(args, yaml_content, subcommand='profile')
         self.mock_os.set_os_path_exists_return_value(True)
 
-        args = ['model-analyzer', 'analyze', '-f', 'path-to-config-file']
+        args = [
+            'model-analyzer', 'profile', '-f', 'path-to-config-file',
+            '--model-repository', 'cli_repository'
+        ]
         yaml_content = """
         export_path: /opt/triton-model-analyzer/tests
-        analysis_models:
+        profile_models:
             - model1
             - model2
         """
 
-        self._evaluate_config(args, yaml_content, subcommand='analyze')
+        self._evaluate_config(args, yaml_content, subcommand='profile')
 
         self.mock_os.set_os_path_exists_return_value(False)
         with self.assertRaises(TritonModelAnalyzerException):
-            self._evaluate_config(args, yaml_content, subcommand='analyze')
+            self._evaluate_config(args, yaml_content, subcommand='profile')
         self.mock_os.set_os_path_exists_return_value(True)
 
         # Test the binary path validator
@@ -1907,43 +1906,6 @@ profile_models:
         """
 
         self._evaluate_config(args, yaml_content, subcommand='profile')
-
-    def test_model_weightings_analyze(self):
-        """
-        Test that weightings can be specified only per model in the YAML
-        """
-        args = ['model-analzyer', 'analyze', '-f', 'path-to-config-file']
-
-        # Global weighting - illegal
-        yaml_content = """
-        weighting: 3
-
-        analysis_models:
-          resnet50_libtorch:
-            objectives:
-              perf_latency_p99: 1
-          add_sub:
-            objectives:
-              perf_throughput: 1
-        """
-
-        with self.assertRaises(TritonModelAnalyzerException):
-            self._evaluate_config(args, yaml_content, subcommand='analyze')
-
-        # Model specific weighting - legal
-        yaml_content = """
-        analysis_models:
-          resnet50_libtorch:
-            weighting: 3
-            objectives:
-              perf_latency_p99: 1
-          add_sub:
-            weighting: 1
-            objectives:
-              perf_throughput: 1
-        """
-
-        self._evaluate_config(args, yaml_content, subcommand='analyze')
 
     def _test_quick_search_with_rcs(self,
                                     args: Namespace,

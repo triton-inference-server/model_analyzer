@@ -16,7 +16,7 @@ limitations under the License.
 
 # Quick Start
 
-The steps below will guide you through using Model Analyzer in Docker mode to analyze a simple PyTorch model: add_sub.
+The steps below will guide you through using Model Analyzer in Docker mode to profile and analyze a simple PyTorch model: add_sub.
 
 ## `Step 1:` Download the add_sub model
 
@@ -84,7 +84,7 @@ model-analyzer profile \
     --model-repository <path-to-examples-quick-start> \
     --profile-models add_sub --triton-launch-mode=docker \
     --output-model-repository-path <path-to-output-model-repo>/<output_dir>
-    --export-path analysis_results
+    --export-path profile_results
 ```
 
 **Important:** You must specify an `<output_dir>` subdirectory. You cannot have `--output-model-repository-path` point directly to `<path-to-output-model-repo>`
@@ -115,12 +115,12 @@ configuration:
 With these options, model analyzer will test 5 configs (4 new configs as well as the unmodified default add_sub config), and each config will have 2 experiments run on Perf Analyzer (concurrency=1 and concurrency=2). This significantly reduces the search space, and therefore, model analyzer's runtime.
 
 The measured data and summary report will be placed inside the
-`./analysis_results` directory. The directory will be structured as follows.
+`./profile_results` directory. The directory will be structured as follows.
 
 ```
 $HOME
   |--- model_analyzer
-              |--- analysis_results
+              |--- profile_results
               .       |--- plots
               .       |      |--- simple
               .       |      |      |--- add_sub
@@ -157,17 +157,17 @@ detailed report for the two `add_sub` model configs `add_sub_config_default` and
 `add_sub_config_0` using:
 
 ```
-$ model-analyzer report --report-model-configs add_sub_config_default,add_sub_config_0 -e analysis_results
+$ model-analyzer report --report-model-configs add_sub_config_default,add_sub_config_0 -e profile_results
 ```
 
 This will create directories named after each of the model configs under
-`./analysis_results/reports/detailed` containing the detailed report PDF files as
+`./profile_results/reports/detailed` containing the detailed report PDF files as
 shown below.
 
 ```
 $HOME
   |--- model_analyzer
-              |--- analysis_results
+              |--- profile_results
               .       .
               .       .
                       .

@@ -25,7 +25,6 @@ from .run_config_result import RunConfigResult
 from .results import Results
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
 from collections import defaultdict
@@ -255,101 +254,83 @@ class ResultManager:
         # The Report subcommand can init, but nothing needs to be done
         if isinstance(self._config, ConfigCommandProfile):
             self._complete_profile_setup()
-        elif isinstance(self._config, ConfigCommandAnalyze):
-            self._complete_analyze_setup()
         elif isinstance(self._config, ConfigCommandReport):
             pass
         else:
             raise TritonModelAnalyzerException(
-                f"Expected config of type ConfigCommandProfile/ConfigCommandAnalyze/ConfigCommandReport,"
+                f"Expected config of type ConfigCommandProfile/ConfigCommandReport,"
                 f" got {type(self._config)}.")
 
     def _complete_profile_setup(self):
-        #TODO: TMA-792: Until we get rid of analysis we need this
-        self._config._fields["analysis_models"] = self._config._fields[
-            "profile_models"]
-
-        self._create_concurrent_analysis_model_name()
+        self._create_concurrent_profile_model_name()
 
         if self._config.run_config_profile_models_concurrently_enable:
-            self._setup_for_concurrent_analysis()
+            self._setup_for_concurrent_profile()
         else:
-            self._setup_for_sequential_analysis()
+            self._setup_for_sequential_profile()
 
         self._add_results_to_heaps(suppress_warnings=True)
 
-    def _complete_analyze_setup(self):
-        self._create_concurrent_analysis_model_name()
-
-        if self._analyzing_models_concurrently():
-            self._setup_for_concurrent_analysis()
-        else:
-            self._setup_for_sequential_analysis()
-
-        self._check_for_models_in_checkpoint()
-        self._add_results_to_heaps(suppress_warnings=False)
-
-    def _create_concurrent_analysis_model_name(self):
-        analysis_model_names = [
-            model.model_name() for model in self._config.analysis_models
+    def _create_concurrent_profile_model_name(self):
+        profile_model_names = [
+            model.model_name() for model in self._config.profile_models
         ]
 
-        self._concurrent_analysis_model_name = ','.join(analysis_model_names)
+        self._concurrent_profile_model_name = ','.join(profile_model_names)
 
-    def _analyzing_models_concurrently(self):
+    def _profiling_models_concurrently(self):
         """
         Returns
         -------
-        bool: True if we are doing concurrent model analysis
+        bool: True if we are doing concurrent model profile
         """
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
         return bool(
             results.get_model_measurements_dict(
-                models_name=self._concurrent_analysis_model_name,
-                suppress_warning=True) and
-            len(self._config.analysis_models) > 1)
+                models_name=self._concurrent_profile_model_name,
+                suppress_warning=True) and len(self._config.profile_models) > 1)
 
-    def _setup_for_concurrent_analysis(self):
-        self._analysis_model_names = [self._concurrent_analysis_model_name]
+    def _setup_for_concurrent_profile(self):
+        self._profile_model_names = [self._concurrent_profile_model_name]
 
         model_objectives_list = [
-            model.objectives() for model in self._config.analysis_models
+            model.objectives() for model in self._config.profile_models
         ]
         model_constraints_list = [
-            model.constraints() for model in self._config.analysis_models
+            model.constraints() for model in self._config.profile_models
         ]
         model_weighting_list = [
-            model.weighting() for model in self._config.analysis_models
+            model.weighting() for model in self._config.profile_models
         ]
 
         self._run_comparators = {
-            self._concurrent_analysis_model_name:
+            self._concurrent_profile_model_name:
                 RunConfigResultComparator(
                     metric_objectives_list=model_objectives_list,
                     model_weights=model_weighting_list)
         }
 
         self._run_constraints = {
-            self._concurrent_analysis_model_name: model_constraints_list
+            self._concurrent_profile_model_name: model_constraints_list
         }
 
-    def _setup_for_sequential_analysis(self):
-        self._analysis_model_names = [
-            model.model_name() for model in self._config.analysis_models
+    def _setup_for_sequential_profile(self):
+        self._profile_model_names = [
+            model.model_name() for model in self._config.profile_models
         ]
 
         self._run_comparators = {
             model.model_name(): RunConfigResultComparator(
                 metric_objectives_list=[model.objectives()],
                 model_weights=[model.weighting()])
-            for model in self._config.analysis_models
+            for model in self._config.profile_models
         }
 
         self._run_constraints = {
             model.model_name(): model.constraints()
-            for model in self._config.analysis_models
+            for model in self._config.profile_models
         }
 
     def _add_rcm_to_results(self, run_config, run_config_measurement):
@@ -375,16 +356,6 @@ class ResultManager:
         self._state_manager.set_state_variable(name='ResultManager.results',
                                                value=results)
 
-    def _check_for_models_in_checkpoint(self):
-        results = self._state_manager.get_state_variable(
-            'ResultManager.results')
-
-        for model_name in self._analysis_model_names:
-            if not results.get_model_measurements_dict(model_name):
-                raise TritonModelAnalyzerException(
-                    f"The model {model_name} was not found in the loaded checkpoint."
-                )
-
     def _add_results_to_heaps(self, suppress_warnings=False):
         """
         Construct and add results to individual result heaps 
@@ -393,7 +364,7 @@ class ResultManager:
         results = self._state_manager.get_state_variable(
             'ResultManager.results')
 
-        for model_name in self._analysis_model_names:
+        for model_name in self._profile_model_names:
             model_measurements = results.get_model_measurements_dict(
                 model_name, suppress_warnings)
 

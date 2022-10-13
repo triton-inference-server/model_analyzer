@@ -158,9 +158,9 @@ class TestResultManager(trc.TestResultCollector):
     def _add_a_fake_result(self, result_manager):
         fake_model = MagicMock()
         fake_model.model_name.return_value = "FakeModel"
-        old_analysis_models = result_manager._config.analysis_models
-        old_analysis_models.append(fake_model)
-        result_manager._config.analysis_models = old_analysis_models
+        old_profile_models = result_manager._config.profile_models
+        old_profile_models.append(fake_model)
+        result_manager._config.profile_models = old_profile_models
         result_manager._run_comparators[
             'FakeModel'] = result_manager._run_comparators['add_sub']
         result_manager._run_constraints[
