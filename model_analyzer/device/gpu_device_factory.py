@@ -19,6 +19,7 @@ import model_analyzer.monitor.dcgm.dcgm_structs as structs
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 import numba.cuda
+import subprocess
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -223,19 +224,30 @@ class GPUDeviceFactory:
             UUIDs of the DCGM supported devices visible to CUDA
         """
 
-        cuda_visible_gpus = []
-        if numba.cuda.is_available():
-            for cuda_device in numba.cuda.list_devices():
-                try:
-                    cuda_visible_gpus.append(
-                        self.get_device_by_cuda_index(cuda_device.id))
-                except TritonModelAnalyzerException:
-                    # Device not supported by DCGM, log warning
-                    logger.warning(
-                        f"Device '{str(cuda_device.name, encoding='ascii')}' with "
-                        f"cuda device id {cuda_device.id} is not supported by DCGM."
-                    )
-        return cuda_visible_gpus
+        smi_strings = subprocess.run(
+            ['nvidia-smi', '-L'],
+            stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')[:-1]
+
+        # The SMI strings format is:
+        # ["GPU 0: NVIDIA TITAN RTX (UUID: GPU-8557549f-9c89-4384-8bd6-1fd823c342e0)",
+        #  "GPU 1: NVIDIA TITAN RTX (UUID: GPU-8557549f-9c89-4384-8bd6-1fd823c342e1)",
+        # ...]
+        gpu_devices = []
+        for smi_string in smi_strings:
+            gpu_string = smi_string.split(':')
+            gpu_id = gpu_string[0].split(' ')[1]
+            gpu_name = gpu_string[1].split('(')[0][1:-1]
+            gpu_uuid = gpu_string[2][1:-1]
+
+            gpu_devices.append(
+                GPUDevice(
+                    device_name=gpu_name,
+                    device_id=int(gpu_id),
+                    pci_bus_id=
+                    '',  # FIXME: PCI bus ID isn't needed and will be removed when DCGM is removed
+                    device_uuid=gpu_uuid))
+
+        return gpu_devices
 
     def _log_gpus_used(self, gpus):
         """
