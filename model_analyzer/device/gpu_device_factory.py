@@ -224,9 +224,13 @@ class GPUDeviceFactory:
             UUIDs of the DCGM supported devices visible to CUDA
         """
 
-        smi_strings = subprocess.run(
-            ['nvidia-smi', '-L'],
-            stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')[:-1]
+        try:
+            smi_strings = subprocess.run(
+                ['nvidia-sim', '-L'],
+                stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')[:-1]
+        except OSError:
+            logger.warning("nvidia-smi not found")
+            return []
 
         # The SMI strings format is:
         # ["GPU 0: NVIDIA TITAN RTX (UUID: GPU-8557549f-9c89-4384-8bd6-1fd823c342e0)",
