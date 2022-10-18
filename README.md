@@ -55,10 +55,13 @@ Triton Inference Server.
   example, you can specify a latency budget to filter out model configurations
   that do not satisfy the specified latency threshold.
 
+## Examples and Tutorials
+
+See our [Quick Start](docs/quick_start.md) for a guide of how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
+
 ## Documentation
 
 - [Installation](docs/install.md)
-- [Quick Start](docs/quick_start.md)
 - [Model Analyzer CLI](docs/cli.md)
 - [Launch Modes](docs/launch_modes.md)
 - [Configuring Model Analyzer](docs/config.md)
