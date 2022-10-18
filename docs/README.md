@@ -37,7 +37,8 @@ See our [Installation Guide](install.md) for details on how to install Model Ana
 
 ## **Getting Started**
 
-Our [Quick Start Guide](quick_start.md) will show you how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
+- Our [Quick Start Guide](quick_start.md) will show you how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
+- Watch the [Optimizing Triton Deployments](https://www.youtube.com/watch?v=UU9Rh00yZMY) video for a step-by-step guide of how the optimal configuration for a BERT model can be found.
 
 ## **User Guide**
 
