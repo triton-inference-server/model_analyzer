@@ -159,6 +159,9 @@ def get_cli_and_config_options():
             help=
             'Run model inference profiling based on specified CLI or config options.',
             config=config_profile)
+        cli.add_subcommand(cmd='analyze',
+                           help='DEPRECATED: Please use profile subcommand.',
+                           config=config_profile)
         cli.add_subcommand(cmd='report',
                            help='Generate detailed reports for a single config',
                            config=config_report)
@@ -235,7 +238,7 @@ def main():
     server = None
     try:
         # Make calls to correct analyzer subcommand functions
-        if args.subcommand == 'profile':
+        if args.subcommand == 'profile' or args.subcommand == 'analyze':
 
             # Set up devices
             gpus = GPUDeviceFactory().verify_requested_gpus(config.gpus)
@@ -258,14 +261,6 @@ def main():
                              gpus=gpus,
                              mode=args.mode,
                              verbose=args.verbose)
-
-        elif args.subcommand == 'analyze':
-            analyzer = Analyzer(config,
-                                server,
-                                AnalyzerStateManager(config=config,
-                                                     server=server),
-                                checkpoint_required=True)
-            analyzer.analyze(mode=args.mode, verbose=args.verbose)
         elif args.subcommand == 'report':
 
             analyzer = Analyzer(config,
