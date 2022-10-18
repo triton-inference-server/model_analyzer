@@ -18,6 +18,8 @@ import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
 import model_analyzer.monitor.dcgm.dcgm_structs as structs
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
+from pynvml import *
+
 import numba.cuda
 import subprocess
 import logging
@@ -224,32 +226,25 @@ class GPUDeviceFactory:
             UUIDs of the DCGM supported devices visible to CUDA
         """
 
-        try:
-            smi_strings = subprocess.run(
-                ['nvidia-sim', '-L'],
-                stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')[:-1]
-        except OSError:
-            logger.warning("nvidia-smi not found")
-            return []
+        nvmlInit()
 
-        # The SMI strings format is:
-        # ["GPU 0: NVIDIA TITAN RTX (UUID: GPU-8557549f-9c89-4384-8bd6-1fd823c342e0)",
-        #  "GPU 1: NVIDIA TITAN RTX (UUID: GPU-8557549f-9c89-4384-8bd6-1fd823c342e1)",
-        # ...]
         gpu_devices = []
-        for smi_string in smi_strings:
-            gpu_string = smi_string.split(':')
-            gpu_id = gpu_string[0].split(' ')[1]
-            gpu_name = gpu_string[1].split('(')[0][1:-1]
-            gpu_uuid = gpu_string[2][1:-1]
+        try:
+            devices = nvmlDeviceGetCount()
+            for device_id in range(devices):
+                gpu_handle = nvmlDeviceGetHandleByIndex(device_id)
+                uuid = nvmlDeviceGetUUID(handle=gpu_handle).decode('utf-8')
+                name = nvmlDeviceGetName(handle=gpu_handle).decode('utf-8')
 
-            gpu_devices.append(
-                GPUDevice(
-                    device_name=gpu_name,
-                    device_id=int(gpu_id),
-                    pci_bus_id=
-                    '',  # FIXME: PCI bus ID isn't needed and will be removed when DCGM is removed
-                    device_uuid=gpu_uuid))
+                gpu_devices.append(
+                    GPUDevice(
+                        device_name=name,
+                        device_id=device_id,
+                        pci_bus_id=
+                        '',  # FIXME: PCI bus ID isn't needed and will be removed when DCGM is removed
+                        device_uuid=uuid))
+        except NVMLError as error:
+            raise TritonModelAnalyzerException(f"NVML error: {error}")
 
         return gpu_devices
 
