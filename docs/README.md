@@ -26,18 +26,18 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 
-# **Triton Inference Server Documentation**
+# **Model Analyzer Documentation**
 
 | [Installation](README.md#installation) | [Getting Started](README.md#getting-started) | [User Guide](README.md#user-guide) | [Additional Resources](README.md#resources) |
 | -------------------------------------- | -------------------------------------------- | ---------------------------------- | ------------------------------------------- |
 
 ## **Installation**
 
-See our [Installation Guide](install.md) for details on how to install Model Analyzer.
+See the [Installation Guide](install.md) for details on how to install Model Analyzer.
 
 ## **Getting Started**
 
-- Our [Quick Start Guide](quick_start.md) will show you how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
+- The [Quick Start Guide](quick_start.md) will show you how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
 - Watch the [Optimizing Triton Deployments](https://www.youtube.com/watch?v=UU9Rh00yZMY) video for a step-by-step guide of how the optimal configuration for a BERT model can be found.
 
 ## **User Guide**
@@ -57,4 +57,4 @@ The User Guide describes how to configure Model Analyzer, choose launch and sear
 
 The following resources are recommended:
 
-- [Perf Analyzer](user_guide/perf_analyzer.md): Perf Analyzer is a CLI application built to generate inference requests and measures the latency of those requests and throughput of the model being served.
+- [Perf Analyzer](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/perf_analyzer.md): Perf Analyzer is a CLI application built to generate inference requests and measures the latency of those requests and throughput of the model being served.
