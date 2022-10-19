@@ -18,7 +18,10 @@ import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
 import model_analyzer.monitor.dcgm.dcgm_structs as structs
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
+import os
 from pynvml import *
+
+from typing import List
 
 import numba.cuda
 import logging
@@ -228,10 +231,22 @@ class GPUDeviceFactory:
         nvmlInit()
 
         gpu_devices = []
+        cuda_id_map = []
+        cuda_visiable_devices_set = "CUDA_VISIBLE_DEVICES" in os.environ
         try:
+            if cuda_visiable_devices_set:
+                cuda_id_map = list(
+                    map(int,
+                        os.environ.get("CUDA_VISIBLE_DEVICES", "").split(",")))
+
             devices = nvmlDeviceGetCount()
             for device_id in range(devices):
-                gpu_handle = nvmlDeviceGetHandleByIndex(device_id)
+                if cuda_visiable_devices_set and device_id not in ids:
+                    continue
+
+                id = self._get_cuda_device_id(cuda_visiable_devices_set,
+                                              cuda_id_map, device_id)
+                gpu_handle = nvmlDeviceGetHandleByIndex(id)
                 uuid = nvmlDeviceGetUUID(handle=gpu_handle).decode('utf-8')
                 name = nvmlDeviceGetName(handle=gpu_handle).decode('utf-8')
 
@@ -247,6 +262,13 @@ class GPUDeviceFactory:
             return []
 
         return gpu_devices
+
+    def _get_cuda_device_id(self, cuda_visible_devices_set: bool,
+                            cuda_id_map: List[int], device_id: int) -> int:
+        if cuda_visible_devices_set:
+            return cuda_id_map[device_id]
+        else:
+            return device_id
 
     def _log_gpus_used(self, gpus):
         """
