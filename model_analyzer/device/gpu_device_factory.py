@@ -21,7 +21,6 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 from pynvml import *
 
 import numba.cuda
-import subprocess
 import logging
 
 logger = logging.getLogger(LOGGER_NAME)
