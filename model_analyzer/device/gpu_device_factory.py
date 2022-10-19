@@ -243,8 +243,9 @@ class GPUDeviceFactory:
                         pci_bus_id=
                         '',  # FIXME: TMA-958: PCI bus ID isn't needed and will be removed when DCGM is removed
                         device_uuid=uuid))
-        except NVMLError as error:
-            raise TritonModelAnalyzerException(f"NVML error: {error}")
+        except NVMLError:
+            # This can happen if running on a machine without a GPU (CPU_ONLY)
+            return []
 
         return gpu_devices
 
