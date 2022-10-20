@@ -159,9 +159,11 @@ def get_cli_and_config_options():
             help=
             'Run model inference profiling based on specified CLI or config options.',
             config=config_profile)
-        cli.add_subcommand(cmd='analyze',
-                           help='DEPRECATED: Please use profile subcommand.',
-                           config=config_profile)
+        cli.add_subcommand(
+            cmd='analyze',
+            help=
+            'DEPRECATED: Aliased to profile - please use profile subcommand.',
+            config=config_profile)
         cli.add_subcommand(cmd='report',
                            help='Generate detailed reports for a single config',
                            config=config_report)

@@ -50,7 +50,7 @@ in offline mode, the best model configuration will be the one that maximizes thr
 A minimum throughput can be specified to the [profile subcommand](#subcommand-profile)
 via `--min-throughput` to ignore any configuration that does not exceed a minimum number of inferences per second.
 
-In offline mode the report subcommands will generate reports specific to offline inference.
+In offline mode the profile and report subcommands will generate reports specific to offline inference.
 See the example [offline summary](../examples/offline_summary.pdf) and
 [offline detailed report](../examples/offline_detailed_report.pdf) examples.
 
