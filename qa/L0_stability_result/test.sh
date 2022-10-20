@@ -36,16 +36,16 @@ mkdir $EXPORT_PATH
 mkdir $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/stability_result_p9x.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
 # Generate test configs
-python3 test_config_generator.py --analysis-models $MODEL_NAMES
+python3 test_config_generator.py --profile-models $MODEL_NAMES
 
 # Set analyzer config options
 RET=0
 
 set +e
 
-MODEL_ANALYZER_ARGS="--analysis-models $MODEL_NAMES --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ARGS="--profile-models $MODEL_NAMES --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL -f $CONFIG_FILE"
-MODEL_ANALYZER_SUBCOMMAND="analyze"
+MODEL_ANALYZER_SUBCOMMAND="profile"
 
 # Run the analyzer and check the results
 for (( i=1; i<=$NUM_ITERATIONS; i++ )); do

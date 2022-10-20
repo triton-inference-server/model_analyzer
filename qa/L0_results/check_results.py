@@ -44,7 +44,7 @@ class TestOutputValidator:
         True if all exist, False otherwise
         """
 
-        for model in config['analysis_models']:
+        for model in config['profile_models']:
             if not os.path.exists(
                     os.path.join(self._export_path, 'reports', 'summaries',
                                  model, 'result_summary.pdf')):
@@ -52,15 +52,15 @@ class TestOutputValidator:
                 return False
 
         # First check for the best models report
-        analysis_models = set(config['analysis_models'])
+        profile_models = set(config['profile_models'])
         report_dirs = set(
             os.listdir(os.path.join(self._export_path, 'reports', 'summaries')))
-        if len(report_dirs - analysis_models) != 1:
+        if len(report_dirs - profile_models) != 1:
             print("\n***\n*** Top models summary not found.\n***")
             return False
 
         # Should be only 1 element in set difference
-        for dir in (report_dirs - analysis_models):
+        for dir in (report_dirs - profile_models):
             if not os.path.exists(
                     os.path.join(self._export_path, 'reports', 'summaries', dir,
                                  'result_summary.pdf')):

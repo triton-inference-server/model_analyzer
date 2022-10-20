@@ -93,35 +93,6 @@ class TestAnalyzer(trc.TestResultCollector):
         self.assertFalse(os.path.exists(os.path.join(path, "results")))
         self.assertFalse(os.path.exists(os.path.join(path, "reports")))
 
-    @patch(
-        'model_analyzer.state.analyzer_state_manager.AnalyzerStateManager.get_state_variable',
-        mock_get_state_variable)
-    @patch('model_analyzer.result.results.Results.get_list_of_models',
-           mock_get_list_of_models)
-    def test_get_analyze_command_help_string(self):
-        """
-        Tests that the member function returning the analyze command help string
-        works correctly.
-        """
-
-        args = [
-            'model-analyzer', 'profile', '--model-repository', '/tmp',
-            '--profile-models', 'model1', '--config-file', '/tmp/my_config.yml',
-            '--checkpoint-directory', '/tmp/my_checkpoints'
-        ]
-        config = evaluate_mock_config(args, '', subcommand="profile")
-        state_manager = AnalyzerStateManager(config, None)
-        analyzer = Analyzer(config,
-                            None,
-                            state_manager,
-                            checkpoint_required=False)
-        self.assertEqual(
-            analyzer._get_analyze_command_help_string(),
-            'To analyze the profile results and find the best configurations, '
-            'run `model-analyzer analyze --analysis-models model1 '
-            '--config-file /tmp/my_config.yml --checkpoint-directory '
-            '/tmp/my_checkpoints`')
-
     def mock_top_n_results(self,
                            model_name=None,
                            n=SortedResults.GET_ALL_RESULTS):
@@ -151,20 +122,14 @@ class TestAnalyzer(trc.TestResultCollector):
             RunConfigResult("fake_model_name", rc3, MagicMock())
         ]
 
-    def mock_check_for_models_in_checkpoint(self):
-        return True
-
     @patch(
-        'model_analyzer.config.input.config_command_analyze.file_path_validator',
+        'model_analyzer.config.input.config_command_profile.file_path_validator',
         lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
     @patch(
-        'model_analyzer.config.input.config_command_analyze.ConfigCommandAnalyze._preprocess_and_verify_arguments',
+        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments',
         lambda _: None)
     @patch('model_analyzer.result.result_manager.ResultManager.top_n_results',
            mock_top_n_results)
-    @patch(
-        'model_analyzer.result.result_manager.ResultManager._check_for_models_in_checkpoint',
-        mock_check_for_models_in_checkpoint)
     def test_get_report_command_help_string(self):
         """
         Tests that the member function returning the report command help string
@@ -172,11 +137,12 @@ class TestAnalyzer(trc.TestResultCollector):
         """
 
         args = [
-            'model-analyzer', 'analyze', '--analysis-models', 'model1',
+            'model-analyzer', 'profile', '--profile-models', 'model1',
             '--config-file', '/tmp/my_config.yml', '--checkpoint-directory',
-            '/tmp/my_checkpoints', '--export-path', '/tmp/my_export_path'
+            '/tmp/my_checkpoints', '--export-path', '/tmp/my_export_path',
+            '--model-repository', 'cli_repository'
         ]
-        config = evaluate_mock_config(args, '', subcommand="analyze")
+        config = evaluate_mock_config(args, '', subcommand="profile")
         state_manager = AnalyzerStateManager(config, None)
         analyzer = Analyzer(config,
                             None,

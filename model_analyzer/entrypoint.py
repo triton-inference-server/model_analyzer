@@ -21,7 +21,6 @@ from .triton.client.client_factory import TritonClientFactory
 from .triton.server.server_factory import TritonServerFactory
 from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
-from .config.input.config_command_analyze import ConfigCommandAnalyze
 from .config.input.config_command_report import ConfigCommandReport
 from .log_formatter import setup_logging
 import sys
@@ -152,7 +151,6 @@ def get_cli_and_config_options():
     # Parse CLI options
     try:
         config_profile = ConfigCommandProfile()
-        config_analyze = ConfigCommandAnalyze()
         config_report = ConfigCommandReport()
 
         cli = CLI()
@@ -164,8 +162,8 @@ def get_cli_and_config_options():
         cli.add_subcommand(
             cmd='analyze',
             help=
-            'Collect and sort profiling results and generate data and summaries.',
-            config=config_analyze)
+            'DEPRECATED: Aliased to profile - please use profile subcommand.',
+            config=config_profile)
         cli.add_subcommand(cmd='report',
                            help='Generate detailed reports for a single config',
                            config=config_report)
@@ -242,7 +240,12 @@ def main():
     server = None
     try:
         # Make calls to correct analyzer subcommand functions
-        if args.subcommand == 'profile':
+        if args.subcommand == 'profile' or args.subcommand == 'analyze':
+
+            if args.subcommand == 'profile' and not config.model_repository:
+                raise TritonModelAnalyzerException(
+                    "No model repository specified. Please specify it using the YAML config file or using the --model-repository flag in CLI."
+                )
 
             # Set up devices
             gpus = GPUDeviceFactory().verify_requested_gpus(config.gpus)
@@ -265,14 +268,6 @@ def main():
                              gpus=gpus,
                              mode=args.mode,
                              verbose=args.verbose)
-
-        elif args.subcommand == 'analyze':
-            analyzer = Analyzer(config,
-                                server,
-                                AnalyzerStateManager(config=config,
-                                                     server=server),
-                                checkpoint_required=True)
-            analyzer.analyze(mode=args.mode, verbose=args.verbose)
         elif args.subcommand == 'report':
 
             analyzer = Analyzer(config,

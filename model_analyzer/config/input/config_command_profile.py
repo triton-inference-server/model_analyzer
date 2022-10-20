@@ -43,7 +43,7 @@ from .config_defaults import \
     DEFAULT_EXPORT_PATH, DEFAULT_FILENAME_MODEL_INFERENCE, DEFAULT_FILENAME_MODEL_GPU, \
     DEFAULT_FILENAME_SERVER_ONLY, DEFAULT_NUM_CONFIGS_PER_MODEL, DEFAULT_NUM_TOP_MODEL_CONFIGS, \
     DEFAULT_INFERENCE_OUTPUT_FIELDS, DEFAULT_GPU_OUTPUT_FIELDS, DEFAULT_SERVER_OUTPUT_FIELDS, \
-    DEFAULT_ONLINE_OBJECTIVES, DEFAULT_ONLINE_ANALYSIS_PLOTS, DEFAULT_OFFLINE_ANALYSIS_PLOTS, DEFAULT_MODEL_WEIGHTING
+    DEFAULT_ONLINE_OBJECTIVES, DEFAULT_ONLINE_PLOTS, DEFAULT_OFFLINE_PLOTS, DEFAULT_MODEL_WEIGHTING
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.server.server_config import \
@@ -240,7 +240,7 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField('model_repository',
                         flags=['-m', '--model-repository'],
                         field_type=ConfigPrimitive(
-                            str, required=True, validator=file_path_validator),
+                            str, validator=file_path_validator),
                         description='Triton Model repository location'))
         self._add_config(
             ConfigField(
@@ -869,9 +869,9 @@ class ConfigCommandProfile(ConfigCommand):
         # able to edit these plots.
         self._add_plot_configs()
         if args.mode == 'online':
-            self._fields['plots'].set_value(DEFAULT_ONLINE_ANALYSIS_PLOTS)
+            self._fields['plots'].set_value(DEFAULT_ONLINE_PLOTS)
         elif args.mode == 'offline':
-            self._fields['plots'].set_value(DEFAULT_OFFLINE_ANALYSIS_PLOTS)
+            self._fields['plots'].set_value(DEFAULT_OFFLINE_PLOTS)
 
     def _add_plot_configs(self):
         """

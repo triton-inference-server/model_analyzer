@@ -42,7 +42,6 @@ class TestConfigGenerator:
 
     def generate_time_window_no_adjust(self):
         model_config = {
-            'analysis_models': ['vgg19_libtorch'],
             'profile_models': ['vgg19_libtorch'],
             'perf_analyzer_flags': {
                 'measurement-mode': 'time_windows',
@@ -54,7 +53,6 @@ class TestConfigGenerator:
 
     def generate_time_window_adjust(self):
         model_config = {
-            'analysis_models': ['vgg19_libtorch'],
             'profile_models': ['vgg19_libtorch'],
             'perf_output': True,
             'perf_analyzer_flags': {
@@ -67,7 +65,6 @@ class TestConfigGenerator:
 
     def generate_count_window_no_adjust(self):
         model_config = {
-            'analysis_models': ['vgg19_libtorch'],
             'profile_models': ['vgg19_libtorch'],
             'perf_analyzer_flags': {
                 'measurement-mode': 'count_windows',
@@ -79,7 +76,6 @@ class TestConfigGenerator:
 
     def generate_additive_args(self):
         model_config = {
-            'analysis_models': ['vgg19_libtorch'],
             'profile_models': ['vgg19_libtorch'],
             'perf_analyzer_flags': {
                 'measurement-mode': 'count_windows',

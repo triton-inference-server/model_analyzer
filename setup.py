@@ -75,7 +75,7 @@ setup(
     author='NVIDIA Inc.',
     author_email='sw-dl-triton@nvidia.com',
     description=
-    "Triton Model Analyzer is a tool to analyze the runtime performance of one or more models on the Triton Inference Server",
+    "Triton Model Analyzer is a tool to profile and analyze the runtime performance of one or more models on the Triton Inference Server",
     long_description=
     """See the Model Analyzer's [installation documentation](https://github.com/triton-inference-server/model_analyzer/blob/main/docs/install.md#using-pip3) """
     """for package details. The [quick start](https://github.com/triton-inference-server/model_analyzer/blob/main/docs/quick_start.md) documentation """

@@ -41,16 +41,16 @@ class TestConfigGenerator:
     def setup(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('-m',
-                            '--analysis-models',
+                            '--profile-models',
                             type=str,
                             required=True,
                             help='The models used for this test')
 
         self.args = parser.parse_args()
         self.config = {}
-        self.config['analysis_models'] = {}
-        for model in sorted(self.args.analysis_models.split(',')):
-            self.config['analysis_models'][model] = {
+        self.config['profile_models'] = {}
+        for model in sorted(self.args.profile_models.split(',')):
+            self.config['profile_models'][model] = {
                 'objectives': {
                     'perf_throughput': 10
                 }

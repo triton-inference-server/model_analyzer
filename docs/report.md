@@ -23,25 +23,23 @@ the best performing model configurations for each model.
 
 ## Summary Reports
 
-The most basic type of report is the *Summary Report* which the Model Analyzer's
-`analyze` subcommand generates by default for each model.
+The most basic type of report is the _Summary Report_ which the Model Analyzer's
+`profile` subcommand generates by default for each model.
 
 ```
-$ model-analyzer analyze --analysis-models <list of model names> --checkpoint-directory <path to checkpoints directory> -e <path to export directory> -f <path to optional config file>
+$ model-analyzer profile --profile-models <list of model names> --checkpoint-directory <path to checkpoints directory> -e <path to export directory> -f <path to optional config file>
 ```
 
 The export directory will, by default, contain 3 subdirectories. The summary
-report for a model will be located in `[export-path]/reports/summaries/<model
-name>`. The report will look like the one shown [*here*](../examples/online_summary.pdf).
+report for a model will be located in `[export-path]/reports/summaries/<model name>`. The report will look like the one shown [_here_](../examples/online_summary.pdf).
 
 To disable summary report generation use `--summarize=false` or set the
 `summarize` yaml option to `false`.
 
-
 ## Detailed Reports
 
-The second type of report is the *Detailed Report* which can be generated using
-the Model Analyzer's `report` subcommand. 
+The second type of report is the _Detailed Report_ which can be generated using
+the Model Analyzer's `report` subcommand.
 
 ```
 $ model-analyzer report --report-model-configs <list of model configs> --checkpoint-directory <path to checkpoints directory> -e <path to export directory> -f <path to optional config file>
@@ -54,8 +52,7 @@ particular model config with which the measurements are obtained, as well as
 extra configurable plots. The user can define the plots they would like to see
 in the detailed report using the YAML config file (See [**Configuring Model
 Analyzer**](./config.md) section for more details) The detailed report will
-look like the one shown [*here*](../examples/online_detailed_report.pdf).
-
+look like the one shown [_here_](../examples/online_detailed_report.pdf).
 
 See the [**configuring model
 analyzer**](./config.md) section for more details on how to configure these

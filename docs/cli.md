@@ -50,7 +50,7 @@ in offline mode, the best model configuration will be the one that maximizes thr
 A minimum throughput can be specified to the [profile subcommand](#subcommand-profile)
 via `--min-throughput` to ignore any configuration that does not exceed a minimum number of inferences per second.
 
-In offline mode the analyze and report subcommands will generate reports specific to offline inference.
+In offline mode the profile and report subcommands will generate reports specific to offline inference.
 See the example [offline summary](../examples/offline_summary.pdf) and
 [offline detailed report](../examples/offline_detailed_report.pdf) examples.
 
@@ -175,7 +175,7 @@ The contents of `config.yaml` are shown below.
 checkpoint_directory: ./checkpoints/
 export_path: ./export_directory/
 
-analysis_models:
+profile_models:
   resnet50_libtorch:
     objectives:
       - perf_throughput
@@ -193,73 +193,6 @@ analysis_models:
 **Note**: The checkpoint directory should be removed between consecutive runs of
 the `model-analyzer profile` command when you do not want to include the results
 from a previous profile.
-
-## Subcommand: `analyze`
-
-**Note: This subcommand has been deprecated and is slated for removal. This
-subcommand's functionality has been subsumed into the profile subcommand**
-
-The `analyze` subcommand allows the user to create summaries and data tables
-from the measurements taken using the `profile` subcommand. The YAML config file
-can be used to set constraints and objectives used to sort and filter the
-measurements, and order the model configs and models according to the metrics
-collected. Use the
-following command to see the usage and argument descriptions for the subcommand.
-
-```
-$ model-analyzer analyze -h
-```
-
-The `analyze` subcommand begins by loading the "latest" checkpoint available in
-the checkpoint directory. Next, it sorts the models specified in the CLI or
-config YAML, provided they contain measurements in the checkpoint, using the
-objectives specified in the config YAML. Finally, it constructs summary PDFs
-using the top model configs for each model, as well as across models, if
-requested (See the [Reports](./report.md) section for more details). The
-`analyze` subcommand can be run multiple times with different configurations if
-the user would like to sort and filter the results using different objectives or
-under different constraints.
-
-### Examples
-
-1. Create summary and results for model `resnet50_libtorch` from latest checkpoint in directory `checkpoints`.
-
-```
-$ model-analyzer analyze --analysis-models resnet50_libtorch --checkpoint-directory=checkpoints
-```
-
-2. Create summaries and results for models `resnet50_libtorch` and `vgg16_graphdef` from same checkpoint as above and export them to a directory called `export_directory`
-
-```
-$ model-analyzer analyze --analysis-models resnet50_libtorch,vgg16_graphdef -e export_directory --checkpoint-directory=checkpoints
-```
-
-3. Apply objectives and constraints to sort and filter results in summary plots and tables using yaml config file.
-
-```
-$ model-analyzer analyze -f /path/to/config.yaml
-```
-
-The contents of `config.yaml` are shown below.
-
-```yaml
-checkpoint_directory: ./checkpoints/
-export_path: ./export_directory/
-
-analysis_models:
-  resnet50_libtorch:
-    objectives:
-      - perf_throughput
-    constraints:
-      perf_latency_p99:
-        max: 15
-  vgg16_graphdef:
-    objectives:
-      - gpu_used_memory
-    constraints:
-      perf_latency_p99:
-        max: 15
-```
 
 ## Subcommand: `report`
 

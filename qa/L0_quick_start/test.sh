@@ -26,17 +26,12 @@ model-analyzer profile \
   --run-config-search-max-instance-count 2 ; \
   exit_early_if_nonzero $?
 
-mkdir analysis_results ; \
-  exit_early_if_nonzero $?
-
-model-analyzer analyze \
-  --analysis-models add_sub \
-  -e analysis_results ; \
+mkdir profile_results ; \
   exit_early_if_nonzero $?
 
 model-analyzer report \
   --report-model-configs add_sub_config_0,add_sub_config_1 \
-  -e analysis_results ; \
+  -e profile_results ; \
   exit_early_if_nonzero $?
 
 echo -e "\n***\n*** Test PASSED\n***"

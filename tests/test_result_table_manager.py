@@ -85,16 +85,16 @@ class TestResultTableManager(trc.TestResultCollector):
 
         rmtree(f"{ROOT_DIR}/multi-model-ckpt/results/")
 
-    @patch(
-        'model_analyzer.result.result_manager.ResultManager._check_for_models_in_checkpoint',
-        MagicMock(return_value=True))
     def test_create_inference_table_with_backend_parameters(self):
-        args = ['model-analyzer', 'analyze', '-f', 'config.yml']
+        args = [
+            'model-analyzer', 'profile', '-f', 'config.yml',
+            '--model-repository', '.'
+        ]
         yaml_str = ("""
-            analysis_models: analysis_models
+            profile_models: profile_models
             inference_output_fields: model_name,batch_size,backend_parameter/parameter_1,backend_parameter/parameter_2
         """)
-        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
         state_manager = AnalyzerStateManager(config=config, server=None)
         result_manager = ResultManager(config=config,
                                        state_manager=state_manager)
@@ -107,9 +107,6 @@ class TestResultTableManager(trc.TestResultCollector):
             'backend_parameter/parameter_2'
         ])
 
-    @patch(
-        'model_analyzer.result.result_manager.ResultManager._check_for_models_in_checkpoint',
-        MagicMock(return_value=True))
     def test_get_common_row_items_with_backend_parameters(self):
         """
         This tests that a metrics model inference table row can be created with
@@ -129,7 +126,7 @@ class TestResultTableManager(trc.TestResultCollector):
         Each row of the metrics model inference table corresponds to one model
         config variant.
 
-        It is possible for a user to run the analyze command with multiple
+        It is possible for a user to run the profile command with multiple
         models config variants from different models with potentially different
         backend parameters. This test includes backend parameters from two
         separate models, showing that for one particular row (for a 'model A'
@@ -149,12 +146,15 @@ class TestResultTableManager(trc.TestResultCollector):
         add_sub_2   add_sub_2_config_0  None                              None                              add_sub_2_value_1                   add_sub_2_value_2       
         """
 
-        args = ['model-analyzer', 'analyze', '-f', 'config.yml']
+        args = [
+            'model-analyzer', 'profile', '-f', 'config.yml',
+            '--model-repository', '.'
+        ]
         yaml_str = ("""
-            analysis_models: analysis_models
+            profile_models: profile_models
             inference_output_fields: model_name,batch_size,backend_parameter/model_1_key_1,backend_parameter/model_1_key_2,backend_parameter/model_2_key_1
         """)
-        config = evaluate_mock_config(args, yaml_str, subcommand="analyze")
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
         state_manager = AnalyzerStateManager(config=config, server=None)
         result_manager = ResultManager(config=config,
                                        state_manager=state_manager)

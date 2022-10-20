@@ -84,10 +84,10 @@ profile_models: <comma-delimited-string-list>
 # Export path to be used
 [ export_path: <string> | default: '.' ]
 
-# Concurrency values to be used for the analysis
+# Concurrency values to be used
 [ concurrency: <comma-delimited-string|list|range> ]
 
-# Batch size values to be used for the analysis
+# Batch size values to be used
 [ batch_sizes: <comma-delimited-string|list|range> | default: 1 ]
 
 # Specifies the maximum number of retries for any retry attempt.
@@ -189,7 +189,7 @@ profile_models: <comma-delimited-string-list>
 # Enables the profiling of all supplied models concurrently
 [ run_config_profile_models_concurrently_enable: <bool> | default: false]
 
-# Skips the generation of analysis summary reports and tables
+# Skips the generation of summary reports and tables
 [ skip_summary_reports: <bool> | default: false]
 
 # Number of top configs to show in summary plots
@@ -257,75 +257,6 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 # Dict of name=value pairs containing metadata for the tritonserve docker container
 # launched in docker launch mode
 [ triton_docker_labels: <dict> ]
-```
-
-## Config Options for `analyze`
-
-### CLI and YAML Options
-
-The config options for the `analyze` subcommand supported by both the CLI and
-YAML config file are shown below. Brackets indicate that a parameter is
-optional. For non-list and non-object parameters the value is set to the
-specified default.
-
-```yaml
-
-# Comma-delimited list of the model names for which to generate summary reports and tables.
-analysis_models: <comma-delimited-string-list>
-
-# Full path to directory to which to read and write checkpoints and profile data.
-[ checkpoint_directory: <string> | default: '.' ]
-
-# Export path to be used
-[ export_path: <string> | default: '.' ]
-
-# Number of top configs to show in summary plots
-[ num_configs_per_model: <int> | default: 3]
-
-# Number of top model configs to save across ALL models, none saved by default
-[ num_top_model_configs: <int> | default: 0 ]
-
-# File name to be used for the model inference results
-[ filename_model_inference: <string> | default: metrics-model-inference.csv ]
-
-# File name to be used for the GPU metrics results
-[ filename_model_gpu: <string> | default: metrics-model-gpu.csv ]
-
-# File name to be used for storing the server only metrics.
-[ filename_server_only: <string> | default: metrics-server-only.csv ]
-
-# Specifies columns keys for model inference metrics table
-[ inference_output_fields: <comma-delimited-string-list> | default: See [Config Defaults](#config-defaults) section]
-
-# Specifies columns keys for model gpu metrics table
-[ gpu_output_fields: <comma-delimited-string-list> | default: See [Config Defaults](#config-defaults) section]
-
-# Specifies columns keys for server only metrics table
-[ server_output_fields: <comma-delimited-string-list> | default: See [Config Defaults](#config-defaults) section]
-
-# Shorthand that allows a user to specify a max latency constraint in ms
-[ latency_budget: <int>]
-
-# Shorthand that allows a user to specify a min throughput constraint
-[ min_throughput: <int>]
-
-# Specify path to config yaml file
-[ config_file: <string> ]
-```
-
-### YAML only options
-
-The following config options are support by the YAML config file only.
-
-```yaml
-# yaml config section for each model for which to generate summary reports and tables.
-analysis_models: <comma-delimited-string|list|analysis_model>
-
-# List of constraints placed on the config search results.
-[ constraints: <constraint> ]
-
-# List of objectives that user wants to sort the results by it.
-[ objectives: <objective|list> ]
 ```
 
 ## Config Options for `report`
@@ -422,7 +353,7 @@ The global example looks like below:
 
 ```yaml
 model_repository: /path/to/model-repository
-analysis_models:
+profile_models:
   - model_1
   - model_2
 
@@ -436,7 +367,7 @@ have different constraints for each model, version below can be used:
 
 ```yaml
 model_repository: /path/to/model-repository
-analysis_models:
+profile_models:
   model_1:
     constraints:
       gpu_used_memory:
@@ -1025,39 +956,6 @@ It will also run the model `vgg_16_graphdef` over combinations of batch sizes
 `[4,5,6,7,8,9]`(taken from the global `batch_sizes` section), concurrency
 `[2,10,18,26,34,42,50,58]`, with dynamic batching enabled and a single GPU instance.
 
-## `<analysis-model>`
-
-The `--analysis-models` argument can be provided as a list of strings (names of
-models) from the CLI interface, or as a more complex `<analysis-model>` object
-but only through the YAML configuration file. The model object can contain
-`<objectives>` and `<constraints>`. An example looks like:
-
-```yaml
-analysis_models:
-  model_1:
-    constraints:
-      gpu_used_memory:
-        max: 200
-    objectives:
-      - perf_throughput
-```
-
-Multiple models can be specified under the `analysis_models` key as well.
-
-```yaml
-analysis_models:
-  model_1:
-    constraints:
-        gpu_used_memory:
-            max: 200
-  model_1:
-    constraints:
-        perf_latency_p99:
-            max: 80
-objectives:
-- perf_throughput
-```
-
 ## `<report-model-config>`
 
 The `--report-model-configs` argument can be provided as a list of strings
@@ -1076,7 +974,7 @@ report_model_configs:
         monotonic: True
 ```
 
-Multiple models can be specified under the `analysis_models` key as well.
+Multiple models can be specified under the `report_model_configs` key as well.
 
 ```yaml
 report_model_configs:

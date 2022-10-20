@@ -110,7 +110,7 @@ class ReportManager:
         self._plot_manager.export_summary_plots()
 
         statistics = self._result_manager.get_result_statistics()
-        model_names = self._result_manager._analysis_model_names
+        model_names = self._result_manager._profile_model_names
 
         at_least_one_summary = False
         for model_name in model_names:
@@ -183,7 +183,7 @@ class ReportManager:
         build tables and add to reports
         """
 
-        model_names = self._result_manager._analysis_model_names
+        model_names = self._result_manager._profile_model_names
 
         for model_name in model_names:
             top_results = self._result_manager.top_n_results(
@@ -382,7 +382,7 @@ class ReportManager:
             "The following table summarizes each configuration at the measurement"
             " that optimizes the desired metrics under the given constraints.")
 
-        if self._result_manager._analyzing_models_concurrently():
+        if self._result_manager._profiling_models_concurrently():
             caption_results_table = caption_results_table + " Per model values are parenthetical."
 
         summary.add_paragraph(caption_results_table)

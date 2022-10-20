@@ -70,7 +70,7 @@ for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
     # Then generate results
     MODEL_ANALYZER_ARGS="-e $EXPORT_PATH -f $CONFIG_FILE --filename-server-only=$FILENAME_SERVER_ONLY"
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL "
-    MODEL_ANALYZER_SUBCOMMAND="analyze"
+    MODEL_ANALYZER_SUBCOMMAND="profile"
     
     run_analyzer
     if [ $? -ne 0 ]; then

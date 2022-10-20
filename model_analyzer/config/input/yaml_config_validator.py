@@ -68,13 +68,8 @@ class YamlConfigValidator:
         # This will cause a circular dependency between ConfigCommand, ConfigCommand*, and YamlConfigValidator
         # However, importing here, only requires these files to be imported on object initialization.
         from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-        from model_analyzer.config.input.config_command_analyze import ConfigCommandAnalyze
         from model_analyzer.config.input.config_command_report import ConfigCommandReport
-        config_array = [
-            ConfigCommandProfile(),
-            ConfigCommandAnalyze(),
-            ConfigCommandReport()
-        ]
+        config_array = [ConfigCommandProfile(), ConfigCommandReport()]
 
         for config in config_array:
             for field in config.get_config():
