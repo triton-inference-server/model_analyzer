@@ -242,6 +242,11 @@ def main():
         # Make calls to correct analyzer subcommand functions
         if args.subcommand == 'profile' or args.subcommand == 'analyze':
 
+            if args.subcommand == 'profile' and not config.model_repository:
+                raise TritonModelAnalyzerException(
+                    "No model repository specified. Please specify it using the YAML config file or using the --model-repository flag in CLI."
+                )
+
             # Set up devices
             gpus = GPUDeviceFactory().verify_requested_gpus(config.gpus)
 
