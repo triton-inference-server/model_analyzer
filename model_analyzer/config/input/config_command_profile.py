@@ -240,7 +240,7 @@ class ConfigCommandProfile(ConfigCommand):
             ConfigField('model_repository',
                         flags=['-m', '--model-repository'],
                         field_type=ConfigPrimitive(
-                            str, required=True, validator=file_path_validator),
+                            str, validator=file_path_validator),
                         description='Triton Model repository location'))
         self._add_config(
             ConfigField(

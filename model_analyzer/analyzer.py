@@ -100,14 +100,15 @@ class Analyzer:
 
         self._get_server_only_metrics(client, gpus)
 
-        self._profile_models()
+        if self._config.model_repository:
+            self._profile_models()
 
-        # The message is in interrupt_handler(), so we can just exit
-        if (self._state_manager.exiting()):
-            sys.exit(1)
+            # The message is in interrupt_handler(), so we can just exit
+            if (self._state_manager.exiting()):
+                sys.exit(1)
 
-        logger.info(self._get_profile_complete_string())
-        logger.info("")
+            logger.info(self._get_profile_complete_string())
+            logger.info("")
 
         if not self._config.skip_summary_reports:
             self._create_summary_tables(verbose)
