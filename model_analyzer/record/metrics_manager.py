@@ -19,13 +19,17 @@ from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
-from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
 from model_analyzer.monitor.remote_monitor import RemoteMonitor
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.results import Results
+
+from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
+from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
+from model_analyzer.record.types.gpu_utilization import GPUUtilization
+from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
 
 from collections import defaultdict
 from prometheus_client.parser import text_string_to_metric_families
@@ -615,8 +619,12 @@ class MetricsManager:
         True if the given tag is a supported gpu metric
         False otherwise
         """
+        gpu_metric_fields = [
+            GPUUsedMemory, GPUFreeMemory, GPUUtilization, GPUPowerUsage
+        ]
         metric = MetricsManager.get_metric_types([tag])[0]
-        return metric in DCGMMonitor.model_analyzer_to_dcgm_field
+
+        return metric in gpu_metric_fields
 
     @staticmethod
     def is_perf_analyzer_metric(tag):
