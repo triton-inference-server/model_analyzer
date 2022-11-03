@@ -40,7 +40,7 @@ FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
-python3 test_config_generator.py --profile-models $MODEL_NAMES
+python3 test_config_generator.py --profile-models $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY
 
 # Run the analyzer and check the results
 RET=0
@@ -56,6 +56,40 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --filename-server-only
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --skip-summary-reports"
 MODEL_ANALYZER_SUBCOMMAND="profile"
+run_analyzer
+if [ $? -ne 0 ]; then
+    echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"
+    cat $ANALYZER_LOG
+    RET=1
+else
+    # Check the Analyzer log for correct output
+    TEST_NAME='profile_logs'
+    python3 check_results.py -f $CONFIG_FILE -t $TEST_NAME -l $ANALYZER_LOG
+    if [ $? -ne 0 ]; then
+        echo -e "\n***\n*** Test Output Verification Failed for $TEST_NAME test.\n***"
+        cat $ANALYZER_LOG
+        RET=1
+    fi
+
+    SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
+    MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
+    MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
+
+    for file in SERVER_METRICS_FILE, MODEL_METRICS_GPU_FILE, MODEL_METRICS_INFERENCE_FILE; do
+        check_no_csv_exists $file
+        if [ $? -ne 0 ]; then
+          echo -e "\n***\n*** Test Output Verification Failed.\n***"
+          cat $ANALYZER_LOG
+          RET=1
+        fi
+    done
+fi
+
+# Rerun with batch size expanded to 1,2,4
+rm -rf $CONFIG_FILE
+BATCH_SIZES="1,2,4"
+python3 test_config_generator.py --profile-models $MODEL_NAMES -b $BATCH_SIZES -c $CONCURRENCY
+
 run_analyzer
 if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"
