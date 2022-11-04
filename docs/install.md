@@ -181,6 +181,13 @@ pip3 install --upgrade pip
 
 You can then try installing model analyzer again.
 
+Optionally, if you want Model Analyzer to generate PDF reports instead of HTML, 
+you should also run the following:
+
+```
+sudo apt-get update && sudo apt-get install wkhtmltopdf
+```
+
 <br>
 
 ## From the Source
