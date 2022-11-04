@@ -27,14 +27,20 @@ class ReportFactory:
     """
 
     PDF_PACKAGE = "wkhtmltopdf"
+    WARNING_PRINTED = False
 
     @staticmethod
     def create_report():
         if ReportFactory._is_package_installed(f"{ReportFactory.PDF_PACKAGE}"):
             return ReportFactory._create_pdf_report()
         else:
-            logging.warning(f"Warning: {ReportFactory.PDF_PACKAGE} is not installed. "\
-                f"Pdf reports cannot be generated. Html reports will be generated instead."
+            if not ReportFactory.WARNING_PRINTED:
+                ReportFactory.WARNING_PRINTED = True
+                logging.warning(
+                    f'Warning: html reports are being generated instead of pdf because'
+                    f'{ReportFactory.PDF_PACKAGE} is not installed. If you want pdf '
+                    f'reports, run the following command and then rerun Model Analyzer: '
+                    f'"sudo apt-get update && sudo apt-get install wkhtmltopdf"'
                 )
             return ReportFactory._create_html_report()
 
