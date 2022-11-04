@@ -24,7 +24,7 @@ tags, which are used in various places to configure Model Analyzer.
 
 These metrics come from the perf analyzer and are parsed and processed by the
 model analyzer. See the [perf analyzer
-docs](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md)
+docs](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/perf_analyzer.md)
 for more info on these 
 
 * `perf_throughput`: The number of inferences per second measured by the perf

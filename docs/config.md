@@ -675,7 +675,7 @@ perf_analyzer_flags:
 If a model configuration has variable-sized dimensions in the inputs section, 
 then the `shape` option of the `perf_analyzer_flags` option must be specified.
 More information about this can be found in the 
-[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#input-data).
+[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/perf_analyzer.md#input-data).
 
 **Note**:
 Perf Analyzer now supports SSL via GRPC and HTTP. It can be enabled via Model Analyzer configuration file updates.
@@ -702,7 +702,7 @@ profile_models:
         ssl-https-private-key-file: /path/to/private/key/file
 ```
 More information about this can be found in the 
-[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/perf_analyzer.md#ssltls-support).
+[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/perf_analyzer.md#ssltls-support).
 
 **Important Notes**:
 * When providing arguments under `perf_analyzer_flags`, you must use `-` instead
@@ -788,7 +788,7 @@ triton_server_flags:
     grpc-root-cert: /path/to/grpc/root/cert
 ```
 More information about this can be found in the 
-[Triton Server documentation](https://github.com/triton-inference-server/server/blob/main/docs/inference_protocols.md#ssltls).
+[Triton Server documentation](https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/inference_protocols.md#ssltls).
 
 **Important Notes**:
 * The Model Analyzer also provides certain arguments to the `tritonserver`
@@ -801,7 +801,7 @@ More information about this can be found in the
 This section enables setting environment variables for the tritonserver
 instances launched by Model Analyzer. For example, when a custom operation is 
 required by a model, Triton requires the LD_PRELOAD and LD_LIBRARY_PATH 
-environment variables to be set. See [this link](https://github.com/triton-inference-server/server/blob/main/docs/custom_operations.md) 
+environment variables to be set. See [this link](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/custom_operations.md) 
 for details. The value for this section is a dictionary where the
 keys are the environment variable names and their values are the values to be
 set.

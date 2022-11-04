@@ -68,7 +68,7 @@ $ docker run -it --gpus all --net=host nvcr.io/nvidia/tritonserver:22.04-py3-sdk
 
 You will need to build and install the Triton server binary inside the SDK
 container. See the Triton [Installation
-docs](https://github.com/triton-inference-server/server/blob/main/docs/build.md)
+docs](https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/build.md)
 for more details. 
 
 If you intend to use `--triton-launch-mode=docker`, which is recommended with 

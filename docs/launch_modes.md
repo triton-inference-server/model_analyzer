@@ -79,7 +79,7 @@ Triton SDK Container. You will need Docker installed, though.
 | - | - |
 
 In this mode, Triton server is launched locally via the
-[C_API](https://github.com/triton-inference-server/server/blob/main/docs/inference_protocols.md#c-api)
+[C_API](https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/inference_protocols.md#c-api)
 by the perf_analyzer instances launched by Model Analyzer.
 
 This mode is useful if you want to run with the Triton Server installed locally
