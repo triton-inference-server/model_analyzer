@@ -577,14 +577,14 @@ class ReportManager:
         if multi_model:
             header_values = [
                 'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
-                'Instance Count', 'Average p99 Latency (ms)',
+                'Total Instance Count', 'Average p99 Latency (ms)',
                 'Total Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
             ]
         else:
             header_values = [
                 'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
-                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
-                'Max CPU Memory Usage (MB)'
+                'Total Instance Count', 'p99 Latency (ms)',
+                'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)'
             ]
         if not self._cpu_metrics_were_gathered():
             header_values.remove('Max CPU Memory Usage (MB)')
@@ -595,16 +595,16 @@ class ReportManager:
         if multi_model:
             header_values = [
                 'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
-                'Instance Count', 'Average p99 Latency (ms)',
+                'Total Instance Count', 'Average p99 Latency (ms)',
                 'Total Throughput (infer/sec)', 'Max CPU Memory Usage (MB)',
                 'Max GPU Memory Usage (MB)', 'Average GPU Utilization (%)'
             ]
         else:
             header_values = [
                 'Model Config Name', 'Max Batch Size', 'Dynamic Batching',
-                'Instance Count', 'p99 Latency (ms)', 'Throughput (infer/sec)',
-                'Max CPU Memory Usage (MB)', 'Max GPU Memory Usage (MB)',
-                'Average GPU Utilization (%)'
+                'Total Instance Count', 'p99 Latency (ms)',
+                'Throughput (infer/sec)', 'Max CPU Memory Usage (MB)',
+                'Max GPU Memory Usage (MB)', 'Average GPU Utilization (%)'
             ]
 
         if not self._cpu_metrics_were_gathered():
