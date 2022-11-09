@@ -40,16 +40,27 @@ class TestConfigGenerator:
 
     def setup(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument('-m',
-                            '--profile-models',
+        parser.add_argument(
+            '-m',
+            '--profile-models',
+            type=str,
+            required=True,
+            help='Comma seperated list of models to be profiled')
+        parser.add_argument('-b',
+                            '--batch-sizes',
                             type=str,
                             required=True,
-                            help='The config file for this test')
+                            help='List of batch sizes')
+        parser.add_argument('-c',
+                            '--concurrency',
+                            type=str,
+                            required=True,
+                            help='List of concurrencies')
 
         args = parser.parse_args()
         self.config = {
-            'batch_sizes': [1, 2],
-            'concurrency': [1, 2],
+            'batch_sizes': args.batch_sizes.split(','),
+            'concurrency': args.concurrency.split(',')
         }
         self.config['profile_models'] = sorted(args.profile_models.split(','))
         self.config['run_config_search_disable'] = True
