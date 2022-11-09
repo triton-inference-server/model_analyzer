@@ -132,21 +132,34 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(
             self.mcmB.calculate_weighted_percentage_gain(self.mcmA), 100)
 
+        self.mcmA.set_metric_weighting({"perf_latency_p99": 1})
+        self.mcmB.set_metric_weighting({"perf_latency_p99": 1})
+
+        # latency: mcmA: 20, mcmB: 40
+        self.assertEqual(
+            self.mcmA.calculate_weighted_percentage_gain(self.mcmB), 100)
+        self.assertEqual(
+            self.mcmB.calculate_weighted_percentage_gain(self.mcmA), -50)
+
+        # This illustrates why we need to use score, not percentages to determine
+        # which model is better. In both cases we will (correctly) report that
+        # mcmA/B is 25% better than the other, eventhough they are equal
+        #
+        # mcmA has 50% worse throughput, but 100% better latency
+        # mcmB has 100% better latency, but 50% worse throughput
         self.mcmA.set_metric_weighting({
             "perf_throughput": 1,
-            "perf_latency_p99": 3
+            "perf_latency_p99": 1
         })
         self.mcmB.set_metric_weighting({
             "perf_throughput": 1,
-            "perf_latency_p99": 3
+            "perf_latency_p99": 1
         })
-
-        # throuhput: mcmA: 1000, mcmB: 2000
-        # latency:   mcmA: 10,   mcmB: 20
+        self.assertTrue(self.mcmA == self.mcmB)
         self.assertEqual(
-            self.mcmA.calculate_weighted_percentage_gain(self.mcmB), -50)
+            self.mcmA.calculate_weighted_percentage_gain(self.mcmB), 25)
         self.assertEqual(
-            self.mcmB.calculate_weighted_percentage_gain(self.mcmA), 100)
+            self.mcmB.calculate_weighted_percentage_gain(self.mcmA), 25)
 
     def test_is_better_than(self):
         """

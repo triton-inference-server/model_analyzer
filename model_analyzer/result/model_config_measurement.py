@@ -305,7 +305,7 @@ class ModelConfigMeasurement:
         Returns
         -------
         float
-            The weighted percentage. A positive value indicates 
+            The weighted percentage gain. A positive value indicates 
             this ModelConfig measurement is better than the other
         """
 
@@ -322,8 +322,23 @@ class ModelConfigMeasurement:
             elif self_metric is None and other_metric is None:
                 return 0
 
-            metric_pct = ((self_metric.value() - other_metric.value()) /
-                          other_metric.value()) * 100
+            metric_diff = self_metric - other_metric
+
+            if self_metric.value() > other_metric.value():
+                if metric_diff.value() > 0:
+                    metric_pct = (metric_diff.value() /
+                                  other_metric.value()) * 100
+                else:
+                    metric_pct = (metric_diff.value() /
+                                  self_metric.value()) * 100
+            elif self_metric.value() < other_metric.value():
+                if metric_diff.value() < 0:
+                    metric_pct = (metric_diff.value() /
+                                  other_metric.value()) * 100
+                else:
+                    metric_pct = (metric_diff.value() /
+                                  self_metric.value()) * 100
+
             weighted_pct += metric_pct * weight
 
         return weighted_pct
