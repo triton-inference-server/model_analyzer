@@ -472,12 +472,12 @@ class ReportManager:
         else:
             return f"{num_configurations} configurations, {config_names_str}"
 
-    def _create_summary_throughput_phrase(self, report_key,
-                                          best_run_config_measurement,
-                                          multi_model):
-        default_throughput = round(
-            self._find_default_configs_throughput(report_key))
-        best_throughput = round(
+    def _create_summary_objective_phrase(self, report_key,
+                                         best_run_config_measurement,
+                                         multi_model):
+        default_objective = round(
+            self._find_default_configs_objective(report_key))
+        best_objective = round(
             best_run_config_measurement.get_non_gpu_metric_value(
                 'perf_throughput'))
         throughput_gain = round(
@@ -502,7 +502,7 @@ class ReportManager:
 
         return throughput_phrase
 
-    def _find_default_configs_throughput(self, model_name):
+    def _find_default_configs_objective(self, model_name):
         # There is no single default config when comparing across
         # multiple model runs
         #

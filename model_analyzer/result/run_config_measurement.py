@@ -448,6 +448,32 @@ class RunConfigMeasurement:
         # Step 3: Reverse the polarity to match what is expected in the docstring return
         return -1 * weighted_rcm_score
 
+    def calcuate_weighted_percentage_gain(
+            self, other: 'RunConfigMeasurement') -> float:
+        """
+        Calculates the weighted percentage gain between
+        two RunConfigMeasurements based on each
+        ModelConfigs weighted metric objectives and the
+        ModelConfigs weighted value within the RunConfigMeasurement
+
+        Parameters
+        ----------
+        other: RunConfigMeasurement
+            
+        Returns
+        -------
+        float
+           The weighted percentage gain. A positive value indicates 
+           this ModelConfig measurement is better than the other
+        """
+        # for each ModelConfig determine the weighted percentage gain
+        weighted_mcm_pct = self._calculate_weighted_mcm_percentage_gain(other)
+
+        # combine these using the ModelConfig weighting
+        weighted_rcm_pct = self._calculate_weighted_rcm_score(weighted_mcm_pct)
+
+        return weighted_rcm_pct
+
     def compare_constraints(self,
                             other: 'RunConfigMeasurement') -> Optional[float]:
         """
@@ -526,6 +552,24 @@ class RunConfigMeasurement:
         """
         return [
             self_mcm.get_weighted_score(other_mcm)
+            for self_mcm, other_mcm in zip(self._model_config_measurements,
+                                           other._model_config_measurements)
+        ]
+
+    def _calculate_weighted_mcm_percentage_gain(
+            self, other: 'RunConfigMeasurement') -> List[float]:
+        """
+        Parameters
+        ----------
+        other: RunConfigMeasurement
+
+        Returns
+        -------
+        list of floats
+            A weighted percentage gain for each ModelConfig measurement in the RunConfig
+        """
+        return [
+            self_mcm.calculate_weighted_percentage_gain(other_mcm)
             for self_mcm, other_mcm in zip(self._model_config_measurements,
                                            other._model_config_measurements)
         ]

@@ -317,6 +317,28 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(self.rcm4.compare_constraints(self.rcm5), 0.30)
         self.assertEqual(self.rcm5.compare_constraints(self.rcm4), -0.30)
 
+    def test_calculate_weighted_percentage_gain(self):
+        """
+        Test to ensure weighted percentage gain is being calcuated correctly
+        """
+
+        # RCM0: 1000, 40    RCM1: 500, 30  weights:[1,3]
+        # RCM0-A's throughput is better than RCM1-A (0.5)
+        # RCM0-B's latency is worse than RCM1-B (-0.25)
+        # Factoring in model config weighting
+        # tips this is favor of RCM1 (0.125, -0.1875)
+        # However, by percentage RCM0 will be evaluated as slightly better
+        # 100% on throughput, -25% on latency
+        # Factoring in weighting, RCM0 is slightly better (100 - 75) / 4 = 6.25%
+        self.assertEqual(self.rcm0.calcuate_weighted_percentage_gain(self.rcm1),
+                         6.25)
+
+        # Changing the weighting tips the scale in the favor of RCM0 (0.2, -0.15)
+        # And, from a percentage standpoint we get: (200 - 75) / 5 = 25%
+        self.rcm0.set_model_config_weighting([2, 3])
+        self.assertEqual(self.rcm0.calcuate_weighted_percentage_gain(self.rcm1),
+                         25.0)
+
     def test_from_dict(self):
         """
         Test to ensure class can be correctly restored from a dictionary
