@@ -119,6 +119,35 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         expected_mw = {"perf_throughput": 2 / 5, "perf_latency_p99": 3 / 5}
         self.assertEqual(expected_mw, self.mcmA._metric_weights)
 
+    def test_calculate_weighted_percentage_gain(self):
+        """
+        Test that weighted percentages are returned correctly
+        """
+        self.mcmA.set_metric_weighting({"perf_throughput": 1})
+        self.mcmB.set_metric_weighting({"perf_throughput": 1})
+
+        # throuhput: mcmA: 1000, mcmB: 2000
+        self.assertEqual(
+            self.mcmA.calculate_weighted_percentage_gain(self.mcmB), -50)
+        self.assertEqual(
+            self.mcmB.calculate_weighted_percentage_gain(self.mcmA), 100)
+
+        self.mcmA.set_metric_weighting({
+            "perf_throughput": 1,
+            "perf_latency_p99": 3
+        })
+        self.mcmB.set_metric_weighting({
+            "perf_throughput": 1,
+            "perf_latency_p99": 3
+        })
+
+        # throuhput: mcmA: 1000, mcmB: 2000
+        # latency:   mcmA: 10,   mcmB: 20
+        self.assertEqual(
+            self.mcmA.calculate_weighted_percentage_gain(self.mcmB), -50)
+        self.assertEqual(
+            self.mcmB.calculate_weighted_percentage_gain(self.mcmA), 100)
+
     def test_is_better_than(self):
         """
         Test that individual metric comparison works as expected
