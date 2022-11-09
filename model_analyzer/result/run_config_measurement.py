@@ -448,7 +448,7 @@ class RunConfigMeasurement:
         # Step 3: Reverse the polarity to match what is expected in the docstring return
         return -1 * weighted_rcm_score
 
-    def calcuate_weighted_percentage_gain(
+    def calculate_weighted_percentage_gain(
             self, other: 'RunConfigMeasurement') -> float:
         """
         Calculates the weighted percentage gain between

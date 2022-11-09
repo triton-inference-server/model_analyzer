@@ -325,14 +325,14 @@ class ModelConfigMeasurement:
             metric_diff = self_metric - other_metric
 
             # FIXME: this needs to be moved into Records
-            if self_metric.value() > other_metric.value():
-                if metric_diff.value() > 0:
+            if self_metric.value() >= other_metric.value():
+                if metric_diff.value() >= 0:
                     metric_pct = (metric_diff.value() /
                                   other_metric.value()) * 100
                 else:
                     metric_pct = (metric_diff.value() /
                                   self_metric.value()) * 100
-            elif self_metric.value() < other_metric.value():
+            else:
                 if metric_diff.value() < 0:
                     metric_pct = (metric_diff.value() /
                                   other_metric.value()) * 100

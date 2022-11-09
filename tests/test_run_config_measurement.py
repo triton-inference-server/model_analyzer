@@ -319,7 +319,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
 
     def test_calculate_weighted_percentage_gain(self):
         """
-        Test to ensure weighted percentage gain is being calcuated correctly
+        Test to ensure weighted percentage gain is being calculated correctly
         """
 
         # RCM0: 1000, 40    RCM1: 500, 30  weights:[1,3]
@@ -330,14 +330,14 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         # However, by percentage RCM0 will be evaluated as slightly better
         # 100% on throughput, -25% on latency
         # Factoring in weighting, RCM0 is slightly better (100 - 75) / 4 = 6.25%
-        self.assertEqual(self.rcm0.calcuate_weighted_percentage_gain(self.rcm1),
-                         6.25)
+        self.assertEqual(
+            self.rcm0.calculate_weighted_percentage_gain(self.rcm1), 6.25)
 
         # Changing the weighting tips the scale in the favor of RCM0 (0.2, -0.15)
         # And, from a percentage standpoint we get: (200 - 75) / 5 = 25%
         self.rcm0.set_model_config_weighting([2, 3])
-        self.assertEqual(self.rcm0.calcuate_weighted_percentage_gain(self.rcm1),
-                         25.0)
+        self.assertEqual(
+            self.rcm0.calculate_weighted_percentage_gain(self.rcm1), 25.0)
 
     def test_from_dict(self):
         """
