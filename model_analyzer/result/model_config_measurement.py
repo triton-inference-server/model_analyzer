@@ -322,23 +322,7 @@ class ModelConfigMeasurement:
             elif self_metric is None and other_metric is None:
                 return 0
 
-            metric_diff = self_metric - other_metric
-
-            # FIXME: this needs to be moved into Records
-            if self_metric.value() >= other_metric.value():
-                if metric_diff.value() >= 0:
-                    metric_pct = (metric_diff.value() /
-                                  other_metric.value()) * 100
-                else:
-                    metric_pct = (metric_diff.value() /
-                                  self_metric.value()) * 100
-            else:
-                if metric_diff.value() < 0:
-                    metric_pct = (metric_diff.value() /
-                                  other_metric.value()) * 100
-                else:
-                    metric_pct = (metric_diff.value() /
-                                  self_metric.value()) * 100
+            metric_pct = self_metric.calculate_percentage_gain(other_metric)
 
             weighted_pct += metric_pct * weight
 

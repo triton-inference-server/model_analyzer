@@ -478,13 +478,17 @@ class ReportManager:
         default_run_config_measurement = self._find_default_run_config_measurement(
             report_key)
 
-        objective_gain_pct = round(
-            best_run_config_measurement.calculate_weighted_percentage_gain(
-                default_run_config_measurement))
+        if default_run_config_measurement:
+            objective_gain_pct = round(
+                best_run_config_measurement.calculate_weighted_percentage_gain(
+                    default_run_config_measurement))
+            default_throughput = round(
+                default_run_config_measurement.get_non_gpu_metric_value(
+                    'perf_throughput'))
+        else:
+            objective_gain_pct = 0
+            default_throughput = 0
 
-        default_throughput = round(
-            default_run_config_measurement.get_non_gpu_metric_value(
-                'perf_throughput'))
         best_throughput = round(
             best_run_config_measurement.get_non_gpu_metric_value(
                 'perf_throughput'))

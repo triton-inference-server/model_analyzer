@@ -60,6 +60,17 @@ class PerfLatency(Record):
         cls._print_deprecate_warning()
         return "p99 Latency (ms)"
 
+    def calculate_percentage_gain(self, other) -> float:
+        """
+        Calculates percentage gain between records
+        
+        ** Note this does a reverse calculation because
+            of the inverted nature of latency
+        """
+
+        self._print_deprecate_warning()
+        return ((other.value() - self.value()) / self.value()) * 100
+
     def __eq__(self, other):
         """
         Allows checking for
