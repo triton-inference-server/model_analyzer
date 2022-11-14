@@ -57,7 +57,7 @@ class CPUAvailableRAM(Record):
 
         return ("Max " if aggregation_tag else "") + "RAM Available (MB)"
 
-    def calculate_percentage_gain(self, other) -> float:
+    def calculate_percentage_gain(self, other: Record) -> float:
         """
         Calculates percentage gain between records
         """

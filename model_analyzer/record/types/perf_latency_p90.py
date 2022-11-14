@@ -57,7 +57,7 @@ class PerfLatencyP90(Record):
 
         return "p90 Latency (ms)"
 
-    def calculate_percentage_gain(self, other) -> float:
+    def calculate_percentage_gain(self, other: Record) -> float:
         """
         Calculates percentage gain between records
         

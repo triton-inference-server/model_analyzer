@@ -59,7 +59,7 @@ class GPUUsedMemory(GPURecord):
 
         return ("Max " if aggregation_tag else "") + "GPU Memory Usage (MB)"
 
-    def calculate_percentage_gain(self, other) -> float:
+    def calculate_percentage_gain(self, other: GPURecord) -> float:
         """
         Calculates percentage gain between records
         """

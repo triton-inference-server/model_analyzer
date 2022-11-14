@@ -58,7 +58,7 @@ class PerfServerComputeInfer(Record):
 
         return "Server Compute Infer time (ms)"
 
-    def calculate_percentage_gain(self, other) -> float:
+    def calculate_percentage_gain(self, other: Record) -> float:
         """
         Calculates percentage gain between records
         
