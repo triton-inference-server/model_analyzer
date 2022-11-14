@@ -479,46 +479,24 @@ class ReportManager:
             report_key)
 
         if default_run_config_measurement:
-            objective_gain = round(
-                best_run_config_measurement.calculate_weighted_percentage_gain(
-                    default_run_config_measurement))
-            default_throughput = round(
-                default_run_config_measurement.get_non_gpu_metric_value(
-                    'perf_throughput'))
+            objective_gain = self._get_objective_gain(
+                best_run_config_measurement, default_run_config_measurement)
         else:
-            objective_gain = None
-            default_throughput = None
+            objective_gain = 0
 
         if (objective_gain > 0):
             objective_phrase = f"is <strong>{objective_gain}%</strong> better than the default configuration at meeting the objectives"
         else:
             objective_phrase = "provides no gain over the default configuration"
 
-        # best_throughput = round(
-        #     best_run_config_measurement.get_non_gpu_metric_value(
-        #         'perf_throughput'))
-
-        # throughput_gain = round(
-        #     (best_throughput - default_throughput) / default_throughput *
-        #     100) if default_throughput else None
-
-        # throughput_phrase = "total " if multi_model else ""
-        # throughput_phrase = (
-        #     throughput_phrase +
-        #     f"throughput: <strong>{best_throughput} infer/sec</strong>.<br><br>"
-        # )
-
-        # if throughput_gain is not None and throughput_gain != 0:
-        #     throughput_phrase = (
-        #         throughput_phrase +
-        #         f"This is a <strong>{throughput_gain}% gain</strong> over the "
-        #         f"default configuration ({default_throughput} infer/sec)")
-        # else:
-        #     throughput_phrase = (
-        #         throughput_phrase +
-        #         "Which provides no gain over the default configuration")
-
         return objective_phrase
+
+    def _get_objective_gain(
+            self, run_config_measurement: "RunConfigMeasurement",
+            default_run_config_measurement: "RunConfigMeasurement") -> float:
+        return round(
+            run_config_measurement.calculate_weighted_percentage_gain(
+                default_run_config_measurement))
 
     def _find_default_run_config_measurement(self, model_name):
         # There is no single default config when comparing across

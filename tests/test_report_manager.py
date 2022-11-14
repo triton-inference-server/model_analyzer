@@ -204,9 +204,12 @@ class TestReportManagerMethods(trc.TestResultCollector):
             self.assertEqual(len(report1_data), 10)
             self.assertEqual(len(report2_data), 5)
 
-    # @patch(
-    #     'model_analyzer.reports.report_manager.ReportManager._find_default_configs_throughput',
-    #     return_value=100)
+    @patch(
+        'model_analyzer.reports.report_manager.ReportManager._find_default_run_config_measurement',
+        return_value=100)
+    @patch(
+        'model_analyzer.reports.report_manager.ReportManager._get_objective_gain',
+        return_value=100)
     def test_build_summary_table(self, *args):
         for mode in ['offline', 'online']:
             for cpu_only in [True, False]:
@@ -246,17 +249,15 @@ class TestReportManagerMethods(trc.TestResultCollector):
         if cpu_only:
             expected_summary_sentence = (
                 "In 10 measurements across 3 configurations, "
-                "<strong>test_model_config_10</strong> provides the best throughput: <strong>200 infer/sec</strong>.<br><br>"
-                "This is a <strong>100% gain</strong> over the default configuration "
-                "(100 infer/sec), under the given constraints.<UL><LI> "
+                "<strong>test_model_config_10</strong> is <strong>100%</strong> better than the default configuration "
+                "at meeting the objectives, under the given constraints.<UL><LI> "
                 "<strong>test_model_config_10</strong>: 1 GPU instance with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>")
         else:
             expected_summary_sentence = (
                 "In 10 measurements across 3 configurations, "
-                "<strong>test_model_config_10</strong> provides the best throughput: <strong>200 infer/sec</strong>.<br><br>"
-                "This is a <strong>100% gain</strong> over the default configuration "
-                "(100 infer/sec), under the given constraints on GPU(s) TITAN RTX.<UL><LI> "
+                "<strong>test_model_config_10</strong> is <strong>100%</strong> better than the default configuration "
+                "at meeting the objectives, under the given constraints, on GPU(s) TITAN RTX.<UL><LI> "
                 "<strong>test_model_config_10</strong>: 1 GPU instance with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>")
 
@@ -411,16 +412,6 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         self.assertEqual(expected_plot_count, add_plot_fn.call_count)
         self.assertEqual(expected_table_count, add_table_fn.call_count)
-
-        # FIXME
-        # default_throughput = self.report_manager._find_default_configs_throughput(
-        #     "test_model1")
-        # expected_default_throughput = 100 if default_within_top else 200
-        # self.assertEqual(default_throughput, expected_default_throughput)
-
-        # top_models_throughput = self.report_manager._find_default_configs_throughput(
-        #     TOP_MODELS_REPORT_KEY)
-        # self.assertEqual(top_models_throughput, 0)
 
     def test_create_instance_group_phrase(self):
         """ Test all corner cases of _create_instance_group_phrase() """
