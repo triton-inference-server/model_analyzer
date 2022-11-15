@@ -538,6 +538,40 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.assertEqual(names, "2 x fake_gpu_name, 1 x fake_gpu_name_3")
         self.assertEqual(max_mem, "12.0 GB")
 
+    @patch(
+        'model_analyzer.reports.report_manager.ReportManager._build_constraint_strings',
+        return_value={"modelA": "Max p99 latency: 100 ms"})
+    def test_constraint_string_single_model(self, *args):
+        report_manager = ReportManager(mode=MagicMock(),
+                                       config=MagicMock(),
+                                       gpu_info=MagicMock(),
+                                       result_manager=MagicMock())
+        expected_constraint_str = "Max p99 latency: 100 ms"
+        actual_constraint_str = report_manager._create_constraint_string(
+            report_key="modelA")
+
+        self.assertEqual(actual_constraint_str, expected_constraint_str)
+
+    @patch(
+        'model_analyzer.reports.report_manager.ReportManager._build_constraint_strings',
+        return_value={
+            "modelA": "Max p99 latency: 100 ms",
+            "modelB": "Max p99 latency: 200 ms"
+        })
+    def test_constraint_string_multi_model(self, *args):
+        report_manager = ReportManager(mode=MagicMock(),
+                                       config=MagicMock(),
+                                       gpu_info=MagicMock(),
+                                       result_manager=MagicMock())
+        expected_constraint_str = "<strong>modelA</strong>: Max p99 latency: 100 ms"
+        expected_constraint_str += "<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;"
+        expected_constraint_str += "<strong>modelB</strong>: Max p99 latency: 200 ms"
+
+        actual_constraint_str = report_manager._create_constraint_string(
+            report_key="modelA,modelB")
+
+        self.assertEqual(actual_constraint_str, expected_constraint_str)
+
     def tearDown(self):
         self.matplotlib_mock.stop()
         self.io_mock.stop()
