@@ -435,7 +435,7 @@ class ReportManager:
         config_phrase = self._create_summary_config_phrase(
             best_run_config, num_configurations)
         objective_phrase = self._create_summary_objective_phrase(
-            report_key, best_run_config_measurement, multi_model)
+            report_key, best_run_config_measurement)
         gpu_name_phrase = self._create_summary_gpu_name_phrase(
             gpu_name, cpu_only)
 
@@ -472,9 +472,9 @@ class ReportManager:
         else:
             return f"{num_configurations} configurations, {config_names_str}"
 
-    def _create_summary_objective_phrase(self, report_key,
-                                         best_run_config_measurement,
-                                         multi_model):
+    def _create_summary_objective_phrase(
+            self, report_key: str,
+            best_run_config_measurement: "RunConfigMeasurement") -> str:
         default_run_config_measurement = self._find_default_run_config_measurement(
             report_key)
 
