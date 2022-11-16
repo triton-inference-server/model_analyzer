@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .record import Record, IncreasingRecord
+from .record import Record
 
 
-class GPURecord(IncreasingRecord):
+class GPURecord(Record):
     """
     This is a base class for any
     GPU based record
@@ -54,3 +54,15 @@ class GPURecord(IncreasingRecord):
             if key in record_dict:
                 setattr(record, key, record_dict[key])
         return record
+
+
+class IncreasingGPURecord(GPURecord):
+
+    def _positive_is_better(self) -> bool:
+        return True
+
+
+class DecreasingGPURecord(GPURecord):
+
+    def _positive_is_better(self) -> bool:
+        return False

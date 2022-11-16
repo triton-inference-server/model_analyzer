@@ -13,11 +13,11 @@
 # limitations under the License.
 
 from functools import total_ordering
-from model_analyzer.record.gpu_record import GPURecord
+from model_analyzer.record.gpu_record import GPURecord, IncreasingGPURecord
 
 
 @total_ordering
-class GPUUtilization(GPURecord):
+class GPUUtilization(IncreasingGPURecord):
     """
     GPU utilization record
     """
