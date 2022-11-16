@@ -14,11 +14,11 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.record import Record
+from model_analyzer.record.record import Record, IncreasingRecord
 
 
 @total_ordering
-class CPUUsedRAM(Record):
+class CPUUsedRAM(IncreasingRecord):
     """
     The CPU memory usage record
     """
@@ -56,13 +56,6 @@ class CPUUsedRAM(Record):
         """
 
         return ("Max " if aggregation_tag else "") + "RAM Usage (MB)"
-
-    def calculate_percentage_gain(self, other: Record) -> float:
-        """
-        Calculates percentage gain between records
-        """
-
-        return ((self.value() - other.value()) / other.value()) * 100
 
     def __eq__(self, other):
         """

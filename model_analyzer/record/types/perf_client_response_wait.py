@@ -14,11 +14,11 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.record import Record
+from model_analyzer.record.record import Record, DecreasingRecord
 
 
 @total_ordering
-class PerfClientResponseWait(Record):
+class PerfClientResponseWait(DecreasingRecord):
     """
     A record for perf_analyzer
     metric 'Client response wait'
@@ -57,16 +57,6 @@ class PerfClientResponseWait(Record):
         """
 
         return "Response Wait Time (ms)"
-
-    def calculate_percentage_gain(self, other: Record) -> float:
-        """
-        Calculates percentage gain between records
-        
-        ** Note this does a reverse calculation because
-            of the inverted nature of latency
-        """
-
-        return ((other.value() - self.value()) / self.value()) * 100
 
     def __eq__(self, other):
         """

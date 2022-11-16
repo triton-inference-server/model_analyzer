@@ -233,3 +233,32 @@ class Record(metaclass=RecordType):
             return type(self)(value=(self.value() / other))
         else:
             raise TypeError
+
+    @abstractmethod
+    def _positive_is_better(self) -> bool:
+        """
+        Returns a bool indicating if a larger positive value is better
+        for a given record type
+        """
+
+    def calculate_percentage_gain(self, other: "Record") -> float:
+        """
+        Calculates percentage gain between records
+        """
+
+        if self._positive_is_better():
+            return ((self.value() - other.value()) / other.value()) * 100
+        else:
+            return ((other.value() - self.value()) / self.value()) * 100
+
+
+class IncreasingRecord(Record):
+
+    def _positive_is_better(self) -> bool:
+        return True
+
+
+class DecreasingRecord(Record):
+
+    def _positive_is_better(self) -> bool:
+        return False

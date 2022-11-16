@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .record import Record
+from .record import Record, IncreasingRecord
 
 
-class GPURecord(Record):
+class GPURecord(IncreasingRecord):
     """
     This is a base class for any
     GPU based record

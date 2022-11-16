@@ -14,11 +14,11 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.record import Record
+from model_analyzer.record.record import Record, DecreasingRecord
 
 
 @total_ordering
-class PerfServerQueue(Record):
+class PerfServerQueue(DecreasingRecord):
     """
     A record for Server queue time
     from the perf analyzer
@@ -57,16 +57,6 @@ class PerfServerQueue(Record):
         """
 
         return "Server Queue time (ms)"
-
-    def calculate_percentage_gain(self, other: Record) -> float:
-        """
-        Calculates percentage gain between records
-        
-        ** Note this does a reverse calculation because
-            of the inverted nature of latency
-        """
-
-        return ((other.value() - self.value()) / self.value()) * 100
 
     def __eq__(self, other):
         """

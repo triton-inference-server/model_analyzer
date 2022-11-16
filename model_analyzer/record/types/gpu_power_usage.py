@@ -70,13 +70,6 @@ class GPUPowerUsage(GPURecord):
 
         return ("Average " if aggregation_tag else "") + "GPU Power Usage (W)"
 
-    def calculate_percentage_gain(self, other: GPURecord) -> float:
-        """
-        Calculates percentage gain between records
-        """
-
-        return ((self.value() - other.value()) / other.value()) * 100
-
     def __eq__(self, other):
         """
         Allows checking for

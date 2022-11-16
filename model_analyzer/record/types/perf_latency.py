@@ -15,11 +15,11 @@
 from functools import total_ordering
 import logging
 
-from model_analyzer.record.record import Record
+from model_analyzer.record.record import Record, DecreasingRecord
 
 
 @total_ordering
-class PerfLatency(Record):
+class PerfLatency(DecreasingRecord):
     """
     A record for perf_analyzer latency metric
     """
@@ -59,17 +59,6 @@ class PerfLatency(Record):
 
         cls._print_deprecate_warning()
         return "p99 Latency (ms)"
-
-    def calculate_percentage_gain(self, other: Record) -> float:
-        """
-        Calculates percentage gain between records
-        
-        ** Note this does a reverse calculation because
-            of the inverted nature of latency
-        """
-
-        self._print_deprecate_warning()
-        return ((other.value() - self.value()) / self.value()) * 100
 
     def __eq__(self, other):
         """
