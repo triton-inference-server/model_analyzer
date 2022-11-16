@@ -434,14 +434,14 @@ class ReportManager:
             num_measurements)
         config_phrase = self._create_summary_config_phrase(
             best_run_config, num_configurations)
-        throughput_phrase = self._create_summary_throughput_phrase(
-            report_key, best_run_config_measurement, multi_model)
+        objective_phrase = self._create_summary_objective_phrase(
+            report_key, best_run_config_measurement)
         gpu_name_phrase = self._create_summary_gpu_name_phrase(
             gpu_name, cpu_only)
 
         summary_sentence = (
-            f"In {measurement_phrase} across {config_phrase} provides the best "
-            f"{throughput_phrase}, under the given constraints{gpu_name_phrase}.<UL>"
+            f"In {measurement_phrase} across {config_phrase} "
+            f"{objective_phrase}, under the given constraints{gpu_name_phrase}.<UL>"
         )
 
         for model_run_config in best_run_config.model_run_configs():
@@ -472,42 +472,38 @@ class ReportManager:
         else:
             return f"{num_configurations} configurations, {config_names_str}"
 
-    def _create_summary_throughput_phrase(self, report_key,
-                                          best_run_config_measurement,
-                                          multi_model):
-        default_throughput = round(
-            self._find_default_configs_throughput(report_key))
-        best_throughput = round(
-            best_run_config_measurement.get_non_gpu_metric_value(
-                'perf_throughput'))
-        throughput_gain = round(
-            (best_throughput - default_throughput) / default_throughput *
-            100) if default_throughput else None
+    def _create_summary_objective_phrase(
+            self, report_key: str,
+            best_run_config_measurement: "RunConfigMeasurement") -> str:
+        default_run_config_measurement = self._find_default_run_config_measurement(
+            report_key)
 
-        throughput_phrase = "total " if multi_model else ""
-        throughput_phrase = (
-            throughput_phrase +
-            f"throughput: <strong>{best_throughput} infer/sec</strong>.<br><br>"
-        )
-
-        if throughput_gain is not None and throughput_gain != 0:
-            throughput_phrase = (
-                throughput_phrase +
-                f"This is a <strong>{throughput_gain}% gain</strong> over the "
-                f"default configuration ({default_throughput} infer/sec)")
+        if default_run_config_measurement:
+            objective_gain = self._get_objective_gain(
+                best_run_config_measurement, default_run_config_measurement)
         else:
-            throughput_phrase = (
-                throughput_phrase +
-                "Which provides no gain over the default configuration")
+            objective_gain = 0
 
-        return throughput_phrase
+        if (objective_gain > 0):
+            objective_phrase = f"is <strong>{objective_gain}%</strong> better than the default configuration at meeting the objectives"
+        else:
+            objective_phrase = "provides no gain over the default configuration"
 
-    def _find_default_configs_throughput(self, model_name):
+        return objective_phrase
+
+    def _get_objective_gain(
+            self, run_config_measurement: "RunConfigMeasurement",
+            default_run_config_measurement: "RunConfigMeasurement") -> float:
+        return round(
+            run_config_measurement.calculate_weighted_percentage_gain(
+                default_run_config_measurement))
+
+    def _find_default_run_config_measurement(self, model_name):
         # There is no single default config when comparing across
         # multiple model runs
         #
         if model_name == TOP_MODELS_REPORT_KEY:
-            return 0
+            return None
 
         sorted_results = self._result_manager.get_model_sorted_results(
             model_name)
@@ -516,12 +512,14 @@ class ReportManager:
             run_config_measurements = run_config_result.passing_measurements()
             if run_config_measurements and 'default' in run_config_measurements[
                     0].model_variants_name():
-                return max([
-                    rcm.get_non_gpu_metric_value('perf_throughput')
-                    for rcm in run_config_measurements
-                ])
+                best_rcm = run_config_measurements[0]
+                for run_config_measurement in run_config_measurements:
+                    if run_config_measurement > best_rcm:
+                        best_rcm = run_config_measurement
 
-        return 0
+                return best_rcm
+
+        return None
 
     def _create_summary_platform_phrase(self, model_config):
         if model_config.get_field('backend'):
@@ -550,7 +548,7 @@ class ReportManager:
         return ret_str
 
     def _create_summary_gpu_name_phrase(self, gpu_name, cpu_only):
-        return f" on GPU(s) {gpu_name}" if not cpu_only else ""
+        return f", on GPU(s) {gpu_name}" if not cpu_only else ""
 
     def _construct_summary_result_table_cpu_only(self, sorted_measurements,
                                                  multi_model):

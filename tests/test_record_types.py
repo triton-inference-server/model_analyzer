@@ -46,13 +46,13 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
                 'perf_server_compute_infer', 'perf_latency',
                 'perf_server_queue', 'perf_client_response_wait',
                 'perf_server_compute_output', 'perf_client_send_recv',
-                'perf_server_compute_input'
+                'perf_server_compute_input', 'gpu_power_usage'
             ]
         }
         self.more_is_better_types = {
             record_types[k] for k in [
                 'perf_throughput', 'gpu_free_memory', 'gpu_utilization',
-                'cpu_available_ram', 'gpu_power_usage', 'gpu_total_memory'
+                'cpu_available_ram', 'gpu_total_memory'
             ]
         }
 
@@ -164,6 +164,18 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
 
         self.assertEqual(avg_value, 50)
         self.assertEqual(total_value, 200)
+
+    def test_calculate_percentage_gain(self):
+        for record_type in self.all_record_types:
+            metric1 = record_type(value=10)
+            metric2 = record_type(value=5)
+
+            if record_type in self.less_is_better_types:
+                self.assertEqual(metric1.calculate_percentage_gain(metric2),
+                                 -50)
+            else:
+                self.assertEqual(metric1.calculate_percentage_gain(metric2),
+                                 100)
 
 
 if __name__ == "__main__":

@@ -54,3 +54,15 @@ class GPURecord(Record):
             if key in record_dict:
                 setattr(record, key, record_dict[key])
         return record
+
+
+class IncreasingGPURecord(GPURecord):
+
+    def _positive_is_better(self) -> bool:
+        return True
+
+
+class DecreasingGPURecord(GPURecord):
+
+    def _positive_is_better(self) -> bool:
+        return False

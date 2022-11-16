@@ -171,7 +171,7 @@ class ModelConfigMeasurement:
         
         Returns
         -------
-        int
+        float
             The weighted score between this ModelConfig
             and the other ModelConfig
         """
@@ -290,6 +290,43 @@ class ModelConfigMeasurement:
             weighted_score += weight * (metric_diff.value() / average)
 
         return weighted_score
+
+    def calculate_weighted_percentage_gain(self, other):
+        """
+        Calculates the weighted percentage between two 
+        ModelConfig measurements based on the weighted
+        metric objectives
+        
+        Parameters
+        ----------
+        other : ModelConfigMeasurement
+            set of (non_gpu) metrics to be compared against
+            
+        Returns
+        -------
+        float
+            The weighted percentage gain. A positive value indicates 
+            this ModelConfig measurement is better than the other
+        """
+
+        weighted_pct = 0.0
+        for objective, weight in self._metric_weights.items():
+            self_metric = self.get_metric(tag=objective)
+            other_metric = other.get_metric(tag=objective)
+
+            # Handle the case where objective GPU metric is queried on CPU only
+            if self_metric and other_metric is None:
+                return 100
+            elif other_metric and self_metric is None:
+                return -100
+            elif self_metric is None and other_metric is None:
+                return 0
+
+            metric_pct = self_metric.calculate_percentage_gain(other_metric)
+
+            weighted_pct += metric_pct * weight
+
+        return weighted_pct
 
     def _get_non_gpu_data_from_tag(self):
         return {metric.tag: metric for metric in self._non_gpu_data}

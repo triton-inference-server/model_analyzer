@@ -13,11 +13,11 @@
 # limitations under the License.
 
 from functools import total_ordering
-from model_analyzer.record.gpu_record import GPURecord
+from model_analyzer.record.gpu_record import GPURecord, DecreasingGPURecord
 
 
 @total_ordering
-class GPUPowerUsage(GPURecord):
+class GPUPowerUsage(DecreasingGPURecord):
     """
     GPU Power Usage
     """
@@ -85,7 +85,7 @@ class GPUPowerUsage(GPURecord):
         the other
         """
 
-        return self.value() < other.value()
+        return other.value() < self.value()
 
     def __add__(self, other):
         """
@@ -103,4 +103,4 @@ class GPUPowerUsage(GPURecord):
         """
 
         return GPUPowerUsage(device_uuid=None,
-                             value=(self.value() - other.value()))
+                             value=(other.value() - self.value()))

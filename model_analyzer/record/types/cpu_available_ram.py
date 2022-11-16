@@ -14,11 +14,11 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.record import Record
+from model_analyzer.record.record import Record, IncreasingRecord
 
 
 @total_ordering
-class CPUAvailableRAM(Record):
+class CPUAvailableRAM(IncreasingRecord):
     """
     The Available CPU memory
     """

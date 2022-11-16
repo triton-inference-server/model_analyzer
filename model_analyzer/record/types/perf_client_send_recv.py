@@ -14,11 +14,11 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.record import Record
+from model_analyzer.record.record import Record, DecreasingRecord
 
 
 @total_ordering
-class PerfClientSendRecv(Record):
+class PerfClientSendRecv(DecreasingRecord):
     """
     A record for perf_analyzer
     metric 'Client send/recv'

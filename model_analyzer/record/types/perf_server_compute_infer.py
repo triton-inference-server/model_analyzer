@@ -14,11 +14,11 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.record import Record
+from model_analyzer.record.record import Record, DecreasingRecord
 
 
 @total_ordering
-class PerfServerComputeInfer(Record):
+class PerfServerComputeInfer(DecreasingRecord):
     """
     A record for Server compute infer time
     from the perf analyzer

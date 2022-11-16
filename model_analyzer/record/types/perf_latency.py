@@ -15,11 +15,11 @@
 from functools import total_ordering
 import logging
 
-from model_analyzer.record.record import Record
+from model_analyzer.record.record import Record, DecreasingRecord
 
 
 @total_ordering
-class PerfLatency(Record):
+class PerfLatency(DecreasingRecord):
     """
     A record for perf_analyzer latency metric
     """
