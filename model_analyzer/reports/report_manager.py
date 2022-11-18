@@ -437,8 +437,8 @@ class ReportManager:
 
         return constraint_str
 
-    def _create_multi_model_constraint_string(self, report_key: str,
-                                              constraint_strs: str) -> str:
+    def _create_multi_model_constraint_string(
+            self, report_key: str, constraint_strs: Dict[str, str]) -> str:
         constraint_str = ""
         for model_name in report_key.split(','):
             if model_name in constraint_strs:
