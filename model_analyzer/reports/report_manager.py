@@ -309,13 +309,7 @@ class ReportManager:
             measurements=[v for _, v in self._summary_data[report_key]])
 
         # Get constraints
-        constraint_strs = self._build_constraint_strings()
-        constraint_str = "None"
-        if constraint_strs:
-            if report_key in constraint_strs:
-                constraint_str = constraint_strs[report_key]
-            elif report_key == TOP_MODELS_REPORT_KEY:
-                constraint_str = constraint_strs['default']
+        constraint_str = self._create_constraint_string(report_key)
 
         # Build summary table and info sentence
         if not cpu_only:
@@ -425,6 +419,38 @@ class ReportManager:
         best_run_config_measurement = sorted_measurements[0][1]
 
         return best_run_config, best_run_config_measurement, sorted_measurements
+
+    def _create_constraint_string(self, report_key: str) -> str:
+        constraint_strs = self._build_constraint_strings()
+
+        if constraint_strs:
+            if report_key == TOP_MODELS_REPORT_KEY:
+                constraint_str = constraint_strs['default']
+            elif ',' in report_key:  # indicates multi-model
+                constraint_str = self._create_multi_model_constraint_string(
+                    report_key, constraint_strs)
+            else:  # single-model
+                if report_key in constraint_strs:
+                    constraint_str = constraint_strs[report_key]
+        else:
+            constraint_str = "None"
+
+        return constraint_str
+
+    def _create_multi_model_constraint_string(
+            self, report_key: str, constraint_strs: Dict[str, str]) -> str:
+        constraint_str = ""
+        for model_name in report_key.split(','):
+            if model_name in constraint_strs:
+                if constraint_str:
+                    constraint_str += "<br>"
+                    for i in range(len("Constraint targets: ")):
+                        constraint_str += "&ensp;"
+
+                constraint_str += "<strong>" + model_name + "</strong>: " + constraint_strs[
+                    model_name]
+
+        return constraint_str
 
     def _create_summary_sentence(self, report_key, num_configurations,
                                  num_measurements, best_run_config,
@@ -908,7 +934,7 @@ class ReportManager:
         max_mem_str = f"{max_memory} GB"
         return (gpu_names, max_mem_str)
 
-    def _build_constraint_strings(self):
+    def _build_constraint_strings(self) -> Dict[str, str]:
         """
         Constructs constraint strings to show the constraints under which
         each model is being run.
@@ -923,11 +949,11 @@ class ReportManager:
                     metric_header = MetricsManager.get_metric_types(
                         [metric])[0].header(aggregation_tag='')
                     for constraint_type, constraint_val in constraint.items():
-                        # String looks like 'Max p99 Latency : 99 ms'
+                        # String looks like 'Max p99 Latency: 99 ms'
                         metric_header_name = metric_header.rsplit(' ', 1)[0]
                         metric_unit = metric_header.rsplit(' ', 1)[1][1:-1]
                         strs.append(
-                            f"{constraint_type.capitalize()} {metric_header_name} : {constraint_val} {metric_unit}"
+                            f"{constraint_type.capitalize()} {metric_header_name}: {constraint_val} {metric_unit}"
                         )
                 constraint_strs[model_name] = ', '.join(strs)
         return constraint_strs
