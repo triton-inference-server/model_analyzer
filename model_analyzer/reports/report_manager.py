@@ -936,7 +936,7 @@ class ReportManager:
         max_mem_str = f"{max_memory} GB"
         return (gpu_names, max_mem_str)
 
-    def _build_constraint_strings(self):
+    def _build_constraint_strings(self) -> Dict[str, str]:
         """
         Constructs constraint strings to show the constraints under which
         each model is being run.
