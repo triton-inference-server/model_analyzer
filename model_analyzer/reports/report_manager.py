@@ -427,13 +427,19 @@ class ReportManager:
             if report_key == TOP_MODELS_REPORT_KEY:
                 constraint_str = constraint_strs['default']
             elif ',' in report_key:  # indicates multi-model
-                constraint_str = ""
+                constraint_str = None
                 for model_name in report_key.split(','):
                     if model_name in constraint_strs:
-                        constraint_str += "<strong>" + model_name + "</strong>: " + constraint_strs[
-                            model_name] + "<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;"
+                        if constraint_str:
+                            constraint_str += "<br>"
+                            for i in range(len("Constraint targets: ")):
+                                constraint_str += "&ensp;"
 
-                constraint_str = constraint_str[:-64]  # remove trailing <br>...
+                            constraint_str += "<strong>" + model_name + "</strong>: " + constraint_strs[
+                                model_name]
+                        else:
+                            constraint_str = "<strong>" + model_name + "</strong>: " + constraint_strs[
+                                model_name]
             else:  # single-model
                 if report_key in constraint_strs:
                     constraint_str = constraint_strs[report_key]

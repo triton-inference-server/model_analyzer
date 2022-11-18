@@ -564,7 +564,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
                                        gpu_info=MagicMock(),
                                        result_manager=MagicMock())
         expected_constraint_str = "<strong>modelA</strong>: Max p99 latency: 100 ms"
-        expected_constraint_str += "<br>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;"
+        expected_constraint_str += "<br>"
+
+        for i in range(len("Constraint targets: ")):
+            expected_constraint_str += "&ensp;"
+
         expected_constraint_str += "<strong>modelB</strong>: Max p99 latency: 200 ms"
 
         actual_constraint_str = report_manager._create_constraint_string(
