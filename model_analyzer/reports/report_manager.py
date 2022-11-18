@@ -439,7 +439,7 @@ class ReportManager:
 
     def _create_multi_model_constraint_string(self, report_key: str,
                                               constraint_strs: str) -> str:
-        constraint_str = None
+        constraint_str = ""
         for model_name in report_key.split(','):
             if model_name in constraint_strs:
                 if constraint_str:
@@ -447,11 +447,8 @@ class ReportManager:
                     for i in range(len("Constraint targets: ")):
                         constraint_str += "&ensp;"
 
-                    constraint_str += "<strong>" + model_name + "</strong>: " + constraint_strs[
-                        model_name]
-                else:
-                    constraint_str = "<strong>" + model_name + "</strong>: " + constraint_strs[
-                        model_name]
+                constraint_str += "<strong>" + model_name + "</strong>: " + constraint_strs[
+                    model_name]
 
         return constraint_str
 
