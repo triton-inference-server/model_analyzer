@@ -427,24 +427,31 @@ class ReportManager:
             if report_key == TOP_MODELS_REPORT_KEY:
                 constraint_str = constraint_strs['default']
             elif ',' in report_key:  # indicates multi-model
-                constraint_str = None
-                for model_name in report_key.split(','):
-                    if model_name in constraint_strs:
-                        if constraint_str:
-                            constraint_str += "<br>"
-                            for i in range(len("Constraint targets: ")):
-                                constraint_str += "&ensp;"
-
-                            constraint_str += "<strong>" + model_name + "</strong>: " + constraint_strs[
-                                model_name]
-                        else:
-                            constraint_str = "<strong>" + model_name + "</strong>: " + constraint_strs[
-                                model_name]
+                constraint_str = self._create_multi_model_constraint_string(
+                    report_key, constraint_strs)
             else:  # single-model
                 if report_key in constraint_strs:
                     constraint_str = constraint_strs[report_key]
         else:
             constraint_str = "None"
+
+        return constraint_str
+
+    def _create_multi_model_constraint_string(self, report_key: str,
+                                              constraint_strs: str) -> str:
+        constraint_str = None
+        for model_name in report_key.split(','):
+            if model_name in constraint_strs:
+                if constraint_str:
+                    constraint_str += "<br>"
+                    for i in range(len("Constraint targets: ")):
+                        constraint_str += "&ensp;"
+
+                    constraint_str += "<strong>" + model_name + "</strong>: " + constraint_strs[
+                        model_name]
+                else:
+                    constraint_str = "<strong>" + model_name + "</strong>: " + constraint_strs[
+                        model_name]
 
         return constraint_str
 
