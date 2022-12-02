@@ -115,16 +115,16 @@ class ConstraintManager:
 
     @staticmethod
     def _get_failure_percentage(metric: Record, constraint: ModelConstraints) -> float:
-        constraint = constraint[metric.tag]
+        constraint_type = constraint[metric.tag]
         failure_percentage = 0
 
-        if 'min' in constraint:
-            if metric.value() < constraint['min']:
-                failure_percentage = (constraint['min'] -
-                                      metric.value()) / constraint['min']
-        if 'max' in constraint:
-            if metric.value() > constraint['max']:
+        if 'min' in constraint_type:
+            if metric.value() < constraint_type['min']:
+                failure_percentage = (constraint_type['min'] -
+                                      metric.value()) / constraint_type['min']
+        if 'max' in constraint_type:
+            if metric.value() > constraint_type['max']:
                 failure_percentage = (metric.value() -
-                                      constraint['max']) / constraint['max']
+                                      constraint_type['max']) / constraint_type['max']
 
         return failure_percentage
