@@ -431,7 +431,7 @@ class ReportManager:
                     report_key, constraint_strs)
             else:  # single-model
                 if report_key in constraint_strs:
-                    constraint_str = constraint_strs[report_key]
+                    constraint_str = constraint_strs[report_key]            
         else:
             constraint_str = "None"
 
@@ -945,7 +945,7 @@ class ReportManager:
                 self._config).items():
             strs = []
             if model_constraints:
-                for metric, constraint in model_constraints.items():
+                for metric, constraint in model_constraints.to_dict().items():
                     metric_header = MetricsManager.get_metric_types(
                         [metric])[0].header(aggregation_tag='')
                     for constraint_type, constraint_val in constraint.items():

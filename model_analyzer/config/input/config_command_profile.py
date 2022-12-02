@@ -57,6 +57,7 @@ from .objects.config_plot import ConfigPlot
 from .objects.config_model_profile_spec import ConfigModelProfileSpec
 from .objects.config_protobuf_utils import \
     is_protobuf_type_primitive, protobuf_to_config_type
+from model_analyzer.result.model_constraints import ModelConstraints
 
 from tritonclient.grpc.model_config_pb2 import ModelConfig
 from google.protobuf.descriptor import FieldDescriptor
@@ -1008,7 +1009,7 @@ class ConfigCommandProfile(ConfigCommand):
                     {'perf_throughput': {
                         'min': self.min_throughput
                     }})
-
+        
         new_profile_models = {}
         for i, model in enumerate(self.profile_models):
             new_model = {'cpu_only': (model.cpu_only() or cpu_only)}
@@ -1025,7 +1026,7 @@ class ConfigCommandProfile(ConfigCommand):
                         'constraints'].value():
                     new_model['constraints'] = self.constraints
             else:
-                new_model['constraints'] = model.constraints()
+                new_model['constraints'] = model.constraints().to_dict()
 
             # Weighting
             if not model.weighting():

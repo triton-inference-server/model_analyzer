@@ -20,6 +20,7 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.record import Record, RecordType
+from model_analyzer.result.model_constraints import ModelConstraints
 
 from copy import deepcopy
 from statistics import mean
@@ -55,7 +56,7 @@ class RunConfigMeasurement:
 
         self._model_config_measurements: List[ModelConfigMeasurement] = []
         self._model_config_weights: List[float] = []
-        self._model_config_constraints: List[Dict[str, Dict[str, int]]] = []
+        self._model_config_constraints: List[ModelConstraints] = []
 
     def to_dict(self):
         rcm_dict = deepcopy(self.__dict__)
@@ -106,13 +107,12 @@ class RunConfigMeasurement:
         ]
 
     def set_model_config_constraints(
-            self, model_config_constraints: List[Dict[str, Dict[str,
-                                                                int]]]) -> None:
+            self, model_config_constraints: List[ModelConstraints]) -> None:
         """
 
         Parameters
         ----------
-        model_config_constraints: list of dicts of constraints 
+        model_config_constraints: list of ModelConstraints objects
         Used to determine if an ModelConfigMeasurement passes or fails
         """
         self._model_config_constraints = model_config_constraints

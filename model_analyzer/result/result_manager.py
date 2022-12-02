@@ -329,7 +329,7 @@ class ResultManager:
         }
 
         self._run_constraints = {
-            model.model_name(): model.constraints()
+            model.model_name(): [model.constraints()]
             for model in self._config.profile_models
         }
 

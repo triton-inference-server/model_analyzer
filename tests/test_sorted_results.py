@@ -14,6 +14,8 @@
 
 from model_analyzer.result.sorted_results import SortedResults
 from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
+from model_analyzer.result.model_constraints import ModelConstraints
+
 from .common import test_result_collector as trc
 from .common.test_utils import construct_run_config, construct_run_config_result
 
@@ -121,7 +123,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         """
         Test the case where we have only failing results
         """
-        constraints = {'perf_throughput': {'min': 1000}}
+        constraints = ModelConstraints({'perf_throughput': {'min': 1000}})
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         for i in sample(range(10), 10):
             avg_non_gpu_metrics = {
@@ -133,7 +135,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
-                    constraints=constraints,
+                    constraints=[constraints],
                     model_name=str(i)))
 
         top_5_results = self.sorted_results.top_n_results(n=5)
@@ -150,7 +152,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         """
 
         # Create 10 failing results
-        constraints = {'perf_throughput': {'min': 1000}}
+        constraints = ModelConstraints({'perf_throughput': {'min': 1000}})
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         for i in sample(range(10), 10):
             avg_non_gpu_metrics = {
@@ -162,7 +164,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
-                    constraints=constraints,
+                    constraints=[constraints],
                     model_name=str(i)))
 
         # Now add a measurment to the last result so that it now passes the constraint
@@ -176,7 +178,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                 avg_gpu_metric_values=avg_gpu_metrics,
                 avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                 comparator=self.result_comparator,
-                constraints=constraints,
+                constraints=[constraints],
                 model_name="9"))
 
         top_5_results = self.sorted_results.top_n_results(n=5)

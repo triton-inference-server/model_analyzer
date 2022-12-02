@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from model_analyzer.result.constraint_manager import ConstraintManager
+from model_analyzer.result.model_constraints import ModelConstraints
 
 from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
 
@@ -36,8 +37,8 @@ class TestConstraintManager(trc.TestResultCollector):
         config = self._create_single_model_no_constraints()
         constraints = ConstraintManager.get_constraints_for_all_models(config)
 
-        self.assertEqual(constraints['model_A'], None)
-        self.assertEqual(constraints['default'], {})
+        self.assertEqual(constraints['model_A'], ModelConstraints({}))
+        self.assertEqual(constraints['default'], ModelConstraints({}))
 
     def test_single_model_with_constraints(self):
         """
@@ -47,10 +48,10 @@ class TestConstraintManager(trc.TestResultCollector):
         constraints = ConstraintManager.get_constraints_for_all_models(config)
 
         self.assertEqual(constraints['model_A'],
-                         {'perf_latency_p99': {
+                         ModelConstraints({'perf_latency_p99': {
                              'max': 100
-                         }})
-        self.assertEqual(constraints['default'], {})
+                         }}))
+        self.assertEqual(constraints['default'], ModelConstraints({}))
 
     def test_single_model_with_global_constraints(self):
         """
@@ -60,13 +61,13 @@ class TestConstraintManager(trc.TestResultCollector):
         constraints = ConstraintManager.get_constraints_for_all_models(config)
 
         self.assertEqual(constraints['model_A'],
-                         {'perf_throughput': {
+                         ModelConstraints({'perf_throughput': {
                              'min': 100
-                         }})
+                         }}))
         self.assertEqual(constraints['default'],
-                         {'perf_throughput': {
+                         ModelConstraints({'perf_throughput': {
                              'min': 100
-                         }})
+                         }}))
 
     def test_single_model_with_both_constraints(self):
         """
@@ -76,13 +77,13 @@ class TestConstraintManager(trc.TestResultCollector):
         constraints = ConstraintManager.get_constraints_for_all_models(config)
 
         self.assertEqual(constraints['model_A'],
-                         {'perf_latency_p99': {
+                         ModelConstraints({'perf_latency_p99': {
                              'max': 50
-                         }})
+                         }}))
         self.assertEqual(constraints['default'],
-                         {'perf_latency_p99': {
+                         ModelConstraints({'perf_latency_p99': {
                              'max': 100
-                         }})
+                         }}))
 
     def test_multi_model_with_both_constraints(self):
         """
@@ -92,29 +93,29 @@ class TestConstraintManager(trc.TestResultCollector):
         constraints = ConstraintManager.get_constraints_for_all_models(config)
 
         self.assertEqual(constraints['model_A'],
-                         {'perf_latency_p99': {
+                         ModelConstraints({'perf_latency_p99': {
                              'max': 50
-                         }})
+                         }}))
         self.assertEqual(constraints['model_B'],
-                         {'perf_throughput': {
+                         ModelConstraints({'perf_throughput': {
                              'min': 100
-                         }})
-        self.assertEqual(constraints['model_C'], {
+                         }}))
+        self.assertEqual(constraints['model_C'], ModelConstraints({
             'gpu_used_memory': {
                 'max': 50
             },
             'perf_throughput': {
                 'min': 50
             }
-        })
-        self.assertEqual(constraints['model_D'], {
+        }))
+        self.assertEqual(constraints['model_D'], ModelConstraints({
             'perf_latency_p99': {
                 'max': 100
             },
             'gpu_used_memory': {
                 'max': 100
             }
-        })
+        }))
 
     def test_single_model_max_constraint_checks(self):
         """

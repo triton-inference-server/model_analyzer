@@ -19,6 +19,7 @@ from model_analyzer.record.record import Record
 if TYPE_CHECKING:
     from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
+from model_analyzer.result.model_constraints import ModelConstraints
 
 class ConstraintManager:
     """
@@ -37,19 +38,19 @@ class ConstraintManager:
         Returns
         -------
         dict
-            keys are model names, and values are constraints
+            keys are model names, and values are ModelConstraints objects
         """
 
         constraints = {}
         for model in config.profile_models:
             constraints[model.model_name()] = model.constraints()
         if "constraints" in config.get_all_config():
-            constraints["default"] = config.get_all_config()["constraints"]
+            constraints["default"] = ModelConstraints(config.get_all_config()["constraints"])
         return constraints
 
     @staticmethod
     def satisfies_constraints(
-            constraints: List[Dict[str, Dict[str, int]]],
+            constraints: List[ModelConstraints],
             run_config_measurement: 'RunConfigMeasurement') -> bool:
         """
         Checks that the measurements, for every model, satisfy 
@@ -57,7 +58,7 @@ class ConstraintManager:
 
         Parameters
         ----------
-        constraints: list of dicts
+        constraints: list of ModelConstraints objects
             keys are metrics and values are 
             constraint_type:constraint_value pairs
         run_config_measurement : RunConfigMeasurement
@@ -75,14 +76,14 @@ class ConstraintManager:
                     if ConstraintManager._metric_matches_constraint(
                             metric, constraints[i]):
                         if ConstraintManager._get_failure_percentage(
-                                metric, constraints[i][metric.tag]) > 0:
+                                metric, constraints[i]) > 0:
                             return False
 
         return True
 
     @staticmethod
     def constraint_failure_percentage(
-            constraints: List[Dict[str, Dict[str, int]]],
+            constraints: List[ModelConstraints],
             run_config_measurement: 'RunConfigMeasurement') -> float:
         """
         Additive percentage, for every measurement, in every model, of how much 
@@ -100,22 +101,21 @@ class ConstraintManager:
                     if ConstraintManager._metric_matches_constraint(
                             metric, constraints[i]):
                         failure_percentage += ConstraintManager._get_failure_percentage(
-                            metric, constraints[i][metric.tag])
+                            metric, constraints[i])
 
         return failure_percentage * 100
 
     @staticmethod
     def _metric_matches_constraint(
-            metric: Record, constraint: Dict[str, Dict[str, int]]) -> bool:
-        if constraint is not None and metric.tag in constraint:
+            metric: Record, constraint: ModelConstraints) -> bool:
+        if constraint is not None and constraint.has_metric(metric.tag):
             return True
         else:
             return False
 
     @staticmethod
-    def _get_failure_percentage(metric: Record, constraint: Dict[str,
-                                                                 int]) -> float:
-
+    def _get_failure_percentage(metric: Record, constraint: ModelConstraints) -> float:
+        constraint = constraint[metric.tag]
         failure_percentage = 0
 
         if 'min' in constraint:

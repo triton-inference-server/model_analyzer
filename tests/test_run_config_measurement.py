@@ -19,6 +19,7 @@ from tests.common.test_utils import convert_non_gpu_metrics_to_data, \
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.result.model_constraints import ModelConstraints
 
 from statistics import mean
 
@@ -238,18 +239,18 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         passing/failing if model is above/below
         throughput threshold
         """
-        self.rcm5.set_model_config_constraints([{
+        self.rcm5.set_model_config_constraints([ModelConstraints({
             "perf_throughput": {
                 "min": 500
             }
-        }])
+        })])
         self.assertTrue(self.rcm5.is_passing_constraints())
 
-        self.rcm5.set_model_config_constraints([{
+        self.rcm5.set_model_config_constraints([ModelConstraints({
             "perf_throughput": {
                 "min": 3000
             }
-        }])
+        })])
         self.assertFalse(self.rcm5.is_passing_constraints())
 
     def test_compare_constraints_none(self):
@@ -258,16 +259,16 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         # RCM4's throughput is 1000
         # RCM5's throughput is 2000
-        self.rcm4.set_model_config_constraints([{
+        self.rcm4.set_model_config_constraints([ModelConstraints({
             "perf_throughput": {
                 "min": 500
             }
-        }])
-        self.rcm5.set_model_config_constraints([{
+        })])
+        self.rcm5.set_model_config_constraints([ModelConstraints({
             "perf_throughput": {
                 "min": 2500
             }
-        }])
+        })])
 
         self.assertEqual(self.rcm4.compare_constraints(self.rcm5), None)
         self.assertEqual(self.rcm5.compare_constraints(self.rcm4), None)
@@ -279,16 +280,16 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         # RCM4's throughput is 1000
         # RCM5's throughput is 2000
-        self.rcm4.set_model_config_constraints([{
+        self.rcm4.set_model_config_constraints([ModelConstraints({
             "perf_throughput": {
                 "min": 1250
             }
-        }])
-        self.rcm5.set_model_config_constraints([{
+        })])
+        self.rcm5.set_model_config_constraints([ModelConstraints({
             "perf_throughput": {
                 "min": 2500
             }
-        }])
+        })])
 
         # RCM4 is failing by 20%, RCM5 is failing by 20%
         self.assertEqual(self.rcm4.compare_constraints(self.rcm5), 0)
@@ -302,16 +303,16 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         # RCM4's throughput is 1000
         # RCM5's throughput is 2000
-        self.rcm4.set_model_config_constraints([{
+        self.rcm4.set_model_config_constraints([ModelConstraints({
             "perf_throughput": {
                 "min": 2000
             }
-        }])
-        self.rcm5.set_model_config_constraints([{
+        })])
+        self.rcm5.set_model_config_constraints([ModelConstraints({
             "perf_throughput": {
                 "min": 2500
             }
-        }])
+        })])
 
         # RCM4 is failing by 50%, RCM5 is failing by 20%
         self.assertEqual(self.rcm4.compare_constraints(self.rcm5), 0.30)
