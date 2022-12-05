@@ -258,13 +258,55 @@ class ModelConfig:
 
     def cpu_only(self):
         """
-        Return
+        Returns
         -------
         bool
             Whether the model should be run on CPU only
         """
 
         return self._cpu_only
+
+    def is_ensemble(self) -> bool:
+        """
+        Returns
+        -------
+        bool
+           True if this is an ensemble model
+        """
+
+        return getattr(self._model_config, "platform") == "ensemble"
+
+    def get_ensemble_submodels(self) -> List[str]:
+        """
+        Returns
+        -------
+            List[str]: Sub-model names
+        """
+
+        if not self.is_ensemble():
+            return None
+
+        submodels = [
+            model['modelName']
+            for model in self.to_dict()['ensembleScheduling']['step']
+        ]
+        return submodels
+
+    def set_submodel_variant_name(self, submodel_name: str,
+                                  variant_name: str) -> None:
+        """
+        Replaces the Ensembles submodel's name with the variant name
+        """
+
+        if not self.is_ensemble():
+            return
+
+        model_config_dict = self.to_dict()
+        for submodel in model_config_dict['ensembleScheduling']['step']:
+            if submodel['modelName'] == submodel_name:
+                submodel['modelName'] = variant_name
+
+        self._model_config = self.from_dict(model_config_dict)._model_config
 
     def write_config_to_file(self, model_path, src_model_path,
                              first_variant_model_path):
