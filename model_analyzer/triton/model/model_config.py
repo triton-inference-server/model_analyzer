@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from copy import deepcopy
 
 from numba import cuda
@@ -276,7 +276,7 @@ class ModelConfig:
 
         return getattr(self._model_config, "platform") == "ensemble"
 
-    def get_ensemble_submodels(self) -> List[str]:
+    def get_ensemble_submodels(self) -> Optional[List[str]]:
         """
         Returns
         -------
