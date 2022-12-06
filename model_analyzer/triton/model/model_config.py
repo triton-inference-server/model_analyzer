@@ -285,7 +285,7 @@ class ModelConfig:
 
         if not self.is_ensemble():
             raise TritonModelAnalyzerException(
-                "Cannot find submodels. Model platfrom is not ensemble.")
+                "Cannot find submodels. Model platform is not ensemble.")
 
         try:
             submodels = [
@@ -294,7 +294,7 @@ class ModelConfig:
             ]
         except:
             raise TritonModelAnalyzerException(
-                "Cannot find submodels. Ensemble Scheduling and/or step is not present in config protobuf"
+                "Cannot find submodels. Ensemble Scheduling and/or step is not present in config protobuf."
             )
 
         return submodels
@@ -307,7 +307,7 @@ class ModelConfig:
 
         if not self.is_ensemble():
             raise TritonModelAnalyzerException(
-                "Cannot find submodels. Model platfrom is not ensemble.")
+                "Cannot find submodels. Model platform is not ensemble.")
 
         model_config_dict = self.to_dict()
 
@@ -317,7 +317,7 @@ class ModelConfig:
                     submodel['modelName'] = variant_name
         except:
             raise TritonModelAnalyzerException(
-                "Cannot find submodels. Ensemble Scheduling and/or step is not present in config protobuf"
+                "Cannot find submodels. Ensemble Scheduling and/or step is not present in config protobuf."
             )
 
         self._model_config = self.from_dict(model_config_dict)._model_config
