@@ -25,6 +25,8 @@ from model_analyzer.config.generate.quick_run_config_generator import QuickRunCo
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 
+from tests.common.test_utils import evaluate_mock_config
+
 
 class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
@@ -262,6 +264,66 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(pc2['concurrency-range'], 192)
         self.assertEqual(pc2['batch-size'], 1)
         self.assertEqual(pc2['model-version'], 3)
+
+    def test_default_config_generation(self):
+        """
+        Test that the default config is generated correctly
+        """
+
+        fake_config = {
+            "name": "my-model",
+            "input": [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": [16]
+            }],
+            "max_batch_size": 4
+        }
+
+        args = [
+            'model-analyzer', 'profile', '--model-repository', '/tmp',
+            '--config-file', '/tmp/my_config.yml'
+        ]
+
+        # yapf: disable
+        yaml_str = ("""
+            profile_models:
+                - my-model:
+                    perf_analyzer_flags:
+                        percentile: 96
+            """)
+        # yapf: enable
+
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                return_value=fake_config):
+            models = [
+                ModelProfileSpec(spec=config.profile_models[0],
+                                 config=config,
+                                 client=MagicMock(),
+                                 gpus=MagicMock())
+            ]
+
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("max_batch_size",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("concurrency",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
+                                       MagicMock(), ModelVariantNameManager())
+
+        default_run_config = qrcg._create_default_run_config()
+
+        self.assertTrue(
+            '--percentile=96' in default_run_config.representation())
 
     def tearDown(self):
         patch.stopall()

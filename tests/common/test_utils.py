@@ -44,7 +44,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 def evaluate_mock_config(
     args: list,
     yaml_str: str,
-    subcommand: str = 'analyze'
+    subcommand: str = 'profile'
 ) -> Union[ConfigCommandProfile, ConfigCommandReport]:
     """
     Return a ConfigCommandReport/Analyze/Profile created from the fake CLI
