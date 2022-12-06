@@ -77,6 +77,97 @@ instance_group [
 ]
 """
 
+        # Ensemble model config
+        self._ensemble_model_config_protobuf = """
+    name: "ensemble_python_resnet50"
+platform: "ensemble"
+max_batch_size: 256
+input [
+  {
+    name: "INPUT"
+    data_type: TYPE_UINT8
+    dims: [ -1 ]
+  }
+]
+output [
+  {
+    name: "OUTPUT"
+    data_type: TYPE_FP32
+    dims: [ 1000 ]
+  }
+]
+ensemble_scheduling {
+  step [
+    {
+      model_name: "preprocess"
+      model_version: -1
+      input_map {
+        key: "INPUT_0"
+        value: "INPUT"
+      }
+      output_map {
+        key: "OUTPUT_0"
+        value: "preprocessed_image"
+      }
+    },
+    {
+      model_name: "resnet50_trt"
+      model_version: -1
+      input_map {
+        key: "input"
+        value: "preprocessed_image"
+      }
+      output_map {
+        key: "output"
+        value: "OUTPUT"
+      }
+    }
+  ]
+}
+"""
+
+        self._ensemble_model_config_protobuf_no_scheduling = """
+    name: "ensemble_python_resnet50"
+platform: "ensemble"
+max_batch_size: 256
+input [
+  {
+    name: "INPUT"
+    data_type: TYPE_UINT8
+    dims: [ -1 ]
+  }
+]
+output [
+  {
+    name: "OUTPUT"
+    data_type: TYPE_FP32
+    dims: [ 1000 ]
+  }
+]
+"""
+
+        self._ensemble_model_config_protobuf_no_step = """
+    name: "ensemble_python_resnet50"
+platform: "ensemble"
+max_batch_size: 256
+input [
+  {
+    name: "INPUT"
+    data_type: TYPE_UINT8
+    dims: [ -1 ]
+  }
+]
+output [
+  {
+    name: "OUTPUT"
+    data_type: TYPE_FP32
+    dims: [ 1000 ]
+  }
+]
+ensemble_scheduling {
+}
+"""
+
     def tearDown(self):
         patch.stopall()
 
@@ -230,6 +321,100 @@ instance_group [
             ]
         }
         _test_helper(model_config_dict, "8:GPU + 3:CPU", gpu_count=4)
+
+    def test_is_ensemble(self):
+        """ Test that we recognize if the platform is ensemble """
+
+        tensor_protobuf = self._model_config_protobuf
+        mock_model_config = MockModelConfig(tensor_protobuf)
+        mock_model_config.start()
+        model_config = ModelConfig._create_from_file('/path/to/model_config')
+        self.assertFalse(model_config.is_ensemble())
+        mock_model_config.stop()
+
+        ensemble_protobuf = self._ensemble_model_config_protobuf
+        mock_model_config = MockModelConfig(ensemble_protobuf)
+        mock_model_config.start()
+        model_config = ModelConfig._create_from_file('/path/to/model_config')
+        self.assertTrue(model_config.is_ensemble())
+        mock_model_config.stop()
+
+    def test_ensemble_submodels(self):
+        """ Test that we can extract an ensembles submodel names """
+
+        ensemble_protobuf = self._ensemble_model_config_protobuf
+        mock_model_config = MockModelConfig(ensemble_protobuf)
+        mock_model_config.start()
+        model_config = ModelConfig._create_from_file('/path/to/model_config')
+
+        self.assertEqual(model_config.get_ensemble_submodels(),
+                         ['preprocess', 'resnet50_trt'])
+        mock_model_config.stop()
+
+    def test_set_submodel_name(self):
+        """ Test setting a variant name for an ensemble's submodel """
+
+        ensemble_protobuf = self._ensemble_model_config_protobuf
+        mock_model_config = MockModelConfig(ensemble_protobuf)
+        mock_model_config.start()
+        model_config = ModelConfig._create_from_file('/path/to/model_config')
+
+        model_config.set_submodel_variant_name(
+            submodel_name="preprocess", variant_name="preprocess_config_0")
+        model_config.set_submodel_variant_name(
+            submodel_name="resnet50_trt", variant_name="resnet50_trt_config_1")
+
+        self.assertEqual(model_config.get_ensemble_submodels(),
+                         ['preprocess_config_0', 'resnet50_trt_config_1'])
+        mock_model_config.stop()
+
+    def test_badly_formed_ensemble_configs(self):
+        """ Test cases where protobuf is incorrect for an ensemble platform """
+
+        # Tests where platform is not ensemble
+        ensemble_protobuf = self._model_config_protobuf
+        mock_model_config = MockModelConfig(ensemble_protobuf)
+        mock_model_config.start()
+        model_config = ModelConfig._create_from_file('/path/to/model_config')
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            model_config.get_ensemble_submodels()
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            model_config.set_submodel_variant_name(
+                submodel_name="preprocess", variant_name="preprocess_config_0")
+
+        mock_model_config.stop()
+
+        # Tests where platform is ensemble, but scheduling section doesn't exist
+        ensemble_protobuf = self._ensemble_model_config_protobuf_no_scheduling
+        mock_model_config = MockModelConfig(ensemble_protobuf)
+        mock_model_config.start()
+        model_config = ModelConfig._create_from_file('/path/to/model_config')
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            model_config.get_ensemble_submodels()
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            model_config.set_submodel_variant_name(
+                submodel_name="preprocess", variant_name="preprocess_config_0")
+
+        mock_model_config.stop()
+
+        # Tests where platform is ensemble, scheduling exists, but step is omitted
+        ensemble_protobuf = self._ensemble_model_config_protobuf_no_step
+        mock_model_config = MockModelConfig(ensemble_protobuf)
+        mock_model_config.start()
+        model_config = ModelConfig._create_from_file('/path/to/model_config')
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            model_config.get_ensemble_submodels()
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            model_config.set_submodel_variant_name(
+                submodel_name="preprocess", variant_name="preprocess_config_0")
+
+        mock_model_config.stop()
 
 
 if __name__ == '__main__':
