@@ -284,12 +284,19 @@ class ModelConfig:
         """
 
         if not self.is_ensemble():
-            return None
+            raise TritonModelAnalyzerException(
+                "Cannot find submodels. Model platfrom is not ensemble.")
 
-        submodels = [
-            model['modelName']
-            for model in self.to_dict()['ensembleScheduling']['step']
-        ]
+        try:
+            submodels = [
+                model['modelName']
+                for model in self.to_dict()['ensembleScheduling']['step']
+            ]
+        except:
+            raise TritonModelAnalyzerException(
+                "Cannot find submodels. Ensemble Scheduling and/or step is not present in config protobuf"
+            )
+
         return submodels
 
     def set_submodel_variant_name(self, submodel_name: str,
@@ -299,12 +306,19 @@ class ModelConfig:
         """
 
         if not self.is_ensemble():
-            return
+            raise TritonModelAnalyzerException(
+                "Cannot find submodels. Model platfrom is not ensemble.")
 
         model_config_dict = self.to_dict()
-        for submodel in model_config_dict['ensembleScheduling']['step']:
-            if submodel['modelName'] == submodel_name:
-                submodel['modelName'] = variant_name
+
+        try:
+            for submodel in model_config_dict['ensembleScheduling']['step']:
+                if submodel['modelName'] == submodel_name:
+                    submodel['modelName'] = variant_name
+        except:
+            raise TritonModelAnalyzerException(
+                "Cannot find submodels. Ensemble Scheduling and/or step is not present in config protobuf"
+            )
 
         self._model_config = self.from_dict(model_config_dict)._model_config
 
