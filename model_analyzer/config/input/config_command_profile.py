@@ -1008,7 +1008,7 @@ class ConfigCommandProfile(ConfigCommand):
                     {'perf_throughput': {
                         'min': self.min_throughput
                     }})
-        
+
         new_profile_models = {}
         for i, model in enumerate(self.profile_models):
             new_model = {'cpu_only': (model.cpu_only() or cpu_only)}
