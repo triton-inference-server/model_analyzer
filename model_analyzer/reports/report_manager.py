@@ -431,7 +431,7 @@ class ReportManager:
                     report_key, constraint_strs)
             else:  # single-model
                 if report_key in constraint_strs:
-                    constraint_str = constraint_strs[report_key]            
+                    constraint_str = constraint_strs[report_key]
         else:
             constraint_str = "None"
 

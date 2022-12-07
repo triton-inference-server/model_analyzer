@@ -15,7 +15,7 @@
 from model_analyzer.result.model_constraints import ModelConstraints
 
 class ConfigModelProfileSpec:
-    """ 
+    """
     A class representing the configuration used for
     a single model.
     """
