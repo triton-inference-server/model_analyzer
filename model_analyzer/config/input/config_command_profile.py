@@ -57,7 +57,6 @@ from .objects.config_plot import ConfigPlot
 from .objects.config_model_profile_spec import ConfigModelProfileSpec
 from .objects.config_protobuf_utils import \
     is_protobuf_type_primitive, protobuf_to_config_type
-from model_analyzer.result.model_constraints import ModelConstraints
 
 from tritonclient.grpc.model_config_pb2 import ModelConfig
 from google.protobuf.descriptor import FieldDescriptor

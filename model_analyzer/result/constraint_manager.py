@@ -76,7 +76,7 @@ class ConstraintManager:
                     if ConstraintManager._metric_matches_constraint(
                             metric, constraints[i]):
                         if ConstraintManager._get_failure_percentage(
-                                metric, constraints[i]) > 0:
+                                metric, constraints[i][metric.tag]) > 0:
                             return False
 
         return True
@@ -101,30 +101,31 @@ class ConstraintManager:
                     if ConstraintManager._metric_matches_constraint(
                             metric, constraints[i]):
                         failure_percentage += ConstraintManager._get_failure_percentage(
-                            metric, constraints[i])
+                            metric, constraints[i][metric.tag])
 
         return failure_percentage * 100
 
     @staticmethod
     def _metric_matches_constraint(
             metric: Record, constraint: ModelConstraints) -> bool:
-        if constraint is not None and constraint.has_metric(metric.tag):
+        if constraint.has_metric(metric.tag):
             return True
         else:
             return False
 
     @staticmethod
-    def _get_failure_percentage(metric: Record, constraint: ModelConstraints) -> float:
-        constraint_type = constraint[metric.tag]
+    def _get_failure_percentage(metric: Record, constraint: Dict[str,
+                                                                 int]) -> float:
+
         failure_percentage = 0
 
-        if 'min' in constraint_type:
-            if metric.value() < constraint_type['min']:
-                failure_percentage = (constraint_type['min'] -
-                                      metric.value()) / constraint_type['min']
-        if 'max' in constraint_type:
-            if metric.value() > constraint_type['max']:
+        if 'min' in constraint:
+            if metric.value() < constraint['min']:
+                failure_percentage = (constraint['min'] -
+                                      metric.value()) / constraint['min']
+        if 'max' in constraint:
+            if metric.value() > constraint['max']:
                 failure_percentage = (metric.value() -
-                                      constraint_type['max']) / constraint_type['max']
+                                      constraint['max']) / constraint['max']
 
         return failure_percentage

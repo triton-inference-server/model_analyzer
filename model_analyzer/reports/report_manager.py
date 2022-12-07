@@ -945,7 +945,7 @@ class ReportManager:
                 self._config).items():
             strs = []
             if model_constraints:
-                for metric, constraint in model_constraints.to_dict().items():
+                for metric, constraint in model_constraints.items():
                     metric_header = MetricsManager.get_metric_types(
                         [metric])[0].header(aggregation_tag='')
                     for constraint_type, constraint_val in constraint.items():

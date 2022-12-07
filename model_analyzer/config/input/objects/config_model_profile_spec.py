@@ -272,7 +272,7 @@ class ConfigModelProfileSpec:
             model_object['parameters'] = self._parameters
 
         if self._constraints:
-            model_object['constraints'] = self._constraints.to_dict()
+            model_object['constraints'] = self._constraints
 
         if self._weighting:
             model_object['weighting'] = self._weighting

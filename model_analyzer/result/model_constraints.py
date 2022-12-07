@@ -23,8 +23,8 @@ class ModelConstraints:
         Parameters
         ----------
         constraints: dict
-            keys are metrics and values are 
-            constraint_type: constraint_value pairs
+            keys are strings and 
+            values are dict of single str: int pair
         """
 
         self._constraints = {}
@@ -93,3 +93,12 @@ class ModelConstraints:
             return True
         else:
             return False
+
+    def items(self):
+        return self._constraints.items()
+
+    def __repr__(self):
+        return str(self._constraints)
+
+    def __iter__(self):
+        return iter(self._constraints)
