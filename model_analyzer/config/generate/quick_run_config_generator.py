@@ -349,6 +349,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             perf_config_params = {'batch-size': 1, 'concurrency-range': 1}
             default_perf_analyzer_config.update_config(perf_config_params)
 
+            default_perf_analyzer_config.update_config(
+                model.perf_analyzer_flags())
+
             default_model_run_config = ModelRunConfig(
                 model.model_name(), default_model_config,
                 default_perf_analyzer_config)
