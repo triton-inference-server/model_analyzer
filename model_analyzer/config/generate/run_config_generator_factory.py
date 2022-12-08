@@ -115,7 +115,8 @@ class RunConfigGeneratorFactory:
         client: TritonClient, result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager
     ) -> ConfigGeneratorInterface:
-        search_config = RunConfigGeneratorFactory._create_search_config(models)
+        search_config = RunConfigGeneratorFactory._create_search_config(
+            models, ensemble_submodels)
         return QuickPlusConcurrencySweepRunConfigGenerator(
             search_config=search_config,
             config=command_config,
@@ -127,14 +128,25 @@ class RunConfigGeneratorFactory:
             model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod
-    def _create_search_config(models: List[ModelProfileSpec]) -> SearchConfig:
+    def _create_search_config(
+            models: List[ModelProfileSpec],
+            ensemble_submodels: Dict[str,
+                                     List[ModelProfileSpec]]) -> SearchConfig:
         dimensions = SearchDimensions()
 
-        #yapf: disable
-        for i, model in enumerate(models):
-            dims = RunConfigGeneratorFactory._get_dimensions_for_model(model.supports_batching())
-            dimensions.add_dimensions(i, dims)
-        #yapf: enable
+        index = 0
+        for model in models:
+            if model.model_name() in ensemble_submodels:
+                for submodel in ensemble_submodels[model.model_name()]:
+                    dims = RunConfigGeneratorFactory._get_dimensions_for_model(
+                        model.supports_batching())
+                    dimensions.add_dimensions(index, dims)
+                    index += 1
+            else:
+                dims = RunConfigGeneratorFactory._get_dimensions_for_model(
+                    model.supports_batching())
+                dimensions.add_dimensions(index, dims)
+                index += 1
 
         search_config = SearchConfig(dimensions=dimensions,
                                      radius=RADIUS,
