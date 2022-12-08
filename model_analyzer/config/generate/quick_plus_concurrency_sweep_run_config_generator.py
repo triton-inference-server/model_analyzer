@@ -60,8 +60,10 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         config: ConfigCommandProfile
             Profile configuration information
         gpus: List of GPUDevices
-        models: List of ConfigModelProfileSpec
+        models: List of ModelProfileSpec
             List of models to profile
+        ensemble_submodels: Dict of List of ModelProfileSpec
+            Dict indexed by model name of list of submodels to profile
         client: TritonClient
         result_manager: ResultManager
             The object that handles storing and sorting the results from the perf analyzer

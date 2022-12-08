@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 import collections.abc
 from copy import deepcopy
 from model_analyzer.constants import DEFAULT_CONFIG_PARAMS
@@ -41,6 +41,17 @@ class ModelVariantNameManager:
 
         return model_variant_name_manager
 
+    @staticmethod
+    def make_ensemble_submodel_key(
+            ensemble_config_dicts: List[Dict]) -> Dict[str, str]:
+        ensemble_names = [
+            ensemble_config_dict["name"]
+            for ensemble_config_dict in ensemble_config_dicts
+        ]
+        ensemble_key = ','.join(ensemble_names)
+
+        return {"key": ensemble_key}
+
     def get_model_variant_name(self, model_name: str, model_config_dict: Dict,
                                param_combo: Dict) -> Tuple[bool, str]:
         """
@@ -56,6 +67,29 @@ class ModelVariantNameManager:
         variant_found, model_variant_name = self._find_existing_variant(mcd)
 
         if self._is_default_config(param_combo):
+            return (False, model_name + '_config_default')
+
+        if variant_found:
+            return (True, model_variant_name)
+
+        model_variant_name = self._create_new_model_variant(model_name, mcd)
+
+        return (False, model_variant_name)
+
+    def get_ensemble_model_variant_name(
+            self, model_name: str, ensemble_dict: Dict) -> Tuple[bool, str]:
+        """
+        Given a base ensemble model name and a dict of ensemble subconfigs,
+        return if the variant already existed and the name of the model variant
+
+        If the same input values are provided to this function multiple times,
+        the same value will be returned
+        """
+        mcd = self._copy_and_restore_mcd_name(model_name, ensemble_dict)
+
+        variant_found, model_variant_name = self._find_existing_variant(mcd)
+
+        if self._is_ensemble_default_config(ensemble_dict):
             return (False, model_name + '_config_default')
 
         if variant_found:
@@ -83,6 +117,9 @@ class ModelVariantNameManager:
 
     def _is_default_config(self, param_combo: Dict) -> bool:
         return param_combo == DEFAULT_CONFIG_PARAMS
+
+    def _is_ensemble_default_config(self, ensemble_dict: Dict) -> bool:
+        return '_config_default' in ensemble_dict['key']
 
     def _create_new_model_variant(self, model_name: str,
                                   model_config_dict: Dict) -> str:

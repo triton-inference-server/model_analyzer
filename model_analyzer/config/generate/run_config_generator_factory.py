@@ -198,8 +198,13 @@ class RunConfigGeneratorFactory:
             if model_config.is_ensemble():
                 ensemble_submodel_names = model_config.get_ensemble_submodels()
 
-                submodel_configs = ConfigModelProfileSpec.model_list_to_config_model_profile_spec(
+                submodel_specs = ConfigModelProfileSpec.model_list_to_config_model_profile_spec(
                     ensemble_submodel_names)
+
+                submodel_configs = [
+                    ModelProfileSpec(submodel_spec, config, client, gpus)
+                    for submodel_spec in submodel_specs
+                ]
 
                 submodels[model.model_name()] = submodel_configs
 

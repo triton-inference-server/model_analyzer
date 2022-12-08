@@ -162,19 +162,6 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         """
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config
-
-        Parameters:
-        -----------
-        param_combo: dict
-            dict of key:value pairs to apply to the model config
-        config: ModelAnalyzerConfig
-        client: TritonClient
-        gpus: List of GPUDevices
-        model: dict
-            dict of model properties
-        model_repository: str
-            path to the model repository on the file system
-        model_variant_name_manager: ModelVariantNameManager
         """
         model_name = model.model_name()
 
@@ -209,6 +196,38 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
         model_config.set_cpu_only(model.cpu_only())
+
+        return model_config
+
+    @staticmethod
+    def make_ensemble_model_config(
+            model: ModelProfileSpec, ensemble_submodels: List[ModelConfig],
+            model_variant_name_manager: ModelVariantNameManager) -> ModelConfig:
+        """
+        Loads the base model config from the model repository, and then mutates
+        the names to match the ensemble submodels
+        """
+        model_name = model.model_name()
+        model_config_dict = model.get_default_config()
+        ensemble_config_dicts = [
+            model.to_dict() for model in ensemble_submodels
+        ]
+        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+            ensemble_config_dicts)
+
+        (variant_found, variant_name
+        ) = model_variant_name_manager.get_ensemble_model_variant_name(
+            model_name, ensemble_key)
+
+        model_config_dict['name'] = variant_name
+        model_config = ModelConfig.create_from_dictionary(model_config_dict)
+
+        for submodel in ensemble_submodels:
+            variant_name = submodel.get_field("name")
+            submodel_name = variant_name[:variant_name.find("_config_")]
+
+            model_config.set_submodel_variant_name(submodel_name=submodel_name,
+                                                   variant_name=variant_name)
 
         return model_config
 
