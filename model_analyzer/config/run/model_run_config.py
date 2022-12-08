@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Optional
+
 from model_analyzer.constants import LOGGER_NAME
 import logging
 
@@ -29,7 +31,8 @@ class ModelRunConfig:
     DEFAULT_MAX_BATCH_SIZE = 1
     DEFAULT_PERF_BATCH_SIZE = 1
 
-    def __init__(self, model_name, model_config, perf_config):
+    def __init__(self, model_name: str, model_config: ModelConfig,
+                 perf_config: PerfAnalyzerConfig) -> None:
         """
         Parameters
         ----------
@@ -45,8 +48,9 @@ class ModelRunConfig:
         self._model_name = model_name
         self._model_config = model_config
         self._perf_config = perf_config
+        self._ensemble_subconfigs: List[ModelConfig] = []
 
-    def model_name(self):
+    def model_name(self) -> str:
         """
         Get the original model name for this run config.
 
@@ -58,7 +62,7 @@ class ModelRunConfig:
 
         return self._model_name
 
-    def model_variant_name(self):
+    def model_variant_name(self) -> str:
         """
         Get the model config variant name for this config.
 
@@ -70,7 +74,7 @@ class ModelRunConfig:
 
         return self.model_config().get_field('name')
 
-    def model_config(self):
+    def model_config(self) -> ModelConfig:
         """
         Returns
         -------
@@ -80,7 +84,7 @@ class ModelRunConfig:
 
         return self._model_config
 
-    def perf_config(self):
+    def perf_config(self) -> PerfAnalyzerConfig:
         """
         Returns
         -------
@@ -91,7 +95,14 @@ class ModelRunConfig:
 
         return self._perf_config
 
-    def representation(self):
+    def ensemble_subconfigs(self) -> List[ModelConfig]:
+        """
+        Returns the list of ensemble subconfigs
+        """
+
+        return self._ensemble_subconfigs
+
+    def representation(self) -> str:
         """
         Returns a representation string for the ModelRunConfig that can be used
         as a key to uniquely identify it
@@ -99,7 +110,7 @@ class ModelRunConfig:
 
         return self.perf_config().representation()
 
-    def is_legal_combination(self):
+    def is_legal_combination(self) -> bool:
         """
         Returns true if the run_config is valid and should be run. Else false
         """
@@ -116,6 +127,26 @@ class ModelRunConfig:
                 f"Illegal model run config because client batch size {perf_batch_size} is greater than model max batch size {max_batch_size}"
             )
         return legal
+
+    def is_ensemble_model(self) -> bool:
+        """
+        Returns true if the model_config is an ensemble model
+        """
+        return self._model_config.is_ensemble()
+
+    def get_ensemble_subconfig_names(self) -> Optional[List[str]]:
+        """
+        Returns list of Ensemble Subconfig names
+        """
+        return self._model_config.get_ensemble_submodels(
+        ) if self._model_config.is_ensemble() else None
+
+    def add_ensemble_submodel_config(self,
+                                     submodel_config: ModelConfig) -> None:
+        """
+        Add an ensemble submodel config
+        """
+        self._ensemble_subconfigs.append(submodel_config)
 
     @classmethod
     def from_dict(cls, model_run_config_dict):

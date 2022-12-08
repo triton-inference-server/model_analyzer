@@ -32,6 +32,7 @@ from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 
 from model_analyzer.constants import LOGGER_NAME
 
@@ -47,7 +48,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 models: List[ModelProfileSpec], client: TritonClient,
+                 models: List[ModelProfileSpec],
+                 ensemble_submodels: Dict[str, List[ModelProfileSpec]],
+                 client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
@@ -64,8 +67,11 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         """
         self._search_config = search_config
         self._config = config
-        self._models = models
         self._client = client
+        self._gpus = gpus
+        self._models = models
+        self._ensemble_submodels = ensemble_submodels
+
         self._model_variant_name_manager = model_variant_name_manager
 
         self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(
