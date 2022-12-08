@@ -20,6 +20,7 @@ from model_analyzer.config.generate.search_dimension import SearchDimension
 from model_analyzer.config.generate.search_dimensions import SearchDimensions
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.coordinate import Coordinate
+from model_analyzer.result.model_constraints import ModelConstraints
 
 from .common.test_utils import construct_run_config_measurement
 from .common import test_result_collector as trc
@@ -390,14 +391,14 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraints = {
+        constraints = ModelConstraints({
             "perf_throughput": {
                 "min": 100
             },
             "perf_latency_p99": {
                 "max": 300
             }
-        }
+        })
 
         rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
         rcm0.set_model_config_constraints([constraints])
@@ -466,14 +467,14 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraints = {
+        constraints = ModelConstraints({
             "perf_throughput": {
                 "min": 100
             },
             "perf_latency_p99": {
                 "max": 300
             }
-        }
+        })
 
         rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
         rcm0.set_model_config_constraints([constraints])
@@ -534,14 +535,14 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraints = {
+        constraints = ModelConstraints({
             "perf_throughput": {
                 "min": 100
             },
             "perf_latency_p99": {
                 "max": 300
             }
-        }
+        })
 
         rcm0 = self._construct_rcm(throughput=500, latency=450)  # fail
         rcm0.set_model_config_constraints([constraints])

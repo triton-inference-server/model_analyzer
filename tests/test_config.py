@@ -45,6 +45,8 @@ from model_analyzer.config.input.objects.config_model_profile_spec \
 from model_analyzer.constants import \
     CONFIG_PARSER_FAILURE
 
+from model_analyzer.result.model_constraints import ModelConstraints
+
 from copy import deepcopy
 
 from unittest.mock import patch
@@ -1365,11 +1367,11 @@ profile_models:
                      constraint_shorthand[1]: 40
                  }})
 
-            self.assertDictEqual(
+            self.assertEqual(
                 config.get_all_config()['profile_models'][0].constraints(),
-                {constraint_shorthand[2]: {
+                ModelConstraints({constraint_shorthand[2]: {
                      constraint_shorthand[1]: 40
-                 }})
+                 }}))
 
             # check that model specific constraints are appended to
             args = [
@@ -1392,15 +1394,15 @@ profile_models:
                 {constraint_shorthand[2]: {
                      constraint_shorthand[1]: 40
                  }})
-            self.assertDictEqual(
-                config.get_all_config()['profile_models'][0].constraints(), {
+            self.assertEqual(
+                config.get_all_config()['profile_models'][0].constraints(), ModelConstraints({
                     constraint_shorthand[2]: {
                         constraint_shorthand[1]: 40
                     },
                     'gpu_used_memory': {
                         'max': 100
                     }
-                })
+                }))
 
             # check that model specific constraints are replaced
             yaml_content = f"""
@@ -1413,11 +1415,11 @@ profile_models:
             config = self._evaluate_config(args,
                                            yaml_content,
                                            subcommand='profile')
-            self.assertDictEqual(
+            self.assertEqual(
                 config.get_all_config()['profile_models'][0].constraints(),
-                {constraint_shorthand[2]: {
+                ModelConstraints({constraint_shorthand[2]: {
                      constraint_shorthand[1]: 40
-                 }})
+                 }}))
 
             # check that global constraints are appended to
             yaml_content = """

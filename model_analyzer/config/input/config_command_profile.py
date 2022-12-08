@@ -1025,7 +1025,7 @@ class ConfigCommandProfile(ConfigCommand):
                         'constraints'].value():
                     new_model['constraints'] = self.constraints
             else:
-                new_model['constraints'] = model.constraints()
+                new_model['constraints'] = model.constraints().to_dict()
 
             # Weighting
             if not model.weighting():

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.result.model_constraints import ModelConstraints
 
 class ConfigModelProfileSpec:
     """
@@ -62,7 +63,7 @@ class ConfigModelProfileSpec:
         self._model_name = model_name
         self._cpu_only = cpu_only
         self._objectives = objectives
-        self._constraints = constraints
+        self._constraints = ModelConstraints(constraints)
         self._weighting = weighting
 
         self._parameters = parameters
@@ -95,8 +96,8 @@ class ConfigModelProfileSpec:
         """
         Returns
         -------
-        dict or None
-            A dictionary containing the constraints
+        ModelConstraints
+            A ModelConstraints object containing the constraints
         """
 
         return self._constraints
