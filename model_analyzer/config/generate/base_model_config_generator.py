@@ -210,7 +210,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_name = model.model_name()
         model_config_dict = model.get_default_config()
         ensemble_config_dicts = [
-            model.to_dict() for model in ensemble_submodels
+            submodel.to_dict() for submodel in ensemble_submodels
         ]
         ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
             ensemble_config_dicts)
@@ -224,7 +224,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
         for submodel in ensemble_submodels:
             variant_name = submodel.get_field("name")
-            submodel_name = variant_name[:variant_name.find("_config_")]
+            submodel_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                variant_name)
 
             model_config.set_submodel_variant_name(submodel_name=submodel_name,
                                                    variant_name=variant_name)
@@ -241,6 +242,10 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
                 "No longer increasing max_batch_size because throughput has plateaued"
             )
             self._max_batch_size_warning_printed = True
+
+    @staticmethod
+    def extract_model_name_from_variant_name(variant_name):
+        return variant_name[:variant_name.find("_config_")]
 
     @staticmethod
     def _apply_value_to_dict(key: Any, value: Any, dict_in: Dict) -> None:

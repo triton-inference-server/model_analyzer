@@ -131,28 +131,6 @@ class ModelManager:
             'ModelManager.model_variant_name_manager',
             model_variant_name_manager_dict)
 
-    def _create_ensemble_submodels(
-        self, model: ConfigModelProfileSpec
-    ) -> Optional[List[ConfigModelProfileSpec]]:
-        model_config_dict = ModelConfig.create_model_config_dict(
-            config=self._config,
-            client=self._client,
-            gpus=self._gpus,
-            model_repository=self._config.model_repository,
-            model_name=model.model_name())
-
-        model_config = ModelConfig.create_from_dictionary(model_config_dict)
-
-        if not model_config.is_ensemble():
-            return None
-
-        ensemble_submodel_names = model_config.get_ensemble_submodels()
-
-        submodels = ConfigModelProfileSpec.model_list_to_config_model_profile_spec(
-            ensemble_submodel_names)
-
-        return submodels
-
     def _get_triton_server_flags(self, models):
         triton_server_flags = models[0].triton_server_flags()
 

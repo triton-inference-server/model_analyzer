@@ -62,19 +62,10 @@ class ModelVariantNameManager:
         If the same input values are provided to this function multiple times, 
         the same value will be returned
         """
-        mcd = self._copy_and_restore_mcd_name(model_name, model_config_dict)
-
-        variant_found, model_variant_name = self._find_existing_variant(mcd)
-
-        if self._is_default_config(param_combo):
-            return (False, model_name + '_config_default')
-
-        if variant_found:
-            return (True, model_variant_name)
-
-        model_variant_name = self._create_new_model_variant(model_name, mcd)
-
-        return (False, model_variant_name)
+        return self._get_variant_name(model_name,
+                                      model_config_dict,
+                                      is_ensemble=False,
+                                      param_combo=param_combo)
 
     def get_ensemble_model_variant_name(
             self, model_name: str, ensemble_dict: Dict) -> Tuple[bool, str]:
@@ -85,12 +76,25 @@ class ModelVariantNameManager:
         If the same input values are provided to this function multiple times,
         the same value will be returned
         """
-        mcd = self._copy_and_restore_mcd_name(model_name, ensemble_dict)
+        return self._get_variant_name(model_name,
+                                      ensemble_dict,
+                                      is_ensemble=True)
+
+    def _get_variant_name(self,
+                          model_name: str,
+                          config_dict: Dict,
+                          is_ensemble: bool,
+                          param_combo: Dict = {}) -> Tuple[bool, str]:
+        mcd = self._copy_and_restore_mcd_name(model_name, config_dict)
 
         variant_found, model_variant_name = self._find_existing_variant(mcd)
 
-        if self._is_ensemble_default_config(ensemble_dict):
-            return (False, model_name + '_config_default')
+        if is_ensemble:
+            if self._is_ensemble_default_config(config_dict):
+                return (False, model_name + '_config_default')
+        else:
+            if self._is_default_config(param_combo):
+                return (False, model_name + '_config_default')
 
         if variant_found:
             return (True, model_variant_name)
