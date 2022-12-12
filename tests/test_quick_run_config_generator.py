@@ -21,6 +21,7 @@ from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
 from model_analyzer.config.generate.search_dimensions import SearchDimensions
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from model_analyzer.config.generate.run_config_generator_factory import RunConfigGeneratorFactory
 from model_analyzer.config.generate.quick_run_config_generator import QuickRunConfigGenerator
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
@@ -61,7 +62,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
         self._qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                             self._mock_models, MagicMock(),
+                                             self._mock_models, {}, MagicMock(),
                                              ModelVariantNameManager())
 
     def test_get_starting_coordinate(self):
@@ -76,7 +77,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         sc = SearchConfig(dimensions=dims,radius=2, min_initialized=2)
         #yapf: enable
         qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                       self._mock_models, MagicMock(),
+                                       self._mock_models, {}, MagicMock(),
                                        ModelVariantNameManager())
         self.assertEqual(qrcg._get_starting_coordinate(), Coordinate([2, 1, 3]))
 
@@ -243,7 +244,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
         qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                       mock_models, MagicMock(),
+                                       mock_models, {}, MagicMock(),
                                        ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
@@ -317,13 +318,98 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         ])
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
-        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models, {},
                                        MagicMock(), ModelVariantNameManager())
 
         default_run_config = qrcg._create_default_run_config()
 
         self.assertTrue(
             '--percentile=96' in default_run_config.representation())
+
+    def tearDown(self):
+        patch.stopall()
+
+    def test_default_ensemble_config_generation(self):
+        """
+        Test that the default ensemble config is generated correctly
+        """
+
+        fake_config = {
+            "name": "my-model",
+            "platform": "ensemble",
+            "ensemble_scheduling": {
+                "step": [{
+                    "model_name": "preprocess"
+                }, {
+                    "model_name": "resnet50_trt"
+                }]
+            },
+            "input": [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": [16]
+            }],
+            "max_batch_size": 4
+        }
+
+        args = [
+            'model-analyzer', 'profile', '--model-repository', '/tmp',
+            '--config-file', '/tmp/my_config.yml'
+        ]
+
+        # yapf: disable
+        yaml_str = ("""
+            profile_models:
+                - my-model:
+                    perf_analyzer_flags:
+                        percentile: 96
+            """)
+        # yapf: enable
+
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                return_value=fake_config):
+            models = [
+                ModelProfileSpec(spec=config.profile_models[0],
+                                 config=config,
+                                 client=MagicMock(),
+                                 gpus=MagicMock())
+            ]
+
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("max_batch_size",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("concurrency",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+
+        sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                return_value=fake_config):
+            ensemble_submodels = RunConfigGeneratorFactory._create_ensemble_submodels(
+                models, config, MagicMock(), MagicMock())
+
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
+                                       ensemble_submodels, MagicMock(),
+                                       ModelVariantNameManager())
+
+        default_run_config = qrcg._create_default_run_config()
+        ensemble_subconfigs = default_run_config.model_run_configs(
+        )[0].ensemble_subconfigs()
+
+        self.assertTrue(
+            "my-model_config_default" in default_run_config.representation())
+        self.assertEqual(ensemble_subconfigs[0].get_field("name"),
+                         "preprocess_config_default")
+        self.assertEqual(ensemble_subconfigs[1].get_field("name"),
+                         "resnet50_trt_config_default")
 
     def tearDown(self):
         patch.stopall()
