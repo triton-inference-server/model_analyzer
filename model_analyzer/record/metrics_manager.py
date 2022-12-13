@@ -26,6 +26,7 @@ from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.results import Results
+from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 
 from collections import defaultdict
 from prometheus_client.parser import text_string_to_metric_families
@@ -276,6 +277,13 @@ class MetricsManager:
             self._create_model_variant(original_name=mrc.model_name(),
                                        variant_config=mrc.model_config())
 
+            for ensemble_subconfig in mrc.ensemble_subconfigs():
+                variant_name = ensemble_subconfig.get_field("name")
+                original_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                    variant_name)
+
+                self._create_model_variant(original_name, ensemble_subconfig)
+
     def _create_model_variant(self, original_name, variant_config):
         """
         Creates a directory for the model config variant in the output model
@@ -309,6 +317,11 @@ class MetricsManager:
         for mrc in run_config.model_run_configs():
             if not self._load_model_variant(variant_config=mrc.model_config()):
                 return False
+
+            for ensemble_subconfig in mrc.ensemble_subconfigs():
+                if not self._load_model_variant(
+                        variant_config=ensemble_subconfig):
+                    return False
         return True
 
     def _load_model_variant(self, variant_config):
