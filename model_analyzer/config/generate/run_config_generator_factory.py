@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict, List
+
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
+from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.result.result_manager import ResultManager
 from .brute_run_config_generator import BruteRunConfigGenerator
@@ -66,11 +70,15 @@ class RunConfigGeneratorFactory:
             new_models.append(
                 ModelProfileSpec(model, command_config, client, gpus))
 
+        ensemble_submodels = RunConfigGeneratorFactory._create_ensemble_submodels(
+            new_models, command_config, client, gpus)
+
         if (command_config.run_config_search_mode == "quick"):
             return RunConfigGeneratorFactory._create_quick_plus_concurrency_sweep_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
                 models=new_models,
+                ensemble_submodels=ensemble_submodels,
                 client=client,
                 result_manager=result_manager,
                 model_variant_name_manager=model_variant_name_manager)
@@ -102,29 +110,43 @@ class RunConfigGeneratorFactory:
     @staticmethod
     def _create_quick_plus_concurrency_sweep_run_config_generator(
         command_config: ConfigCommandProfile, gpus: List[GPUDevice],
-        models: List[ModelProfileSpec], client: TritonClient,
-        result_manager: ResultManager,
+        models: List[ModelProfileSpec],
+        ensemble_submodels: Dict[str, List[ModelProfileSpec]],
+        client: TritonClient, result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager
     ) -> ConfigGeneratorInterface:
-        search_config = RunConfigGeneratorFactory._create_search_config(models)
+        search_config = RunConfigGeneratorFactory._create_search_config(
+            models, ensemble_submodels)
         return QuickPlusConcurrencySweepRunConfigGenerator(
             search_config=search_config,
             config=command_config,
             gpus=gpus,
             models=models,
+            ensemble_submodels=ensemble_submodels,
             client=client,
             result_manager=result_manager,
             model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod
-    def _create_search_config(models: List[ModelProfileSpec]) -> SearchConfig:
+    def _create_search_config(
+            models: List[ModelProfileSpec],
+            ensemble_submodels: Dict[str,
+                                     List[ModelProfileSpec]]) -> SearchConfig:
         dimensions = SearchDimensions()
 
-        #yapf: disable
-        for i, model in enumerate(models):
-            dims = RunConfigGeneratorFactory._get_dimensions_for_model(model.supports_batching())
-            dimensions.add_dimensions(i, dims)
-        #yapf: enable
+        index = 0
+        for model in models:
+            if model.model_name() in ensemble_submodels:
+                for submodel in ensemble_submodels[model.model_name()]:
+                    dims = RunConfigGeneratorFactory._get_dimensions_for_model(
+                        model.supports_batching())
+                    dimensions.add_dimensions(index, dims)
+                    index += 1
+            else:
+                dims = RunConfigGeneratorFactory._get_dimensions_for_model(
+                    model.supports_batching())
+                dimensions.add_dimensions(index, dims)
+                index += 1
 
         search_config = SearchConfig(dimensions=dimensions,
                                      radius=RADIUS,
@@ -158,3 +180,32 @@ class RunConfigGeneratorFactory:
             SearchDimension(f"instance_count",
                             SearchDimension.DIMENSION_TYPE_LINEAR)
         ]
+
+    @staticmethod
+    def _create_ensemble_submodels(
+            models: List[ModelProfileSpec], config: ConfigCommandProfile,
+            client: TritonClient,
+            gpus: List[GPUDevice]) -> Dict[str, List[ModelProfileSpec]]:
+        """
+        Given a list of models create the ensemble submodels (indexed by model name) 
+        """
+        submodels = {}
+
+        for model in models:
+            model_config = ModelConfig.create_from_profile_spec(
+                model, config, client, gpus)
+
+            if model_config.is_ensemble():
+                ensemble_submodel_names = model_config.get_ensemble_submodels()
+
+                submodel_specs = ConfigModelProfileSpec.model_list_to_config_model_profile_spec(
+                    ensemble_submodel_names)
+
+                submodel_configs = [
+                    ModelProfileSpec(submodel_spec, config, client, gpus)
+                    for submodel_spec in submodel_specs
+                ]
+
+                submodels[model.model_name()] = submodel_configs
+
+        return submodels
