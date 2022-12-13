@@ -162,6 +162,13 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         """
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config
+        
+        Parameters:
+        -----------
+        param_combo: dict
+            dict of key:value pairs to apply to the model config
+        model: ModelProfileSpec
+        model_variant_name_manager: ModelVariantNameManager
         """
         model_name = model.model_name()
 
