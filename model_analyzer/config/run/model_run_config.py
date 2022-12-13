@@ -139,7 +139,7 @@ class ModelRunConfig:
         Returns list of Ensemble Subconfig names
         """
         return self._model_config.get_ensemble_submodels(
-        ) if self._model_config.is_ensemble() else None
+        ) if self._model_config.is_ensemble() else []
 
     def add_ensemble_submodel_configs(
             self, submodel_configs: List[ModelConfig]) -> None:
