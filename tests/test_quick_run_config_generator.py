@@ -378,23 +378,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                                  gpus=MagicMock())
             ]
 
-        dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("max_batch_size",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("instance_count",
-                            SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("concurrency",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("max_batch_size",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("instance_count",
-                            SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("concurrency",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
-
-        sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
+        sc = SearchConfig(dimensions=MagicMock(), radius=5, min_initialized=2)
 
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",

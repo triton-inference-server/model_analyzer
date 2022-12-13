@@ -141,12 +141,13 @@ class ModelRunConfig:
         return self._model_config.get_ensemble_submodels(
         ) if self._model_config.is_ensemble() else None
 
-    def add_ensemble_submodel_config(self,
-                                     submodel_config: ModelConfig) -> None:
+    def add_ensemble_submodel_configs(
+            self, submodel_configs: List[ModelConfig]) -> None:
         """
-        Add an ensemble submodel config
+        Adds a list of ensemble submodel configs
         """
-        self._ensemble_subconfigs.append(submodel_config)
+        for submodel_config in submodel_configs:
+            self._ensemble_subconfigs.append(submodel_config)
 
     @classmethod
     def from_dict(cls, model_run_config_dict):

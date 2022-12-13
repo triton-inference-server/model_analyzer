@@ -370,8 +370,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model.model_name(), default_ensemble_model_config,
             default_perf_analyzer_config)
 
-        default_model_run_config = self._add_submodels_to_model_run_config(
-            default_model_run_config, default_submodel_configs)
+        default_model_run_config.add_ensemble_submodel_configs(
+            default_submodel_configs)
 
         return default_model_run_config
 
@@ -387,14 +387,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             )
 
         return default_submodel_configs
-
-    def _add_submodels_to_model_run_config(
-            self, model_run_config: ModelRunConfig,
-            submodel_configs: List[ModelConfig]) -> ModelRunConfig:
-        for submodel_config in submodel_configs:
-            model_run_config.add_ensemble_submodel_config(submodel_config)
-
-        return model_run_config
 
     def _create_default_model_run_config(
             self, model: ModelProfileSpec) -> ModelRunConfig:
