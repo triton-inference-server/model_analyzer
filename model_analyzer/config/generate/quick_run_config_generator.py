@@ -32,6 +32,7 @@ from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 
 from model_analyzer.constants import LOGGER_NAME
 
@@ -47,7 +48,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 models: List[ModelProfileSpec], client: TritonClient,
+                 models: List[ModelProfileSpec],
+                 ensemble_submodels: Dict[str, List[ModelProfileSpec]],
+                 client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
@@ -57,15 +60,20 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         config: ConfigCommandProfile
             Profile configuration information
         gpus: List of GPUDevices
-        models: List of ConfigModelProfileSpec
+        models: List of ModelProfileSpec
             List of models to profile
+        ensemble_submodels: Dict of List of ModelProfileSpec
+            Dict indexed by model name of ensemble submodel profiles
         client: TritonClient
         model_variant_name_manager: ModelVariantNameManager
         """
         self._search_config = search_config
         self._config = config
-        self._models = models
         self._client = client
+        self._gpus = gpus
+        self._models = models
+        self._ensemble_submodels = ensemble_submodels
+
         self._model_variant_name_manager = model_variant_name_manager
 
         self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(
@@ -337,28 +345,78 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         default_run_config = RunConfig(self._triton_env)
 
         for model in self._models:
-            default_model_config = BaseModelConfigGenerator.make_model_config(
-                param_combo={},
-                model=model,
-                model_variant_name_manager=self._model_variant_name_manager)
-
-            default_perf_analyzer_config = PerfAnalyzerConfig()
-            default_perf_analyzer_config.update_config_from_profile_config(
-                default_model_config.get_field('name'), self._config)
-
-            perf_config_params = {'batch-size': 1, 'concurrency-range': 1}
-            default_perf_analyzer_config.update_config(perf_config_params)
-
-            default_perf_analyzer_config.update_config(
-                model.perf_analyzer_flags())
-
-            default_model_run_config = ModelRunConfig(
-                model.model_name(), default_model_config,
-                default_perf_analyzer_config)
-
-            default_run_config.add_model_run_config(default_model_run_config)
+            if model.model_name() in self._ensemble_submodels:
+                default_run_config.add_model_run_config(
+                    self._create_default_ensemble_model_run_config(model))
+            else:
+                default_run_config.add_model_run_config(
+                    self._create_default_model_run_config(model))
 
         return default_run_config
+
+    def _create_default_ensemble_model_run_config(
+            self, model: ModelProfileSpec) -> ModelRunConfig:
+        default_submodel_configs = self._create_default_submodel_configs(model)
+
+        default_ensemble_model_config = BaseModelConfigGenerator.make_ensemble_model_config(
+            model=model,
+            ensemble_submodel_configs=default_submodel_configs,
+            model_variant_name_manager=self._model_variant_name_manager)
+
+        default_perf_analyzer_config = self._create_default_perf_analyzer_config(
+            model, default_ensemble_model_config)
+
+        default_model_run_config = ModelRunConfig(
+            model.model_name(), default_ensemble_model_config,
+            default_perf_analyzer_config)
+
+        default_model_run_config.add_ensemble_submodel_configs(
+            default_submodel_configs)
+
+        return default_model_run_config
+
+    def _create_default_submodel_configs(
+            self, model: ModelProfileSpec) -> List[ModelConfig]:
+        default_submodel_configs: List[ModelConfig] = []
+        for submodel in self._ensemble_submodels[model.model_name()]:
+            default_submodel_configs.append(
+                BaseModelConfigGenerator.make_model_config(
+                    param_combo={},
+                    model=submodel,
+                    model_variant_name_manager=self._model_variant_name_manager)
+            )
+
+        return default_submodel_configs
+
+    def _create_default_model_run_config(
+            self, model: ModelProfileSpec) -> ModelRunConfig:
+        default_model_config = BaseModelConfigGenerator.make_model_config(
+            param_combo={},
+            model=model,
+            model_variant_name_manager=self._model_variant_name_manager)
+
+        default_perf_analyzer_config = self._create_default_perf_analyzer_config(
+            model, default_model_config)
+
+        default_model_run_config = ModelRunConfig(model.model_name(),
+                                                  default_model_config,
+                                                  default_perf_analyzer_config)
+
+        return default_model_run_config
+
+    def _create_default_perf_analyzer_config(
+            self, model: ConfigModelProfileSpec,
+            model_config: ModelConfig) -> PerfAnalyzerConfig:
+        default_perf_analyzer_config = PerfAnalyzerConfig()
+        default_perf_analyzer_config.update_config_from_profile_config(
+            model_config.get_field('name'), self._config)
+
+        perf_config_params = {'batch-size': 1, 'concurrency-range': 1}
+        default_perf_analyzer_config.update_config(perf_config_params)
+
+        default_perf_analyzer_config.update_config(model.perf_analyzer_flags())
+
+        return default_perf_analyzer_config
 
     def _print_debug_logs(
             self, measurements: List[Union[RunConfigMeasurement,

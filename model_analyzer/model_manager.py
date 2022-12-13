@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Optional
+
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.config.generate.run_config_generator_factory import RunConfigGeneratorFactory
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.result.constraint_manager import ConstraintManager
+from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.triton.model.model_config import ModelConfig
 
 import logging
 

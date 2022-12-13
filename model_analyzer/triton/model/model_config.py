@@ -25,6 +25,10 @@ from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
 from model_analyzer.triton.server.server_factory import TritonServerFactory
+from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.device.gpu_device import GPUDevice
 
 
 class ModelConfig:
@@ -244,6 +248,26 @@ class ModelConfig:
         model_config_dict = client.get_model_config(model_name, num_retries)
 
         return ModelConfig.create_from_dictionary(model_config_dict)
+
+    @staticmethod
+    def create_from_profile_spec(spec: ConfigModelProfileSpec,
+                                 config: ConfigCommandProfile,
+                                 client: TritonClient,
+                                 gpus: List[GPUDevice]) -> "ModelConfig":
+        """
+        Creates the model config from a ModelProfileSpec, plus assoc. collateral 
+        """
+
+        model_config_dict = ModelConfig.create_model_config_dict(
+            config=config,
+            client=client,
+            gpus=gpus,
+            model_repository=config.model_repository,
+            model_name=spec.model_name())
+
+        model_config = ModelConfig.create_from_dictionary(model_config_dict)
+
+        return model_config
 
     def set_cpu_only(self, cpu_only):
         """
