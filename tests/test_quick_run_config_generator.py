@@ -385,6 +385,12 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             SearchDimension("instance_count",
                             SearchDimension.DIMENSION_TYPE_LINEAR),
             SearchDimension("concurrency",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("max_batch_size",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("concurrency",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
 

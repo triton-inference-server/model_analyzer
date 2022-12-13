@@ -360,7 +360,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         default_ensemble_model_config = BaseModelConfigGenerator.make_ensemble_model_config(
             model=model,
-            ensemble_submodels=default_submodel_configs,
+            ensemble_submodel_configs=default_submodel_configs,
             model_variant_name_manager=self._model_variant_name_manager)
 
         default_perf_analyzer_config = self._create_default_perf_analyzer_config(

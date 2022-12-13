@@ -208,16 +208,27 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
     @staticmethod
     def make_ensemble_model_config(
-            model: ModelProfileSpec, ensemble_submodels: List[ModelConfig],
+            model: ModelProfileSpec,
+            ensemble_submodel_configs: List[ModelConfig],
             model_variant_name_manager: ModelVariantNameManager) -> ModelConfig:
         """
-        Loads the base model config from the model repository, and then mutates
+        Loads the ensemble model spec from the model repository, and then mutates
         the names to match the ensemble submodels
+        
+        Parameters
+        ----------
+        model: ModelProfileSpec
+            The top-level ensemble model spec
+        ensemble_submodel_configs: List of ModelConfigs
+            The list of submodel ModelConfigs 
+        model_variant_name_manager: ModelVariantNameManager
+
         """
         model_name = model.model_name()
         model_config_dict = model.get_default_config()
         ensemble_config_dicts = [
-            submodel.to_dict() for submodel in ensemble_submodels
+            submodel_config.to_dict()
+            for submodel_config in ensemble_submodel_configs
         ]
         ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
             ensemble_config_dicts)
@@ -229,8 +240,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_config_dict['name'] = variant_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
 
-        for submodel in ensemble_submodels:
-            variant_name = submodel.get_field("name")
+        for submodel_config in ensemble_submodel_configs:
+            variant_name = submodel_config.get_field("name")
             submodel_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
                 variant_name)
 
@@ -251,7 +262,11 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             self._max_batch_size_warning_printed = True
 
     @staticmethod
-    def extract_model_name_from_variant_name(variant_name):
+    def extract_model_name_from_variant_name(variant_name: str) -> str:
+        """
+        Removes '_config_#/default' from the variant name and returns
+        the model name, eg. model_name_config_10 -> model_name
+        """
         return variant_name[:variant_name.find("_config_")]
 
     @staticmethod
