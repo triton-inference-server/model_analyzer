@@ -120,6 +120,77 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         self.assertEqual(a0, (False, "modelA_config_0"))
         self.assertEqual(a1, (False, "modelA_config_1"))
 
+    def test_ensemble_default(self):
+        """
+        Test that a default ensemble config is returned
+        """
+        sub_configA = {"name": "modelA_config_default"}
+        sub_configB = {"name": "modelB_config_default"}
+
+        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+            [sub_configA, sub_configB])
+
+        name = self._mvnm.get_ensemble_model_variant_name(
+            "ensemble_model", ensemble_key)
+
+        self.assertEqual(name, (False, "ensemble_model_config_default"))
+
+    def test_ensemble_basic(self):
+        """
+        Test that we can increment the ensemble config numbers
+        """
+        sub_configA = {"name": "modelA_config_0"}
+        sub_configB = {"name": "modelB_config_0"}
+
+        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+            [sub_configA, sub_configB])
+
+        name = self._mvnm.get_ensemble_model_variant_name(
+            "ensemble_model", ensemble_key)
+
+        self.assertEqual(name, (False, "ensemble_model_config_0"))
+
+        sub_configB = {"name": "modelB_config_1"}
+
+        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+            [sub_configA, sub_configB])
+
+        name = self._mvnm.get_ensemble_model_variant_name(
+            "ensemble_model", ensemble_key)
+
+        self.assertEqual(name, (False, "ensemble_model_config_1"))
+
+        sub_configA = {"name": "modelA_config_1"}
+
+        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+            [sub_configA, sub_configB])
+
+        name = self._mvnm.get_ensemble_model_variant_name(
+            "ensemble_model", ensemble_key)
+
+        self.assertEqual(name, (False, "ensemble_model_config_2"))
+
+    def test_ensemble_repeat(self):
+        """
+        Calling with the same model name/ensemble key multiple times 
+        should result in the same config name being returned
+        """
+        sub_configA = {"name": "modelA_config_0"}
+        sub_configB = {"name": "modelB_config_0"}
+
+        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+            [sub_configA, sub_configB])
+
+        name = self._mvnm.get_ensemble_model_variant_name(
+            "ensemble_model", ensemble_key)
+
+        self.assertEqual(name, (False, "ensemble_model_config_0"))
+
+        name = self._mvnm.get_ensemble_model_variant_name(
+            "ensemble_model", ensemble_key)
+
+        self.assertEqual(name, (True, "ensemble_model_config_0"))
+
     def test_from_dict(self):
         """
         Restoring from a dict should see existing configs
