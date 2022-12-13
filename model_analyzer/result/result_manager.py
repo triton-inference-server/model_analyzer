@@ -24,6 +24,8 @@ from .run_config_measurement import RunConfigMeasurement
 from .run_config_result import RunConfigResult
 from .results import Results
 
+from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
+
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
@@ -152,7 +154,8 @@ class ResultManager:
 
         # Name format is <base_model_name>_config_<number_or_default>
         #
-        model_name = model_variants_name.rsplit('_', 2)[0]
+        model_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
+            model_variants_name)
 
         # Remote mode has model_name == model_config_name
         #
