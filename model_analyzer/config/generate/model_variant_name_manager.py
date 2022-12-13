@@ -85,9 +85,11 @@ class ModelVariantNameManager:
                           config_dict: Dict,
                           is_ensemble: bool,
                           param_combo: Dict = {}) -> Tuple[bool, str]:
-        mcd = self._copy_and_restore_mcd_name(model_name, config_dict)
+        model_config_dict = self._copy_and_restore_model_config_dict_name(
+            model_name, config_dict)
 
-        variant_found, model_variant_name = self._find_existing_variant(mcd)
+        variant_found, model_variant_name = self._find_existing_variant(
+            model_config_dict)
 
         if is_ensemble:
             if self._is_ensemble_default_config(config_dict):
@@ -99,16 +101,17 @@ class ModelVariantNameManager:
         if variant_found:
             return (True, model_variant_name)
 
-        model_variant_name = self._create_new_model_variant(model_name, mcd)
+        model_variant_name = self._create_new_model_variant(
+            model_name, model_config_dict)
 
         return (False, model_variant_name)
 
-    def _copy_and_restore_mcd_name(self, model_name: str,
-                                   model_config_dict: Dict) -> Dict:
-        mcd = deepcopy(model_config_dict)
-        mcd['name'] = model_name
+    def _copy_and_restore_model_config_dict_name(
+            self, model_name: str, model_config_dict: Dict) -> Dict:
+        model_config_dict_copy = deepcopy(model_config_dict)
+        model_config_dict_copy['name'] = model_name
 
-        return mcd
+        return model_config_dict_copy
 
     def _find_existing_variant(self,
                                model_config_dict: Dict) -> Tuple[bool, str]:
