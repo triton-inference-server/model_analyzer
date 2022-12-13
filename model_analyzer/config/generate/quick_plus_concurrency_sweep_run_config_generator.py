@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Generator
+from typing import List, Optional, Generator, Dict
 
 from .config_generator_interface import ConfigGeneratorInterface
 
@@ -48,8 +48,9 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 models: List[ModelProfileSpec], client: TritonClient,
-                 result_manager: ResultManager,
+                 models: List[ModelProfileSpec],
+                 ensemble_submodels: Dict[str, List[ModelProfileSpec]],
+                 client: TritonClient, result_manager: ResultManager,
                  model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
@@ -59,8 +60,10 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         config: ConfigCommandProfile
             Profile configuration information
         gpus: List of GPUDevices
-        models: List of ConfigModelProfileSpec
+        models: List of ModelProfileSpec
             List of models to profile
+        ensemble_submodels: Dict of List of ModelProfileSpec
+            Dict indexed by model name of list of submodels to profile
         client: TritonClient
         result_manager: ResultManager
             The object that handles storing and sorting the results from the perf analyzer
@@ -73,6 +76,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         self._config = config
         self._gpus = gpus
         self._models = models
+        self._ensemble_submodels = ensemble_submodels
         self._client = client
         self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
@@ -116,6 +120,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             config=self._config,
             gpus=self._gpus,
             models=self._models,
+            ensemble_submodels=self._ensemble_submodels,
             client=self._client,
             model_variant_name_manager=self._model_variant_name_manager)
 
