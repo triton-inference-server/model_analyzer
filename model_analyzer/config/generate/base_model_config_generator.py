@@ -210,7 +210,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     def make_ensemble_model_config(
             model: ModelProfileSpec,
             ensemble_submodel_configs: List[ModelConfig],
-            model_variant_name_manager: ModelVariantNameManager) -> ModelConfig:
+            model_variant_name_manager: ModelVariantNameManager,
+            param_combo: Dict = {}) -> ModelConfig:
         """
         Loads the ensemble model spec from the model repository, and then mutates
         the names to match the ensemble submodels
@@ -226,6 +227,19 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         """
         model_name = model.model_name()
         model_config_dict = model.get_default_config()
+
+        logger_str = []
+        if param_combo is not None:
+            for key, value in param_combo.items():
+                if value is not None:
+                    BaseModelConfigGenerator._apply_value_to_dict(
+                        key, value, model_config_dict)
+
+                    if value == {}:
+                        logger_str.append(f"  Enabling {key}")
+                    else:
+                        logger_str.append(f"  Setting {key} to {value}")
+
         ensemble_config_dicts = [
             submodel_config.to_dict()
             for submodel_config in ensemble_submodel_configs
