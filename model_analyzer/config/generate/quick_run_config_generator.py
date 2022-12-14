@@ -32,7 +32,6 @@ from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 
 from sys import maxsize
 from copy import deepcopy
@@ -292,11 +291,11 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         return run_config
 
     def _get_next_model_run_config(
-            self, model: ConfigModelProfileSpec,
+            self, model: ModelProfileSpec,
             model_index: int) -> Tuple[ModelRunConfig, int]:
         pa_model_index = deepcopy(model_index)
         ensemble_subconfigs = []
-        min_val_of_max_batch_sizes = maxsize
+        min_val_of_max_batch_sizes = int(maxsize)
         if model.model_name() in self._ensemble_submodels:
             for ensemble_submodel in self._ensemble_submodels[
                     model.model_name()]:
@@ -307,10 +306,11 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                 dimension_values = self._get_coordinate_values(
                     self._coordinate_to_measure, model_index)
 
-                min_val_of_max_batch_sizes = min([
-                    dimension_values.get("max_batch_size", 1),
-                    min_val_of_max_batch_sizes
-                ])
+                min_val_of_max_batch_sizes = int(
+                    min([
+                        dimension_values.get("max_batch_size", 1),
+                        min_val_of_max_batch_sizes
+                    ]))
                 ### END REFACTOR
 
                 model_index = model_index + 1
@@ -321,7 +321,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                 model_variant_name_manager=self._model_variant_name_manager,
                 param_combo={'max_batch_size': min_val_of_max_batch_sizes})
         else:
-            model_config = self._get_next_model_config(model, dimension_index)
+            model_config = self._get_next_model_config(model, model_index)
             model_index = model_index + 1
 
         model_variant_name = model_config.get_field('name')
@@ -338,7 +338,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         return (model_run_config, model_index)
 
-    def _get_next_model_config(self, model: ConfigModelProfileSpec,
+    def _get_next_model_config(self, model: ModelProfileSpec,
                                dimension_index: int) -> ModelConfig:
         dimension_values = self._get_coordinate_values(
             self._coordinate_to_measure, dimension_index)
@@ -371,7 +371,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         return model_config
 
     def _get_next_perf_analyzer_config(self, model_variant_name: str,
-                                       model: ConfigModelProfileSpec,
+                                       model: ModelProfileSpec,
                                        model_index: int) -> PerfAnalyzerConfig:
         dimension_values = self._get_coordinate_values(
             self._coordinate_to_measure, model_index)
@@ -456,7 +456,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         return default_model_run_config
 
     def _create_default_perf_analyzer_config(
-            self, model: ConfigModelProfileSpec,
+            self, model: ModelProfileSpec,
             model_config: ModelConfig) -> PerfAnalyzerConfig:
         default_perf_analyzer_config = PerfAnalyzerConfig()
         default_perf_analyzer_config.update_config_from_profile_config(

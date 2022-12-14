@@ -170,21 +170,10 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model: ModelProfileSpec
         model_variant_name_manager: ModelVariantNameManager
         """
+        logger_str: List[str] = []
         model_name = model.model_name()
-
-        model_config_dict = model.get_default_config()
-
-        logger_str = []
-        if param_combo is not None:
-            for key, value in param_combo.items():
-                if value is not None:
-                    BaseModelConfigGenerator._apply_value_to_dict(
-                        key, value, model_config_dict)
-
-                    if value == {}:
-                        logger_str.append(f"  Enabling {key}")
-                    else:
-                        logger_str.append(f"  Setting {key} to {value}")
+        model_config_dict = BaseModelConfigGenerator._apply_param_combo_to_model(
+            model, param_combo, logger_str)
 
         (variant_found,
          variant_name) = model_variant_name_manager.get_model_variant_name(
@@ -225,20 +214,10 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_variant_name_manager: ModelVariantNameManager
 
         """
+        logger_str: List[str] = []
         model_name = model.model_name()
-        model_config_dict = model.get_default_config()
-
-        logger_str = []
-        if param_combo is not None:
-            for key, value in param_combo.items():
-                if value is not None:
-                    BaseModelConfigGenerator._apply_value_to_dict(
-                        key, value, model_config_dict)
-
-                    if value == {}:
-                        logger_str.append(f"  Enabling {key}")
-                    else:
-                        logger_str.append(f"  Setting {key} to {value}")
+        model_config_dict = BaseModelConfigGenerator._apply_param_combo_to_model(
+            model, param_combo, logger_str)
 
         ensemble_config_dicts = [
             submodel_config.to_dict()
@@ -263,6 +242,26 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
                                                    variant_name=variant_name)
 
         return model_config
+
+    @staticmethod
+    def _apply_param_combo_to_model(model: ModelProfileSpec, param_combo: dict,
+                                    logger_str: List[str]) -> dict:
+        """
+        Given a model, apply any parameters and return a model config dictionary
+        """
+        model_config_dict = model.get_default_config()
+        if param_combo is not None:
+            for key, value in param_combo.items():
+                if value is not None:
+                    BaseModelConfigGenerator._apply_value_to_dict(
+                        key, value, model_config_dict)
+
+                    if value == {}:
+                        logger_str.append(f"  Enabling {key}")
+                    else:
+                        logger_str.append(f"  Setting {key} to {value}")
+
+        return model_config_dict
 
     def _reset_max_batch_size(self) -> None:
         self._max_batch_size_warning_printed = False
