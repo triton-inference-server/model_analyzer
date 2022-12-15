@@ -293,24 +293,26 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _get_next_model_run_config(
             self, model: ModelProfileSpec,
             model_index: int) -> Tuple[ModelRunConfig, int]:
-        pa_model_index = deepcopy(model_index)
+        start_model_index = deepcopy(model_index)
 
         if model.model_name() in self._ensemble_submodels:
-            ensemble_subconfigs, model_index = self._get_next_ensemble_subconfigs(
-                model, pa_model_index)
+            ensemble_subconfigs, end_model_index = self._get_next_ensemble_subconfigs(
+                model, start_model_index)
 
             param_combo = self._get_next_ensemble_param_combo(
-                pa_model_index, model_index)
+                start_model_index, end_model_index)
 
             model_config = self._get_next_ensemble_model_config(
                 model, ensemble_subconfigs, param_combo)
+
+            model_index = end_model_index
         else:
             model_config = self._get_next_model_config(model, model_index)
             model_index = model_index + 1
 
         model_variant_name = model_config.get_field('name')
         perf_analyzer_config = self._get_next_perf_analyzer_config(
-            model_variant_name, model, pa_model_index)
+            model_variant_name, model, start_model_index)
 
         model_name = model.model_name()
         model_run_config = ModelRunConfig(model_name, model_config,
