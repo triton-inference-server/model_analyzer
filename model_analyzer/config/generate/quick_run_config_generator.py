@@ -34,7 +34,6 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 from sys import maxsize
-from copy import deepcopy
 
 from model_analyzer.constants import LOGGER_NAME
 
@@ -293,7 +292,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _get_next_model_run_config(
             self, model: ModelProfileSpec,
             model_index: int) -> Tuple[ModelRunConfig, int]:
-        start_model_index = deepcopy(model_index)
+        start_model_index = model_index
 
         if model.model_name() in self._ensemble_submodels:
             ensemble_subconfigs, end_model_index = self._get_next_ensemble_subconfigs(
@@ -326,7 +325,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _get_next_ensemble_subconfigs(
             self, model: ModelProfileSpec,
             start_model_index: int) -> Tuple[List[ModelConfig], int]:
-        model_index = deepcopy(start_model_index)
+        model_index = start_model_index
         ensemble_subconfigs = []
         for ensemble_submodel in self._ensemble_submodels[model.model_name()]:
             ensemble_subconfigs.append(
@@ -373,13 +372,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         dimension_values = self._get_coordinate_values(
             self._coordinate_to_measure, dimension_index)
 
-        if model.cpu_only():
-            kind = "KIND_CPU"
-        elif 'instance_group' in model.get_default_config():
-            kind = "KIND_CPU" if model.get_default_config(
-            )['instance_group'][0]['kind'] else "KIND_GPU"
-        else:
-            kind = "KIND_GPU"
+        kind = "KIND_CPU" if model.cpu_only() else "KIND_GPU"
 
         param_combo: dict = {
             'instance_group': [{
