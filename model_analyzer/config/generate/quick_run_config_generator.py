@@ -313,7 +313,6 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_variant_name, model, pa_model_index)
 
         model_name = model.model_name()
-
         model_run_config = ModelRunConfig(model_name, model_config,
                                           perf_analyzer_config)
 
