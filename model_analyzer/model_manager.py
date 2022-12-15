@@ -16,7 +16,6 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.config.generate.run_config_generator_factory import RunConfigGeneratorFactory
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-from model_analyzer.result.constraint_manager import ConstraintManager
 
 import logging
 
@@ -30,7 +29,7 @@ class ModelManager:
     """
 
     def __init__(self, config, gpus, client, server, metrics_manager,
-                 result_manager, state_manager):
+                 result_manager, state_manager, constraint_manager):
         """
         Parameters
         ----------
@@ -47,6 +46,9 @@ class ModelManager:
             The object that handles storing and sorting the results from the perf analyzer
         state_manager: AnalyzerStateManager
             The object that handles serializing the state of the analyzer and saving.
+        constraint_manager: ConstraintManager
+            The object that handles processing and applying
+            constraints on a given measurements
         """
 
         self._config = config
@@ -56,6 +58,7 @@ class ModelManager:
         self._metrics_manager = metrics_manager
         self._result_manager = result_manager
         self._state_manager = state_manager
+        self._constraint_manager = constraint_manager
 
         if state_manager.starting_fresh_run():
             self._init_state()
@@ -104,12 +107,11 @@ class ModelManager:
 
             if measurement:
                 objectives = [model.objectives() for model in models]
-                constraints = [model.constraints() for model in models]
                 weightings = [model.weighting() for model in models]
 
                 measurement.set_metric_weightings(metric_objectives=objectives)
-                measurement.set_model_config_constraints(
-                    model_config_constraints=constraints)
+                measurement.set_constraint_manager(
+                    constraint_manager=self._constraint_manager)
                 measurement.set_model_config_weighting(
                     model_config_weights=weightings)
 

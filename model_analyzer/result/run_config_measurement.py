@@ -20,7 +20,6 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.record import Record, RecordType
-from model_analyzer.result.model_constraints import ModelConstraints
 
 from copy import deepcopy
 from statistics import mean
@@ -56,12 +55,12 @@ class RunConfigMeasurement:
 
         self._model_config_measurements: List[ModelConfigMeasurement] = []
         self._model_config_weights: List[float] = []
-        self._model_config_constraints: List[ModelConstraints] = []
+        self._constraint_manager: ConstraintManager = None
 
     def to_dict(self):
         rcm_dict = deepcopy(self.__dict__)
         del rcm_dict['_model_config_weights']
-        del rcm_dict['_model_config_constraints']
+        del rcm_dict['_constraint_manager']
 
         return rcm_dict
 
@@ -106,16 +105,16 @@ class RunConfigMeasurement:
             for model_config_weight in model_config_weights
         ]
 
-    def set_model_config_constraints(
-            self, model_config_constraints: List[ModelConstraints]) -> None:
+    def set_constraint_manager(
+            self, constraint_manager: ConstraintManager) -> None:
         """
 
         Parameters
         ----------
-        model_config_constraints: list of ModelConstraints objects
+        constraint_manager: ConstraintManager object
         Used to determine if an ModelConfigMeasurement passes or fails
         """
-        self._model_config_constraints = model_config_constraints
+        self._constraint_manager = constraint_manager
 
     def add_model_config_measurement(self, model_config_name: str,
                                      model_specific_pa_params: Dict[str, int],
@@ -169,19 +168,20 @@ class RunConfigMeasurement:
 
         return self._model_variants_name
 
-    def data(self) -> List[List[Record]]:
+    def data(self) -> Dict[str, List[Record]]:
         """
         Returns
         -------
-        per model list of a list of Records
+        dict
+            keys are model names and values are list of Records per model
             All the metric values in each model's measurement 
             for both GPU and non-GPU
         """
 
-        return [
-            self._avg_gpu_data + mcm.non_gpu_data()
+        return {
+            mcm.model_name(): self._avg_gpu_data + mcm.non_gpu_data()
             for mcm in self._model_config_measurements
-        ]
+        }
 
     def gpu_data(self) -> Dict[int, List[Record]]:
         """
@@ -418,8 +418,7 @@ class RunConfigMeasurement:
         Returns true if all model measurements pass
         their respective constraints
         """
-        return ConstraintManager.satisfies_constraints(
-            self._model_config_constraints, self)
+        return self._constraint_manager.satisfies_constraints(self)
 
     def compare_measurements(self, other: 'RunConfigMeasurement') -> float:
         """
@@ -495,10 +494,8 @@ class RunConfigMeasurement:
         if self.is_passing_constraints() or other.is_passing_constraints():
             return None
 
-        self_failing_pct = ConstraintManager.constraint_failure_percentage(
-            self._model_config_constraints, self)
-        other_failing_pct = ConstraintManager.constraint_failure_percentage(
-            other._model_config_constraints, other)
+        self_failing_pct = self._constraint_manager.constraint_failure_percentage(self)
+        other_failing_pct = self._constraint_manager.constraint_failure_percentage(other)
 
         return (self_failing_pct - other_failing_pct) / 100
 

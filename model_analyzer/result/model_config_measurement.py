@@ -102,6 +102,13 @@ class ModelConfigMeasurement:
 
         return self._model_config_name
 
+    def model_name(self):
+        """
+        Return the model name
+        """
+
+        return self._model_config_name.partition("_config_")[0]
+
     def model_specific_pa_params(self):
         """
         Return a dict of model specific PA parameters

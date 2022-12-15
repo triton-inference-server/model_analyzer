@@ -13,8 +13,6 @@
 # limitations under the License.
 
 from model_analyzer.constants import LOGGER_NAME
-from .constraint_manager import ConstraintManager
-from .run_config_measurement import RunConfigMeasurement
 
 from bisect import insort
 from functools import total_ordering
@@ -31,7 +29,7 @@ class RunConfigResult:
     to a particular ResultTable
     """
 
-    def __init__(self, model_name, run_config, comparator, constraints=None):
+    def __init__(self, model_name, run_config, comparator, constraint_manager):
         """
         Parameters
         ----------
@@ -43,14 +41,15 @@ class RunConfigResult:
             RunConfigResults and returns 1 if the first is better than
             the second, 0 if they are equal and -1
             otherwise
-        constraints: list of ModelConstraints objects
-            Used to determine if a RunConfigResult passes or fails
+        constraint_manager: ConstraintManager
+            The object that handles processing and applying
+            constraints on a given measurements
         """
 
         self._model_name = model_name
         self._run_config = run_config
         self._comparator = comparator
-        self._constraints = constraints
+        self._constraint_manager = constraint_manager
 
         # Heaps
         self._measurements = []
@@ -102,7 +101,7 @@ class RunConfigResult:
 
         insort(self._measurements, run_config_measurement)
 
-        if ConstraintManager.satisfies_constraints(self._constraints,
+        if self._constraint_manager.satisfies_constraints(
                                                    run_config_measurement):
             insort(self._passing_measurements, run_config_measurement)
         else:

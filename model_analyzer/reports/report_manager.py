@@ -17,7 +17,6 @@ from typing import List, Tuple, Dict, Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.constants import LOGGER_NAME, TOP_MODELS_REPORT_KEY
-from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.result.result_table import ResultTable
@@ -36,7 +35,7 @@ class ReportManager:
     various types of reports
     """
 
-    def __init__(self, mode, config, gpu_info, result_manager):
+    def __init__(self, mode, config, gpu_info, result_manager, constraint_manager):
         """
         Parameters
         ----------
@@ -51,16 +50,20 @@ class ReportManager:
         result_manager : ResultManager
             instance that manages the result tables and 
             adding results
+        constraint_manager: ConstraintManager
+            instance that manages constraints
         """
 
         self._mode = mode
         self._config = config
         self._gpu_info = gpu_info
         self._result_manager = result_manager
+        self._constraint_manager = constraint_manager
 
         # Create the plot manager
         self._plot_manager = PlotManager(config=self._config,
-                                         result_manager=self._result_manager)
+                                         result_manager=self._result_manager,
+                                         constraint_manager=self._constraint_manager)
 
         self._summary_data = defaultdict(list)
         self._summaries = {}
@@ -423,6 +426,7 @@ class ReportManager:
     def _create_constraint_string(self, report_key: str) -> str:
         constraint_strs = self._build_constraint_strings()
 
+        constraint_str = "None"
         if constraint_strs:
             if report_key == TOP_MODELS_REPORT_KEY:
                 constraint_str = constraint_strs['default']
@@ -432,8 +436,6 @@ class ReportManager:
             else:  # single-model
                 if report_key in constraint_strs:
                     constraint_str = constraint_strs[report_key]
-        else:
-            constraint_str = "None"
 
         return constraint_str
 
@@ -941,8 +943,8 @@ class ReportManager:
         """
 
         constraint_strs = {}
-        for model_name, model_constraints in ConstraintManager.get_constraints_for_all_models(
-                self._config).items():
+
+        for model_name, model_constraints in self._constraint_manager.get_constraints_for_all_models().items():
             strs = []
             if model_constraints:
                 for metric, constraint in model_constraints.items():
