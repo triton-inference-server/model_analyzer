@@ -418,6 +418,8 @@ class RunConfigMeasurement:
         Returns true if all model measurements pass
         their respective constraints
         """
+
+        assert (self._constraint_manager is not None)
         return self._constraint_manager.satisfies_constraints(self)
 
     def compare_measurements(self, other: 'RunConfigMeasurement') -> float:
@@ -491,6 +493,9 @@ class RunConfigMeasurement:
            Zero if they are equally close to passing constraints
            None if either RCM is passing constraints
         """
+
+        assert (self._constraint_manager is not None)
+
         if self.is_passing_constraints() or other.is_passing_constraints():
             return None
 
