@@ -294,32 +294,16 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self, model: ModelProfileSpec,
             model_index: int) -> Tuple[ModelRunConfig, int]:
         pa_model_index = deepcopy(model_index)
-        ensemble_subconfigs = []
-        min_val_of_max_batch_sizes = int(maxsize)
+
         if model.model_name() in self._ensemble_submodels:
-            for ensemble_submodel in self._ensemble_submodels[
-                    model.model_name()]:
-                ensemble_subconfigs.append(
-                    self._get_next_model_config(ensemble_submodel, model_index))
+            ensemble_subconfigs, model_index = self._get_next_ensemble_subconfigs(
+                model, pa_model_index)
 
-                #### REFACTOR
-                dimension_values = self._get_coordinate_values(
-                    self._coordinate_to_measure, model_index)
+            param_combo = self._get_next_ensemble_param_combo(
+                pa_model_index, model_index)
 
-                min_val_of_max_batch_sizes = int(
-                    min([
-                        dimension_values.get("max_batch_size", 1),
-                        min_val_of_max_batch_sizes
-                    ]))
-                ### END REFACTOR
-
-                model_index = model_index + 1
-
-            model_config = BaseModelConfigGenerator.make_ensemble_model_config(
-                model=model,
-                ensemble_submodel_configs=ensemble_subconfigs,
-                model_variant_name_manager=self._model_variant_name_manager,
-                param_combo={'max_batch_size': min_val_of_max_batch_sizes})
+            model_config = self._get_next_ensemble_model_config(
+                model, ensemble_subconfigs, param_combo)
         else:
             model_config = self._get_next_model_config(model, model_index)
             model_index = model_index + 1
@@ -337,6 +321,51 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_run_config.add_ensemble_submodel_configs(ensemble_subconfigs)
 
         return (model_run_config, model_index)
+
+    def _get_next_ensemble_subconfigs(
+            self, model: ModelProfileSpec,
+            start_model_index: int) -> Tuple[List[ModelConfig], int]:
+        model_index = deepcopy(start_model_index)
+        ensemble_subconfigs = []
+        for ensemble_submodel in self._ensemble_submodels[model.model_name()]:
+            ensemble_subconfigs.append(
+                self._get_next_model_config(ensemble_submodel, model_index))
+            model_index = model_index + 1
+
+        return (ensemble_subconfigs, model_index)
+
+    def _get_next_ensemble_param_combo(self, start_model_index: int,
+                                       end_model_index: int) -> dict:
+        """
+        For the ensemble model the only parameter we need to set 
+        is the max batch size; which will be the minimum batch size 
+        found in the submodel max batch sizes
+        """
+        min_val_of_max_batch_size = maxsize
+        for model_index in range(start_model_index, end_model_index):
+            dimension_values = self._get_coordinate_values(
+                self._coordinate_to_measure, model_index)
+
+            min_val_of_max_batch_size = int(
+                min([
+                    dimension_values.get("max_batch_size", 1),
+                    min_val_of_max_batch_size
+                ]))
+
+        param_combo = {'max_batch_size': min_val_of_max_batch_size}
+
+        return param_combo
+
+    def _get_next_ensemble_model_config(self, model: ModelProfileSpec,
+                                        ensemble_subconfigs: List[ModelConfig],
+                                        param_combo: dict) -> ModelConfig:
+        model_config = BaseModelConfigGenerator.make_ensemble_model_config(
+            model=model,
+            ensemble_submodel_configs=ensemble_subconfigs,
+            model_variant_name_manager=self._model_variant_name_manager,
+            param_combo=param_combo)
+
+        return model_config
 
     def _get_next_model_config(self, model: ModelProfileSpec,
                                dimension_index: int) -> ModelConfig:
