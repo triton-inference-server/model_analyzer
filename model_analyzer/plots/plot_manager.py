@@ -84,7 +84,7 @@ class PlotManager:
         """
 
         for plot_config in self._config.plots:
-            constraints = self._constraints['default']
+            constraints = self._constraints['__default__']
             if plots_key in self._constraints:
                 constraints = self._constraints[plots_key]
             for run_config_result in self._result_manager.top_n_results(

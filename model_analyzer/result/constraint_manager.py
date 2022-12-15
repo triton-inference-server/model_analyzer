@@ -28,17 +28,18 @@ class ConstraintManager:
     """
 
     def __init__(self, config) -> None:
-        self._model_constraints = {}
-        self._global_constraints = {}
+        self._constraints = {}
 
         if config:
+            # Model constraints
             if "profile_models" in config.get_config():
                 for model in config.profile_models:
-                    self._model_constraints[model.model_name()
+                    self._constraints[model.model_name()
                                             ] = model.constraints()
 
+            # Global constraints
             if "constraints" in config.get_all_config():
-                self._global_constraints['default'] = ModelConstraints(config.get_all_config()[
+                self._constraints['__default__'] = ModelConstraints(config.get_all_config()[
                     "constraints"])
 
     def get_constraints_for_all_models(self):
@@ -48,11 +49,8 @@ class ConstraintManager:
         dict
             keys are model names, and values are ModelConstraints objects
         """
-        all_constraints = {}
-        all_constraints.update(self._model_constraints)
-        all_constraints.update(self._global_constraints)
 
-        return all_constraints
+        return self._constraints
 
     def satisfies_constraints(self,
             run_config_measurement: 'RunConfigMeasurement') -> bool:
@@ -71,13 +69,13 @@ class ConstraintManager:
         False otherwise
         """
 
-        if self._model_constraints:
+        if self._constraints:
             for (model_name, model_metrics) in run_config_measurement.data().items():
                 for metric in model_metrics:
                     if self._metric_matches_constraint(
-                            metric, self._model_constraints[model_name]):
+                            metric, self._constraints[model_name]):
                         if self._get_failure_percentage(
-                                metric, self._model_constraints[model_name][metric.tag]) > 0:
+                                metric, self._constraints[model_name][metric.tag]) > 0:
                             return False
 
         return True
@@ -94,13 +92,13 @@ class ConstraintManager:
         """
         failure_percentage: float = 0
 
-        if self._model_constraints:
+        if self._constraints:
             for (model_name, model_metrics) in run_config_measurement.data().items():
                 for metric in model_metrics:
                     if self._metric_matches_constraint(
-                            metric, self._model_constraints[model_name]):
+                            metric, self._constraints[model_name]):
                         failure_percentage += self._get_failure_percentage(
-                            metric, self._model_constraints[model_name][metric.tag])
+                            metric, self._constraints[model_name][metric.tag])
 
         return failure_percentage * 100
 

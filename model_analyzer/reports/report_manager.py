@@ -429,7 +429,7 @@ class ReportManager:
         constraint_str = "None"
         if constraint_strs:
             if report_key == TOP_MODELS_REPORT_KEY:
-                constraint_str = constraint_strs['default']
+                constraint_str = constraint_strs['__default__']
             elif ',' in report_key:  # indicates multi-model
                 constraint_str = self._create_multi_model_constraint_string(
                     report_key, constraint_strs)
