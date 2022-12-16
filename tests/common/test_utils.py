@@ -30,6 +30,10 @@ from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.constants import SECONDS_TO_MILLISECONDS_MULTIPLIER
+
+import yaml
+from model_analyzer.result.constraint_manager import ConstraintManager
+
 from model_analyzer.config.input.config_defaults import \
     DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_CLIENT_PROTOCOL, \
     DEFAULT_MEASUREMENT_MODE, DEFAULT_TRITON_GRPC_ENDPOINT, DEFAULT_TRITON_HTTP_ENDPOINT, \
@@ -100,7 +104,9 @@ def _load_result_manager_helper(dir_path: str, yaml_str: str):
     state_manager = AnalyzerStateManager(config=config, server=None)
     state_manager.load_checkpoint(checkpoint_required=True)
 
-    result_manager = ResultManager(config=config, state_manager=state_manager)
+    result_manager = ResultManager(config=config,
+                            state_manager=state_manager,
+                            constraint_manager=ConstraintManager(config=config))
     return result_manager, config
 
 
@@ -314,13 +320,25 @@ def construct_run_config_measurement(model_name,
     if metric_objectives:
         rc_measurement.set_metric_weightings(metric_objectives)
 
+    # Initially set to empty constraint_manager object, later it can be overwritten
+    if model_config_names:
+        constraints = {}
+        for name in model_config_names:
+            name = name.partition('_config_')[0]
+            constraints[name] = {}
+        constraint_manager = construct_constraint_manager(constraints=constraints)
+        rc_measurement.set_constraint_manager(constraint_manager=constraint_manager)
+    else:
+        constraint_manager = construct_constraint_manager(constraints={"test_model": {}})
+        rc_measurement.set_constraint_manager(constraint_manager=constraint_manager)
+
     return rc_measurement
 
 
 def construct_run_config_result(avg_gpu_metric_values,
                                 avg_non_gpu_metric_values_list,
                                 comparator,
-                                constraints=None,
+                                constraint_manager=None,
                                 value_step=1,
                                 model_name="test_model",
                                 model_config_names=["test_model"],
@@ -355,11 +373,15 @@ def construct_run_config_result(avg_gpu_metric_values,
 
     num_vals = 10
 
+    # Initially set to empty constraint_manager object
+    if constraint_manager is None:
+        constraint_manager = construct_constraint_manager(constraints={"test_model": {}})
+
     # Construct a result
     run_config_result = RunConfigResult(model_name=model_name,
                                         run_config=run_config,
                                         comparator=comparator,
-                                        constraints=constraints)
+                                        constraint_manager=constraint_manager)
 
     # Get dict of list of metric values
     gpu_metric_values = {}
@@ -408,6 +430,61 @@ def construct_run_config_result(avg_gpu_metric_values,
 
     return run_config_result
 
+
+def construct_constraint_manager(constraints=None, yaml_str=None):
+    """
+    Returns a ConstraintManager object for Test cases
+    
+    Parameters
+    ----------
+    constraints: dict or None
+        The keys are model names and the values are model constraint dictionaries
+
+    yaml_str: str or None
+        valid yaml config string for creatiing config object (ConfigCommandProfile)
+        atleast one profile model name is required
+    
+    Examples
+    ----------
+    constraints
+       {
+            "add_sub": {
+                "gpu_used_memory": {"max":300000},
+                "perf_latency_p99": {"max":50}
+            },
+            "constraints": {    ## Needed only if we want to pass Global constraints
+                "perf_throughput":{"min":5}
+            }
+        }
+
+    yaml_str
+        '''
+        profile_models: 
+            add_sub
+        '''
+    """
+    args = ['model-analyzer', 'profile', '-f', 'config.yml', '-m', '.']
+
+    if yaml_str:
+        final_yaml_str = yaml_str
+    elif constraints:
+        yaml_dict = {"profile_models": {}}
+        for model_name, model_constraints in constraints.items():
+            if model_name == "constraints":
+                yaml_dict["constraints"] = model_constraints
+            else:
+                yaml_dict["profile_models"].update({model_name: {"constraints": model_constraints }})
+        final_yaml_str = yaml.dump(yaml_dict)
+    else:
+        final_yaml_str = ("""
+            profile_models: 
+              dummy_model_name_1
+        """)
+
+    config = evaluate_mock_config(args, final_yaml_str, subcommand="profile")
+    constraint_manager = ConstraintManager(config)
+
+    return constraint_manager
 
 def default_encode(obj):
     if isinstance(obj, bytes):

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Union
+
 from model_analyzer.result.result_statistics import ResultStatistics
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import TOP_MODELS_REPORT_KEY
@@ -26,6 +28,8 @@ from .results import Results
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.result.constraint_manager import ConstraintManager
 
 from collections import defaultdict
 
@@ -36,7 +40,9 @@ class ResultManager:
     and sort results
     """
 
-    def __init__(self, config, state_manager, constraint_manager):
+    def __init__(self, config: Union[ConfigCommandProfile, ConfigCommandReport],
+                 state_manager: AnalyzerStateManager,
+                 constraint_manager: ConstraintManager):
         """
         Parameters
         ----------

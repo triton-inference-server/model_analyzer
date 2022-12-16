@@ -12,10 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.config.generate.run_config_generator_factory import RunConfigGeneratorFactory
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+
+from model_analyzer.result.constraint_manager import ConstraintManager
+from model_analyzer.result.result_manager import ResultManager
+from model_analyzer.record.metrics_manager import MetricsManager
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.triton.server.server import TritonServer
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
 import logging
 
@@ -28,14 +39,16 @@ class ModelManager:
     It also records the best results for each model.
     """
 
-    def __init__(self, config, gpus, client, server, metrics_manager,
-                 result_manager, state_manager, constraint_manager):
+    def __init__(self, config: ConfigCommandProfile, gpus: List[GPUDevice],
+                 client: TritonClient, server: TritonServer, metrics_manager: MetricsManager,
+                 result_manager: ResultManager, state_manager: AnalyzerStateManager,
+                 constraint_manager: ConstraintManager):
         """
         Parameters
         ----------
         config:ConfigCommandProfile
             The config for the model analyzer
-        gpus: List of GPUDevices
+        gpus: List of GPUDevice
         client: TritonClient
             The client handle used to send requests to Triton
         server: TritonServer

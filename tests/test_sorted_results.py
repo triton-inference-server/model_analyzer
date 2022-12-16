@@ -14,10 +14,10 @@
 
 from model_analyzer.result.sorted_results import SortedResults
 from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
-from model_analyzer.result.model_constraints import ModelConstraints
 
 from .common import test_result_collector as trc
-from .common.test_utils import construct_run_config, construct_run_config_result
+from .common.test_utils import construct_run_config, construct_run_config_result, \
+    construct_constraint_manager
 
 import unittest
 from random import sample
@@ -91,6 +91,8 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
                     model_name='model',
+                    model_config_names=['model_config_0'],
+                    constraint_manager=construct_constraint_manager(constraints={'model':{}}),
                     run_config=run_config_list[i]))
 
         all_results = self.sorted_results.top_n_results(
@@ -109,6 +111,8 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                 avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                 comparator=self.result_comparator,
                 model_name='model',
+                model_config_names=['model_config_0'],
+                constraint_manager=construct_constraint_manager(constraints={'model':{}}),
                 run_config=run_config_B))
 
         all_results = self.sorted_results.top_n_results(
@@ -123,9 +127,15 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         """
         Test the case where we have only failing results
         """
-        constraints = ModelConstraints({'perf_throughput': {'min': 1000}})
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         for i in sample(range(10), 10):
+            model_name = str(i)
+            model_config_names = [f"{model_name}_config_0"]
+            constraints = {
+                model_name: {'perf_throughput': {'min': 1000}}
+            }
+            constraint_manager = construct_constraint_manager(constraints=constraints)
+
             avg_non_gpu_metrics = {
                 'perf_throughput': 100 + 10 * i,
                 'perf_latency_p99': 4000
@@ -135,8 +145,9 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
-                    constraints=[constraints],
-                    model_name=str(i)))
+                    constraint_manager=constraint_manager,
+                    model_config_names=model_config_names,
+                    model_name=model_name))
 
         top_5_results = self.sorted_results.top_n_results(n=5)
         self.assertEqual(top_5_results[0].model_name(), '9')
@@ -152,9 +163,15 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         """
 
         # Create 10 failing results
-        constraints = ModelConstraints({'perf_throughput': {'min': 1000}})
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         for i in sample(range(10), 10):
+            model_name = str(i)
+            model_config_names = [f"{model_name}_config_0"]
+            constraints = {
+                model_name: {'perf_throughput': {'min': 1000}}
+            }
+            constraint_manager = construct_constraint_manager(constraints=constraints)
+
             avg_non_gpu_metrics = {
                 'perf_throughput': 100 + 10 * i,
                 'perf_latency_p99': 4000
@@ -164,8 +181,9 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
-                    constraints=[constraints],
-                    model_name=str(i)))
+                    constraint_manager=constraint_manager,
+                    model_config_names=model_config_names,
+                    model_name=model_name))
 
         # Now add a measurment to the last result so that it now passes the constraint
         avg_non_gpu_metrics = {
@@ -173,13 +191,20 @@ class TestSortedResultsMethods(trc.TestResultCollector):
             'perf_latency_p99': 4000
         }
 
+        model_name = "9"
+        model_config_names = [f"{model_name}_config_0"]
+        constraints = {
+            model_name: {'perf_throughput': {'min': 1000}}
+        }
+        constraint_manager = construct_constraint_manager(constraints=constraints)
         self.sorted_results.add_result(
             construct_run_config_result(
                 avg_gpu_metric_values=avg_gpu_metrics,
                 avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                 comparator=self.result_comparator,
-                constraints=[constraints],
-                model_name="9"))
+                constraint_manager=constraint_manager,
+                model_config_names=model_config_names,
+                model_name=model_name))
 
         top_5_results = self.sorted_results.top_n_results(n=5)
         self.assertEqual(len(top_5_results), 1)
@@ -188,6 +213,10 @@ class TestSortedResultsMethods(trc.TestResultCollector):
     def test_top_n_results(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         for i in sample(range(10), 10):
+            model_name = str(i)
+            model_config_names = [f"{model_name}_config_0"]
+            constraint_manager = construct_constraint_manager(constraints={model_name:{}})
+
             avg_non_gpu_metrics = {
                 'perf_throughput': 100 + 10 * i,
                 'perf_latency_p99': 4000
@@ -197,7 +226,9 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
-                    model_name=str(i)))
+                    model_name=model_name,
+                    model_config_names=model_config_names,
+                    constraint_manager=constraint_manager))
 
         top_5_results = self.sorted_results.top_n_results(n=5)
         self.assertEqual(top_5_results[0].model_name(), '9')

@@ -12,22 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, TYPE_CHECKING
+from typing import Union, Dict, TYPE_CHECKING
 
 from model_analyzer.record.record import Record
 
 if TYPE_CHECKING:
     from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
+from model_analyzer.constants import GLOBAL_CONSTRAINTS_KEY
 from model_analyzer.result.model_constraints import ModelConstraints
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
 class ConstraintManager:
     """
     Handles processing and applying
     constraints on a given measurements
+
+    Parameters
+    ----------
+    config: ConfigCommandProfile or ConfigCommandReport
     """
 
-    def __init__(self, config) -> None:
+    def __init__(self, config: Union[ConfigCommandProfile, ConfigCommandReport]) -> None:
         self._constraints = {}
 
         if config:
@@ -39,7 +46,7 @@ class ConstraintManager:
 
             # Global constraints
             if "constraints" in config.get_all_config():
-                self._constraints['__default__'] = ModelConstraints(config.get_all_config()[
+                self._constraints[GLOBAL_CONSTRAINTS_KEY] = ModelConstraints(config.get_all_config()[
                     "constraints"])
 
     def get_constraints_for_all_models(self):

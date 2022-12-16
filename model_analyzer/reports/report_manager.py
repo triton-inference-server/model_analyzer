@@ -12,15 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Dict, Any, TYPE_CHECKING
+from typing import List, Tuple, Dict, Any, Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.constants import LOGGER_NAME, TOP_MODELS_REPORT_KEY
+from model_analyzer.constants import LOGGER_NAME, TOP_MODELS_REPORT_KEY, GLOBAL_CONSTRAINTS_KEY
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.result.result_table import ResultTable
 from .report_factory import ReportFactory
+
+from model_analyzer.result.constraint_manager import ConstraintManager
+from model_analyzer.result.result_manager import ResultManager
+from model_analyzer.record.metrics_manager import MetricsManager
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
 import os
 from collections import defaultdict
@@ -35,13 +41,15 @@ class ReportManager:
     various types of reports
     """
 
-    def __init__(self, mode, config, gpu_info, result_manager, constraint_manager):
+    def __init__(self, mode: str, config: Union[ConfigCommandProfile, ConfigCommandReport],
+                 gpu_info, result_manager: ResultManager,
+                 constraint_manager: ConstraintManager):
         """
         Parameters
         ----------
         mode: str
             The mode in which Model Analyzer is operating
-        config :ConfigCommandProfile
+        config :ConfigCommandProfile or ConfigCommandReport
             The model analyzer's config containing information
             about the kind of reports to generate
         gpu_info: dict
@@ -429,7 +437,7 @@ class ReportManager:
         constraint_str = "None"
         if constraint_strs:
             if report_key == TOP_MODELS_REPORT_KEY:
-                constraint_str = constraint_strs['__default__']
+                constraint_str = constraint_strs[GLOBAL_CONSTRAINTS_KEY]
             elif ',' in report_key:  # indicates multi-model
                 constraint_str = self._create_multi_model_constraint_string(
                     report_key, constraint_strs)

@@ -500,7 +500,7 @@ class RunConfigMeasurement:
             return None
 
         self_failing_pct = self._constraint_manager.constraint_failure_percentage(self)
-        other_failing_pct = self._constraint_manager.constraint_failure_percentage(other)
+        other_failing_pct = other._constraint_manager.constraint_failure_percentage(other)
 
         return (self_failing_pct - other_failing_pct) / 100
 

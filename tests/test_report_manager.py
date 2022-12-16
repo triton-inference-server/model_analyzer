@@ -20,6 +20,7 @@ from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.reports.report_manager import ReportManager
 from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
 from model_analyzer.result.result_manager import ResultManager
+from model_analyzer.result.constraint_manager import ConstraintManager
 
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
@@ -31,7 +32,8 @@ from .mocks.mock_matplotlib import MockMatplotlibMethods
 from .mocks.mock_os import MockOSMethods
 from .mocks.mock_json import MockJSONMethods
 
-from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
+from .common.test_utils import construct_run_config_measurement, evaluate_mock_config, \
+    construct_constraint_manager
 from .common import test_result_collector as trc
 
 import os
@@ -73,12 +75,16 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 'total_memory': 1024000000
             }
         }
+        constraint_manager = ConstraintManager(config=config)
+
         self.result_manager = ResultManager(config=config,
-                                            state_manager=state_manager)
+                                            state_manager=state_manager,
+                                            constraint_manager=constraint_manager)
         self.report_manager = ReportManager(mode=mode,
                                             config=config,
                                             gpu_info=gpu_info,
-                                            result_manager=self.result_manager)
+                                            result_manager=self.result_manager,
+                                            constraint_manager=constraint_manager)
 
     def _add_result_measurement(self,
                                 model_config_name,
@@ -174,7 +180,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                     "perf_latency_p99": 4000,
                     "cpu_used_ram": 1000
                 }
-                self._add_result_measurement(f"test_model1_report_{i}",
+                self._add_result_measurement(f"test_model1_config_report_{i}",
                                              "test_model1",
                                              avg_gpu_metrics,
                                              avg_non_gpu_metrics,
@@ -187,7 +193,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                     "perf_latency_p99": 4000,
                     "cpu_used_ram": 1000
                 }
-                self._add_result_measurement(f"test_model2_report_{i}",
+                self._add_result_measurement(f"test_model2_config_report_{i}",
                                              "test_model2",
                                              avg_gpu_metrics,
                                              avg_non_gpu_metrics,
@@ -483,7 +489,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
         report_manager = ReportManager(mode=MagicMock(),
                                        config=MagicMock(),
                                        gpu_info=gpu_info,
-                                       result_manager=MagicMock())
+                                       result_manager=MagicMock(),
+                                       constraint_manager=construct_constraint_manager())
 
         avg_gpu_metrics1 = {
             'gpu_uuid1': {
@@ -534,10 +541,17 @@ class TestReportManagerMethods(trc.TestResultCollector):
         'model_analyzer.reports.report_manager.ReportManager._build_constraint_strings',
         return_value={"modelA": "Max p99 latency: 100 ms"})
     def test_constraint_string_single_model(self, *args):
+        constraint_manager = construct_constraint_manager(
+            constraints={
+                "modelA": {"perf_latency_p99": {"max": 100}}
+            }
+        )
+
         report_manager = ReportManager(mode=MagicMock(),
                                        config=MagicMock(),
                                        gpu_info=MagicMock(),
-                                       result_manager=MagicMock())
+                                       result_manager=MagicMock(),
+                                       constraint_manager=constraint_manager)
         expected_constraint_str = "Max p99 latency: 100 ms"
         actual_constraint_str = report_manager._create_constraint_string(
             report_key="modelA")
@@ -551,10 +565,18 @@ class TestReportManagerMethods(trc.TestResultCollector):
             "modelB": "Max p99 latency: 200 ms"
         })
     def test_constraint_string_multi_model(self, *args):
+        constraint_manager = construct_constraint_manager(
+            constraints={
+                "modelA": {"perf_latency_p99": {"max": 100}},
+                "modelB": {"perf_latency_p99": {"max": 200}},
+            }
+        )
+
         report_manager = ReportManager(mode=MagicMock(),
                                        config=MagicMock(),
                                        gpu_info=MagicMock(),
-                                       result_manager=MagicMock())
+                                       result_manager=MagicMock(),
+                                       constraint_manager=constraint_manager)
         expected_constraint_str = "<strong>modelA</strong>: Max p99 latency: 100 ms"
         expected_constraint_str += "<br>"
 
