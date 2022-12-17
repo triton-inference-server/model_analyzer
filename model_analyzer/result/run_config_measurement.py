@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List, Optional
 
 from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
 from model_analyzer.constants import LOGGER_NAME
@@ -55,7 +55,7 @@ class RunConfigMeasurement:
 
         self._model_config_measurements: List[ModelConfigMeasurement] = []
         self._model_config_weights: List[float] = []
-        self._constraint_manager: ConstraintManager = None
+        self._constraint_manager: Optional[ConstraintManager] = None
 
     def to_dict(self):
         rcm_dict = deepcopy(self.__dict__)

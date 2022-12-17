@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Dict, Any, Union, TYPE_CHECKING
+from typing import List, Tuple, Dict, Any, Union, DefaultDict, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from model_analyzer.result.run_config_measurement import RunConfigMeasurement
@@ -28,6 +28,11 @@ from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
+from model_analyzer.reports.pdf_report import PDFReport
+from model_analyzer.reports.html_report import HTMLReport
+from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+
 import os
 from collections import defaultdict
 import logging
@@ -42,7 +47,7 @@ class ReportManager:
     """
 
     def __init__(self, mode: str, config: Union[ConfigCommandProfile, ConfigCommandReport],
-                 gpu_info, result_manager: ResultManager,
+                 gpu_info: Dict[str, Dict[str, str]], result_manager: ResultManager,
                  constraint_manager: ConstraintManager):
         """
         Parameters
@@ -73,11 +78,11 @@ class ReportManager:
                                          result_manager=self._result_manager,
                                          constraint_manager=self._constraint_manager)
 
-        self._summary_data = defaultdict(list)
-        self._summaries = {}
+        self._summary_data: DefaultDict[str, List[Tuple[RunConfig, RunConfigMeasurement]]] = defaultdict(list)
+        self._summaries: Dict[str, Union[PDFReport, HTMLReport]] = {}
 
-        self._detailed_report_data = {}
-        self._detailed_reports = {}
+        self._detailed_report_data: Dict[str, Tuple[RunConfig, RunConfigMeasurement]] = {}
+        self._detailed_reports: Dict[str, Union[PDFReport, HTMLReport]] = {}
 
         self._reports_export_directory = os.path.join(config.export_path,
                                                       'reports')

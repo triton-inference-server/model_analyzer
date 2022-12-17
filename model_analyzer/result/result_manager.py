@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union
+from typing import Union, DefaultDict
 
 from model_analyzer.result.result_statistics import ResultStatistics
 from model_analyzer.config.run.run_config import RunConfig
@@ -60,8 +60,8 @@ class ResultManager:
         self._constraint_manager = constraint_manager
 
         # Data structures for sorting results
-        self._per_model_sorted_results = defaultdict(SortedResults)
-        self._across_model_sorted_results = SortedResults()
+        self._per_model_sorted_results: DefaultDict[str, SortedResults] = defaultdict(SortedResults)
+        self._across_model_sorted_results: SortedResults = SortedResults()
 
         if state_manager.starting_fresh_run():
             self._init_state()
@@ -81,7 +81,6 @@ class ResultManager:
         if model_name not in self._per_model_sorted_results:
             raise TritonModelAnalyzerException(
                 f"model name {model_name} not found in result manager")
-
         return self._per_model_sorted_results[model_name]
 
     def get_across_model_sorted_results(self):
