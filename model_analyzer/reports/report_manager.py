@@ -47,7 +47,7 @@ class ReportManager:
     """
 
     def __init__(self, mode: str, config: Union[ConfigCommandProfile, ConfigCommandReport],
-                 gpu_info: Dict[str, Dict[str, str]], result_manager: ResultManager,
+                 gpu_info: Dict[str, Dict[str, Union[str, int]]], result_manager: ResultManager,
                  constraint_manager: ConstraintManager):
         """
         Parameters

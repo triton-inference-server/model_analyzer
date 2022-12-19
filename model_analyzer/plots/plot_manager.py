@@ -63,7 +63,7 @@ class PlotManager:
         os.makedirs(self._plot_export_directory, exist_ok=True)
 
         # Dict of list of plots
-        self._simple_plots: DefaultDict[str, Dict[str, SimplePlot]] = defaultdict(list)
+        self._simple_plots: DefaultDict[str, Dict[str, SimplePlot]] = defaultdict()
         self._detailed_plots: Dict[str, DetailedPlot] = {}
 
     def create_summary_plots(self):
