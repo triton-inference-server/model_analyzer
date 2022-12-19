@@ -494,7 +494,7 @@ class RunConfigMeasurement:
            None if either RCM is passing constraints
         """
 
-        assert (self._constraint_manager is not None)
+        assert (self._constraint_manager is not None and other._constraint_manager is not None)
 
         if self.is_passing_constraints() or other.is_passing_constraints():
             return None
