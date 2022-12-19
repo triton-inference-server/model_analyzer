@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Union
 import sys
 from model_analyzer.constants import LOGGER_NAME
 from .model_manager import ModelManager
@@ -29,6 +29,8 @@ from .config.input.config_defaults import \
     DEFAULT_CHECKPOINT_DIRECTORY
 from .model_analyzer_exceptions \
     import TritonModelAnalyzerException
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.triton.server.server import TritonServer
 
 from .triton.client.client import TritonClient
 from .device.gpu_device import GPUDevice
@@ -45,11 +47,13 @@ class Analyzer:
     result writing methods.
     """
 
-    def __init__(self, config, server, state_manager, checkpoint_required):
+    def __init__(self, config: Union[ConfigCommandProfile, ConfigCommandReport],
+                 server: TritonServer, state_manager: AnalyzerStateManager,
+                 checkpoint_required: bool):
         """
         Parameters
         ----------
-        config : Config
+        config : ConfigCommandProfile or ConfigCommandReport
             Model Analyzer config
         server : TritonServer
             Server handle
