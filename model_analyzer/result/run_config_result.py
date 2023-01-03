@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
 from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
+from model_analyzer.result.constraint_manager import ConstraintManager
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 from bisect import insort
 from functools import total_ordering
@@ -29,7 +35,9 @@ class RunConfigResult:
     to a particular ResultTable
     """
 
-    def __init__(self, model_name, run_config, comparator, constraint_manager):
+    def __init__(self, model_name: str, run_config: RunConfig,
+                 comparator: RunConfigResultComparator,
+                 constraint_manager: ConstraintManager):
         """
         Parameters
         ----------
@@ -52,9 +60,9 @@ class RunConfigResult:
         self._constraint_manager = constraint_manager
 
         # Heaps
-        self._measurements = []
-        self._passing_measurements = []
-        self._failing_measurements = []
+        self._measurements: List[RunConfigMeasurement] = []
+        self._passing_measurements: List[RunConfigMeasurement] = []
+        self._failing_measurements: List[RunConfigMeasurement] = []
 
     def model_name(self):
         """
