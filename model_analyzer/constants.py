@@ -56,3 +56,6 @@ SERVER_OUTPUT_TIMEOUT_SECS = 5
 
 # Logging
 LOGGER_NAME = "model_analyzer_logger"
+
+# Constraints
+GLOBAL_CONSTRAINTS_KEY = "__default__"
