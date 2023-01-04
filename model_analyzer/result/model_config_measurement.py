@@ -102,16 +102,6 @@ class ModelConfigMeasurement:
 
         return self._model_config_name
 
-    def model_name(self):
-        """
-        Return the model name
-
-        TODO: This method should be replaced with the extract_model_name_from_variant_name() static method,
-        once the ensemble code gets merged to main
-        """
-
-        return self._model_config_name.partition("_config_")[0]
-
     def model_specific_pa_params(self):
         """
         Return a dict of model specific PA parameters

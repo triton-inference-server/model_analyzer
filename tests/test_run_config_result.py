@@ -18,8 +18,8 @@ from .common import test_result_collector as trc
 
 from model_analyzer.result.run_config_result import RunConfigResult
 
-from tests.common.test_utils import construct_run_config_measurement, \
-        convert_non_gpu_metrics_to_data, construct_constraint_manager
+from tests.common.test_utils import construct_run_config_measurement, convert_non_gpu_metrics_to_data
+from model_analyzer.result.model_constraints import ModelConstraints
 
 
 class TestRunConfigResult(trc.TestResultCollector):
@@ -264,32 +264,22 @@ class TestRunConfigResult(trc.TestResultCollector):
         self.rcr_empty = RunConfigResult(model_name=self.model_name,
                                          run_config=self.run_config,
                                          comparator=MagicMock(),
-                                         constraint_manager=MagicMock())
+                                         constraints=MagicMock())
 
     def _construct_throughput_with_latency_constraint_rcr(self):
-        constraints = {
-            "modelA": {'perf_latency_p99': {'max': 100}}
-        }
-        constraint_manager = construct_constraint_manager(constraints=constraints)
-
         self._rcr_throughput_with_latency_constraint = \
             RunConfigResult(model_name=MagicMock(),
                             run_config=MagicMock(),
                             comparator=[{'perf_throughput': 1}],
-                            constraint_manager=constraint_manager)
+                            constraints=[ModelConstraints({'perf_latency_p99': {'max': 100}})])
 
     def _construct_throughput_with_latency_constraint_multi_model_rcr(self):
-        constraints = {
-            "modelA": {'perf_latency_p99': {'max': 100}},
-            "modelB": {'perf_latency_p99': {'max': 50}}
-        }
-        constraint_manager = construct_constraint_manager(constraints=constraints)
-
         self._rcr_throughput_with_latency_constraint_multi_model = \
             RunConfigResult(model_name=MagicMock(),
                             run_config=MagicMock(),
                             comparator=[{'perf_throughput': 1}],
-                            constraint_manager=constraint_manager)
+                            constraints=[ModelConstraints({'perf_latency_p99': {'max': 100}}),
+                            ModelConstraints({'perf_latency_p99': {'max': 50}})])
 
     def _add_rcm_to_rcr(self, rcr, throughput_value, latency_value):
         rcr.add_run_config_measurement(

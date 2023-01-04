@@ -20,9 +20,9 @@ from model_analyzer.config.generate.search_dimension import SearchDimension
 from model_analyzer.config.generate.search_dimensions import SearchDimensions
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.coordinate import Coordinate
+from model_analyzer.result.model_constraints import ModelConstraints
 
-from .common.test_utils import construct_run_config_measurement, \
-    construct_constraint_manager
+from .common.test_utils import construct_run_config_measurement
 from .common import test_result_collector as trc
 
 
@@ -45,7 +45,7 @@ class TestNeighborhood(trc.TestResultCollector):
         weights = [1]
 
         rcm = construct_run_config_measurement(
-            model_name="modelA",
+            model_name="",
             model_config_names=model_config_name,
             model_specific_pa_params=MagicMock(),
             gpu_metric_values={},
@@ -391,29 +391,29 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager(
-            constraints={
-                "modelA": {
-                    "perf_throughput": {"min": 100},
-                    "perf_latency_p99": {"max": 300}
-                }
+        constraints = ModelConstraints({
+            "perf_throughput": {
+                "min": 100
+            },
+            "perf_latency_p99": {
+                "max": 300
             }
-        )
+        })
 
         rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
-        rcm0.set_constraint_manager(constraint_manager=constraint_manager)
+        rcm0.set_model_config_constraints([constraints])
 
         rcm1 = self._construct_rcm(throughput=700, latency=350)  # fail
-        rcm1.set_constraint_manager(constraint_manager=constraint_manager)
+        rcm1.set_model_config_constraints([constraints])
 
         rcm2 = self._construct_rcm(throughput=300, latency=130)  # pass
-        rcm2.set_constraint_manager(constraint_manager=constraint_manager)
+        rcm2.set_model_config_constraints([constraints])
 
         rcm3 = self._construct_rcm(throughput=400, latency=290)  # pass
-        rcm3.set_constraint_manager(constraint_manager=constraint_manager)
+        rcm3.set_model_config_constraints([constraints])
 
         rcm4 = self._construct_rcm(throughput=850, latency=400)  # fail
-        rcm4.set_constraint_manager(constraint_manager=constraint_manager)
+        rcm4.set_model_config_constraints([constraints])
 
         cd.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
         cd.set_measurement(Coordinate([2, 1, 1]), rcm1)
@@ -467,23 +467,23 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager(
-            constraints={
-                "modelA": {
-                    "perf_throughput": {"min": 100},
-                    "perf_latency_p99": {"max": 300}
-                }
+        constraints = ModelConstraints({
+            "perf_throughput": {
+                "min": 100
+            },
+            "perf_latency_p99": {
+                "max": 300
             }
-        )
+        })
 
         rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
-        rcm0.set_constraint_manager(constraint_manager=constraint_manager)
+        rcm0.set_model_config_constraints([constraints])
 
         rcm1 = self._construct_rcm(throughput=300, latency=130)  # pass
-        rcm1.set_constraint_manager(constraint_manager=constraint_manager)
+        rcm1.set_model_config_constraints([constraints])
 
         rcm2 = self._construct_rcm(throughput=400, latency=290)  # pass
-        rcm2.set_constraint_manager(constraint_manager=constraint_manager)
+        rcm2.set_model_config_constraints([constraints])
 
         cd.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
         cd.set_measurement(Coordinate([2, 3, 1]), rcm1)
@@ -535,23 +535,23 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager(
-            constraints={
-                "modelA": {
-                    "perf_throughput": {"min": 100},
-                    "perf_latency_p99": {"max": 300}
-                }
+        constraints = ModelConstraints({
+            "perf_throughput": {
+                "min": 100
+            },
+            "perf_latency_p99": {
+                "max": 300
             }
-        )
+        })
 
         rcm0 = self._construct_rcm(throughput=500, latency=450)  # fail
-        rcm0.set_constraint_manager(constraint_manager=constraint_manager)
+        rcm0.set_model_config_constraints([constraints])
 
         rcm1 = self._construct_rcm(throughput=700, latency=360)  # fail
-        rcm1.set_constraint_manager(constraint_manager=constraint_manager)
+        rcm1.set_model_config_constraints([constraints])
 
         rcm2 = self._construct_rcm(throughput=850, latency=540)  # fail
-        rcm2.set_constraint_manager(constraint_manager=constraint_manager)
+        rcm2.set_model_config_constraints([constraints])
 
         cd.set_measurement(Coordinate([1, 1, 1]), rcm0)  # home coordinate
         cd.set_measurement(Coordinate([3, 2, 1]), rcm1)
