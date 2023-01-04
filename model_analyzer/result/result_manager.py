@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, DefaultDict
-
 from model_analyzer.result.result_statistics import ResultStatistics
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import TOP_MODELS_REPORT_KEY
@@ -28,8 +26,6 @@ from .results import Results
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
-from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
-from model_analyzer.result.constraint_manager import ConstraintManager
 
 from collections import defaultdict
 
@@ -40,9 +36,7 @@ class ResultManager:
     and sort results
     """
 
-    def __init__(self, config: Union[ConfigCommandProfile, ConfigCommandReport],
-                 state_manager: AnalyzerStateManager,
-                 constraint_manager: ConstraintManager):
+    def __init__(self, config, state_manager):
         """
         Parameters
         ----------
@@ -50,18 +44,14 @@ class ResultManager:
             the model analyzer config
         state_manager: AnalyzerStateManager
             The object that allows control and update of state
-        constraint_manager: ConstraintManager
-            The object that handles processing and applying
-            constraints on a given measurements
         """
 
         self._config = config
         self._state_manager = state_manager
-        self._constraint_manager = constraint_manager
 
         # Data structures for sorting results
-        self._per_model_sorted_results: DefaultDict[str, SortedResults] = defaultdict(SortedResults)
-        self._across_model_sorted_results: SortedResults = SortedResults()
+        self._per_model_sorted_results = defaultdict(SortedResults)
+        self._across_model_sorted_results = SortedResults()
 
         if state_manager.starting_fresh_run():
             self._init_state()
@@ -81,6 +71,7 @@ class ResultManager:
         if model_name not in self._per_model_sorted_results:
             raise TritonModelAnalyzerException(
                 f"model name {model_name} not found in result manager")
+
         return self._per_model_sorted_results[model_name]
 
     def get_across_model_sorted_results(self):
@@ -127,7 +118,7 @@ class ResultManager:
             model_name=model_name,
             run_config=run_config,
             comparator=self._run_comparators[model_name],
-            constraint_manager=self._constraint_manager)
+            constraints=self._run_constraints[model_name])
 
         run_config_measurement.set_metric_weightings(
             self._run_comparators[model_name].get_metric_weights())
@@ -307,6 +298,9 @@ class ResultManager:
         model_objectives_list = [
             model.objectives() for model in self._config.profile_models
         ]
+        model_constraints_list = [
+            model.constraints() for model in self._config.profile_models
+        ]
         model_weighting_list = [
             model.weighting() for model in self._config.profile_models
         ]
@@ -318,6 +312,10 @@ class ResultManager:
                     model_weights=model_weighting_list)
         }
 
+        self._run_constraints = {
+            self._concurrent_profile_model_name: model_constraints_list
+        }
+
     def _setup_for_sequential_profile(self):
         self._profile_model_names = [
             model.model_name() for model in self._config.profile_models
@@ -327,6 +325,11 @@ class ResultManager:
             model.model_name(): RunConfigResultComparator(
                 metric_objectives_list=[model.objectives()],
                 model_weights=[model.weighting()])
+            for model in self._config.profile_models
+        }
+
+        self._run_constraints = {
+            model.model_name(): [model.constraints()]
             for model in self._config.profile_models
         }
 
@@ -375,7 +378,7 @@ class ResultManager:
                     model_name=model_name,
                     run_config=run_config,
                     comparator=self._run_comparators[model_name],
-                    constraint_manager=self._constraint_manager)
+                    constraints=self._run_constraints[model_name])
 
                 for run_config_measurement in run_config_measurements.values():
                     run_config_measurement.set_metric_weightings(

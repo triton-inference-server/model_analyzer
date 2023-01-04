@@ -12,21 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
-
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.config.generate.run_config_generator_factory import RunConfigGeneratorFactory
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-
 from model_analyzer.result.constraint_manager import ConstraintManager
-from model_analyzer.result.result_manager import ResultManager
-from model_analyzer.record.metrics_manager import MetricsManager
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.triton.client.client import TritonClient
-from model_analyzer.triton.server.server import TritonServer
-from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
 import logging
 
@@ -39,16 +29,14 @@ class ModelManager:
     It also records the best results for each model.
     """
 
-    def __init__(self, config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 client: TritonClient, server: TritonServer, metrics_manager: MetricsManager,
-                 result_manager: ResultManager, state_manager: AnalyzerStateManager,
-                 constraint_manager: ConstraintManager):
+    def __init__(self, config, gpus, client, server, metrics_manager,
+                 result_manager, state_manager):
         """
         Parameters
         ----------
         config:ConfigCommandProfile
             The config for the model analyzer
-        gpus: List of GPUDevice
+        gpus: List of GPUDevices
         client: TritonClient
             The client handle used to send requests to Triton
         server: TritonServer
@@ -59,9 +47,6 @@ class ModelManager:
             The object that handles storing and sorting the results from the perf analyzer
         state_manager: AnalyzerStateManager
             The object that handles serializing the state of the analyzer and saving.
-        constraint_manager: ConstraintManager
-            The object that handles processing and applying
-            constraints on a given measurements
         """
 
         self._config = config
@@ -71,7 +56,6 @@ class ModelManager:
         self._metrics_manager = metrics_manager
         self._result_manager = result_manager
         self._state_manager = state_manager
-        self._constraint_manager = constraint_manager
 
         if state_manager.starting_fresh_run():
             self._init_state()
@@ -120,11 +104,12 @@ class ModelManager:
 
             if measurement:
                 objectives = [model.objectives() for model in models]
+                constraints = [model.constraints() for model in models]
                 weightings = [model.weighting() for model in models]
 
                 measurement.set_metric_weightings(metric_objectives=objectives)
-                measurement.set_constraint_manager(
-                    constraint_manager=self._constraint_manager)
+                measurement.set_model_config_constraints(
+                    model_config_constraints=constraints)
                 measurement.set_model_config_weighting(
                     model_config_weights=weightings)
 

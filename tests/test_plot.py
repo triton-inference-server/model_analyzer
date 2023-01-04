@@ -60,7 +60,7 @@ class TestPlotMethods(trc.TestResultCollector):
 
         measurement = construct_run_config_measurement(
             model_name='test_model',
-            model_config_names=['test_model_config_0'],
+            model_config_names=['test_model_config0'],
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=gpu_metric_values,
             non_gpu_metric_values=[non_gpu_metric_values],
@@ -111,7 +111,7 @@ class TestPlotMethods(trc.TestResultCollector):
 
         measurement = construct_run_config_measurement(
             model_name='test_model',
-            model_config_names=['test_model_config_0'],
+            model_config_names=['test_model_config0'],
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=gpu_metric_values,
             non_gpu_metric_values=[non_gpu_metric_values],
