@@ -105,6 +105,60 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
 
         self.assertEqual(summary_sentence, expected_summary_sentence)
 
+        # Check the first row of the table
+        self.assertEqual(
+            summary_table._rows[0][0],
+            'ensemble_python_resnet50_config_28')  # model config name
+        self.assertEqual(summary_table._rows[0][1], '(8, 8)')  # max batch size
+        self.assertEqual(summary_table._rows[0][2],
+                         '(Enabled, Enabled)')  # dynamic batching
+        self.assertEqual(summary_table._rows[0][3],
+                         '(4:GPU, 2:GPU)')  # instance count
+        self.assertEqual(summary_table._rows[0][4], '1104.425')  # p99 latency
+        self.assertEqual(summary_table._rows[0][5], '63.9635')  # throughput
+        self.assertEqual(summary_table._rows[0][6], 2801)  # max gpu memory
+        self.assertEqual(summary_table._rows[0][7], 2.7)  # GPU utilization
+
+    def test_ensemble_cpu_only(self):
+        """
+        Ensures the summary report sentence and table are accurate for a basic ensemble model (loaded from a checkpoint)
+        when the cpu only flag is set
+        """
+
+        self._init_managers(models="ensemble_python_resnet50",
+                            subcommand='profile')
+
+        self.report_manager.create_summaries()
+
+        expected_summary_sentence = 'In 68 measurements across 37 configurations, <strong>ensemble_python_resnet50_config_28</strong> ' \
+        'is <strong>285%</strong> better than the default configuration at meeting the objectives, ' \
+        'under the given constraints.<BR><BR><strong>ensemble_python_resnet50_config_28</strong> is comprised of the following submodels: ' \
+        '<UL> <LI> <strong>preprocess_config_9</strong>: ' \
+        '4 GPU instances with a max batch size of 8 on platform python </LI><LI> <strong>resnet50_trt_config_8</strong>: ' \
+        '2 GPU instances with a max batch size of 8 on platform tensorrt_plan </LI> </UL>'
+
+        summary_table, summary_sentence = \
+            self.report_manager._build_summary_table(
+                report_key="ensemble_python_resnet50",
+                num_measurements=68,
+                num_configurations=37,
+                gpu_name="TITAN RTX",
+                cpu_only=True)
+
+        self.assertEqual(summary_sentence, expected_summary_sentence)
+
+        # Check the first row of the table
+        self.assertEqual(
+            summary_table._rows[0][0],
+            'ensemble_python_resnet50_config_28')  # model config name
+        self.assertEqual(summary_table._rows[0][1], '8, 8')  # max batch size
+        self.assertEqual(summary_table._rows[0][2],
+                         '(Enabled, Enabled)')  # dynamic batching
+        self.assertEqual(summary_table._rows[0][3],
+                         '4:GPU, 2:GPU')  # instance count
+        self.assertEqual(summary_table._rows[0][4], '1104.425')  # p99 latency
+        self.assertEqual(summary_table._rows[0][5], '63.9635')  # throughput
+
     def tearDown(self):
         patch.stopall()
 
