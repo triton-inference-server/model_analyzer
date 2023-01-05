@@ -400,10 +400,12 @@ class ReportManager:
             report_key)
 
         multi_model = len(best_run_config.model_run_configs()) > 1
+        ensemble = best_run_config.model_run_configs()[0].is_ensemble_model()
 
         summary_sentence = self._create_summary_sentence(
             report_key, num_configurations, num_measurements, best_run_config,
-            best_run_config_measurement, gpu_name, cpu_only, multi_model)
+            best_run_config_measurement, gpu_name, cpu_only, multi_model,
+            ensemble)
 
         summary_table = self._construct_summary_result_table_cpu_only(sorted_measurements, multi_model) if cpu_only else \
                         self._construct_summary_result_table(sorted_measurements, multi_model)
@@ -455,7 +457,7 @@ class ReportManager:
     def _create_summary_sentence(self, report_key, num_configurations,
                                  num_measurements, best_run_config,
                                  best_run_config_measurement, gpu_name,
-                                 cpu_only, multi_model):
+                                 cpu_only, multi_model, ensemble):
         measurement_phrase = self._create_summary_measurement_phrase(
             num_measurements)
         config_phrase = self._create_summary_config_phrase(
@@ -470,9 +472,15 @@ class ReportManager:
             f"{objective_phrase}, under the given constraints{gpu_name_phrase}.<UL>"
         )
 
-        for model_run_config in best_run_config.model_run_configs():
-            summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
-                model_run_config.model_config()) + ' </LI>'
+        if ensemble:
+            for ensemble_subconfig in best_run_config.model_run_configs(
+            )[0].ensemble_subconfigs():
+                summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
+                    ensemble_subconfig) + ' </LI>'
+        else:
+            for model_run_config in best_run_config.model_run_configs():
+                summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
+                    model_run_config.model_config()) + ' </LI>'
 
         summary_sentence = summary_sentence + ' </UL>'
 
