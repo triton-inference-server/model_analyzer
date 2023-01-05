@@ -268,6 +268,7 @@ def construct_run_config_measurement(model_name,
                                      model_specific_pa_params,
                                      gpu_metric_values,
                                      non_gpu_metric_values,
+                                     constraint_manager=None,
                                      metric_objectives=None,
                                      model_config_weights=None):
     """
@@ -320,16 +321,7 @@ def construct_run_config_measurement(model_name,
     if metric_objectives:
         rc_measurement.set_metric_weightings(metric_objectives)
 
-    # Initially set to empty constraint_manager object, later it can be overwritten
-    if model_config_names:
-        constraints = {}
-        for name in model_config_names:
-            name = name.partition('_config_')[0]
-            constraints[name] = {}
-        constraint_manager = construct_constraint_manager(constraints=constraints)
-        rc_measurement.set_constraint_manager(constraint_manager=constraint_manager)
-    else:
-        constraint_manager = construct_constraint_manager(constraints={"test_model": {}})
+    if constraint_manager:
         rc_measurement.set_constraint_manager(constraint_manager=constraint_manager)
 
     return rc_measurement
@@ -375,7 +367,7 @@ def construct_run_config_result(avg_gpu_metric_values,
 
     # Initially set to empty constraint_manager object
     if constraint_manager is None:
-        constraint_manager = construct_constraint_manager(constraints={"test_model": {}})
+        constraint_manager = construct_constraint_manager()
 
     # Construct a result
     run_config_result = RunConfigResult(model_name=model_name,
@@ -431,9 +423,10 @@ def construct_run_config_result(avg_gpu_metric_values,
     return run_config_result
 
 
-def construct_constraint_manager(constraints=None, yaml_str=None):
+def construct_constraint_manager(constraints=None, yaml_str=None, model_names=None):
     """
     Returns a ConstraintManager object for Test cases
+    Each parameter is optional. One or zero parameters at a time need to be passed.
     
     Parameters
     ----------
@@ -443,6 +436,9 @@ def construct_constraint_manager(constraints=None, yaml_str=None):
     yaml_str: str or None
         valid yaml config string for creatiing config object (ConfigCommandProfile)
         atleast one profile model name is required
+
+    model_names: list of str
+        model names to create empty constraint manager
     
     Examples
     ----------
@@ -462,13 +458,20 @@ def construct_constraint_manager(constraints=None, yaml_str=None):
         profile_models: 
             add_sub
         '''
+
+    model_names
+        ["modelA", "modelB"]
     """
-    args = ['model-analyzer', 'profile', '-f', 'config.yml', '-m', '.']
+    args = ['model-analyzer', 'profile', '-f', 'config.yml']
+    yaml_dict = {"profile_models": {}}
 
     if yaml_str:
         final_yaml_str = yaml_str
+    elif model_names:
+        for model_name in model_names:
+            yaml_dict["profile_models"].update({model_name: {"constraints": {} }})
+        final_yaml_str = yaml.dump(yaml_dict)
     elif constraints:
-        yaml_dict = {"profile_models": {}}
         for model_name, model_constraints in constraints.items():
             if model_name == "constraints":
                 yaml_dict["constraints"] = model_constraints
@@ -478,7 +481,7 @@ def construct_constraint_manager(constraints=None, yaml_str=None):
     else:
         final_yaml_str = ("""
             profile_models: 
-              dummy_model_name_1
+              test_model
         """)
 
     config = evaluate_mock_config(args, final_yaml_str, subcommand="profile")

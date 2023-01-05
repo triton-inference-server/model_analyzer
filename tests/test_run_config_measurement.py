@@ -34,6 +34,8 @@ import json
 class TestRunConfigMeasurement(trc.TestResultCollector):
 
     def setUp(self):
+        self.default_constraint_manager = construct_constraint_manager(
+            model_names=["modelA", "modelB"])
         self._construct_rcm0()
         self._construct_rcm1()
         self._construct_rcm2()
@@ -420,7 +422,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.rcm0 = construct_run_config_measurement(
             self.model_name, self.model_config_name,
             self.model_specific_pa_params, self.gpu_metric_values,
-            self.rcm0_non_gpu_metric_values, self.metric_objectives,
+            self.rcm0_non_gpu_metric_values, self.default_constraint_manager, self.metric_objectives,
             self.weights)
 
     def _construct_rcm1(self):
@@ -476,7 +478,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.rcm1 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
             gpu_metric_values, self.rcm1_non_gpu_metric_values,
-            metric_objectives, weights)
+            self.default_constraint_manager, metric_objectives, weights)
 
     def _construct_rcm2(self):
         model_name = "modelA,modelB"
@@ -531,7 +533,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.rcm2 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
             gpu_metric_values, self.rcm2_non_gpu_metric_values,
-            metric_objectives, weights)
+            self.default_constraint_manager, metric_objectives, weights)
 
     def _construct_rcm3(self):
         model_name = "modelA,modelB"
@@ -586,7 +588,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.rcm3 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
             gpu_metric_values, self.rcm3_non_gpu_metric_values,
-            metric_objectives, weights)
+            self.default_constraint_manager, metric_objectives, weights)
 
     def _construct_rcm4(self):
         model_name = "modelA"
@@ -636,7 +638,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.rcm4 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
             gpu_metric_values, self.rcm4_non_gpu_metric_values,
-            metric_objectives, weights)
+            self.default_constraint_manager, metric_objectives, weights)
 
     def _construct_rcm5(self):
         model_name = "modelA"
@@ -686,7 +688,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.rcm5 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
             gpu_metric_values, self.rcm5_non_gpu_metric_values,
-            metric_objectives, weights)
+            self.default_constraint_manager, metric_objectives, weights)
 
 
 if __name__ == '__main__':

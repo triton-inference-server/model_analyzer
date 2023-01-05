@@ -26,6 +26,7 @@ from .mocks.mock_os import MockOSMethods
 from unittest.mock import MagicMock, patch
 
 from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
+from model_analyzer.result.constraint_manager import ConstraintManager
 
 from model_analyzer.config.input.config_defaults import \
     DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE
@@ -630,10 +631,11 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         rcg = BruteRunConfigGenerator(config, MagicMock(), profile_models,
                                       MagicMock(), ModelVariantNameManager())
 
+        constraint_manager = ConstraintManager(config)
         run_configs = []
         for run_config in rcg.get_configs():
             run_configs.append(run_config)
-            rcg.set_last_results(self._get_next_fake_results())
+            rcg.set_last_results(self._get_next_fake_results(constraint_manager))
 
         self.assertEqual(expected_config_count, len(set(run_configs)))
 
@@ -656,7 +658,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         self.mock_os.stop()
         patch.stopall()
 
-    def _get_next_fake_results(self):
+    def _get_next_fake_results(self, constraint_manager):
         throughput_value = self._get_next_perf_throughput_value()
 
         measurement = None
@@ -665,6 +667,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
             measurement = construct_run_config_measurement(
                 model_name=MagicMock(),
                 model_config_names=["test_config_name"],
+                constraint_manager=constraint_manager,
                 model_specific_pa_params=MagicMock(),
                 gpu_metric_values=MagicMock(),
                 non_gpu_metric_values=[{

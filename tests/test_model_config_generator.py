@@ -25,6 +25,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from model_analyzer.result.constraint_manager import ConstraintManager
 
 
 class TestModelConfigGenerator(trc.TestResultCollector):
@@ -815,6 +816,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         self.mock_model_config.start()
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
+        constraint_manager = ConstraintManager(config)
         profile_models = []
         for model in config.profile_models:
             profile_models.append(
@@ -838,7 +840,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
 
             model_configs = []
             for model_config in mcg.get_configs():
-                mcg.set_last_results(self._get_next_fake_results())
+                mcg.set_last_results(self._get_next_fake_results(constraint_manager))
                 model_config_dict = model_config.get_config()
                 model_configs.append(model_config_dict)
 
@@ -859,7 +861,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
         finally:
             self.mock_model_config.stop()
 
-    def _get_next_fake_results(self):
+    def _get_next_fake_results(self, constraint_manager):
         throughput = self._get_next_fake_throughput()
 
         measurement = construct_run_config_measurement(
@@ -867,6 +869,7 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             model_config_names=["test_model_config_name"],
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=MagicMock(),
+            constraint_manager=constraint_manager,
             non_gpu_metric_values=[{
                 "perf_throughput": throughput
             }])
