@@ -28,6 +28,8 @@ from unittest.mock import patch
 class TestSortedResultsMethods(trc.TestResultCollector):
 
     def setUp(self):
+        self.default_constraint_manager = construct_constraint_manager(
+                                           model_names=['model', 'test_model'])
         objective_spec = {'perf_throughput': 10, 'perf_latency_p99': 5}
         self.sorted_results = SortedResults()
         self.result_comparator = RunConfigResultComparator(
@@ -44,6 +46,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                 construct_run_config_result(
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
+                    constraint_manager=self.default_constraint_manager,
                     comparator=self.result_comparator))
 
         results = self.sorted_results.results()
@@ -64,6 +67,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
+                    constraint_manager=self.default_constraint_manager,
                     run_config=run_config))
 
         results = self.sorted_results.results()
@@ -92,7 +96,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                     comparator=self.result_comparator,
                     model_name='model',
                     model_config_names=['model_config_0'],
-                    constraint_manager=construct_constraint_manager(constraints={'model':{}}),
+                    constraint_manager=self.default_constraint_manager,
                     run_config=run_config_list[i]))
 
         all_results = self.sorted_results.top_n_results(
@@ -112,7 +116,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                 comparator=self.result_comparator,
                 model_name='model',
                 model_config_names=['model_config_0'],
-                constraint_manager=construct_constraint_manager(constraints={'model':{}}),
+                constraint_manager=self.default_constraint_manager,
                 run_config=run_config_B))
 
         all_results = self.sorted_results.top_n_results(

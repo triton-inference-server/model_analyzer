@@ -14,7 +14,6 @@
 
 from unittest.mock import MagicMock
 
-from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.coordinate import Coordinate
 

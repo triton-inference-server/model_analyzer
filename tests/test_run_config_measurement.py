@@ -17,15 +17,10 @@ from tests.common.test_utils import convert_non_gpu_metrics_to_data, \
     construct_run_config_measurement, default_encode, \
     construct_constraint_manager
 
-from model_analyzer.record.metrics_manager import MetricsManager
-from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.result.model_constraints import ModelConstraints
-
-from statistics import mean
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from .common import test_result_collector as trc
 
 import json
@@ -234,8 +229,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         Test to ensure constraints are reported as passing
         if none were specified
         """
-        constraint_manager = construct_constraint_manager(constraints={"modelA":{}})
-        self.rcm5.set_constraint_manager(constraint_manager=constraint_manager)
+        self.rcm5.set_constraint_manager(constraint_manager=self.default_constraint_manager)
         self.assertTrue(self.rcm5.is_passing_constraints())
 
     def test_is_passing_constraints(self):

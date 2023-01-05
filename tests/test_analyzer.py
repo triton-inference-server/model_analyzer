@@ -26,8 +26,7 @@ from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 
-from tests.common.test_utils import evaluate_mock_config, \
-    construct_constraint_manager
+from tests.common.test_utils import evaluate_mock_config
 from .common import test_result_collector as trc
 
 
@@ -116,12 +115,10 @@ class TestAnalyzer(trc.TestResultCollector):
                 ModelConfig.create_from_dictionary({"name": "config4"}),
                 MagicMock()))
 
-        constraint_manager = construct_constraint_manager()
-
         return [
-            RunConfigResult("fake_model_name", rc1, MagicMock(), constraint_manager),
-            RunConfigResult("fake_model_name", rc2, MagicMock(), constraint_manager),
-            RunConfigResult("fake_model_name", rc3, MagicMock(), constraint_manager)
+            RunConfigResult("fake_model_name", rc1, MagicMock(), MagicMock()),
+            RunConfigResult("fake_model_name", rc2, MagicMock(), MagicMock()),
+            RunConfigResult("fake_model_name", rc3, MagicMock(), MagicMock())
         ]
 
     @patch(

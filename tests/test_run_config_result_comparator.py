@@ -208,6 +208,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             comparator=result_comparator,
             value_step=value_step1,
             run_config=MagicMock(),
+            constraint_manager=MagicMock(),
             model_name=model_name,
             model_config_names=model_config_names)
 
@@ -217,6 +218,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             comparator=result_comparator,
             value_step=value_step2,
             run_config=MagicMock(),
+            constraint_manager=MagicMock(),
             model_name=model_name,
             model_config_names=model_config_names)
 

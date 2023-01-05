@@ -365,10 +365,6 @@ def construct_run_config_result(avg_gpu_metric_values,
 
     num_vals = 10
 
-    # Initially set to empty constraint_manager object
-    if constraint_manager is None:
-        constraint_manager = construct_constraint_manager()
-
     # Construct a result
     run_config_result = RunConfigResult(model_name=model_name,
                                         run_config=run_config,

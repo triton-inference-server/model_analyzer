@@ -490,7 +490,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                                        config=MagicMock(),
                                        gpu_info=gpu_info,
                                        result_manager=MagicMock(),
-                                       constraint_manager=construct_constraint_manager())
+                                       constraint_manager=MagicMock())
 
         avg_gpu_metrics1 = {
             'gpu_uuid1': {
@@ -519,6 +519,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             model_config_names=MagicMock(),
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=avg_gpu_metrics1,
+            constraint_manager=MagicMock(),
             non_gpu_metric_values=MagicMock(),
             metric_objectives=MagicMock(),
             model_config_weights=MagicMock())
@@ -528,6 +529,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             model_config_names=MagicMock(),
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=avg_gpu_metrics2,
+            constraint_manager=MagicMock(),
             non_gpu_metric_values=MagicMock(),
             metric_objectives=MagicMock(),
             model_config_weights=MagicMock())

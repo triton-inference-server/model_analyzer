@@ -25,21 +25,22 @@ from model_analyzer.result.sorted_results import SortedResults
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
-from model_analyzer.result.constraint_manager import ConstraintManager
 
 class TestResultManager(trc.TestResultCollector):
+
+    def setUp(self):
+        self.default_constraint_manager = construct_constraint_manager()
 
     def test_server_data(self):
         """
         Test that add_server_data() and get_server_only_data() 
         are effectively mirrored set/get functions
         """
-        constraint_manager = construct_constraint_manager()
 
         state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
         result_manager = ResultManager(config=ConfigCommandReport(),
                                        state_manager=state_manager,
-                                       constraint_manager=constraint_manager)
+                                       constraint_manager=self.default_constraint_manager)
 
         server_data = {'a': 5, 'b': 7}
         result_manager.add_server_data(server_data)
@@ -54,12 +55,11 @@ class TestResultManager(trc.TestResultCollector):
         then in a list per-representation
         Confirm that the measurements can be read out via get_model_configs_run_config_measurements()
         """
-        constraint_manager = construct_constraint_manager()
 
         state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
         result_manager = ResultManager(config=ConfigCommandReport(),
                                        state_manager=state_manager,
-                                       constraint_manager=constraint_manager)
+                                       constraint_manager=self.default_constraint_manager)
 
         fake_run_config1a = MagicMock()
         fake_run_config1a.models_name.return_value = "Model1"
