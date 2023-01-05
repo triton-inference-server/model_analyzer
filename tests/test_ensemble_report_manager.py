@@ -31,7 +31,7 @@ from .mocks.mock_matplotlib import MockMatplotlibMethods
 from .mocks.mock_os import MockOSMethods
 from .mocks.mock_json import MockJSONMethods
 
-from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
+from .common.test_utils import construct_run_config_measurement, evaluate_mock_config, ROOT_DIR
 from .common import test_result_collector as trc
 
 import os
@@ -51,7 +51,7 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
         if subcommand == 'profile':
             args.extend(["--profile-models", models])
             args.extend(["--model-repository", "/tmp"])
-            args.extend(["--checkpoint-directory", "/swdev/testing"])
+            args.extend(["--checkpoint-directory", f"{ROOT_DIR}/ensemble-ckpt"])
         else:
             args.extend(["--report-model-configs", models])
 
@@ -80,20 +80,30 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
         NotImplemented
 
     def test_ensemble(self):
+        """
+        Ensures the summary report sentence and table are accurate for a basic ensemble model (loaded from a checkpoint)
+        """
         self._init_managers(models="ensemble_python_resnet50",
                             subcommand='profile')
 
         self.report_manager.create_summaries()
 
+        expected_summary_sentence = 'In 68 measurements across 37 configurations, <strong>ensemble_python_resnet50_config_28</strong> ' \
+        'is <strong>285%</strong> better than the default configuration at meeting the objectives, ' \
+        'under the given constraints, on GPU(s) TITAN RTX.<BR><BR><strong>ensemble_python_resnet50_config_28</strong> is comprised of the following submodels: '\
+        '<UL> <LI> <strong>preprocess_config_9</strong>: ' \
+        '4 GPU instances with a max batch size of 8 on platform python </LI><LI> <strong>resnet50_trt_config_8</strong>: ' \
+        '2 GPU instances with a max batch size of 8 on platform tensorrt_plan </LI> </UL>'
+
         summary_table, summary_sentence = \
             self.report_manager._build_summary_table(
                 report_key="ensemble_python_resnet50",
-                num_measurements=55,
-                num_configurations=26,
+                num_measurements=68,
+                num_configurations=37,
                 gpu_name="TITAN RTX",
                 cpu_only=False)
 
-        print("Made it here")
+        self.assertEqual(summary_sentence, expected_summary_sentence)
 
     def tearDown(self):
         patch.stopall()
