@@ -34,7 +34,7 @@ from .mocks.mock_json import MockJSONMethods
 from .common.test_utils import construct_run_config_measurement, evaluate_mock_config, ROOT_DIR
 from .common import test_result_collector as trc
 
-import os
+import os, shutil
 
 import unittest
 from unittest.mock import MagicMock, patch
@@ -55,9 +55,9 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
         else:
             args.extend(["--report-model-configs", models])
 
-        yaml_str = ("""
+        yaml_str = (f"""
             client_protocol: grpc
-            export_path: /swdev/testing
+            export_path: {ROOT_DIR}
         """)
         config = evaluate_mock_config(args, yaml_str, subcommand=subcommand)
         state_manager = AnalyzerStateManager(config=config, server=None)
@@ -161,6 +161,8 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
 
     def tearDown(self):
         patch.stopall()
+        shutil.rmtree(f"{ROOT_DIR}/reports")
+        shutil.rmtree(f"{ROOT_DIR}/plots")
 
 
 if __name__ == '__main__':
