@@ -478,10 +478,11 @@ class ReportManager:
 
         summary_sentence = (
             f"In {measurement_phrase} across {config_phrase} "
-            f"{objective_phrase}, under the given constraints{gpu_name_phrase}.<BR><BR>"
+            f"{objective_phrase}, under the given constraints{gpu_name_phrase}."
         )
 
         if ensemble:
+            summary_sentence = summary_sentence + "<BR><BR>"
             best_config_name = best_run_config.model_run_configs(
             )[0].model_config().get_field('name')
             summary_sentence = summary_sentence + f"<strong>{best_config_name}</strong> is comprised of the following submodels: <UL> "
