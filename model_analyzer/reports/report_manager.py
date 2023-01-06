@@ -21,6 +21,7 @@ from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.result.result_table import ResultTable
+from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 from .report_factory import ReportFactory
 
 import os
@@ -378,6 +379,14 @@ class ReportManager:
 
         if self._result_manager._profiling_models_concurrently():
             caption_results_table = caption_results_table + " Per model values are parenthetical."
+
+        if run_config.model_run_configs()[0].is_ensemble_model():
+            caption_results_table = caption_results_table + " The ensemble's submodel values are listed in the following order: "
+            for ensemble_subconfig_name in run_config.model_run_configs(
+            )[0].get_ensemble_subconfig_names():
+                caption_results_table = caption_results_table + BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                    ensemble_subconfig_name) + ", "
+            caption_results_table = caption_results_table[:-2]  # removes comma
 
         summary.add_paragraph(caption_results_table)
         summary.add_table(table=table)
