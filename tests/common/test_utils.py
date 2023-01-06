@@ -419,7 +419,7 @@ def construct_run_config_result(avg_gpu_metric_values,
     return run_config_result
 
 
-def construct_constraint_manager(constraints=None, yaml_str=None, model_names=None):
+def construct_constraint_manager(constraints=None, model_names=None):
     """
     Returns a ConstraintManager object for Test cases
     Each parameter is optional. One or zero parameters at a time need to be passed.
@@ -428,10 +428,7 @@ def construct_constraint_manager(constraints=None, yaml_str=None, model_names=No
     ----------
     constraints: dict or None
         The keys are model names and the values are model constraint dictionaries
-
-    yaml_str: str or None
-        valid yaml config string for creatiing config object (ConfigCommandProfile)
-        atleast one profile model name is required
+        Key will be 'constraints' for passing global constraints
 
     model_names: list of str
         model names to create empty constraint manager
@@ -444,43 +441,36 @@ def construct_constraint_manager(constraints=None, yaml_str=None, model_names=No
                 "gpu_used_memory": {"max":300000},
                 "perf_latency_p99": {"max":50}
             },
-            "constraints": {    ## Needed only if we want to pass Global constraints
+            "constraints": {
                 "perf_throughput":{"min":5}
             }
         }
-
-    yaml_str
-        '''
-        profile_models: 
-            add_sub
-        '''
 
     model_names
         ["modelA", "modelB"]
     """
     args = ['model-analyzer', 'profile', '-f', 'config.yml']
-    yaml_dict = {"profile_models": {}}
+    yaml_dict = {}
 
-    if yaml_str:
-        final_yaml_str = yaml_str
-    elif model_names:
-        for model_name in model_names:
-            yaml_dict["profile_models"].update({model_name: {"constraints": {} }})
-        final_yaml_str = yaml.dump(yaml_dict)
+    if model_names:
+        yaml_dict["profile_models"] = {model_name: {"constraints":{}} for model_name in model_names}
+        yaml_str = yaml.dump(yaml_dict)
     elif constraints:
+        profile_models = {}
         for model_name, model_constraints in constraints.items():
             if model_name == "constraints":
                 yaml_dict["constraints"] = model_constraints
             else:
-                yaml_dict["profile_models"].update({model_name: {"constraints": model_constraints }})
-        final_yaml_str = yaml.dump(yaml_dict)
+                profile_models[model_name] = {"constraints": model_constraints}
+        yaml_dict["profile_models"] = profile_models
+        yaml_str = yaml.dump(yaml_dict)
     else:
-        final_yaml_str = ("""
+        yaml_str = ("""
             profile_models: 
               test_model
         """)
 
-    config = evaluate_mock_config(args, final_yaml_str, subcommand="profile")
+    config = evaluate_mock_config(args, yaml_str, subcommand="profile")
     constraint_manager = ConstraintManager(config)
 
     return constraint_manager

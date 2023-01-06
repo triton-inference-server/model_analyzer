@@ -23,7 +23,6 @@ from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.model_manager import ModelManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
-from model_analyzer.result.constraint_manager import ConstraintManager
 
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -1041,7 +1040,7 @@ class TestModelManager(trc.TestResultCollector):
                                                  MagicMock(), state_manager)
         model_manager = ModelManager(config, MagicMock(), MagicMock(),
                                      MagicMock(), metrics_manager, MagicMock(),
-                                     state_manager, constraint_manager=ConstraintManager(config))
+                                     state_manager,  MagicMock())
 
         model_manager.run_models([config.profile_models[0]])
         self.mock_model_config.stop()

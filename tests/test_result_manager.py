@@ -17,8 +17,7 @@ import unittest
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 from .common import test_result_collector as trc
-from .common.test_utils import load_single_model_result_manager, load_multi_model_result_manager, \
-    construct_constraint_manager
+from .common.test_utils import load_single_model_result_manager, load_multi_model_result_manager
 
 from unittest.mock import patch, MagicMock
 from model_analyzer.result.sorted_results import SortedResults
@@ -27,9 +26,6 @@ from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
 class TestResultManager(trc.TestResultCollector):
-
-    def setUp(self):
-        self.default_constraint_manager = construct_constraint_manager()
 
     def test_server_data(self):
         """
@@ -40,7 +36,7 @@ class TestResultManager(trc.TestResultCollector):
         state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
         result_manager = ResultManager(config=ConfigCommandReport(),
                                        state_manager=state_manager,
-                                       constraint_manager=self.default_constraint_manager)
+                                       constraint_manager=MagicMock())
 
         server_data = {'a': 5, 'b': 7}
         result_manager.add_server_data(server_data)
@@ -59,7 +55,7 @@ class TestResultManager(trc.TestResultCollector):
         state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
         result_manager = ResultManager(config=ConfigCommandReport(),
                                        state_manager=state_manager,
-                                       constraint_manager=self.default_constraint_manager)
+                                       constraint_manager=MagicMock())
 
         fake_run_config1a = MagicMock()
         fake_run_config1a.models_name.return_value = "Model1"
