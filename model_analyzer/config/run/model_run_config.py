@@ -157,10 +157,12 @@ class ModelRunConfig:
             model_run_config_dict['_model_config'])
         model_run_config._perf_config = PerfAnalyzerConfig.from_dict(
             model_run_config_dict['_perf_config'])
-        model_run_config._ensemble_subconfigs = [
-            ModelConfig.from_dict(ensemble_subconfig_dict)
-            for ensemble_subconfig_dict in
-            model_run_config_dict['_ensemble_subconfigs']
-        ]
+
+        if '_ensemble_subconfigs' in model_run_config_dict:
+            model_run_config._ensemble_subconfigs = [
+                ModelConfig.from_dict(ensemble_subconfig_dict)
+                for ensemble_subconfig_dict in
+                model_run_config_dict['_ensemble_subconfigs']
+            ]
 
         return model_run_config
