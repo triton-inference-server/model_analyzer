@@ -380,7 +380,7 @@ class ReportManager:
         if self._result_manager._profiling_models_concurrently():
             caption_results_table = caption_results_table + " Per model values are parenthetical."
 
-        if run_config.model_run_configs()[0].is_ensemble_model():
+        if run_config.is_ensemble_model():
             caption_results_table = caption_results_table + " The ensemble's submodel values are listed in the following order: "
             for ensemble_subconfig_name in run_config.model_run_configs(
             )[0].get_ensemble_subconfig_names():
@@ -409,7 +409,7 @@ class ReportManager:
             report_key)
 
         multi_model = len(best_run_config.model_run_configs()) > 1
-        is_ensemble = best_run_config.model_run_configs()[0].is_ensemble_model()
+        is_ensemble = best_run_config.is_ensemble_model()
 
         summary_sentence = self._create_summary_sentence(
             report_key, num_configurations, num_measurements, best_run_config,
@@ -671,8 +671,8 @@ class ReportManager:
 
         if is_ensemble:
             dynamic_batching_string = self._create_summary_string([
-                model_config.dynamic_batching_string() for model_config in
-                run_config.model_run_configs()[0].ensemble_subconfigs()
+                model_config.dynamic_batching_string()
+                for model_config in run_config.ensemble_subconfigs()
             ])
         else:
             dynamic_batching_string = self._create_summary_string([
@@ -682,8 +682,8 @@ class ReportManager:
 
         if is_ensemble:
             max_batch_sizes = ', '.join([
-                str(model_config.max_batch_size()) for model_config in
-                run_config.model_run_configs()[0].ensemble_subconfigs()
+                str(model_config.max_batch_size())
+                for model_config in run_config.ensemble_subconfigs()
             ])
         else:
             max_batch_sizes = ', '.join([
@@ -728,8 +728,8 @@ class ReportManager:
                             is_ensemble):
         if is_ensemble:
             dynamic_batching_string = self._create_summary_string([
-                model_config.dynamic_batching_string() for model_config in
-                run_config.model_run_configs()[0].ensemble_subconfigs()
+                model_config.dynamic_batching_string()
+                for model_config in run_config.ensemble_subconfigs()
             ])
         else:
             dynamic_batching_string = self._create_summary_string([
@@ -752,8 +752,8 @@ class ReportManager:
 
         if is_ensemble:
             max_batch_sizes_string = self._create_summary_string([
-                str(model_config.max_batch_size()) for model_config in
-                run_config.model_run_configs()[0].ensemble_subconfigs()
+                str(model_config.max_batch_size())
+                for model_config in run_config.ensemble_subconfigs()
             ])
         else:
             max_batch_sizes_string = self._create_summary_string([
