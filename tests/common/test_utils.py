@@ -88,6 +88,17 @@ def load_multi_model_result_manager(
     return _load_result_manager_helper(dir_path, yaml_str)
 
 
+def load_ensemble_result_manager(
+) -> Tuple[ResultManager, ConfigCommandProfile]:
+    """
+    Return a ResultManager with the ensemble model test checkpoint loaded, as well
+    as the ConfigCommandProfile used to fake the profile step
+    """
+    dir_path = f'{ROOT_DIR}/ensemble-ckpt/'
+    yaml_str = "profile_models: ensemble_python_resnet50"
+    return _load_result_manager_helper(dir_path, yaml_str)
+
+
 def _load_result_manager_helper(dir_path: str, yaml_str: str):
     args = [
         'model-analyzer', 'profile', '-f', 'config.yml',
