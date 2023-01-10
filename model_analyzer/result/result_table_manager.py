@@ -35,7 +35,6 @@ class ResultTableManager:
         'batch_size': 'Batch',
         'concurrency': 'Concurrency',
         'model_config_path': 'Model Config Path',
-        'ensemble_subconfig_path': 'Ensemble Subconfig Path',
         'instance_group': 'Instance Group',
         'max_batch_size': 'Max Batch Size',
         'satisfies_constraints': 'Satisfies Constraints',
