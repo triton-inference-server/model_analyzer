@@ -364,11 +364,8 @@ class ResultTableManager:
                     ensemble_subconfig_names=ensemble_subconfig_names)
 
     def _tablulate_measurements_setup(self, run_config_result):
-        # FIXME: the if clause will change once results_summary is checked in
-        if run_config_result.run_config().model_run_configs(
-        )[0].is_ensemble_model():
-            model_configs = run_config_result.run_config().model_run_configs(
-            )[0].ensemble_subconfigs()
+        if run_config_result.run_config().is_ensemble_model():
+            model_configs = run_config_result.run_config().ensemble_subconfigs()
             ensemble_subconfig_names = [
                 model_config.get_field("name") for model_config in model_configs
             ]
