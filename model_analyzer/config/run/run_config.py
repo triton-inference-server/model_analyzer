@@ -62,6 +62,13 @@ class RunConfig:
             for model_run_config in self._model_run_configs
         ])
 
+    def is_ensemble_model(self) -> bool:
+        """
+        Returns true if the first model config is an ensemble
+        (an ensemble cannot be part of a multi-model)
+        """
+        return self._model_run_configs[0].is_ensemble_model()
+
     def cpu_only(self):
         """
         Returns true if all model_run_configs only operate on the CPU
@@ -90,6 +97,13 @@ class RunConfig:
         """ Returns a single comma-joined name of the model variant names """
         return ','.join(
             [mrc.model_variant_name() for mrc in self.model_run_configs()])
+
+    def ensemble_subconfigs(self):
+        """
+        Returns a list of ensemble subconfigs from the first model config
+        (an ensemble cannot be part of a multi-model)
+        """
+        return self._model_run_configs[0].ensemble_subconfigs()
 
     @classmethod
     def from_dict(cls, run_config_dict):
