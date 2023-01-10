@@ -20,6 +20,7 @@ from model_analyzer.constants import LOGGER_NAME, TOP_MODELS_REPORT_KEY, GLOBAL_
 from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.result.result_table import ResultTable
+from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 from .report_factory import ReportFactory
 
 from model_analyzer.result.constraint_manager import ConstraintManager
@@ -395,6 +396,14 @@ class ReportManager:
         if self._result_manager._profiling_models_concurrently():
             caption_results_table = caption_results_table + " Per model values are parenthetical."
 
+        if run_config.is_ensemble_model():
+            caption_results_table = caption_results_table + " The ensemble's submodel values are listed in the following order: "
+            for ensemble_subconfig_name in run_config.model_run_configs(
+            )[0].get_ensemble_subconfig_names():
+                caption_results_table = caption_results_table + BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                    ensemble_subconfig_name) + ", "
+            caption_results_table = caption_results_table[:-2]  # removes comma
+
         summary.add_paragraph(caption_results_table)
         summary.add_table(table=table)
 
@@ -416,13 +425,15 @@ class ReportManager:
             report_key)
 
         multi_model = len(best_run_config.model_run_configs()) > 1
+        is_ensemble = best_run_config.is_ensemble_model()
 
         summary_sentence = self._create_summary_sentence(
             report_key, num_configurations, num_measurements, best_run_config,
-            best_run_config_measurement, gpu_name, cpu_only, multi_model)
+            best_run_config_measurement, gpu_name, cpu_only, multi_model,
+            is_ensemble)
 
-        summary_table = self._construct_summary_result_table_cpu_only(sorted_measurements, multi_model) if cpu_only else \
-                        self._construct_summary_result_table(sorted_measurements, multi_model)
+        summary_table = self._construct_summary_result_table_cpu_only(sorted_measurements, multi_model, is_ensemble) if cpu_only else \
+                        self._construct_summary_result_table(sorted_measurements, multi_model, is_ensemble)
 
         return summary_table, summary_sentence
 
@@ -470,7 +481,7 @@ class ReportManager:
     def _create_summary_sentence(self, report_key, num_configurations,
                                  num_measurements, best_run_config,
                                  best_run_config_measurement, gpu_name,
-                                 cpu_only, multi_model):
+                                 cpu_only, multi_model, is_ensemble):
         measurement_phrase = self._create_summary_measurement_phrase(
             num_measurements)
         config_phrase = self._create_summary_config_phrase(
@@ -482,12 +493,24 @@ class ReportManager:
 
         summary_sentence = (
             f"In {measurement_phrase} across {config_phrase} "
-            f"{objective_phrase}, under the given constraints{gpu_name_phrase}.<UL>"
+            f"{objective_phrase}, under the given constraints{gpu_name_phrase}."
         )
 
-        for model_run_config in best_run_config.model_run_configs():
-            summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
-                model_run_config.model_config()) + ' </LI>'
+        if is_ensemble:
+            summary_sentence = summary_sentence + "<BR><BR>"
+            best_config_name = best_run_config.model_run_configs(
+            )[0].model_config().get_field('name')
+            summary_sentence = summary_sentence + f"<strong>{best_config_name}</strong> is comprised of the following submodels: <UL> "
+
+            for ensemble_subconfig in best_run_config.model_run_configs(
+            )[0].ensemble_subconfigs():
+                summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
+                    ensemble_subconfig) + ' </LI>'
+        else:
+            summary_sentence = summary_sentence + '<UL>'
+            for model_run_config in best_run_config.model_run_configs():
+                summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
+                    model_run_config.model_config()) + ' </LI>'
 
         summary_sentence = summary_sentence + ' </UL>'
 
@@ -592,22 +615,25 @@ class ReportManager:
         return f", on GPU(s) {gpu_name}" if not cpu_only else ""
 
     def _construct_summary_result_table_cpu_only(self, sorted_measurements,
-                                                 multi_model):
+                                                 multi_model, is_ensemble):
         summary_table = self._create_summary_result_table_header_cpu_only(
             multi_model)
 
         for run_config, run_config_measurement in sorted_measurements:
             row = self._create_summary_row_cpu_only(run_config,
-                                                    run_config_measurement)
+                                                    run_config_measurement,
+                                                    is_ensemble)
             summary_table.insert_row_by_index(row)
 
         return summary_table
 
-    def _construct_summary_result_table(self, sorted_measurements, multi_model):
+    def _construct_summary_result_table(self, sorted_measurements, multi_model,
+                                        is_ensemble):
         summary_table = self._create_summary_result_table_header(multi_model)
 
         for run_config, run_config_measurement in sorted_measurements:
-            row = self._create_summary_row(run_config, run_config_measurement)
+            row = self._create_summary_row(run_config, run_config_measurement,
+                                           is_ensemble)
             summary_table.insert_row_by_index(row)
 
         return summary_table
@@ -651,27 +677,47 @@ class ReportManager:
 
         return ResultTable(headers=header_values, title="Report Table")
 
-    def _create_summary_row_cpu_only(self, run_config, run_config_measurement):
+    def _create_summary_row_cpu_only(self, run_config, run_config_measurement,
+                                     is_ensemble):
         model_config_names = ', '.join([
             model_run_config.model_config().get_field('name')
             for model_run_config in run_config.model_run_configs()
         ])
 
-        dynamic_batching_string = self._create_summary_string([
-            model_run_config.model_config().dynamic_batching_string()
-            for model_run_config in run_config.model_run_configs()
-        ])
+        if is_ensemble:
+            dynamic_batching_string = self._create_summary_string([
+                model_config.dynamic_batching_string()
+                for model_config in run_config.ensemble_subconfigs()
+            ])
+        else:
+            dynamic_batching_string = self._create_summary_string([
+                model_run_config.model_config().dynamic_batching_string()
+                for model_run_config in run_config.model_run_configs()
+            ])
 
-        max_batch_sizes = ', '.join([
-            str(model_run_config.model_config().max_batch_size())
-            for model_run_config in run_config.model_run_configs()
-        ])
+        if is_ensemble:
+            max_batch_sizes = ', '.join([
+                str(model_config.max_batch_size())
+                for model_config in run_config.ensemble_subconfigs()
+            ])
+        else:
+            max_batch_sizes = ', '.join([
+                str(model_run_config.model_config().max_batch_size())
+                for model_run_config in run_config.model_run_configs()
+            ])
 
-        instance_group_strings = ', '.join([
-            model_run_config.model_config().instance_group_string(
-                self._get_gpu_count())
-            for model_run_config in run_config.model_run_configs()
-        ])
+        if is_ensemble:
+            instance_group_strings = ', '.join([
+                model_config.instance_group_string(self._get_gpu_count())
+                for model_config in run_config.model_run_configs()
+                [0].ensemble_subconfigs()
+            ])
+        else:
+            instance_group_strings = ', '.join([
+                model_run_config.model_config().instance_group_string(
+                    self._get_gpu_count())
+                for model_run_config in run_config.model_run_configs()
+            ])
 
         perf_latency_string = self._create_non_gpu_metric_string(
             run_config_measurement=run_config_measurement,
@@ -693,22 +739,42 @@ class ReportManager:
 
         return row
 
-    def _create_summary_row(self, run_config, run_config_measurement):
-        dynamic_batching_string = self._create_summary_string([
-            model_run_config.model_config().dynamic_batching_string()
-            for model_run_config in run_config.model_run_configs()
-        ])
+    def _create_summary_row(self, run_config, run_config_measurement,
+                            is_ensemble):
+        if is_ensemble:
+            dynamic_batching_string = self._create_summary_string([
+                model_config.dynamic_batching_string()
+                for model_config in run_config.ensemble_subconfigs()
+            ])
+        else:
+            dynamic_batching_string = self._create_summary_string([
+                model_run_config.model_config().dynamic_batching_string()
+                for model_run_config in run_config.model_run_configs()
+            ])
 
-        instance_group_string = self._create_summary_string([
-            model_run_config.model_config().instance_group_string(
-                self._get_gpu_count())
-            for model_run_config in run_config.model_run_configs()
-        ])
+        if is_ensemble:
+            instance_group_string = self._create_summary_string([
+                model_config.instance_group_string(self._get_gpu_count())
+                for model_config in run_config.model_run_configs()
+                [0].ensemble_subconfigs()
+            ])
+        else:
+            instance_group_string = self._create_summary_string([
+                model_run_config.model_config().instance_group_string(
+                    self._get_gpu_count())
+                for model_run_config in run_config.model_run_configs()
+            ])
 
-        max_batch_sizes_string = self._create_summary_string([
-            str(model_run_config.model_config().max_batch_size())
-            for model_run_config in run_config.model_run_configs()
-        ])
+        if is_ensemble:
+            max_batch_sizes_string = self._create_summary_string([
+                str(model_config.max_batch_size())
+                for model_config in run_config.ensemble_subconfigs()
+            ])
+        else:
+            max_batch_sizes_string = self._create_summary_string([
+                str(model_run_config.model_config().max_batch_size())
+                for model_run_config in run_config.model_run_configs()
+            ])
 
         model_config_names = '<br>'.join([
             model_run_config.model_config().get_field('name')

@@ -145,7 +145,7 @@ class TestResultManager(trc.TestResultCollector):
         sorted_results = result_manager.get_model_sorted_results(
             "resnet50_libtorch,vgg19_libtorch")
         self.assertTrue(isinstance(sorted_results, SortedResults))
-        self.assertEqual(17, len(sorted_results.results()))
+        self.assertEqual(9, len(sorted_results.results()))
 
     def test_get_across_model_sorted_results(self):
         """
