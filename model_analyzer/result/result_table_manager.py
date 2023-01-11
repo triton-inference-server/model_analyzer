@@ -341,7 +341,7 @@ class ResultTableManager:
         """
 
         model_name = run_config_result.model_name()
-        instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters = self._tablulate_measurements_setup(
+        instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters, ensemble_subconfig_names = self._tablulate_measurements_setup(
             run_config_result)
 
         passing_measurements = run_config_result.passing_measurements()
@@ -359,13 +359,23 @@ class ResultTableManager:
                     run_config_measurement=run_config_measurement,
                     passes=passes,
                     cpu_onlys=cpu_onlys,
-                    backend_parameters=backend_parameters)
+                    backend_parameters=backend_parameters,
+                    ensemble_subconfig_names=ensemble_subconfig_names)
 
     def _tablulate_measurements_setup(self, run_config_result):
-        model_configs = [
-            model_run_configs.model_config() for model_run_configs in
-            run_config_result.run_config().model_run_configs()
-        ]
+        if run_config_result.run_config().is_ensemble_model():
+            model_configs = run_config_result.run_config().ensemble_subconfigs()
+            ensemble_subconfig_names = [
+                model_config.get_field("name") for model_config in model_configs
+            ]
+        else:
+            model_configs = [
+                model_run_configs.model_config() for model_run_configs in
+                run_config_result.run_config().model_run_configs()
+            ]
+
+            ensemble_subconfig_names = []
+
         instance_groups = [
             model_config.instance_group_string(self._get_gpu_count())
             for model_config in model_configs
@@ -386,18 +396,26 @@ class ResultTableManager:
             for model_config in model_configs
         ]
 
-        return instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters
+        return instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters, ensemble_subconfig_names
 
     def _tabulate_measurement(self, model_name, instance_groups,
                               max_batch_sizes, dynamic_batchings,
                               run_config_measurement, passes, cpu_onlys,
-                              backend_parameters):
+                              backend_parameters, ensemble_subconfig_names):
         """
         Add a single RunConfigMeasurement to the specified
         table
         """
 
         model_config_name = run_config_measurement.model_variants_name()
+        if ensemble_subconfig_names:
+            model_config_name = model_config_name + ": "
+            for ensemble_subconfig_name in ensemble_subconfig_names:
+                model_config_name = model_config_name + ensemble_subconfig_name
+
+                if ensemble_subconfig_name != ensemble_subconfig_names[-1]:
+                    model_config_name = model_config_name + ", "
+
         model_specific_pa_params, batch_sizes, concurrencies = self._tabulate_measurement_setup(
             run_config_measurement)
 

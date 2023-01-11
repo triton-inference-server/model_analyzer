@@ -15,7 +15,8 @@
 import unittest
 
 from .common import test_result_collector as trc
-from .common.test_utils import evaluate_mock_config, ROOT_DIR, load_single_model_result_manager, load_multi_model_result_manager
+from .common.test_utils import evaluate_mock_config, ROOT_DIR, \
+    load_single_model_result_manager, load_multi_model_result_manager, load_ensemble_result_manager
 
 from google.protobuf import text_format
 from tritonclient.grpc import model_config_pb2
@@ -84,6 +85,31 @@ class TestResultTableManager(trc.TestResultCollector):
                 f"{ROOT_DIR}/multi-model-ckpt/golden-metrics-server-only.csv"))
 
         rmtree(f"{ROOT_DIR}/multi-model-ckpt/results/")
+
+    def test_ensemble_csv_against_golden(self):
+        """
+        Match the csvs against the golden versions in
+        tests/common/ensemble-ckpt
+        """
+        table_manager = self._create_ensemble_result_table_manager()
+
+        table_manager.create_tables()
+        table_manager.tabulate_results()
+        table_manager.export_results()
+
+        self.assertTrue(
+            cmp(f"{ROOT_DIR}/ensemble-ckpt/results/metrics-model-gpu.csv",
+                f"{ROOT_DIR}/ensemble-ckpt/golden-metrics-model-gpu.csv"))
+
+        self.assertTrue(
+            cmp(f"{ROOT_DIR}/ensemble-ckpt/results/metrics-model-inference.csv",
+                f"{ROOT_DIR}/ensemble-ckpt/golden-metrics-model-inference.csv"))
+
+        self.assertTrue(
+            cmp(f"{ROOT_DIR}/ensemble-ckpt/results/metrics-server-only.csv",
+                f"{ROOT_DIR}/ensemble-ckpt/golden-metrics-server-only.csv"))
+
+        rmtree(f"{ROOT_DIR}/ensemble-ckpt/results/")
 
     def test_create_inference_table_with_backend_parameters(self):
         args = [
@@ -203,6 +229,11 @@ class TestResultTableManager(trc.TestResultCollector):
 
     def _create_multi_model_result_table_manager(self):
         result_manager, config = load_multi_model_result_manager()
+
+        return ResultTableManager(config, result_manager)
+
+    def _create_ensemble_result_table_manager(self):
+        result_manager, config = load_ensemble_result_manager()
 
         return ResultTableManager(config, result_manager)
 
