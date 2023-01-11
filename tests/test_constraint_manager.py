@@ -172,8 +172,6 @@ class TestConstraintManager(trc.TestResultCollector):
         config = self._create_multi_model_both_constraints()        
         constraint_manager = ConstraintManager(config)
 
-        mm_constraints_dict = constraint_manager.get_constraints_for_all_models()
-
         # Constraints are:
         #  Model A: P99 Latency max of 50
         #  Model B: Throughput min of 100

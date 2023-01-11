@@ -545,7 +545,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
     def test_constraint_string_single_model(self, *args):
         constraint_manager = construct_constraint_manager(
             constraints={
-                "modelA": {"perf_latency_p99": {"max": 100}}
+                "modelA": {"constraints": {"perf_latency_p99": {"max": 100}}}
             }
         )
 
@@ -569,8 +569,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
     def test_constraint_string_multi_model(self, *args):
         constraint_manager = construct_constraint_manager(
             constraints={
-                "modelA": {"perf_latency_p99": {"max": 100}},
-                "modelB": {"perf_latency_p99": {"max": 200}},
+                "modelA": {"constraints": {"perf_latency_p99": {"max": 100}}},
+                "modelB": {"constraints": {"perf_latency_p99": {"max": 200}}},
             }
         )
 

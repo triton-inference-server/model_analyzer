@@ -39,6 +39,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
     def test_add_results(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency_p99': 4000}
+
         for _ in range(10):
             self.sorted_results.add_result(
                 construct_run_config_result(
@@ -57,6 +58,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         """
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency_p99': 4000}
+
         for _ in range(10):
             run_config = construct_run_config('modelA', 'model_config_0',
                                               'key_A')
@@ -131,7 +133,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         """
         # Create constraint_manager for all model names
         constraints = {
-            str(i): {'perf_throughput': {'min': 1000}}
+            str(i): {"constraints": {'perf_throughput': {'min': 1000}}}
             for i in sample(range(10), 10)
         }
         constraint_manager = construct_constraint_manager(constraints=constraints)
@@ -169,7 +171,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
 
         # Create constraint_manager for all model names
         constraints = {
-            str(i): {'perf_throughput': {'min': 1000}}
+            str(i): {"constraints": {'perf_throughput': {'min': 1000}}}
             for i in sample(range(10), 10)
         }
         constraint_manager = construct_constraint_manager(constraints=constraints)

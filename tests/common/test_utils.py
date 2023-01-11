@@ -453,16 +453,12 @@ def construct_constraint_manager(constraints=None, model_names=None):
     yaml_dict = {}
 
     if model_names:
-        yaml_dict["profile_models"] = {model_name: {"constraints":{}} for model_name in model_names}
+        yaml_dict["profile_models"] = {model_name: {} for model_name in model_names}
         yaml_str = yaml.dump(yaml_dict)
     elif constraints:
-        profile_models = {}
-        for model_name, model_constraints in constraints.items():
-            if model_name == "constraints":
-                yaml_dict["constraints"] = model_constraints
-            else:
-                profile_models[model_name] = {"constraints": model_constraints}
-        yaml_dict["profile_models"] = profile_models
+        yaml_dict["profile_models"] = constraints
+        if "constraints" in constraints:
+            yaml_dict["constraints"] = constraints["constraints"]
         yaml_str = yaml.dump(yaml_dict)
     else:
         yaml_str = ("""
