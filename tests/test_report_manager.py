@@ -543,10 +543,10 @@ class TestReportManagerMethods(trc.TestResultCollector):
         'model_analyzer.reports.report_manager.ReportManager._build_constraint_strings',
         return_value={"modelA": "Max p99 latency: 100 ms"})
     def test_constraint_string_single_model(self, *args):
-        constraint_manager = construct_constraint_manager(
-            constraints={
-                "modelA": {"constraints": {"perf_latency_p99": {"max": 100}}}
-            }
+        constraint_manager = construct_constraint_manager({
+                "profile_models": {
+                    "modelA": {"constraints": {"perf_latency_p99": {"max": 100}}}
+                }}
         )
 
         report_manager = ReportManager(mode=MagicMock(),
@@ -567,11 +567,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
             "modelB": "Max p99 latency: 200 ms"
         })
     def test_constraint_string_multi_model(self, *args):
-        constraint_manager = construct_constraint_manager(
-            constraints={
+        constraint_manager = construct_constraint_manager({
+            "profile_models": {
                 "modelA": {"constraints": {"perf_latency_p99": {"max": 100}}},
                 "modelB": {"constraints": {"perf_latency_p99": {"max": 200}}},
-            }
+            }}
         )
 
         report_manager = ReportManager(mode=MagicMock(),

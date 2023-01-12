@@ -26,9 +26,11 @@ class TestRunConfigResult(trc.TestResultCollector):
 
     def setUp(self):
         self.default_constraint_manager = construct_constraint_manager(
-            constraints={
-                "modelA": {"constraints": {'perf_latency_p99': {'max': 100}}},
-                "modelB": {"constraints": {'perf_latency_p99': {'max': 50}}}
+            {
+                "profile_models": {
+                    "modelA": {"constraints": {'perf_latency_p99': {'max': 100}}},
+                    "modelB": {"constraints": {'perf_latency_p99': {'max': 50}}}
+                }
             }
         )
         self._construct_empty_rcr()

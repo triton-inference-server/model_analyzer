@@ -31,7 +31,8 @@ from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.constants import SECONDS_TO_MILLISECONDS_MULTIPLIER
 
-import yaml
+from typing import Optional, Dict, Any
+import argparse
 from model_analyzer.result.constraint_manager import ConstraintManager
 
 from model_analyzer.config.input.config_defaults import \
@@ -418,58 +419,37 @@ def construct_run_config_result(avg_gpu_metric_values,
 
     return run_config_result
 
+class ConfigCommandProfileSubClass(ConfigCommandProfile):
+    # Override ConfigCommandProfile.set_config_values() method
+    def set_config_values(self, args, yaml_config):
+        self._set_field_values(args, yaml_config)
+        self._autofill_values()
 
-def construct_constraint_manager(constraints=None, model_names=None):
+class CLISubclass(CLI):
+    # Override CLI.parse() method
+    def parse(self, yaml_config):
+        config_profile = ConfigCommandProfileSubClass()
+        config_profile.set_config_values(argparse.Namespace(), yaml_config)
+        return config_profile
+
+def construct_constraint_manager(yaml_config: Optional[Dict[str, Dict[str, Any]]]=None):
     """
     Returns a ConstraintManager object for Test cases
-    Each parameter is optional. One or zero parameters at a time need to be passed.
-    
+
     Parameters
     ----------
-    constraints: dict or None
-        The keys are model names and the values are model constraint dictionaries
-        Key will be 'constraints' for passing global constraints
-
-    model_names: list of str
-        model names to create empty constraint manager
-    
-    Examples
-    ----------
-    constraints
-       {
-            "add_sub": {
-                "gpu_used_memory": {"max":300000},
-                "perf_latency_p99": {"max":50}
-            },
-            "constraints": {
-                "perf_throughput":{"min":5}
-            }
-        }
-
-    model_names
-        ["modelA", "modelB"]
+    yaml_config: optional dict
+        For passing model constraints: {"profile_models": {<model_name>: <model_constraints_dictionary>}
+        For passing global constraints: {"constraints": <constraints_dictionary>}
     """
-    args = ['model-analyzer', 'profile', '-f', 'config.yml']
-    yaml_dict = {}
-
-    if model_names:
-        yaml_dict["profile_models"] = {model_name: {} for model_name in model_names}
-        yaml_str = yaml.dump(yaml_dict)
-    elif constraints:
-        yaml_dict["profile_models"] = constraints
-        if "constraints" in constraints:
-            yaml_dict["constraints"] = constraints["constraints"]
-        yaml_str = yaml.dump(yaml_dict)
+    cli = CLISubclass()
+    
+    if yaml_config:
+        config = cli.parse(yaml_config)
     else:
-        yaml_str = ("""
-            profile_models: 
-              test_model
-        """)
+        config = cli.parse({"profile_models": {"test_model": {}}})
 
-    config = evaluate_mock_config(args, yaml_str, subcommand="profile")
-    constraint_manager = ConstraintManager(config)
-
-    return constraint_manager
+    return ConstraintManager(config)
 
 def default_encode(obj):
     if isinstance(obj, bytes):
