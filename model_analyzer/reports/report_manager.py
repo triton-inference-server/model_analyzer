@@ -286,7 +286,7 @@ class ReportManager:
             "are the requested configurable plots showing the relationship between "
             "various metrics measured by the Model Analyzer. The above table contains "
             "detailed data for each of the measurements taken for this model config in "
-            "decreasing order of throughput.",
+            "decreasing order of concurrency.",
             font_size=18)
         return detailed_report
 
@@ -950,12 +950,22 @@ class ReportManager:
         if not run_config.cpu_only():
             gpu_names, max_memories = self._get_gpu_stats(measurements)
             gpu_cpu_string = f"GPU(s) {gpu_names} with total memory {max_memories}"
-        sentence = (
-            f"The model config \"{model_config_name}\" uses {instance_group_string} "
-            f"with {max_batch_size_string} and has {dynamic_batching_string}. "
-            f"{len(measurements)} measurement(s) were obtained for the model config on "
-            f"{gpu_cpu_string}. "
-            f"This model uses the platform {platform}.")
+
+        if run_config.is_ensemble_model():
+            sentence = f"This <strong>{model_config_name}</strong> consists of the following sub-model configurations:"
+
+            for ensemble_subconfig in run_config.ensemble_subconfigs():
+                sentence = sentence + '<LI> ' + self._create_summary_config_info(
+                    ensemble_subconfig) + ' </LI>'
+
+            sentence = sentence + f"<br>{len(measurements)} measurement(s) were obtained for the model config on {gpu_cpu_string}."
+        else:
+            sentence = (
+                f"The model config <strong>{model_config_name}</strong> uses {instance_group_string} "
+                f"with {max_batch_size_string} and has {dynamic_batching_string}. "
+                f"{len(measurements)} measurement(s) were obtained for the model config on "
+                f"{gpu_cpu_string}. "
+                f"This model uses the platform {platform}.")
 
         return sentence
 

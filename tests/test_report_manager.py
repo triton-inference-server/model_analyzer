@@ -316,13 +316,13 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         if cpu_only:
             expected_sentence = (
-                f"The model config \"test_model_config_10\" uses 1 GPU instance with "
+                f"The model config <strong>test_model_config_10</strong> uses 1 GPU instance with "
                 f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
                 f"were obtained for the model config on CPU. "
                 f"This model uses the platform tensorflow_graphdef.")
         else:
             expected_sentence = (
-                f"The model config \"test_model_config_10\" uses 1 GPU instance with "
+                f"The model config <strong>test_model_config_10</strong> uses 1 GPU instance with "
                 f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
                 f"were obtained for the model config on GPU(s) 1 x fake_gpu_name with total memory 1.0 GB. "
                 f"This model uses the platform tensorflow_graphdef.")
