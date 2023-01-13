@@ -1,4 +1,4 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -280,13 +280,15 @@ class ReportManager:
         detailed_info = self._build_detailed_info(report_key)
         detailed_report.add_line_breaks(num_breaks=2)
         detailed_report.add_paragraph(detailed_info, font_size=18)
+
+        sort_by_tag = 'latency' if self._mode == 'online' else 'throughput'
         detailed_report.add_paragraph(
             "The first plot above shows the breakdown of the latencies in "
             "the latency throughput curve for this model config. Following that "
             "are the requested configurable plots showing the relationship between "
             "various metrics measured by the Model Analyzer. The above table contains "
             "detailed data for each of the measurements taken for this model config in "
-            "decreasing order of concurrency.",
+            f"decreasing order of {sort_by_tag}.",
             font_size=18)
         return detailed_report
 
@@ -952,7 +954,7 @@ class ReportManager:
             gpu_cpu_string = f"GPU(s) {gpu_names} with total memory {max_memories}"
 
         if run_config.is_ensemble_model():
-            sentence = f"This <strong>{model_config_name}</strong> consists of the following sub-model configurations:"
+            sentence = f"<strong>{model_config_name}</strong> is comprised of the following submodels:"
 
             for ensemble_subconfig in run_config.ensemble_subconfigs():
                 sentence = sentence + '<LI> ' + self._create_summary_config_info(
