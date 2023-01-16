@@ -115,6 +115,7 @@ class ModelRunConfig:
             logger.debug(
                 f"Illegal model run config because client batch size {perf_batch_size} is greater than model max batch size {max_batch_size}"
             )
+            return legal
 
         if 'dynamic_batching' in model_config and 'preferred_batch_size' in model_config['dynamic_batching']:
             max_preferred_batch_size = max(model_config['dynamic_batching']['preferred_batch_size'])
