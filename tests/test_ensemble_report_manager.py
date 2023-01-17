@@ -173,8 +173,8 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
         detailed_sentence = self.report_manager._build_detailed_info(
             "ensemble_python_resnet50_config_28")
 
-        expected_detailed_sentence = "This <strong>ensemble_python_resnet50_config_28</strong> consists of the " \
-            "following sub-model configurations:<LI> <strong>preprocess_config_9</strong>: " \
+        expected_detailed_sentence = "<strong>ensemble_python_resnet50_config_28</strong> is comprised of the " \
+            "following submodels:<LI> <strong>preprocess_config_9</strong>: " \
             "4 GPU instances with a max batch size of 8 on platform python </LI><LI> " \
             "<strong>resnet50_trt_config_8</strong>: 2 GPU instances with a max batch size of 8 " \
             "on platform tensorrt_plan </LI><br>10 measurement(s) were obtained for the model config " \
