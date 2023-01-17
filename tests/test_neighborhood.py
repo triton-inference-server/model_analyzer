@@ -29,9 +29,12 @@ from .common import test_result_collector as trc
 class TestNeighborhood(trc.TestResultCollector):
 
     def setUp(self):
-        self.constraint_manager = construct_constraint_manager({
-                "profile_models": {"modelA": {}}
-            })
+        self.constraint_manager = construct_constraint_manager(
+            """
+            profile_models: 
+              modelA
+            """
+        )
 
     def tearDown(self):
         patch.stopall()
@@ -397,16 +400,16 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager({
-            "profile_models": {
-                "modelA": {
-                    "constraints": {
-                        "perf_throughput": {"min": 100},
-                        "perf_latency_p99": {"max": 300}
-                    }
-                }
-            }}
-        )
+        constraint_manager = construct_constraint_manager(
+            """
+            profile_models: 
+              modelA:
+                constraints:
+                  perf_throughput:
+                    min: 100
+                  perf_latency_p99:
+                    max: 300
+            """)
 
         rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
         rcm0.set_constraint_manager(constraint_manager)
@@ -475,15 +478,16 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager({
-            "profile_models": {
-                "modelA": {
-                    "constraints": {
-                        "perf_throughput": {"min": 100},
-                        "perf_latency_p99": {"max": 300}
-                    }
-                }
-            }}
+        constraint_manager = construct_constraint_manager(
+            """
+            profile_models: 
+              modelA:
+                constraints:
+                  perf_throughput:
+                    min: 100
+                  perf_latency_p99:
+                    max: 300
+            """
         )
 
         rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
@@ -545,15 +549,16 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager({
-            "profile_models": {
-                "modelA": {
-                    "constraints": {
-                        "perf_throughput": {"min": 100},
-                        "perf_latency_p99": {"max": 300}
-                    }
-                }
-            }}
+        constraint_manager = construct_constraint_manager(
+            """
+            profile_models: 
+              modelA:
+                constraints:
+                  perf_throughput:
+                    min: 100
+                  perf_latency_p99:
+                    max: 300
+            """
         )
 
         rcm0 = self._construct_rcm(throughput=500, latency=450)  # fail

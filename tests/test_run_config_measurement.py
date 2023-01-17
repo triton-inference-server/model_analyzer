@@ -227,9 +227,12 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         Test to ensure constraints are reported as passing
         if none were specified
         """
-        self.rcm5.set_constraint_manager(construct_constraint_manager({
-            "profile_models": {"modelA": {}}
-        }))
+        self.rcm5.set_constraint_manager(construct_constraint_manager(
+            """
+            profile_models: 
+              modelA
+            """
+        ))
         self.assertTrue(self.rcm5.is_passing_constraints())
 
     def test_is_passing_constraints(self):
@@ -239,7 +242,13 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         throughput threshold
         """
         constraint_manager = construct_constraint_manager(
-            {"profile_models": {"modelA": {"constraints":{"perf_throughput": {"min": 500}}}}}
+            """
+            profile_models: 
+              modelA:
+                constraints:
+                  perf_throughput:
+                    min: 500
+            """
         )
         self.rcm5.set_constraint_manager(constraint_manager)
 
@@ -247,7 +256,13 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
 
 
         constraint_manager = construct_constraint_manager(
-            {"profile_models": {"modelA": {"constraints":{"perf_throughput": {"min": 3000}}}}}
+            """
+            profile_models: 
+              modelA:
+                constraints:
+                  perf_throughput:
+                    min: 3000
+            """
         )
         self.rcm5.set_constraint_manager(constraint_manager)
 
@@ -260,12 +275,24 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         # RCM4's throughput is 1000
         # RCM5's throughput is 2000
         constraint_manager = construct_constraint_manager(
-            {"profile_models": {"modelA": {"constraints":{"perf_throughput": {"min": 500}}}}}
+            """
+            profile_models: 
+              modelA:
+                constraints:
+                  perf_throughput:
+                    min: 500
+            """
         )
         self.rcm4.set_constraint_manager(constraint_manager)
 
         constraint_manager = construct_constraint_manager(
-            {"profile_models": {"modelA": {"constraints":{"perf_throughput": {"min": 2500}}}}}
+            """
+            profile_models: 
+              modelA:
+                constraints:
+                  perf_throughput:
+                    min: 2500
+            """
         )
         self.rcm5.set_constraint_manager(constraint_manager)
 
@@ -280,12 +307,24 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         # RCM4's throughput is 1000
         # RCM5's throughput is 2000
         constraint_manager = construct_constraint_manager(
-            {"profile_models": {"modelA": {"constraints":{"perf_throughput": {"min": 1250}}}}}
+            """
+            profile_models: 
+              modelA:
+                constraints:
+                  perf_throughput:
+                    min: 1250
+            """
         )
         self.rcm4.set_constraint_manager(constraint_manager)
 
         constraint_manager = construct_constraint_manager(
-            {"profile_models": {"modelA": {"constraints":{"perf_throughput": {"min": 2500}}}}}
+            """
+            profile_models: 
+              modelA:
+                constraints:
+                  perf_throughput:
+                    min: 2500
+            """
         )
         self.rcm5.set_constraint_manager(constraint_manager)
 
@@ -302,12 +341,24 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         # RCM4's throughput is 1000
         # RCM5's throughput is 2000
         constraint_manager = construct_constraint_manager(
-            {"profile_models": {"modelA": {"constraints":{"perf_throughput": {"min": 2000}}}}}
+            """
+            profile_models: 
+              modelA:
+                constraints:
+                  perf_throughput:
+                    min: 2000
+            """
         )
         self.rcm4.set_constraint_manager(constraint_manager)
 
         constraint_manager = construct_constraint_manager(
-            {"profile_models": {"modelA": {"constraints":{"perf_throughput": {"min": 2500}}}}}
+            """
+            profile_models: 
+              modelA:
+                constraints:
+                  perf_throughput:
+                    min: 2500
+            """
         )
         self.rcm5.set_constraint_manager(constraint_manager)
 

@@ -419,35 +419,26 @@ def construct_run_config_result(avg_gpu_metric_values,
 
     return run_config_result
 
-class ConfigCommandProfileSubClass(ConfigCommandProfile):
-    # Override ConfigCommandProfile.set_config_values() method
-    def set_config_values(self, args, yaml_config):
-        self._set_field_values(args, yaml_config)
-        self._autofill_values()
-
-class CLISubclass(CLI):
-    # Override CLI.parse() method
-    def parse(self, yaml_config):
-        config_profile = ConfigCommandProfileSubClass()
-        config_profile.set_config_values(argparse.Namespace(), yaml_config)
-        return config_profile
-
-def construct_constraint_manager(yaml_config: Optional[Dict[str, Dict[str, Any]]]=None):
+def construct_constraint_manager(yaml_config_str=None):
     """
     Returns a ConstraintManager object for Test cases
 
     Parameters
     ----------
-    yaml_config: optional dict
-        For passing model constraints: {"profile_models": {<model_name>: <model_constraints_dictionary>}
-        For passing global constraints: {"constraints": <constraints_dictionary>}
+    yaml_config_str: optional str
+        yaml config string with atleast one profile model name and optional constraints
     """
-    cli = CLISubclass()
-    
-    if yaml_config:
-        return ConstraintManager(cli.parse(yaml_config))
-    else:
-        return ConstraintManager(cli.parse({"profile_models": {"test_model": {}}}))
+    args = ['model-analyzer', 'profile', '-f', 'config.yml', '-m', '.']
+
+    if not yaml_config_str:
+        yaml_config_str = ("""
+            profile_models: 
+              test_model
+        """)
+
+    config = evaluate_mock_config(args, yaml_config_str, subcommand="profile")
+
+    return ConstraintManager(config)
 
 def default_encode(obj):
     if isinstance(obj, bytes):
