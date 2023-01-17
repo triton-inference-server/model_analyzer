@@ -99,9 +99,9 @@ class ModelRunConfig:
 
         return self.perf_config().representation()
 
-    def is_legal_combination(self):
+    def check_for_client_vs_model_batch_size(self):
         """
-        Returns true if the run_config is valid and should be run. Else false
+        Returns false if client batch size is greater than model batch size. Else true
         """
         model_config = self._model_config.get_config()
 
@@ -115,7 +115,18 @@ class ModelRunConfig:
             logger.debug(
                 f"Illegal model run config because client batch size {perf_batch_size} is greater than model max batch size {max_batch_size}"
             )
-            return legal
+
+        return legal
+
+    def check_for_preferred_vs_model_batch_size(self):
+        """
+        Returns false if maximum of preferred batch size is greater than model batch size. Else true
+        """
+        model_config = self._model_config.get_config()
+        legal = True
+
+        max_batch_size = model_config[
+            'max_batch_size'] if 'max_batch_size' in model_config else self.DEFAULT_MAX_BATCH_SIZE
 
         if 'dynamic_batching' in model_config and 'preferred_batch_size' in model_config['dynamic_batching']:
             max_preferred_batch_size = max(model_config['dynamic_batching']['preferred_batch_size'])
@@ -123,8 +134,18 @@ class ModelRunConfig:
 
             if not legal:
                 logger.debug(
-                    f"Illegal model run config because max of model preferred batch size {max_preferred_batch_size} is greater than model max batch size {max_batch_size}"
+                    f"Illegal model run config because maximum of model preferred batch size {max_preferred_batch_size} is greater than model max batch size {max_batch_size}"
             )
+
+        return legal
+    
+    def is_legal_combination(self):
+        """
+        Returns true if the run_config is valid and should be run. Else false
+        """
+        legal = self.check_for_client_vs_model_batch_size()
+        if legal:
+            legal = self.check_for_preferred_vs_model_batch_size()
 
         return legal
 
