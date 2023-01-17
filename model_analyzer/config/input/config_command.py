@@ -124,9 +124,10 @@ class ConfigCommand:
             config_value = self._get_config_value(key, args, yaml_config)
 
             if config_value:
-                self._fields[key].set_value(config_value)
+                self._fields[key].set_value(config_value, set_by_config=True)
             elif value.default_value() is not None:
-                self._fields[key].set_value(value.default_value())
+                self._fields[key].set_value(value.default_value(),
+                                            set_by_config=False)
             elif value.required():
                 flags = ', '.join(value.flags())
                 raise TritonModelAnalyzerException(
@@ -184,7 +185,7 @@ class ConfigCommand:
             return
 
         self._check_no_search_disable(args, yaml_config)
-        self._check_no_search_values(args, yaml_config)
+        # self._check_no_search_values(args, yaml_config)
         self._check_no_global_list_values(args, yaml_config)
         self._check_no_per_model_list_values(args, yaml_config)
 

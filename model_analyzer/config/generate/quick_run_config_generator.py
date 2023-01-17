@@ -407,13 +407,30 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         model_batch_size = dimension_values.get("max_batch_size", 1)
         instance_count = dimension_values.get("instance_count", 1)
 
-        concurrency = 2 * model_batch_size * instance_count
+        concurrency = self._calculate_concurrency(model_batch_size,
+                                                  instance_count)
 
         perf_config_params = {'batch-size': 1, 'concurrency-range': concurrency}
         perf_analyzer_config.update_config(perf_config_params)
 
         perf_analyzer_config.update_config(model.perf_analyzer_flags())
         return perf_analyzer_config
+
+    def _calculate_concurrency(self, model_batch_size: int,
+                               instance_count: int) -> int:
+        concurrency = 2 * model_batch_size * instance_count
+
+        min_concurrency_set = self._config.get_config(
+        )['run_config_search_min_concurrency'].set_by_config()
+        if min_concurrency_set and concurrency < self._config.run_config_search_min_concurrency:
+            return self._config.run_config_search_min_concurrency
+
+        max_concurrency_set = self._config.get_config(
+        )['run_config_search_max_concurrency'].set_by_config()
+        if max_concurrency_set and concurrency > self._config.run_config_search_max_concurrency:
+            return self._config.run_config_search_max_concurrency
+
+        return concurrency
 
     def _create_default_run_config(self) -> RunConfig:
         default_run_config = RunConfig(self._triton_env)

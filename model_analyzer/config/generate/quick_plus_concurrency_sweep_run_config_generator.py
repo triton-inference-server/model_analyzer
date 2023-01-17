@@ -34,6 +34,7 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.config.input.config_defaults import DEFAULT_RUN_CONFIG_MIN_CONCURRENCY, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
 
 from copy import deepcopy
+from math import log2
 
 import logging
 
@@ -135,8 +136,12 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             for count, result in enumerate(top_results):
                 run_config = deepcopy(result.run_config())
 
+                max_concurrency_index = int(
+                    log2(self._config.run_config_search_max_concurrency))
+
                 run_config_measurements = []
-                for concurrency in (2**i for i in range(0, 10)):
+                for concurrency in (
+                        2**i for i in range(0, max_concurrency_index + 1)):
                     run_config = self._set_concurrency(run_config, concurrency)
                     yield run_config
 
