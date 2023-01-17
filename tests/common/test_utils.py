@@ -445,11 +445,9 @@ def construct_constraint_manager(yaml_config: Optional[Dict[str, Dict[str, Any]]
     cli = CLISubclass()
     
     if yaml_config:
-        config = cli.parse(yaml_config)
+        return ConstraintManager(cli.parse(yaml_config))
     else:
-        config = cli.parse({"profile_models": {"test_model": {}}})
-
-    return ConstraintManager(config)
+        return ConstraintManager(cli.parse({"profile_models": {"test_model": {}}}))
 
 def default_encode(obj):
     if isinstance(obj, bytes):

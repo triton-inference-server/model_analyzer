@@ -28,6 +28,11 @@ from .common import test_result_collector as trc
 
 class TestNeighborhood(trc.TestResultCollector):
 
+    def setUp(self):
+        self.constraint_manager = construct_constraint_manager({
+                "profile_models": {"modelA": {}}
+            })
+
     def tearDown(self):
         patch.stopall()
 
@@ -50,7 +55,7 @@ class TestNeighborhood(trc.TestResultCollector):
             model_specific_pa_params=MagicMock(),
             gpu_metric_values={},
             non_gpu_metric_values=non_gpu_metric_values,
-            constraint_manager=MagicMock(),
+            constraint_manager=self.constraint_manager,
             metric_objectives=metric_objectives,
             model_config_weights=weights)
         return rcm

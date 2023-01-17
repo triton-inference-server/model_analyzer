@@ -227,7 +227,9 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         Test to ensure constraints are reported as passing
         if none were specified
         """
-        self.rcm5.set_constraint_manager(MagicMock())
+        self.rcm5.set_constraint_manager(construct_constraint_manager({
+            "profile_models": {"modelA": {}}
+        }))
         self.assertTrue(self.rcm5.is_passing_constraints())
 
     def test_is_passing_constraints(self):

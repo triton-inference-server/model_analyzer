@@ -59,6 +59,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         avg_non_gpu_metrics = {'perf_throughput': 100, 'perf_latency_p99': 4000}
 
+        constraint_manager = construct_constraint_manager({"profile_models": {'test_model': {}}})
         for _ in range(10):
             run_config = construct_run_config('modelA', 'model_config_0',
                                               'key_A')
@@ -67,7 +68,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                     avg_gpu_metric_values=avg_gpu_metrics,
                     avg_non_gpu_metric_values_list=[avg_non_gpu_metrics],
                     comparator=self.result_comparator,
-                    constraint_manager=MagicMock(),
+                    constraint_manager=constraint_manager,
                     run_config=run_config))
 
         results = self.sorted_results.results()
@@ -84,6 +85,8 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         run_config_B = construct_run_config('model', 'model_config_B', 'key_B')
         run_config_list = [run_config_A, run_config_B]
 
+        constraint_manager = construct_constraint_manager({"profile_models": {'model': {}}})
+
         for i in sample(range(2), 2):
             avg_non_gpu_metrics = {
                 'perf_throughput': 100 - 10 * i,
@@ -96,7 +99,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                     comparator=self.result_comparator,
                     model_name='model',
                     model_config_names=['model_config_0'],
-                    constraint_manager=MagicMock(),
+                    constraint_manager=constraint_manager,
                     run_config=run_config_list[i]))
 
         all_results = self.sorted_results.top_n_results(
@@ -116,7 +119,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                 comparator=self.result_comparator,
                 model_name='model',
                 model_config_names=['model_config_0'],
-                constraint_manager=MagicMock(),
+                constraint_manager=constraint_manager,
                 run_config=run_config_B))
 
         all_results = self.sorted_results.top_n_results(
@@ -132,13 +135,12 @@ class TestSortedResultsMethods(trc.TestResultCollector):
         Test the case where we have only failing results
         """
         # Create constraint_manager for all model names
-        constraints = {
+        constraint_manager = construct_constraint_manager({
             "profile_models": {
                 str(i): {"constraints": {'perf_throughput': {'min': 1000}}}
-                for i in sample(range(10), 10)
+                for i in range(10)
             }
-        }
-        constraint_manager = construct_constraint_manager(constraints)
+        })
 
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
         for i in sample(range(10), 10):
@@ -222,6 +224,12 @@ class TestSortedResultsMethods(trc.TestResultCollector):
 
     def test_top_n_results(self):
         avg_gpu_metrics = {0: {'gpu_used_memory': 6000, 'gpu_utilization': 60}}
+        constraint_manager = construct_constraint_manager({
+            "profile_models": {
+                str(i): {} for i in range(10)
+            }
+        })
+
         for i in sample(range(10), 10):
             model_name = str(i)
             model_config_names = [f"{model_name}_config_0"]
@@ -237,7 +245,7 @@ class TestSortedResultsMethods(trc.TestResultCollector):
                     comparator=self.result_comparator,
                     model_name=model_name,
                     model_config_names=model_config_names,
-                    constraint_manager=MagicMock()))
+                    constraint_manager=constraint_manager))
 
         top_5_results = self.sorted_results.top_n_results(n=5)
         self.assertEqual(top_5_results[0].model_name(), '9')
