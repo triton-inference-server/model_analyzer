@@ -112,7 +112,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         ])
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
-        self._qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
+        config = self._create_config()
+        self._qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
                                              self._mock_models, {}, MagicMock(),
                                              ModelVariantNameManager())
 
@@ -294,9 +295,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         ])
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
-        qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                       mock_models, {}, MagicMock(),
-                                       ModelVariantNameManager())
+        config = self._create_config()
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), mock_models, {},
+                                       MagicMock(), ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
 
@@ -455,6 +456,18 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
     def test_get_next_run_config_ensemble(self):
         """
         Test that get_next_run_config() creates a proper RunConfig for ensemble
+        """
+        self._get_next_run_config_ensemble()
+
+    def test_get_next_run_config_ensemble_with_max_concurrency(self):
+        """
+        Test that get_next_run_config() creates a proper RunConfig for ensemble with a max concurrency
+        """
+        self._get_next_run_config_ensemble(max_concurrency=8)
+
+    def _get_next_run_config_ensemble(self, max_concurrency=0):
+        """
+        Test that get_next_run_config() creates a proper RunConfig for ensemble
 
         Sets up a case where the coordinate is [1,2,4,5], which cooresponds to
           - submodel 1 max_batch_size = 2
@@ -471,19 +484,11 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         - existing values from the base model config should persist if they aren't overwritten
         - existing values for perf-analyzer config should persist if they aren't overwritten
         """
-        args = [
-            'model-analyzer', 'profile', '--model-repository', '/tmp',
-            '--config-file', '/tmp/my_config.yml'
-        ]
 
-        # yapf: disable
-        yaml_str = ("""
-            profile_models:
-                - my-model:
-                    perf_analyzer_flags:
-                        percentile: 96
-            """)
-        # yapf: enable
+        additional_args = []
+        if max_concurrency:
+            additional_args.append('--run-config-search-max-concurrency')
+            additional_args.append(f'{max_concurrency}')
 
         #yapf: disable
         expected_model_config0 = {
@@ -519,7 +524,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         }
         #yapf: enable
 
-        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+        config = self._create_config(additional_args)
 
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
@@ -574,8 +579,33 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         self.assertEqual(submodel_config0.to_dict(), expected_model_config0)
         self.assertEqual(submodel_config1.to_dict(), expected_model_config1)
-        self.assertEqual(perf_config['concurrency-range'], 12)
+
+        if max_concurrency:
+            self.assertEqual(perf_config['concurrency-range'], max_concurrency)
+        else:
+            self.assertEqual(perf_config['concurrency-range'], 12)
+
         self.assertEqual(perf_config['batch-size'], 1)
+
+    def _create_config(self, additional_args=[]):
+        args = [
+            'model-analyzer', 'profile', '--model-repository', '/tmp',
+            '--config-file', '/tmp/my_config.yml'
+        ]
+
+        for arg in additional_args:
+            args.append(arg)
+
+        # yapf: disable
+        yaml_str = ("""
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
+        return config
 
     def tearDown(self):
         patch.stopall()
