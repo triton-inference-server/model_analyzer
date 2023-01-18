@@ -99,7 +99,7 @@ class ModelRunConfig:
 
         return self.perf_config().representation()
 
-    def check_for_client_vs_model_batch_size(self):
+    def _check_for_client_vs_model_batch_size(self):
         """
         Returns false if client batch size is greater than model batch size. Else true
         """
@@ -118,7 +118,7 @@ class ModelRunConfig:
 
         return legal
 
-    def check_for_preferred_vs_model_batch_size(self):
+    def _check_for_preferred_vs_model_batch_size(self):
         """
         Returns false if maximum of preferred batch size is greater than model batch size. Else true
         """
@@ -143,9 +143,8 @@ class ModelRunConfig:
         """
         Returns true if the run_config is valid and should be run. Else false
         """
-        legal = self.check_for_client_vs_model_batch_size()
-        if legal:
-            legal = self.check_for_preferred_vs_model_batch_size()
+        legal = self._check_for_client_vs_model_batch_size() and \
+            self._check_for_preferred_vs_model_batch_size()
 
         return legal
 
