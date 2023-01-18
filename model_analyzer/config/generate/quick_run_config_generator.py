@@ -404,8 +404,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config_from_profile_config(
             model_variant_name, self._config)
 
-        model_batch_size = dimension_values.get("max_batch_size", 1)
-        instance_count = dimension_values.get("instance_count", 1)
+        dimension_batch_size = dimension_values.get("max_batch_size", 1)
+        dimension_instance_count = dimension_values.get("instance_count", 1)
+
+        model_batch_size = self._calculate_model_batch_size(
+            dimension_batch_size)
+        instance_count = self._calculate_instance_count(
+            dimension_instance_count)
 
         concurrency = self._calculate_concurrency(model_batch_size,
                                                   instance_count)
@@ -416,17 +421,49 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config(model.perf_analyzer_flags())
         return perf_analyzer_config
 
+    def _calculate_model_batch_size(self, dimension_batch_size: int) -> int:
+        min_batch_size_set = self._config.get_config(
+        )['run_config_search_min_model_batch_size'].set_by_config()
+
+        max_batch_size_set = self._config.get_config(
+        )['run_config_search_max_model_batch_size'].set_by_config()
+
+        if min_batch_size_set and dimension_batch_size < self._config.run_config_search_min_model_batch_size:
+            return self._config.run_config_search_min_model_batch_size
+
+        if max_batch_size_set and dimension_batch_size > self._config.run_config_search_max_model_batch_size:
+            return self._config.run_config_search_max_model_batch_size
+
+        return dimension_batch_size
+
+    def _calculate_instance_count(self, instance_count: int) -> int:
+        min_instance_count_set = self._config.get_config(
+        )['run_config_search_min_instance_count'].set_by_config()
+
+        max_instance_count_set = self._config.get_config(
+        )['run_config_search_max_instance_count'].set_by_config()
+
+        if min_instance_count_set and instance_count < self._config.run_config_search_min_instance_count:
+            return self._config.run_config_search_min_instance_count
+
+        if max_instance_count_set and instance_count > self._config.run_config_search_max_instance_count:
+            return self._config.run_config_search_max_instance_count
+
+        return instance_count
+
     def _calculate_concurrency(self, model_batch_size: int,
                                instance_count: int) -> int:
         concurrency = 2 * model_batch_size * instance_count
 
         min_concurrency_set = self._config.get_config(
         )['run_config_search_min_concurrency'].set_by_config()
-        if min_concurrency_set and concurrency < self._config.run_config_search_min_concurrency:
-            return self._config.run_config_search_min_concurrency
 
         max_concurrency_set = self._config.get_config(
         )['run_config_search_max_concurrency'].set_by_config()
+
+        if min_concurrency_set and concurrency < self._config.run_config_search_min_concurrency:
+            return self._config.run_config_search_min_concurrency
+
         if max_concurrency_set and concurrency > self._config.run_config_search_max_concurrency:
             return self._config.run_config_search_max_concurrency
 
