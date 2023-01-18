@@ -12,45 +12,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, TYPE_CHECKING
+from typing import Union, Dict, TYPE_CHECKING
 
 from model_analyzer.record.record import Record
 
 if TYPE_CHECKING:
     from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
+from model_analyzer.constants import GLOBAL_CONSTRAINTS_KEY
 from model_analyzer.result.model_constraints import ModelConstraints
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
 class ConstraintManager:
     """
     Handles processing and applying
     constraints on a given measurements
+
+    Parameters
+    ----------
+    config: ConfigCommandProfile or ConfigCommandReport
     """
 
-    @staticmethod
-    def get_constraints_for_all_models(config):
-        """
-        Parameters
-        ----------
-        config :ConfigCommandProfile
-            The model analyzer config
+    def __init__(self, config: Union[ConfigCommandProfile, ConfigCommandReport]) -> None:
+        self._constraints = {}
 
+        if config:
+            # Model constraints
+            if "profile_models" in config.get_config():
+                for model in config.profile_models:
+                    self._constraints[model.model_name()
+                                            ] = model.constraints()
+
+            # Global constraints
+            if "constraints" in config.get_all_config():
+                self._constraints[GLOBAL_CONSTRAINTS_KEY] = ModelConstraints(config.get_all_config()[
+                    "constraints"])
+
+    def get_constraints_for_all_models(self):
+        """
         Returns
         -------
         dict
             keys are model names, and values are ModelConstraints objects
         """
 
-        constraints = {}
-        for model in config.profile_models:
-            constraints[model.model_name()] = model.constraints()
-        if "constraints" in config.get_all_config():
-            constraints["default"] = ModelConstraints(config.get_all_config()["constraints"])
-        return constraints
+        return self._constraints
 
-    @staticmethod
-    def satisfies_constraints(
-            constraints: List[ModelConstraints],
+    def satisfies_constraints(self,
             run_config_measurement: 'RunConfigMeasurement') -> bool:
         """
         Checks that the measurements, for every model, satisfy 
@@ -58,9 +67,6 @@ class ConstraintManager:
 
         Parameters
         ----------
-        constraints: list of ModelConstraints objects
-            keys are metrics and values are 
-            constraint_type:constraint_value pairs
         run_config_measurement : RunConfigMeasurement
             The measurement to check against the constraints
 
@@ -70,20 +76,18 @@ class ConstraintManager:
         False otherwise
         """
 
-        if constraints:
-            for (i, model_metrics) in enumerate(run_config_measurement.data()):
+        if self._constraints:
+            for (model_name, model_metrics) in run_config_measurement.data().items():
                 for metric in model_metrics:
-                    if ConstraintManager._metric_matches_constraint(
-                            metric, constraints[i]):
-                        if ConstraintManager._get_failure_percentage(
-                                metric, constraints[i][metric.tag]) > 0:
+                    if self._metric_matches_constraint(
+                            metric, self._constraints[model_name]):
+                        if self._get_failure_percentage(
+                                metric, self._constraints[model_name][metric.tag]) > 0:
                             return False
 
         return True
 
-    @staticmethod
-    def constraint_failure_percentage(
-            constraints: List[ModelConstraints],
+    def constraint_failure_percentage(self,
             run_config_measurement: 'RunConfigMeasurement') -> float:
         """
         Additive percentage, for every measurement, in every model, of how much 
@@ -95,26 +99,24 @@ class ConstraintManager:
         """
         failure_percentage: float = 0
 
-        if constraints:
-            for (i, model_metrics) in enumerate(run_config_measurement.data()):
+        if self._constraints:
+            for (model_name, model_metrics) in run_config_measurement.data().items():
                 for metric in model_metrics:
-                    if ConstraintManager._metric_matches_constraint(
-                            metric, constraints[i]):
-                        failure_percentage += ConstraintManager._get_failure_percentage(
-                            metric, constraints[i][metric.tag])
+                    if self._metric_matches_constraint(
+                            metric, self._constraints[model_name]):
+                        failure_percentage += self._get_failure_percentage(
+                            metric, self._constraints[model_name][metric.tag])
 
         return failure_percentage * 100
 
-    @staticmethod
-    def _metric_matches_constraint(
+    def _metric_matches_constraint(self,
             metric: Record, constraint: ModelConstraints) -> bool:
         if constraint.has_metric(metric.tag):
             return True
         else:
             return False
 
-    @staticmethod
-    def _get_failure_percentage(metric: Record, constraint: Dict[str,
+    def _get_failure_percentage(self, metric: Record, constraint: Dict[str,
                                                                  int]) -> float:
 
         failure_percentage = 0

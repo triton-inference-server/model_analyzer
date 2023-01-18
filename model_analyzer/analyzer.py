@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Union
 import sys
 from model_analyzer.constants import LOGGER_NAME
 from .model_manager import ModelManager
 from .result.result_manager import ResultManager
 from .result.result_table_manager import ResultTableManager
+from .result.constraint_manager import ConstraintManager
 from .record.metrics_manager import MetricsManager
 from .reports.report_manager import ReportManager
 from .config.input.config_command_report \
@@ -28,6 +29,8 @@ from .config.input.config_defaults import \
     DEFAULT_CHECKPOINT_DIRECTORY
 from .model_analyzer_exceptions \
     import TritonModelAnalyzerException
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.triton.server.server import TritonServer
 
 from .triton.client.client import TritonClient
 from .device.gpu_device import GPUDevice
@@ -44,11 +47,13 @@ class Analyzer:
     result writing methods.
     """
 
-    def __init__(self, config, server, state_manager, checkpoint_required):
+    def __init__(self, config: Union[ConfigCommandProfile, ConfigCommandReport],
+                 server: TritonServer, state_manager: AnalyzerStateManager,
+                 checkpoint_required: bool):
         """
         Parameters
         ----------
-        config : Config
+        config : ConfigCommandProfile or ConfigCommandReport
             Model Analyzer config
         server : TritonServer
             Server handle
@@ -63,8 +68,10 @@ class Analyzer:
         self._state_manager = state_manager
         state_manager.load_checkpoint(checkpoint_required)
 
+        self._constraint_manager = ConstraintManager(self._config)
         self._result_manager = ResultManager(config=config,
-                                             state_manager=self._state_manager)
+                                             state_manager=self._state_manager,
+                                             constraint_manager=self._constraint_manager)
 
     def profile(self, client: TritonClient, gpus: List[GPUDevice], mode: str,
                 verbose: bool) -> None:
@@ -143,7 +150,8 @@ class Analyzer:
             mode=mode,
             config=self._config,
             result_manager=self._result_manager,
-            gpu_info=gpu_info)
+            gpu_info=gpu_info,
+            constraint_manager=self._constraint_manager)
 
         self._report_manager.create_detailed_reports()
         self._report_manager.export_detailed_reports()
@@ -165,7 +173,8 @@ class Analyzer:
             server=self._server,
             result_manager=self._result_manager,
             metrics_manager=self._metrics_manager,
-            state_manager=self._state_manager)
+            state_manager=self._state_manager,
+            constraint_manager=self._constraint_manager)
 
     def _get_server_only_metrics(self, client, gpus):
         if self._config.triton_launch_mode != 'c_api':
@@ -225,7 +234,8 @@ class Analyzer:
             mode=mode,
             config=self._config,
             gpu_info=gpu_info,
-            result_manager=self._result_manager)
+            result_manager=self._result_manager,
+            constraint_manager=self._constraint_manager)
 
         self._report_manager.create_summaries()
         self._report_manager.export_summaries()

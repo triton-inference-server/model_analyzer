@@ -27,7 +27,6 @@ from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.config.run.model_run_config import ModelRunConfig
 
 from tests.common.test_utils import evaluate_mock_config
-
 from .common import test_result_collector as trc
 
 
@@ -117,9 +116,9 @@ class TestAnalyzer(trc.TestResultCollector):
                 MagicMock()))
 
         return [
-            RunConfigResult("fake_model_name", rc1, MagicMock()),
-            RunConfigResult("fake_model_name", rc2, MagicMock()),
-            RunConfigResult("fake_model_name", rc3, MagicMock())
+            RunConfigResult("fake_model_name", rc1, MagicMock(), MagicMock()),
+            RunConfigResult("fake_model_name", rc2, MagicMock(), MagicMock()),
+            RunConfigResult("fake_model_name", rc3, MagicMock(), MagicMock())
         ]
 
     @patch(
