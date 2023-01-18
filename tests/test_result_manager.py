@@ -24,7 +24,7 @@ from model_analyzer.result.sorted_results import SortedResults
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
-
+from model_analyzer.result.constraint_manager import ConstraintManager
 
 class TestResultManager(trc.TestResultCollector):
 
@@ -33,9 +33,11 @@ class TestResultManager(trc.TestResultCollector):
         Test that add_server_data() and get_server_only_data() 
         are effectively mirrored set/get functions
         """
+
         state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
         result_manager = ResultManager(config=ConfigCommandReport(),
-                                       state_manager=state_manager)
+                                       state_manager=state_manager,
+                                       constraint_manager=ConstraintManager(config=MagicMock()))
 
         server_data = {'a': 5, 'b': 7}
         result_manager.add_server_data(server_data)
@@ -50,9 +52,11 @@ class TestResultManager(trc.TestResultCollector):
         then in a list per-representation
         Confirm that the measurements can be read out via get_model_configs_run_config_measurements()
         """
+
         state_manager = AnalyzerStateManager(config=MagicMock(), server=None)
         result_manager = ResultManager(config=ConfigCommandReport(),
-                                       state_manager=state_manager)
+                                       state_manager=state_manager,
+                                       constraint_manager=ConstraintManager(config=MagicMock()))
 
         fake_run_config1a = MagicMock()
         fake_run_config1a.models_name.return_value = "Model1"
@@ -163,8 +167,6 @@ class TestResultManager(trc.TestResultCollector):
         result_manager._config.profile_models = old_profile_models
         result_manager._run_comparators[
             'FakeModel'] = result_manager._run_comparators['add_sub']
-        result_manager._run_constraints[
-            'FakeModel'] = result_manager._run_constraints['add_sub']
 
         fake_run_config = MagicMock()
         fake_run_config.models_name.return_value = "FakeModel"

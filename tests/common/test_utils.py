@@ -30,6 +30,11 @@ from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.constants import SECONDS_TO_MILLISECONDS_MULTIPLIER
+
+from typing import Optional, Dict, Any
+import argparse
+from model_analyzer.result.constraint_manager import ConstraintManager
+
 from model_analyzer.config.input.config_defaults import \
     DEFAULT_BATCH_SIZES, DEFAULT_TRITON_LAUNCH_MODE, DEFAULT_CLIENT_PROTOCOL, \
     DEFAULT_MEASUREMENT_MODE, DEFAULT_TRITON_GRPC_ENDPOINT, DEFAULT_TRITON_HTTP_ENDPOINT, \
@@ -100,7 +105,9 @@ def _load_result_manager_helper(dir_path: str, yaml_str: str):
     state_manager = AnalyzerStateManager(config=config, server=None)
     state_manager.load_checkpoint(checkpoint_required=True)
 
-    result_manager = ResultManager(config=config, state_manager=state_manager)
+    result_manager = ResultManager(config=config,
+                            state_manager=state_manager,
+                            constraint_manager=ConstraintManager(config=config))
     return result_manager, config
 
 
@@ -262,6 +269,7 @@ def construct_run_config_measurement(model_name,
                                      model_specific_pa_params,
                                      gpu_metric_values,
                                      non_gpu_metric_values,
+                                     constraint_manager=None,
                                      metric_objectives=None,
                                      model_config_weights=None):
     """
@@ -314,13 +322,16 @@ def construct_run_config_measurement(model_name,
     if metric_objectives:
         rc_measurement.set_metric_weightings(metric_objectives)
 
+    if constraint_manager:
+        rc_measurement.set_constraint_manager(constraint_manager=constraint_manager)
+
     return rc_measurement
 
 
 def construct_run_config_result(avg_gpu_metric_values,
                                 avg_non_gpu_metric_values_list,
                                 comparator,
-                                constraints=None,
+                                constraint_manager=None,
                                 value_step=1,
                                 model_name="test_model",
                                 model_config_names=["test_model"],
@@ -359,7 +370,7 @@ def construct_run_config_result(avg_gpu_metric_values,
     run_config_result = RunConfigResult(model_name=model_name,
                                         run_config=run_config,
                                         comparator=comparator,
-                                        constraints=constraints)
+                                        constraint_manager=constraint_manager)
 
     # Get dict of list of metric values
     gpu_metric_values = {}
@@ -408,6 +419,26 @@ def construct_run_config_result(avg_gpu_metric_values,
 
     return run_config_result
 
+def construct_constraint_manager(yaml_config_str=None):
+    """
+    Returns a ConstraintManager object for Test cases
+
+    Parameters
+    ----------
+    yaml_config_str: optional str
+        yaml config string with atleast one profile model name and optional constraints
+    """
+    args = ['model-analyzer', 'profile', '-f', 'config.yml', '-m', '.']
+
+    if not yaml_config_str:
+        yaml_config_str = ("""
+            profile_models: 
+              test_model
+        """)
+
+    config = evaluate_mock_config(args, yaml_config_str, subcommand="profile")
+
+    return ConstraintManager(config)
 
 def default_encode(obj):
     if isinstance(obj, bytes):

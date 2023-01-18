@@ -15,13 +15,14 @@
 import unittest
 
 from .common import test_result_collector as trc
-from .common.test_utils import evaluate_mock_config, convert_to_bytes, default_encode, ROOT_DIR
+from .common.test_utils import evaluate_mock_config, ROOT_DIR
 
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.result.constraint_manager import ConstraintManager
 
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import json
 
@@ -42,7 +43,8 @@ class TestPlotManager(trc.TestResultCollector):
         """
         plot_manager = PlotManager(
             config=self._single_model_config,
-            result_manager=self._single_model_result_manager)
+            result_manager=self._single_model_result_manager,
+            constraint_manager=MagicMock())
 
         plot_manager.create_summary_plots()
 
@@ -67,7 +69,8 @@ class TestPlotManager(trc.TestResultCollector):
         """
         plot_manager = PlotManager(
             config=self._multi_model_config,
-            result_manager=self._multi_model_result_manager)
+            result_manager=self._multi_model_result_manager,
+            constraint_manager=MagicMock())
 
         plot_manager.create_summary_plots()
 
@@ -99,8 +102,9 @@ class TestPlotManager(trc.TestResultCollector):
         state_manager = AnalyzerStateManager(config=config, server=None)
         state_manager.load_checkpoint(checkpoint_required=True)
 
+        constraint_manager = ConstraintManager(config)
         self._single_model_result_manager = ResultManager(
-            config=config, state_manager=state_manager)
+            config=config, state_manager=state_manager, constraint_manager=constraint_manager)
 
         self._single_model_config = config
 
@@ -120,8 +124,9 @@ class TestPlotManager(trc.TestResultCollector):
         state_manager = AnalyzerStateManager(config=config, server=None)
         state_manager.load_checkpoint(checkpoint_required=True)
 
+        constraint_manager = ConstraintManager(config)
         self._multi_model_result_manager = ResultManager(
-            config=config, state_manager=state_manager)
+            config=config, state_manager=state_manager, constraint_manager=constraint_manager)
 
         self._multi_model_config = config
 

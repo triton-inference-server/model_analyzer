@@ -14,7 +14,6 @@
 
 from unittest.mock import MagicMock
 
-from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.coordinate import Coordinate
 
@@ -25,7 +24,7 @@ from .common import test_result_collector as trc
 class TestCoordinateData(trc.TestResultCollector):
 
     def _construct_rcm(self, throughput: float, latency: float,
-                       config_name: str):
+                       config_name: str, model_name: str):
         model_config_name = [config_name]
 
         # yapf: disable
@@ -39,7 +38,7 @@ class TestCoordinateData(trc.TestResultCollector):
         weights = [1]
 
         rcm = construct_run_config_measurement(
-            model_name="",
+            model_name=model_name,
             model_config_names=model_config_name,
             model_specific_pa_params=MagicMock(),
             gpu_metric_values={},
@@ -86,8 +85,8 @@ class TestCoordinateData(trc.TestResultCollector):
         coordinate1 = Coordinate([0, 4, 1])
         coordinate2 = Coordinate([1, 2, 3])
 
-        rcm0 = self._construct_rcm(10, 5, config_name="modelA_config_0")
-        rcm1 = self._construct_rcm(20, 8, config_name="modelB_config_0")
+        rcm0 = self._construct_rcm(10, 5, config_name="modelA_config_0", model_name="modelA")
+        rcm1 = self._construct_rcm(20, 8, config_name="modelB_config_0", model_name="modelB")
         rcm2 = None
 
         coordinate_data.set_measurement(coordinate0, rcm0)

@@ -62,7 +62,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metrics2=self.avg_non_gpu_metrics_multi2,
             expected_result=False,
             model_name="test_model",
-            model_config_names=["test_model_config0", "test_model_config1"])
+            model_config_names=["test_model_config_0", "test_model_config_1"])
 
     def test_latency_driven(self):
         objective_spec = [
@@ -101,7 +101,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             avg_non_gpu_metrics2=self.avg_non_gpu_metrics_multi2,
             expected_result=True,
             model_name="test_model",
-            model_config_names=["test_model_config0", "test_model_config1"])
+            model_config_names=["test_model_config_0", "test_model_config_1"])
 
     def test_equal_weight(self):
         objective_spec = [{'perf_throughput': 1, 'perf_latency_p99': 1}]
@@ -137,7 +137,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             value_step2=2,
             expected_result=False,
             model_name="test_model",
-            model_config_names=["test_model_config0", "test_model_config1"])
+            model_config_names=["test_model_config_0", "test_model_config_1"])
 
     def test_unequal_weight_multi(self):
         """
@@ -164,7 +164,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             value_step2=2,
             expected_result=False,
             model_name="test_model",
-            model_config_names=["test_model_config0", "test_model_config1"])
+            model_config_names=["test_model_config_0", "test_model_config_1"])
 
         # With an unequal weighting - config 0 is better
         model_weights = [3, 1]
@@ -178,7 +178,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             value_step2=2,
             expected_result=True,
             model_name="test_model",
-            model_config_names=["test_model_config0", "test_model_config1"])
+            model_config_names=["test_model_config_0", "test_model_config_1"])
 
     def _check_run_config_result_comparison(self,
                                             objective_spec,
@@ -208,6 +208,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             comparator=result_comparator,
             value_step=value_step1,
             run_config=MagicMock(),
+            constraint_manager=MagicMock(),
             model_name=model_name,
             model_config_names=model_config_names)
 
@@ -217,6 +218,7 @@ class TestRunConfigResultComparatorMethods(trc.TestResultCollector):
             comparator=result_comparator,
             value_step=value_step2,
             run_config=MagicMock(),
+            constraint_manager=MagicMock(),
             model_name=model_name,
             model_config_names=model_config_names)
 

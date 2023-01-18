@@ -23,6 +23,7 @@ from tritonclient.grpc import model_config_pb2
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.result_table_manager import ResultTableManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.result.constraint_manager import ConstraintManager
 
 from filecmp import cmp
 from shutil import rmtree
@@ -97,7 +98,8 @@ class TestResultTableManager(trc.TestResultCollector):
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
         state_manager = AnalyzerStateManager(config=config, server=None)
         result_manager = ResultManager(config=config,
-                                       state_manager=state_manager)
+                                       state_manager=state_manager,
+                                       constraint_manager=ConstraintManager(config))
         result_table_manager = ResultTableManager(config=config,
                                                   result_manager=result_manager)
 
@@ -157,7 +159,8 @@ class TestResultTableManager(trc.TestResultCollector):
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
         state_manager = AnalyzerStateManager(config=config, server=None)
         result_manager = ResultManager(config=config,
-                                       state_manager=state_manager)
+                                       state_manager=state_manager,
+                                       constraint_manager=ConstraintManager(config))
         table_manager = ResultTableManager(config=config,
                                            result_manager=result_manager)
         model_config_str = """
