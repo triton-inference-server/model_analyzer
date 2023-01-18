@@ -101,8 +101,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                     MagicMock(), MagicMock(), MagicMock())
             ]
 
-        dims = SearchDimensions()
-        dims.add_dimensions(0, [
+        self._dims = SearchDimensions()
+        self._dims.add_dimensions(0, [
             SearchDimension("max_batch_size",
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
             SearchDimension("instance_count",
@@ -111,7 +111,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                             SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
         ])
 
-        sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
+        sc = SearchConfig(dimensions=self._dims, radius=5, min_initialized=2)
         config = self._create_config()
         self._qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
                                              self._mock_models, {}, MagicMock(),
@@ -464,6 +464,126 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         Test that get_next_run_config() creates a proper RunConfig for ensemble with a max concurrency
         """
         self._get_next_run_config_ensemble(max_concurrency=8)
+
+    def test_get_next_run_config_max_batch_size(self):
+        """
+        Test that run-config-search-max-model-batch-size is enforced
+
+        Sets up a case where the coordinate is [5,7], which corresponds to
+          - max_batch_size = 32 (will be capped at 16)
+          - instance_count = 8
+          - concurrency = 32*8*2 = 512 (will now be 16*8*2 = 256)
+
+        Also
+        - dynamic batching should be on
+        - existing values from the base model config should persist if they aren't overwritten
+        """
+        sc = SearchConfig(dimensions=self._dims, radius=5, min_initialized=2)
+        config = self._create_config(
+            additional_args=['--run-config-search-max-model-batch-size', '16'])
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
+                                       self._mock_models, {}, MagicMock(),
+                                       ModelVariantNameManager())
+
+        qrcg._coordinate_to_measure = Coordinate([5, 7])
+
+        #yapf: disable
+        fake_base_config = {
+            "name": "fake_model_name",
+            "input": [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": [16]
+            }],
+            "max_batch_size": 4
+        }
+
+        expected_model_config = {
+            'cpu_only': False,
+            'dynamicBatching': {},
+            'instanceGroup': [{
+                'count': 8,
+                'kind': 'KIND_GPU',
+            }],
+            'maxBatchSize': 16,
+            'name': 'fake_model_name_config_0',
+            'input': [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": ['16']
+            }]
+        }
+        #yapf: enable
+
+        rc = qrcg._get_next_run_config()
+
+        self.assertEqual(len(rc.model_run_configs()), 1)
+        model_config = rc.model_run_configs()[0].model_config()
+        perf_config = rc.model_run_configs()[0].perf_config()
+
+        self.assertEqual(model_config.to_dict(), expected_model_config)
+        self.assertEqual(perf_config['concurrency-range'], 256)
+        self.assertEqual(perf_config['batch-size'], 1)
+
+    def test_get_next_run_config_max_instance_count(self):
+        """
+        Test that run-config-search-max-instance-count is enforced
+
+        Sets up a case where the coordinate is [5,7], which corresponds to
+          - max_batch_size = 32 
+          - instance_count = 8 (will be capped at 4)
+          - concurrency = 32*8*2 = 512 (will now be 32*4*2 = 256)
+
+        Also
+        - dynamic batching should be on
+        - existing values from the base model config should persist if they aren't overwritten
+        """
+        sc = SearchConfig(dimensions=self._dims, radius=5, min_initialized=2)
+        config = self._create_config(
+            additional_args=['--run-config-search-max-instance-count', '4'])
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
+                                       self._mock_models, {}, MagicMock(),
+                                       ModelVariantNameManager())
+
+        qrcg._coordinate_to_measure = Coordinate([5, 7])
+
+        #yapf: disable
+        fake_base_config = {
+            "name": "fake_model_name",
+            "input": [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": [16]
+            }],
+            "max_batch_size": 4
+        }
+
+        expected_model_config = {
+            'cpu_only': False,
+            'dynamicBatching': {},
+            'instanceGroup': [{
+                'count': 4,
+                'kind': 'KIND_GPU',
+            }],
+            'maxBatchSize': 32,
+            'name': 'fake_model_name_config_0',
+            'input': [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": ['16']
+            }]
+        }
+        #yapf: enable
+
+        rc = qrcg._get_next_run_config()
+
+        self.assertEqual(len(rc.model_run_configs()), 1)
+        model_config = rc.model_run_configs()[0].model_config()
+        perf_config = rc.model_run_configs()[0].perf_config()
+
+        self.assertEqual(model_config.to_dict(), expected_model_config)
+        self.assertEqual(perf_config['concurrency-range'], 256)
+        self.assertEqual(perf_config['batch-size'], 1)
 
     def _get_next_run_config_ensemble(self, max_concurrency=0):
         """
