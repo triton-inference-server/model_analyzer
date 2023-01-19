@@ -185,7 +185,6 @@ class ConfigCommand:
             return
 
         self._check_no_search_disable(args, yaml_config)
-        # self._check_no_search_values(args, yaml_config)
         self._check_no_global_list_values(args, yaml_config)
         self._check_no_per_model_list_values(args, yaml_config)
 
@@ -197,37 +196,6 @@ class ConfigCommand:
             raise TritonModelAnalyzerException(
                 f'\nDisabling of run config search is not supported in quick search mode.'
                 '\nPlease use brute search mode or remove --run-config-search-disable.'
-            )
-
-    def _check_no_search_values(self, args: Namespace,
-                                yaml_config: Optional[Dict[str, List]]) -> None:
-        max_concurrency = self._get_config_value(
-            'run_config_search_max_concurrency', args, yaml_config)
-        min_concurrency = self._get_config_value(
-            'run_config_search_min_concurrency', args, yaml_config)
-        max_instance = self._get_config_value(
-            'run_config_search_max_instance_count', args, yaml_config)
-        min_instance = self._get_config_value(
-            'run_config_search_min_instance_count', args, yaml_config)
-        max_batch_size = self._get_config_value(
-            'run_config_search_max_model_batch_size', args, yaml_config)
-        min_batch_size = self._get_config_value(
-            'run_config_search_min_model_batch_size', args, yaml_config)
-
-        if max_concurrency or min_concurrency:
-            raise TritonModelAnalyzerException(
-                f'\nProfiling of models in quick search mode is not supported with min/max concurrency search values.'
-                '\nPlease use brute search mode or remove concurrency search values.'
-            )
-        if max_instance or min_instance:
-            raise TritonModelAnalyzerException(
-                f'\nProfiling of models in quick search mode is not supported with min/max instance search values.'
-                '\nPlease use brute search mode or remove instance search values.'
-            )
-        if max_batch_size or min_batch_size:
-            raise TritonModelAnalyzerException(
-                f'\nProfiling of models in quick search mode is not supported with min/max batch size search values.'
-                '\nPlease use brute search mode or remove batch size search values.'
             )
 
     def _check_no_global_list_values(
