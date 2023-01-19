@@ -465,6 +465,12 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         """
         self._get_next_run_config_ensemble(max_concurrency=8)
 
+    def test_get_next_run_config_ensemble_with_min_concurrency(self):
+        """
+        Test that get_next_run_config() creates a proper RunConfig for ensemble with a min concurrency
+        """
+        self._get_next_run_config_ensemble(min_concurrency=16)
+
     def test_get_next_run_config_max_batch_size(self):
         """
         Test that run-config-search-max-model-batch-size is enforced
@@ -585,7 +591,129 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(perf_config['concurrency-range'], 256)
         self.assertEqual(perf_config['batch-size'], 1)
 
-    def _get_next_run_config_ensemble(self, max_concurrency=0):
+    def test_get_next_run_config_min_batch_size(self):
+        """
+        Test that run-config-search-min-model-batch-size is enforced
+
+        Sets up a case where the coordinate is [5,7], which corresponds to
+          - max_batch_size = 32 (will be min of 64)
+          - instance_count = 8
+          - concurrency = 32*8*2 = 512 (will now be 64*8*2 = 1024)
+
+        Also
+        - dynamic batching should be on
+        - existing values from the base model config should persist if they aren't overwritten
+        """
+        sc = SearchConfig(dimensions=self._dims, radius=5, min_initialized=2)
+        config = self._create_config(
+            additional_args=['--run-config-search-min-model-batch-size', '64'])
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
+                                       self._mock_models, {}, MagicMock(),
+                                       ModelVariantNameManager())
+
+        qrcg._coordinate_to_measure = Coordinate([5, 7])
+
+        #yapf: disable
+        fake_base_config = {
+            "name": "fake_model_name",
+            "input": [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": [16]
+            }],
+            "max_batch_size": 4
+        }
+
+        expected_model_config = {
+            'cpu_only': False,
+            'dynamicBatching': {},
+            'instanceGroup': [{
+                'count': 8,
+                'kind': 'KIND_GPU',
+            }],
+            'maxBatchSize': 64,
+            'name': 'fake_model_name_config_0',
+            'input': [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": ['16']
+            }]
+        }
+        #yapf: enable
+
+        rc = qrcg._get_next_run_config()
+
+        self.assertEqual(len(rc.model_run_configs()), 1)
+        model_config = rc.model_run_configs()[0].model_config()
+        perf_config = rc.model_run_configs()[0].perf_config()
+
+        self.assertEqual(model_config.to_dict(), expected_model_config)
+        self.assertEqual(perf_config['concurrency-range'], 1024)
+        self.assertEqual(perf_config['batch-size'], 1)
+
+    def test_get_next_run_config_min_instance_count(self):
+        """
+        Test that run-config-search-min-instance-count is enforced
+
+        Sets up a case where the coordinate is [5,7], which corresponds to
+          - max_batch_size = 32 
+          - instance_count = 8 (will be min of 16)
+          - concurrency = 32*8*2 = 512 (will now be 32*16*2 = 1024)
+
+        Also
+        - dynamic batching should be on
+        - existing values from the base model config should persist if they aren't overwritten
+        """
+        sc = SearchConfig(dimensions=self._dims, radius=5, min_initialized=2)
+        config = self._create_config(
+            additional_args=['--run-config-search-min-instance-count', '16'])
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
+                                       self._mock_models, {}, MagicMock(),
+                                       ModelVariantNameManager())
+
+        qrcg._coordinate_to_measure = Coordinate([5, 7])
+
+        #yapf: disable
+        fake_base_config = {
+            "name": "fake_model_name",
+            "input": [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": [16]
+            }],
+            "max_batch_size": 4
+        }
+
+        expected_model_config = {
+            'cpu_only': False,
+            'dynamicBatching': {},
+            'instanceGroup': [{
+                'count': 16,
+                'kind': 'KIND_GPU',
+            }],
+            'maxBatchSize': 32,
+            'name': 'fake_model_name_config_0',
+            'input': [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": ['16']
+            }]
+        }
+        #yapf: enable
+
+        rc = qrcg._get_next_run_config()
+
+        self.assertEqual(len(rc.model_run_configs()), 1)
+        model_config = rc.model_run_configs()[0].model_config()
+        perf_config = rc.model_run_configs()[0].perf_config()
+
+        self.assertEqual(model_config.to_dict(), expected_model_config)
+        self.assertEqual(perf_config['concurrency-range'], 1024)
+        self.assertEqual(perf_config['batch-size'], 1)
+
+    def _get_next_run_config_ensemble(self,
+                                      max_concurrency=0,
+                                      min_concurrency=0):
         """
         Test that get_next_run_config() creates a proper RunConfig for ensemble
 
@@ -609,6 +737,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         if max_concurrency:
             additional_args.append('--run-config-search-max-concurrency')
             additional_args.append(f'{max_concurrency}')
+        if min_concurrency:
+            additional_args.append('--run-config-search-min-concurrency')
+            additional_args.append(f'{min_concurrency}')
 
         #yapf: disable
         expected_model_config0 = {
@@ -702,6 +833,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         if max_concurrency:
             self.assertEqual(perf_config['concurrency-range'], max_concurrency)
+        elif min_concurrency:
+            self.assertEqual(perf_config['concurrency-range'], min_concurrency)
         else:
             self.assertEqual(perf_config['concurrency-range'], 12)
 
