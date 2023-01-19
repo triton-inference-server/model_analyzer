@@ -179,7 +179,7 @@ class ConfigField:
 
         self._default_value = default_value
 
-        self._set_by_user = False
+        self._set_by_config = False
 
     def value(self):
         """

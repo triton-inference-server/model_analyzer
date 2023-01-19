@@ -373,8 +373,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self._coordinate_to_measure, dimension_index)
 
         kind = "KIND_CPU" if model.cpu_only() else "KIND_GPU"
-        instance_count = self._calculate_instance_count(
-            int(dimension_values['instance_count']))
+        instance_count = self._calculate_instance_count(dimension_values)
 
         param_combo: dict = {
             'instance_group': [{
@@ -385,7 +384,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         if 'max_batch_size' in dimension_values:
             param_combo['max_batch_size'] = self._calculate_model_batch_size(
-                int(dimension_values['max_batch_size']))
+                dimension_values)
 
         if model.supports_dynamic_batching():
             param_combo['dynamic_batching'] = {}
@@ -407,17 +406,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config_from_profile_config(
             model_variant_name, self._config)
 
-        dimension_batch_size = int(dimension_values.get("max_batch_size", 1))
-        dimension_instance_count = int(dimension_values.get(
-            "instance_count", 1))
-
-        model_batch_size = self._calculate_model_batch_size(
-            dimension_batch_size)
-        instance_count = self._calculate_instance_count(
-            dimension_instance_count)
-
-        concurrency = self._calculate_concurrency(model_batch_size,
-                                                  instance_count)
+        concurrency = self._calculate_concurrency(dimension_values)
 
         perf_config_params = {'batch-size': 1, 'concurrency-range': concurrency}
         perf_analyzer_config.update_config(perf_config_params)
@@ -425,7 +414,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config(model.perf_analyzer_flags())
         return perf_analyzer_config
 
-    def _calculate_model_batch_size(self, batch_size: int) -> int:
+    def _calculate_model_batch_size(
+            self, dimension_values: Dict[str, Union[int, float]]) -> int:
+        batch_size = int(dimension_values.get("max_batch_size", 1))
+
         min_batch_size_set = self._config.get_config(
         )['run_config_search_min_model_batch_size'].set_by_config()
 
@@ -440,7 +432,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         return batch_size
 
-    def _calculate_instance_count(self, instance_count: int) -> int:
+    def _calculate_instance_count(
+            self, dimension_values: Dict[str, Union[int, float]]) -> int:
+        instance_count = int(dimension_values.get("instance_count", 1))
+
         min_instance_count_set = self._config.get_config(
         )['run_config_search_min_instance_count'].set_by_config()
 
@@ -455,8 +450,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         return instance_count
 
-    def _calculate_concurrency(self, model_batch_size: int,
-                               instance_count: int) -> int:
+    def _calculate_concurrency(
+            self, dimension_values: Dict[str, Union[int, float]]) -> int:
+        model_batch_size = self._calculate_model_batch_size(dimension_values)
+        instance_count = self._calculate_instance_count(dimension_values)
         concurrency = 2 * model_batch_size * instance_count
 
         min_concurrency_set = self._config.get_config(
