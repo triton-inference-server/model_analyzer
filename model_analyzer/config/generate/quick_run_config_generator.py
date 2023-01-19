@@ -374,7 +374,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         kind = "KIND_CPU" if model.cpu_only() else "KIND_GPU"
         instance_count = self._calculate_instance_count(
-            dimension_values['instance_count'])
+            int(dimension_values['instance_count']))
 
         param_combo: dict = {
             'instance_group': [{
@@ -385,7 +385,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         if 'max_batch_size' in dimension_values:
             param_combo['max_batch_size'] = self._calculate_model_batch_size(
-                dimension_values['max_batch_size'])
+                int(dimension_values['max_batch_size']))
 
         if model.supports_dynamic_batching():
             param_combo['dynamic_batching'] = {}
@@ -407,8 +407,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         perf_analyzer_config.update_config_from_profile_config(
             model_variant_name, self._config)
 
-        dimension_batch_size = dimension_values.get("max_batch_size", 1)
-        dimension_instance_count = dimension_values.get("instance_count", 1)
+        dimension_batch_size = int(dimension_values.get("max_batch_size", 1))
+        dimension_instance_count = int(dimension_values.get(
+            "instance_count", 1))
 
         model_batch_size = self._calculate_model_batch_size(
             dimension_batch_size)

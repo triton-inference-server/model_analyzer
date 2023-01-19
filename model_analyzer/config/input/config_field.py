@@ -17,6 +17,8 @@ from model_analyzer.model_analyzer_exceptions import \
 from model_analyzer.constants import \
     CONFIG_PARSER_FAILURE
 
+from typing import Any
+
 
 class ConfigField:
 
@@ -151,7 +153,7 @@ class ConfigField:
 
         return self._flags
 
-    def set_value(self, value, set_by_config: bool = False):
+    def set_value(self, value: Any, set_by_config: bool = False) -> None:
         """
         Set the value for the config field.
         """
