@@ -181,12 +181,17 @@ this will find greater than 95% of the maximum objective value (that could be fo
 
 After it has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the default concurrency range before generation of the summary reports.
 
+### Limiting Batch Size, Instance Count, and Client Concurrency
+
+Using the `--run-config-search-<min/max>...` CLI options you have the ability to clamp the algorithm's upper or lower bounds for the model's batch size and instance count, as well as the client's concurrency.
+
+Note: That by default quick search runs unbounded and ignores any default values for these settings
+
 ## Multi-Model Search Mode
 
 _This mode is in EARLY ACCESS and has the following limitations:_
 
 - Can only be run in `quick` search mode
-- Cannot set limitations on min/max batch size, concurrency or instance count
 - Does not support individual model constraints, only global constraints
 - Does not support detailed reporting, only summary reports
 

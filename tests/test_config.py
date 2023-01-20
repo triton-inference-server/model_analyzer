@@ -1369,9 +1369,10 @@ profile_models:
 
             self.assertEqual(
                 config.get_all_config()['profile_models'][0].constraints(),
-                ModelConstraints({constraint_shorthand[2]: {
-                     constraint_shorthand[1]: 40
-                 }}))
+                ModelConstraints(
+                    {constraint_shorthand[2]: {
+                         constraint_shorthand[1]: 40
+                     }}))
 
             # check that model specific constraints are appended to
             args = [
@@ -1395,7 +1396,8 @@ profile_models:
                      constraint_shorthand[1]: 40
                  }})
             self.assertEqual(
-                config.get_all_config()['profile_models'][0].constraints(), ModelConstraints({
+                config.get_all_config()['profile_models'][0].constraints(),
+                ModelConstraints({
                     constraint_shorthand[2]: {
                         constraint_shorthand[1]: 40
                     },
@@ -1417,9 +1419,10 @@ profile_models:
                                            subcommand='profile')
             self.assertEqual(
                 config.get_all_config()['profile_models'][0].constraints(),
-                ModelConstraints({constraint_shorthand[2]: {
-                     constraint_shorthand[1]: 40
-                 }}))
+                ModelConstraints(
+                    {constraint_shorthand[2]: {
+                         constraint_shorthand[1]: 40
+                     }}))
 
             # check that global constraints are appended to
             yaml_content = """
@@ -1809,18 +1812,6 @@ profile_models:
                                          '--run-config-search-disable',
                                          use_value=False,
                                          use_list=False)
-        self._test_quick_search_with_rcs(args, yaml_content,
-                                         '--run-config-search-min-concurrency')
-        self._test_quick_search_with_rcs(args, yaml_content,
-                                         '--run-config-search-max-concurrency')
-        self._test_quick_search_with_rcs(
-            args, yaml_content, '--run-config-search-min-instance-count')
-        self._test_quick_search_with_rcs(
-            args, yaml_content, '--run-config-search-max-instance-count')
-        self._test_quick_search_with_rcs(
-            args, yaml_content, '--run-config-search-min-model-batch-size')
-        self._test_quick_search_with_rcs(
-            args, yaml_content, '--run-config-search-max-model-batch-size')
         self._test_quick_search_with_rcs(args,
                                          yaml_content,
                                          '--batch-sizes',
