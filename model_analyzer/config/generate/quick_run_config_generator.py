@@ -418,16 +418,16 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self, dimension_values: Dict[str, Union[int, float]]) -> int:
         batch_size = int(dimension_values.get("max_batch_size", 1))
 
-        min_batch_size_set = self._config.get_config(
-        )['run_config_search_min_model_batch_size'].set_by_config()
+        min_batch_size_is_set_by_config = self._config.get_config(
+        )['run_config_search_min_model_batch_size'].is_set_by_config()
 
-        max_batch_size_set = self._config.get_config(
-        )['run_config_search_max_model_batch_size'].set_by_config()
+        max_batch_size_is_set_by_config = self._config.get_config(
+        )['run_config_search_max_model_batch_size'].is_set_by_config()
 
-        if min_batch_size_set and batch_size < self._config.run_config_search_min_model_batch_size:
+        if min_batch_size_is_set_by_config and batch_size < self._config.run_config_search_min_model_batch_size:
             return self._config.run_config_search_min_model_batch_size
 
-        if max_batch_size_set and batch_size > self._config.run_config_search_max_model_batch_size:
+        if max_batch_size_is_set_by_config and batch_size > self._config.run_config_search_max_model_batch_size:
             return self._config.run_config_search_max_model_batch_size
 
         return batch_size
@@ -436,16 +436,16 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self, dimension_values: Dict[str, Union[int, float]]) -> int:
         instance_count = int(dimension_values.get("instance_count", 1))
 
-        min_instance_count_set = self._config.get_config(
-        )['run_config_search_min_instance_count'].set_by_config()
+        min_instance_count_is_set_by_config = self._config.get_config(
+        )['run_config_search_min_instance_count'].is_set_by_config()
 
-        max_instance_count_set = self._config.get_config(
-        )['run_config_search_max_instance_count'].set_by_config()
+        max_instance_count_is_set_by_config = self._config.get_config(
+        )['run_config_search_max_instance_count'].is_set_by_config()
 
-        if min_instance_count_set and instance_count < self._config.run_config_search_min_instance_count:
+        if min_instance_count_is_set_by_config and instance_count < self._config.run_config_search_min_instance_count:
             return self._config.run_config_search_min_instance_count
 
-        if max_instance_count_set and instance_count > self._config.run_config_search_max_instance_count:
+        if max_instance_count_is_set_by_config and instance_count > self._config.run_config_search_max_instance_count:
             return self._config.run_config_search_max_instance_count
 
         return instance_count
@@ -456,16 +456,16 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         instance_count = self._calculate_instance_count(dimension_values)
         concurrency = 2 * model_batch_size * instance_count
 
-        min_concurrency_set = self._config.get_config(
-        )['run_config_search_min_concurrency'].set_by_config()
+        min_concurrency_is_set_by_config = self._config.get_config(
+        )['run_config_search_min_concurrency'].is_set_by_config()
 
-        max_concurrency_set = self._config.get_config(
-        )['run_config_search_max_concurrency'].set_by_config()
+        max_concurrency_is_set_by_config = self._config.get_config(
+        )['run_config_search_max_concurrency'].is_set_by_config()
 
-        if min_concurrency_set and concurrency < self._config.run_config_search_min_concurrency:
+        if min_concurrency_is_set_by_config and concurrency < self._config.run_config_search_min_concurrency:
             return self._config.run_config_search_min_concurrency
 
-        if max_concurrency_set and concurrency > self._config.run_config_search_max_concurrency:
+        if max_concurrency_is_set_by_config and concurrency > self._config.run_config_search_max_concurrency:
             return self._config.run_config_search_max_concurrency
 
         return concurrency
