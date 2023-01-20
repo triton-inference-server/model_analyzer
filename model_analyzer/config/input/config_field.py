@@ -17,6 +17,8 @@ from model_analyzer.model_analyzer_exceptions import \
 from model_analyzer.constants import \
     CONFIG_PARSER_FAILURE
 
+from typing import Any
+
 
 class ConfigField:
 
@@ -57,6 +59,7 @@ class ConfigField:
         self._flags = flags
         self._choices = choices
         self._parser_args = {} if parser_args is None else parser_args
+        self._is_set_by_config = False
 
     def choices(self):
         """
@@ -150,7 +153,7 @@ class ConfigField:
 
         return self._flags
 
-    def set_value(self, value):
+    def set_value(self, value: Any, is_set_by_config: bool = False) -> None:
         """
         Set the value for the config field.
         """
@@ -161,6 +164,8 @@ class ConfigField:
             raise TritonModelAnalyzerException(
                 f'Failed to set the value for field "{self._name}". Error: {config_status.message()}'
             )
+
+        self._is_set_by_config = is_set_by_config
 
     def set_default_value(self, default_value):
         """
@@ -173,6 +178,8 @@ class ConfigField:
         """
 
         self._default_value = default_value
+
+        self._is_set_by_config = False
 
     def value(self):
         """
@@ -200,3 +207,9 @@ class ConfigField:
 
     def set_name(self, name):
         self._field_type.set_name(name)
+
+    def is_set_by_config(self) -> bool:
+        """
+        Returns true if the user set the field
+        """
+        return self._is_set_by_config
