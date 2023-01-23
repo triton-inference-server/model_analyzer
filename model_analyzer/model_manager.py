@@ -129,7 +129,7 @@ class ModelManager:
         self._server.update_config(params=server_config_copy.server_args())
 
         model_variant_name_manager_dict = self._state_manager.default_encode(
-            rcg._model_variant_name_manager)  # type: ignore
+            self._model_variant_name_manager)
 
         self._state_manager.set_state_variable(
             'ModelManager.model_variant_name_manager',
@@ -159,7 +159,8 @@ class ModelManager:
                 if self._config.run_config_search_mode != 'quick':
                     raise TritonModelAnalyzerException(
                         f'\nBrute search mode is not supported for ensemble models'
-                        '\nPlease use quick search mode')
+                        '\nPlease use quick search mode (--run-config-search-mode quick)'
+                    )
 
     def _init_state(self):
         """

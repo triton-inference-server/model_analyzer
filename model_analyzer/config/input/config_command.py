@@ -113,8 +113,9 @@ class ConfigCommand:
     def _check_for_illegal_config_settings(
             self, args: Namespace, yaml_config: Optional[Dict[str,
                                                               List]]) -> None:
-        # Illegal config settings check for ensemble is done in model_manager,
+        # Note: Illegal config settings check for ensemble is done in model_manager,
         # since we don't yet know the type of model being profiled
+
         self._check_for_duplicate_profile_models_option(args, yaml_config)
         self._check_for_multi_model_incompatability(args, yaml_config)
         self._check_for_quick_search_incompatability(args, yaml_config)
