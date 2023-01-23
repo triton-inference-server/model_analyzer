@@ -71,11 +71,13 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
             }
         }
         self.result_manager = ResultManager(config=config,
-                                            state_manager=state_manager)
+                                            state_manager=state_manager,
+                                            constraint_manager=MagicMock())
         self.report_manager = ReportManager(mode=mode,
                                             config=config,
                                             gpu_info=gpu_info,
-                                            result_manager=self.result_manager)
+                                            result_manager=self.result_manager,
+                                            constraint_manager=MagicMock())
 
     def setUp(self):
         NotImplemented
