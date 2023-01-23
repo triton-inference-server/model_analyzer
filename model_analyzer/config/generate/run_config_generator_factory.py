@@ -41,7 +41,7 @@ class RunConfigGeneratorFactory:
     @staticmethod
     def create_run_config_generator(
         command_config: ConfigCommandProfile, gpus: List[GPUDevice],
-        models: List[ModelProfileSpec], client: TritonClient,
+        models: List[ConfigModelProfileSpec], client: TritonClient,
         result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager
     ) -> ConfigGeneratorInterface:
