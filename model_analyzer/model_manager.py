@@ -27,6 +27,8 @@ from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.server.server import TritonServer
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 
 import logging
 
@@ -40,8 +42,9 @@ class ModelManager:
     """
 
     def __init__(self, config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 client: TritonClient, server: TritonServer, metrics_manager: MetricsManager,
-                 result_manager: ResultManager, state_manager: AnalyzerStateManager,
+                 client: TritonClient, server: TritonServer,
+                 metrics_manager: MetricsManager, result_manager: ResultManager,
+                 state_manager: AnalyzerStateManager,
                  constraint_manager: ConstraintManager):
         """
         Parameters
@@ -80,7 +83,7 @@ class ModelManager:
             self._state_manager.get_state_variable(
                 'ModelManager.model_variant_name_manager'))
 
-    def run_models(self, models):
+    def run_models(self, models: List[ConfigModelProfileSpec]) -> None:
         """
         Generates configs, runs inferences, gets
         measurements for a list of models
@@ -90,6 +93,10 @@ class ModelManager:
         models : List of ConfigModelProfileSpec
             The models to run
         """
+
+        # Note: this is not done in config_commmand, because there isn't a ModelConfig yet,
+        # so we cannot determine if the model is an ensemble
+        self._check_for_ensemble_model_incompatability(models)
 
         self._metrics_manager.start_new_model()
 
@@ -136,7 +143,7 @@ class ModelManager:
         self._server.update_config(params=server_config_copy.server_args())
 
         model_variant_name_manager_dict = self._state_manager.default_encode(
-            rcg._model_variant_name_manager)
+            self._model_variant_name_manager)
 
         self._state_manager.set_state_variable(
             'ModelManager.model_variant_name_manager',
@@ -150,6 +157,24 @@ class ModelManager:
                 raise TritonModelAnalyzerException(
                     f"Triton server flags must be the same for all models to run concurrently"
                 )
+
+    def _check_for_ensemble_model_incompatability(
+            self, models: List[ConfigModelProfileSpec]) -> None:
+        for model in models:
+            model_config = ModelConfig.create_from_profile_spec(
+                model, self._config, self._client, self._gpus)
+
+            if model_config.is_ensemble():
+                if len(models) > 1:
+                    raise TritonModelAnalyzerException(
+                        f'\nProfiling of multiple models is not supported for ensemble models'
+                    )
+
+                if self._config.run_config_search_mode != 'quick':
+                    raise TritonModelAnalyzerException(
+                        f'\nBrute search mode is not supported for ensemble models'
+                        '\nPlease use quick search mode (--run-config-search-mode quick)'
+                    )
 
     def _init_state(self):
         """
