@@ -104,27 +104,37 @@ class TestRunConfig(trc.TestResultCollector):
         rc.add_model_run_config(mrc2)
         self.assertFalse(rc.cpu_only())
 
-
     def test_mrc_with_illegal_combinations(self):
         """
         Test ModelRunConfig with illegal comibinations 
         """
         mc = ModelConfig({})
         pc = PerfAnalyzerConfig()
-        
+
         # Valid client batch-size and invalid model preferred_batch_size
         pc['batch-size'] = 2
-        mc.set_config({"max_batch_size": 4, "dynamic_batching": {"preferred_batch_size": [4, 8]}})
+        mc.set_config({
+            "name": "test_model",
+            "max_batch_size": 4,
+            "dynamic_batching": {
+                "preferred_batch_size": [4, 8]
+            }
+        })
         mrc = ModelRunConfig("modelA", mc, pc)
         self.assertFalse(mrc.is_legal_combination())
-        
+
         # Invalid client batch-size and invalid model preferred_batch_size
         pc['batch-size'] = 8
         mrc = ModelRunConfig("modelB", mc, pc)
         self.assertFalse(mrc.is_legal_combination())
 
         # Invalid client batch-size and valid model preferred_batch_size
-        mc.set_config({"max_batch_size": 4, "dynamic_batching": {"preferred_batch_size": [2]}})
+        mc.set_config({
+            "max_batch_size": 4,
+            "dynamic_batching": {
+                "preferred_batch_size": [2]
+            }
+        })
         mrc = ModelRunConfig("modelC", mc, pc)
         self.assertFalse(mrc.is_legal_combination())
 
@@ -140,11 +150,49 @@ class TestRunConfig(trc.TestResultCollector):
         mc.set_config({"max_batch_size": 8})
         mrc = ModelRunConfig("modelA", mc, pc)
         self.assertTrue(mrc.is_legal_combination())
-        
+
         # Valid client batch-size and valid model preferred_batch_size
-        mc.set_config({"max_batch_size": 8, "dynamic_batching": {"preferred_batch_size": [4]}})
+        mc.set_config({
+            "max_batch_size": 8,
+            "dynamic_batching": {
+                "preferred_batch_size": [4]
+            }
+        })
         mrc = ModelRunConfig("modelB", mc, pc)
         self.assertTrue(mrc.is_legal_combination())
+
+    def test_ensemble_mrc_with_illegal_combinations(self):
+        """
+        Test ModelRunConfig with illegal combinations in an ensemble
+        """
+        mc = ModelConfig({})
+        pc = PerfAnalyzerConfig()
+        submodel_configs = [ModelConfig({}), ModelConfig({})]
+
+        # Invalid client batch-size and valid model preferred_batch_size for subconfig[1]
+        pc['batch-size'] = 2
+        mc.set_config({"max_batch_size": 8, "name": "test_model"})
+        mrc = ModelRunConfig("modelC", mc, pc)
+
+        submodel_configs[0].set_config({
+            "name": "subconfig_A",
+            "max_batch_size": 4,
+            "dynamic_batching": {
+                "preferred_batch_size": [2]
+            }
+        })
+        submodel_configs[1].set_config({
+            "name": "subconfig_B",
+            "max_batch_size": 4,
+            "dynamic_batching": {
+                "preferred_batch_size": [4, 8]
+            }
+        })
+
+        mrc.add_ensemble_submodel_configs(submodel_configs)
+
+        self.assertFalse(mrc.is_legal_combination())
+
 
 if __name__ == '__main__':
     unittest.main()
