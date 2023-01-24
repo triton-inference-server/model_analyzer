@@ -139,7 +139,7 @@ class RunConfigGeneratorFactory:
             if model.model_name() in ensemble_submodels:
                 for submodel in ensemble_submodels[model.model_name()]:
                     dims = RunConfigGeneratorFactory._get_dimensions_for_model(
-                        model.supports_batching())
+                        submodel.supports_batching())
                     dimensions.add_dimensions(index, dims)
                     index += 1
             else:
