@@ -1,0 +1,4 @@
+latency_budget: '2000'
+profile_models:
+- ensemble_python_resnet50
+run_config_search_mode: quick

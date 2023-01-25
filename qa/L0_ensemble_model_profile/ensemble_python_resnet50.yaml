@@ -1,0 +1,4 @@
+profile_models: ensemble_python_resnet50
+perf_analyzer_flags:
+  shape: INPUT:1005970
+  input-data: ./test_image
