@@ -1,4 +1,4 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -90,11 +90,11 @@ class TestConstraintManager(trc.TestResultCollector):
                              'max': 100
                          }}))
 
-    def test_multi_model_with_different_model_constraints(self):
+    def test_multi_model_with_no_global_constraints(self):
         """
-        Test multi-model with different individual model constraints
+        Test multi-model with only model constraints and no global constraints
         """
-        config = self._create_multi_model_with_different_model_constraints()
+        config = self._create_multi_model_with_no_global_constraints()
         constraint_manager = ConstraintManager(config)
         constraints = constraint_manager.get_constraints_for_all_models()
 
@@ -107,11 +107,11 @@ class TestConstraintManager(trc.TestResultCollector):
                              'min': 100
                          }}))
 
-    def test_multi_model_with_global_constraints(self):
+    def test_multi_model_with_matching_global_constraints(self):
         """
         Test multi-model with Global constraints and individual overrides
         """
-        config = self._create_multi_model_with_global_constraints()
+        config = self._create_multi_model_with_matching_global_constraints()
         constraint_manager = ConstraintManager(config)
         constraints = constraint_manager.get_constraints_for_all_models()
 
@@ -129,11 +129,11 @@ class TestConstraintManager(trc.TestResultCollector):
                             "gpu_used_memory": {"max": 1000}
                          }))
 
-    def test_multi_model_with_different_all_constraints(self):
+    def test_multi_model_with_different_global_constrants(self):
         """
         Test multi-model with different global and individual model constraints
         """
-        config = self._create_multi_model_with_different_all_constraints()
+        config = self._create_multi_model_with_different_global_constrants()
         constraint_manager = ConstraintManager(config)
         constraints = constraint_manager.get_constraints_for_all_models()
 
@@ -201,7 +201,7 @@ class TestConstraintManager(trc.TestResultCollector):
         #  Model A: P99 Latency max of 50
         #  Model B: Throughput min of 100
         constraint_manager = ConstraintManager(
-                config=self._create_multi_model_with_different_model_constraints())
+                config=self._create_multi_model_with_no_global_constraints())
 
         # Model A & B are both at boundaries
         rcm = self._construct_mm_rcm([{
@@ -229,7 +229,7 @@ class TestConstraintManager(trc.TestResultCollector):
         #  Model A: P99 Latency max of 75
         #  Model B: Throughput min of 125
         constraint_manager = ConstraintManager(
-                config=self._create_multi_model_with_global_constraints())
+                config=self._create_multi_model_with_matching_global_constraints())
 
         # Model A & B are both at boundaries
         rcm = self._construct_mm_rcm([{
@@ -257,7 +257,7 @@ class TestConstraintManager(trc.TestResultCollector):
         #  Model A: P99 Latency max of 100
         #  Model B: Throughput min of 150
         constraint_manager = ConstraintManager(
-                config=self._create_multi_model_with_different_all_constraints())
+                config=self._create_multi_model_with_different_global_constrants())
 
         # Model A & B are both at boundaries
         rcm = self._construct_mm_rcm([{
@@ -290,7 +290,7 @@ class TestConstraintManager(trc.TestResultCollector):
         #  Model A: P99 Latency max of 50
         #  Model B: Throughput min of 100
         constraint_manager = ConstraintManager(
-                config=self._create_multi_model_with_different_model_constraints())
+                config=self._create_multi_model_with_no_global_constraints())
 
         # Model B doesn't have enough throughput
         rcm = self._construct_mm_rcm([{
@@ -307,7 +307,7 @@ class TestConstraintManager(trc.TestResultCollector):
         #  Model A: P99 Latency max of 75
         #  Model B: Throughput min of 125
         constraint_manager = ConstraintManager(
-                config=self._create_multi_model_with_global_constraints())
+                config=self._create_multi_model_with_matching_global_constraints())
 
         # Model B doesn't have enough throughput
         rcm = self._construct_mm_rcm([{
@@ -324,7 +324,7 @@ class TestConstraintManager(trc.TestResultCollector):
         #  Model A: P99 Latency max of 100
         #  Model B: Throughput min of 150
         constraint_manager = ConstraintManager(
-                config=self._create_multi_model_with_different_all_constraints())
+                config=self._create_multi_model_with_different_global_constrants())
 
         # Model B doesn't have enough throughput
         rcm = self._construct_mm_rcm([{
@@ -403,7 +403,7 @@ class TestConstraintManager(trc.TestResultCollector):
         #  Model A: P99 Latency max of 50
         #  Model B: Throughput min of 100
         constraint_manager = ConstraintManager(
-                config=self._create_multi_model_with_different_model_constraints())
+                config=self._create_multi_model_with_no_global_constraints())
 
         # Model A & B are both at boundaries
         rcm = self._construct_mm_rcm([{
@@ -445,7 +445,7 @@ class TestConstraintManager(trc.TestResultCollector):
         #  Model A: P99 Latency max of 75
         #  Model B: Throughput min of 125
         constraint_manager = ConstraintManager(
-                config=self._create_multi_model_with_global_constraints())
+                config=self._create_multi_model_with_matching_global_constraints())
 
         # Model A & B are both at boundaries
         rcm = self._construct_mm_rcm([{
@@ -487,7 +487,7 @@ class TestConstraintManager(trc.TestResultCollector):
         #  Model A: P99 Latency max of 100
         #  Model B: Throughput min of 150
         constraint_manager = ConstraintManager(
-                config=self._create_multi_model_with_different_all_constraints())
+                config=self._create_multi_model_with_different_global_constrants())
 
         # Model A & B are both at boundaries
         rcm = self._construct_mm_rcm([{
@@ -579,7 +579,7 @@ class TestConstraintManager(trc.TestResultCollector):
 
         return config
 
-    def _create_multi_model_with_different_model_constraints(self):
+    def _create_multi_model_with_no_global_constraints(self):
         args = self._create_args()
         yaml_str = ("""
             profile_models:
@@ -596,7 +596,7 @@ class TestConstraintManager(trc.TestResultCollector):
 
         return config
 
-    def _create_multi_model_with_global_constraints(self):
+    def _create_multi_model_with_matching_global_constraints(self):
         args = self._create_args()
         yaml_str = ("""
             profile_models:
@@ -618,7 +618,7 @@ class TestConstraintManager(trc.TestResultCollector):
 
         return config
 
-    def _create_multi_model_with_different_all_constraints(self):
+    def _create_multi_model_with_different_global_constrants(self):
         args = self._create_args()
         yaml_str = ("""
             profile_models:
