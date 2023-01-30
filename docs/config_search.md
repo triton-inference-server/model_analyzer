@@ -187,7 +187,6 @@ _This mode is in EARLY ACCESS and has the following limitations:_
 
 - Can only be run in `quick` search mode
 - Cannot set limitations on min/max batch size, concurrency or instance count
-- Does not support individual model constraints, only global constraints
 - Does not support detailed reporting, only summary reports
 
 Multi-model concurrent search mode can be enabled by adding the parameter `--run-config-profile-models-concurrently-enable` to the CLI.

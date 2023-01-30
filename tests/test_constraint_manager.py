@@ -1,4 +1,4 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -90,11 +90,11 @@ class TestConstraintManager(trc.TestResultCollector):
                              'max': 100
                          }}))
 
-    def test_multi_model_with_both_constraints(self):
+    def test_multi_model_with_no_global_constraints(self):
         """
-        Test multi-model with both styles of constraints
+        Test multi-model with only model constraints and no global constraints
         """
-        config = self._create_multi_model_both_constraints()
+        config = self._create_multi_model_with_no_global_constraints()
         constraint_manager = ConstraintManager(config)
         constraints = constraint_manager.get_constraints_for_all_models()
 
@@ -106,22 +106,49 @@ class TestConstraintManager(trc.TestResultCollector):
                          ModelConstraints({'perf_throughput': {
                              'min': 100
                          }}))
-        self.assertEqual(constraints['model_C'], ModelConstraints({
-            'gpu_used_memory': {
-                'max': 50
-            },
-            'perf_throughput': {
-                'min': 50
-            }
-        }))
-        self.assertEqual(constraints['model_D'], ModelConstraints({
-            'perf_latency_p99': {
-                'max': 100
-            },
-            'gpu_used_memory': {
-                'max': 100
-            }
-        }))
+
+    def test_multi_model_with_matching_global_constraints(self):
+        """
+        Test multi-model with Global constraints and individual overrides
+        """
+        config = self._create_multi_model_with_matching_global_constraints()
+        constraint_manager = ConstraintManager(config)
+        constraints = constraint_manager.get_constraints_for_all_models()
+
+        self.assertEqual(constraints['model_A'],
+                         ModelConstraints({'perf_latency_p99': {
+                             'max': 75
+                         }}))
+        self.assertEqual(constraints['model_B'],
+                         ModelConstraints({'perf_throughput': {
+                             'min': 125
+                         }}))
+        self.assertEqual(constraints[GLOBAL_CONSTRAINTS_KEY],
+                         ModelConstraints({
+                            "perf_throughput": {"min": 100},
+                            "gpu_used_memory": {"max": 1000}
+                         }))
+
+    def test_multi_model_with_different_global_constrants(self):
+        """
+        Test multi-model with different global and individual model constraints
+        """
+        config = self._create_multi_model_with_different_global_constrants()
+        constraint_manager = ConstraintManager(config)
+        constraints = constraint_manager.get_constraints_for_all_models()
+
+        self.assertEqual(constraints['model_A'],
+                         ModelConstraints({'perf_latency_p99': {
+                             'max': 100
+                         }}))
+        self.assertEqual(constraints['model_B'],
+                         ModelConstraints({'perf_throughput': {
+                             'min': 150
+                         }}))
+        self.assertEqual(constraints[GLOBAL_CONSTRAINTS_KEY],
+                         ModelConstraints({
+                            "gpu_used_memory": {"max": 2000}
+                         }))
 
     def test_single_model_max_constraint_checks(self):
         """
@@ -165,16 +192,16 @@ class TestConstraintManager(trc.TestResultCollector):
         self.assertFalse(
             constraint_manager.satisfies_constraints(rcm))
 
-    def test_multi_model_constraint_checks(self):
+    def test_multi_model_max_constraint_checks(self):
         """
-        Test that satisfies_constraints works for a multi model
+        Test that satisfies_constraints works for multi-model
+        with a max style constraints
         """
-        config = self._create_multi_model_both_constraints()        
-        constraint_manager = ConstraintManager(config)
-
         # Constraints are:
         #  Model A: P99 Latency max of 50
         #  Model B: Throughput min of 100
+        constraint_manager = ConstraintManager(
+                config=self._create_multi_model_with_no_global_constraints())
 
         # Model A & B are both at boundaries
         rcm = self._construct_mm_rcm([{
@@ -198,6 +225,73 @@ class TestConstraintManager(trc.TestResultCollector):
         self.assertFalse(
             constraint_manager.satisfies_constraints(rcm))
 
+        # Constraints are:
+        #  Model A: P99 Latency max of 75
+        #  Model B: Throughput min of 125
+        constraint_manager = ConstraintManager(
+                config=self._create_multi_model_with_matching_global_constraints())
+
+        # Model A & B are both at boundaries
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 75,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 125
+        }], constraint_manager)
+        self.assertTrue(
+            constraint_manager.satisfies_constraints(rcm))
+
+        # Model A exceeds latency
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 78,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 125
+        }], constraint_manager)
+        self.assertFalse(
+            constraint_manager.satisfies_constraints(rcm))
+
+        # Constraints are:
+        #  Model A: P99 Latency max of 100
+        #  Model B: Throughput min of 150
+        constraint_manager = ConstraintManager(
+                config=self._create_multi_model_with_different_global_constrants())
+
+        # Model A & B are both at boundaries
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 100,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 150
+        }], constraint_manager)
+        self.assertTrue(
+            constraint_manager.satisfies_constraints(rcm))
+
+        # Model A exceeds latency
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 105,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 150
+        }], constraint_manager)
+        self.assertFalse(
+            constraint_manager.satisfies_constraints(rcm))
+
+    def test_multi_model_min_constraint_checks(self):
+        """
+        Test that satisfies_constraints works for multi-model
+        with a min style constraints
+        """
+        # Constraints are:
+        #  Model A: P99 Latency max of 50
+        #  Model B: Throughput min of 100
+        constraint_manager = ConstraintManager(
+                config=self._create_multi_model_with_no_global_constraints())
+
         # Model B doesn't have enough throughput
         rcm = self._construct_mm_rcm([{
             "perf_latency_p99": 50,
@@ -205,6 +299,40 @@ class TestConstraintManager(trc.TestResultCollector):
         }, {
             "perf_latency_p99": 0,
             "perf_throughput": 99
+        }], constraint_manager)
+        self.assertFalse(
+            constraint_manager.satisfies_constraints(rcm))
+
+        # Constraints are:
+        #  Model A: P99 Latency max of 75
+        #  Model B: Throughput min of 125
+        constraint_manager = ConstraintManager(
+                config=self._create_multi_model_with_matching_global_constraints())
+
+        # Model B doesn't have enough throughput
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 75,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 120
+        }], constraint_manager)
+        self.assertFalse(
+            constraint_manager.satisfies_constraints(rcm))
+
+        # Constraints are:
+        #  Model A: P99 Latency max of 100
+        #  Model B: Throughput min of 150
+        constraint_manager = ConstraintManager(
+                config=self._create_multi_model_with_different_global_constrants())
+
+        # Model B doesn't have enough throughput
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 100,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 140
         }], constraint_manager)
         self.assertFalse(
             constraint_manager.satisfies_constraints(rcm))
@@ -268,14 +396,14 @@ class TestConstraintManager(trc.TestResultCollector):
 
     def test_multi_model_failure_percentage(self):
         """
-        Test that failure percentage works for a multi model setup
+        Test that constraint_failure_percentage works for multi-model
+        with a max style constraints
         """
-        config = self._create_multi_model_both_constraints()
-        constraint_manager = ConstraintManager(config)
-
         # Constraints are:
         #  Model A: P99 Latency max of 50
         #  Model B: Throughput min of 100
+        constraint_manager = ConstraintManager(
+                config=self._create_multi_model_with_no_global_constraints())
 
         # Model A & B are both at boundaries
         rcm = self._construct_mm_rcm([{
@@ -312,6 +440,90 @@ class TestConstraintManager(trc.TestResultCollector):
         self.assertEqual(
             constraint_manager.constraint_failure_percentage(rcm),
             50)
+
+        # Constraints are:
+        #  Model A: P99 Latency max of 75
+        #  Model B: Throughput min of 125
+        constraint_manager = ConstraintManager(
+                config=self._create_multi_model_with_matching_global_constraints())
+
+        # Model A & B are both at boundaries
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 75,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 125
+        }], constraint_manager)
+        self.assertEqual(
+            constraint_manager.constraint_failure_percentage(rcm),
+            0)
+
+        # Model A exceeds latency, Model B misses on throughput - each by 25%
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 93.75,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 93.75
+        }], constraint_manager)
+        self.assertEqual(
+            constraint_manager.constraint_failure_percentage(rcm),
+            50)
+
+        # Model A exceeds latency by 30%, Model B misses on throughput by 20%
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 97.5,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 100
+        }], constraint_manager)
+        self.assertEqual(
+            constraint_manager.constraint_failure_percentage(rcm),
+            50)
+
+        # Constraints are:
+        #  Model A: P99 Latency max of 100
+        #  Model B: Throughput min of 150
+        constraint_manager = ConstraintManager(
+                config=self._create_multi_model_with_different_global_constrants())
+
+        # Model A & B are both at boundaries
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 100,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 150
+        }], constraint_manager)
+        self.assertEqual(
+            constraint_manager.constraint_failure_percentage(rcm),
+            0)
+
+        # Model A exceeds latency, Model B misses on throughput - each by 30%
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 130,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 105
+        }], constraint_manager)
+        self.assertEqual(
+            constraint_manager.constraint_failure_percentage(rcm),
+            60)
+
+        # Model A exceeds latency by 35%, Model B misses on throughput by 25%
+        rcm = self._construct_mm_rcm([{
+            "perf_latency_p99": 135,
+            "perf_throughput": 0
+        }, {
+            "perf_latency_p99": 0,
+            "perf_throughput": 112.5
+        }], constraint_manager)
+        self.assertEqual(
+            constraint_manager.constraint_failure_percentage(rcm),
+            60)
 
     def _create_single_model_no_constraints(self):
         args = self._create_args()
@@ -367,7 +579,7 @@ class TestConstraintManager(trc.TestResultCollector):
 
         return config
 
-    def _create_multi_model_both_constraints(self):
+    def _create_multi_model_with_no_global_constraints(self):
         args = self._create_args()
         yaml_str = ("""
             profile_models:
@@ -379,21 +591,48 @@ class TestConstraintManager(trc.TestResultCollector):
                 constraints:
                   perf_throughput:
                     min: 100
-              model_C:
+        """)
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
+        return config
+
+    def _create_multi_model_with_matching_global_constraints(self):
+        args = self._create_args()
+        yaml_str = ("""
+            profile_models:
+              model_A:
                 constraints:
-                  gpu_used_memory:
-                    max: 50
+                  perf_latency_p99:
+                    max: 75
+              model_B:
+                constraints:
                   perf_throughput:
-                    min: 50
-              model_D:
-                objectives:
-                  perf_throughput  
-                    
+                    min: 125
             constraints:
-                perf_latency_p99:
-                  max: 100
+                perf_throughput:
+                  min: 100
                 gpu_used_memory:
-                  max: 100
+                  max: 1000
+        """)
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
+        return config
+
+    def _create_multi_model_with_different_global_constrants(self):
+        args = self._create_args()
+        yaml_str = ("""
+            profile_models:
+              model_A:
+                constraints:
+                  perf_latency_p99:
+                    max: 100
+              model_B:
+                constraints:
+                  perf_throughput:
+                    min: 150
+            constraints:
+                gpu_used_memory:
+                  max: 2000
         """)
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
