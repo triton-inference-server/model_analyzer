@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+Copyright (c) 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ limitations under the License.
 
 **LATEST RELEASE: You are currently on the main branch which tracks
 under-development progress towards the next release. The latest
-release of the Triton Model Analyzer is 1.22.0 and is available on
+release of the Triton Model Analyzer is 1.24.0 and is available on
 branch
-[r22.12](https://github.com/triton-inference-server/model_analyzer/tree/r22.12).**
+[r23.01](https://github.com/triton-inference-server/model_analyzer/tree/r23.01).**
 
 Triton Model Analyzer is a CLI tool to help with better understanding of the
 compute and memory requirements of the

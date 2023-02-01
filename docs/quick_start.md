@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+Copyright (c) 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ git pull origin main
 **1. Pull the SDK container:**
 
 ```
-docker pull nvcr.io/nvidia/tritonserver:22.12-py3-sdk
+docker pull nvcr.io/nvidia/tritonserver:23.01-py3-sdk
 ```
 
 **2. Run the SDK container**
@@ -59,7 +59,7 @@ docker run -it --gpus all \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
       -v <path-to-output-model-repo>:<path-to-output-model-repo> \
-      --net=host nvcr.io/nvidia/tritonserver:22.12-py3-sdk
+      --net=host nvcr.io/nvidia/tritonserver:23.01-py3-sdk
 ```
 
 **Replacing** `<path-to-output-model-repo>` with the
