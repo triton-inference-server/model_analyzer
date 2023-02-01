@@ -1,4 +1,4 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ class ReportFactory:
             if not ReportFactory.WARNING_PRINTED:
                 ReportFactory.WARNING_PRINTED = True
                 logging.warning(
-                    f'Warning: html reports are being generated instead of pdf because'
+                    f'Warning: html reports are being generated instead of pdf because '
                     f'{ReportFactory.PDF_PACKAGE} is not installed. If you want pdf '
                     f'reports, run the following command and then rerun Model Analyzer: '
                     f'"sudo apt-get update && sudo apt-get install wkhtmltopdf"'
