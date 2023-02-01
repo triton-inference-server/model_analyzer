@@ -50,6 +50,7 @@ class Monitor(ABC):
         # Thread pool
         self._thread_pool = ThreadPool(processes=1)
         self._metrics = metrics
+        self.stop_timestamp = None
 
     def _monitoring_loop(self):
         frequency = self._frequency
@@ -113,7 +114,7 @@ class Monitor(ABC):
             raise TritonModelAnalyzerException(
                 "start_recording_metrics should be "
                 "called before stop_recording_metrics")
-
+        self.stop_timestamp = time.time_ns()
         self._thread_active = False
         self._thread.wait()
         self._thread = None

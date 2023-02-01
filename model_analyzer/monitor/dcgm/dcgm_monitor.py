@@ -106,11 +106,12 @@ class DCGMMonitor(Monitor):
                     for measurement in metrics[dcgm_field].values:
 
                         if measurement.value is not None:
-                            # DCGM timestamp is in nanoseconds
-                            records.append(
-                                metric_type(value=float(measurement.value),
-                                            device_uuid=gpu.device_uuid(),
-                                            timestamp=measurement.ts))
+                            if measurement.ts <= self.stop_timestamp:
+                                # DCGM timestamp is in nanoseconds
+                                records.append(
+                                    metric_type(value=float(measurement.value),
+                                                device_uuid=gpu.device_uuid(),
+                                                timestamp=measurement.ts))
 
         return records
 
