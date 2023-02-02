@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2023, NVIDIA CORPORATION. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -193,7 +193,7 @@ _This mode has the following limitations:_
 
 - Can only be run in `quick` search mode
 
-Ensemble models can be optimized using the Quick Search mode's hill climbing algorithm to search the ensemble sub-model's configuration spaces in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under 60 minutes (compared to the days it would take a brute force run to complete) for ensembles with up to 4 submodels.
+Ensemble models can be optimized using the Quick Search mode's hill climbing algorithm to search the ensemble sub-model's configuration spaces in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under one hour (compared to the days it would take a brute force run to complete) for ensembles with up to four submodels.
 
 After it has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the concurrency range before generation of the summary reports.
 
