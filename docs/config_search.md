@@ -187,6 +187,16 @@ Using the `--run-config-search-<min/max>...` CLI options you have the ability to
 
 Note: That by default quick search runs unbounded and ignores any default values for these settings
 
+## Ensemble Model Search
+
+_This mode has the following limitations:_
+
+- Can only be run in `quick` search mode
+
+Ensemble models can be optimized using the Quick Search mode's hill climbing algorithm to search the ensemble sub-model's configuration spaces in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under 60 minutes (compared to the days it would take a brute force run to complete) for ensembles with up to 4 submodels.
+
+After it has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the concurrency range before generation of the summary reports.
+
 ## Multi-Model Search Mode
 
 _This mode is in EARLY ACCESS and has the following limitations:_

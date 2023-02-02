@@ -43,8 +43,11 @@ Triton Inference Server.
   to test the model with different concurrency and batch sizes of requests. Using
   [Manual Config Search](docs/config_search.md#manual-brute-search), you can create manual sweeps for every parameter that can be specified in the model configuration.
 
-- [Multi-Model Search](docs/config_search.md#multi-model-search-mode): **EARLY ACCESS** - Model Analyzer can help you
+- [Multi-Model Search](docs/config_search.md#multi-model-search-mode): Model Analyzer can help you
   find the optimal settings when profiling multiple concurrent models, utilizing our Quick Search alogrithm
+
+- [Ensemble Model Search](docs/config_search.md#ensemble-model-search): Model Analyzer can help you find the optimal
+  settings when profiling an ensemble model, utilizing our Quick Search algorithm
 
 - [Detailed and summary reports](docs/report.md): Model Analyzer is able to generate
   summarized and detailed reports that can help you better understand the trade-offs
