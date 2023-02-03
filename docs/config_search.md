@@ -20,9 +20,6 @@ Model Analyzer's `profile` subcommand supports multiple modes when searching to 
 
 - [Brute](config_search.md#brute-search-mode) is the default, and will do a brute-force sweep of the cross product of all possible configurations
 - [Quick](config_search.md#quick-search-mode) will use heuristics to try to find the optimal configuration much quicker than brute, and can be enabled via `--run-config-search-mode quick`
-
-_This is mode is in **EARLY ACCESS** and is limited in scope:_
-
 - [Multi-model](config_search.md#multi-model-search-mode) will profile mutliple models to find the optimal configurations for all models while they are running concurrently. This feature is enabled via `--run-config-profile-models-concurrently-enable`
 
 ## Brute Search Mode
@@ -199,7 +196,7 @@ After it has found the best config(s), it will then sweep the top-N configuratio
 
 ## Multi-Model Search Mode
 
-_This mode is in EARLY ACCESS and has the following limitations:_
+_This mode has the following limitations:_
 
 - Can only be run in `quick` search mode
 - Does not support detailed reporting, only summary reports
