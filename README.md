@@ -47,7 +47,7 @@ Triton Inference Server.
   find the optimal settings when profiling multiple concurrent models, utilizing the Quick Search alogrithm
 
 - [Ensemble Model Search](docs/config_search.md#ensemble-model-search): Model Analyzer can help you find the optimal
-  settings when profiling an ensemble model, utilizing the Quick Search algorithm
+  settings when profiling a non-BLS ensemble model, utilizing the Quick Search algorithm
 
 - [Detailed and summary reports](docs/report.md): Model Analyzer is able to generate
   summarized and detailed reports that can help you better understand the trade-offs
