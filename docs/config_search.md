@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2020-2023, NVIDIA CORPORATION. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,9 +20,6 @@ Model Analyzer's `profile` subcommand supports multiple modes when searching to 
 
 - [Brute](config_search.md#brute-search-mode) is the default, and will do a brute-force sweep of the cross product of all possible configurations
 - [Quick](config_search.md#quick-search-mode) will use heuristics to try to find the optimal configuration much quicker than brute, and can be enabled via `--run-config-search-mode quick`
-
-_This is mode is in **EARLY ACCESS** and is limited in scope:_
-
 - [Multi-model](config_search.md#multi-model-search-mode) will profile mutliple models to find the optimal configurations for all models while they are running concurrently. This feature is enabled via `--run-config-profile-models-concurrently-enable`
 
 ## Brute Search Mode
@@ -187,9 +184,20 @@ Using the `--run-config-search-<min/max>...` CLI options you have the ability to
 
 Note: That by default quick search runs unbounded and ignores any default values for these settings
 
+## Ensemble Model Search
+
+_This mode has the following limitations:_
+
+- Can only be run in `quick` search mode
+- Only supports up to 3 sub-models
+
+Non-BLS Ensemble models can be optimized using the Quick Search mode's hill climbing algorithm to search the ensemble sub-model's configuration spaces in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under one hour (compared to the days it would take a brute force run to complete) for ensembles with up to three submodels.
+
+After it has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the concurrency range before generation of the summary reports.
+
 ## Multi-Model Search Mode
 
-_This mode is in EARLY ACCESS and has the following limitations:_
+_This mode has the following limitations:_
 
 - Can only be run in `quick` search mode
 - Does not support detailed reporting, only summary reports
