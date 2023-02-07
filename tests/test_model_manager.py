@@ -23,6 +23,8 @@ from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.model_manager import ModelManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 from unittest.mock import MagicMock
 from unittest.mock import patch
@@ -1018,6 +1020,45 @@ class TestModelManager(trc.TestResultCollector):
 
         self._test_model_manager(yaml_str, expected_ranges)
 
+    @patch('model_analyzer.triton.model.model_config.ModelConfig.is_ensemble',
+           return_value=True)
+    def test_ensemble_illegal_checks(self, *args):
+        yaml_str = ("""
+                  profile_models: ensemble_model, test_model
+                  """)
+
+        args = self._args.copy()
+        args.append('--run-config-search-mode')
+        args.append('brute')
+
+        self.mock_model_config = MockModelConfig(self._model_config_protobuf)
+        self.mock_model_config.start()
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
+        state_manager = AnalyzerStateManager(config, MagicMock())
+        metrics_manager = MetricsManagerSubclass(config, MagicMock(),
+                                                 MagicMock(), MagicMock(),
+                                                 MagicMock(), state_manager)
+        model_manager = ModelManager(config, MagicMock(), MagicMock(),
+                                     MagicMock(), metrics_manager, MagicMock(),
+                                     state_manager, MagicMock())
+
+        # Multiple model check
+        models = [
+            ConfigModelProfileSpec('ensemble_model'),
+            ConfigModelProfileSpec('test_model')
+        ]
+        with self.assertRaises(TritonModelAnalyzerException):
+            model_manager._check_for_ensemble_model_incompatability(models)
+
+        # RunConfigSearch check
+        models = [
+            ConfigModelProfileSpec('ensemble_model'),
+        ]
+        with self.assertRaises(TritonModelAnalyzerException):
+            model_manager._check_for_ensemble_model_incompatability(models)
+        self.mock_model_config.stop()
+
     def _test_model_manager(self, yaml_content, expected_ranges, args=None):
         """ 
         Test helper function that passes the given yaml_str into
@@ -1040,7 +1081,7 @@ class TestModelManager(trc.TestResultCollector):
                                                  MagicMock(), state_manager)
         model_manager = ModelManager(config, MagicMock(), MagicMock(),
                                      MagicMock(), metrics_manager, MagicMock(),
-                                     state_manager,  MagicMock())
+                                     state_manager, MagicMock())
 
         model_manager.run_models([config.profile_models[0]])
         self.mock_model_config.stop()

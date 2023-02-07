@@ -44,7 +44,10 @@ Triton Inference Server.
   [Manual Config Search](docs/config_search.md#manual-brute-search), you can create manual sweeps for every parameter that can be specified in the model configuration.
 
 - [Multi-Model Search](docs/config_search.md#multi-model-search-mode): **EARLY ACCESS** - Model Analyzer can help you
-  find the optimal settings when profiling multiple concurrent models, utilizing our Quick Search alogrithm
+  find the optimal settings when profiling multiple concurrent models, utilizing the Quick Search alogrithm
+
+- [Ensemble Model Search](docs/config_search.md#ensemble-model-search): Model Analyzer can help you find the optimal
+  settings when profiling a non-BLS ensemble model, utilizing the Quick Search algorithm
 
 - [Detailed and summary reports](docs/report.md): Model Analyzer is able to generate
   summarized and detailed reports that can help you better understand the trade-offs
@@ -57,7 +60,7 @@ Triton Inference Server.
 
 ## Examples and Tutorials
 
-See our [Quick Start](docs/quick_start.md) for a guide of how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
+See the [Quick Start](docs/quick_start.md) for a guide of how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
 
 ## Documentation
 

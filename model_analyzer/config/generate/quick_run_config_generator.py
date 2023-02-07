@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Union, Optional, Generator
+from typing import Dict, List, Union, Optional, Generator, Tuple
 
 from .config_generator_interface import ConfigGeneratorInterface
 
@@ -33,6 +33,8 @@ from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
+from sys import maxsize
+
 from model_analyzer.constants import LOGGER_NAME
 
 import logging
@@ -47,7 +49,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 models: List[ModelProfileSpec], client: TritonClient,
+                 models: List[ModelProfileSpec],
+                 ensemble_submodels: Dict[str, List[ModelProfileSpec]],
+                 client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
@@ -57,15 +61,20 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         config: ConfigCommandProfile
             Profile configuration information
         gpus: List of GPUDevices
-        models: List of ConfigModelProfileSpec
+        models: List of ModelProfileSpec
             List of models to profile
+        ensemble_submodels: Dict of List of ModelProfileSpec
+            Dict indexed by model name of ensemble submodel profiles
         client: TritonClient
         model_variant_name_manager: ModelVariantNameManager
         """
         self._search_config = search_config
         self._config = config
-        self._models = models
         self._client = client
+        self._gpus = gpus
+        self._models = models
+        self._ensemble_submodels = ensemble_submodels
+
         self._model_variant_name_manager = model_variant_name_manager
 
         self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(
@@ -272,93 +281,271 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _get_next_run_config(self) -> RunConfig:
         run_config = RunConfig(self._triton_env)
 
-        for i, _ in enumerate(self._models):
-            mrc = self._get_next_model_run_config(i)
+        model_index = 0
+        for model in self._models:
+            mrc, model_index = self._get_next_model_run_config(
+                model, model_index)
             run_config.add_model_run_config(mrc)
 
         return run_config
 
-    def _get_next_model_run_config(self, model_num: int) -> ModelRunConfig:
-        mc = self._get_next_model_config(model_num)
+    def _get_next_model_run_config(
+            self, model: ModelProfileSpec,
+            model_index: int) -> Tuple[ModelRunConfig, int]:
+        start_model_index = model_index
 
-        model_variant_name = mc.get_field('name')
-        pac = self._get_next_perf_analyzer_config(model_variant_name, model_num)
+        if model.model_name() in self._ensemble_submodels:
+            ensemble_subconfigs, end_model_index = self._get_next_ensemble_subconfigs(
+                model, start_model_index)
 
-        model_name = self._models[model_num].model_name()
-        return ModelRunConfig(model_name, mc, pac)
+            param_combo = self._get_next_ensemble_param_combo(
+                start_model_index, end_model_index)
 
-    def _get_next_model_config(self, model_num: int) -> ModelConfig:
+            model_config = self._get_next_ensemble_model_config(
+                model, ensemble_subconfigs, param_combo)
+
+            model_index = end_model_index
+        else:
+            model_config = self._get_next_model_config(model, model_index)
+            model_index = model_index + 1
+
+        model_variant_name = model_config.get_field('name')
+        perf_analyzer_config = self._get_next_perf_analyzer_config(
+            model_variant_name, model, start_model_index)
+
+        model_name = model.model_name()
+        model_run_config = ModelRunConfig(model_name, model_config,
+                                          perf_analyzer_config)
+
+        if model.model_name() in self._ensemble_submodels:
+            model_run_config.add_ensemble_submodel_configs(ensemble_subconfigs)
+
+        return (model_run_config, model_index)
+
+    def _get_next_ensemble_subconfigs(
+            self, model: ModelProfileSpec,
+            start_model_index: int) -> Tuple[List[ModelConfig], int]:
+        model_index = start_model_index
+        ensemble_subconfigs = []
+        for ensemble_submodel in self._ensemble_submodels[model.model_name()]:
+            ensemble_subconfigs.append(
+                self._get_next_model_config(ensemble_submodel, model_index))
+            model_index = model_index + 1
+
+        return (ensemble_subconfigs, model_index)
+
+    def _get_next_ensemble_param_combo(self, start_model_index: int,
+                                       end_model_index: int) -> dict:
+        """
+        For the ensemble model the only parameter we need to set 
+        is the max batch size; which will be the minimum batch size 
+        found in the submodel max batch sizes
+        """
+        min_val_of_max_batch_size = maxsize
+        for model_index in range(start_model_index, end_model_index):
+            dimension_values = self._get_coordinate_values(
+                self._coordinate_to_measure, model_index)
+
+            min_val_of_max_batch_size = int(
+                min([
+                    dimension_values.get("max_batch_size", 1),
+                    min_val_of_max_batch_size
+                ]))
+
+        param_combo = {'max_batch_size': min_val_of_max_batch_size}
+
+        return param_combo
+
+    def _get_next_ensemble_model_config(self, model: ModelProfileSpec,
+                                        ensemble_subconfigs: List[ModelConfig],
+                                        param_combo: dict) -> ModelConfig:
+        model_config = BaseModelConfigGenerator.make_ensemble_model_config(
+            model=model,
+            ensemble_submodel_configs=ensemble_subconfigs,
+            model_variant_name_manager=self._model_variant_name_manager,
+            param_combo=param_combo)
+
+        return model_config
+
+    def _get_next_model_config(self, model: ModelProfileSpec,
+                               dimension_index: int) -> ModelConfig:
         dimension_values = self._get_coordinate_values(
-            self._coordinate_to_measure, model_num)
+            self._coordinate_to_measure, dimension_index)
 
-        kind = "KIND_CPU" if self._models[model_num].cpu_only() else "KIND_GPU"
+        kind = "KIND_CPU" if model.cpu_only() else "KIND_GPU"
+        instance_count = self._calculate_instance_count(dimension_values)
+
         param_combo: dict = {
             'instance_group': [{
-                'count': dimension_values['instance_count'],
+                'count': instance_count,
                 'kind': kind,
             }]
         }
 
         if 'max_batch_size' in dimension_values:
-            param_combo['max_batch_size'] = dimension_values['max_batch_size']
+            param_combo['max_batch_size'] = self._calculate_model_batch_size(
+                dimension_values)
 
-        if self._models[model_num].supports_dynamic_batching():
+        if model.supports_dynamic_batching():
             param_combo['dynamic_batching'] = {}
 
         model_config = BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
-            model=self._models[model_num],
+            model=model,
             model_variant_name_manager=self._model_variant_name_manager)
         return model_config
 
     def _get_next_perf_analyzer_config(self, model_variant_name: str,
-                                       model_num: int) -> PerfAnalyzerConfig:
+                                       model: ModelProfileSpec,
+                                       model_index: int) -> PerfAnalyzerConfig:
         dimension_values = self._get_coordinate_values(
-            self._coordinate_to_measure, model_num)
+            self._coordinate_to_measure, model_index)
 
         perf_analyzer_config = PerfAnalyzerConfig()
 
         perf_analyzer_config.update_config_from_profile_config(
             model_variant_name, self._config)
 
-        model_batch_size = dimension_values.get("max_batch_size", 1)
-        instance_count = dimension_values.get("instance_count", 1)
-
-        concurrency = 2 * model_batch_size * instance_count
+        concurrency = self._calculate_concurrency(dimension_values)
 
         perf_config_params = {'batch-size': 1, 'concurrency-range': concurrency}
         perf_analyzer_config.update_config(perf_config_params)
 
-        perf_analyzer_config.update_config(
-            self._models[model_num].perf_analyzer_flags())
+        perf_analyzer_config.update_config(model.perf_analyzer_flags())
         return perf_analyzer_config
+
+    def _calculate_model_batch_size(
+            self, dimension_values: Dict[str, Union[int, float]]) -> int:
+        batch_size = int(dimension_values.get("max_batch_size", 1))
+
+        min_batch_size_is_set_by_config = self._config.get_config(
+        )['run_config_search_min_model_batch_size'].is_set_by_config()
+
+        max_batch_size_is_set_by_config = self._config.get_config(
+        )['run_config_search_max_model_batch_size'].is_set_by_config()
+
+        if min_batch_size_is_set_by_config and batch_size < self._config.run_config_search_min_model_batch_size:
+            return self._config.run_config_search_min_model_batch_size
+
+        if max_batch_size_is_set_by_config and batch_size > self._config.run_config_search_max_model_batch_size:
+            return self._config.run_config_search_max_model_batch_size
+
+        return batch_size
+
+    def _calculate_instance_count(
+            self, dimension_values: Dict[str, Union[int, float]]) -> int:
+        instance_count = int(dimension_values.get("instance_count", 1))
+
+        min_instance_count_is_set_by_config = self._config.get_config(
+        )['run_config_search_min_instance_count'].is_set_by_config()
+
+        max_instance_count_is_set_by_config = self._config.get_config(
+        )['run_config_search_max_instance_count'].is_set_by_config()
+
+        if min_instance_count_is_set_by_config and instance_count < self._config.run_config_search_min_instance_count:
+            return self._config.run_config_search_min_instance_count
+
+        if max_instance_count_is_set_by_config and instance_count > self._config.run_config_search_max_instance_count:
+            return self._config.run_config_search_max_instance_count
+
+        return instance_count
+
+    def _calculate_concurrency(
+            self, dimension_values: Dict[str, Union[int, float]]) -> int:
+        model_batch_size = self._calculate_model_batch_size(dimension_values)
+        instance_count = self._calculate_instance_count(dimension_values)
+        concurrency = 2 * model_batch_size * instance_count
+
+        min_concurrency_is_set_by_config = self._config.get_config(
+        )['run_config_search_min_concurrency'].is_set_by_config()
+
+        max_concurrency_is_set_by_config = self._config.get_config(
+        )['run_config_search_max_concurrency'].is_set_by_config()
+
+        if min_concurrency_is_set_by_config and concurrency < self._config.run_config_search_min_concurrency:
+            return self._config.run_config_search_min_concurrency
+
+        if max_concurrency_is_set_by_config and concurrency > self._config.run_config_search_max_concurrency:
+            return self._config.run_config_search_max_concurrency
+
+        return concurrency
 
     def _create_default_run_config(self) -> RunConfig:
         default_run_config = RunConfig(self._triton_env)
 
         for model in self._models:
-            default_model_config = BaseModelConfigGenerator.make_model_config(
-                param_combo={},
-                model=model,
-                model_variant_name_manager=self._model_variant_name_manager)
-
-            default_perf_analyzer_config = PerfAnalyzerConfig()
-            default_perf_analyzer_config.update_config_from_profile_config(
-                default_model_config.get_field('name'), self._config)
-
-            perf_config_params = {'batch-size': 1, 'concurrency-range': 1}
-            default_perf_analyzer_config.update_config(perf_config_params)
-
-            default_perf_analyzer_config.update_config(
-                model.perf_analyzer_flags())
-
-            default_model_run_config = ModelRunConfig(
-                model.model_name(), default_model_config,
-                default_perf_analyzer_config)
-
-            default_run_config.add_model_run_config(default_model_run_config)
+            if model.model_name() in self._ensemble_submodels:
+                default_run_config.add_model_run_config(
+                    self._create_default_ensemble_model_run_config(model))
+            else:
+                default_run_config.add_model_run_config(
+                    self._create_default_model_run_config(model))
 
         return default_run_config
+
+    def _create_default_ensemble_model_run_config(
+            self, model: ModelProfileSpec) -> ModelRunConfig:
+        default_submodel_configs = self._create_default_submodel_configs(model)
+
+        default_ensemble_model_config = BaseModelConfigGenerator.make_ensemble_model_config(
+            model=model,
+            ensemble_submodel_configs=default_submodel_configs,
+            model_variant_name_manager=self._model_variant_name_manager)
+
+        default_perf_analyzer_config = self._create_default_perf_analyzer_config(
+            model, default_ensemble_model_config)
+
+        default_model_run_config = ModelRunConfig(
+            model.model_name(), default_ensemble_model_config,
+            default_perf_analyzer_config)
+
+        default_model_run_config.add_ensemble_submodel_configs(
+            default_submodel_configs)
+
+        return default_model_run_config
+
+    def _create_default_submodel_configs(
+            self, model: ModelProfileSpec) -> List[ModelConfig]:
+        default_submodel_configs: List[ModelConfig] = []
+        for submodel in self._ensemble_submodels[model.model_name()]:
+            default_submodel_configs.append(
+                BaseModelConfigGenerator.make_model_config(
+                    param_combo={},
+                    model=submodel,
+                    model_variant_name_manager=self._model_variant_name_manager)
+            )
+
+        return default_submodel_configs
+
+    def _create_default_model_run_config(
+            self, model: ModelProfileSpec) -> ModelRunConfig:
+        default_model_config = BaseModelConfigGenerator.make_model_config(
+            param_combo={},
+            model=model,
+            model_variant_name_manager=self._model_variant_name_manager)
+
+        default_perf_analyzer_config = self._create_default_perf_analyzer_config(
+            model, default_model_config)
+
+        default_model_run_config = ModelRunConfig(model.model_name(),
+                                                  default_model_config,
+                                                  default_perf_analyzer_config)
+
+        return default_model_run_config
+
+    def _create_default_perf_analyzer_config(
+            self, model: ModelProfileSpec,
+            model_config: ModelConfig) -> PerfAnalyzerConfig:
+        default_perf_analyzer_config = PerfAnalyzerConfig()
+        default_perf_analyzer_config.update_config_from_profile_config(
+            model_config.get_field('name'), self._config)
+
+        perf_config_params = {'batch-size': 1, 'concurrency-range': 1}
+        default_perf_analyzer_config.update_config(perf_config_params)
+
+        default_perf_analyzer_config.update_config(model.perf_analyzer_flags())
+
+        return default_perf_analyzer_config
 
     def _print_debug_logs(
             self, measurements: List[Union[RunConfigMeasurement,

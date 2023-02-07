@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from copy import deepcopy
 
 from numba import cuda
@@ -25,6 +25,10 @@ from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
 from model_analyzer.triton.server.server_factory import TritonServerFactory
+from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.device.gpu_device import GPUDevice
 
 
 class ModelConfig:
@@ -245,6 +249,26 @@ class ModelConfig:
 
         return ModelConfig.create_from_dictionary(model_config_dict)
 
+    @staticmethod
+    def create_from_profile_spec(spec: ConfigModelProfileSpec,
+                                 config: ConfigCommandProfile,
+                                 client: TritonClient,
+                                 gpus: List[GPUDevice]) -> "ModelConfig":
+        """
+        Creates the model config from a ModelProfileSpec, plus assoc. collateral 
+        """
+
+        model_config_dict = ModelConfig.create_model_config_dict(
+            config=config,
+            client=client,
+            gpus=gpus,
+            model_repository=config.model_repository,
+            model_name=spec.model_name())
+
+        model_config = ModelConfig.create_from_dictionary(model_config_dict)
+
+        return model_config
+
     def set_cpu_only(self, cpu_only):
         """
         Parameters
@@ -258,13 +282,69 @@ class ModelConfig:
 
     def cpu_only(self):
         """
-        Return
+        Returns
         -------
         bool
             Whether the model should be run on CPU only
         """
 
         return self._cpu_only
+
+    def is_ensemble(self) -> bool:
+        """
+        Returns
+        -------
+        bool
+           True if this is an ensemble model
+        """
+
+        return getattr(self._model_config, "platform") == "ensemble"
+
+    def get_ensemble_submodels(self) -> Optional[List[str]]:
+        """
+        Returns
+        -------
+            List[str]: Sub-model names
+        """
+
+        if not self.is_ensemble():
+            raise TritonModelAnalyzerException(
+                "Cannot find submodels. Model platform is not ensemble.")
+
+        try:
+            submodels = [
+                model['modelName']
+                for model in self.to_dict()['ensembleScheduling']['step']
+            ]
+        except:
+            raise TritonModelAnalyzerException(
+                "Cannot find submodels. Ensemble Scheduling and/or step is not present in config protobuf."
+            )
+
+        return submodels
+
+    def set_submodel_variant_name(self, submodel_name: str,
+                                  variant_name: str) -> None:
+        """
+        Replaces the Ensembles submodel's name with the variant name
+        """
+
+        if not self.is_ensemble():
+            raise TritonModelAnalyzerException(
+                "Cannot find submodels. Model platform is not ensemble.")
+
+        model_config_dict = self.to_dict()
+
+        try:
+            for submodel in model_config_dict['ensembleScheduling']['step']:
+                if submodel['modelName'] == submodel_name:
+                    submodel['modelName'] = variant_name
+        except:
+            raise TritonModelAnalyzerException(
+                "Cannot find submodels. Ensemble Scheduling and/or step is not present in config protobuf."
+            )
+
+        self._model_config = self.from_dict(model_config_dict)._model_config
 
     def write_config_to_file(self, model_path, src_model_path,
                              first_variant_model_path):

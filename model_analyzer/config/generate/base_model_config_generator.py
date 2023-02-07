@@ -162,35 +162,18 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         """
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config
-
+        
         Parameters:
         -----------
         param_combo: dict
             dict of key:value pairs to apply to the model config
-        config: ModelAnalyzerConfig
-        client: TritonClient
-        gpus: List of GPUDevices
-        model: dict
-            dict of model properties
-        model_repository: str
-            path to the model repository on the file system
+        model: ModelProfileSpec
         model_variant_name_manager: ModelVariantNameManager
         """
+        logger_str: List[str] = []
         model_name = model.model_name()
-
-        model_config_dict = model.get_default_config()
-
-        logger_str = []
-        if param_combo is not None:
-            for key, value in param_combo.items():
-                if value is not None:
-                    BaseModelConfigGenerator._apply_value_to_dict(
-                        key, value, model_config_dict)
-
-                    if value == {}:
-                        logger_str.append(f"  Enabling {key}")
-                    else:
-                        logger_str.append(f"  Setting {key} to {value}")
+        model_config_dict = BaseModelConfigGenerator._apply_param_combo_to_model(
+            model, param_combo, logger_str)
 
         (variant_found,
          variant_name) = model_variant_name_manager.get_model_variant_name(
@@ -212,6 +195,74 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
         return model_config
 
+    @staticmethod
+    def make_ensemble_model_config(
+            model: ModelProfileSpec,
+            ensemble_submodel_configs: List[ModelConfig],
+            model_variant_name_manager: ModelVariantNameManager,
+            param_combo: Dict = {}) -> ModelConfig:
+        """
+        Loads the ensemble model spec from the model repository, and then mutates
+        the names to match the ensemble submodels
+        
+        Parameters
+        ----------
+        model: ModelProfileSpec
+            The top-level ensemble model spec
+        ensemble_submodel_configs: List of ModelConfigs
+            The list of submodel ModelConfigs 
+        model_variant_name_manager: ModelVariantNameManager
+
+        """
+        logger_str: List[str] = []
+        model_name = model.model_name()
+        model_config_dict = BaseModelConfigGenerator._apply_param_combo_to_model(
+            model, param_combo, logger_str)
+
+        ensemble_config_dicts = [
+            submodel_config.to_dict()
+            for submodel_config in ensemble_submodel_configs
+        ]
+        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+            ensemble_config_dicts)
+
+        (variant_found, variant_name
+        ) = model_variant_name_manager.get_ensemble_model_variant_name(
+            model_name, ensemble_key)
+
+        model_config_dict['name'] = variant_name
+        model_config = ModelConfig.create_from_dictionary(model_config_dict)
+
+        for submodel_config in ensemble_submodel_configs:
+            variant_name = submodel_config.get_field("name")
+            submodel_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                variant_name)
+
+            model_config.set_submodel_variant_name(submodel_name=submodel_name,
+                                                   variant_name=variant_name)
+
+        return model_config
+
+    @staticmethod
+    def _apply_param_combo_to_model(model: ModelProfileSpec, param_combo: dict,
+                                    logger_str: List[str]) -> dict:
+        """
+        Given a model, apply any parameters and return a model config dictionary
+        """
+        model_config_dict = model.get_default_config()
+        if param_combo is not None:
+            for key, value in param_combo.items():
+                if value is not None:
+                    BaseModelConfigGenerator._apply_value_to_dict(
+                        key, value, model_config_dict)
+
+                    if value == {}:
+                        logger_str.append(f"  Enabling {key}")
+                    else:
+                        logger_str.append(f"  Setting {key} to {value}")
+
+        return model_config_dict
+
     def _reset_max_batch_size(self) -> None:
         self._max_batch_size_warning_printed = False
         self._curr_max_batch_size_throughputs = []
@@ -222,6 +273,14 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
                 "No longer increasing max_batch_size because throughput has plateaued"
             )
             self._max_batch_size_warning_printed = True
+
+    @staticmethod
+    def extract_model_name_from_variant_name(variant_name: str) -> str:
+        """
+        Removes '_config_#/default' from the variant name and returns
+        the model name, eg. model_name_config_10 -> model_name
+        """
+        return variant_name[:variant_name.find("_config_")]
 
     @staticmethod
     def _apply_value_to_dict(key: Any, value: Any, dict_in: Dict) -> None:
