@@ -170,11 +170,15 @@ class ModelManager:
                         f'\nProfiling of multiple models is not supported for ensemble models'
                     )
 
-                if self._config.run_config_search_mode != 'quick':
-                    raise TritonModelAnalyzerException(
-                        f'\nBrute search mode is not supported for ensemble models'
-                        '\nPlease use quick search mode (--run-config-search-mode quick)'
-                    )
+                if self._config.run_config_search_mode == 'brute':
+                    if self._config.get_config(
+                    )['run_config_search_mode'].is_set_by_config():
+                        raise TritonModelAnalyzerException(
+                            f'\nBrute search mode is not supported for ensemble models'
+                            '\nPlease use quick search mode (--run-config-search-mode quick)'
+                        )
+                    else:
+                        self._config.run_config_search_mode = 'quick'
 
     def _init_state(self):
         """
