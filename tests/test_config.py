@@ -1775,8 +1775,7 @@ profile_models:
         yaml_content = ''
 
         # Tests the case where no search mode is specified (default is brute)
-        with self.assertRaises(TritonModelAnalyzerException):
-            self._evaluate_config(args, yaml_content, subcommand='profile')
+        self._evaluate_config(args, yaml_content, subcommand='profile')
 
         # Brute should fail
         new_args = deepcopy(args)

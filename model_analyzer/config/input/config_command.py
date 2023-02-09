@@ -174,10 +174,10 @@ class ConfigCommand:
             self, args: Namespace, yaml_config: Optional[Dict[str,
                                                               List]]) -> None:
         if self._get_config_value('run_config_search_mode', args,
-                                  yaml_config) != 'quick':
+                                  yaml_config) == 'brute':
             raise TritonModelAnalyzerException(
-                f'\nConcurrent profiling of models is only supported in quick search mode.'
-                '\nPlease use quick search mode or disable concurrent model profiling.'
+                f'\nConcurrent profiling of models not supported in brute search mode.'
+                '\nPlease use quick search mode (`--run-config-search-mode quick`) or disable concurrent model profiling.'
             )
 
     def _check_for_quick_search_incompatability(
