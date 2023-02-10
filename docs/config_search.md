@@ -18,14 +18,16 @@ limitations under the License.
 
 Model Analyzer's `profile` subcommand supports multiple modes when searching to find the best model configuration.
 
-- [Brute](config_search.md#brute-search-mode) is the default, and will do a brute-force sweep of the cross product of all possible configurations
-- [Quick](config_search.md#quick-search-mode) will use heuristics to try to find the optimal configuration much quicker than brute, and can be enabled via `--run-config-search-mode quick`
+- [Brute](config_search.md#brute-search-mode) is the default when profiling non-ensemble models or when profling mulitple models sequentially, and will do a brute-force sweep of the cross product of all possible configurations
+- [Quick](config_search.md#quick-search-mode) is the default for ensemble models or when profiling multiple models concurrenty, and will use heuristics to try to find the optimal configuration much quicker than brute, and can be enabled via `--run-config-search-mode quick`
 - [Multi-model](config_search.md#multi-model-search-mode) will profile mutliple models to find the optimal configurations for all models while they are running concurrently. This feature is enabled via `--run-config-profile-models-concurrently-enable`
 
 ## Brute Search Mode
 
 Model Analyzer's brute search mode will do a brute-force sweep of the cross product of all possible configurations. You can [Manually](config_search.md#manual-brute-search) provide `model_config_parameters` to tell Model Analyzer what to sweep over, or you can
 let it [Automatically](config_search.md#automatic-brute-search) sweep through configurations expected to have the highest impact on performance for Triton models.
+
+This search mode is the default when profiling non-ensemble models sequentially.
 
 ### Automatic Brute Search
 
@@ -171,6 +173,8 @@ manual sweep:
 ## Quick Search Mode
 
 Quick search can be enabled by adding the parameter `--run-config-search-mode quick` to the CLI.
+
+This search mode is the default for ensemble models or when profiling concurrently.
 
 It uses a hill climbing algorithm to search the configuration space, looking for
 the maximal objective value within the specified constraints. In the majority of cases
