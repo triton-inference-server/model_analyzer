@@ -92,7 +92,7 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
         self.report_manager.create_summaries()
 
         expected_summary_sentence = 'In 68 measurements across 37 configurations, <strong>ensemble_python_resnet50_config_28</strong> ' \
-        'is <strong>285%</strong> better than the default configuration at meeting the objectives, ' \
+        'is <strong>285%</strong> better than the default configuration at maximizing throughput, ' \
         'under the given constraints, on GPU(s) TITAN RTX.<BR><BR><strong>ensemble_python_resnet50_config_28</strong> is comprised of the following submodels: '\
         '<UL> <LI> <strong>preprocess_config_9</strong>: ' \
         '4 GPU instances with a max batch size of 8 on platform python </LI><LI> <strong>resnet50_trt_config_8</strong>: ' \
@@ -134,7 +134,7 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
         self.report_manager.create_summaries()
 
         expected_summary_sentence = 'In 68 measurements across 37 configurations, <strong>ensemble_python_resnet50_config_28</strong> ' \
-        'is <strong>285%</strong> better than the default configuration at meeting the objectives, ' \
+        'is <strong>285%</strong> better than the default configuration at maximizing throughput, ' \
         'under the given constraints.<BR><BR><strong>ensemble_python_resnet50_config_28</strong> is comprised of the following submodels: ' \
         '<UL> <LI> <strong>preprocess_config_9</strong>: ' \
         '4 GPU instances with a max batch size of 8 on platform python </LI><LI> <strong>resnet50_trt_config_8</strong>: ' \
