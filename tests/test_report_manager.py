@@ -252,18 +252,23 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 gpu_name="TITAN RTX",
                 cpu_only=cpu_only)
 
+        if mode == 'online':
+            objective = "maximizing throughput"
+        else:
+            objective = "minimizing latency"
+
         if cpu_only:
             expected_summary_sentence = (
                 "In 10 measurements across 3 configurations, "
                 "<strong>test_model_config_10</strong> is <strong>100%</strong> better than the default configuration "
-                "at meeting the objectives, under the given constraints.<UL><LI> "
+                f"at {objective}, under the given constraints.<UL><LI> "
                 "<strong>test_model_config_10</strong>: 1 GPU instance with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>")
         else:
             expected_summary_sentence = (
                 "In 10 measurements across 3 configurations, "
                 "<strong>test_model_config_10</strong> is <strong>100%</strong> better than the default configuration "
-                "at meeting the objectives, under the given constraints, on GPU(s) TITAN RTX.<UL><LI> "
+                f"at {objective}, under the given constraints, on GPU(s) TITAN RTX.<UL><LI> "
                 "<strong>test_model_config_10</strong>: 1 GPU instance with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>")
 

@@ -551,7 +551,13 @@ class ReportManager:
             objective_gain = 0
 
         if (objective_gain > 0):
-            objective_phrase = f"is <strong>{objective_gain}%</strong> better than the default configuration at meeting the objectives"
+            if self._config.get_config()['objectives'].is_set_by_config():
+                objective_phrase = f"is <strong>{objective_gain}%</strong> better than the default configuration at meeting the objectives"
+            else:
+                if self._mode == 'online':
+                    objective_phrase = f"is <strong>{objective_gain}%</strong> better than the default configuration at maximizing throughput"
+                else:
+                    objective_phrase = f"is <strong>{objective_gain}%</strong> better than the default configuration at minimizing latency"
         else:
             objective_phrase = "provides no gain over the default configuration"
 
