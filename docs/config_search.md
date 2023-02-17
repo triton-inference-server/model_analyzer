@@ -40,22 +40,22 @@ Model Analyzer's `profile` subcommand supports multiple modes when searching to 
 
 ---
 
-<strong>Default search mode when profiling non-ensemble models sequentially</strong>
+**Default search mode when profiling non-ensemble models sequentially**
 
 Model Analyzer's brute search mode will do a brute-force sweep of the cross product of all possible configurations. <br>
 It has two modes:
 
 - [Automatic](config_search.md#automatic-brute-search)
-  - <strong>No</strong> model config parameters are specified
+  - **No** model config parameters are specified
 - [Manual](config_search.md#manual-brute-search)
-  - <strong>Any</strong> model config parameters are specified
+  - **Any** model config parameters are specified
   - `--run-config-search-disable` option is specified
 
 ---
 
 ## Automatic Brute Search
 
-<strong>Default brute search mode when no model config parameters are specified</strong>
+**Default brute search mode when no model config parameters are specified**
 
 The parameters that are automatically searched are
 [model maximum batch size](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#maximum-batch-size),
@@ -116,9 +116,9 @@ _This will perform an Automatic Brute Search with instance counts: 3-5, batch si
 
 ---
 
-### <strong>Interaction with Remote Triton Launch Mode</strong>
+### **Interaction with Remote Triton Launch Mode**
 
-When the triton launch mode is remote, _<strong>only concurrency values can be swept._</strong><br>
+When the triton launch mode is remote, _\*\*only concurrency values can be swept._\*\*<br>
 
 Model Analyzer will ignore any model config parameters because we have no way of accessing and modifying the model repository of the remote Triton Server.
 
@@ -126,7 +126,7 @@ Model Analyzer will ignore any model config parameters because we have no way of
 
 ## Manual Brute Search
 
-<strong>Default brute search mode when any model config parameters or parameters are specified</strong>
+**Default brute search mode when any model config parameters or parameters are specified**
 
 Using Manual Brute Search, you can create custom sweeps for any parameter that can be specified in the model configuration. There are two ways this mode is enabled when doing a brute search:
 
@@ -138,8 +138,8 @@ Using Manual Brute Search, you can create custom sweeps for any parameter that c
 - `--run-config-search-disable` is specified:
   - You must manually specify the batch sizes, instance counts, and request concurrencies you want MA to sweep
 
-_<strong>Note</strong>: Model Analyzer only checks the syntax of the `model config parameters` and cannot guarantee that the configuration that is generated is loadable by Triton. For a complete list of parameters allowed under model_config_parameters, refer to the [Triton Model
-Configuration](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md). <br><strong>It is your responsibility to ensure the sweep configuration specified works with your model.</strong>_
+_**Note**: Model Analyzer only checks the syntax of the `model config parameters` and cannot guarantee that the configuration that is generated is loadable by Triton. For a complete list of parameters allowed under model_config_parameters, refer to the [Triton Model
+Configuration](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md). <br>**It is your responsibility to ensure the sweep configuration specified works with your model.**_
 
 ---
 
@@ -188,7 +188,7 @@ profile_models:
 
 ---
 
-### <strong>Examples of Additional Model Config Parameters</strong>
+### **Examples of Additional Model Config Parameters**
 
 In this section, we describe some of the parameters that might be of interest for
 manual sweep:
@@ -201,7 +201,7 @@ manual sweep:
 
 ## Quick Search Mode
 
-<strong>Default search mode when profiling ensemble models or multiple models concurrently</strong>
+**Default search mode when profiling ensemble models or multiple models concurrently**
 
 This mode uses a hill climbing algorithm to search the configuration space, looking for
 the maximal objective value within the specified constraints. In the majority of cases
@@ -223,7 +223,7 @@ profile_models:
 
 ---
 
-### <strong>Limiting Batch Size, Instance Count, and Client Concurrency</strong>
+### **Limiting Batch Size, Instance Count, and Client Concurrency**
 
 Using the `--run-config-search-<min/max>...` config options you have the ability to clamp the algorithm's upper or lower bounds for the model's batch size and instance count, as well as the client's request concurrency.
 
@@ -289,7 +289,7 @@ profile_models:
 
 ---
 
-### <strong>Model Weighting</strong>
+### **Model Weighting**
 
 In additon to setting a model's objectives or constraints, in multi-model search mode, you have the ability to set a model's weighting. By default each model is set for equal weighting (value of 1), but in the YAML you can specify `weighting: <int>` which will bias that model's objectives when evaluating for an optimal result.
 
