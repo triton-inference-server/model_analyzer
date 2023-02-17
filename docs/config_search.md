@@ -14,9 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
+# Table of Contents
+
+- [Search Modes](#search-modes)
+- [Default Search Mode](#default-search-mode)
+- [Brute Search Mode](#brute-search-mode)
+  - [Automatic Brute Search](#automatic-brute-search)
+  - [Manual Brute Search](#manual-brute-search)
+- [Quick Search Mode](#quick-search-mode)
+- [Ensemble Model Search](#ensemble-model-search)
+- [Multi-Model Search Mode](#multi-model-search-mode)
+
+<br>
+
 # Model Config Search
 
-Model Analyzer's `profile` subcommand supports multiple modes when searching to find the best model configuration.
+## Search Modes
+
+Model Analyzer's `profile` subcommand supports multiple modes when searching to find the best model configuration:
 
 - [Brute Force Search](config_search.md#brute-search-mode)
   - **Search type:** Brute-force sweep of the cross product of all possible configurations
@@ -30,11 +45,24 @@ Model Analyzer's `profile` subcommand supports multiple modes when searching to 
     - Single ensemble models
     - Multiple models being profiled concurrently
   - **Command:** `--run-config-search-mode quick`
+
+---
+
+## Default Search Mode
+
+Model Analyzer's default search mode depends on the type of model and if you are profiling models concurrently (in the case of multiple models):
+
+- [Sequential (single or multi-model) Search](config_search.md#brute-search-mode)
+  - **Default Search type:** [Brute Force Search](config_search.md#brute-search-mode)
+  - **Command:** N/A
 - [Concurrent / Multi-model Search](config_search.md#multi-model-search-mode)
-  - **Search type:** Heuristic concurrent sweep of all models' search spaces to find an optimal configuration for all models
-  - **Default for:**
-    - None
+  - **Default Search type:** [Quick Search](config_search.md#quick-search-mode)
   - **Command:** `--run-config-profile-models-concurrently-enable`
+- [Ensemble Model Search](config_search.md#ensemble-model-search):
+  - **Default Search type:** [Quick Search](config_search.md#quick-search-mode)
+  - **Command:** N/A
+
+---
 
 ## Brute Search Mode
 
