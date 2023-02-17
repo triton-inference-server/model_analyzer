@@ -251,7 +251,7 @@ profile_models:
 
 Using the `--run-config-search-<min/max>...` config options you have the ability to clamp the algorithm's upper or lower bounds for the model's batch size and instance count, as well as the client's request concurrency.
 
-_Note: That by default quick search runs unbounded and ignores any default values for these settings_
+_Note: By default, quick search runs unbounded and ignores any default values for these settings_
 
 ---
 
