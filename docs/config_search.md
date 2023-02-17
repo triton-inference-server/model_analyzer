@@ -19,26 +19,24 @@ limitations under the License.
 Model Analyzer's `profile` subcommand supports multiple modes when searching to find the best model configuration.
 
 - [Brute Force Search](config_search.md#brute-search-mode)
-  - `Search type:` Brute-force sweep of the cross product of all possible configurations
-  - `Default for:`
+  - **Search type:** Brute-force sweep of the cross product of all possible configurations
+  - **Default for:**
     - Single non-ensemble models
     - Multiple models being profiled sequentially
-  - `Command:` `--run-config-search-mode brute`
+  - **Command:** `--run-config-search-mode brute`
 - [Quick Search](config_search.md#quick-search-mode)
-  - `Search type:` Heuristic sweep using a hill-climbing algorithm to find an optimal configuration
-  - `Default for:`
+  - **Search type:** Heuristic sweep using a hill-climbing algorithm to find an optimal configuration
+  - **Default for:**
     - Single ensemble models
-    - Multiple models beging profiled concurrently
-  - `Command:` `--run-config-search-mode quick`
+    - Multiple models being profiled concurrently
+  - **Command:** `--run-config-search-mode quick`
 - [Concurrent / Multi-model Search](config_search.md#multi-model-search-mode)
-  - `Search type:` Heuristic concurrent sweep of all models' search spaces to find an optimal configuration for all models
-  - `Default for: `
+  - **Search type:** Heuristic concurrent sweep of all models' search spaces to find an optimal configuration for all models
+  - **Default for:**
     - None
-  - `Command:` `--run-config-profile-models-concurrently-enable`
+  - **Command:** `--run-config-profile-models-concurrently-enable`
 
 ## Brute Search Mode
-
----
 
 **Default search mode when profiling non-ensemble models sequentially**
 
@@ -72,8 +70,6 @@ profile_models:
 ```
 
 You can also modify the minimum/maximum values that the automatic search space will iterate through:
-
----
 
 ### [Instance Group Search Space](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#instance-groups)
 
@@ -169,7 +165,7 @@ profile_models:
 
 _This example shows how a value other than instance, batch size or concurrency can be swept, and will sweep through eight configs:<br>_
 
-- \[2 _ `max_batch_size`] \* \[2 _ `max_queue_delay_microseconds`] \* \[2 \* `instance_group`].
+- \[2 \* `max_batch_size`] \* \[2 \* `max_queue_delay_microseconds`] \* \[2 \* `instance_group`].
 
 ```yaml
 model_repository: /path/to/model/repository/
