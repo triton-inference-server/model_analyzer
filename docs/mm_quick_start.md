@@ -91,18 +91,15 @@ model-analyzer profile \
 
 **Important:** If you already ran this earlier in the container, you can use the `--override-output-model-repository` option to overwrite the earlier results.
 
-**Important**: All models must be in the same directory
-
-**Important:** The checkpoint directory should be removed between consecutive runs of
-the `model-analyzer profile` command.<br><br>
+**Important**: All models must be in the same repository
 
 ---
 
-The `--run-config-profile-models-concurrently-enable` option tells MA to load and optimize both models concurrently using the [Quick Search](config_search.md#quick-search-mode) algortihm.
+The `--run-config-profile-models-concurrently-enable` option tells Model Analyzer to load and optimize both models concurrently using the [Quick Search](config_search.md#quick-search-mode) algorithm.
 
-This will profile both models concurrently using the quick search algorithm to find the maximal throughput gain for both models by iterating across instance counts and batch sizes. By default, the algorithm is attempting to find the best balance of gains for each model, not the best combined total throughput.
+This will profile both models concurrently finding the maximal throughput gain for both models by iterating across instance counts and batch sizes. By default, the algorithm is attempting to find the best balance of gains for each model, not the best combined total throughput.
 
-After the quick search completes, MA will then sweep concurrencies for the top three configurations and then create a summary report and CSV outputs.
+After the quick search completes, Model Analyzer will then sweep concurrencies for the top three configurations and then create a summary report and CSV outputs.
 
 ---
 
@@ -113,7 +110,7 @@ Here is an example result summary, run on a TITAN RTX GPU:
 
 You will note that the top model configuration has a lower total combined throughput than either the 2nd or 3rd configurations. However, it does a better job at increasing the total percentage throughput gain versus the other configurations.
 
-For example, comparing the top config (42,24) to the third best (37,19), you will see that while the gain in `add_sub` throughput is large (~1600 infer/sec) it is only a 3.5% increase. However, this is offset by a decrease in `resnet50_libtorch` throughput (~75 infer/sec), which represents an 8% decrease in throughput. Therefore, the (42,24) is deemed to be a better configuration by MA.
+For example, comparing the top config `[add_sub_config_42, resnet50_libtorch_config_24]` to the third best `[add_sub_config_37, resnet50_libtorch_config_19]`, you will see that while the gain in `add_sub` throughput is large (~1600 infer/sec) it is only a 3.5% increase. However, this is offset by a decrease in `resnet50_libtorch` throughput (~75 infer/sec), which represents an 8% decrease in throughput. Therefore, the `[add_sub_config_42, resnet_libtorch_config_24]` is deemed to be a better configuration by Model Analyzer.
 
 ---
 
@@ -178,4 +175,4 @@ Here is an example result summary with the above constraints, run on a TITAN RTX
 
 ---
 
-You will observe that the top configuration here has a higher total combined throughput than the unconstrained run, however the total percentage gain is lower due to the large decrease in throuhgput for the `resnet50_libtorch` model.
+You will observe that the top configuration here has a higher total combined throughput than the unconstrained run, however the total percentage gain is lower due to the large decrease in throughput for the `resnet50_libtorch` model.
