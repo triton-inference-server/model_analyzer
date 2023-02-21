@@ -282,6 +282,8 @@ Ensemble models can be optimized using the Quick Search mode's hill climbing alg
 
 After MA has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the concurrency range before generation of the summary reports.
 
+---
+
 ## Multi-Model Search Mode
 
 _This mode has the following limitations:_
