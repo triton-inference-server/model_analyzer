@@ -59,7 +59,7 @@ For each `instance_group`, Model Analyzer will sweep values 1 through 128 increa
 will be enabled for all model configs generated using automatic search.
 
 For each model config that is generated in automatic search, Model Analyzer will gather data for
-[`concurrency`](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/perf_analyzer.md#request-concurrency)
+[`concurrency`](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/README.md#request-concurrency)
 values 1 through 1024 increased exponentially (i.e. 1, 2, 4, 8, ...). The maximum value can be configured
 using the `run_config_search_max_concurrency` key in the Model Analyzer Config.
 

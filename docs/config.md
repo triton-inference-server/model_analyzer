@@ -613,7 +613,7 @@ but profile `model_2` using GPU.
 This field allows the user to pass `perf_analyzer` any CLI options it needs to
 execute properly. Refer to [the
 `perf_analyzer`
-docs](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/perf_analyzer.md)
+docs](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/README.md)
 for more information on these options.
 
 #### Global options to apply to all instances of Perf Analyzer
@@ -668,7 +668,7 @@ perf_analyzer_flags:
 If a model configuration has variable-sized dimensions in the inputs section,
 then the `shape` option of the `perf_analyzer_flags` option must be specified.
 More information about this can be found in the
-[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/perf_analyzer.md#input-data).
+[Perf Analyzer documentation](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/README.md#input-data).
 
 #### SSL Support:
 
@@ -697,7 +697,7 @@ profile_models:
 ```
 
 More information about this can be found in the
-[Perf Analyzer documentation](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/perf_analyzer.md#ssltls-support).
+[Perf Analyzer documentation](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/README.md#ssltls-support).
 
 #### Important Notes:
 
