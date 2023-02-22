@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-# Quick Start
+# Single-Model Quick Start
 
 The steps below will guide you through using Model Analyzer in Docker mode to profile and analyze a simple PyTorch model: add_sub.
 
@@ -143,7 +143,7 @@ $HOME
                               .                |--- result_summary.pdf
 ```
 
-## `Step 5:` Generate a Detailed Report
+## `Step 4:` Generate a Detailed Report
 
 ---
 

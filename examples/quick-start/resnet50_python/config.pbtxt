@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,34 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-name: "add_sub"
-platform: "pytorch_libtorch"
-max_batch_size: 8
-
-input [
-  {
-    name: "INPUT__0"
+#
+name: "resnet50_python"
+backend: "python"
+max_batch_size: 128
+input {
+    name: "INPUT0"
     data_type: TYPE_FP32
-    dims: [ 16 ]
-  },
-  {
-    name: "INPUT__1"
-    data_type: TYPE_FP32
-    dims: [ 16 ]
+    format: FORMAT_NCHW
+    dims: [ 3, 224, 224 ]
   }
-]
-output [
-  {
-    name: "OUTPUT__0"
+output {
+    name: "OUTPUT0"
     data_type: TYPE_FP32
-    dims: [ 16 ]
-    label_filename: "output0_labels.txt"
-  },
-  {
-    name: "OUTPUT__1"
-    data_type: TYPE_FP32
-    dims: [ 16 ]
+    dims: [ 1000 ]
   }
-]
-instance_group [ { kind: KIND_GPU }]

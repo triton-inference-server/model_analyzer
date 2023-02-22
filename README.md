@@ -60,7 +60,9 @@ Triton Inference Server.
 
 ## Examples and Tutorials
 
-See the [Quick Start](docs/quick_start.md) for a guide of how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
+See the [Single-Model Quick Start](docs/quick_start.md) for a guide of how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
+
+See the [Multi-Model Quick Start](docs/mm_quick_start.md) for a guide on how to use Model Analyzer to profile, analyze and report on multiple models running concurrently on the same GPU.
 
 ## Documentation
 
