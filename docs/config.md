@@ -177,10 +177,10 @@ profile_models: <comma-delimited-string-list>
 # Maximum max_batch_size used for the automatic config search.
 [ run_config_search_max_model_batch_size: <int> | default: 128 ]
 
-# Minimum instance count used for the automatic config search.
+# Minimum instance group count used for the automatic config search.
 [ run_config_search_min_instance_count: <int> | default: 1 ]
 
-# Maximum instance count used for the automatic config search.
+# Maximum instance group count used for the automatic config search.
 [ run_config_search_max_instance_count: <int> | default: 5 ]
 
 # Disables automatic config search
@@ -241,7 +241,7 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 # List of objectives that user wants to sort the results by it.
 [ objectives: <objective|list> ]
 
-# Weighting used to bias the model's objectives (agianst the other models) in multi-mode mode
+# Weighting used to bias the model's objectives (against the other models) in multi-mode mode
 [ weighting: <int>]
 
 # Specify flags to pass to the Triton instances launched by model analyzer
