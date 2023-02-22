@@ -154,20 +154,20 @@ Model Analyzer will ignore any model config parameters because we have no way of
 
 Using Manual Brute Search, you can create custom sweeps for any parameter that can be specified in the model configuration. There are two ways this mode is enabled when doing a brute search:
 
-- Any `model config parameters` are specified:
-  - You must manually specify the batch sizes and instance counts you want MA to sweep
+- Any [`model config parameters`](./config.md#model-config-parameters) are specified:
+  - You must manually specify the batch sizes and instance counts you want Model Analyzer to sweep
   - Request concurrencies will still be automatically swept (as they are not a model config parameter)
-- Any `parameters` are specified:
-  - You must manually specify the batch sizes, instance counts, and request concurrencies you want MA to sweep
+- Any [`parameters`](./config.md#test-configuration-parameter) are specified:
+  - You must manually specify the batch sizes, instance counts, and request concurrencies you want Model Analyzer to sweep
 - `--run-config-search-disable` is specified:
-  - You must manually specify the batch sizes, instance counts, and request concurrencies you want MA to sweep
+  - You must manually specify the batch sizes, instance counts, and request concurrencies you want Model Analyzer to sweep
 
 _**Note**: Model Analyzer only checks the syntax of the `model config parameters` and cannot guarantee that the configuration that is generated is loadable by Triton. For a complete list of parameters allowed under model_config_parameters, refer to the [Triton Model
 Configuration](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md). <br>**It is your responsibility to ensure the sweep configuration specified works with your model.**_
 
 ---
 
-_In this example, MA will only sweep through different values of `request concurrencies`:_
+_In this example, Model Analyzer will only sweep through different values of `request concurrencies`:_
 
 ```yaml
 model_repository: /path/to/model/repository/
@@ -180,7 +180,7 @@ profile_models:
           count: [1, 2]
 ```
 
-_In this example, MA will not sweep through any values, and will only try the concurrencies listed below:_
+_In this example, Model Analyzer will not sweep through any values, and will only try the concurrencies listed below:_
 
 ```yaml
 model_repository: /path/to/model/repository/
@@ -280,7 +280,7 @@ _This mode has the following limitations:_
 
 Ensemble models can be optimized using the Quick Search mode's hill climbing algorithm to search the ensemble sub-model's configuration spaces in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under one hour (compared to the days it would take a brute force run to complete) for ensembles with up to four submodels.
 
-After MA has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the concurrency range before generation of the summary reports.
+After Model Analyzer has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the concurrency range before generation of the summary reports.
 
 ---
 
