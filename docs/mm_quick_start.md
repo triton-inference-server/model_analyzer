@@ -97,7 +97,7 @@ model-analyzer profile \
 
 The `--run-config-profile-models-concurrently-enable` option tells Model Analyzer to load and optimize both models concurrently using the [Quick Search](config_search.md#quick-search-mode) algorithm.
 
-This will profile both models concurrently finding the maximal throughput gain for both models by iterating across instance counts and batch sizes. By default, the algorithm is attempting to find the best balance of gains for each model, not the best combined total throughput.
+This will profile both models concurrently finding the maximal throughput gain for both models by iterating across instance group counts and batch sizes. By default, the algorithm is attempting to find the best balance of gains for each model, not the best combined total throughput.
 
 After the quick search completes, Model Analyzer will then sweep concurrencies for the top three configurations and then create a summary report and CSV outputs.
 
