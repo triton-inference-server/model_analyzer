@@ -16,7 +16,7 @@ limitations under the License.
 
 # Multi-Model Quick Start
 
-The steps below will guide you through using Model Analyzer in Docker mode to profile and analyze two PyTorch models concurrently: `add_sub` & `resnet50_libtorch`.
+The steps below will guide you through using Model Analyzer in Docker mode to profile and analyze two models concurrently: `add_sub` & `resnet50_python`.
 
 ## `Step 1:` Download the models
 
@@ -34,7 +34,7 @@ mkdir <new_dir> && cd <new_dir>
 git init && git remote add -f origin https://github.com/triton-inference-server/model_analyzer.git
 ```
 
-**3. Enable sparse checkout, and download the examples directory, which contains the add_sub & resnet50_libtorch models**
+**3. Enable sparse checkout, and download the examples directory, which contains the add_sub & resnet50_python models**
 
 ```
 git config core.sparseCheckout true && \
@@ -74,14 +74,14 @@ config variants that Model Analyzer creates.<br><br>
 ---
 
 The [examples/quick-start](../examples/quick-start) directory is an example
-[Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md) that contains two libtorch models: `add_sub` & `resnet50_libtorch`
+[Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md) that contains two libtorch models: `add_sub` & `resnet50_python`
 
 Run the Model Analyzer `profile` subcommand inside the container with:
 
 ```
 model-analyzer profile \
     --model-repository <path-to-examples-quick-start> \
-    --profile-models add_sub,resnet50_libtorch --triton-launch-mode=docker \
+    --profile-models add_sub,resnet50_python --triton-launch-mode=docker \
     --output-model-repository-path <path-to-output-model-repo>/<output_dir>
     --export-path profile_results
     --run-config-profile-models-concurrently-enable
@@ -108,9 +108,9 @@ Here is an example result summary, run on a TITAN RTX GPU:
 ![Result Summary Top](../examples/mm_result_summary_top.jpg)
 ![Result Summary Table](../examples/mm_result_summary_table.jpg)
 
-You will note that the top model configuration has a lower total combined throughput than either the 2nd or 3rd configurations. However, it does a better job at increasing the total percentage throughput gain versus the other configurations.
+You will note that the top model configuration has a lower total combined throughput than the third configuration. However, it does a better job at increasing the total percentage throughput gain versus the other configurations.
 
-For example, comparing the top config `[add_sub_config_42, resnet50_libtorch_config_24]` to the third best `[add_sub_config_37, resnet50_libtorch_config_19]`, you will see that while the gain in `add_sub` throughput is large (~1600 infer/sec) it is only a 3.5% increase. However, this is offset by a decrease in `resnet50_libtorch` throughput (~75 infer/sec), which represents an 8% decrease in throughput. Therefore, the `[add_sub_config_42, resnet_libtorch_config_24]` is deemed to be a better configuration by Model Analyzer.
+For example, comparing the top config `[add_sub_config_10, resnet50_python_config_12]` to the third best `[add_sub_config_5, resnet50_python_config_3]`, you will see that while the decrease in `add_sub` throughput is large (~4600 infer/sec), it represents just a **12.5% decrease** in throughput. This is offset by an increase in `resnet50_python` throughput (~46 infer/sec), which represents an **20% increase** in throughput. Therefore, the `[add_sub_config_10, resnet_python_config_12]` is deemed to be a better configuration by Model Analyzer.
 
 ---
 
@@ -123,7 +123,7 @@ $HOME
               |--- profile_results
               .       |--- plots
               .       |      |--- simple
-              .       |      |      |--- add_sub,resnet50_libtorch
+              .       |      |      |--- add_sub,resnet50_python
                       |      |              |--- gpu_mem_v_latency.png
                       |      |              |--- throughput_v_latency.png
                       |
@@ -134,7 +134,7 @@ $HOME
                       |
                       |--- reports
                               |--- summaries
-                              .        |--- add_sub,resnet50_libtorch
+                              .        |--- add_sub,resnet50_python
                               .                |--- result_summary.pdf
 ```
 
@@ -142,18 +142,18 @@ $HOME
 
 ---
 
-In the above results you can see a large (472%) throughput increase, but this is at the expense of a large increase in latency. By creating a YAML config file we can specify per model latency constraints:
+In the above results you can see a large (651%) throughput increase, but this comes at the expense of a large increase in latency. By creating a YAML config file we can specify per model latency constraints:
 
 ```
 profile_models:
   add_sub:
     constraints:
       perf_latency_p99:
-        max: 3
-  resnet50_libtorch:
+        max: 5
+  resnet50_python:
     constraints:
       perf_latency_p99:
-        max: 20
+        max: 50
 ```
 
 And then re-run with the following command:
@@ -173,6 +173,4 @@ Here is an example result summary with the above constraints, run on a TITAN RTX
 ![Result Summary Constraint Top](../examples/mm_result_summary_constraint_top.jpg)
 ![Result Summary Constraint Table](../examples/mm_result_summary_constraint_table.jpg)
 
----
-
-You will observe that the top configuration here has a higher total combined throughput than the unconstrained run, however the total percentage gain is lower due to the large decrease in throughput for the `resnet50_libtorch` model.
+Again, you will observe that the top configuration here has a lower total combined throughput than the second or third best configurations. However the total percentage gain is higher due to the large decrease in throughput for the `resnet50_python` model in the other configurations.
