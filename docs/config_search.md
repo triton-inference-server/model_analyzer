@@ -101,9 +101,9 @@ You can also modify the minimum/maximum values that the automatic search space w
 
 ### [Instance Group Search Space](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md#instance-groups)
 
-- `Default:` 1 to 5 instance groups
-- `--run-config-search-min-instance-count: <val>`: Changes the instance count's minimum automatic search space value
-- `--run-config-search-max-instance-count: <val>`: Changes the instance count's maximum automatic search space value
+- `Default:` 1 to 5 instance group counts
+- `--run-config-search-min-instance-count: <val>`: Changes the instance group count's minimum automatic search space value
+- `--run-config-search-max-instance-count: <val>`: Changes the instance group count's maximum automatic search space value
 
 ---
 
@@ -136,7 +136,7 @@ profile_models:
   - model_A
 ```
 
-_This will perform an Automatic Brute Search with instance counts: 3-5, batch sizes: 16-128, and concurrencies: 8-256_
+_This will perform an Automatic Brute Search with instance group counts: 3-5, batch sizes: 16-128, and concurrencies: 8-256_
 
 ---
 
@@ -155,12 +155,12 @@ Model Analyzer will ignore any model config parameters because we have no way of
 Using Manual Brute Search, you can create custom sweeps for any parameter that can be specified in the model configuration. There are two ways this mode is enabled when doing a brute search:
 
 - Any [`model config parameters`](./config.md#model-config-parameters) are specified:
-  - You must manually specify the batch sizes and instance counts you want Model Analyzer to sweep
+  - You must manually specify the batch sizes and instance group counts you want Model Analyzer to sweep
   - Request concurrencies will still be automatically swept (as they are not a model config parameter)
 - Any [`parameters`](./config.md#test-configuration-parameter) are specified:
-  - You must manually specify the batch sizes, instance counts, and request concurrencies you want Model Analyzer to sweep
+  - You must manually specify the batch sizes, instance group counts, and request concurrencies you want Model Analyzer to sweep
 - `--run-config-search-disable` is specified:
-  - You must manually specify the batch sizes, instance counts, and request concurrencies you want Model Analyzer to sweep
+  - You must manually specify the batch sizes, instance group counts, and request concurrencies you want Model Analyzer to sweep
 
 _**Note**: Model Analyzer only checks the syntax of the `model config parameters` and cannot guarantee that the configuration that is generated is loadable by Triton. For a complete list of parameters allowed under model_config_parameters, refer to the [Triton Model
 Configuration](https://github.com/triton-inference-server/server/blob/master/docs/user_guide/model_configuration.md). <br>**It is your responsibility to ensure the sweep configuration specified works with your model.**_
@@ -247,9 +247,9 @@ profile_models:
 
 ---
 
-### **Limiting Batch Size, Instance Count, and Client Concurrency**
+### **Limiting Batch Size, Instance Group, and Client Concurrency**
 
-Using the `--run-config-search-<min/max>...` config options you have the ability to clamp the algorithm's upper or lower bounds for the model's batch size and instance count, as well as the client's request concurrency.
+Using the `--run-config-search-<min/max>...` config options you have the ability to clamp the algorithm's upper or lower bounds for the model's batch size and instance group count, as well as the client's request concurrency.
 
 _Note: By default, quick search runs unbounded and ignores any default values for these settings_
 

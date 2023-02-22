@@ -110,7 +110,7 @@ configuration:
   config search will not go beyond. <br>
 - `--run-config-search-max-model-batch-size` sets the highest max_batch_size that run config search will not go beyond.
 - `--run-config-search-max-instance-count`
-  sets the max instance count value that run config search will not go beyond.<br><br>
+  sets the max instance group count value that run config search will not go beyond.<br><br>
 
 With these options, model analyzer will test 5 configs (4 new configs as well as the unmodified default add_sub config), and each config will have 2 experiments run on Perf Analyzer (concurrency=1 and concurrency=2). This significantly reduces the search space, and therefore, model analyzer's runtime.
 
