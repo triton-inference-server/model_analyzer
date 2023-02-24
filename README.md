@@ -67,9 +67,9 @@ Triton Model Analyzer is a CLI tool which can help you find a more optimal confi
 
 ### **Single Model**
 
-See the [Quick Start](docs/quick_start.md) for a guide on how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
+See the [Single Model Quick Start](docs/quick_start.md) for a guide on how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
 
-### **Ensemble Model**
+### **Multi Model**
 
 See the [Multi-model Quick Start](docs/mm_quick_start.md) for a guide on how to use Model Analyzer to profile, analyze and report on two models running concurrently on the same GPU.
 <br><br>
