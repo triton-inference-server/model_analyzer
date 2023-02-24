@@ -24,30 +24,34 @@ release of the Triton Model Analyzer is 1.24.0 and is available on
 branch
 [r23.01](https://github.com/triton-inference-server/model_analyzer/tree/r23.01).**
 
-Triton Model Analyzer is a CLI tool to help with better understanding of the
-compute and memory requirements of the
-[Triton Inference Server](https://github.com/triton-inference-server/server/) models. These
-reports will help the user better understand the trade-offs in different
-configurations and choose a configuration that maximizes the performance of
-Triton Inference Server.
+Triton Model Analyzer is a CLI tool which can help you find a more optimal configuration, on a given piece of hardware, for single, multiple, or ensemble models running on a [Triton Inference Server](https://github.com/triton-inference-server/server/). Model Analyzer will also generate reports to help you better understand the trade-offs of the different configurations along with their compute and memory requirements.
+<br><br>
 
-## Features
+# Features
 
-- [Brute and Quick search](docs/config_search.md): Model Analyzer can
-  help you automatically find the optimal settings for
+### Search Modes
+
+- [Quick Search](docs/config_search.md#quick-search-mode) will **sparsely** search the [Max Batch Size](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#maximum-batch-size),
+  [Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#dynamic-batcher), and
+  [Instance Group](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#instance-groups) spaces by utilizing a heuristic hill-climbing algorithm to help you quickly find a more optimal configuration
+
+- [Automatic Brute Search](docs/config_search.md#automatic-brute-search) will **exhaustively** search the
   [Max Batch Size](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#maximum-batch-size),
   [Dynamic Batching](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#dynamic-batcher), and
   [Instance Group](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_configuration.md#instance-groups)
-  parameters of your model configuration. Model Analyzer utilizes
-  [Performance Analyzer](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/README.md)
-  to test the model with different concurrency and batch sizes of requests. Using
-  [Manual Config Search](docs/config_search.md#manual-brute-search), you can create manual sweeps for every parameter that can be specified in the model configuration.
+  parameters of your model configuration
 
-- [Multi-Model Search](docs/config_search.md#multi-model-search-mode): **EARLY ACCESS** - Model Analyzer can help you
-  find the optimal settings when profiling multiple concurrent models, utilizing the Quick Search alogrithm
+- [Manual Brute Search](docs/config_search.md#manual-brute-search) allows you to create manual sweeps for every parameter that can be specified in the model configuration
+
+### Model Types
 
 - [Ensemble Model Search](docs/config_search.md#ensemble-model-search): Model Analyzer can help you find the optimal
-  settings when profiling a non-BLS ensemble model, utilizing the Quick Search algorithm
+  settings when profiling a non-BLS ensemble model, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
+
+- [Multi-Model Search](docs/config_search.md#multi-model-search-mode): **EARLY ACCESS** - Model Analyzer can help you
+  find the optimal settings when profiling multiple concurrent models, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
+
+### Other Features
 
 - [Detailed and summary reports](docs/report.md): Model Analyzer is able to generate
   summarized and detailed reports that can help you better understand the trade-offs
@@ -57,14 +61,20 @@ Triton Inference Server.
   filter out the Model Analyzer results based on your QoS requirements. For
   example, you can specify a latency budget to filter out model configurations
   that do not satisfy the specified latency threshold.
+  <br><br>
 
-## Examples and Tutorials
+# Examples and Tutorials
 
-See the [Single-Model Quick Start](docs/quick_start.md) for a guide of how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
+### **Single Model**
 
-See the [Multi-Model Quick Start](docs/mm_quick_start.md) for a guide on how to use Model Analyzer to profile, analyze and report on multiple models running concurrently on the same GPU.
+See the [Single Model Quick Start](docs/quick_start.md) for a guide on how to use Model Analyzer to profile, analyze and report on a simple PyTorch model.
 
-## Documentation
+### **Multi Model**
+
+See the [Multi-model Quick Start](docs/mm_quick_start.md) for a guide on how to use Model Analyzer to profile, analyze and report on two models running concurrently on the same GPU.
+<br><br>
+
+# Documentation
 
 - [Installation](docs/install.md)
 - [Model Analyzer CLI](docs/cli.md)
@@ -75,6 +85,7 @@ See the [Multi-Model Quick Start](docs/mm_quick_start.md) for a guide on how to 
 - [Checkpointing](docs/checkpoints.md)
 - [Model Analyzer Reports](docs/report.md)
 - [Deployment with Kubernetes](docs/kubernetes_deploy.md)
+  <br><br>
 
 # Reporting problems, asking questions
 
