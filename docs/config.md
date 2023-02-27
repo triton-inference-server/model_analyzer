@@ -70,8 +70,6 @@ triton_server_flags:
 
 ## CLI and YAML Config Options
 
----
-
 A list of all the configuration options supported by **both the CLI and YAML**
 config file are shown below.
 
@@ -244,8 +242,6 @@ profile_models: <comma-delimited-string-list>
 
 ## YAML Only Options
 
----
-
 The following config options are supported **only by the YAML** config file.
 
 ```yaml
@@ -283,10 +279,8 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 
 ## CLI and YAML options
 
----
-
-The config options for the `report` subcommand supported by both the CLI and
-YAML config file are shown below.
+A list of all the configuration options supported by **both the CLI and YAML**
+config file are shown below.
 
 - Brackets indicate that a parameter is optional.
 - For non-list and non-object parameters the value is set to the
@@ -307,8 +301,6 @@ report_model_configs: <comma-delimited-string-list>
 ```
 
 ## YAML only options
-
----
 
 The following config options are support by the YAML config file only.
 
@@ -493,8 +485,6 @@ basis.
 
 ## Test Configuration `<parameter>`
 
----
-
 A user can specify a range of test configurations that Model Analyzer will
 profile over. The possible configuration parameters are `concurrency` and
 `batch_sizes`. One or more parameters are specified per model only. Parameters
@@ -539,16 +529,12 @@ This will result in 27 individual test runs of the model.
 
 ## `<weighting>`
 
----
-
 This field is used to bias a model's objective when performing a multi-model search.
 
 See [Multi-Model Search - Model Weighting](config_search.md#model-weighting) for details and an example YAML configuration.
 <br>
 
 ## `<model-config-parameters>`
-
----
 
 This field represents the values that can be changed or swept through using
 Model Analyzer. All the values supported in the [Triton
@@ -633,8 +619,6 @@ cartesian product of both of the lists.
 
 ## `<cpu_only>`
 
----
-
 This flag tells the model analyzer that, whether performing a search during profiling
 or generating reports, this model should use CPU instances only. In order to run a model on CPU only you must provide a value of `true` for this flag.
 
@@ -654,8 +638,6 @@ but profile `model_2` using GPU.
 <br>
 
 ## `<perf-analyzer-flags>`
-
----
 
 This field allows the user to pass `perf_analyzer` any CLI options it needs to
 execute properly. Refer to [the
@@ -778,8 +760,6 @@ More information about this can be found in the
 
 ## `<triton-server-flags>`
 
----
-
 This section of the config allows fine-grained control over the flags passed to
 the Triton instances launched by Model Analyzer when it is running in the
 `docker` or `local` Triton launch modes. Any argument to the server can be
@@ -848,14 +828,12 @@ More information about this can be found in the
 #### **Important Notes**:
 
 - The Model Analyzer also provides certain arguments to the `tritonserver`
-  instances it launches. These **_cannot_** be overriden by providing those
+  instances it launches. These **_cannot_** be overridden by providing those
   arguments in this section. An example of this is `http-port`, which is an
   argument to Model Analyzer itself.
   <br>
 
 ## `<triton-server-environment>`
-
----
 
 This section enables setting environment variables for the tritonserver
 instances launched by Model Analyzer. For example, when a custom operation is
@@ -895,8 +873,6 @@ profile_models:
 
 ## `<plots>`
 
----
-
 This section is used to specify the kind of plots that will be displayed in the
 detailed report. The section is structured as a list of `<plot>` objects as
 follows:
@@ -926,8 +902,8 @@ specifying each of the following:
   increasing. A boolean value of `true` can be specified here to require this.
 
 <br>
+
 ## `<profile-model>`
----
 
 The `--profile-models` argument can be provided as a list of strings (names of
 models) from the CLI interface, or as a more complex `<profile-model>` object
@@ -1021,8 +997,6 @@ It will also run the model `vgg_16_graphdef` over combinations of batch sizes
 
 ## `<report-model-config>`
 
----
-
 The `--report-model-configs` argument can be provided as a list of strings
 (names of models) from the CLI interface, or as a more complex
 `<report-model-config>` object but only through the YAML configuration file. The
@@ -1062,8 +1036,6 @@ report_model_configs:
 <br>
 
 ## Config Defaults
-
----
 
 Up to date config defaults can be found in
 [config_defaults.py](../model_analyzer/config/input/config_defaults.py)
