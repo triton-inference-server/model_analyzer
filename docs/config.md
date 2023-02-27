@@ -24,6 +24,7 @@ limitations under the License.
   - [CLI and YAML options](#cli-and-yaml-options)
   - [YAML only options](#yaml-only-options)
 - [Field Descriptions](#field-descriptions)
+- [Config Defaults](#config-defaults)
 
 <br>
 
