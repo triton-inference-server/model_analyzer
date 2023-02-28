@@ -40,7 +40,7 @@ throughput. If a latency budget is specified to the [profile subcommand](#subcom
 `--latency-budget`, then the best model configuration will be the one with the highest throughput in the given budget.
 
 In online mode the profile and report subcommands will generate summaries specific to online inference.
-See the example [online summary](../examples/online_summary.pdf) and [online detailed report](../examples/online_summary.pdf).
+See the example [online summary](../examples/online_summary.pdf) and [online detailed report](../examples/online_detailed_report.pdf).
 
 ### Offline Mode
 
@@ -89,7 +89,7 @@ subcommand will either perform a
 [manual](./config_search.md#manual-brute-search), [automatic](./config_search.md#automatic-brute-search), or
 [quick](./config_search.md#quick-search-mode) search over perf analyzer
 and model config file parameters. For each combination of [model config
-parameters](./config.md#model-config-parameters) (e.g. _max batch size_, _dynamic batching_, and _instance count_), it will run tritonserver and perf analyzer instances with
+parameters](./config.md#model-config-parameters) (e.g. _max batch size_, _dynamic batching_, and _instance group count_), it will run tritonserver and perf analyzer instances with
 all the specified run parameters (client request concurrency and static batch
 size). It will also save the protobuf (.pbtxt) model config files corresponding
 to each combination in the [_output model
