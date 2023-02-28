@@ -155,6 +155,54 @@ class TestAnalyzer(trc.TestResultCollector):
             '--config-file /tmp/my_config.yml --checkpoint-directory '
             '/tmp/my_checkpoints`')
 
+    def test_multiple_models_in_report_model_config(self):
+        """
+        Test that multiple different models in the report are detected
+        """
+        # Single model config
+        args = [
+            'model-analyzer', 'report', '--report-model-configs',
+            'modelA_config_0', '--checkpoint-directory', '/tmp/my_checkpoints'
+        ]
+        config = evaluate_mock_config(args, '', subcommand="report")
+        state_manager = AnalyzerStateManager(config, None)
+        analyzer = Analyzer(config,
+                            None,
+                            state_manager,
+                            checkpoint_required=False)
+
+        self.assertFalse(analyzer._multiple_models_in_report_model_config())
+
+        # Multiple different models
+        args = [
+            'model-analyzer', 'report', '--report-model-configs',
+            'modelA_config_0,modelB_config_1', '--checkpoint-directory',
+            '/tmp/my_checkpoints'
+        ]
+        config = evaluate_mock_config(args, '', subcommand="report")
+        state_manager = AnalyzerStateManager(config, None)
+        analyzer = Analyzer(config,
+                            None,
+                            state_manager,
+                            checkpoint_required=False)
+
+        self.assertTrue(analyzer._multiple_models_in_report_model_config())
+
+        # Single model - multiple configs
+        args = [
+            'model-analyzer', 'report', '--report-model-configs',
+            'modelA_config_0,modelA_config_1', '--checkpoint-directory',
+            '/tmp/my_checkpoints'
+        ]
+        config = evaluate_mock_config(args, '', subcommand="report")
+        state_manager = AnalyzerStateManager(config, None)
+        analyzer = Analyzer(config,
+                            None,
+                            state_manager,
+                            checkpoint_required=False)
+
+        self.assertFalse(analyzer._multiple_models_in_report_model_config())
+
 
 if __name__ == '__main__':
     unittest.main()
