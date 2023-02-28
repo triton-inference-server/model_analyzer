@@ -32,6 +32,8 @@ from .model_analyzer_exceptions \
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.server.server import TritonServer
 
+from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
+
 from .triton.client.client import TritonClient
 from .device.gpu_device import GPUDevice
 
@@ -156,6 +158,11 @@ class Analyzer:
             result_manager=self._result_manager,
             gpu_info=gpu_info,
             constraint_manager=self._constraint_manager)
+
+        if self._multiple_models_in_report_model_config():
+            raise TritonModelAnalyzerException("Model Analyzer does not support detailed reporting for multi-model runs.\n" \
+                "If you are trying to generate detailed reports for different sequentially profiled models you must run " \
+                "the report command for each model separately.")
 
         self._report_manager.create_detailed_reports()
         self._report_manager.export_detailed_reports()
@@ -303,3 +310,16 @@ class Analyzer:
         gpu_uuids = [gpu._device_uuid for gpu in gpus]
 
         return sorted(ckpt_uuids) == sorted(gpu_uuids)
+
+    def _multiple_models_in_report_model_config(self) -> bool:
+        model_config_names = [
+            report_model_config.model_config_name()
+            for report_model_config in self._config.report_model_configs
+        ]
+
+        model_names = [
+            BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                model_config_name) for model_config_name in model_config_names
+        ]
+
+        return len(set(model_names)) > 1
