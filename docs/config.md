@@ -48,7 +48,7 @@ The placeholders listed below are used throughout the configuration:
   value
   - If `step` is not defined, **1** is the default value
   - Types that support `<range>` can be described by a list or using the example
-    structure below, which declares the value of _batch_sizes_ to be an array `[2, 4, 6]`:
+    structure below, which declares the value of _batch_sizes_ to be an array `[2, 4, 6]`
 
 ```yaml
 batch_sizes:
@@ -77,8 +77,9 @@ config file are shown below.
 - Brackets indicate that a parameter is optional.
 - For non-list and non-object parameters the value is set to the specified default.
 - The CLI flags corresponding to each of the options below are obtained by
-  converting the `snake_case` options to `--kebab-case`. <br>For example,
-  `profile_models` in the YAML would be `--profile-models` in the CLI.
+  converting the `snake_case` options to `--kebab-case`.
+  <br>
+  For example, `profile_models` in the YAML would be `--profile-models` in the CLI.
 
 ```yaml
 # Path to the Triton Model Repository (https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md)
