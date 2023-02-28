@@ -82,8 +82,8 @@ Run the Model Analyzer `profile` subcommand inside the container with:
 model-analyzer profile \
     --model-repository <path-to-examples-quick-start> \
     --profile-models add_sub,resnet50_python --triton-launch-mode=docker \
-    --output-model-repository-path <path-to-output-model-repo>/<output_dir>
-    --export-path profile_results
+    --output-model-repository-path <path-to-output-model-repo>/<output_dir> \
+    --export-path profile_results \
     --run-config-profile-models-concurrently-enable
 ```
 
@@ -162,8 +162,8 @@ And then re-run with the following command:
 model-analyzer profile \
     --model-repository <path-to-examples-quick-start> \
     --config-file <path-to-config-file> --triton-launch-mode=docker \
-    --output-model-repository-path <path-to-output-model-repo>/<output_dir>
-    --export-path profile_results
+    --output-model-repository-path <path-to-output-model-repo>/<output_dir> \
+    --export-path profile_results \
     --run-config-profile-models-concurrently-enable
 ```
 
