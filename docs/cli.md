@@ -40,7 +40,7 @@ throughput. If a latency budget is specified to the [profile subcommand](#subcom
 `--latency-budget`, then the best model configuration will be the one with the highest throughput in the given budget.
 
 In online mode the profile and report subcommands will generate summaries specific to online inference.
-See the example [online summary](../examples/online_summary.pdf) and [online detailed report](../examples/online_summary.pdf).
+See the example [online summary](../examples/online_summary.pdf) and [online detailed report](../examples/online_detailed_report.pdf).
 
 ### Offline Mode
 
