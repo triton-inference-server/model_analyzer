@@ -46,8 +46,8 @@ The placeholders listed below are used throughout the configuration:
 - `<list>`: a list of values
 - `<range>`: An object containing `start` and `stop` key with an optional `step`
   value
-  - If `step` is not defined, **1** is the default value
-  - Types that support `<range>` can be described by a list or using the example
+  - If `step` is not defined, **1** is the default step value
+  - Types that support `<range>` can be described by a list or by using the example
     structure below, which declares the value of _batch_sizes_ to be an array `[2, 4, 6]`
 
 ```yaml
@@ -82,7 +82,8 @@ config file are shown below.
   For example, `profile_models` in the YAML would be `--profile-models` in the CLI.
 
 ```yaml
-# Path to the Triton Model Repository (https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md)
+# Path to the Triton Model Repository
+# https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md
 model_repository: <string>
 
 # List of the model names to be profiled
