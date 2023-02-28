@@ -69,9 +69,10 @@ class Analyzer:
         state_manager.load_checkpoint(checkpoint_required)
 
         self._constraint_manager = ConstraintManager(self._config)
-        self._result_manager = ResultManager(config=config,
-                                             state_manager=self._state_manager,
-                                             constraint_manager=self._constraint_manager)
+        self._result_manager = ResultManager(
+            config=config,
+            state_manager=self._state_manager,
+            constraint_manager=self._constraint_manager)
 
     def profile(self, client: TritonClient, gpus: List[GPUDevice], mode: str,
                 verbose: bool) -> None:
@@ -123,7 +124,10 @@ class Analyzer:
         if not self._config.skip_summary_reports:
             self._create_summary_tables(verbose)
             self._create_summary_reports(mode)
-            logger.info(self._get_report_command_help_string())
+
+            # TODO-TMA-650: Detailed reporting not supported for multi-model
+            if not self._config.run_config_profile_models_concurrently_enable:
+                logger.info(self._get_report_command_help_string())
 
     def report(self, mode: str) -> None:
         """
