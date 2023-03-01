@@ -148,12 +148,60 @@ class TestAnalyzer(trc.TestResultCollector):
                             state_manager,
                             checkpoint_required=False)
         self.assertEqual(
-            analyzer._get_report_command_help_string(),
-            'To generate detailed reports for the 3 best configurations, run '
+            analyzer._get_report_command_help_string(model_name='model1'),
+            'To generate detailed reports for the 3 best model1 configurations, run '
             '`model-analyzer report --report-model-configs '
             'config1,config3,config4 --export-path /tmp/my_export_path '
             '--config-file /tmp/my_config.yml --checkpoint-directory '
             '/tmp/my_checkpoints`')
+
+    def test_multiple_models_in_report_model_config(self):
+        """
+        Test that multiple different models in the report are detected
+        """
+        # Single model config
+        args = [
+            'model-analyzer', 'report', '--report-model-configs',
+            'modelA_config_0', '--checkpoint-directory', '/tmp/my_checkpoints'
+        ]
+        config = evaluate_mock_config(args, '', subcommand="report")
+        state_manager = AnalyzerStateManager(config, None)
+        analyzer = Analyzer(config,
+                            None,
+                            state_manager,
+                            checkpoint_required=False)
+
+        self.assertFalse(analyzer._multiple_models_in_report_model_config())
+
+        # Multiple different models
+        args = [
+            'model-analyzer', 'report', '--report-model-configs',
+            'modelA_config_0,modelB_config_1', '--checkpoint-directory',
+            '/tmp/my_checkpoints'
+        ]
+        config = evaluate_mock_config(args, '', subcommand="report")
+        state_manager = AnalyzerStateManager(config, None)
+        analyzer = Analyzer(config,
+                            None,
+                            state_manager,
+                            checkpoint_required=False)
+
+        self.assertTrue(analyzer._multiple_models_in_report_model_config())
+
+        # Single model - multiple configs
+        args = [
+            'model-analyzer', 'report', '--report-model-configs',
+            'modelA_config_0,modelA_config_1', '--checkpoint-directory',
+            '/tmp/my_checkpoints'
+        ]
+        config = evaluate_mock_config(args, '', subcommand="report")
+        state_manager = AnalyzerStateManager(config, None)
+        analyzer = Analyzer(config,
+                            None,
+                            state_manager,
+                            checkpoint_required=False)
+
+        self.assertFalse(analyzer._multiple_models_in_report_model_config())
 
 
 if __name__ == '__main__':

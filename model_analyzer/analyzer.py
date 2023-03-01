@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union
+from typing import List, Union, Optional
 import sys
 from model_analyzer.constants import LOGGER_NAME
 from .model_manager import ModelManager
@@ -31,6 +31,8 @@ from .model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.server.server import TritonServer
+
+from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 
 from .triton.client.client import TritonClient
 from .device.gpu_device import GPUDevice
@@ -69,9 +71,10 @@ class Analyzer:
         state_manager.load_checkpoint(checkpoint_required)
 
         self._constraint_manager = ConstraintManager(self._config)
-        self._result_manager = ResultManager(config=config,
-                                             state_manager=self._state_manager,
-                                             constraint_manager=self._constraint_manager)
+        self._result_manager = ResultManager(
+            config=config,
+            state_manager=self._state_manager,
+            constraint_manager=self._constraint_manager)
 
     def profile(self, client: TritonClient, gpus: List[GPUDevice], mode: str,
                 verbose: bool) -> None:
@@ -123,7 +126,13 @@ class Analyzer:
         if not self._config.skip_summary_reports:
             self._create_summary_tables(verbose)
             self._create_summary_reports(mode)
-            logger.info(self._get_report_command_help_string())
+
+            # TODO-TMA-650: Detailed reporting not supported for multi-model
+            if not self._config.run_config_profile_models_concurrently_enable:
+                for model in self._config.profile_models:
+                    logger.info(
+                        self._get_report_command_help_string(
+                            model.model_name()))
 
     def report(self, mode: str) -> None:
         """
@@ -152,6 +161,11 @@ class Analyzer:
             result_manager=self._result_manager,
             gpu_info=gpu_info,
             constraint_manager=self._constraint_manager)
+
+        if self._multiple_models_in_report_model_config():
+            raise TritonModelAnalyzerException("Model Analyzer does not support detailed reporting for multi-model runs.\n" \
+                "If you are trying to generate detailed reports for different sequentially profiled models you must run " \
+                "the report command for each model separately.")
 
         self._report_manager.create_detailed_reports()
         self._report_manager.export_detailed_reports()
@@ -259,16 +273,16 @@ class Analyzer:
             get_list_of_model_config_measurement_tuples()
         ])
 
-    def _get_report_command_help_string(self):
-        top_3_model_config_names = self._get_top_n_model_config_names(n=3)
+    def _get_report_command_help_string(self, model_name: str) -> str:
+        top_3_model_config_names = self._get_top_n_model_config_names(
+            n=3, model_name=model_name)
+        return (
+            f'To generate detailed reports for the '
+            f'{len(top_3_model_config_names)} best {model_name} configurations, run '
+            f'`{self._get_report_command_string(top_3_model_config_names)}`')
 
-        return (f'To generate detailed reports for the '
-                f'{len(top_3_model_config_names)} best configurations, run '
-                f'`{self._get_report_command_string()}`')
-
-    def _get_report_command_string(self):
-        top_3_model_config_names = self._get_top_n_model_config_names(n=3)
-
+    def _get_report_command_string(self,
+                                   top_3_model_config_names: List[str]) -> str:
         report_command_string = (f'model-analyzer report '
                                  f'--report-model-configs '
                                  f'{",".join(top_3_model_config_names)}')
@@ -287,10 +301,14 @@ class Analyzer:
 
         return report_command_string
 
-    def _get_top_n_model_config_names(self, n=-1):
+    def _get_top_n_model_config_names(self,
+                                      n: int = -1,
+                                      model_name: Optional[str] = None
+                                     ) -> List[str]:
         return [
             x.run_config().model_variants_name()
-            for x in self._result_manager.top_n_results(n=n)
+            for x in self._result_manager.top_n_results(n=n,
+                                                        model_name=model_name)
         ]
 
     def _do_checkpoint_gpus_match(self, gpus: dict) -> bool:
@@ -299,3 +317,16 @@ class Analyzer:
         gpu_uuids = [gpu._device_uuid for gpu in gpus]
 
         return sorted(ckpt_uuids) == sorted(gpu_uuids)
+
+    def _multiple_models_in_report_model_config(self) -> bool:
+        model_config_names = [
+            report_model_config.model_config_name()
+            for report_model_config in self._config.report_model_configs
+        ]
+
+        model_names = [
+            BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                model_config_name) for model_config_name in model_config_names
+        ]
+
+        return len(set(model_names)) > 1
