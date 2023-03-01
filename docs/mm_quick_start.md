@@ -59,7 +59,7 @@ docker run -it --gpus all \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
       -v <path-to-output-model-repo>:<path-to-output-model-repo> \
-      --net=host nvcr.io/nvidia/tritonserver:23.01-py3-sdk
+      --net=host nvcr.io/nvidia/tritonserver:23.02-py3-sdk
 ```
 
 **Replacing** `<path-to-output-model-repo>` with the
