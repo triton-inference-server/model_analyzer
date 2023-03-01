@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union
+from typing import List, Union, Optional
 import sys
 from model_analyzer.constants import LOGGER_NAME
 from .model_manager import ModelManager
@@ -129,7 +129,10 @@ class Analyzer:
 
             # TODO-TMA-650: Detailed reporting not supported for multi-model
             if not self._config.run_config_profile_models_concurrently_enable:
-                logger.info(self._get_report_command_help_string())
+                for model in self._config.profile_models:
+                    logger.info(
+                        self._get_report_command_help_string(
+                            model.model_name()))
 
     def report(self, mode: str) -> None:
         """
@@ -270,16 +273,16 @@ class Analyzer:
             get_list_of_model_config_measurement_tuples()
         ])
 
-    def _get_report_command_help_string(self):
-        top_3_model_config_names = self._get_top_n_model_config_names(n=3)
+    def _get_report_command_help_string(self, model_name: str) -> str:
+        top_3_model_config_names = self._get_top_n_model_config_names(
+            n=3, model_name=model_name)
+        return (
+            f'To generate detailed reports for the '
+            f'{len(top_3_model_config_names)} best {model_name} configurations, run '
+            f'`{self._get_report_command_string(top_3_model_config_names)}`')
 
-        return (f'To generate detailed reports for the '
-                f'{len(top_3_model_config_names)} best configurations, run '
-                f'`{self._get_report_command_string()}`')
-
-    def _get_report_command_string(self):
-        top_3_model_config_names = self._get_top_n_model_config_names(n=3)
-
+    def _get_report_command_string(self,
+                                   top_3_model_config_names: List[str]) -> str:
         report_command_string = (f'model-analyzer report '
                                  f'--report-model-configs '
                                  f'{",".join(top_3_model_config_names)}')
@@ -298,10 +301,14 @@ class Analyzer:
 
         return report_command_string
 
-    def _get_top_n_model_config_names(self, n=-1):
+    def _get_top_n_model_config_names(self,
+                                      n: int = -1,
+                                      model_name: Optional[str] = None
+                                     ) -> List[str]:
         return [
             x.run_config().model_variants_name()
-            for x in self._result_manager.top_n_results(n=n)
+            for x in self._result_manager.top_n_results(n=n,
+                                                        model_name=model_name)
         ]
 
     def _do_checkpoint_gpus_match(self, gpus: dict) -> bool:

@@ -148,8 +148,8 @@ class TestAnalyzer(trc.TestResultCollector):
                             state_manager,
                             checkpoint_required=False)
         self.assertEqual(
-            analyzer._get_report_command_help_string(),
-            'To generate detailed reports for the 3 best configurations, run '
+            analyzer._get_report_command_help_string(model_name='model1'),
+            'To generate detailed reports for the 3 best model1 configurations, run '
             '`model-analyzer report --report-model-configs '
             'config1,config3,config4 --export-path /tmp/my_export_path '
             '--config-file /tmp/my_config.yml --checkpoint-directory '
