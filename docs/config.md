@@ -608,10 +608,10 @@ profile_models:
       dynamic_batching:
         max_queue_delay_microseconds: [200, 400, 600]
       instance_group:
-        - - kind: KIND_GPU
-            count: 1
-        - - kind: KIND_CPU
-            count: 1
+        - kind: KIND_GPU
+          count: 1
+        - kind: KIND_CPU
+          count: 1
 ```
 
 This will lead to 6 different configurations (3 different max queue delays
@@ -931,10 +931,10 @@ profile_models:
       dynamic_batching:
         max_queue_delay_microseconds: 200
       instance_group:
-        - - kind: KIND_GPU
-            count: 1
-        - - kind: KIND_CPU
-            count: 1
+        - kind: KIND_GPU
+          count: 1
+        - kind: KIND_CPU
+          count: 1
     parameters:
       concurrency:
         start: 2
@@ -959,8 +959,8 @@ profile_models:
       dynamic_batching:
         max_queue_delay_microseconds: 200
       instance_group:
-        - - kind: KIND_CPU
-            count: 1
+        - kind: KIND_CPU
+          count: 1
     vgg_16_graphdef:
       parameters:
         concurrency:
@@ -971,8 +971,8 @@ profile_models:
         dynamic_batching:
           max_queue_delay_microseconds: 200
         instance_group:
-          - - kind: KIND_GPU
-              count: 1
+          - kind: KIND_GPU
+            count: 1
 batch_sizes:
   start: 4
   stop: 9
