@@ -449,6 +449,27 @@ class ConfigCommandProfile(ConfigCommand):
                 flags=['--reload-model-disable'],
                 description='Flag to indicate whether or not to disable model '
                 'loading and unloading in remote mode.'))
+        self._add_config(
+            ConfigField(
+                'bls_models',
+                flags=['--bls-models'],
+                field_type=ConfigUnion([
+                    profile_model_scheme,
+                    ConfigListGeneric(ConfigUnion([
+                        profile_model_scheme,
+                        ConfigPrimitive(str,
+                                        output_mapper=ConfigModelProfileSpec.
+                                        model_str_to_config_model_profile_spec)
+                    ]),
+                                      required=True,
+                                      output_mapper=ConfigModelProfileSpec.
+                                      model_mixed_to_config_model_profile_spec),
+                    ConfigListString(output_mapper=ConfigModelProfileSpec.
+                                     model_list_to_config_model_profile_spec),
+                ],
+                                       required=True),
+                default_value=[],
+                description='List of the models to be profiled'))
 
     def _add_client_configs(self):
         """

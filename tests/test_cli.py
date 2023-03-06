@@ -145,12 +145,13 @@ def get_test_options():
         # No OP Options:
         # Option format:
         # (noop, any MA step, long_flag)
-        # These commands arent tested directly but are here to ensure that
+        # These commands aren't tested directly but are here to ensure that
         # the count is correct for all options in the config.
         # Some of these are required to run the subcommand
         # Others are yaml only options
         OptionStruct("noop", "profile", "--model-repository"),
         OptionStruct("noop", "profile", "--profile-models"),
+        OptionStruct("noop", "profile", "--bls-models"),
 
         OptionStruct("noop", "report", "--report-model-configs"),
         OptionStruct("noop", "report", "--output-formats", "-o", ["pdf", "csv", "png"], "pdf", "SHOULD_FAIL"),
