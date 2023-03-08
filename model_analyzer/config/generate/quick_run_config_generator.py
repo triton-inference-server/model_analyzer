@@ -50,7 +50,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
                  models: List[ModelProfileSpec],
-                 ensemble_submodels: Dict[str, List[ModelProfileSpec]],
+                 ensemble_composing_models: Dict[str, List[ModelProfileSpec]],
                  client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager):
         """
@@ -63,8 +63,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         gpus: List of GPUDevices
         models: List of ModelProfileSpec
             List of models to profile
-        ensemble_submodels: Dict of List of ModelProfileSpec
-            Dict indexed by model name of ensemble submodel profiles
+        ensemble_composing_models: Dict of List of ModelProfileSpec
+            Dict indexed by model name of ensemble composing model profiles
         client: TritonClient
         model_variant_name_manager: ModelVariantNameManager
         """
@@ -73,7 +73,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._client = client
         self._gpus = gpus
         self._models = models
-        self._ensemble_submodels = ensemble_submodels
+        self._ensemble_composing_models = ensemble_composing_models
 
         self._model_variant_name_manager = model_variant_name_manager
 
@@ -294,7 +294,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_index: int) -> Tuple[ModelRunConfig, int]:
         start_model_index = model_index
 
-        if model.model_name() in self._ensemble_submodels:
+        if model.model_name() in self._ensemble_composing_models:
             ensemble_subconfigs, end_model_index = self._get_next_ensemble_subconfigs(
                 model, start_model_index)
 
@@ -317,8 +317,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         model_run_config = ModelRunConfig(model_name, model_config,
                                           perf_analyzer_config)
 
-        if model.model_name() in self._ensemble_submodels:
-            model_run_config.add_ensemble_submodel_configs(ensemble_subconfigs)
+        if model.model_name() in self._ensemble_composing_models:
+            model_run_config.add_ensemble_composing_model_configs(
+                ensemble_subconfigs)
 
         return (model_run_config, model_index)
 
@@ -327,9 +328,11 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             start_model_index: int) -> Tuple[List[ModelConfig], int]:
         model_index = start_model_index
         ensemble_subconfigs = []
-        for ensemble_submodel in self._ensemble_submodels[model.model_name()]:
+        for ensemble_composing_model in self._ensemble_composing_models[
+                model.model_name()]:
             ensemble_subconfigs.append(
-                self._get_next_model_config(ensemble_submodel, model_index))
+                self._get_next_model_config(ensemble_composing_model,
+                                            model_index))
             model_index = model_index + 1
 
         return (ensemble_subconfigs, model_index)
@@ -339,7 +342,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         """
         For the ensemble model the only parameter we need to set 
         is the max batch size; which will be the minimum batch size 
-        found in the submodel max batch sizes
+        found in the composing_model max batch sizes
         """
         min_val_of_max_batch_size = maxsize
         for model_index in range(start_model_index, end_model_index):
@@ -361,7 +364,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                                         param_combo: dict) -> ModelConfig:
         model_config = BaseModelConfigGenerator.make_ensemble_model_config(
             model=model,
-            ensemble_submodel_configs=ensemble_subconfigs,
+            ensemble_composing_model_configs=ensemble_subconfigs,
             model_variant_name_manager=self._model_variant_name_manager,
             param_combo=param_combo)
 
@@ -474,7 +477,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         default_run_config = RunConfig(self._triton_env)
 
         for model in self._models:
-            if model.model_name() in self._ensemble_submodels:
+            if model.model_name() in self._ensemble_composing_models:
                 default_run_config.add_model_run_config(
                     self._create_default_ensemble_model_run_config(model))
             else:
@@ -485,11 +488,12 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def _create_default_ensemble_model_run_config(
             self, model: ModelProfileSpec) -> ModelRunConfig:
-        default_submodel_configs = self._create_default_submodel_configs(model)
+        default_composing_model_configs = self._create_default_composing_model_configs(
+            model)
 
         default_ensemble_model_config = BaseModelConfigGenerator.make_ensemble_model_config(
             model=model,
-            ensemble_submodel_configs=default_submodel_configs,
+            ensemble_composing_model_configs=default_composing_model_configs,
             model_variant_name_manager=self._model_variant_name_manager)
 
         default_perf_analyzer_config = self._create_default_perf_analyzer_config(
@@ -499,23 +503,24 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model.model_name(), default_ensemble_model_config,
             default_perf_analyzer_config)
 
-        default_model_run_config.add_ensemble_submodel_configs(
-            default_submodel_configs)
+        default_model_run_config.add_ensemble_composing_model_configs(
+            default_composing_model_configs)
 
         return default_model_run_config
 
-    def _create_default_submodel_configs(
+    def _create_default_composing_model_configs(
             self, model: ModelProfileSpec) -> List[ModelConfig]:
-        default_submodel_configs: List[ModelConfig] = []
-        for submodel in self._ensemble_submodels[model.model_name()]:
-            default_submodel_configs.append(
+        default_composing_model_configs: List[ModelConfig] = []
+        for composing_model in self._ensemble_composing_models[
+                model.model_name()]:
+            default_composing_model_configs.append(
                 BaseModelConfigGenerator.make_model_config(
                     param_combo={},
-                    model=submodel,
+                    model=composing_model,
                     model_variant_name_manager=self._model_variant_name_manager)
             )
 
-        return default_submodel_configs
+        return default_composing_model_configs
 
     def _create_default_model_run_config(
             self, model: ModelProfileSpec) -> ModelRunConfig:

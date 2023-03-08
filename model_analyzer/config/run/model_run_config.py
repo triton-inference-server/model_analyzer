@@ -178,16 +178,16 @@ class ModelRunConfig:
         """
         Returns list of Ensemble Subconfig names
         """
-        return self._model_config.get_ensemble_submodels(
+        return self._model_config.get_ensemble_composing_models(
         ) if self._model_config.is_ensemble() else []
 
-    def add_ensemble_submodel_configs(
-            self, submodel_configs: List[ModelConfig]) -> None:
+    def add_ensemble_composing_model_configs(
+            self, composing_model_configs: List[ModelConfig]) -> None:
         """
-        Adds a list of ensemble submodel configs
+        Adds a list of ensemble composing_model configs
         """
-        for submodel_config in submodel_configs:
-            self._ensemble_subconfigs.append(submodel_config)
+        for composing_model_config in composing_model_configs:
+            self._ensemble_subconfigs.append(composing_model_config)
 
     @classmethod
     def from_dict(cls, model_run_config_dict):

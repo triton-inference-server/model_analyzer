@@ -127,7 +127,7 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         sub_configA = {"name": "modelA_config_default"}
         sub_configB = {"name": "modelB_config_default"}
 
-        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+        ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             [sub_configA, sub_configB])
 
         name = self._mvnm.get_ensemble_model_variant_name(
@@ -142,7 +142,7 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         sub_configA = {"name": "modelA_config_0"}
         sub_configB = {"name": "modelB_config_0"}
 
-        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+        ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             [sub_configA, sub_configB])
 
         name = self._mvnm.get_ensemble_model_variant_name(
@@ -152,7 +152,7 @@ class TestModelVariantNameManager(trc.TestResultCollector):
 
         sub_configB = {"name": "modelB_config_1"}
 
-        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+        ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             [sub_configA, sub_configB])
 
         name = self._mvnm.get_ensemble_model_variant_name(
@@ -162,7 +162,7 @@ class TestModelVariantNameManager(trc.TestResultCollector):
 
         sub_configA = {"name": "modelA_config_1"}
 
-        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+        ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             [sub_configA, sub_configB])
 
         name = self._mvnm.get_ensemble_model_variant_name(
@@ -178,7 +178,7 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         sub_configA = {"name": "modelA_config_0"}
         sub_configB = {"name": "modelB_config_0"}
 
-        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+        ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             [sub_configA, sub_configB])
 
         name = self._mvnm.get_ensemble_model_variant_name(

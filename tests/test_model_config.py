@@ -339,32 +339,34 @@ ensemble_scheduling {
         self.assertTrue(model_config.is_ensemble())
         mock_model_config.stop()
 
-    def test_ensemble_submodels(self):
-        """ Test that we can extract an ensembles submodel names """
+    def test_ensemble_composing_models(self):
+        """ Test that we can extract an ensembles composing model names """
 
         ensemble_protobuf = self._ensemble_model_config_protobuf
         mock_model_config = MockModelConfig(ensemble_protobuf)
         mock_model_config.start()
         model_config = ModelConfig._create_from_file('/path/to/model_config')
 
-        self.assertEqual(model_config.get_ensemble_submodels(),
+        self.assertEqual(model_config.get_ensemble_composing_models(),
                          ['preprocess', 'resnet50_trt'])
         mock_model_config.stop()
 
-    def test_set_submodel_name(self):
-        """ Test setting a variant name for an ensemble's submodel """
+    def test_set_composing_model_name(self):
+        """ Test setting a variant name for an ensemble's composing model """
 
         ensemble_protobuf = self._ensemble_model_config_protobuf
         mock_model_config = MockModelConfig(ensemble_protobuf)
         mock_model_config.start()
         model_config = ModelConfig._create_from_file('/path/to/model_config')
 
-        model_config.set_submodel_variant_name(
-            submodel_name="preprocess", variant_name="preprocess_config_0")
-        model_config.set_submodel_variant_name(
-            submodel_name="resnet50_trt", variant_name="resnet50_trt_config_1")
+        model_config.set_composing_model_variant_name(
+            composing_model_name="preprocess",
+            variant_name="preprocess_config_0")
+        model_config.set_composing_model_variant_name(
+            composing_model_name="resnet50_trt",
+            variant_name="resnet50_trt_config_1")
 
-        self.assertEqual(model_config.get_ensemble_submodels(),
+        self.assertEqual(model_config.get_ensemble_composing_models(),
                          ['preprocess_config_0', 'resnet50_trt_config_1'])
         mock_model_config.stop()
 
@@ -378,11 +380,12 @@ ensemble_scheduling {
         model_config = ModelConfig._create_from_file('/path/to/model_config')
 
         with self.assertRaises(TritonModelAnalyzerException):
-            model_config.get_ensemble_submodels()
+            model_config.get_ensemble_composing_models()
 
         with self.assertRaises(TritonModelAnalyzerException):
-            model_config.set_submodel_variant_name(
-                submodel_name="preprocess", variant_name="preprocess_config_0")
+            model_config.set_composing_model_variant_name(
+                composing_model_name="preprocess",
+                variant_name="preprocess_config_0")
 
         mock_model_config.stop()
 
@@ -393,11 +396,12 @@ ensemble_scheduling {
         model_config = ModelConfig._create_from_file('/path/to/model_config')
 
         with self.assertRaises(TritonModelAnalyzerException):
-            model_config.get_ensemble_submodels()
+            model_config.get_ensemble_composing_models()
 
         with self.assertRaises(TritonModelAnalyzerException):
-            model_config.set_submodel_variant_name(
-                submodel_name="preprocess", variant_name="preprocess_config_0")
+            model_config.set_composing_model_variant_name(
+                composing_model_name="preprocess",
+                variant_name="preprocess_config_0")
 
         mock_model_config.stop()
 
@@ -408,11 +412,12 @@ ensemble_scheduling {
         model_config = ModelConfig._create_from_file('/path/to/model_config')
 
         with self.assertRaises(TritonModelAnalyzerException):
-            model_config.get_ensemble_submodels()
+            model_config.get_ensemble_composing_models()
 
         with self.assertRaises(TritonModelAnalyzerException):
-            model_config.set_submodel_variant_name(
-                submodel_name="preprocess", variant_name="preprocess_config_0")
+            model_config.set_composing_model_variant_name(
+                composing_model_name="preprocess",
+                variant_name="preprocess_config_0")
 
         mock_model_config.stop()
 

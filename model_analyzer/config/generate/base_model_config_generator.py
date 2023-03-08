@@ -198,19 +198,19 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     @staticmethod
     def make_ensemble_model_config(
             model: ModelProfileSpec,
-            ensemble_submodel_configs: List[ModelConfig],
+            ensemble_composing_model_configs: List[ModelConfig],
             model_variant_name_manager: ModelVariantNameManager,
             param_combo: Dict = {}) -> ModelConfig:
         """
         Loads the ensemble model spec from the model repository, and then mutates
-        the names to match the ensemble submodels
+        the names to match the ensemble composing models
         
         Parameters
         ----------
         model: ModelProfileSpec
             The top-level ensemble model spec
-        ensemble_submodel_configs: List of ModelConfigs
-            The list of submodel ModelConfigs 
+        ensemble_composing_model_configs: List of ModelConfigs
+            The list of composing model ModelConfigs 
         model_variant_name_manager: ModelVariantNameManager
 
         """
@@ -220,10 +220,10 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model, param_combo, logger_str)
 
         ensemble_config_dicts = [
-            submodel_config.to_dict()
-            for submodel_config in ensemble_submodel_configs
+            composing_model_config.to_dict()
+            for composing_model_config in ensemble_composing_model_configs
         ]
-        ensemble_key = ModelVariantNameManager.make_ensemble_submodel_key(
+        ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             ensemble_config_dicts)
 
         (variant_found, variant_name
@@ -233,13 +233,14 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_config_dict['name'] = variant_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
 
-        for submodel_config in ensemble_submodel_configs:
-            variant_name = submodel_config.get_field("name")
-            submodel_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
+        for composing_model_config in ensemble_composing_model_configs:
+            variant_name = composing_model_config.get_field("name")
+            composing_model_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
                 variant_name)
 
-            model_config.set_submodel_variant_name(submodel_name=submodel_name,
-                                                   variant_name=variant_name)
+            model_config.set_composing_model_variant_name(
+                composing_model_name=composing_model_name,
+                variant_name=variant_name)
 
         return model_config
 
