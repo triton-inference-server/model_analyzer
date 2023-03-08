@@ -451,7 +451,7 @@ class ConfigCommandProfile(ConfigCommand):
                 'loading and unloading in remote mode.'))
         self._add_config(
             ConfigField(
-                'bls_models',
+                'bls_submodels',
                 flags=['--bls-submodels'],
                 field_type=ConfigUnion([
                     profile_model_scheme,
