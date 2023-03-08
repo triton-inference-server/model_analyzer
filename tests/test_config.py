@@ -1920,7 +1920,7 @@ profile_models:
 
     def test_bls_composing_models(self):
         """
-        Test that BLS submodels can be specified
+        Test that BLS composing models can be specified
         """
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli-repository',
