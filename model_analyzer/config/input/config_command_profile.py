@@ -452,7 +452,7 @@ class ConfigCommandProfile(ConfigCommand):
         self._add_config(
             ConfigField(
                 'bls_models',
-                flags=['--bls-models'],
+                flags=['--bls-submodels'],
                 field_type=ConfigUnion([
                     profile_model_scheme,
                     ConfigListGeneric(ConfigUnion([
