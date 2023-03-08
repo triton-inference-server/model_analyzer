@@ -1920,7 +1920,7 @@ profile_models:
 
     def test_bls_submodels(self):
         """
-        Test that BLS submodels can be specified only per model in the YAML
+        Test that BLS submodels can be specified
         """
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli-repository',
