@@ -42,7 +42,7 @@ class ModelVariantNameManager:
         return model_variant_name_manager
 
     @staticmethod
-    def make_ensemble_submodel_key(
+    def make_ensemble_composing_model_key(
             ensemble_config_dicts: List[Dict]) -> Dict[str, str]:
         ensemble_names = [
             ensemble_config_dict["name"]

@@ -47,8 +47,10 @@ class ReportManager:
     various types of reports
     """
 
-    def __init__(self, mode: str, config: Union[ConfigCommandProfile, ConfigCommandReport],
-                 gpu_info: Dict[str, Dict[str, Any]], result_manager: ResultManager,
+    def __init__(self, mode: str, config: Union[ConfigCommandProfile,
+                                                ConfigCommandReport],
+                 gpu_info: Dict[str, Dict[str,
+                                          Any]], result_manager: ResultManager,
                  constraint_manager: ConstraintManager):
         """
         Parameters
@@ -75,14 +77,17 @@ class ReportManager:
         self._constraint_manager = constraint_manager
 
         # Create the plot manager
-        self._plot_manager = PlotManager(config=self._config,
-                                         result_manager=self._result_manager,
-                                         constraint_manager=self._constraint_manager)
+        self._plot_manager = PlotManager(
+            config=self._config,
+            result_manager=self._result_manager,
+            constraint_manager=self._constraint_manager)
 
-        self._summary_data: DefaultDict[str, List[Tuple[RunConfig, RunConfigMeasurement]]] = defaultdict(list)
+        self._summary_data: DefaultDict[str, List[Tuple[
+            RunConfig, RunConfigMeasurement]]] = defaultdict(list)
         self._summaries: Dict[str, Union[PDFReport, HTMLReport]] = {}
 
-        self._detailed_report_data: Dict[str, Tuple[RunConfig, RunConfigMeasurement]] = {}
+        self._detailed_report_data: Dict[str, Tuple[RunConfig,
+                                                    RunConfigMeasurement]] = {}
         self._detailed_reports: Dict[str, Union[PDFReport, HTMLReport]] = {}
 
         self._reports_export_directory = os.path.join(config.export_path,
@@ -399,7 +404,7 @@ class ReportManager:
             caption_results_table = caption_results_table + " Per model values are parenthetical."
 
         if run_config.is_ensemble_model():
-            caption_results_table = caption_results_table + " The ensemble's submodel values are listed in the following order: "
+            caption_results_table = caption_results_table + " The ensemble's composing model values are listed in the following order: "
             for ensemble_subconfig_name in run_config.model_run_configs(
             )[0].get_ensemble_subconfig_names():
                 caption_results_table = caption_results_table + BaseModelConfigGenerator.extract_model_name_from_variant_name(
@@ -502,7 +507,7 @@ class ReportManager:
             summary_sentence = summary_sentence + "<BR><BR>"
             best_config_name = best_run_config.model_run_configs(
             )[0].model_config().get_field('name')
-            summary_sentence = summary_sentence + f"<strong>{best_config_name}</strong> is comprised of the following submodels: <UL> "
+            summary_sentence = summary_sentence + f"<strong>{best_config_name}</strong> is comprised of the following composing models: <UL> "
 
             for ensemble_subconfig in best_run_config.model_run_configs(
             )[0].ensemble_subconfigs():
@@ -975,7 +980,7 @@ class ReportManager:
             gpu_cpu_string = f"GPU(s) {gpu_names} with total memory {max_memories}"
 
         if run_config.is_ensemble_model():
-            sentence = f"<strong>{model_config_name}</strong> is comprised of the following submodels:"
+            sentence = f"<strong>{model_config_name}</strong> is comprised of the following composing models:"
 
             for ensemble_subconfig in run_config.ensemble_subconfigs():
                 sentence = sentence + '<LI> ' + self._create_summary_config_info(
@@ -1041,7 +1046,8 @@ class ReportManager:
 
         constraint_strs = {}
 
-        for model_name, model_constraints in self._constraint_manager.get_constraints_for_all_models().items():
+        for model_name, model_constraints in self._constraint_manager.get_constraints_for_all_models(
+        ).items():
             strs = []
             if model_constraints:
                 for metric, constraint in model_constraints.items():

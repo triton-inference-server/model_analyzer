@@ -300,7 +300,7 @@ class ModelConfig:
 
         return getattr(self._model_config, "platform") == "ensemble"
 
-    def get_ensemble_submodels(self) -> Optional[List[str]]:
+    def get_ensemble_composing_models(self) -> Optional[List[str]]:
         """
         Returns
         -------
@@ -309,39 +309,40 @@ class ModelConfig:
 
         if not self.is_ensemble():
             raise TritonModelAnalyzerException(
-                "Cannot find submodels. Model platform is not ensemble.")
+                "Cannot find composing_models. Model platform is not ensemble.")
 
         try:
-            submodels = [
+            composing_models = [
                 model['modelName']
                 for model in self.to_dict()['ensembleScheduling']['step']
             ]
         except:
             raise TritonModelAnalyzerException(
-                "Cannot find submodels. Ensemble Scheduling and/or step is not present in config protobuf."
+                "Cannot find composing_models. Ensemble Scheduling and/or step is not present in config protobuf."
             )
 
-        return submodels
+        return composing_models
 
-    def set_submodel_variant_name(self, submodel_name: str,
-                                  variant_name: str) -> None:
+    def set_composing_model_variant_name(self, composing_model_name: str,
+                                         variant_name: str) -> None:
         """
-        Replaces the Ensembles submodel's name with the variant name
+        Replaces the Ensembles composing_model's name with the variant name
         """
 
         if not self.is_ensemble():
             raise TritonModelAnalyzerException(
-                "Cannot find submodels. Model platform is not ensemble.")
+                "Cannot find composing_models. Model platform is not ensemble.")
 
         model_config_dict = self.to_dict()
 
         try:
-            for submodel in model_config_dict['ensembleScheduling']['step']:
-                if submodel['modelName'] == submodel_name:
-                    submodel['modelName'] = variant_name
+            for composing_model in model_config_dict['ensembleScheduling'][
+                    'step']:
+                if composing_model['modelName'] == composing_model_name:
+                    composing_model['modelName'] = variant_name
         except:
             raise TritonModelAnalyzerException(
-                "Cannot find submodels. Ensemble Scheduling and/or step is not present in config protobuf."
+                "Cannot find composing_models. Ensemble Scheduling and/or step is not present in config protobuf."
             )
 
         self._model_config = self.from_dict(model_config_dict)._model_config

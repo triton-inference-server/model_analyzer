@@ -435,11 +435,11 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
                 return_value=fake_config):
-            ensemble_submodels = RunConfigGeneratorFactory._create_ensemble_submodels(
+            ensemble_composing_models = RunConfigGeneratorFactory._create_ensemble_composing_models(
                 models, config, MagicMock(), MagicMock())
 
         qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
-                                       ensemble_submodels, MagicMock(),
+                                       ensemble_composing_models, MagicMock(),
                                        ModelVariantNameManager())
 
         default_run_config = qrcg._create_default_run_config()
@@ -717,13 +717,13 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         """
         Test that get_next_run_config() creates a proper RunConfig for ensemble
 
-        Sets up a case where the coordinate is [1,2,4,5], which cooresponds to
-          - submodel 1 max_batch_size = 2
-          - submodel 1 instance_count = 3
-          - submodel 1 concurrency = 2*3*2 = 12
-          - submodel 2 max_batch_size = 16
-          - submodel 2 instance_count = 6
-          - submodel 2 concurrency = 16*6*2 = 192
+        Sets up a case where the coordinate is [1,2,4,5], which corresponds to
+          - composing model 1 max_batch_size = 2
+          - composing model 1 instance_count = 3
+          - composing model 1 concurrency = 2*3*2 = 12
+          - composing model 2 max_batch_size = 16
+          - composing model 2 instance_count = 6
+          - composing model 2 concurrency = 16*6*2 = 192
           - ensemble model concurrency = 12 (minimum value of [12, 192])
 
         Also,
@@ -790,7 +790,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
                 side_effect=mock_ensemble_configs):
-            ensemble_submodels = RunConfigGeneratorFactory._create_ensemble_submodels(
+            ensemble_composing_models = RunConfigGeneratorFactory._create_ensemble_composing_models(
                 models, config, MagicMock(), MagicMock())
 
         dims = SearchDimensions()
@@ -810,7 +810,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
 
         qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
-                                       ensemble_submodels, MagicMock(),
+                                       ensemble_composing_models, MagicMock(),
                                        ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
@@ -823,13 +823,15 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
-        submodel_config0 = run_config.model_run_configs(
+        composing_model_config0 = run_config.model_run_configs(
         )[0].ensemble_subconfigs()[0]
-        submodel_config1 = run_config.model_run_configs(
+        composing_model_config1 = run_config.model_run_configs(
         )[0].ensemble_subconfigs()[1]
 
-        self.assertEqual(submodel_config0.to_dict(), expected_model_config0)
-        self.assertEqual(submodel_config1.to_dict(), expected_model_config1)
+        self.assertEqual(composing_model_config0.to_dict(),
+                         expected_model_config0)
+        self.assertEqual(composing_model_config1.to_dict(),
+                         expected_model_config1)
 
         if max_concurrency:
             self.assertEqual(perf_config['concurrency-range'], max_concurrency)
