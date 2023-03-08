@@ -1931,6 +1931,17 @@ profile_models:
 
         self._evaluate_config(args, yaml_content)
 
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'quick', '--profile-models', 'modelA'
+        ]
+
+        yaml_content = """
+        bls_submodels: submodelA,submodelB
+        """
+
+        self._evaluate_config(args, yaml_content)
+
 
 if __name__ == '__main__':
     unittest.main()
