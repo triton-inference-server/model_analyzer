@@ -1918,14 +1918,14 @@ profile_models:
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(new_args, yaml_content, subcommand='profile')
 
-    def test_bls_submodels(self):
+    def test_bls_composing_models(self):
         """
         Test that BLS submodels can be specified
         """
         args = [
             'model-analyzer', 'profile', '--model-repository', 'cli-repository',
             '--run-config-search-mode', 'quick', '--profile-models', 'modelA',
-            '--bls-submodels', 'submodelA,submodelB'
+            '--bls-composing-models', 'modelA,modelB'
         ]
         yaml_content = ''
 
@@ -1937,7 +1937,7 @@ profile_models:
         ]
 
         yaml_content = """
-        bls_submodels: submodelA,submodelB
+        bls_composing_models: modelA,modelB
         """
 
         self._evaluate_config(args, yaml_content)

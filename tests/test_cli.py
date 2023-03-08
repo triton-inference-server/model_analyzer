@@ -151,7 +151,7 @@ def get_test_options():
         # Others are yaml only options
         OptionStruct("noop", "profile", "--model-repository"),
         OptionStruct("noop", "profile", "--profile-models"),
-        OptionStruct("noop", "profile", "--bls-submodels"),
+        OptionStruct("noop", "profile", "--bls-composing-models"),
 
         OptionStruct("noop", "report", "--report-model-configs"),
         OptionStruct("noop", "report", "--output-formats", "-o", ["pdf", "csv", "png"], "pdf", "SHOULD_FAIL"),

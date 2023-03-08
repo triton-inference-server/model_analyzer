@@ -89,8 +89,8 @@ model_repository: <string>
 # List of the model names to be profiled
 profile_models: <comma-delimited-string-list>
 
-# List of submodels for BLS models
-bls_submodels: <comma-delimited-string-list>
+# List of composing models for BLS models
+bls_composing_models: <comma-delimited-string-list>
 
 # Full path to directory to which to read and write checkpoints and profile data
 [ checkpoint_directory: <string> | default: './checkpoints' ]
@@ -255,8 +255,8 @@ The following config options are supported **only by the YAML** config file.
 # YAML config section for each model to be profiled
 profile_models: <comma-delimited-string-list|list|profile_model>
 
-# List of submodels for BLS models
-bls_submodels: <comma-delimited-string-list>
+# List of composing models for BLS models
+bls_composing_models: <comma-delimited-string-list>
 
 # List of constraints placed on the config search results
 [ constraints: <constraint> ]
