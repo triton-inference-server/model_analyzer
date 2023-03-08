@@ -73,12 +73,20 @@ class RunConfigGeneratorFactory:
         ensemble_composing_models = RunConfigGeneratorFactory._create_ensemble_composing_models(
             new_models, command_config, client, gpus)
 
-        if (command_config.run_config_search_mode == "quick"):
+        bls_composing_models = [
+            ModelProfileSpec(bls_composing_model_spec, command_config, client,
+                             gpus)
+            for bls_composing_model_spec in command_config.bls_composing_models
+        ]
+
+        if (command_config.run_config_search_mode == "quick" or
+                bls_composing_models):
             return RunConfigGeneratorFactory._create_quick_plus_concurrency_sweep_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
                 models=new_models,
                 ensemble_composing_models=ensemble_composing_models,
+                bls_composing_models=bls_composing_models,
                 client=client,
                 result_manager=result_manager,
                 model_variant_name_manager=model_variant_name_manager)
@@ -112,26 +120,28 @@ class RunConfigGeneratorFactory:
         command_config: ConfigCommandProfile, gpus: List[GPUDevice],
         models: List[ModelProfileSpec],
         ensemble_composing_models: Dict[str, List[ModelProfileSpec]],
-        client: TritonClient, result_manager: ResultManager,
+        bls_composing_models: List[ModelProfileSpec], client: TritonClient,
+        result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager
     ) -> ConfigGeneratorInterface:
         search_config = RunConfigGeneratorFactory._create_search_config(
-            models, ensemble_composing_models)
+            models, ensemble_composing_models, bls_composing_models)
         return QuickPlusConcurrencySweepRunConfigGenerator(
             search_config=search_config,
             config=command_config,
             gpus=gpus,
             models=models,
             ensemble_composing_models=ensemble_composing_models,
+            bls_composing_models=bls_composing_models,
             client=client,
             result_manager=result_manager,
             model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod
     def _create_search_config(
-        models: List[ModelProfileSpec],
-        ensemble_composing_models: Dict[str, List[ModelProfileSpec]]
-    ) -> SearchConfig:
+            models: List[ModelProfileSpec],
+            ensemble_composing_models: Dict[str, List[ModelProfileSpec]],
+            bls_composing_models: List[ModelProfileSpec]) -> SearchConfig:
         dimensions = SearchDimensions()
 
         index = 0
@@ -148,6 +158,12 @@ class RunConfigGeneratorFactory:
                     model.supports_batching())
                 dimensions.add_dimensions(index, dims)
                 index += 1
+
+        for bls_composing_model in bls_composing_models:
+            dims = RunConfigGeneratorFactory._get_dimensions_for_model(
+                model.supports_batching())
+            dimensions.add_dimensions(index, dims)
+            index += 1
 
         search_config = SearchConfig(dimensions=dimensions,
                                      radius=RADIUS,
@@ -188,7 +204,7 @@ class RunConfigGeneratorFactory:
             client: TritonClient,
             gpus: List[GPUDevice]) -> Dict[str, List[ModelProfileSpec]]:
         """
-        Given a list of models create the ensemble composing_models (indexed by model name) 
+        Given a list of models create the ensemble composing models (indexed by model name) 
         """
         composing_models = {}
 

@@ -51,6 +51,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
                  models: List[ModelProfileSpec],
                  ensemble_composing_models: Dict[str, List[ModelProfileSpec]],
+                 bls_composing_models: List[ModelProfileSpec],
                  client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager):
         """
@@ -65,6 +66,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             List of models to profile
         ensemble_composing_models: Dict of List of ModelProfileSpec
             Dict indexed by model name of ensemble composing model profiles
+        bls_composing_models: List of ModelProfileSpec
+            List of BLS composing model profiles
         client: TritonClient
         model_variant_name_manager: ModelVariantNameManager
         """
@@ -74,6 +77,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._gpus = gpus
         self._models = models
         self._ensemble_composing_models = ensemble_composing_models
+        self._bls_composing_models = bls_composing_models
 
         self._model_variant_name_manager = model_variant_name_manager
 
@@ -512,8 +516,17 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _create_default_composing_model_configs(
             self, model: ModelProfileSpec) -> List[ModelConfig]:
         default_composing_model_configs: List[ModelConfig] = []
-        for composing_model in self._ensemble_composing_models[
-                model.model_name()]:
+        if self._ensemble_composing_models:
+            for composing_model in self._ensemble_composing_models[
+                    model.model_name()]:
+                default_composing_model_configs.append(
+                    BaseModelConfigGenerator.make_model_config(
+                        param_combo={},
+                        model=composing_model,
+                        model_variant_name_manager=self.
+                        _model_variant_name_manager))
+
+        for composing_model in self._bls_composing_models:
             default_composing_model_configs.append(
                 BaseModelConfigGenerator.make_model_config(
                     param_combo={},
@@ -536,6 +549,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         default_model_run_config = ModelRunConfig(model.model_name(),
                                                   default_model_config,
                                                   default_perf_analyzer_config)
+
+        default_composing_model_configs = self._create_default_composing_model_configs(
+            model)
+
+        if default_composing_model_configs:
+            default_model_run_config.add_bls_composing_model_configs(
+                default_composing_model_configs)
 
         return default_model_run_config
 
