@@ -43,6 +43,8 @@ docker pull nvcr.io/nvidia/tritonserver:${RELEASE}-py3-sdk
 
 **3. Run the SDK container**
 
+Before running the SDK container, it is necessary that you define a <output-model-repository>, a folder that Model Analyzer has write access to. Model Analyzer creates different configurations of the models you are testing and leverages this folder to write the corresponding configurations. If this is not defined correctly, model analyzer may not work.
+
 ```
 docker run -it --gpus all \
     -v /var/run/docker.sock:/var/run/docker.sock \
