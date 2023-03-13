@@ -55,7 +55,7 @@ docker run -it --gpus all \
 will be located.
 This ensures the Triton SDK container has access to the model
 config variants that Model Analyzer creates.<br><br>
-**Important:** You must ensure the `<path-to-output-model-repo>` is identical on both sides of the mount<br><br>
+**Important:** You must ensure the `<path-to-output-model-repo>` is identical on both sides of the mount (or else Tritonserver cannot load the model)<br><br>
 
 **4. Run Model Analyzer with Docker Launch Mode**  
 Be sure to use `--triton-launch-mode=docker`, when running Model Analyzer.<br><br>
@@ -181,7 +181,7 @@ pip3 install --upgrade pip
 
 You can then try installing model analyzer again.
 
-Optionally, if you want Model Analyzer to generate PDF reports instead of HTML, 
+Optionally, if you want Model Analyzer to generate PDF reports instead of HTML,
 you should also run the following:
 
 ```
