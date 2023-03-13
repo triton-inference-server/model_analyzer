@@ -181,7 +181,7 @@ pip3 install --upgrade pip
 
 You can then try installing model analyzer again.
 
-Optionally, if you want Model Analyzer to generate PDF reports instead of HTML, 
+Optionally, if you want Model Analyzer to generate PDF reports instead of HTML,
 you should also run the following:
 
 ```
@@ -223,5 +223,5 @@ After these steps, `model-analyzer` executable should be available in `$PATH`.
 
 - Triton Model Analyzer supports all the GPUs supported by the DCGM library. See
   [DCGM Supported
-  GPUs](https://docs.nvidia.com/datacenter/dcgm/latest/dcgm-user-guide/getting-started.html#supported-platforms)
+  GPUs](https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/getting-started.html#supported-platforms)
   for more information.
