@@ -67,7 +67,7 @@ docker run -it --gpus all \
 will be located.
 This ensures the Triton SDK container has access to the model
 config variants that Model Analyzer creates.<br><br>
-**Important:** You must ensure the absolutes paths are identical on both sides of the mounts<br><br>
+**Important:** You must ensure the absolutes paths are identical on both sides of the mounts (or else Tritonserver cannot load the model)<br><br>
 
 ## `Step 3:` Profile both models concurrently
 
