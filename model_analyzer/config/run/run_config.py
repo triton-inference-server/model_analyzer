@@ -98,12 +98,12 @@ class RunConfig:
         return ','.join(
             [mrc.model_variant_name() for mrc in self.model_run_configs()])
 
-    def ensemble_subconfigs(self):
+    def ensemble_composing_configs(self):
         """
-        Returns a list of ensemble subconfigs from the first model config
+        Returns a list of ensemble composing configs from the first model config
         (an ensemble cannot be part of a multi-model)
         """
-        return self._model_run_configs[0].ensemble_subconfigs()
+        return self._model_run_configs[0].ensemble_composing_configs()
 
     @classmethod
     def from_dict(cls, run_config_dict):

@@ -47,7 +47,7 @@ def mock_ensemble_configs(*args, **kwargs):
         }],
         "max_batch_size": 4
     }
-    fake_base_subconfig0 = {
+    fake_base_composing_config0 = {
         "name": "fake_model_A",
         "input": [{
             "name": "INPUT__0",
@@ -57,7 +57,7 @@ def mock_ensemble_configs(*args, **kwargs):
         "max_batch_size": 4,
         "sequence_batching": {}
     }
-    fake_base_subconfig1 = {
+    fake_base_composing_config1 = {
         "name": "fake_model_B",
         "input": [{
             "name": "INPUT__2",
@@ -75,9 +75,9 @@ def mock_ensemble_configs(*args, **kwargs):
     if model_name == 'my-model':
         return fake_config
     elif model_name == 'fake_model_A':
-        return fake_base_subconfig0
+        return fake_base_composing_config0
     elif model_name == 'fake_model_B':
-        return fake_base_subconfig1
+        return fake_base_composing_config1
 
 
 class TestQuickRunConfigGenerator(trc.TestResultCollector):
@@ -443,14 +443,14 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                                        ModelVariantNameManager())
 
         default_run_config = qrcg._create_default_run_config()
-        ensemble_subconfigs = default_run_config.model_run_configs(
-        )[0].ensemble_subconfigs()
+        ensemble_composing_configs = default_run_config.model_run_configs(
+        )[0].ensemble_composing_configs()
 
         self.assertTrue(
             "my-model_config_default" in default_run_config.representation())
-        self.assertEqual(ensemble_subconfigs[0].get_field("name"),
+        self.assertEqual(ensemble_composing_configs[0].get_field("name"),
                          "preprocess_config_default")
-        self.assertEqual(ensemble_subconfigs[1].get_field("name"),
+        self.assertEqual(ensemble_composing_configs[1].get_field("name"),
                          "resnet50_trt_config_default")
 
     def test_get_next_run_config_ensemble(self):
@@ -819,14 +819,15 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         self.assertEqual(len(run_config.model_run_configs()), 1)
         self.assertEqual(
-            len(run_config.model_run_configs()[0].ensemble_subconfigs()), 2)
+            len(run_config.model_run_configs()[0].ensemble_composing_configs()),
+            2)
 
         model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
         composing_model_config0 = run_config.model_run_configs(
-        )[0].ensemble_subconfigs()[0]
+        )[0].ensemble_composing_configs()[0]
         composing_model_config1 = run_config.model_run_configs(
-        )[0].ensemble_subconfigs()[1]
+        )[0].ensemble_composing_configs()[1]
 
         self.assertEqual(composing_model_config0.to_dict(),
                          expected_model_config0)

@@ -295,14 +295,14 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         start_model_index = model_index
 
         if model.model_name() in self._ensemble_composing_models:
-            ensemble_subconfigs, end_model_index = self._get_next_ensemble_subconfigs(
+            ensemble_composing_configs, end_model_index = self._get_next_ensemble_composing_configs(
                 model, start_model_index)
 
             param_combo = self._get_next_ensemble_param_combo(
                 start_model_index, end_model_index)
 
             model_config = self._get_next_ensemble_model_config(
-                model, ensemble_subconfigs, param_combo)
+                model, ensemble_composing_configs, param_combo)
 
             model_index = end_model_index
         else:
@@ -319,23 +319,23 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         if model.model_name() in self._ensemble_composing_models:
             model_run_config.add_ensemble_composing_model_configs(
-                ensemble_subconfigs)
+                ensemble_composing_configs)
 
         return (model_run_config, model_index)
 
-    def _get_next_ensemble_subconfigs(
+    def _get_next_ensemble_composing_configs(
             self, model: ModelProfileSpec,
             start_model_index: int) -> Tuple[List[ModelConfig], int]:
         model_index = start_model_index
-        ensemble_subconfigs = []
+        ensemble_composing_configs = []
         for ensemble_composing_model in self._ensemble_composing_models[
                 model.model_name()]:
-            ensemble_subconfigs.append(
+            ensemble_composing_configs.append(
                 self._get_next_model_config(ensemble_composing_model,
                                             model_index))
             model_index = model_index + 1
 
-        return (ensemble_subconfigs, model_index)
+        return (ensemble_composing_configs, model_index)
 
     def _get_next_ensemble_param_combo(self, start_model_index: int,
                                        end_model_index: int) -> dict:
@@ -359,12 +359,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         return param_combo
 
-    def _get_next_ensemble_model_config(self, model: ModelProfileSpec,
-                                        ensemble_subconfigs: List[ModelConfig],
-                                        param_combo: dict) -> ModelConfig:
+    def _get_next_ensemble_model_config(
+            self, model: ModelProfileSpec,
+            ensemble_composing_configs: List[ModelConfig],
+            param_combo: dict) -> ModelConfig:
         model_config = BaseModelConfigGenerator.make_ensemble_model_config(
             model=model,
-            ensemble_composing_model_configs=ensemble_subconfigs,
+            ensemble_composing_model_configs=ensemble_composing_configs,
             model_variant_name_manager=self._model_variant_name_manager,
             param_combo=param_combo)
 
