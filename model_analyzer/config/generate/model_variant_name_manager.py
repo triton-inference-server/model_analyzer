@@ -70,7 +70,7 @@ class ModelVariantNameManager:
     def get_ensemble_model_variant_name(
             self, model_name: str, ensemble_dict: Dict) -> Tuple[bool, str]:
         """
-        Given a base ensemble model name and a dict of ensemble subconfigs,
+        Given a base ensemble model name and a dict of ensemble composing configs,
         return if the variant already existed and the name of the model variant
 
         If the same input values are provided to this function multiple times,

@@ -169,20 +169,20 @@ class TestRunConfig(trc.TestResultCollector):
         pc = PerfAnalyzerConfig()
         composing_model_configs = [ModelConfig({}), ModelConfig({})]
 
-        # Invalid client batch-size and valid model preferred_batch_size for subconfig[1]
+        # Invalid client batch-size and valid model preferred_batch_size for composing_config[1]
         pc['batch-size'] = 2
         mc.set_config({"max_batch_size": 8, "name": "test_model"})
         mrc = ModelRunConfig("modelC", mc, pc)
 
         composing_model_configs[0].set_config({
-            "name": "subconfig_A",
+            "name": "composing_config_A",
             "max_batch_size": 4,
             "dynamic_batching": {
                 "preferred_batch_size": [2]
             }
         })
         composing_model_configs[1].set_config({
-            "name": "subconfig_B",
+            "name": "composing_config_B",
             "max_batch_size": 4,
             "dynamic_batching": {
                 "preferred_batch_size": [4, 8]

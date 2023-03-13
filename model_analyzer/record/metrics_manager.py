@@ -277,12 +277,13 @@ class MetricsManager:
             self._create_model_variant(original_name=mrc.model_name(),
                                        variant_config=mrc.model_config())
 
-            for ensemble_subconfig in mrc.ensemble_subconfigs():
-                variant_name = ensemble_subconfig.get_field("name")
+            for ensemble_composing_config in mrc.ensemble_composing_configs():
+                variant_name = ensemble_composing_config.get_field("name")
                 original_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
                     variant_name)
 
-                self._create_model_variant(original_name, ensemble_subconfig)
+                self._create_model_variant(original_name,
+                                           ensemble_composing_config)
 
     def _create_model_variant(self, original_name, variant_config):
         """
@@ -318,9 +319,9 @@ class MetricsManager:
             if not self._load_model_variant(variant_config=mrc.model_config()):
                 return False
 
-            for ensemble_subconfig in mrc.ensemble_subconfigs():
+            for ensemble_composing_config in mrc.ensemble_composing_configs():
                 if not self._load_model_variant(
-                        variant_config=ensemble_subconfig):
+                        variant_config=ensemble_composing_config):
                     return False
         return True
 

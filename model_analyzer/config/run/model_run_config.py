@@ -48,7 +48,7 @@ class ModelRunConfig:
         self._model_name = model_name
         self._model_config = model_config
         self._perf_config = perf_config
-        self._ensemble_subconfigs: List[ModelConfig] = []
+        self._ensemble_composing_configs: List[ModelConfig] = []
 
     def model_name(self) -> str:
         """
@@ -95,12 +95,12 @@ class ModelRunConfig:
 
         return self._perf_config
 
-    def ensemble_subconfigs(self) -> List[ModelConfig]:
+    def ensemble_composing_configs(self) -> List[ModelConfig]:
         """
-        Returns the list of ensemble subconfigs
+        Returns the list of ensemble composing configs
         """
 
-        return self._ensemble_subconfigs
+        return self._ensemble_composing_configs
 
     def representation(self) -> str:
         """
@@ -134,10 +134,11 @@ class ModelRunConfig:
         Returns false if maximum of preferred batch size is greater than model batch size. Else true
         """
         legal = True
-        ensemble_subconfigs = [
-            subconfig.get_config() for subconfig in self._ensemble_subconfigs
+        ensemble_composing_configs = [
+            composing_config.get_config()
+            for composing_config in self._ensemble_composing_configs
         ]
-        model_configs = ensemble_subconfigs if self._ensemble_subconfigs else [
+        model_configs = ensemble_composing_configs if self._ensemble_composing_configs else [
             self._model_config.get_config()
         ]
 
@@ -174,9 +175,9 @@ class ModelRunConfig:
         """
         return self._model_config.is_ensemble()
 
-    def get_ensemble_subconfig_names(self) -> Optional[List[str]]:
+    def get_ensemble_composing_config_names(self) -> Optional[List[str]]:
         """
-        Returns list of Ensemble Subconfig names
+        Returns list of ensemble composing config names
         """
         return self._model_config.get_ensemble_composing_models(
         ) if self._model_config.is_ensemble() else []
@@ -187,7 +188,7 @@ class ModelRunConfig:
         Adds a list of ensemble composing_model configs
         """
         for composing_model_config in composing_model_configs:
-            self._ensemble_subconfigs.append(composing_model_config)
+            self._ensemble_composing_configs.append(composing_model_config)
 
     @classmethod
     def from_dict(cls, model_run_config_dict):
@@ -198,11 +199,11 @@ class ModelRunConfig:
         model_run_config._perf_config = PerfAnalyzerConfig.from_dict(
             model_run_config_dict['_perf_config'])
 
-        if '_ensemble_subconfigs' in model_run_config_dict:
-            model_run_config._ensemble_subconfigs = [
-                ModelConfig.from_dict(ensemble_subconfig_dict)
-                for ensemble_subconfig_dict in
-                model_run_config_dict['_ensemble_subconfigs']
+        if '_ensemble_composing_configs' in model_run_config_dict:
+            model_run_config._ensemble_composing_configs = [
+                ModelConfig.from_dict(ensemble_composing_config_dict)
+                for ensemble_composing_config_dict in
+                model_run_config_dict['_ensemble_composing_configs']
             ]
 
         return model_run_config
