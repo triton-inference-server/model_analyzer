@@ -28,9 +28,9 @@ cluster using helm charts. You can find information about helm charts [here](htt
 
 1. **Install Kubernetes :** Follow the steps in the [NVIDIA Kubernetes Installation Docs](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/install-k8s.html) to install Kubernetes, verify your installation, and troubleshoot any issues.
 
-2. **Set Default Container Runtime :** Kubernetes does not yet support the `--gpus` options for running Docker containers, so all GPU nodes will need to register the `nvidia` runtime as the default for Docker on all GPU nodes. Follow the directions in the [NVIDIA Container Toolkit Installation Docs](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/dcgme2e.html#install-nvidia-container-toolkit-previously-nvidia-docker2).
+2. **Set Default Container Runtime :** Kubernetes does not yet support the `--gpus` options for running Docker containers, so all GPU nodes will need to register the `nvidia` runtime as the default for Docker on all GPU nodes. Follow the directions in the [NVIDIA Container Toolkit Installation Docs](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/install-k8s.html#install-nvidia-container-toolkit-nvidia-docker2).
 
-3. **Install NVIDIA Device Plugin :** The NVIDIA Device Plugin is also required to use GPUs with Kubernetes. The device plugin provides a daemonset that automatically enumerates the number of GPUs on your worker nodes, and allows pods to run on them. Follow the directions in the [NVIDIA Device Plugin Docs](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/dcgme2e.html#install-nvidia-device-plugin) to deploy the device plugin on your cluster.
+3. **Install NVIDIA Device Plugin :** The NVIDIA Device Plugin is also required to use GPUs with Kubernetes. The device plugin provides a daemonset that automatically enumerates the number of GPUs on your worker nodes, and allows pods to run on them. Follow the directions in the [NVIDIA Device Plugin Docs](https://docs.nvidia.com/datacenter/cloud-native/kubernetes/install-k8s.html#install-nvidia-device-plugin) to deploy the device plugin on your cluster.
 
 ## Deploy Model Analyzer
 
