@@ -455,6 +455,72 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(ensemble_composing_configs[1].get_field("name"),
                          "resnet50_trt_config_default")
 
+    def test_default_bls_config_generation(self):
+        """
+        Test that the default BLS config is generated correctly
+        """
+
+        fake_config = {
+            "name": "my-model",
+            "platform": "pytorch",
+            "input": [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": [16]
+            }],
+            "max_batch_size": 4
+        }
+
+        args = [
+            'model-analyzer', 'profile', '--model-repository', '/tmp',
+            '--config-file', '/tmp/my_config.yml', '--bls-composing-models',
+            'bls_composing_modelA,bls_composing_modelB'
+        ]
+
+        # yapf: disable
+        yaml_str = ("""
+            profile_models:
+                - my-model:
+                    perf_analyzer_flags:
+                        percentile: 96
+            """)
+        # yapf: enable
+
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                return_value=fake_config):
+            models = [
+                ModelProfileSpec(spec=config.profile_models[0],
+                                 config=config,
+                                 client=MagicMock(),
+                                 gpus=MagicMock())
+            ]
+
+        sc = SearchConfig(dimensions=MagicMock(), radius=5, min_initialized=2)
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                return_value=fake_config):
+            bls_composing_models = RunConfigGeneratorFactory._create_bls_composing_models(
+                config, MagicMock(), MagicMock())
+
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models, {},
+                                       bls_composing_models, MagicMock(),
+                                       ModelVariantNameManager())
+
+        default_run_config = qrcg._create_default_run_config()
+        bls_composing_configs = default_run_config.model_run_configs(
+        )[0].bls_composing_configs()
+
+        self.assertTrue(
+            "my-model_config_default" in default_run_config.representation())
+        self.assertEqual(bls_composing_configs[0].get_field("name"),
+                         "bls_composing_modelA_config_default")
+        self.assertEqual(bls_composing_configs[1].get_field("name"),
+                         "bls_composing_modelB_config_default")
+
     def test_get_next_run_config_ensemble(self):
         """
         Test that get_next_run_config() creates a proper RunConfig for ensemble

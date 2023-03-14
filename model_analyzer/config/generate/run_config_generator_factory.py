@@ -73,11 +73,8 @@ class RunConfigGeneratorFactory:
         ensemble_composing_models = RunConfigGeneratorFactory._create_ensemble_composing_models(
             new_models, command_config, client, gpus)
 
-        bls_composing_models = [
-            ModelProfileSpec(bls_composing_model_spec, command_config, client,
-                             gpus)
-            for bls_composing_model_spec in command_config.bls_composing_models
-        ]
+        bls_composing_models = RunConfigGeneratorFactory._create_bls_composing_models(
+            command_config, client, gpus)
 
         if (command_config.run_config_search_mode == "quick" or
                 bls_composing_models):
@@ -227,3 +224,14 @@ class RunConfigGeneratorFactory:
                 composing_models[model.model_name()] = composing_model_configs
 
         return composing_models
+
+    @staticmethod
+    def _create_bls_composing_models(
+            config: ConfigCommandProfile, client: TritonClient,
+            gpus: List[GPUDevice]) -> List[ModelProfileSpec]:
+        bls_composing_models = [
+            ModelProfileSpec(bls_composing_model_spec, config, client, gpus)
+            for bls_composing_model_spec in config.bls_composing_models
+        ]
+
+        return bls_composing_models
