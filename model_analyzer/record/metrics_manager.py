@@ -328,6 +328,7 @@ class MetricsManager:
         Loads all model variants in the client
         """
         for mrc in run_config.model_run_configs():
+            # BLS composing configs cannot mutate the model names
             for bls_composing_config in mrc.bls_composing_configs():
                 bls_original_composing_config = BaseModelConfigGenerator.create_original_config_from_variant(
                     bls_composing_config)
