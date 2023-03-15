@@ -114,7 +114,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         sc = SearchConfig(dimensions=self._dims, radius=5, min_initialized=2)
         config = self._create_config()
         self._qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                             self._mock_models, {}, MagicMock(),
+                                             self._mock_models, {}, {},
+                                             MagicMock(),
                                              ModelVariantNameManager())
 
     def test_get_starting_coordinate(self):
@@ -129,7 +130,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         sc = SearchConfig(dimensions=dims,radius=2, min_initialized=2)
         #yapf: enable
         qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                       self._mock_models, {}, MagicMock(),
+                                       self._mock_models, {}, {}, MagicMock(),
                                        ModelVariantNameManager())
         self.assertEqual(qrcg._get_starting_coordinate(), Coordinate([2, 1, 3]))
 
@@ -296,8 +297,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
         config = self._create_config()
-        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), mock_models, {},
-                                       MagicMock(), ModelVariantNameManager())
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), mock_models,
+                                       {}, {}, MagicMock(),
+                                       ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
 
@@ -370,7 +372,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         ])
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
-        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models, {},
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models, {}, {},
                                        MagicMock(), ModelVariantNameManager())
 
         default_run_config = qrcg._create_default_run_config()
@@ -438,9 +440,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             ensemble_composing_models = RunConfigGeneratorFactory._create_ensemble_composing_models(
                 models, config, MagicMock(), MagicMock())
 
-        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
-                                       ensemble_composing_models, MagicMock(),
-                                       ModelVariantNameManager())
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
+                                       models, ensemble_composing_models, {},
+                                       MagicMock(), ModelVariantNameManager())
 
         default_run_config = qrcg._create_default_run_config()
         ensemble_composing_configs = default_run_config.model_run_configs(
@@ -452,6 +454,72 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                          "preprocess_config_default")
         self.assertEqual(ensemble_composing_configs[1].get_field("name"),
                          "resnet50_trt_config_default")
+
+    def test_default_bls_config_generation(self):
+        """
+        Test that the default BLS config is generated correctly
+        """
+
+        fake_config = {
+            "name": "my-model",
+            "platform": "pytorch",
+            "input": [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": [16]
+            }],
+            "max_batch_size": 4
+        }
+
+        args = [
+            'model-analyzer', 'profile', '--model-repository', '/tmp',
+            '--config-file', '/tmp/my_config.yml', '--bls-composing-models',
+            'bls_composing_modelA,bls_composing_modelB'
+        ]
+
+        # yapf: disable
+        yaml_str = ("""
+            profile_models:
+                - my-model:
+                    perf_analyzer_flags:
+                        percentile: 96
+            """)
+        # yapf: enable
+
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                return_value=fake_config):
+            models = [
+                ModelProfileSpec(spec=config.profile_models[0],
+                                 config=config,
+                                 client=MagicMock(),
+                                 gpus=MagicMock())
+            ]
+
+        sc = SearchConfig(dimensions=MagicMock(), radius=5, min_initialized=2)
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                return_value=fake_config):
+            bls_composing_models = RunConfigGeneratorFactory._create_bls_composing_models(
+                config, MagicMock(), MagicMock())
+
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models, {},
+                                       bls_composing_models, MagicMock(),
+                                       ModelVariantNameManager())
+
+        default_run_config = qrcg._create_default_run_config()
+        bls_composing_configs = default_run_config.model_run_configs(
+        )[0].bls_composing_configs()
+
+        self.assertTrue(
+            "my-model_config_default" in default_run_config.representation())
+        self.assertEqual(bls_composing_configs[0].get_field("name"),
+                         "bls_composing_modelA_config_default")
+        self.assertEqual(bls_composing_configs[1].get_field("name"),
+                         "bls_composing_modelB_config_default")
 
     def test_get_next_run_config_ensemble(self):
         """
@@ -488,7 +556,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         config = self._create_config(
             additional_args=['--run-config-search-max-model-batch-size', '16'])
         qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                       self._mock_models, {}, MagicMock(),
+                                       self._mock_models, {}, {}, MagicMock(),
                                        ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
@@ -548,7 +616,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         config = self._create_config(
             additional_args=['--run-config-search-max-instance-count', '4'])
         qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                       self._mock_models, {}, MagicMock(),
+                                       self._mock_models, {}, {}, MagicMock(),
                                        ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
@@ -608,7 +676,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         config = self._create_config(
             additional_args=['--run-config-search-min-model-batch-size', '64'])
         qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                       self._mock_models, {}, MagicMock(),
+                                       self._mock_models, {}, {}, MagicMock(),
                                        ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
@@ -668,7 +736,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         config = self._create_config(
             additional_args=['--run-config-search-min-instance-count', '16'])
         qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                       self._mock_models, {}, MagicMock(),
+                                       self._mock_models, {}, {}, MagicMock(),
                                        ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
@@ -809,9 +877,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
 
-        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
-                                       ensemble_composing_models, MagicMock(),
-                                       ModelVariantNameManager())
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
+                                       models, ensemble_composing_models, {},
+                                       MagicMock(), ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
 
