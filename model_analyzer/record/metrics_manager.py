@@ -285,6 +285,13 @@ class MetricsManager:
                 self._create_model_variant(original_name,
                                            ensemble_composing_config)
 
+            for bls_composing_config in mrc.bls_composing_configs():
+                variant_name = bls_composing_config.get_field("name")
+                original_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                    variant_name)
+
+                self._create_model_variant(original_name, bls_composing_config)
+
     def _create_model_variant(self, original_name, variant_config):
         """
         Creates a directory for the model config variant in the output model
@@ -316,6 +323,11 @@ class MetricsManager:
         Loads all model variants in the client
         """
         for mrc in run_config.model_run_configs():
+            for bls_composing_config in mrc.bls_composing_configs():
+                if not self._load_model_variant(
+                        variant_config=bls_composing_config):
+                    return False
+
             if not self._load_model_variant(variant_config=mrc.model_config()):
                 return False
 

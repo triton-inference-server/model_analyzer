@@ -49,6 +49,7 @@ class ModelRunConfig:
         self._model_config = model_config
         self._perf_config = perf_config
         self._ensemble_composing_configs: List[ModelConfig] = []
+        self._bls_composing_configs: List[ModelConfig] = []
 
     def model_name(self) -> str:
         """
@@ -102,6 +103,13 @@ class ModelRunConfig:
 
         return self._ensemble_composing_configs
 
+    def bls_composing_configs(self) -> List[ModelConfig]:
+        """
+        Returns the list of BLS composing configs
+        """
+
+        return self._bls_composing_configs
+
     def representation(self) -> str:
         """
         Returns a representation string for the ModelRunConfig that can be used
@@ -141,6 +149,12 @@ class ModelRunConfig:
         model_configs = ensemble_composing_configs if self._ensemble_composing_configs else [
             self._model_config.get_config()
         ]
+
+        bls_composing_configs = [
+            composing_config.get_config()
+            for composing_config in self._bls_composing_configs
+        ]
+        model_configs.extend(bls_composing_configs)
 
         for model_config in model_configs:
             max_batch_size = model_config[
@@ -185,10 +199,18 @@ class ModelRunConfig:
     def add_ensemble_composing_model_configs(
             self, composing_model_configs: List[ModelConfig]) -> None:
         """
-        Adds a list of ensemble composing_model configs
+        Adds a list of ensemble composing model configs
         """
         for composing_model_config in composing_model_configs:
             self._ensemble_composing_configs.append(composing_model_config)
+
+    def add_bls_composing_model_configs(
+            self, composing_model_configs: List[ModelConfig]) -> None:
+        """
+        Adds a list of BLS composing model configs
+        """
+        for composing_model_config in composing_model_configs:
+            self._bls_composing_configs.append(composing_model_config)
 
     @classmethod
     def from_dict(cls, model_run_config_dict):
@@ -204,6 +226,13 @@ class ModelRunConfig:
                 ModelConfig.from_dict(ensemble_composing_config_dict)
                 for ensemble_composing_config_dict in
                 model_run_config_dict['_ensemble_composing_configs']
+            ]
+
+        if '_bls_composing_configs' in model_run_config_dict:
+            model_run_config._bls_composing_configs = [
+                ModelConfig.from_dict(bls_composing_config_dict)
+                for bls_composing_config_dict in
+                model_run_config_dict['_bls_composing_configs']
             ]
 
         return model_run_config
