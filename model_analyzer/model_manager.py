@@ -94,9 +94,9 @@ class ModelManager:
             The models to run
         """
 
-        # Note: this is not done in config_commmand, because there isn't a ModelConfig yet,
+        # Note: this is not done in config_command, because there isn't a ModelConfig yet,
         # so we cannot determine if the model is an ensemble
-        self._check_for_ensemble_model_incompatability(models)
+        self._check_for_ensemble_model_incompatibility(models)
 
         self._metrics_manager.start_new_model()
 
@@ -158,7 +158,7 @@ class ModelManager:
                     f"Triton server flags must be the same for all models to run concurrently"
                 )
 
-    def _check_for_ensemble_model_incompatability(
+    def _check_for_ensemble_model_incompatibility(
             self, models: List[ConfigModelProfileSpec]) -> None:
         for model in models:
             model_config = ModelConfig.create_from_profile_spec(
