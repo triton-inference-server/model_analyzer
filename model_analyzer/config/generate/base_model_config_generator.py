@@ -288,7 +288,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     def create_original_config_from_variant(
             variant_config: ModelConfig) -> ModelConfig:
         """
-        Removes '_config_$/default' from the variant config and returns
+        Removes 'config_#/default' from the variant config and returns
         a new model config
         """
         original_config = deepcopy(variant_config)
