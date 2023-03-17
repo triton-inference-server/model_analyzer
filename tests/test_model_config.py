@@ -421,6 +421,14 @@ ensemble_scheduling {
 
         mock_model_config.stop()
 
+    def test_set_model_name(self):
+        """
+      Test that we can set the model name of a config
+      """
+        model_config = ModelConfig.create_from_dictionary(self._model_config)
+        model_config.set_model_name("new_model_name")
+        self.assertEqual(model_config.get_field("name"), "new_model_name")
+
 
 if __name__ == '__main__':
     unittest.main()
