@@ -347,6 +347,11 @@ class ModelConfig:
 
         self._model_config = self.from_dict(model_config_dict)._model_config
 
+    def set_model_name(self, model_name: str) -> None:
+        model_config_dict = self.to_dict()
+        model_config_dict['name'] = model_name
+        self._model_config = self.from_dict(model_config_dict)._model_config
+
     def write_config_to_file(self, model_path, src_model_path,
                              first_variant_model_path):
         """
