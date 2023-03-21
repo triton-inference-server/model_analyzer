@@ -215,47 +215,57 @@ class Neighborhood:
 
     def _create_neighborhood(self) -> List[Coordinate]:
 
+        def _get_potential_steps(num_coordinates: int,
+                                 radius: int) -> List[List[int]]:
+            result_list = []
+            v = [0] * num_coordinates
+            base = [0] * num_coordinates
+
+            def _permutate_negatives(curr_val, index):
+                if (index + 1 == len(curr_val)):
+                    result_list.append(deepcopy(curr_val))
+                    if (curr_val[index]):
+                        curr_val[index] = -curr_val[index]
+                        result_list.append(deepcopy(curr_val))
+                else:
+                    _permutate_negatives(curr_val, index + 1)
+                    if (curr_val[index]):
+                        curr_val[index] = -curr_val[index]
+                        _permutate_negatives(curr_val, index + 1)
+
+            def _step(curr_step, radius, index):
+                for i in range(radius + 1):
+                    curr_step[index] = i
+
+                    if (index < len(curr_step) - 1):
+                        _step(curr_step, radius, index + 1)
+                    else:
+                        d = Neighborhood.calc_distance(base, curr_step)
+                        if (d <= radius):
+                            _permutate_negatives(curr_step, 0)
+                        else:
+                            return
+
+            _step(v, radius, 0)
+            return result_list
+
+        def _is_in_bounds(potential_coordinate) -> bool:
+            for i, v in enumerate(potential_coordinate):
+                dim = self._config.get_dimension(i)
+                if (v > dim.get_max_idx() or v < dim.get_min_idx()):
+                    return False
+            return True
+
         neighborhood = []
-        potential_neighborhood = self._get_potential_neighborhood(
-            self._home_coordinate, self._radius)
+        potential_steps = _get_potential_steps(
+            self._config.get_num_dimensions(), self._radius)
 
-        for potential_coordinate in potential_neighborhood:
-            distance = Neighborhood.calc_distance(self._home_coordinate,
-                                                  potential_coordinate)
-
-            if distance <= self._radius:
-                neighborhood.append(potential_coordinate)
-
+        for potential_step in potential_steps:
+            for (i, v) in enumerate(self._home_coordinate):
+                potential_step[i] += v
+            if (_is_in_bounds(potential_step)):
+                neighborhood.append(Coordinate(potential_step))
         return neighborhood
-
-    def _get_potential_neighborhood(self, coordinate: Coordinate,
-                                    radius: int) -> List[Coordinate]:
-        bounds = self._get_bounds(coordinate, radius)
-        potential_values = self._enumerate_all_values_in_bounds(bounds)
-        return [Coordinate(x) for x in potential_values]
-
-    def _get_bounds(self, coordinate: Coordinate,
-                    radius: int) -> List[List[int]]:
-        bounds = []
-        for i in range(self._config.get_num_dimensions()):
-            dimension = self._config.get_dimension(i)
-
-            lower_bound = max(dimension.get_min_idx(),
-                              int(coordinate[i]) - radius)
-            upper_bound = min(dimension.get_max_idx(),
-                              int(coordinate[i]) + radius + 1)
-            bounds.append([lower_bound, upper_bound])
-        return bounds
-
-    def _enumerate_all_values_in_bounds(
-            self, bounds: List[List[int]]) -> List[List[int]]:
-        possible_index_values = []
-        for bound in bounds:
-            low: int = bound[0]
-            high: int = bound[1]
-            possible_index_values.append(list(range(low, high + 1)))
-        tuples = list(product(*possible_index_values))
-        return [list(x) for x in tuples]
 
     def _get_coordinates_with_valid_measurements(self) -> List[Coordinate]:
         initialized_coordinates = []
