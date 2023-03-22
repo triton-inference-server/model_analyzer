@@ -937,12 +937,14 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         Sets up a case where the coordinate is [1,2,3,4,5,6], which corresponds to
           - model max_batch_size = 2
           - model instance count = 3
-          - model concurrency = 2*3*2 = 12
           - composing model 1 max_batch_size = 8
           - composing model 1 instance_count = 5
-          - composing model 1 concurrency = 8*5*2 = 80
           - composing model 2 max_batch_size = 32
           - composing model 2 instance_count = 7
+        
+        Concurrency calculations are as follows:
+          - model concurrency = 2*3*2 = 12
+          - composing model 1 concurrency = 8*5*2 = 80
           - composing model 2 concurrency = 32*7*2 = 448
           - model concurrency = 12 (minimum value of [12, 80, 448])
 
