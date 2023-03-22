@@ -16,7 +16,7 @@ import math
 from itertools import product
 from copy import deepcopy
 
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional, Union
 
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.coordinate_data import CoordinateData
@@ -63,8 +63,8 @@ class Neighborhood:
         self._force_slow_mode = False
 
     @classmethod
-    def calc_distance(cls, coordinate1: Coordinate,
-                      coordinate2: Coordinate) -> float:
+    def calc_distance(cls, coordinate1: Union[Coordinate, List[int]],
+                      coordinate2: Union[Coordinate, List[int]]) -> float:
         """ 
         Return the euclidean distance between two coordinates
         """
@@ -248,7 +248,8 @@ class Neighborhood:
         v = [0] * num_coordinates
         base = [0] * num_coordinates
 
-        def _append_combinations_to_results(curr_val: List[int], index: int):
+        def _append_combinations_to_results(curr_val: List[int],
+                                            index: int) -> None:
             """
             Given a List of integers (a potential step vector) with all positive 
             values, permutate all combinations of positive/negative values and 
@@ -269,7 +270,7 @@ class Neighborhood:
                     _append_combinations_to_results(curr_val, index + 1)
 
         def _permute_steps_in_range(curr_step: List[int], radius: int,
-                                    index: int):
+                                    index: int) -> None:
             """
             Recursively walk all combinations of steps within the desired radius
             """
