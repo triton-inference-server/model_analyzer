@@ -966,7 +966,23 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             additional_args.append(f'{min_concurrency}')
 
         #yapf: disable
-        expected_model_config0 = {
+        expected_model_config = {
+            'cpu_only': False,
+            'instanceGroup': [{
+                'count': 3,
+                'kind': 'KIND_GPU',
+            }],
+            'maxBatchSize': 2,
+            'dynamicBatching': {},
+            'name': 'fake_model_name_config_0',
+            'input': [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": ['16']
+            }]
+        }
+
+        expected_composing_model_config0 = {
             'cpu_only': False,
             'instanceGroup': [{
                 'count': 5,
@@ -982,7 +998,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             }]
         }
 
-        expected_model_config1 = {
+        expected_composing_model_config1 = {
             'cpu_only': False,
             'dynamicBatching': {},
             'instanceGroup': [{
@@ -1050,10 +1066,11 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         composing_model_config1 = run_config.model_run_configs(
         )[0].bls_composing_configs()[1]
 
+        self.assertEqual(model_config.to_dict(), expected_model_config)
         self.assertEqual(composing_model_config0.to_dict(),
-                         expected_model_config0)
+                         expected_composing_model_config0)
         self.assertEqual(composing_model_config1.to_dict(),
-                         expected_model_config1)
+                         expected_composing_model_config1)
 
         if max_concurrency:
             self.assertEqual(perf_config['concurrency-range'], max_concurrency)
