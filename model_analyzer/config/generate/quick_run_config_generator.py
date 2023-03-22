@@ -321,6 +321,17 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         model_run_config = ModelRunConfig(model_name, model_config,
                                           perf_analyzer_config)
 
+        bls_composing_model_configs = []
+        for bls_composing_model in self._bls_composing_models:
+            bls_composing_model_config = self._get_next_model_config(
+                bls_composing_model, model_index)
+            model_index += 1
+            bls_composing_model_configs.append(bls_composing_model_config)
+
+        if self._bls_composing_models:
+            model_run_config.add_bls_composing_model_configs(
+                bls_composing_model_configs)
+
         if model.model_name() in self._ensemble_composing_models:
             model_run_config.add_ensemble_composing_model_configs(
                 ensemble_composing_configs)
