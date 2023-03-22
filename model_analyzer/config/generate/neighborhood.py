@@ -214,40 +214,10 @@ class Neighborhood:
         return nearest_neighbor
 
     def _create_neighborhood(self) -> List[Coordinate]:
-
-        def _get_potential_steps(num_coordinates: int,
-                                 radius: int) -> List[List[int]]:
-            result_list = []
-            v = [0] * num_coordinates
-            base = [0] * num_coordinates
-
-            def _permutate_negatives(curr_val: List[int], index: int):
-                if (index + 1 == len(curr_val)):
-                    result_list.append(deepcopy(curr_val))
-                    if (curr_val[index]):
-                        curr_val[index] = -curr_val[index]
-                        result_list.append(deepcopy(curr_val))
-                else:
-                    _permutate_negatives(curr_val, index + 1)
-                    if (curr_val[index]):
-                        curr_val[index] = -curr_val[index]
-                        _permutate_negatives(curr_val, index + 1)
-
-            def _step(curr_step: List[int], radius: int, index: int):
-                for i in range(radius + 1):
-                    curr_step[index] = i
-
-                    if (index < len(curr_step) - 1):
-                        _step(curr_step, radius, index + 1)
-                    else:
-                        d = Neighborhood.calc_distance(base, curr_step)
-                        if (d <= radius):
-                            _permutate_negatives(curr_step, 0)
-                        else:
-                            return
-
-            _step(v, radius, 0)
-            return result_list
+        """
+        Create and return a neighborhood of all Coordinates within 
+        range <_radius> that are also within all bounds
+        """
 
         def _is_in_bounds(potential_coordinate: List[int]) -> bool:
             for i, v in enumerate(potential_coordinate):
@@ -257,7 +227,7 @@ class Neighborhood:
             return True
 
         neighborhood = []
-        potential_steps = _get_potential_steps(
+        potential_steps = self._get_potential_steps(
             self._config.get_num_dimensions(), self._radius)
 
         for potential_step in potential_steps:
@@ -266,6 +236,59 @@ class Neighborhood:
             if (_is_in_bounds(potential_step)):
                 neighborhood.append(Coordinate(potential_step))
         return neighborhood
+
+    def _get_potential_steps(self, num_coordinates: int,
+                             radius: int) -> List[List[int]]:
+        """ 
+        Create and return a list of all possible step vectors that are 
+        within <_radius> distance
+        """
+
+        result_list = []
+        v = [0] * num_coordinates
+        base = [0] * num_coordinates
+
+        def _append_combinations_to_results(curr_val: List[int], index: int):
+            """
+            Given a List of integers (a potential step vector) with all positive 
+            values, permutate all combinations of positive/negative values and 
+            append it to the result_list
+
+            For example, an input of [1,0,2] will append the following:
+            [1,0,2], [1,0,-2], [-1,0,2], [-1,0,-2]
+            """
+            if (index + 1 == len(curr_val)):
+                result_list.append(deepcopy(curr_val))
+                if (curr_val[index]):
+                    curr_val[index] = -curr_val[index]
+                    result_list.append(deepcopy(curr_val))
+            else:
+                _append_combinations_to_results(curr_val, index + 1)
+                if (curr_val[index]):
+                    curr_val[index] = -curr_val[index]
+                    _append_combinations_to_results(curr_val, index + 1)
+
+        def _permute_steps_in_range(curr_step: List[int], radius: int,
+                                    index: int):
+            """
+            Recursively walk all combinations of steps within the desired radius
+            """
+            for i in range(radius + 1):
+                curr_step[index] = i
+
+                # Leaf (rightmost) coordinate index: Add to results if in range
+                if (index == len(curr_step) - 1):
+                    d = Neighborhood.calc_distance(base, curr_step)
+                    if (d <= radius):
+                        _append_combinations_to_results(curr_step, 0)
+                    else:
+                        return
+                # Non-leaf coordinate index: Recurse
+                else:
+                    _permute_steps_in_range(curr_step, radius, index + 1)
+
+        _permute_steps_in_range(v, radius, 0)
+        return result_list
 
     def _get_coordinates_with_valid_measurements(self) -> List[Coordinate]:
         initialized_coordinates = []
