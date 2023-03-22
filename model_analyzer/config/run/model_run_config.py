@@ -204,6 +204,21 @@ class ModelRunConfig:
         for composing_model_config in composing_model_configs:
             self._ensemble_composing_configs.append(composing_model_config)
 
+    def is_bls_model(self) -> bool:
+        """
+        Returns true if the model_config is a BLS model
+        """
+        return len(self._bls_composing_configs) >= 1
+
+    def get_bls_composing_config_names(self) -> Optional[List[str]]:
+        """
+        Returns list of BLS composing config names
+        """
+        return [
+            composing_config.get_field("name")
+            for composing_config in self._bls_composing_configs
+        ]
+
     def add_bls_composing_model_configs(
             self, composing_model_configs: List[ModelConfig]) -> None:
         """
