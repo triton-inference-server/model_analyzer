@@ -221,7 +221,7 @@ class Neighborhood:
             v = [0] * num_coordinates
             base = [0] * num_coordinates
 
-            def _permutate_negatives(curr_val, index):
+            def _permutate_negatives(curr_val: List[int], index: int):
                 if (index + 1 == len(curr_val)):
                     result_list.append(deepcopy(curr_val))
                     if (curr_val[index]):
@@ -233,7 +233,7 @@ class Neighborhood:
                         curr_val[index] = -curr_val[index]
                         _permutate_negatives(curr_val, index + 1)
 
-            def _step(curr_step, radius, index):
+            def _step(curr_step: List[int], radius: int, index: int):
                 for i in range(radius + 1):
                     curr_step[index] = i
 
@@ -249,7 +249,7 @@ class Neighborhood:
             _step(v, radius, 0)
             return result_list
 
-        def _is_in_bounds(potential_coordinate) -> bool:
+        def _is_in_bounds(potential_coordinate: List[int]) -> bool:
             for i, v in enumerate(potential_coordinate):
                 dim = self._config.get_dimension(i)
                 if (v > dim.get_max_idx() or v < dim.get_min_idx()):
