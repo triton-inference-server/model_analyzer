@@ -82,7 +82,7 @@ class TestBLSReportManagerMethods(trc.TestResultCollector):
     def setUp(self):
         NotImplemented
 
-    def test_ensemble_summary(self):
+    def test_bls_summary(self):
         """
         Ensures the summary report sentence and table are accurate for a basic bls model (loaded from a checkpoint)
         """

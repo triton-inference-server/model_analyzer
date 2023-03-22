@@ -16,7 +16,7 @@ import unittest
 
 from .common import test_result_collector as trc
 from .common.test_utils import evaluate_mock_config, ROOT_DIR, \
-    load_single_model_result_manager, load_multi_model_result_manager, load_ensemble_result_manager
+    load_single_model_result_manager, load_multi_model_result_manager, load_ensemble_result_manager, load_bls_result_manager
 
 from google.protobuf import text_format
 from tritonclient.grpc import model_config_pb2
@@ -123,9 +123,10 @@ class TestResultTableManager(trc.TestResultCollector):
         """)
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
         state_manager = AnalyzerStateManager(config=config, server=None)
-        result_manager = ResultManager(config=config,
-                                       state_manager=state_manager,
-                                       constraint_manager=ConstraintManager(config))
+        result_manager = ResultManager(
+            config=config,
+            state_manager=state_manager,
+            constraint_manager=ConstraintManager(config))
         result_table_manager = ResultTableManager(config=config,
                                                   result_manager=result_manager)
 
@@ -184,9 +185,10 @@ class TestResultTableManager(trc.TestResultCollector):
         """)
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
         state_manager = AnalyzerStateManager(config=config, server=None)
-        result_manager = ResultManager(config=config,
-                                       state_manager=state_manager,
-                                       constraint_manager=ConstraintManager(config))
+        result_manager = ResultManager(
+            config=config,
+            state_manager=state_manager,
+            constraint_manager=ConstraintManager(config))
         table_manager = ResultTableManager(config=config,
                                            result_manager=result_manager)
         model_config_str = """
@@ -237,6 +239,11 @@ class TestResultTableManager(trc.TestResultCollector):
 
     def _create_ensemble_result_table_manager(self):
         result_manager, config = load_ensemble_result_manager()
+
+        return ResultTableManager(config, result_manager)
+
+    def _create_bls_result_table_manager(self):
+        result_manager, config = load_bls_result_manager()
 
         return ResultTableManager(config, result_manager)
 
