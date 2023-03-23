@@ -161,6 +161,28 @@ class TestBLSReportManagerMethods(trc.TestResultCollector):
         self.assertEqual(summary_table._rows[0][4], '7.439')  # p99 latency
         self.assertEqual(summary_table._rows[0][5], '3183.7')  # throughput
 
+    def test_bls_detailed(self):
+        """
+        Ensures the detailed report sentence is accurate for a BLS model (loaded from a checkpoint)
+        """
+        self._init_managers(models="FaceDetectionBLS_config_7",
+                            subcommand='report')
+
+        self.report_manager._add_detailed_report_data()
+        self.report_manager._build_detailed_table("FaceDetectionBLS_config_7")
+        detailed_sentence = self.report_manager._build_detailed_info(
+            "FaceDetectionBLS_config_7")
+
+        expected_detailed_sentence = "<strong>FaceDetectionBLS_config_7</strong> is comprised of the " \
+            "following composing models:<LI> <strong>FaceDetectionPreprocessing_config_5</strong>: " \
+            "6 GPU instances with a max batch size of 0 on platform sdk_backend </LI><LI> " \
+            "<strong>FaceDetectionModel_config_4</strong>: 5 GPU instances with a max batch size of 8 " \
+            "on platform tensorrt_plan </LI><LI> <strong>FaceDetectionPostprocessing_config_0</strong>: " \
+            "1 GPU instance with a max batch size of 0 on platform sdk_backend </LI><br>5 measurement(s) " \
+            "were obtained for the model config on GPU(s)  with total memory 0 GB."
+
+        self.assertEqual(detailed_sentence, expected_detailed_sentence)
+
     def tearDown(self):
         patch.stopall()
         shutil.rmtree(f"{ROOT_DIR}/reports")

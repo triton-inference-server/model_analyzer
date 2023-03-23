@@ -498,7 +498,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                                  gpus=MagicMock())
             ]
 
-        sc = SearchConfig(dimensions=MagicMock(), radius=5, min_initialized=2)
+        sc = SearchConfig(dimensions=self._dims, radius=5, min_initialized=2)
 
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
@@ -545,18 +545,17 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         """
         self._get_next_run_config_bls()
 
-    # TMA-1133: Making 6 dimensions is too slow (~4-5 seconds per test)
-    # def test_get_next_run_config_bls_with_max_concurrency(self):
-    #     """
-    #     Test that get_next_run_config() creates a proper RunConfig for BLS with a max concurrency
-    #     """
-    #     self._get_next_run_config_bls(max_concurrency=8)
+    def test_get_next_run_config_bls_with_max_concurrency(self):
+        """
+        Test that get_next_run_config() creates a proper RunConfig for BLS with a max concurrency
+        """
+        self._get_next_run_config_bls(max_concurrency=8)
 
-    # def test_get_next_run_config_bls_with_min_concurrency(self):
-    #     """
-    #     Test that get_next_run_config() creates a proper RunConfig for BLS with a min concurrency
-    #     """
-    #     self._get_next_run_config_bls(min_concurrency=16)
+    def test_get_next_run_config_bls_with_min_concurrency(self):
+        """
+        Test that get_next_run_config() creates a proper RunConfig for BLS with a min concurrency
+        """
+        self._get_next_run_config_bls(min_concurrency=16)
 
     def test_get_next_run_config_max_batch_size(self):
         """
