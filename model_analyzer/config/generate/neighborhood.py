@@ -16,7 +16,7 @@ import math
 from itertools import product
 from copy import deepcopy
 
-from typing import List, Tuple, Dict, Optional
+from typing import List, Tuple, Dict, Optional, Union
 
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.coordinate_data import CoordinateData
@@ -63,8 +63,8 @@ class Neighborhood:
         self._force_slow_mode = False
 
     @classmethod
-    def calc_distance(cls, coordinate1: Coordinate,
-                      coordinate2: Coordinate) -> float:
+    def calc_distance(cls, coordinate1: Union[Coordinate, List[int]],
+                      coordinate2: Union[Coordinate, List[int]]) -> float:
         """ 
         Return the euclidean distance between two coordinates
         """
@@ -214,48 +214,87 @@ class Neighborhood:
         return nearest_neighbor
 
     def _create_neighborhood(self) -> List[Coordinate]:
+        """
+        Create and return a neighborhood of all Coordinates within 
+        range <_radius> that are also within all bounds
+        """
 
         neighborhood = []
-        potential_neighborhood = self._get_potential_neighborhood(
-            self._home_coordinate, self._radius)
+        potential_steps = self._get_potential_steps(
+            self._config.get_num_dimensions(), self._radius)
 
-        for potential_coordinate in potential_neighborhood:
-            distance = Neighborhood.calc_distance(self._home_coordinate,
-                                                  potential_coordinate)
-
-            if distance <= self._radius:
-                neighborhood.append(potential_coordinate)
-
+        for potential_step in potential_steps:
+            for (i, v) in enumerate(self._home_coordinate):
+                potential_step[i] += v
+            if (self._is_in_bounds(potential_step)):
+                neighborhood.append(Coordinate(potential_step))
         return neighborhood
 
-    def _get_potential_neighborhood(self, coordinate: Coordinate,
-                                    radius: int) -> List[Coordinate]:
-        bounds = self._get_bounds(coordinate, radius)
-        potential_values = self._enumerate_all_values_in_bounds(bounds)
-        return [Coordinate(x) for x in potential_values]
+    def _is_in_bounds(self, potential_coordinate: List[int]) -> bool:
+        for i, v in enumerate(potential_coordinate):
+            dim = self._config.get_dimension(i)
+            if (v > dim.get_max_idx() or v < dim.get_min_idx()):
+                return False
+        return True
 
-    def _get_bounds(self, coordinate: Coordinate,
-                    radius: int) -> List[List[int]]:
-        bounds = []
-        for i in range(self._config.get_num_dimensions()):
-            dimension = self._config.get_dimension(i)
+    def _get_potential_steps(self, num_coordinates: int,
+                             radius: int) -> List[List[int]]:
+        """ 
+        Create and return a list of all possible step vectors that are 
+        within <_radius> distance
+        """
 
-            lower_bound = max(dimension.get_min_idx(),
-                              int(coordinate[i]) - radius)
-            upper_bound = min(dimension.get_max_idx(),
-                              int(coordinate[i]) + radius + 1)
-            bounds.append([lower_bound, upper_bound])
-        return bounds
+        result_list: List[List[int]] = []
+        v = [0] * num_coordinates
+        self._permute_steps_in_range(v, radius, 0, result_list)
+        return result_list
 
-    def _enumerate_all_values_in_bounds(
-            self, bounds: List[List[int]]) -> List[List[int]]:
-        possible_index_values = []
-        for bound in bounds:
-            low: int = bound[0]
-            high: int = bound[1]
-            possible_index_values.append(list(range(low, high + 1)))
-        tuples = list(product(*possible_index_values))
-        return [list(x) for x in tuples]
+    def _append_combinations_to_results(self, curr_val: List[int], index: int,
+                                        result_list: List[List[int]]) -> None:
+        """
+        Given a List of integers (a potential step vector) with all positive 
+        values, permutate all combinations of positive/negative values and 
+        append it to the result_list
+
+        For example, an input of [1,0,2] will append the following:
+        [1,0,2], [1,0,-2], [-1,0,2], [-1,0,-2]
+        """
+        if (index + 1 == len(curr_val)):
+            result_list.append(deepcopy(curr_val))
+            if (curr_val[index]):
+                curr_val[index] = -curr_val[index]
+                result_list.append(deepcopy(curr_val))
+        else:
+            self._append_combinations_to_results(curr_val, index + 1,
+                                                 result_list)
+            if (curr_val[index]):
+                curr_val[index] = -curr_val[index]
+                self._append_combinations_to_results(curr_val, index + 1,
+                                                     result_list)
+
+    def _permute_steps_in_range(self, curr_step: List[int], radius: int,
+                                index: int,
+                                result_list: List[List[int]]) -> None:
+        """
+        Recursively walk all combinations of steps within the desired radius
+        """
+        base = [0] * len(curr_step)
+
+        for i in range(radius + 1):
+            curr_step[index] = i
+
+            # Leaf (rightmost) coordinate index: Add to results if in range
+            if (index == len(curr_step) - 1):
+                d = Neighborhood.calc_distance(base, curr_step)
+                if (d <= radius):
+                    self._append_combinations_to_results(
+                        curr_step, 0, result_list)
+                else:
+                    return
+            # Non-leaf coordinate index: Recurse
+            else:
+                self._permute_steps_in_range(curr_step, radius, index + 1,
+                                             result_list)
 
     def _get_coordinates_with_valid_measurements(self) -> List[Coordinate]:
         initialized_coordinates = []

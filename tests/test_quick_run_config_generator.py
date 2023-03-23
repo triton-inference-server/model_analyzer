@@ -430,7 +430,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                                  gpus=MagicMock())
             ]
 
-        sc = SearchConfig(dimensions=MagicMock(), radius=5, min_initialized=2)
+        sc = SearchConfig(dimensions=self._dims, radius=5, min_initialized=2)
 
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",

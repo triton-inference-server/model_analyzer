@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from unittest.mock import MagicMock, patch
+from typing import List
 
 from model_analyzer.config.generate.neighborhood import Neighborhood
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
@@ -29,12 +30,18 @@ from .common import test_result_collector as trc
 class TestNeighborhood(trc.TestResultCollector):
 
     def setUp(self):
-        self.constraint_manager = construct_constraint_manager(
-            """
+        self.constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA
-            """
-        )
+            """)
+
+    # Coordinates can't be sorted by default, but if we convert each one
+    # to a list those can be sorted
+    def _sort_coordinates(self,
+                          coordinates: List[Coordinate]) -> List[Coordinate]:
+        sorted_coordinates = coordinates
+        sorted_coordinates.sort(key=lambda c: [x for x in c])
+        return sorted_coordinates
 
     def tearDown(self):
         patch.stopall()
@@ -103,7 +110,28 @@ class TestNeighborhood(trc.TestResultCollector):
                                  [2, 2, 2], [3, 1, 1]]
 
         expected_coordinates = [Coordinate(x) for x in expected_neighborhood]
-        self.assertEqual(tuple(n._neighborhood), tuple(expected_coordinates))
+
+        self.assertEqual(self._sort_coordinates(n._neighborhood),
+                         self._sort_coordinates(expected_coordinates))
+
+    def test_large_neighborhood(self):
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("a1", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("b1", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("c1", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+        dims.add_dimensions(1, [
+            SearchDimension("a2", SearchDimension.DIMENSION_TYPE_LINEAR),
+            SearchDimension("b2", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("c2", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
+        ])
+        nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
+        n = Neighborhood(nc,
+                         home_coordinate=Coordinate([1, 1, 1, 1, 1, 1]),
+                         coordinate_data=CoordinateData())
+
+        self.assertEqual(2328, len(n._neighborhood))
 
     def test_num_initialized(self):
         dims = SearchDimensions()
@@ -400,8 +428,7 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager(
-            """
+        constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
@@ -478,8 +505,7 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager(
-            """
+        constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
@@ -487,8 +513,7 @@ class TestNeighborhood(trc.TestResultCollector):
                     min: 100
                   perf_latency_p99:
                     max: 300
-            """
-        )
+            """)
 
         rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
         rcm0.set_constraint_manager(constraint_manager)
@@ -549,8 +574,7 @@ class TestNeighborhood(trc.TestResultCollector):
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager(
-            """
+        constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
@@ -558,8 +582,7 @@ class TestNeighborhood(trc.TestResultCollector):
                     min: 100
                   perf_latency_p99:
                     max: 300
-            """
-        )
+            """)
 
         rcm0 = self._construct_rcm(throughput=500, latency=450)  # fail
         rcm0.set_constraint_manager(constraint_manager)
