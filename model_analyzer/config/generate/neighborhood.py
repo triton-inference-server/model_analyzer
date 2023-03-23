@@ -219,13 +219,6 @@ class Neighborhood:
         range <_radius> that are also within all bounds
         """
 
-        def _is_in_bounds(potential_coordinate: List[int]) -> bool:
-            for i, v in enumerate(potential_coordinate):
-                dim = self._config.get_dimension(i)
-                if (v > dim.get_max_idx() or v < dim.get_min_idx()):
-                    return False
-            return True
-
         neighborhood = []
         potential_steps = self._get_potential_steps(
             self._config.get_num_dimensions(), self._radius)
@@ -233,9 +226,16 @@ class Neighborhood:
         for potential_step in potential_steps:
             for (i, v) in enumerate(self._home_coordinate):
                 potential_step[i] += v
-            if (_is_in_bounds(potential_step)):
+            if (self._is_in_bounds(potential_step)):
                 neighborhood.append(Coordinate(potential_step))
         return neighborhood
+
+    def _is_in_bounds(self, potential_coordinate: List[int]) -> bool:
+        for i, v in enumerate(potential_coordinate):
+            dim = self._config.get_dimension(i)
+            if (v > dim.get_max_idx() or v < dim.get_min_idx()):
+                return False
+        return True
 
     def _get_potential_steps(self, num_coordinates: int,
                              radius: int) -> List[List[int]]:
@@ -244,52 +244,57 @@ class Neighborhood:
         within <_radius> distance
         """
 
-        result_list = []
+        result_list: List[List[int]] = []
         v = [0] * num_coordinates
-        base = [0] * num_coordinates
-
-        def _append_combinations_to_results(curr_val: List[int],
-                                            index: int) -> None:
-            """
-            Given a List of integers (a potential step vector) with all positive 
-            values, permutate all combinations of positive/negative values and 
-            append it to the result_list
-
-            For example, an input of [1,0,2] will append the following:
-            [1,0,2], [1,0,-2], [-1,0,2], [-1,0,-2]
-            """
-            if (index + 1 == len(curr_val)):
-                result_list.append(deepcopy(curr_val))
-                if (curr_val[index]):
-                    curr_val[index] = -curr_val[index]
-                    result_list.append(deepcopy(curr_val))
-            else:
-                _append_combinations_to_results(curr_val, index + 1)
-                if (curr_val[index]):
-                    curr_val[index] = -curr_val[index]
-                    _append_combinations_to_results(curr_val, index + 1)
-
-        def _permute_steps_in_range(curr_step: List[int], radius: int,
-                                    index: int) -> None:
-            """
-            Recursively walk all combinations of steps within the desired radius
-            """
-            for i in range(radius + 1):
-                curr_step[index] = i
-
-                # Leaf (rightmost) coordinate index: Add to results if in range
-                if (index == len(curr_step) - 1):
-                    d = Neighborhood.calc_distance(base, curr_step)
-                    if (d <= radius):
-                        _append_combinations_to_results(curr_step, 0)
-                    else:
-                        return
-                # Non-leaf coordinate index: Recurse
-                else:
-                    _permute_steps_in_range(curr_step, radius, index + 1)
-
-        _permute_steps_in_range(v, radius, 0)
+        self._permute_steps_in_range(v, radius, 0, result_list)
         return result_list
+
+    def _append_combinations_to_results(self, curr_val: List[int], index: int,
+                                        result_list: List[List[int]]) -> None:
+        """
+        Given a List of integers (a potential step vector) with all positive 
+        values, permutate all combinations of positive/negative values and 
+        append it to the result_list
+
+        For example, an input of [1,0,2] will append the following:
+        [1,0,2], [1,0,-2], [-1,0,2], [-1,0,-2]
+        """
+        if (index + 1 == len(curr_val)):
+            result_list.append(deepcopy(curr_val))
+            if (curr_val[index]):
+                curr_val[index] = -curr_val[index]
+                result_list.append(deepcopy(curr_val))
+        else:
+            self._append_combinations_to_results(curr_val, index + 1,
+                                                 result_list)
+            if (curr_val[index]):
+                curr_val[index] = -curr_val[index]
+                self._append_combinations_to_results(curr_val, index + 1,
+                                                     result_list)
+
+    def _permute_steps_in_range(self, curr_step: List[int], radius: int,
+                                index: int,
+                                result_list: List[List[int]]) -> None:
+        """
+        Recursively walk all combinations of steps within the desired radius
+        """
+        base = [0] * len(curr_step)
+
+        for i in range(radius + 1):
+            curr_step[index] = i
+
+            # Leaf (rightmost) coordinate index: Add to results if in range
+            if (index == len(curr_step) - 1):
+                d = Neighborhood.calc_distance(base, curr_step)
+                if (d <= radius):
+                    self._append_combinations_to_results(
+                        curr_step, 0, result_list)
+                else:
+                    return
+            # Non-leaf coordinate index: Recurse
+            else:
+                self._permute_steps_in_range(curr_step, radius, index + 1,
+                                             result_list)
 
     def _get_coordinates_with_valid_measurements(self) -> List[Coordinate]:
         initialized_coordinates = []
