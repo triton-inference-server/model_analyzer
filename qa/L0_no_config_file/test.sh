@@ -29,6 +29,8 @@
 
 source ../common/util.sh
 
+REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
+
 rm -f *.log
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 rm -rf $OUTPUT_MODEL_REPOSITORY
@@ -42,7 +44,6 @@ rm $MODEL_REPOSITORY/*/config.pbtxt
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
-REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 TRITON_DOCKER_IMAGE=${TRITONSERVER_BASE_IMAGE_NAME}
 TRITON_LAUNCH_MODES="local docker"
 CLIENT_PROTOCOLS="http grpc"
