@@ -104,6 +104,16 @@ def load_ensemble_result_manager(
     return _load_result_manager_helper(dir_path, yaml_str)
 
 
+def load_bls_result_manager() -> Tuple[ResultManager, ConfigCommandProfile]:
+    """
+    Return a ResultManager with the BLS model test checkpoint loaded, as well
+    as the ConfigCommandProfile used to fake the profile step
+    """
+    dir_path = f'{ROOT_DIR}/bls-ckpt/'
+    yaml_str = "profile_models: FaceDetectionBLS"
+    return _load_result_manager_helper(dir_path, yaml_str)
+
+
 def _load_result_manager_helper(dir_path: str, yaml_str: str):
     args = [
         'model-analyzer', 'profile', '-f', 'config.yml',
@@ -116,9 +126,10 @@ def _load_result_manager_helper(dir_path: str, yaml_str: str):
     state_manager = AnalyzerStateManager(config=config, server=None)
     state_manager.load_checkpoint(checkpoint_required=True)
 
-    result_manager = ResultManager(config=config,
-                            state_manager=state_manager,
-                            constraint_manager=ConstraintManager(config=config))
+    result_manager = ResultManager(
+        config=config,
+        state_manager=state_manager,
+        constraint_manager=ConstraintManager(config=config))
     return result_manager, config
 
 
@@ -334,7 +345,8 @@ def construct_run_config_measurement(model_name,
         rc_measurement.set_metric_weightings(metric_objectives)
 
     if constraint_manager:
-        rc_measurement.set_constraint_manager(constraint_manager=constraint_manager)
+        rc_measurement.set_constraint_manager(
+            constraint_manager=constraint_manager)
 
     return rc_measurement
 
@@ -430,6 +442,7 @@ def construct_run_config_result(avg_gpu_metric_values,
 
     return run_config_result
 
+
 def construct_constraint_manager(yaml_config_str=None):
     """
     Returns a ConstraintManager object for Test cases
@@ -450,6 +463,7 @@ def construct_constraint_manager(yaml_config_str=None):
     config = evaluate_mock_config(args, yaml_config_str, subcommand="profile")
 
     return ConstraintManager(config)
+
 
 def default_encode(obj):
     if isinstance(obj, bytes):
