@@ -1032,13 +1032,21 @@ class ReportManager:
             gpu_names, max_memories = self._get_gpu_stats(measurements)
             gpu_cpu_string = f"GPU(s) {gpu_names} with total memory {max_memories}"
 
-        if run_config.is_ensemble_model() or run_config.is_bls_model():
+        if run_config.is_ensemble_model():
             sentence = f"<strong>{model_config_name}</strong> is comprised of the following composing models:"
 
             for ensemble_composing_config in run_config.ensemble_composing_configs(
             ):
                 sentence = sentence + '<LI> ' + self._create_summary_config_info(
                     ensemble_composing_config) + ' </LI>'
+
+            sentence = sentence + f"<br>{len(measurements)} measurement(s) were obtained for the model config on {gpu_cpu_string}."
+        elif run_config.is_bls_model():
+            sentence = f"<strong>{model_config_name}</strong> is comprised of the following composing models:"
+
+            for bls_composing_config in run_config.bls_composing_configs():
+                sentence = sentence + '<LI> ' + self._create_summary_config_info(
+                    bls_composing_config) + ' </LI>'
 
             sentence = sentence + f"<br>{len(measurements)} measurement(s) were obtained for the model config on {gpu_cpu_string}."
         else:
