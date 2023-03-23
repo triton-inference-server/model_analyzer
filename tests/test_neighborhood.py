@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from unittest.mock import MagicMock, patch
+from typing import List
 
 from model_analyzer.config.generate.neighborhood import Neighborhood
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
@@ -33,6 +34,14 @@ class TestNeighborhood(trc.TestResultCollector):
             profile_models: 
               modelA
             """)
+
+    # Coordinates can't be sorted by default, but if we convert each one
+    # to a list those can be sorted
+    def _sort_coordinates(self,
+                          coordinates: List[Coordinate]) -> List[Coordinate]:
+        sorted_coordinates = coordinates
+        sorted_coordinates.sort(key=lambda c: [x for x in c])
+        return sorted_coordinates
 
     def tearDown(self):
         patch.stopall()
@@ -101,8 +110,9 @@ class TestNeighborhood(trc.TestResultCollector):
                                  [2, 2, 2], [3, 1, 1]]
 
         expected_coordinates = [Coordinate(x) for x in expected_neighborhood]
-        self.assertEqual(sorted(tuple(n._neighborhood)),
-                         sorted(tuple(expected_coordinates)))
+
+        self.assertEqual(self._sort_coordinates(n._neighborhood),
+                         self._sort_coordinates(expected_coordinates))
 
     def test_large_neighborhood(self):
         dims = SearchDimensions()

@@ -74,12 +74,6 @@ class Coordinate:
                 return False
         return True
 
-    def __lt__(self, other: Any) -> bool:
-        for i, v in enumerate(self._values):
-            if v != other[i]:
-                return v < other[i]
-        return False
-
     def round(self) -> None:
         """ Rounds the coordinate in-place """
         for i, _ in enumerate(self._values):
