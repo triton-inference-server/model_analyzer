@@ -163,7 +163,7 @@ class TestBLSReportManagerMethods(trc.TestResultCollector):
 
     def test_bls_detailed(self):
         """
-        Ensures the detailed report sentence is accurate for a basic ensemble model (loaded from a checkpoint)
+        Ensures the detailed report sentence is accurate for a BLS model (loaded from a checkpoint)
         """
         self._init_managers(models="FaceDetectionBLS_config_7",
                             subcommand='report')
