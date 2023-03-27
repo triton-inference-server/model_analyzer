@@ -117,8 +117,9 @@ class ConfigCommand:
         # since we don't yet know the type of model being profiled
 
         self._check_for_duplicate_profile_models_option(args, yaml_config)
-        self._check_for_multi_model_incompatability(args, yaml_config)
-        self._check_for_quick_search_incompatability(args, yaml_config)
+        self._check_for_multi_model_incompatibility(args, yaml_config)
+        self._check_for_quick_search_incompatibility(args, yaml_config)
+        self._check_for_bls_incompatibility(args, yaml_config)
 
     def _set_field_values(self, args: Namespace,
                           yaml_config: Optional[Dict[str, List]]) -> None:
@@ -160,7 +161,7 @@ class ConfigCommand:
                 '\n Please remove the option from one of the locations and try again'
             )
 
-    def _check_for_multi_model_incompatability(
+    def _check_for_multi_model_incompatibility(
             self, args: Namespace, yaml_config: Optional[Dict[str,
                                                               List]]) -> None:
         if not self._get_config_value(
@@ -180,7 +181,7 @@ class ConfigCommand:
                 '\nPlease use quick search mode (`--run-config-search-mode quick`) or disable concurrent model profiling.'
             )
 
-    def _check_for_quick_search_incompatability(
+    def _check_for_quick_search_incompatibility(
             self, args: Namespace, yaml_config: Optional[Dict[str,
                                                               List]]) -> None:
         if self._get_config_value('run_config_search_mode', args,
@@ -190,6 +191,17 @@ class ConfigCommand:
         self._check_no_search_disable(args, yaml_config)
         self._check_no_global_list_values(args, yaml_config)
         self._check_no_per_model_list_values(args, yaml_config)
+
+    def _check_for_bls_incompatibility(
+            self, args: Namespace, yaml_config: Optional[Dict[str,
+                                                              List]]) -> None:
+        if not self._get_config_value('bls_composing_models', args,
+                                      yaml_config):
+            return
+
+        self._check_no_brute_search(args, yaml_config)
+        self._check_no_multi_model(args, yaml_config)
+        self._check_no_concurrent_search(args, yaml_config)
 
     def _check_no_search_disable(
             self, args: Namespace, yaml_config: Optional[Dict[str,
@@ -243,6 +255,34 @@ class ConfigCommand:
                     f'\nProfiling of models in quick search mode is not supported with lists max batch sizes.'
                     '\nPlease use brute search mode or remov max batch size list.'
                 )
+
+    def _check_no_brute_search(self, args: Namespace,
+                               yaml_config: Optional[Dict[str, List]]) -> None:
+        if self._get_config_value('run_config_search_mode', args,
+                                  yaml_config) == 'brute':
+            raise TritonModelAnalyzerException(
+                f'\nProfiling of models in brute search mode is not supported for BLS models.'
+                '\nPlease use quick search mode.')
+
+    def _check_no_multi_model(self, args: Namespace,
+                              yaml_config: Optional[Dict[str, List]]) -> None:
+        if len(
+                self._get_config_value('profile_models', args,
+                                       yaml_config).split(',')) > 1:
+            raise TritonModelAnalyzerException(
+                f'\nProfiling of multiple models is not supported for BLS models.'
+            )
+
+    def _check_no_concurrent_search(
+            self, args: Namespace, yaml_config: Optional[Dict[str,
+                                                              List]]) -> None:
+        if self._get_config_value(
+                'run_config_profile_models_concurrently_enable', args,
+                yaml_config):
+            raise TritonModelAnalyzerException(
+                f'\nProfiling models concurrently is not supported for BLS models.'
+                '\nPlease remove `--run-config-profile-models-concurrently-enable from the config/CLI.'
+            )
 
     def _preprocess_and_verify_arguments(self):
         """
