@@ -253,7 +253,7 @@ class ConfigCommand:
             if 'max_batch_size' in model['model_config_parameters']:
                 raise TritonModelAnalyzerException(
                     f'\nProfiling of models in quick search mode is not supported with lists max batch sizes.'
-                    '\nPlease use brute search mode or remov max batch size list.'
+                    '\nPlease use brute search mode or remove max batch size list.'
                 )
 
     def _check_no_brute_search(self, args: Namespace,
@@ -266,9 +266,14 @@ class ConfigCommand:
 
     def _check_no_multi_model(self, args: Namespace,
                               yaml_config: Optional[Dict[str, List]]) -> None:
-        if len(
-                self._get_config_value('profile_models', args,
-                                       yaml_config).split(',')) > 1:
+        profile_models = self._get_config_value('profile_models', args,
+                                                yaml_config)
+
+        profile_model_count = len(profile_models) if isinstance(
+            profile_models, list) else len(
+                profile_models.split(','))  # type: ignore
+
+        if profile_model_count > 1:
             raise TritonModelAnalyzerException(
                 f'\nProfiling of multiple models is not supported for BLS models.'
             )
