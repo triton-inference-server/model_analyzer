@@ -1942,6 +1942,44 @@ profile_models:
 
         self._evaluate_config(args, yaml_content)
 
+    def test_bls_illegal_config_combinations(self):
+        """
+        Test BLS illegal config combinations
+        """
+        # BLS with brute search mode
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'brute', '--profile-models', 'modelA',
+            '--bls-composing-models', 'modelA,modelB'
+        ]
+        yaml_content = ''
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content)
+
+        # BLS with multiple models
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'quick', '--profile-models',
+            'modelA,modelB', '--bls-composing-models', 'modelA,modelB'
+        ]
+        yaml_content = ''
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content)
+
+        # BLS with concurrent search mode
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'quick', '--profile-models', 'modelA',
+            '--bls-composing-models', 'modelA,modelB',
+            '--run-config-profile-models-concurrently-enable'
+        ]
+        yaml_content = ''
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content)
+
 
 if __name__ == '__main__':
     unittest.main()
