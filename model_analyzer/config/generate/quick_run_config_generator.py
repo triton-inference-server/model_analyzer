@@ -329,11 +329,11 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             bls_composing_model_configs.append(bls_composing_model_config)
 
         if self._bls_composing_models:
-            model_run_config.add_bls_composing_model_configs(
+            model_run_config.add_composing_model_configs(
                 bls_composing_model_configs)
 
         if model.model_name() in self._ensemble_composing_models:
-            model_run_config.add_ensemble_composing_model_configs(
+            model_run_config.add_composing_model_configs(
                 ensemble_composing_configs)
 
         return (model_run_config, model_index)
@@ -519,7 +519,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model.model_name(), default_ensemble_model_config,
             default_perf_analyzer_config)
 
-        default_model_run_config.add_ensemble_composing_model_configs(
+        default_model_run_config.add_composing_model_configs(
             default_composing_model_configs)
 
         return default_model_run_config
@@ -565,7 +565,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model)
 
         if default_composing_model_configs:
-            default_model_run_config.add_bls_composing_model_configs(
+            default_model_run_config.add_composing_model_configs(
                 default_composing_model_configs)
 
         return default_model_run_config

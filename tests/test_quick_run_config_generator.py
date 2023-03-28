@@ -446,7 +446,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         default_run_config = qrcg._create_default_run_config()
         ensemble_composing_configs = default_run_config.model_run_configs(
-        )[0].ensemble_composing_configs()
+        )[0].composing_configs()
 
         self.assertTrue(
             "my-model_config_default" in default_run_config.representation())
@@ -512,7 +512,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         default_run_config = qrcg._create_default_run_config()
         bls_composing_configs = default_run_config.model_run_configs(
-        )[0].bls_composing_configs()
+        )[0].composing_configs()
 
         self.assertTrue(
             "my-model_config_default" in default_run_config.representation())
@@ -905,15 +905,14 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         self.assertEqual(len(run_config.model_run_configs()), 1)
         self.assertEqual(
-            len(run_config.model_run_configs()[0].ensemble_composing_configs()),
-            2)
+            len(run_config.model_run_configs()[0].composing_configs()), 2)
 
         model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
         composing_model_config0 = run_config.model_run_configs(
-        )[0].ensemble_composing_configs()[0]
+        )[0].composing_configs()[0]
         composing_model_config1 = run_config.model_run_configs(
-        )[0].ensemble_composing_configs()[1]
+        )[0].composing_configs()[1]
 
         self.assertEqual(composing_model_config0.to_dict(),
                          expected_model_config0)
@@ -1056,14 +1055,14 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(len(run_config.model_run_configs()), 1)
 
         self.assertEqual(
-            len(run_config.model_run_configs()[0].bls_composing_configs()), 2)
+            len(run_config.model_run_configs()[0].composing_configs()), 2)
 
         model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
         composing_model_config0 = run_config.model_run_configs(
-        )[0].bls_composing_configs()[0]
+        )[0].composing_configs()[0]
         composing_model_config1 = run_config.model_run_configs(
-        )[0].bls_composing_configs()[1]
+        )[0].composing_configs()[1]
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
         self.assertEqual(composing_model_config0.to_dict(),
