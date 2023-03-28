@@ -29,7 +29,7 @@ from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from tests.common.test_utils import evaluate_mock_config
 
 
-def mock_configs(*args, **kwargs):
+def mock_ensemble_configs(*args, **kwargs):
     fake_config = {
         "name": "my-model",
         "platform": "ensemble",
@@ -40,6 +40,50 @@ def mock_configs(*args, **kwargs):
                 "model_name": "fake_model_B"
             }]
         },
+        "input": [{
+            "name": "INPUT__0",
+            "dataType": "TYPE_FP32",
+            "dims": [16]
+        }],
+        "max_batch_size": 4
+    }
+    fake_base_composing_config0 = {
+        "name": "fake_model_A",
+        "input": [{
+            "name": "INPUT__0",
+            "dataType": "TYPE_FP32",
+            "dims": [16]
+        }],
+        "max_batch_size": 4,
+        "sequence_batching": {}
+    }
+    fake_base_composing_config1 = {
+        "name": "fake_model_B",
+        "input": [{
+            "name": "INPUT__2",
+            "dataType": "TYPE_FP16",
+            "dims": [32]
+        }],
+        "max_batch_size": 8
+    }
+
+    if args:
+        model_name = args[4]
+    else:
+        model_name = kwargs['model_name']
+
+    if model_name == 'my-model':
+        return fake_config
+    elif model_name == 'fake_model_A':
+        return fake_base_composing_config0
+    elif model_name == 'fake_model_B':
+        return fake_base_composing_config1
+
+
+def mock_bls_configs(*args, **kwargs):
+    fake_config = {
+        "name": "my-model",
+        "platform": "bls",
         "input": [{
             "name": "INPUT__0",
             "dataType": "TYPE_FP32",
@@ -114,8 +158,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         sc = SearchConfig(dimensions=self._dims, radius=5, min_initialized=2)
         config = self._create_config()
         self._qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                             self._mock_models, {}, {},
-                                             MagicMock(),
+                                             self._mock_models, {}, MagicMock(),
                                              ModelVariantNameManager())
 
     def test_get_starting_coordinate(self):
@@ -130,7 +173,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         sc = SearchConfig(dimensions=dims,radius=2, min_initialized=2)
         #yapf: enable
         qrcg = QuickRunConfigGenerator(sc, MagicMock(), MagicMock(),
-                                       self._mock_models, {}, {}, MagicMock(),
+                                       self._mock_models, {}, MagicMock(),
                                        ModelVariantNameManager())
         self.assertEqual(qrcg._get_starting_coordinate(), Coordinate([2, 1, 3]))
 
@@ -297,9 +340,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
         config = self._create_config()
-        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), mock_models,
-                                       {}, {}, MagicMock(),
-                                       ModelVariantNameManager())
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), mock_models, {},
+                                       MagicMock(), ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
 
@@ -372,7 +414,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         ])
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
-        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models, {}, {},
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models, {},
                                        MagicMock(), ModelVariantNameManager())
 
         default_run_config = qrcg._create_default_run_config()
@@ -437,12 +479,12 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
                 return_value=fake_config):
-            ensemble_composing_models = RunConfigGeneratorFactory._create_ensemble_composing_models(
+            ensemble_composing_models = RunConfigGeneratorFactory._create_composing_models(
                 models, config, MagicMock(), MagicMock())
 
-        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                       models, ensemble_composing_models, {},
-                                       MagicMock(), ModelVariantNameManager())
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
+                                       ensemble_composing_models, MagicMock(),
+                                       ModelVariantNameManager())
 
         default_run_config = qrcg._create_default_run_config()
         ensemble_composing_configs = default_run_config.model_run_configs(
@@ -503,10 +545,10 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
                 return_value=fake_config):
-            bls_composing_models = RunConfigGeneratorFactory._create_bls_composing_models(
-                config, MagicMock(), MagicMock())
+            bls_composing_models = RunConfigGeneratorFactory._create_composing_models(
+                models, config, MagicMock(), MagicMock())
 
-        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models, {},
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
                                        bls_composing_models, MagicMock(),
                                        ModelVariantNameManager())
 
@@ -574,7 +616,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         config = self._create_config(
             additional_args=['--run-config-search-max-model-batch-size', '16'])
         qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                       self._mock_models, {}, {}, MagicMock(),
+                                       self._mock_models, {}, MagicMock(),
                                        ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
@@ -634,7 +676,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         config = self._create_config(
             additional_args=['--run-config-search-max-instance-count', '4'])
         qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                       self._mock_models, {}, {}, MagicMock(),
+                                       self._mock_models, {}, MagicMock(),
                                        ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
@@ -694,7 +736,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         config = self._create_config(
             additional_args=['--run-config-search-min-model-batch-size', '64'])
         qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                       self._mock_models, {}, {}, MagicMock(),
+                                       self._mock_models, {}, MagicMock(),
                                        ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
@@ -754,7 +796,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         config = self._create_config(
             additional_args=['--run-config-search-min-instance-count', '16'])
         qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                       self._mock_models, {}, {}, MagicMock(),
+                                       self._mock_models, {}, MagicMock(),
                                        ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
@@ -865,7 +907,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
-                side_effect=mock_configs):
+                side_effect=mock_ensemble_configs):
             models = [
                 ModelProfileSpec(spec=config.profile_models[0],
                                  config=config,
@@ -875,8 +917,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
-                side_effect=mock_configs):
-            ensemble_composing_models = RunConfigGeneratorFactory._create_ensemble_composing_models(
+                side_effect=mock_ensemble_configs):
+            ensemble_composing_models = RunConfigGeneratorFactory._create_composing_models(
                 models, config, MagicMock(), MagicMock())
 
         dims = SearchDimensions()
@@ -895,9 +937,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
 
-        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                       models, ensemble_composing_models, {},
-                                       MagicMock(), ModelVariantNameManager())
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
+                                       ensemble_composing_models, MagicMock(),
+                                       ModelVariantNameManager())
 
         qrcg._coordinate_to_measure = Coordinate([1, 2, 4, 5])
 
@@ -972,7 +1014,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             }],
             'maxBatchSize': 2,
             'dynamicBatching': {},
-            'name': 'fake_model_name_config_0',
+            'name': 'my-model_config_0',
+            'platform': 'bls',
             'input': [{
                 "name": "INPUT__0",
                 "dataType": "TYPE_FP32",
@@ -1015,6 +1058,16 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         config = self._create_config(additional_args)
 
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                side_effect=mock_bls_configs):
+            models = [
+                ModelProfileSpec(spec=config.profile_models[0],
+                                 config=config,
+                                 client=MagicMock(),
+                                 gpus=MagicMock())
+            ]
+
         dims = SearchDimensions()
         dims.add_dimensions(0, [
             SearchDimension("max_batch_size",
@@ -1039,12 +1092,11 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
-                side_effect=mock_configs):
-            bls_composing_models = RunConfigGeneratorFactory._create_bls_composing_models(
-                config, MagicMock(), MagicMock())
+                side_effect=mock_bls_configs):
+            bls_composing_models = RunConfigGeneratorFactory._create_composing_models(
+                models, config, MagicMock(), MagicMock())
 
-        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(),
-                                       self._mock_models, {},
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
                                        bls_composing_models, MagicMock(),
                                        ModelVariantNameManager())
 

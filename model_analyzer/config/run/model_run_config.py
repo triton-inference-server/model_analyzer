@@ -195,7 +195,7 @@ class ModelRunConfig:
 
     def get_composing_config_names(self) -> Optional[List[str]]:
         """
-        Returns list of BLS composing config names
+        Returns list of composing config names
         """
         return [
             composing_config.get_field("name")
@@ -220,9 +220,9 @@ class ModelRunConfig:
             model_run_config_dict['_perf_config'])
 
         if '_composing_configs' in model_run_config_dict:
-            model_run_config._ensemble_composing_configs = [
-                ModelConfig.from_dict(ensemble_composing_config_dict)
-                for ensemble_composing_config_dict in
+            model_run_config._composing_configs = [
+                ModelConfig.from_dict(composing_config_dict)
+                for composing_config_dict in
                 model_run_config_dict['_composing_configs']
             ]
 

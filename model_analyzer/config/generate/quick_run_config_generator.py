@@ -50,9 +50,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
                  models: List[ModelProfileSpec],
-                 ensemble_composing_models: Dict[str, List[ModelProfileSpec]],
-                 bls_composing_models: List[ModelProfileSpec],
-                 client: TritonClient,
+                 composing_models: List[ModelProfileSpec], client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
@@ -64,10 +62,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         gpus: List of GPUDevices
         models: List of ModelProfileSpec
             List of models to profile
-        ensemble_composing_models: Dict of List of ModelProfileSpec
-            Dict indexed by model name of ensemble composing model profiles
-        bls_composing_models: List of ModelProfileSpec
-            List of BLS composing model profiles
+        composing_models: List of ModelProfileSpec
+            List of composing model profiles
         client: TritonClient
         model_variant_name_manager: ModelVariantNameManager
         """
@@ -76,8 +72,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._client = client
         self._gpus = gpus
         self._models = models
-        self._ensemble_composing_models = ensemble_composing_models
-        self._bls_composing_models = bls_composing_models
+        self._composing_models = composing_models
 
         self._model_variant_name_manager = model_variant_name_manager
 
@@ -295,23 +290,25 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def _get_next_model_run_config(
             self, model: ModelProfileSpec,
-            model_index: int) -> Tuple[ModelRunConfig, int]:
-        start_model_index = model_index
+            start_model_index: int) -> Tuple[ModelRunConfig, int]:
+        model_index = start_model_index
+        # REFACTOR
+        if not model.is_ensemble():
+            model_config = self._get_next_model_config(model, model_index)
+            model_index += 1
 
-        if model.model_name() in self._ensemble_composing_models:
-            ensemble_composing_configs, end_model_index = self._get_next_ensemble_composing_configs(
-                model, start_model_index)
+        composing_model_configs = []
+        for composing_model in self._composing_models:
+            composing_model_config = self._get_next_model_config(
+                composing_model, model_index)
+            model_index += 1
+            composing_model_configs.append(composing_model_config)
 
-            param_combo = self._get_next_ensemble_param_combo(
-                start_model_index, end_model_index)
+        if model.is_ensemble():
+            param_combo = self._get_next_ensemble_param_combo(model_index)
 
             model_config = self._get_next_ensemble_model_config(
-                model, ensemble_composing_configs, param_combo)
-
-            model_index = end_model_index
-        else:
-            model_config = self._get_next_model_config(model, model_index)
-            model_index = model_index + 1
+                model, composing_model_configs, param_combo)
 
         model_variant_name = model_config.get_field('name')
         perf_analyzer_config = self._get_next_perf_analyzer_config(
@@ -321,46 +318,20 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         model_run_config = ModelRunConfig(model_name, model_config,
                                           perf_analyzer_config)
 
-        bls_composing_model_configs = []
-        for bls_composing_model in self._bls_composing_models:
-            bls_composing_model_config = self._get_next_model_config(
-                bls_composing_model, model_index)
-            model_index += 1
-            bls_composing_model_configs.append(bls_composing_model_config)
-
-        if self._bls_composing_models:
+        if self._composing_models:
             model_run_config.add_composing_model_configs(
-                bls_composing_model_configs)
-
-        if model.model_name() in self._ensemble_composing_models:
-            model_run_config.add_composing_model_configs(
-                ensemble_composing_configs)
+                composing_model_configs)
 
         return (model_run_config, model_index)
 
-    def _get_next_ensemble_composing_configs(
-            self, model: ModelProfileSpec,
-            start_model_index: int) -> Tuple[List[ModelConfig], int]:
-        model_index = start_model_index
-        ensemble_composing_configs = []
-        for ensemble_composing_model in self._ensemble_composing_models[
-                model.model_name()]:
-            ensemble_composing_configs.append(
-                self._get_next_model_config(ensemble_composing_model,
-                                            model_index))
-            model_index = model_index + 1
-
-        return (ensemble_composing_configs, model_index)
-
-    def _get_next_ensemble_param_combo(self, start_model_index: int,
-                                       end_model_index: int) -> dict:
+    def _get_next_ensemble_param_combo(self, end_model_index: int) -> dict:
         """
         For the ensemble model the only parameter we need to set 
         is the max batch size; which will be the minimum batch size 
         found in the composing_model max batch sizes
         """
         min_val_of_max_batch_size = maxsize
-        for model_index in range(start_model_index, end_model_index):
+        for model_index in range(0, end_model_index):
             dimension_values = self._get_coordinate_values(
                 self._coordinate_to_measure, model_index)
 
@@ -374,13 +345,12 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         return param_combo
 
-    def _get_next_ensemble_model_config(
-            self, model: ModelProfileSpec,
-            ensemble_composing_configs: List[ModelConfig],
-            param_combo: dict) -> ModelConfig:
+    def _get_next_ensemble_model_config(self, model: ModelProfileSpec,
+                                        composing_configs: List[ModelConfig],
+                                        param_combo: dict) -> ModelConfig:
         model_config = BaseModelConfigGenerator.make_ensemble_model_config(
             model=model,
-            ensemble_composing_model_configs=ensemble_composing_configs,
+            ensemble_composing_model_configs=composing_configs,
             model_variant_name_manager=self._model_variant_name_manager,
             param_combo=param_combo)
 
@@ -493,7 +463,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         default_run_config = RunConfig(self._triton_env)
 
         for model in self._models:
-            if model.model_name() in self._ensemble_composing_models:
+            if model.is_ensemble():
                 default_run_config.add_model_run_config(
                     self._create_default_ensemble_model_run_config(model))
             else:
@@ -526,18 +496,9 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def _create_default_composing_model_configs(
             self, model: ModelProfileSpec) -> List[ModelConfig]:
-        default_composing_model_configs: List[ModelConfig] = []
-        if self._ensemble_composing_models:
-            for composing_model in self._ensemble_composing_models[
-                    model.model_name()]:
-                default_composing_model_configs.append(
-                    BaseModelConfigGenerator.make_model_config(
-                        param_combo={},
-                        model=composing_model,
-                        model_variant_name_manager=self.
-                        _model_variant_name_manager))
 
-        for composing_model in self._bls_composing_models:
+        default_composing_model_configs: List[ModelConfig] = []
+        for composing_model in self._composing_models:
             default_composing_model_configs.append(
                 BaseModelConfigGenerator.make_model_config(
                     param_combo={},

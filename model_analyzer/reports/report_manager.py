@@ -405,17 +405,17 @@ class ReportManager:
 
         if run_config.is_ensemble_model():
             caption_results_table = caption_results_table + " The ensemble's composing model values are listed in the following order: "
-            for ensemble_composing_config_name in run_config.model_run_configs(
-            )[0].get_ensemble_composing_config_names():
+            for composing_config_name in run_config.model_run_configs(
+            )[0].get_composing_config_names():
                 caption_results_table = caption_results_table + BaseModelConfigGenerator.extract_model_name_from_variant_name(
-                    ensemble_composing_config_name) + ", "
+                    composing_config_name) + ", "
             caption_results_table = caption_results_table[:-2]  # removes comma
         elif run_config.is_bls_model():
             caption_results_table = caption_results_table + " The BLS composing model values are listed in the following order: "
-            for bls_composing_config_name in run_config.model_run_configs(
-            )[0].get_bls_composing_config_names():
+            for composing_config_name in run_config.model_run_configs(
+            )[0].get_composing_config_names():
                 caption_results_table = caption_results_table + BaseModelConfigGenerator.extract_model_name_from_variant_name(
-                    bls_composing_config_name) + ", "
+                    composing_config_name) + ", "
             caption_results_table = caption_results_table[:-2]  # removes comma
 
         summary.add_paragraph(caption_results_table)
@@ -517,10 +517,10 @@ class ReportManager:
             )[0].model_config().get_field('name')
             summary_sentence = summary_sentence + f"<strong>{best_config_name}</strong> is comprised of the following composing models: <UL> "
 
-            for ensemble_composing_config in best_run_config.model_run_configs(
-            )[0].ensemble_composing_configs():
+            for composing_config in best_run_config.model_run_configs(
+            )[0].composing_configs():
                 summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
-                    ensemble_composing_config) + ' </LI>'
+                    composing_config) + ' </LI>'
         elif is_bls:
             summary_sentence = summary_sentence + '<UL>'
             for model_run_config in best_run_config.model_run_configs():
@@ -529,10 +529,10 @@ class ReportManager:
 
             summary_sentence = summary_sentence + f"<BR>Which is comprised of the following composing models: <UL>"
 
-            for bls_composing_config in best_run_config.model_run_configs(
-            )[0].bls_composing_configs():
+            for composing_config in best_run_config.model_run_configs(
+            )[0].composing_configs():
                 summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
-                    bls_composing_config) + ' </LI>'
+                    composing_config) + ' </LI>'
         else:
             summary_sentence = summary_sentence + '<UL>'
             for model_run_config in best_run_config.model_run_configs():
@@ -721,12 +721,12 @@ class ReportManager:
         if is_ensemble:
             dynamic_batching_string = self._create_summary_string([
                 model_config.dynamic_batching_string()
-                for model_config in run_config.ensemble_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         elif is_bls:
             dynamic_batching_string = self._create_summary_string([
                 model_config.dynamic_batching_string()
-                for model_config in run_config.bls_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         else:
             dynamic_batching_string = self._create_summary_string([
@@ -737,12 +737,12 @@ class ReportManager:
         if is_ensemble:
             max_batch_sizes = ', '.join([
                 str(model_config.max_batch_size())
-                for model_config in run_config.ensemble_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         elif is_bls:
             max_batch_sizes = ', '.join([
                 str(model_config.max_batch_size())
-                for model_config in run_config.bls_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         else:
             max_batch_sizes = ', '.join([
@@ -754,13 +754,13 @@ class ReportManager:
             instance_group_strings = ', '.join([
                 model_config.instance_group_string(self._get_gpu_count())
                 for model_config in run_config.model_run_configs()
-                [0].ensemble_composing_configs()
+                [0].composing_configs()
             ])
         elif is_bls:
             instance_group_strings = ', '.join([
                 model_config.instance_group_string(self._get_gpu_count())
                 for model_config in run_config.model_run_configs()
-                [0].bls_composing_configs()
+                [0].composing_configs()
             ])
         else:
             instance_group_strings = ', '.join([
@@ -794,12 +794,12 @@ class ReportManager:
         if is_ensemble:
             dynamic_batching_string = self._create_summary_string([
                 model_config.dynamic_batching_string()
-                for model_config in run_config.ensemble_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         elif is_bls:
             dynamic_batching_string = self._create_summary_string([
                 model_config.dynamic_batching_string()
-                for model_config in run_config.bls_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         else:
             dynamic_batching_string = self._create_summary_string([
@@ -811,13 +811,13 @@ class ReportManager:
             instance_group_string = self._create_summary_string([
                 model_config.instance_group_string(self._get_gpu_count())
                 for model_config in run_config.model_run_configs()
-                [0].ensemble_composing_configs()
+                [0].composing_configs()
             ])
         elif is_bls:
             instance_group_string = self._create_summary_string([
                 model_config.instance_group_string(self._get_gpu_count())
                 for model_config in run_config.model_run_configs()
-                [0].bls_composing_configs()
+                [0].composing_configs()
             ])
         else:
             instance_group_string = self._create_summary_string([
@@ -829,12 +829,12 @@ class ReportManager:
         if is_ensemble:
             max_batch_sizes_string = self._create_summary_string([
                 str(model_config.max_batch_size())
-                for model_config in run_config.ensemble_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         elif is_bls:
             max_batch_sizes_string = self._create_summary_string([
                 str(model_config.max_batch_size())
-                for model_config in run_config.bls_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         else:
             max_batch_sizes_string = self._create_summary_string([
@@ -1035,18 +1035,17 @@ class ReportManager:
         if run_config.is_ensemble_model():
             sentence = f"<strong>{model_config_name}</strong> is comprised of the following composing models:"
 
-            for ensemble_composing_config in run_config.ensemble_composing_configs(
-            ):
+            for composing_config in run_config.composing_configs():
                 sentence = sentence + '<LI> ' + self._create_summary_config_info(
-                    ensemble_composing_config) + ' </LI>'
+                    composing_config) + ' </LI>'
 
             sentence = sentence + f"<br>{len(measurements)} measurement(s) were obtained for the model config on {gpu_cpu_string}."
         elif run_config.is_bls_model():
             sentence = f"<strong>{model_config_name}</strong> is comprised of the following composing models:"
 
-            for bls_composing_config in run_config.bls_composing_configs():
+            for composing_config in run_config.composing_configs():
                 sentence = sentence + '<LI> ' + self._create_summary_config_info(
-                    bls_composing_config) + ' </LI>'
+                    composing_config) + ' </LI>'
 
             sentence = sentence + f"<br>{len(measurements)} measurement(s) were obtained for the model config on {gpu_cpu_string}."
         else:
