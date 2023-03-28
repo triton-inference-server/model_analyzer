@@ -180,7 +180,7 @@ class RunConfigGeneratorFactory:
     def _create_composing_models(
             models: List[ModelProfileSpec], config: ConfigCommandProfile,
             client: TritonClient,
-            gpus: List[GPUDevice]) -> Dict[str, List[ModelProfileSpec]]:
+            gpus: List[GPUDevice]) -> List[ModelProfileSpec]:
         """
         Given a list of models create the composing models
         """

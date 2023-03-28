@@ -191,7 +191,7 @@ class ModelRunConfig:
         # If composing configs are present and it's not an ensemble it must be a BLS
         # Note: this will need to change if we allow ensembles to contain BLS models
         return (not self._model_config.is_ensemble() and
-                self._composing_configs)
+                len(self._composing_configs) > 0)
 
     def get_composing_config_names(self) -> Optional[List[str]]:
         """
