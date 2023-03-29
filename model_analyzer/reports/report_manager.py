@@ -518,14 +518,7 @@ class ReportManager:
             summary_sentence = summary_sentence + self._create_model_summary_sentence(
                 best_run_config)
 
-        if is_ensemble or is_bls:
-            for composing_config in best_run_config.model_run_configs(
-            )[0].composing_configs():
-                summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
-                    composing_config) + ' </LI>'
-
         summary_sentence = summary_sentence + ' </UL>'
-
         return summary_sentence
 
     def _create_ensemble_summary_sentence(self, run_config: RunConfig) -> str:
@@ -534,12 +527,16 @@ class ReportManager:
         ).get_field('name')
 
         summary_sentence = summary_sentence + f"<strong>{best_config_name}</strong> is comprised of the following composing models: <UL> "
+        summary_sentence = summary_sentence + self._create_composing_model_summary_sentence(
+            run_config)
 
         return summary_sentence
 
     def _create_bls_summary_sentence(self, run_config: RunConfig) -> str:
         summary_sentence = self._create_model_summary_sentence(run_config)
         summary_sentence = summary_sentence + f"<BR>Which is comprised of the following composing models: <UL>"
+        summary_sentence = summary_sentence + self._create_composing_model_summary_sentence(
+            run_config)
 
         return summary_sentence
 
@@ -548,6 +545,16 @@ class ReportManager:
         for model_run_config in run_config.model_run_configs():
             summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
                 model_run_config.model_config()) + ' </LI>'
+
+        return summary_sentence
+
+    def _create_composing_model_summary_sentence(self,
+                                                 run_config: RunConfig) -> str:
+        summary_sentence = ""
+        for composing_config in run_config.model_run_configs(
+        )[0].composing_configs():
+            summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
+                composing_config) + ' </LI>'
 
         return summary_sentence
 
