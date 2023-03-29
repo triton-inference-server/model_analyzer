@@ -291,12 +291,46 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _get_next_model_run_config(
             self, model: ModelProfileSpec,
             start_model_index: int) -> Tuple[ModelRunConfig, int]:
-        model_index = start_model_index
-        # REFACTOR
-        if not model.is_ensemble():
-            model_config = self._get_next_model_config(model, model_index)
-            model_index += 1
+        """
+        Returns the next ModelRunConfig in the sequence, along with the starting dimension
+        of the next model
+        """
+        # The ordering of dimensions is dependent on the type of composing model:
+        #   Ensemble - The top level model has no search dimensions - all dimensions
+        #              come from the composing models
+        #   BLS      - The top level model has one dimension (instance) - and the
+        #              remaining dimensions come from composing models
+        #
+        # In addition, for Ensemble models, it is necessary to create the composing model configs
+        # first, as these are needed when creating the top-level model config  - while all other
+        # models want to create the top-level first
+        model_config, model_index = self._get_next_non_composing_model_config(
+            model, start_model_index)
 
+        composing_model_configs, model_index = self._get_next_composing_model_configs(
+            model_index)
+
+        # This will overwrite the empty ModelConfig created above
+        if model.is_ensemble():
+            model_config = self._get_next_ensemble_top_level_config(
+                model, composing_model_configs, model_index)
+
+        model_run_config = self._create_next_model_run_config(
+            model, start_model_index, model_config, composing_model_configs)
+
+        return (model_run_config, model_index)
+
+    def _get_next_non_composing_model_config(
+            self, model: ModelProfileSpec,
+            model_index: int) -> Tuple[ModelConfig, int]:
+        if model.is_ensemble():
+            return (ModelConfig({}), model_index)
+        else:
+            return (self._get_next_model_config(model,
+                                                model_index), model_index + 1)
+
+    def _get_next_composing_model_configs(
+            self, model_index: int) -> Tuple[List[ModelConfig], int]:
         composing_model_configs = []
         for composing_model in self._composing_models:
             composing_model_config = self._get_next_model_config(
@@ -304,25 +338,18 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_index += 1
             composing_model_configs.append(composing_model_config)
 
-        if model.is_ensemble():
-            param_combo = self._get_next_ensemble_param_combo(model_index)
+        return (composing_model_configs, model_index)
 
-            model_config = self._get_next_ensemble_model_config(
-                model, composing_model_configs, param_combo)
+    def _get_next_ensemble_top_level_config(
+            self, model: ModelProfileSpec,
+            composing_model_configs: List[ModelConfig],
+            model_index: int) -> ModelConfig:
+        param_combo = self._get_next_ensemble_param_combo(model_index)
 
-        model_variant_name = model_config.get_field('name')
-        perf_analyzer_config = self._get_next_perf_analyzer_config(
-            model_variant_name, model, start_model_index)
+        model_config = self._get_next_ensemble_model_config(
+            model, composing_model_configs, param_combo)
 
-        model_name = model.model_name()
-        model_run_config = ModelRunConfig(model_name, model_config,
-                                          perf_analyzer_config)
-
-        if self._composing_models:
-            model_run_config.add_composing_model_configs(
-                composing_model_configs)
-
-        return (model_run_config, model_index)
+        return model_config
 
     def _get_next_ensemble_param_combo(self, end_model_index: int) -> dict:
         """
@@ -383,6 +410,22 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model=model,
             model_variant_name_manager=self._model_variant_name_manager)
         return model_config
+
+    def _create_next_model_run_config(
+            self, model: ModelProfileSpec, model_index: int,
+            model_config: ModelConfig,
+            composing_model_configs: List[ModelConfig]) -> ModelRunConfig:
+        model_variant_name = model_config.get_field('name')
+        perf_analyzer_config = self._get_next_perf_analyzer_config(
+            model_variant_name, model, model_index)
+        model_run_config = ModelRunConfig(model.model_name(), model_config,
+                                          perf_analyzer_config)
+
+        if self._composing_models:
+            model_run_config.add_composing_model_configs(
+                composing_model_configs)
+
+        return model_run_config
 
     def _get_next_perf_analyzer_config(self, model_variant_name: str,
                                        model: ModelProfileSpec,
