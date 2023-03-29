@@ -405,13 +405,10 @@ class ReportManager:
 
         if run_config.is_ensemble_model():
             caption_results_table = caption_results_table + " The ensemble's composing model values are listed in the following order: "
-            for composing_config_name in run_config.model_run_configs(
-            )[0].get_composing_config_names():
-                caption_results_table = caption_results_table + BaseModelConfigGenerator.extract_model_name_from_variant_name(
-                    composing_config_name) + ", "
-            caption_results_table = caption_results_table[:-2]  # removes comma
         elif run_config.is_bls_model():
             caption_results_table = caption_results_table + " The BLS composing model values are listed in the following order: "
+
+        if run_config.is_ensemble_model() or run_config.is_bls_model():
             for composing_config_name in run_config.model_run_configs(
             )[0].get_composing_config_names():
                 caption_results_table = caption_results_table + BaseModelConfigGenerator.extract_model_name_from_variant_name(
@@ -512,34 +509,45 @@ class ReportManager:
         )
 
         if is_ensemble:
-            summary_sentence = summary_sentence + "<BR><BR>"
-            best_config_name = best_run_config.model_run_configs(
-            )[0].model_config().get_field('name')
-            summary_sentence = summary_sentence + f"<strong>{best_config_name}</strong> is comprised of the following composing models: <UL> "
-
-            for composing_config in best_run_config.model_run_configs(
-            )[0].composing_configs():
-                summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
-                    composing_config) + ' </LI>'
+            summary_sentence = summary_sentence + self._create_ensemble_summary_sentence(
+                best_run_config)
         elif is_bls:
-            summary_sentence = summary_sentence + '<UL>'
-            for model_run_config in best_run_config.model_run_configs():
-                summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
-                    model_run_config.model_config()) + ' </LI>'
+            summary_sentence = summary_sentence + self._create_bls_summary_sentence(
+                best_run_config)
+        else:
+            summary_sentence = summary_sentence + self._create_model_summary_sentence(
+                best_run_config)
 
-            summary_sentence = summary_sentence + f"<BR>Which is comprised of the following composing models: <UL>"
-
+        if is_ensemble or is_bls:
             for composing_config in best_run_config.model_run_configs(
             )[0].composing_configs():
                 summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
                     composing_config) + ' </LI>'
-        else:
-            summary_sentence = summary_sentence + '<UL>'
-            for model_run_config in best_run_config.model_run_configs():
-                summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
-                    model_run_config.model_config()) + ' </LI>'
 
         summary_sentence = summary_sentence + ' </UL>'
+
+        return summary_sentence
+
+    def _create_ensemble_summary_sentence(self, run_config: RunConfig) -> str:
+        summary_sentence = "<BR><BR>"
+        best_config_name = run_config.model_run_configs()[0].model_config(
+        ).get_field('name')
+
+        summary_sentence = summary_sentence + f"<strong>{best_config_name}</strong> is comprised of the following composing models: <UL> "
+
+        return summary_sentence
+
+    def _create_bls_summary_sentence(self, run_config: RunConfig) -> str:
+        summary_sentence = self._create_model_summary_sentence(run_config)
+        summary_sentence = summary_sentence + f"<BR>Which is comprised of the following composing models: <UL>"
+
+        return summary_sentence
+
+    def _create_model_summary_sentence(self, run_config: RunConfig) -> str:
+        summary_sentence = '<UL>'
+        for model_run_config in run_config.model_run_configs():
+            summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
+                model_run_config.model_config()) + ' </LI>'
 
         return summary_sentence
 
