@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from model_analyzer.constants import LOGGER_NAME
 import logging
@@ -110,7 +110,7 @@ class ModelRunConfig:
 
         return self.perf_config().representation()
 
-    def _check_for_client_vs_model_batch_size(self):
+    def _check_for_client_vs_model_batch_size(self) -> bool:
         """
         Returns false if client batch size is greater than model batch size. Else true
         """
@@ -130,26 +130,13 @@ class ModelRunConfig:
 
         return legal
 
-    def _check_for_preferred_vs_model_batch_size(self):
+    def _check_for_preferred_vs_model_batch_size(self) -> bool:
         """
         Returns false if maximum of preferred batch size is greater than model batch size. Else true
         """
         legal = True
 
-        # REFACTOR
-        if self.is_ensemble_model():
-            model_configs = [
-                composing_config.get_config()
-                for composing_config in self._composing_configs
-            ]
-        else:
-            model_configs = [self._model_config.get_config()]
-
-            bls_composing_configs = [
-                composing_config.get_config()
-                for composing_config in self._composing_configs
-            ]
-            model_configs.extend(bls_composing_configs)
+        model_configs = self._create_model_config_dicts()
 
         for model_config in model_configs:
             max_batch_size = model_config[
@@ -168,6 +155,22 @@ class ModelRunConfig:
                     return legal
 
         return legal
+
+    def _create_model_config_dicts(self) -> List[Dict]:
+        """
+        Create a list of model config dictionaries for 
+        the given model + composing models
+        """
+        model_configs = [] if self.is_ensemble_model() else [
+            self._model_config.get_config()
+        ]
+
+        model_configs.extend([
+            composing_config.get_config()
+            for composing_config in self._composing_configs
+        ])
+
+        return model_configs
 
     def is_legal_combination(self):
         """

@@ -197,7 +197,7 @@ class RunConfigGeneratorFactory:
     @staticmethod
     def _create_bls_composing_models(
             config: ConfigCommandProfile, client: TritonClient,
-            gpus: List[GPUDevice]) -> Optional[List[ModelProfileSpec]]:
+            gpus: List[GPUDevice]) -> List[ModelProfileSpec]:
         """
         Creates a list of BLS composing model configs based on the profile command config
         """
@@ -212,7 +212,7 @@ class RunConfigGeneratorFactory:
     def _create_ensemble_composing_models(
             model: ModelProfileSpec, config: ConfigCommandProfile,
             client: TritonClient,
-            gpus: List[GPUDevice]) -> Optional[List[ModelProfileSpec]]:
+            gpus: List[GPUDevice]) -> List[ModelProfileSpec]:
         """
         Creates a list of Ensemble composing model configs based on the model
         """
