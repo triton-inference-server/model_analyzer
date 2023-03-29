@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.triton.client.client import TritonClient
@@ -182,37 +182,56 @@ class RunConfigGeneratorFactory:
             client: TritonClient,
             gpus: List[GPUDevice]) -> List[ModelProfileSpec]:
         """
-        Given a list of models create the composing models
+        Given a list of models create a list of all the composing models (BLS + Ensemble)
         """
-        composing_models = []
+        composing_models = RunConfigGeneratorFactory._create_bls_composing_models(
+            config, client, gpus)
 
         for model in models:
-            # REFACTOR
-            model_config = ModelConfig.create_from_profile_spec(
-                model, config, client, gpus)
-
-            if model_config.is_ensemble():
-                ensemble_composing_model_names = model_config.get_ensemble_composing_models(
-                )
-
-                ensemble_composing_model_specs = ConfigModelProfileSpec.model_list_to_config_model_profile_spec(
-                    ensemble_composing_model_names)
-
-                ensemble_composing_model_configs = [
-                    ModelProfileSpec(ensemble_composing_model_spec, config,
-                                     client, gpus)
-                    for ensemble_composing_model_spec in
-                    ensemble_composing_model_specs
-                ]
-
-                composing_models.extend(ensemble_composing_model_configs)
-
-            # REFACTOR
-            bls_composing_model_configs = [
-                ModelProfileSpec(bls_composing_model_spec, config, client, gpus)
-                for bls_composing_model_spec in config.bls_composing_models
-            ]
-
-            composing_models.extend(bls_composing_model_configs)
+            composing_models.extend(
+                RunConfigGeneratorFactory._create_ensemble_composing_models(
+                    model, config, client, gpus))
 
         return composing_models
+
+    @staticmethod
+    def _create_bls_composing_models(
+            config: ConfigCommandProfile, client: TritonClient,
+            gpus: List[GPUDevice]) -> Optional[List[ModelProfileSpec]]:
+        """
+        Creates a list of BLS composing model configs based on the profile command config
+        """
+        bls_composing_model_configs = [
+            ModelProfileSpec(bls_composing_model_spec, config, client, gpus)
+            for bls_composing_model_spec in config.bls_composing_models
+        ]
+
+        return bls_composing_model_configs
+
+    @staticmethod
+    def _create_ensemble_composing_models(
+            model: ModelProfileSpec, config: ConfigCommandProfile,
+            client: TritonClient,
+            gpus: List[GPUDevice]) -> Optional[List[ModelProfileSpec]]:
+        """
+        Creates a list of Ensemble composing model configs based on the model
+        """
+        model_config = ModelConfig.create_from_profile_spec(
+            model, config, client, gpus)
+
+        if not model_config.is_ensemble():
+            return []
+
+        ensemble_composing_model_names = model_config.get_ensemble_composing_models(
+        )
+
+        ensemble_composing_model_specs = ConfigModelProfileSpec.model_list_to_config_model_profile_spec(
+            ensemble_composing_model_names)
+
+        ensemble_composing_model_configs = [
+            ModelProfileSpec(ensemble_composing_model_spec, config, client,
+                             gpus)
+            for ensemble_composing_model_spec in ensemble_composing_model_specs
+        ]
+
+        return ensemble_composing_model_configs
