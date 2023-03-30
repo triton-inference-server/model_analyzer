@@ -292,7 +292,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self, model: ModelProfileSpec,
             start_model_index: int) -> Tuple[ModelRunConfig, int]:
         """
-        Returns the next ModelRunConfig in the sequence, along with the starting dimension
+        Returns the next ModelRunConfig, along with the starting dimension
         of the next model
         """
         # The ordering of dimensions is dependent on the type of composing model:

@@ -64,7 +64,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         models: List of ModelProfileSpec
             List of models to profile
         composing_models: List of ModelProfileSpec
-            List of composing models to profile
+            List of composing models that exist inside of the supplied models
         client: TritonClient
         result_manager: ResultManager
             The object that handles storing and sorting the results from the perf analyzer

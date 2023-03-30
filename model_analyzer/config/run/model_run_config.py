@@ -114,7 +114,6 @@ class ModelRunConfig:
         """
         Returns false if client batch size is greater than model batch size. Else true
         """
-        # FIXME: should this be checking composing configs?
         model_config = self._model_config.get_config()
 
         max_batch_size = model_config[
