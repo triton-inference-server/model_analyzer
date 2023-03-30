@@ -192,6 +192,12 @@ class RunConfigGeneratorFactory:
                 RunConfigGeneratorFactory._create_ensemble_composing_models(
                     model, config, client, gpus))
 
+        for composing_model in composing_models:
+            if composing_model.is_ensemble():
+                raise TritonModelAnalyzerException(
+                    f"Model Analyzer does not support ensembles as a composing model type: {composing_model.model_name()}"
+                )
+
         return composing_models
 
     @staticmethod
