@@ -140,13 +140,12 @@ class TestBLSReportManagerMethods(trc.TestResultCollector):
         '</LI><LI> <strong>FaceDetectionModel_config_4</strong>: 5 GPU instances with a max batch size of 8 on platform tensorrt_plan '\
         '</LI><LI> <strong>FaceDetectionPostprocessing_config_0</strong>: 1 GPU instance with a max batch size of 0 on platform sdk_backend </LI> </UL>'
 
-        summary_table, summary_sentence = \
-            self.report_manager._build_summary_table(
-                report_key="FaceDetectionBLS",
-                num_measurements=26,
-                num_configurations=10,
-                gpu_name="TITAN RTX",
-                cpu_only=True)
+        summary_table, summary_sentence = self.report_manager._build_summary_table(
+            report_key="FaceDetectionBLS",
+            num_measurements=26,
+            num_configurations=10,
+            gpu_name="TITAN RTX",
+            cpu_only=True)
 
         self.assertEqual(summary_sentence, expected_summary_sentence)
 

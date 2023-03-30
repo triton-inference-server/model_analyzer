@@ -161,9 +161,9 @@ class TestRunConfig(trc.TestResultCollector):
         mrc = ModelRunConfig("modelB", mc, pc)
         self.assertTrue(mrc.is_legal_combination())
 
-    def test_ensemble_mrc_with_illegal_combinations(self):
+    def test_composing_mrc_with_illegal_combinations(self):
         """
-        Test ModelRunConfig with illegal combinations in an ensemble
+        Test ModelRunConfig with illegal combinations in composing config
         """
         mc = ModelConfig({})
         pc = PerfAnalyzerConfig()
@@ -189,7 +189,7 @@ class TestRunConfig(trc.TestResultCollector):
             }
         })
 
-        mrc.add_ensemble_composing_model_configs(composing_model_configs)
+        mrc.add_composing_model_configs(composing_model_configs)
 
         self.assertFalse(mrc.is_legal_combination())
 

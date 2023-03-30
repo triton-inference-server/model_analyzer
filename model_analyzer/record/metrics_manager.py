@@ -277,25 +277,17 @@ class MetricsManager:
             self._create_model_variant(original_name=mrc.model_name(),
                                        variant_config=mrc.model_config())
 
-            for ensemble_composing_config in mrc.ensemble_composing_configs():
-                variant_name = ensemble_composing_config.get_field("name")
+            for composing_config in mrc.composing_configs():
+                variant_name = composing_config.get_field("name")
                 original_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
                     variant_name)
 
+                self._create_model_variant(original_name, composing_config)
+
+                original_composing_config = BaseModelConfigGenerator.create_original_config_from_variant(
+                    composing_config)
                 self._create_model_variant(original_name,
-                                           ensemble_composing_config)
-
-            for bls_composing_config in mrc.bls_composing_configs():
-                variant_name = bls_composing_config.get_field("name")
-                original_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
-                    variant_name)
-
-                self._create_model_variant(original_name, bls_composing_config)
-
-                bls_original_composing_config = BaseModelConfigGenerator.create_original_config_from_variant(
-                    bls_composing_config)
-                self._create_model_variant(original_name,
-                                           bls_original_composing_config)
+                                           original_composing_config)
 
     def _create_model_variant(self, original_name, variant_config):
         """
@@ -328,21 +320,16 @@ class MetricsManager:
         Loads all model variants in the client
         """
         for mrc in run_config.model_run_configs():
-            # BLS composing configs cannot mutate the model names
-            for bls_composing_config in mrc.bls_composing_configs():
-                bls_original_composing_config = BaseModelConfigGenerator.create_original_config_from_variant(
-                    bls_composing_config)
-                if not self._load_model_variant(
-                        variant_config=bls_original_composing_config):
-                    return False
-
             if not self._load_model_variant(variant_config=mrc.model_config()):
                 return False
 
-            for ensemble_composing_config in mrc.ensemble_composing_configs():
+            for composing_config in mrc.composing_configs():
+                original_composing_config = BaseModelConfigGenerator.create_original_config_from_variant(
+                    composing_config)
                 if not self._load_model_variant(
-                        variant_config=ensemble_composing_config):
+                        variant_config=original_composing_config):
                     return False
+
         return True
 
     def _load_model_variant(self, variant_config):
