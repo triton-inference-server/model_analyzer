@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from typing import Dict, Tuple, List
-import collections.abc
 from copy import deepcopy
 from model_analyzer.constants import DEFAULT_CONFIG_PARAMS
 

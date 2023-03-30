@@ -14,7 +14,7 @@
 
 from functools import total_ordering
 
-from model_analyzer.record.record import Record, IncreasingRecord
+from model_analyzer.record.record import IncreasingRecord
 
 
 @total_ordering

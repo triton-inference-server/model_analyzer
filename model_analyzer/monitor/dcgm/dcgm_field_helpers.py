@@ -14,7 +14,6 @@
 
 import ctypes
 import json
-import time
 
 import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs

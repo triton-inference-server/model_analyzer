@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from ctypes import *
-from ctypes.util import find_library
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
 # Provides access to functions

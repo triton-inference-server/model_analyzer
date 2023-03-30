@@ -16,7 +16,6 @@ from .result_table import ResultTable
 from .result_utils import format_for_csv
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.output.file_writer import FileWriter
-from copy import deepcopy
 import os
 import logging
 

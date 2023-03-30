@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, MagicMock
 
 from .mock_dcgm_field_group_watcher import MockDCGMFieldGroupWatcherHelper
 from .mock_dcgm_agent import MockDCGMAgent

@@ -13,13 +13,9 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import MagicMock, patch, mock_open
-import base64
-
-from matplotlib.pyplot import table
+from unittest.mock import MagicMock, patch
 
 from .common import test_result_collector as trc
-from model_analyzer.result.result_table import ResultTable
 from model_analyzer.reports.pdf_report import PDFReport
 
 

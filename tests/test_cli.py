@@ -20,7 +20,6 @@
 # expected value for the CLI. Default values are also verified as well as
 # values that are expected to cause failures.
 
-from distutils.cmd import Command
 import os
 import sys
 import copy

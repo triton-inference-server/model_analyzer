@@ -15,7 +15,6 @@
 from typing import List, Optional
 
 from copy import deepcopy
-from bisect import insort
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.result.run_config_result import RunConfigResult

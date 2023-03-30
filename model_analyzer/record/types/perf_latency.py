@@ -15,7 +15,7 @@
 from functools import total_ordering
 import logging
 
-from model_analyzer.record.record import Record, DecreasingRecord
+from model_analyzer.record.record import DecreasingRecord
 
 
 @total_ordering

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from abc import abstractmethod
-from unittest.mock import patch, Mock, MagicMock
 
 from .mock_base import MockBase
 

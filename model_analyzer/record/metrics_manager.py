@@ -15,7 +15,6 @@
 from .record_aggregator import RecordAggregator
 from .record import RecordType
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
@@ -23,9 +22,7 @@ from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
 from model_analyzer.monitor.remote_monitor import RemoteMonitor
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
-from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.result.results import Results
 from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 
 from collections import defaultdict

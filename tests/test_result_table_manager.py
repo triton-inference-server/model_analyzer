@@ -28,7 +28,7 @@ from model_analyzer.result.constraint_manager import ConstraintManager
 
 from filecmp import cmp
 from shutil import rmtree
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 class TestResultTableManager(trc.TestResultCollector):
@@ -123,9 +123,10 @@ class TestResultTableManager(trc.TestResultCollector):
         """)
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
         state_manager = AnalyzerStateManager(config=config, server=None)
-        result_manager = ResultManager(config=config,
-                                       state_manager=state_manager,
-                                       constraint_manager=ConstraintManager(config))
+        result_manager = ResultManager(
+            config=config,
+            state_manager=state_manager,
+            constraint_manager=ConstraintManager(config))
         result_table_manager = ResultTableManager(config=config,
                                                   result_manager=result_manager)
 
@@ -184,9 +185,10 @@ class TestResultTableManager(trc.TestResultCollector):
         """)
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
         state_manager = AnalyzerStateManager(config=config, server=None)
-        result_manager = ResultManager(config=config,
-                                       state_manager=state_manager,
-                                       constraint_manager=ConstraintManager(config))
+        result_manager = ResultManager(
+            config=config,
+            state_manager=state_manager,
+            constraint_manager=ConstraintManager(config))
         table_manager = ResultTableManager(config=config,
                                            result_manager=result_manager)
         model_config_str = """

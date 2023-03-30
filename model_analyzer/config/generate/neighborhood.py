@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import math
-from itertools import product
 from copy import deepcopy
 
 from typing import List, Tuple, Dict, Optional, Union

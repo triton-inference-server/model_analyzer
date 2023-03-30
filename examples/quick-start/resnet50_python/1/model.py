@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import numpy as np
 import torch
 import triton_python_backend_utils as pb_utils
 from torch.utils.dlpack import to_dlpack

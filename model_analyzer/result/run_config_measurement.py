@@ -22,7 +22,6 @@ from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.record.record import Record, RecordType
 
 from copy import deepcopy
-from statistics import mean
 
 from functools import total_ordering
 import logging
@@ -105,8 +104,8 @@ class RunConfigMeasurement:
             for model_config_weight in model_config_weights
         ]
 
-    def set_constraint_manager(
-            self, constraint_manager: ConstraintManager) -> None:
+    def set_constraint_manager(self,
+                               constraint_manager: ConstraintManager) -> None:
         """
 
         Parameters
@@ -494,13 +493,16 @@ class RunConfigMeasurement:
            None if either RCM is passing constraints
         """
 
-        assert (self._constraint_manager is not None and other._constraint_manager is not None)
+        assert (self._constraint_manager is not None and
+                other._constraint_manager is not None)
 
         if self.is_passing_constraints() or other.is_passing_constraints():
             return None
 
-        self_failing_pct = self._constraint_manager.constraint_failure_percentage(self)
-        other_failing_pct = other._constraint_manager.constraint_failure_percentage(other)
+        self_failing_pct = self._constraint_manager.constraint_failure_percentage(
+            self)
+        other_failing_pct = other._constraint_manager.constraint_failure_percentage(
+            other)
 
         return (self_failing_pct - other_failing_pct) / 100
 
