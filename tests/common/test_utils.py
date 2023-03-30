@@ -31,7 +31,6 @@ from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.constants import SECONDS_TO_MILLISECONDS_MULTIPLIER
 
-from typing import Dict, Any
 from model_analyzer.result.constraint_manager import ConstraintManager
 
 from model_analyzer.config.input.config_defaults import \
