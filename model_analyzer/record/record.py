@@ -17,7 +17,7 @@ from abc import ABCMeta, abstractmethod
 from statistics import mean
 import importlib
 
-from typing import Dict, Any
+from typing import Dict
 
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException

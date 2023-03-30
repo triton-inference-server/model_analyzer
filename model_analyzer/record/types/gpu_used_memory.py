@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from functools import total_ordering
-from model_analyzer.record.gpu_record import GPURecord, DecreasingGPURecord
+from model_analyzer.record.gpu_record import DecreasingGPURecord
 
 
 @total_ordering

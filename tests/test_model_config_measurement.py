@@ -13,11 +13,10 @@
 # limitations under the License.
 
 from tests.common.test_utils import convert_non_gpu_metrics_to_data, default_encode
-from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from .common import test_result_collector as trc
 
 import json

@@ -13,9 +13,6 @@
 # limitations under the License.
 
 from .mock_dcgm_agent import MockDCGMAgent
-from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
-from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
-from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
 
 from collections import defaultdict
 from unittest.mock import MagicMock

@@ -14,8 +14,7 @@
 
 from .config_value import ConfigValue
 from .config_status import ConfigStatus
-from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+from model_analyzer.constants import CONFIG_PARSER_FAILURE
 
 
 class ConfigPrimitive(ConfigValue):

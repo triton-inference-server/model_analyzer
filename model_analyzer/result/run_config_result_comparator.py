@@ -14,10 +14,6 @@
 
 from typing import List, Dict
 
-from model_analyzer.record.record import Record
-
-from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
-
 
 class RunConfigResultComparator:
     """

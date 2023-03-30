@@ -12,29 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.run.model_run_config import ModelRunConfig
-from model_analyzer.config.run.run_config import RunConfig
-from model_analyzer.constants import TOP_MODELS_REPORT_KEY
-from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
-
 from model_analyzer.reports.report_manager import ReportManager
-from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
 from model_analyzer.result.result_manager import ResultManager
-
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
-from model_analyzer.triton.model.model_config import ModelConfig
 
-from model_analyzer.result.results import Results
-
-from .mocks.mock_io import MockIOMethods
-from .mocks.mock_matplotlib import MockMatplotlibMethods
-from .mocks.mock_os import MockOSMethods
-from .mocks.mock_json import MockJSONMethods
-
-from .common.test_utils import construct_run_config_measurement, evaluate_mock_config, ROOT_DIR
+from .common.test_utils import evaluate_mock_config, ROOT_DIR
 from .common import test_result_collector as trc
 
-import os, shutil
+import shutil
 
 import unittest
 from unittest.mock import MagicMock, patch

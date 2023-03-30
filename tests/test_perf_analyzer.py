@@ -17,8 +17,6 @@ from model_analyzer.device.gpu_device import GPUDevice
 import unittest
 from unittest.mock import MagicMock, patch, mock_open
 
-from model_analyzer.triton.model.model_config import ModelConfig
-
 from .mocks.mock_server_local import MockServerLocalMethods
 from .mocks.mock_perf_analyzer import MockPerfAnalyzerMethods
 from .mocks.mock_client import MockTritonClientMethods
@@ -37,7 +35,6 @@ from model_analyzer.record.types.perf_latency_avg import PerfLatencyAvg
 from model_analyzer.record.types.perf_latency_p90 import PerfLatencyP90
 from model_analyzer.record.types.perf_latency_p95 import PerfLatencyP95
 from model_analyzer.record.types.perf_latency_p99 import PerfLatencyP99
-from model_analyzer.record.types.perf_latency import PerfLatency
 from model_analyzer.record.types.perf_client_response_wait \
     import PerfClientResponseWait
 from model_analyzer.record.types.perf_client_send_recv \

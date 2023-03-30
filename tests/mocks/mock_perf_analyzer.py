@@ -14,7 +14,6 @@
 
 from .mock_base import MockBase
 from unittest.mock import patch, Mock, MagicMock
-from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 
 
 class MockCalledProcessError(Exception):

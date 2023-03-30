@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from .mock_base import MockBase
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
 
 
 class MockRequests(MockBase):

@@ -13,11 +13,10 @@
 # limitations under the License.
 
 from model_analyzer.result.results import Results
-from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from .common.test_utils import construct_run_config
 
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from .common import test_result_collector as trc
 
 

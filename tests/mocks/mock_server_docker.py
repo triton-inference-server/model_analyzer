@@ -14,7 +14,7 @@
 
 from .mock_server import MockServerMethods
 from .mock_api_error import MockAPIError
-from unittest.mock import patch, Mock, MagicMock, call
+from unittest.mock import patch, Mock, MagicMock
 
 
 class MockServerDockerMethods(MockServerMethods):
