@@ -52,3 +52,7 @@ class ModelProfileSpec(ConfigModelProfileSpec):
         if "sequence_batching" in self._default_model_config:
             supports_dynamic_batching = False
         return supports_dynamic_batching
+
+    def is_ensemble(self) -> bool:
+        """ Returns true if the model is an ensemble """
+        return ("ensemble_scheduling" in self._default_model_config)

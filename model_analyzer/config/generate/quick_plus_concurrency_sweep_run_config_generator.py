@@ -47,9 +47,8 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
                  models: List[ModelProfileSpec],
-                 ensemble_composing_models: Dict[str, List[ModelProfileSpec]],
-                 bls_composing_models: List[ModelProfileSpec],
-                 client: TritonClient, result_manager: ResultManager,
+                 composing_models: List[ModelProfileSpec], client: TritonClient,
+                 result_manager: ResultManager,
                  model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
@@ -61,10 +60,8 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         gpus: List of GPUDevices
         models: List of ModelProfileSpec
             List of models to profile
-        ensemble_composing_models: Dict of List of ModelProfileSpec
-            Dict indexed by model name of list of composing models to profile
-        bls_composing_models: List of ModelProfileSpec
-            List of BLS composing models to profile
+        composing_models: List of ModelProfileSpec
+            List of composing models that exist inside of the supplied models
         client: TritonClient
         result_manager: ResultManager
             The object that handles storing and sorting the results from the perf analyzer
@@ -77,8 +74,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
         self._config = config
         self._gpus = gpus
         self._models = models
-        self._ensemble_composing_models = ensemble_composing_models
-        self._bls_composing_models = bls_composing_models
+        self._composing_models = composing_models
         self._client = client
         self._result_manager = result_manager
         self._model_variant_name_manager = model_variant_name_manager
@@ -122,8 +118,7 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
             config=self._config,
             gpus=self._gpus,
             models=self._models,
-            ensemble_composing_models=self._ensemble_composing_models,
-            bls_composing_models=self._bls_composing_models,
+            composing_models=self._composing_models,
             client=self._client,
             model_variant_name_manager=self._model_variant_name_manager)
 
