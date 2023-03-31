@@ -237,8 +237,8 @@ class TestConfig(trc.TestResultCollector):
         config = self._evaluate_config(args, yaml_content)
 
         # CLI flag has the highest priority
-        self.assertTrue(
-            config.get_all_config()['model_repository'] == 'cli_repository')
+        self.assertEqual(config.get_all_config()['model_repository'],
+                         'cli_repository')
 
         args = [
             'model-analyzer', 'profile', '-f', 'path-to-config-file',
@@ -248,8 +248,8 @@ class TestConfig(trc.TestResultCollector):
         config = self._evaluate_config(args, yaml_content)
 
         # If CLI flag doesn't exist, YAML config has the highest priority
-        self.assertTrue(
-            config.get_all_config()['model_repository'] == 'yaml_repository')
+        self.assertEqual(config.get_all_config()['model_repository'],
+                         'yaml_repository')
 
         args = ['model-analyzer', 'profile', '-f', 'path-to-config-file']
         yaml_content = 'model_repository: yaml_repository'
@@ -328,7 +328,7 @@ batch_sizes:
     - 3
 """
         config = self._evaluate_config(args, yaml_content)
-        self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 3])
+        self.assertEqual(config.get_all_config()['batch_sizes'], [2, 3])
         self.assertIsInstance(config.get_config()['batch_sizes'].field_type(),
                               ConfigListNumeric)
 
@@ -336,7 +336,7 @@ batch_sizes:
 batch_sizes: 2
 """
         config = self._evaluate_config(args, yaml_content)
-        self.assertTrue(config.get_all_config()['batch_sizes'] == [2])
+        self.assertEqual(config.get_all_config()['batch_sizes'], [2])
         self.assertIsInstance(config.get_config()['batch_sizes'].field_type(),
                               ConfigListNumeric)
 
@@ -344,10 +344,10 @@ batch_sizes: 2
 concurrency: 2
 """
         config = self._evaluate_config(args, yaml_content)
-        self.assertTrue(config.get_all_config()['concurrency'] == [2])
+        self.assertEqual(config.get_all_config()['concurrency'], [2])
         self.assertIsInstance(config.get_config()['concurrency'].field_type(),
                               ConfigListNumeric)
-        self.assertTrue(config.get_all_config()['batch_sizes'] == [1])
+        self.assertEqual(config.get_all_config()['batch_sizes'], [1])
         self.assertIsInstance(config.get_config()['batch_sizes'].field_type(),
                               ConfigListNumeric)
 
@@ -357,8 +357,8 @@ batch_sizes:
     stop: 6
 """
         config = self._evaluate_config(args, yaml_content)
-        self.assertTrue(
-            config.get_all_config()['batch_sizes'] == [2, 3, 4, 5, 6])
+        self.assertEqual(config.get_all_config()['batch_sizes'],
+                         [2, 3, 4, 5, 6])
         self.assertIsInstance(config.get_config()['batch_sizes'].field_type(),
                               ConfigListNumeric)
 
@@ -369,7 +369,7 @@ batch_sizes:
     step: 2
 """
         config = self._evaluate_config(args, yaml_content)
-        self.assertTrue(config.get_all_config()['batch_sizes'] == [2, 4, 6])
+        self.assertEqual(config.get_all_config()['batch_sizes'], [2, 4, 6])
         self.assertIsInstance(config.get_config()['batch_sizes'].field_type(),
                               ConfigListNumeric)
 
@@ -1007,7 +1007,7 @@ profile_models:
         result = re.search('.*\'start\'.*\'stop\'.*\'undefined_key\'.*',
                            config_message)
 
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
         self.assertIsNotNone(config_message)
         self.assertIsNotNone(result)
 
@@ -1015,20 +1015,20 @@ profile_models:
         config_numeric.set_name('key')
         config_status = config_numeric.set_value({'start': 12, 'stop': 'two'})
         print(config_message)
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
         config_numeric = ConfigListNumeric(float)
         config_numeric.set_name('key')
         config_status = config_numeric.set_value({'start': 'five', 'stop': 2})
         config_message = config_status.message()
         print(config_message)
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
         config_numeric = ConfigListNumeric(float)
         config_numeric.set_name('key')
         config_status = config_numeric.set_value({'start': 10, 'stop': 2})
         print(config_status.message())
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
         # ConfigUnion error message
         config_union = ConfigUnion(
@@ -1039,54 +1039,54 @@ profile_models:
         # Dictionaries are not accepted.
         config_status = config_union.set_value({'a': 'b'})
         print(config_status.message())
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
         # ConfigEnum
         config_enum = ConfigEnum(['a', 'b'])
         config_enum.set_name('key')
         config_status = config_enum.set_value('c')
         print(config_status.message())
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
         # ConfigListGeneric
         config_list_generic = ConfigListGeneric(ConfigPrimitive(float))
         config_list_generic.set_name('key')
         config_status = config_list_generic.set_value({'a': 'b'})
         print(config_status.message())
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
         # ConfigListString
         config_list_string = ConfigListString()
         config_list_string.set_name('key')
         config_status = config_list_string.set_value({'a': 'b'})
         print(config_status.message())
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
         config_status = config_list_string.set_value([{'a': 'b'}])
         print(config_status.message())
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
         # ConfigObject
         config_object = ConfigObject(schema={'key': ConfigPrimitive(float)})
         config_object.set_name('key')
         config_status = config_object.set_value({'undefiend_key': 2.0})
         print(config_status.message())
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
         config_status = config_object.set_value({'key': [1, 2, 3]})
         print(config_status.message())
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
         config_status = config_object.set_value([1, 2, 3])
         print(config_status.message())
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
         # ConfigPrimitive
         config_primitive = ConfigPrimitive(float)
         config_primitive.set_name('key')
         config_status = config_primitive.set_value('a')
         print(config_status.message())
-        self.assertTrue(config_status.status() == CONFIG_PARSER_FAILURE)
+        self.assertEqual(config_status.status(), CONFIG_PARSER_FAILURE)
 
     def test_autofill(self):
         args = [

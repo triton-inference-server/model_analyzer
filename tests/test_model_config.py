@@ -176,16 +176,16 @@ ensemble_scheduling {
         mock_model_config = MockModelConfig(test_protobuf)
         mock_model_config.start()
         model_config = ModelConfig._create_from_file('/path/to/model_config')
-        self.assertTrue(model_config.get_config() == self._model_config)
+        self.assertEqual(model_config.get_config(), self._model_config)
         mock_model_config.stop()
 
     def test_create_from_dict(self):
         model_config = ModelConfig.create_from_dictionary(self._model_config)
-        self.assertTrue(model_config.get_config() == self._model_config)
+        self.assertEqual(model_config.get_config(), self._model_config)
 
         new_config = {'instance_group': [{'count': 2, 'kind': 'KIND_CPU'}]}
         model_config.set_config(new_config)
-        self.assertTrue(model_config.get_config() == new_config)
+        self.assertEqual(model_config.get_config(), new_config)
 
     def test_write_config_file(self):
         model_config = ModelConfig.create_from_dictionary(self._model_config)
@@ -207,8 +207,8 @@ ensemble_scheduling {
         mock_model_config.start()
         model_config_from_file = \
             ModelConfig._create_from_file(model_output_path)
-        self.assertTrue(
-            model_config_from_file.get_config() == self._model_config)
+        self.assertEqual(model_config_from_file.get_config(),
+                         self._model_config)
         mock_model_config.stop()
 
         # output path doesn't exist

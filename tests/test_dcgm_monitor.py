@@ -68,14 +68,14 @@ class TestDCGMMonitor(trc.TestResultCollector):
         for record in records:
             self.assertIsInstance(record.device_uuid(), str)
             self.assertIsInstance(record.value(), float)
-            self.assertTrue(record.value() == TEST_RECORD_VALUE)
+            self.assertEqual(record.value(), TEST_RECORD_VALUE)
             self.assertIsInstance(record.timestamp(), int)
 
         # The number of records should be dividable by number of metrics
-        self.assertTrue(len(records) % len(metrics) == 0)
-        self.assertTrue(len(records) > 0)
-        self.assertTrue(
-            records[-1].timestamp() - records[0].timestamp() >= monitoring_time)
+        self.assertEqual(len(records) % len(metrics), 0)
+        self.assertGreater(len(records), 0)
+        self.assertGreaterEqual(
+            records[-1].timestamp() - records[0].timestamp(), monitoring_time)
 
         with self.assertRaises(TritonModelAnalyzerException):
             dcgm_monitor.stop_recording_metrics()
@@ -100,14 +100,14 @@ class TestDCGMMonitor(trc.TestResultCollector):
         for record in records:
             self.assertIsInstance(record.device_uuid(), str)
             self.assertIsInstance(record.value(), float)
-            self.assertTrue(record.value() == TEST_RECORD_VALUE)
+            self.assertEqual(record.value(), TEST_RECORD_VALUE)
             self.assertIsInstance(record.timestamp(), int)
 
         # The number of records should be dividable by number of metrics
-        self.assertTrue(len(records) % len(metrics) == 0)
-        self.assertTrue(len(records) > 0)
-        self.assertTrue(
-            records[-1].timestamp() - records[0].timestamp() >= monitoring_time)
+        self.assertEqual(len(records) % len(metrics), 0)
+        self.assertGreater(len(records), 0)
+        self.assertGreaterEqual(
+            records[-1].timestamp() - records[0].timestamp(), monitoring_time)
 
         dcgm_monitor.destroy()
 
@@ -125,15 +125,15 @@ class TestDCGMMonitor(trc.TestResultCollector):
         for record in records:
             self.assertIsInstance(record.device_uuid(), str)
             self.assertIsInstance(record.value(), float)
-            self.assertTrue(record.value() <= 100)
-            self.assertTrue(record.value() == TEST_RECORD_VALUE)
+            self.assertLessEqual(record.value(), 100)
+            self.assertEqual(record.value(), TEST_RECORD_VALUE)
             self.assertIsInstance(record.timestamp(), int)
 
         # The number of records should be dividable by number of metrics
-        self.assertTrue(len(records) % len(metrics) == 0)
-        self.assertTrue(len(records) > 0)
-        self.assertTrue(
-            records[-1].timestamp() - records[0].timestamp() >= monitoring_time)
+        self.assertEqual(len(records) % len(metrics), 0)
+        self.assertGreater(len(records), 0)
+        self.assertGreaterEqual(
+            records[-1].timestamp() - records[0].timestamp(), monitoring_time)
 
         dcgm_monitor.destroy()
 
