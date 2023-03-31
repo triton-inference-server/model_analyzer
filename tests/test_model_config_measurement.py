@@ -154,7 +154,7 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
             "perf_throughput": 1,
             "perf_latency_p99": 1
         })
-        self.assertTrue(self.mcmA == self.mcmB)
+        self.assertEqual(self.mcmA, self.mcmB)
         self.assertEqual(
             self.mcmA.calculate_weighted_percentage_gain(self.mcmB), 25)
         self.assertEqual(
@@ -168,13 +168,13 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
 
         # throughput: 1000 is not better than 2000
         self.assertFalse(self.mcmA.is_better_than(self.mcmB))
-        self.assertTrue(self.mcmA < self.mcmB)
+        self.assertLess(self.mcmA, self.mcmB)
 
         self.mcmA.set_metric_weighting({"perf_latency_p99": 1})
 
         # latency: 20 is better than 40
         self.assertTrue(self.mcmA.is_better_than(self.mcmB))
-        self.assertFalse(self.mcmA < self.mcmB)
+        self.assertGreater(self.mcmA, self.mcmB)
 
     def test_is_better_than_combo(self):
         """
@@ -198,7 +198,7 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
 
         self.assertTrue(self.mcmA.is_better_than(self.mcmC))
         self.assertFalse(self.mcmC.is_better_than(self.mcmA))
-        self.assertTrue(self.mcmC == self.mcmD)
+        self.assertEqual(self.mcmC, self.mcmD)
 
     def test__eq__(self):
         """
@@ -206,7 +206,7 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         """
         self.mcmA.set_metric_weighting({"cpu_used_ram": 10})
 
-        self.assertTrue(self.mcmA == self.mcmB)
+        self.assertEqual(self.mcmA, self.mcmB)
 
     def test__eq__combo(self):
         """
@@ -219,7 +219,7 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
             "perf_latency_p99": 1
         })
 
-        self.assertTrue(self.mcmA == self.mcmB)
+        self.assertEqual(self.mcmA, self.mcmB)
 
     def test_from_dict(self):
         """

@@ -72,8 +72,8 @@ class TestCPUMonitor(trc.TestResultCollector):
             self.assertIsInstance(record.timestamp(), int)
 
         # The number of records should be dividable by number of metrics
-        self.assertTrue(len(records) % len(metrics) == 0)
-        self.assertTrue(len(records) > 0)
+        self.assertEqual(len(records) % len(metrics), 0)
+        self.assertGreater(len(records), 0)
 
         with self.assertRaises(TritonModelAnalyzerException):
             cpu_monitor.stop_recording_metrics()

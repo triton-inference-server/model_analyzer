@@ -136,17 +136,17 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
 
             # Test __lt__ (True if 1 worse than 2)
             if record_type in self.less_is_better_types:
-                self.assertTrue(metric1 < metric2)
+                self.assertLess(metric1, metric2)
             elif record_type in self.more_is_better_types:
-                self.assertTrue(metric2 < metric1)
+                self.assertLess(metric2, metric1)
             else:
                 fail
 
             # Test __gt__ (True if 1 better than 2)
             if record_type in self.less_is_better_types:
-                self.assertTrue(metric2 > metric1)
+                self.assertLess(metric1, metric2)
             elif record_type in self.more_is_better_types:
-                self.assertTrue(metric1 > metric2)
+                self.assertGreater(metric1, metric2)
             else:
                 fail
 

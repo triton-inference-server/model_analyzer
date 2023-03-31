@@ -435,9 +435,9 @@ class TestPerfAnalyzerMethods(trc.TestResultCollector):
 
         records = perf_analyzer.get_gpu_records()
         self.assertEqual(len(records), 3)
-        self.assertTrue(type(records[0]) == GPUUsedMemory)
-        self.assertTrue(type(records[1]) == GPUUsedMemory)
-        self.assertTrue(type(records[2]) == GPUFreeMemory)
+        self.assertEqual(type(records[0]), GPUUsedMemory)
+        self.assertEqual(type(records[1]), GPUUsedMemory)
+        self.assertEqual(type(records[2]), GPUFreeMemory)
         self.assertEqual(records[2].device_uuid(), "GPU-aaf4fea0")
         self.assertEqual(records[2].value(), 1500 - 1000)
 

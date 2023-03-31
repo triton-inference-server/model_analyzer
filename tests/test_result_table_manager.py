@@ -131,7 +131,7 @@ class TestResultTableManager(trc.TestResultCollector):
                                                   result_manager=result_manager)
 
         result_table_manager._create_inference_table()
-        self.assertTrue(result_table_manager._inference_output_fields == [
+        self.assertEqual(result_table_manager._inference_output_fields, [
             'model_name', 'batch_size', 'backend_parameter/parameter_1',
             'backend_parameter/parameter_2'
         ])
@@ -222,7 +222,7 @@ class TestResultTableManager(trc.TestResultCollector):
             instance_groups=None,
             max_batch_sizes=None,
             backend_parameters=backend_parameters)
-        self.assertTrue(row == [
+        self.assertEqual(row, [
             'model_name', 'batch_size', 'model_1_value_1', 'model_1_value_2',
             None
         ])

@@ -192,7 +192,7 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         # This tips the scale in the favor of RCM0 (0.2, -0.15)
         self.rcm0.set_model_config_weighting([2, 3])
         self.assertTrue(self.rcm0.is_better_than(self.rcm1))
-        self.assertFalse(self.rcm0 < self.rcm1)
+        self.assertGreater(self.rcm0, self.rcm1)
 
     def test_is_better_than_consistency(self):
         """
@@ -227,12 +227,11 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         Test to ensure constraints are reported as passing
         if none were specified
         """
-        self.rcm5.set_constraint_manager(construct_constraint_manager(
-            """
+        self.rcm5.set_constraint_manager(
+            construct_constraint_manager("""
             profile_models: 
               modelA
-            """
-        ))
+            """))
         self.assertTrue(self.rcm5.is_passing_constraints())
 
     def test_is_passing_constraints(self):
@@ -241,29 +240,24 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         passing/failing if model is above/below
         throughput threshold
         """
-        constraint_manager = construct_constraint_manager(
-            """
+        constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
                   perf_throughput:
                     min: 500
-            """
-        )
+            """)
         self.rcm5.set_constraint_manager(constraint_manager)
 
         self.assertTrue(self.rcm5.is_passing_constraints())
 
-
-        constraint_manager = construct_constraint_manager(
-            """
+        constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
                   perf_throughput:
                     min: 3000
-            """
-        )
+            """)
         self.rcm5.set_constraint_manager(constraint_manager)
 
         self.assertFalse(self.rcm5.is_passing_constraints())
@@ -274,26 +268,22 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         # RCM4's throughput is 1000
         # RCM5's throughput is 2000
-        constraint_manager = construct_constraint_manager(
-            """
+        constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
                   perf_throughput:
                     min: 500
-            """
-        )
+            """)
         self.rcm4.set_constraint_manager(constraint_manager)
 
-        constraint_manager = construct_constraint_manager(
-            """
+        constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
                   perf_throughput:
                     min: 2500
-            """
-        )
+            """)
         self.rcm5.set_constraint_manager(constraint_manager)
 
         self.assertEqual(self.rcm4.compare_constraints(self.rcm5), None)
@@ -306,26 +296,22 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         # RCM4's throughput is 1000
         # RCM5's throughput is 2000
-        constraint_manager = construct_constraint_manager(
-            """
+        constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
                   perf_throughput:
                     min: 1250
-            """
-        )
+            """)
         self.rcm4.set_constraint_manager(constraint_manager)
 
-        constraint_manager = construct_constraint_manager(
-            """
+        constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
                   perf_throughput:
                     min: 2500
-            """
-        )
+            """)
         self.rcm5.set_constraint_manager(constraint_manager)
 
         # RCM4 is failing by 20%, RCM5 is failing by 20%
@@ -340,26 +326,22 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         """
         # RCM4's throughput is 1000
         # RCM5's throughput is 2000
-        constraint_manager = construct_constraint_manager(
-            """
+        constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
                   perf_throughput:
                     min: 2000
-            """
-        )
+            """)
         self.rcm4.set_constraint_manager(constraint_manager)
 
-        constraint_manager = construct_constraint_manager(
-            """
+        constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
                   perf_throughput:
                     min: 2500
-            """
-        )
+            """)
         self.rcm5.set_constraint_manager(constraint_manager)
 
         # RCM4 is failing by 50%, RCM5 is failing by 20%
@@ -401,7 +383,8 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.assertEqual(rcm0_from_dict.gpu_data(), self.rcm0.gpu_data())
         self.assertEqual(rcm0_from_dict.non_gpu_data(),
                          self.rcm0.non_gpu_data())
-        self.assertEqual(list(rcm0_from_dict.data().values()), list(self.rcm0.data().values()))
+        self.assertEqual(list(rcm0_from_dict.data().values()),
+                         list(self.rcm0.data().values()))
         self.assertEqual(rcm0_from_dict._model_config_measurements,
                          self.rcm0._model_config_measurements)
         self.assertEqual(rcm0_from_dict._model_config_weights, [])
@@ -467,8 +450,8 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
         self.rcm0 = construct_run_config_measurement(
             self.model_name, self.model_config_name,
             self.model_specific_pa_params, self.gpu_metric_values,
-            self.rcm0_non_gpu_metric_values, MagicMock(), self.metric_objectives,
-            self.weights)
+            self.rcm0_non_gpu_metric_values, MagicMock(),
+            self.metric_objectives, self.weights)
 
     def _construct_rcm1(self):
         model_name = "modelA,modelB"
@@ -522,8 +505,8 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
 
         self.rcm1 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
-            gpu_metric_values, self.rcm1_non_gpu_metric_values,
-            MagicMock(), metric_objectives, weights)
+            gpu_metric_values, self.rcm1_non_gpu_metric_values, MagicMock(),
+            metric_objectives, weights)
 
     def _construct_rcm2(self):
         model_name = "modelA,modelB"
@@ -577,8 +560,8 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
 
         self.rcm2 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
-            gpu_metric_values, self.rcm2_non_gpu_metric_values,
-            MagicMock(), metric_objectives, weights)
+            gpu_metric_values, self.rcm2_non_gpu_metric_values, MagicMock(),
+            metric_objectives, weights)
 
     def _construct_rcm3(self):
         model_name = "modelA,modelB"
@@ -632,8 +615,8 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
 
         self.rcm3 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
-            gpu_metric_values, self.rcm3_non_gpu_metric_values,
-            MagicMock(), metric_objectives, weights)
+            gpu_metric_values, self.rcm3_non_gpu_metric_values, MagicMock(),
+            metric_objectives, weights)
 
     def _construct_rcm4(self):
         model_name = "modelA"
@@ -682,8 +665,8 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
 
         self.rcm4 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
-            gpu_metric_values, self.rcm4_non_gpu_metric_values,
-            MagicMock(), metric_objectives, weights)
+            gpu_metric_values, self.rcm4_non_gpu_metric_values, MagicMock(),
+            metric_objectives, weights)
 
     def _construct_rcm5(self):
         model_name = "modelA"
@@ -732,8 +715,8 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
 
         self.rcm5 = construct_run_config_measurement(
             model_name, model_config_name, model_specific_pa_params,
-            gpu_metric_values, self.rcm5_non_gpu_metric_values,
-            MagicMock(), metric_objectives, weights)
+            gpu_metric_values, self.rcm5_non_gpu_metric_values, MagicMock(),
+            metric_objectives, weights)
 
 
 if __name__ == '__main__':
