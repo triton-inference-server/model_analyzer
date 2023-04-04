@@ -234,15 +234,6 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_config_dict['name'] = variant_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
 
-        for composing_model_config in ensemble_composing_model_configs:
-            variant_name = composing_model_config.get_field("name")
-            composing_model_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
-                variant_name)
-
-            model_config.set_composing_model_variant_name(
-                composing_model_name=composing_model_name,
-                variant_name=variant_name)
-
         return model_config
 
     @staticmethod

@@ -281,12 +281,17 @@ class MetricsManager:
 
                 self._create_model_variant(original_name, composing_config)
 
+                # Create a version with the original (no _config_#/default appended) name
                 original_composing_config = BaseModelConfigGenerator.create_original_config_from_variant(
                     composing_config)
                 self._create_model_variant(original_name,
-                                           original_composing_config)
+                                           original_composing_config,
+                                           ignore_first_config_variant=True)
 
-    def _create_model_variant(self, original_name, variant_config):
+    def _create_model_variant(self,
+                              original_name,
+                              variant_config,
+                              ignore_first_config_variant=False):
         """
         Creates a directory for the model config variant in the output model
         repository and fills directory with config
@@ -301,11 +306,18 @@ class MetricsManager:
                                          variant_name)
             try:
                 # Create the directory for the new model
-                os.makedirs(new_model_dir, exist_ok=False)
+                os.makedirs(new_model_dir, exist_ok=True)
                 self._first_config_variant.setdefault(original_name, None)
-                variant_config.write_config_to_file(
-                    new_model_dir, original_model_dir,
-                    self._first_config_variant[original_name])
+
+                if ignore_first_config_variant:
+                    variant_config.write_config_to_file(new_model_dir,
+                                                        original_model_dir,
+                                                        None)
+                else:
+                    variant_config.write_config_to_file(
+                        new_model_dir, original_model_dir,
+                        self._first_config_variant[original_name])
+
                 if self._first_config_variant[original_name] is None:
                     self._first_config_variant[original_name] = os.path.join(
                         self._output_model_repo_path, variant_name)
@@ -320,12 +332,14 @@ class MetricsManager:
             if not self._load_model_variant(variant_config=mrc.model_config()):
                 return False
 
-            for composing_config in mrc.composing_configs():
-                original_composing_config = BaseModelConfigGenerator.create_original_config_from_variant(
-                    composing_config)
-                if not self._load_model_variant(
-                        variant_config=original_composing_config):
-                    return False
+            # Composing configs for BLS models are not automatically loaded by the top-level model
+            if mrc.is_bls_model():
+                for composing_config in mrc.composing_configs():
+                    original_composing_config = BaseModelConfigGenerator.create_original_config_from_variant(
+                        composing_config)
+                    if not self._load_model_variant(
+                            variant_config=original_composing_config):
+                        return False
 
         return True
 
