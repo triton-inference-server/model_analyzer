@@ -23,6 +23,7 @@ limitations under the License.
   - [Manual Brute Search](#manual-brute-search)
 - [Quick Search Mode](#quick-search-mode)
 - [Ensemble Model Search](#ensemble-model-search)
+- [BLS Model Search](#bls-model-search)
 - [Multi-Model Search Mode](#multi-model-search-mode)
 
 <br>
@@ -36,13 +37,14 @@ Model Analyzer's `profile` subcommand supports multiple modes when searching to 
 - [Brute Force Search](config_search.md#brute-search-mode)
   - **Search type:** Brute-force sweep of the cross product of all possible configurations
   - **Default for:**
-    - Single non-ensemble models
+    - Single non-ensemble/BLS models
     - Multiple models being profiled sequentially
   - **Command:** `--run-config-search-mode brute`
 - [Quick Search](config_search.md#quick-search-mode)
   - **Search type:** Heuristic sweep using a hill-climbing algorithm to find an optimal configuration
   - **Default for:**
     - Single ensemble models
+    - Single BLS models
     - Multiple models being profiled concurrently
   - **Command:** `--run-config-search-mode quick`
 
@@ -61,12 +63,15 @@ Model Analyzer's default search mode depends on the type of model and if you are
 - [Ensemble Model Search](config_search.md#ensemble-model-search):
   - **Default Search type:** [Quick Search](config_search.md#quick-search-mode)
   - **Command:** N/A
+- [BLS Model Search](config_search.md#bls-model-search):
+  - **Default Search type:** [Quick Search](config_search.md#quick-search-mode)
+  - **Command:** N/A
 
 ---
 
 ## Brute Search Mode
 
-**Default search mode when profiling non-ensemble models sequentially**
+**Default search mode when profiling non-ensemble/BLS models sequentially**
 
 Model Analyzer's brute search mode will do a brute-force sweep of the cross product of all possible configurations. <br>
 It has two modes:
@@ -225,7 +230,7 @@ manual sweep:
 
 ## Quick Search Mode
 
-**Default search mode when profiling ensemble models or multiple models concurrently**
+**Default search mode when profiling ensemble models, BLS models, or multiple models concurrently**
 
 This mode uses a hill climbing algorithm to search the configuration space, looking for
 the maximal objective value within the specified constraints. In the majority of cases
@@ -278,8 +283,23 @@ _This mode has the following limitations:_
 - Can only be run in `quick` search mode
 - Only supports up to four composing models
 - Does not support `cpu_only` option for composing models
+- Composing models cannot be ensemble or BLS models
 
-Ensemble models can be optimized using the Quick Search mode's hill climbing algorithm to search the ensemble sub-model's configuration spaces in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under one hour (compared to the days it would take a brute force run to complete) for ensembles with up to four composing models.
+Ensemble models can be optimized using the Quick Search mode's hill climbing algorithm to search the composing models' configuration spaces in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under one hour (compared to the days it would take a brute force run to complete) for ensembles that contain up to four composing models.
+
+After Model Analyzer has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the concurrency range before generation of the summary reports.
+
+---
+
+## BLS Model Search
+
+_This mode has the following limitations:_
+
+- Can only be run in `quick` search mode
+- Only supports up to four composing models
+- Composing models cannot be ensemble or BLS models
+
+BLS models can be optimized using the Quick Search mode's hill climbing algorithm to search the BLS composing models' configuration spaces, as well as the BLS model's instance count, in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under one hour (compared to the days it would take a brute force run to complete) for BLS models that contain up to four composing models.
 
 After Model Analyzer has found the best config(s), it will then sweep the top-N configurations found (specified by `--num-configs-per-model`) over the concurrency range before generation of the summary reports.
 
