@@ -138,6 +138,10 @@ class RunConfigGeneratorFactory:
         all_models = models + composing_models
 
         for model in all_models:
+            # Top level ensemble models don't have any dimensions
+            if model.is_ensemble():
+                continue
+
             dims = RunConfigGeneratorFactory._get_dimensions_for_model(
                 model.supports_batching())
             dimensions.add_dimensions(index, dims)
