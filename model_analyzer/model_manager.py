@@ -136,6 +136,7 @@ class ModelManager:
                     model_config_weights=weightings)
 
             rcg.set_last_results([measurement])
+            self._state_manager.save_checkpoint()
 
         self._metrics_manager.finalize()
 
