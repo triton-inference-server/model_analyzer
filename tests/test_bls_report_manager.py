@@ -16,8 +16,6 @@ from model_analyzer.reports.report_manager import ReportManager
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
-from .mocks.mock_os import MockOSMethods
-
 from .common.test_utils import evaluate_mock_config, ROOT_DIR
 from .common import test_result_collector as trc
 
