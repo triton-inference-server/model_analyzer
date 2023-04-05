@@ -468,8 +468,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         default_run_config = qrcg._create_default_run_config()
 
-        self.assertTrue(
-            '--percentile=96' in default_run_config.representation())
+        self.assertIn('--percentile=96', default_run_config.representation())
 
     def tearDown(self):
         patch.stopall()
@@ -520,8 +519,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         ensemble_composing_configs = default_run_config.model_run_configs(
         )[0].composing_configs()
 
-        self.assertTrue(
-            "my-model_config_default" in default_run_config.representation())
+        self.assertIn("my-model_config_default",
+                      default_run_config.representation())
         self.assertEqual(ensemble_composing_configs[0].get_field("name"),
                          "fake_model_A_config_default")
         self.assertEqual(ensemble_composing_configs[1].get_field("name"),
