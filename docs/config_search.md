@@ -37,7 +37,7 @@ Model Analyzer's `profile` subcommand supports multiple modes when searching to 
 - [Brute Force Search](config_search.md#brute-search-mode)
   - **Search type:** Brute-force sweep of the cross product of all possible configurations
   - **Default for:**
-    - Single non-ensemble/BLS models
+    - Single models, which are not ensemble or BLS
     - Multiple models being profiled sequentially
   - **Command:** `--run-config-search-mode brute`
 - [Quick Search](config_search.md#quick-search-mode)
@@ -56,16 +56,13 @@ Model Analyzer's default search mode depends on the type of model and if you are
 
 - [Sequential (single or multi-model) Search](config_search.md#brute-search-mode)
   - **Default Search type:** [Brute Force Search](config_search.md#brute-search-mode)
-  - **Command:** N/A
 - [Concurrent / Multi-model Search](config_search.md#multi-model-search-mode)
   - **Default Search type:** [Quick Search](config_search.md#quick-search-mode)
   - **Command:** `--run-config-profile-models-concurrently-enable`
 - [Ensemble Model Search](config_search.md#ensemble-model-search):
   - **Default Search type:** [Quick Search](config_search.md#quick-search-mode)
-  - **Command:** N/A
 - [BLS Model Search](config_search.md#bls-model-search):
   - **Default Search type:** [Quick Search](config_search.md#quick-search-mode)
-  - **Command:** N/A
 
 ---
 
