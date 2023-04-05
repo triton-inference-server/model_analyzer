@@ -169,7 +169,7 @@ def mock_bls_configs(*args, **kwargs):
         return fake_config
     elif model_name == 'fake_model_A':
         return fake_base_composing_config0
-    elif model_name == 'fake_model_B':
+    else:
         return fake_base_composing_config1
 
 
