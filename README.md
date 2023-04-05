@@ -18,7 +18,7 @@ limitations under the License.
 
 # Triton Model Analyzer
 
-Triton Model Analyzer is a CLI tool which can help you find a more optimal configuration, on a given piece of hardware, for single, multiple, or ensemble models running on a [Triton Inference Server](https://github.com/triton-inference-server/server/). Model Analyzer will also generate reports to help you better understand the trade-offs of the different configurations along with their compute and memory requirements.
+Triton Model Analyzer is a CLI tool which can help you find a more optimal configuration, on a given piece of hardware, for single, multiple, ensemble, or BLS models running on a [Triton Inference Server](https://github.com/triton-inference-server/server/). Model Analyzer will also generate reports to help you better understand the trade-offs of the different configurations along with their compute and memory requirements.
 <br><br>
 
 # Features
@@ -40,7 +40,10 @@ Triton Model Analyzer is a CLI tool which can help you find a more optimal confi
 ### Model Types
 
 - [Ensemble Model Search](docs/config_search.md#ensemble-model-search): Model Analyzer can help you find the optimal
-  settings when profiling a non-BLS ensemble model, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
+  settings when profiling an ensemble model, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
+
+- [BLS Model Search](docs/config_search.md#bls-model-search): Model Analyzer can help you find the optimal
+  settings when profiling a BLS model, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
 
 - [Multi-Model Search](docs/config_search.md#multi-model-search-mode): **EARLY ACCESS** - Model Analyzer can help you
   find the optimal settings when profiling multiple concurrent models, utilizing the [Quick Search](docs/config_search.md#quick-search-mode) algorithm
