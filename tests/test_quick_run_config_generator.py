@@ -586,8 +586,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         bls_composing_configs = default_run_config.model_run_configs(
         )[0].composing_configs()
 
-        self.assertTrue(
-            "my-model_config_default" in default_run_config.representation())
+        self.assertIn("my-model_config_default",
+                      default_run_config.representation())
         self.assertEqual(bls_composing_configs[0].get_field("name"),
                          "bls_composing_modelA_config_default")
         self.assertEqual(bls_composing_configs[1].get_field("name"),
@@ -890,7 +890,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
                 side_effect=mock_composing_ensemble_configs
         ) and self.assertRaises(TritonModelAnalyzerException):
-            ensemble_composing_models = RunConfigGeneratorFactory._create_composing_models(
+            RunConfigGeneratorFactory._create_composing_models(
                 models, config, MagicMock(), MagicMock())
 
     def _get_next_run_config_ensemble(self,
