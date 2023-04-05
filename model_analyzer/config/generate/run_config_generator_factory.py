@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Optional
+from typing import List
 
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
 from model_analyzer.triton.client.client import TritonClient
