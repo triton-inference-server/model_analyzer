@@ -22,6 +22,7 @@ from typing import List, Optional, Generator, Dict, Any
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.model.model_config import ModelConfig
 from .model_profile_spec import ModelProfileSpec
+from copy import deepcopy
 import abc
 import logging
 
@@ -233,15 +234,6 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_config_dict['name'] = variant_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
 
-        for composing_model_config in ensemble_composing_model_configs:
-            variant_name = composing_model_config.get_field("name")
-            composing_model_name = BaseModelConfigGenerator.extract_model_name_from_variant_name(
-                variant_name)
-
-            model_config.set_composing_model_variant_name(
-                composing_model_name=composing_model_name,
-                variant_name=variant_name)
-
         return model_config
 
     @staticmethod
@@ -282,6 +274,21 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         the model name, eg. model_name_config_10 -> model_name
         """
         return variant_name[:variant_name.find("_config_")]
+
+    @staticmethod
+    def create_original_config_from_variant(
+            variant_config: ModelConfig) -> ModelConfig:
+        """
+        Removes 'config_#/default' from the variant config and returns
+        a new model config
+        """
+        original_config = deepcopy(variant_config)
+
+        original_config.set_model_name(
+            BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                variant_config.get_field("name")))
+
+        return original_config
 
     @staticmethod
     def _apply_value_to_dict(key: Any, value: Any, dict_in: Dict) -> None:

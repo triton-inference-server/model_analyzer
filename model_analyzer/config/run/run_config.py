@@ -69,6 +69,13 @@ class RunConfig:
         """
         return self._model_run_configs[0].is_ensemble_model()
 
+    def is_bls_model(self) -> bool:
+        """
+        Returns true if the first model config is a BLS model
+        (a BLS cannot be part of a multi-model)
+        """
+        return self._model_run_configs[0].is_bls_model()
+
     def cpu_only(self):
         """
         Returns true if all model_run_configs only operate on the CPU
@@ -98,12 +105,12 @@ class RunConfig:
         return ','.join(
             [mrc.model_variant_name() for mrc in self.model_run_configs()])
 
-    def ensemble_composing_configs(self):
+    def composing_configs(self):
         """
-        Returns a list of ensemble composing configs from the first model config
-        (an ensemble cannot be part of a multi-model)
+        Returns a list of composing configs from the first model config
+        (an ensemble/BLS cannot be part of a multi-model profile)
         """
-        return self._model_run_configs[0].ensemble_composing_configs()
+        return self._model_run_configs[0].composing_configs()
 
     @classmethod
     def from_dict(cls, run_config_dict):

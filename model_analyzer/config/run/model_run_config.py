@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from model_analyzer.constants import LOGGER_NAME
 import logging
@@ -48,7 +48,7 @@ class ModelRunConfig:
         self._model_name = model_name
         self._model_config = model_config
         self._perf_config = perf_config
-        self._ensemble_composing_configs: List[ModelConfig] = []
+        self._composing_configs: List[ModelConfig] = []
 
     def model_name(self) -> str:
         """
@@ -95,12 +95,12 @@ class ModelRunConfig:
 
         return self._perf_config
 
-    def ensemble_composing_configs(self) -> List[ModelConfig]:
+    def composing_configs(self) -> List[ModelConfig]:
         """
-        Returns the list of ensemble composing configs
+        Returns the list of composing configs
         """
 
-        return self._ensemble_composing_configs
+        return self._composing_configs
 
     def representation(self) -> str:
         """
@@ -110,7 +110,7 @@ class ModelRunConfig:
 
         return self.perf_config().representation()
 
-    def _check_for_client_vs_model_batch_size(self):
+    def _check_for_client_vs_model_batch_size(self) -> bool:
         """
         Returns false if client batch size is greater than model batch size. Else true
         """
@@ -129,18 +129,13 @@ class ModelRunConfig:
 
         return legal
 
-    def _check_for_preferred_vs_model_batch_size(self):
+    def _check_for_preferred_vs_model_batch_size(self) -> bool:
         """
         Returns false if maximum of preferred batch size is greater than model batch size. Else true
         """
         legal = True
-        ensemble_composing_configs = [
-            composing_config.get_config()
-            for composing_config in self._ensemble_composing_configs
-        ]
-        model_configs = ensemble_composing_configs if self._ensemble_composing_configs else [
-            self._model_config.get_config()
-        ]
+
+        model_configs = self._create_model_config_dicts()
 
         for model_config in model_configs:
             max_batch_size = model_config[
@@ -160,6 +155,22 @@ class ModelRunConfig:
 
         return legal
 
+    def _create_model_config_dicts(self) -> List[Dict]:
+        """
+        Create a list of model config dictionaries for 
+        the given model + composing models
+        """
+        model_configs = [] if self.is_ensemble_model() else [
+            self._model_config.get_config()
+        ]
+
+        model_configs.extend([
+            composing_config.get_config()
+            for composing_config in self._composing_configs
+        ])
+
+        return model_configs
+
     def is_legal_combination(self):
         """
         Returns true if the run_config is valid and should be run. Else false
@@ -171,24 +182,35 @@ class ModelRunConfig:
 
     def is_ensemble_model(self) -> bool:
         """
-        Returns true if the model_config is an ensemble model
+        Returns true if the model config is an ensemble model
         """
         return self._model_config.is_ensemble()
 
-    def get_ensemble_composing_config_names(self) -> Optional[List[str]]:
+    def is_bls_model(self) -> bool:
         """
-        Returns list of ensemble composing config names
+        Returns true if the model config is a BLS model
         """
-        return self._model_config.get_ensemble_composing_models(
-        ) if self._model_config.is_ensemble() else []
+        # If composing configs are present and it's not an ensemble it must be a BLS
+        # Note: this will need to change if we allow ensembles to contain BLS models
+        return (not self._model_config.is_ensemble() and
+                len(self._composing_configs) > 0)
 
-    def add_ensemble_composing_model_configs(
+    def get_composing_config_names(self) -> Optional[List[str]]:
+        """
+        Returns list of composing config names
+        """
+        return [
+            composing_config.get_field("name")
+            for composing_config in self._composing_configs
+        ]
+
+    def add_composing_model_configs(
             self, composing_model_configs: List[ModelConfig]) -> None:
         """
-        Adds a list of ensemble composing_model configs
+        Adds a list of composing model configs
         """
         for composing_model_config in composing_model_configs:
-            self._ensemble_composing_configs.append(composing_model_config)
+            self._composing_configs.append(composing_model_config)
 
     @classmethod
     def from_dict(cls, model_run_config_dict):
@@ -199,11 +221,11 @@ class ModelRunConfig:
         model_run_config._perf_config = PerfAnalyzerConfig.from_dict(
             model_run_config_dict['_perf_config'])
 
-        if '_ensemble_composing_configs' in model_run_config_dict:
-            model_run_config._ensemble_composing_configs = [
-                ModelConfig.from_dict(ensemble_composing_config_dict)
-                for ensemble_composing_config_dict in
-                model_run_config_dict['_ensemble_composing_configs']
+        if '_composing_configs' in model_run_config_dict:
+            model_run_config._composing_configs = [
+                ModelConfig.from_dict(composing_config_dict)
+                for composing_config_dict in
+                model_run_config_dict['_composing_configs']
             ]
 
         return model_run_config

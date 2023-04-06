@@ -1767,7 +1767,7 @@ profile_models:
         Test that multi-model is only run in quick
         """
         args = [
-            'model-analzyer', 'profile', '--model-repository', 'cli-repository',
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
             '--profile-models', 'test_modelA,test_modelB',
             '--run-config-profile-models-concurrently-enable'
         ]
@@ -1797,7 +1797,7 @@ profile_models:
         Test that only legal options are specified in quick search
         """
         args = [
-            'model-analzyer', 'profile', '--model-repository', 'cli-repository',
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
             '--profile-models', 'test_modelA', '--run-config-search-mode',
             'quick'
         ]
@@ -1825,7 +1825,7 @@ profile_models:
         Test for illegal model specific options in the YAML during quick search
         """
         args = [
-            'model-analzyer', 'profile', '--model-repository', 'cli-repository',
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
             '--run-config-search-mode', 'quick', '-f', 'path-to-config-file'
         ]
 
@@ -1864,7 +1864,7 @@ profile_models:
         Test that weightings can be specified only per model in the YAML
         """
         args = [
-            'model-analzyer', 'profile', '--model-repository', 'cli-repository',
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
             '--run-config-search-mode', 'quick', '-f', 'path-to-config-file'
         ]
 
@@ -1917,6 +1917,68 @@ profile_models:
             new_args.append(['1', '2', '4'])
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(new_args, yaml_content, subcommand='profile')
+
+    def test_bls_composing_models(self):
+        """
+        Test that BLS composing models can be specified
+        """
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'quick', '--profile-models', 'modelA',
+            '--bls-composing-models', 'modelA,modelB'
+        ]
+        yaml_content = ''
+
+        self._evaluate_config(args, yaml_content)
+
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'quick', '--profile-models', 'modelA'
+        ]
+
+        yaml_content = """
+        bls_composing_models: modelA,modelB
+        """
+
+        self._evaluate_config(args, yaml_content)
+
+    def test_bls_illegal_config_combinations(self):
+        """
+        Test BLS illegal config combinations
+        """
+        # BLS with brute search mode
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'brute', '--profile-models', 'modelA',
+            '--bls-composing-models', 'modelA,modelB'
+        ]
+        yaml_content = ''
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content)
+
+        # BLS with multiple models
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'quick', '--profile-models',
+            'modelA,modelB', '--bls-composing-models', 'modelA,modelB'
+        ]
+        yaml_content = ''
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content)
+
+        # BLS with concurrent search mode
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--run-config-search-mode', 'quick', '--profile-models', 'modelA',
+            '--bls-composing-models', 'modelA,modelB',
+            '--run-config-profile-models-concurrently-enable'
+        ]
+        yaml_content = ''
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content)
 
 
 if __name__ == '__main__':

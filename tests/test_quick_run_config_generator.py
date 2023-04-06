@@ -16,6 +16,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from .common import test_result_collector as trc
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
@@ -80,6 +81,98 @@ def mock_ensemble_configs(*args, **kwargs):
         return fake_base_composing_config1
 
 
+def mock_composing_ensemble_configs(*args, **kwargs):
+    fake_config = {
+        "name": "my-model",
+        "platform": "ensemble",
+        "ensemble_scheduling": {
+            "step": [{
+                "model_name": "fake_model_A"
+            }, {
+                "model_name": "fake_model_B"
+            }]
+        },
+        "input": [{
+            "name": "INPUT__0",
+            "dataType": "TYPE_FP32",
+            "dims": [16]
+        }],
+        "max_batch_size": 4
+    }
+    fake_base_composing_config0 = {
+        "name": "fake_model_A",
+        "platform": "ensemble",
+        "ensemble_scheduling": {
+            "step": [{
+                "model_name": "fake_model_C"
+            }, {
+                "model_name": "fake_model_D"
+            }]
+        },
+        "input": [{
+            "name": "INPUT__0",
+            "dataType": "TYPE_FP32",
+            "dims": [16]
+        }],
+        "max_batch_size": 4,
+        "sequence_batching": {}
+    }
+
+    if args:
+        model_name = args[4]
+    else:
+        model_name = kwargs['model_name']
+
+    if model_name == 'my-model':
+        return fake_config
+    else:
+        return fake_base_composing_config0
+
+
+def mock_bls_configs(*args, **kwargs):
+    fake_config = {
+        "name": "my-model",
+        "platform": "bls",
+        "input": [{
+            "name": "INPUT__0",
+            "dataType": "TYPE_FP32",
+            "dims": [16]
+        }],
+        "max_batch_size": 4
+    }
+    fake_base_composing_config0 = {
+        "name": "fake_model_A",
+        "input": [{
+            "name": "INPUT__0",
+            "dataType": "TYPE_FP32",
+            "dims": [16]
+        }],
+        "max_batch_size": 4,
+        "sequence_batching": {}
+    }
+    fake_base_composing_config1 = {
+        "name": "fake_model_B",
+        "input": [{
+            "name": "INPUT__2",
+            "dataType": "TYPE_FP16",
+            "dims": [32]
+        }],
+        "max_batch_size": 8
+    }
+
+    if args:
+        model_name = args[4]
+    else:
+        model_name = kwargs['model_name']
+
+    if model_name == 'my-model':
+        return fake_config
+    elif model_name == 'fake_model_A':
+        return fake_base_composing_config0
+    else:
+        return fake_base_composing_config1
+
+
 class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
     def setUp(self):
@@ -137,7 +230,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         """
         Test that get_next_run_config() creates a proper RunConfig
 
-        Sets up a case where the coordinate is [5,7], which cooresponds to
+        Sets up a case where the coordinate is [5,7], which corresponds to
           - max_batch_size = 32
           - instance_count = 8
           - concurrency = 32*8*2 = 512
@@ -191,7 +284,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         """
         Test that get_next_run_config() creates a proper RunConfig for multi-model
 
-        Sets up a case where the coordinate is [1,2,4,5], which cooresponds to
+        Sets up a case where the coordinate is [1,2,4,5], which corresponds to
           - model 1 max_batch_size = 2
           - model 1 instance_count = 3
           - model 1 concurrency = 2*3*2 = 12
@@ -375,8 +468,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         default_run_config = qrcg._create_default_run_config()
 
-        self.assertTrue(
-            '--percentile=96' in default_run_config.representation())
+        self.assertIn('--percentile=96', default_run_config.representation())
 
     def tearDown(self):
         patch.stopall()
@@ -385,17 +477,63 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         """
         Test that the default ensemble config is generated correctly
         """
+        args = [
+            'model-analyzer', 'profile', '--model-repository', '/tmp',
+            '--config-file', '/tmp/my_config.yml'
+        ]
+
+        # yapf: disable
+        yaml_str = ("""
+            profile_models:
+                - my-model:
+                    perf_analyzer_flags:
+                        percentile: 96
+            """)
+        # yapf: enable
+
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                side_effect=mock_ensemble_configs):
+            models = [
+                ModelProfileSpec(spec=config.profile_models[0],
+                                 config=config,
+                                 client=MagicMock(),
+                                 gpus=MagicMock())
+            ]
+
+        sc = SearchConfig(dimensions=self._dims, radius=5, min_initialized=2)
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                side_effect=mock_ensemble_configs):
+            ensemble_composing_models = RunConfigGeneratorFactory._create_composing_models(
+                models, config, MagicMock(), MagicMock())
+
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
+                                       ensemble_composing_models, MagicMock(),
+                                       ModelVariantNameManager())
+
+        default_run_config = qrcg._create_default_run_config()
+        ensemble_composing_configs = default_run_config.model_run_configs(
+        )[0].composing_configs()
+
+        self.assertIn("my-model_config_default",
+                      default_run_config.representation())
+        self.assertEqual(ensemble_composing_configs[0].get_field("name"),
+                         "fake_model_A_config_default")
+        self.assertEqual(ensemble_composing_configs[1].get_field("name"),
+                         "fake_model_B_config_default")
+
+    def test_default_bls_config_generation(self):
+        """
+        Test that the default BLS config is generated correctly
+        """
 
         fake_config = {
             "name": "my-model",
-            "platform": "ensemble",
-            "ensemble_scheduling": {
-                "step": [{
-                    "model_name": "preprocess"
-                }, {
-                    "model_name": "resnet50_trt"
-                }]
-            },
+            "platform": "pytorch",
             "input": [{
                 "name": "INPUT__0",
                 "dataType": "TYPE_FP32",
@@ -406,7 +544,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         args = [
             'model-analyzer', 'profile', '--model-repository', '/tmp',
-            '--config-file', '/tmp/my_config.yml'
+            '--config-file', '/tmp/my_config.yml', '--bls-composing-models',
+            'bls_composing_modelA,bls_composing_modelB'
         ]
 
         # yapf: disable
@@ -435,23 +574,23 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
                 return_value=fake_config):
-            ensemble_composing_models = RunConfigGeneratorFactory._create_ensemble_composing_models(
+            bls_composing_models = RunConfigGeneratorFactory._create_composing_models(
                 models, config, MagicMock(), MagicMock())
 
         qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
-                                       ensemble_composing_models, MagicMock(),
+                                       bls_composing_models, MagicMock(),
                                        ModelVariantNameManager())
 
         default_run_config = qrcg._create_default_run_config()
-        ensemble_composing_configs = default_run_config.model_run_configs(
-        )[0].ensemble_composing_configs()
+        bls_composing_configs = default_run_config.model_run_configs(
+        )[0].composing_configs()
 
-        self.assertTrue(
-            "my-model_config_default" in default_run_config.representation())
-        self.assertEqual(ensemble_composing_configs[0].get_field("name"),
-                         "preprocess_config_default")
-        self.assertEqual(ensemble_composing_configs[1].get_field("name"),
-                         "resnet50_trt_config_default")
+        self.assertIn("my-model_config_default",
+                      default_run_config.representation())
+        self.assertEqual(bls_composing_configs[0].get_field("name"),
+                         "bls_composing_modelA_config_default")
+        self.assertEqual(bls_composing_configs[1].get_field("name"),
+                         "bls_composing_modelB_config_default")
 
     def test_get_next_run_config_ensemble(self):
         """
@@ -470,6 +609,24 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         Test that get_next_run_config() creates a proper RunConfig for ensemble with a min concurrency
         """
         self._get_next_run_config_ensemble(min_concurrency=16)
+
+    def test_get_next_run_config_bls(self):
+        """
+        Test that get_next_run_config() creates a proper RunConfig for BLS
+        """
+        self._get_next_run_config_bls()
+
+    def test_get_next_run_config_bls_with_max_concurrency(self):
+        """
+        Test that get_next_run_config() creates a proper RunConfig for BLS with a max concurrency
+        """
+        self._get_next_run_config_bls(max_concurrency=8)
+
+    def test_get_next_run_config_bls_with_min_concurrency(self):
+        """
+        Test that get_next_run_config() creates a proper RunConfig for BLS with a min concurrency
+        """
+        self._get_next_run_config_bls(min_concurrency=16)
 
     def test_get_next_run_config_max_batch_size(self):
         """
@@ -711,6 +868,30 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         self.assertEqual(perf_config['concurrency-range'], 1024)
         self.assertEqual(perf_config['batch-size'], 1)
 
+    def test_ensemble_in_composing_models(self):
+        """
+        Test that an ensemble as a composing model raises an exception
+        """
+        additional_args = []
+        config = self._create_config(additional_args)
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                side_effect=mock_ensemble_configs):
+            models = [
+                ModelProfileSpec(spec=config.profile_models[0],
+                                 config=config,
+                                 client=MagicMock(),
+                                 gpus=MagicMock())
+            ]
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                side_effect=mock_composing_ensemble_configs
+        ) and self.assertRaises(TritonModelAnalyzerException):
+            RunConfigGeneratorFactory._create_composing_models(
+                models, config, MagicMock(), MagicMock())
+
     def _get_next_run_config_ensemble(self,
                                       max_concurrency=0,
                                       min_concurrency=0):
@@ -790,7 +971,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         with patch(
                 "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
                 side_effect=mock_ensemble_configs):
-            ensemble_composing_models = RunConfigGeneratorFactory._create_ensemble_composing_models(
+            ensemble_composing_models = RunConfigGeneratorFactory._create_composing_models(
                 models, config, MagicMock(), MagicMock())
 
         dims = SearchDimensions()
@@ -819,20 +1000,180 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         self.assertEqual(len(run_config.model_run_configs()), 1)
         self.assertEqual(
-            len(run_config.model_run_configs()[0].ensemble_composing_configs()),
-            2)
+            len(run_config.model_run_configs()[0].composing_configs()), 2)
 
         model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
         composing_model_config0 = run_config.model_run_configs(
-        )[0].ensemble_composing_configs()[0]
+        )[0].composing_configs()[0]
         composing_model_config1 = run_config.model_run_configs(
-        )[0].ensemble_composing_configs()[1]
+        )[0].composing_configs()[1]
 
         self.assertEqual(composing_model_config0.to_dict(),
                          expected_model_config0)
         self.assertEqual(composing_model_config1.to_dict(),
                          expected_model_config1)
+
+        if max_concurrency:
+            self.assertEqual(perf_config['concurrency-range'], max_concurrency)
+        elif min_concurrency:
+            self.assertEqual(perf_config['concurrency-range'], min_concurrency)
+        else:
+            self.assertEqual(perf_config['concurrency-range'], 12)
+
+        self.assertEqual(perf_config['batch-size'], 1)
+
+    def _get_next_run_config_bls(self, max_concurrency=0, min_concurrency=0):
+        """
+        Test that get_next_run_config() creates a proper RunConfig for BLS
+
+        Sets up a case where the coordinate is [1,2,3,4,5,6], which corresponds to
+          - model max_batch_size = 2
+          - model instance count = 3
+          - composing model 1 max_batch_size = 8
+          - composing model 1 instance_count = 5
+          - composing model 2 max_batch_size = 32
+          - composing model 2 instance_count = 7
+        
+        Concurrency calculations are as follows:
+          - model concurrency = 2*3*2 = 12
+          - composing model 1 concurrency = 8*5*2 = 80
+          - composing model 2 concurrency = 32*7*2 = 448
+          - model concurrency = 12 (minimum value of [12, 80, 448])
+
+        Also,
+        - sequence batching should be on for model 1
+        - dynamic batching should be on for model 2
+        - existing values from the base model config should persist if they aren't overwritten
+        - existing values for perf-analyzer config should persist if they aren't overwritten
+        """
+
+        additional_args = [
+            '--bls-composing-models', 'fake_model_A,fake_model_B'
+        ]
+        if max_concurrency:
+            additional_args.append('--run-config-search-max-concurrency')
+            additional_args.append(f'{max_concurrency}')
+        if min_concurrency:
+            additional_args.append('--run-config-search-min-concurrency')
+            additional_args.append(f'{min_concurrency}')
+
+        #yapf: disable
+        expected_model_config = {
+            'cpu_only': False,
+            'instanceGroup': [{
+                'count': 3,
+                'kind': 'KIND_GPU',
+            }],
+            'maxBatchSize': 2,
+            'dynamicBatching': {},
+            'name': 'my-model_config_0',
+            'platform': 'bls',
+            'input': [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": ['16']
+            }]
+        }
+
+        expected_composing_model_config0 = {
+            'cpu_only': False,
+            'instanceGroup': [{
+                'count': 5,
+                'kind': 'KIND_GPU',
+            }],
+            'maxBatchSize': 8,
+            'sequenceBatching': {},
+            'name': 'fake_model_A_config_0',
+            'input': [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": ['16']
+            }]
+        }
+
+        expected_composing_model_config1 = {
+            'cpu_only': False,
+            'dynamicBatching': {},
+            'instanceGroup': [{
+                'count': 7,
+                'kind': 'KIND_GPU',
+            }],
+            'maxBatchSize': 32,
+            'name': 'fake_model_B_config_0',
+            'input': [{
+                "name": "INPUT__2",
+                "dataType": "TYPE_FP16",
+                "dims": ['32']
+            }]
+        }
+        #yapf: enable
+
+        config = self._create_config(additional_args)
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                side_effect=mock_bls_configs):
+            models = [
+                ModelProfileSpec(spec=config.profile_models[0],
+                                 config=config,
+                                 client=MagicMock(),
+                                 gpus=MagicMock())
+            ]
+
+        dims = SearchDimensions()
+        dims.add_dimensions(0, [
+            SearchDimension("max_batch_size",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR)
+        ])
+        dims.add_dimensions(1, [
+            SearchDimension("max_batch_size",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR)
+        ])
+        dims.add_dimensions(2, [
+            SearchDimension("max_batch_size",
+                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            SearchDimension("instance_count",
+                            SearchDimension.DIMENSION_TYPE_LINEAR)
+        ])
+
+        sc = SearchConfig(dimensions=dims, radius=5, min_initialized=2)
+
+        with patch(
+                "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+                side_effect=mock_bls_configs):
+            bls_composing_models = RunConfigGeneratorFactory._create_composing_models(
+                models, config, MagicMock(), MagicMock())
+
+        qrcg = QuickRunConfigGenerator(sc, config, MagicMock(), models,
+                                       bls_composing_models, MagicMock(),
+                                       ModelVariantNameManager())
+
+        qrcg._coordinate_to_measure = Coordinate([1, 2, 3, 4, 5, 6])
+
+        run_config = qrcg._get_next_run_config()
+
+        self.assertEqual(len(run_config.model_run_configs()), 1)
+
+        self.assertEqual(
+            len(run_config.model_run_configs()[0].composing_configs()), 2)
+
+        model_config = run_config.model_run_configs()[0].model_config()
+        perf_config = run_config.model_run_configs()[0].perf_config()
+        composing_model_config0 = run_config.model_run_configs(
+        )[0].composing_configs()[0]
+        composing_model_config1 = run_config.model_run_configs(
+        )[0].composing_configs()[1]
+
+        self.assertEqual(model_config.to_dict(), expected_model_config)
+        self.assertEqual(composing_model_config0.to_dict(),
+                         expected_composing_model_config0)
+        self.assertEqual(composing_model_config1.to_dict(),
+                         expected_composing_model_config1)
 
         if max_concurrency:
             self.assertEqual(perf_config['concurrency-range'], max_concurrency)

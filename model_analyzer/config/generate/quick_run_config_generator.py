@@ -50,8 +50,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def __init__(self, search_config: SearchConfig,
                  config: ConfigCommandProfile, gpus: List[GPUDevice],
                  models: List[ModelProfileSpec],
-                 ensemble_composing_models: Dict[str, List[ModelProfileSpec]],
-                 client: TritonClient,
+                 composing_models: List[ModelProfileSpec], client: TritonClient,
                  model_variant_name_manager: ModelVariantNameManager):
         """
         Parameters
@@ -63,8 +62,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         gpus: List of GPUDevices
         models: List of ModelProfileSpec
             List of models to profile
-        ensemble_composing_models: Dict of List of ModelProfileSpec
-            Dict indexed by model name of ensemble composing model profiles
+        composing_models: List of ModelProfileSpec
+            List of composing model profiles
         client: TritonClient
         model_variant_name_manager: ModelVariantNameManager
         """
@@ -73,7 +72,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         self._client = client
         self._gpus = gpus
         self._models = models
-        self._ensemble_composing_models = ensemble_composing_models
+        self._composing_models = composing_models
 
         self._model_variant_name_manager = model_variant_name_manager
 
@@ -291,61 +290,75 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def _get_next_model_run_config(
             self, model: ModelProfileSpec,
-            model_index: int) -> Tuple[ModelRunConfig, int]:
-        start_model_index = model_index
+            start_model_index: int) -> Tuple[ModelRunConfig, int]:
+        """
+        Returns the next ModelRunConfig, along with the starting dimension
+        of the next model
+        """
+        # The ordering of dimensions is dependent on the type of composing model:
+        #   Ensemble - The top level model has no search dimensions - all dimensions
+        #              come from the composing models
+        #   BLS      - The top level model has one dimension (instance) - and the
+        #              remaining dimensions come from composing models
+        #
+        # In addition, for Ensemble models, it is necessary to create the composing model configs
+        # first, as these are needed when creating the top-level model config  - while all other
+        # models want to create the top-level first
+        model_config, model_index = self._get_next_non_composing_model_config(
+            model, start_model_index)
 
-        if model.model_name() in self._ensemble_composing_models:
-            ensemble_composing_configs, end_model_index = self._get_next_ensemble_composing_configs(
-                model, start_model_index)
+        composing_model_configs, model_index = self._get_next_composing_model_configs(
+            model_index)
 
-            param_combo = self._get_next_ensemble_param_combo(
-                start_model_index, end_model_index)
+        # This will overwrite the empty ModelConfig created above
+        if model.is_ensemble():
+            model_config = self._get_next_ensemble_top_level_config(
+                model, composing_model_configs, model_index)
 
-            model_config = self._get_next_ensemble_model_config(
-                model, ensemble_composing_configs, param_combo)
-
-            model_index = end_model_index
-        else:
-            model_config = self._get_next_model_config(model, model_index)
-            model_index = model_index + 1
-
-        model_variant_name = model_config.get_field('name')
-        perf_analyzer_config = self._get_next_perf_analyzer_config(
-            model_variant_name, model, start_model_index)
-
-        model_name = model.model_name()
-        model_run_config = ModelRunConfig(model_name, model_config,
-                                          perf_analyzer_config)
-
-        if model.model_name() in self._ensemble_composing_models:
-            model_run_config.add_ensemble_composing_model_configs(
-                ensemble_composing_configs)
+        model_run_config = self._create_next_model_run_config(
+            model, start_model_index, model_config, composing_model_configs)
 
         return (model_run_config, model_index)
 
-    def _get_next_ensemble_composing_configs(
+    def _get_next_non_composing_model_config(
             self, model: ModelProfileSpec,
-            start_model_index: int) -> Tuple[List[ModelConfig], int]:
-        model_index = start_model_index
-        ensemble_composing_configs = []
-        for ensemble_composing_model in self._ensemble_composing_models[
-                model.model_name()]:
-            ensemble_composing_configs.append(
-                self._get_next_model_config(ensemble_composing_model,
-                                            model_index))
-            model_index = model_index + 1
+            model_index: int) -> Tuple[ModelConfig, int]:
+        if model.is_ensemble():
+            return (ModelConfig({}), model_index)
+        else:
+            return (self._get_next_model_config(model,
+                                                model_index), model_index + 1)
 
-        return (ensemble_composing_configs, model_index)
+    def _get_next_composing_model_configs(
+            self, model_index: int) -> Tuple[List[ModelConfig], int]:
+        composing_model_configs = []
+        for composing_model in self._composing_models:
+            composing_model_config = self._get_next_model_config(
+                composing_model, model_index)
+            model_index += 1
+            composing_model_configs.append(composing_model_config)
 
-    def _get_next_ensemble_param_combo(self, start_model_index: int,
-                                       end_model_index: int) -> dict:
+        return (composing_model_configs, model_index)
+
+    def _get_next_ensemble_top_level_config(
+            self, model: ModelProfileSpec,
+            composing_model_configs: List[ModelConfig],
+            model_index: int) -> ModelConfig:
+        param_combo = self._get_next_ensemble_param_combo(model_index)
+
+        model_config = self._get_next_ensemble_model_config(
+            model, composing_model_configs, param_combo)
+
+        return model_config
+
+    def _get_next_ensemble_param_combo(self, end_model_index: int) -> dict:
         """
         For the ensemble model the only parameter we need to set 
         is the max batch size; which will be the minimum batch size 
         found in the composing_model max batch sizes
         """
         min_val_of_max_batch_size = maxsize
-        for model_index in range(start_model_index, end_model_index):
+        for model_index in range(0, end_model_index):
             dimension_values = self._get_coordinate_values(
                 self._coordinate_to_measure, model_index)
 
@@ -359,13 +372,12 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         return param_combo
 
-    def _get_next_ensemble_model_config(
-            self, model: ModelProfileSpec,
-            ensemble_composing_configs: List[ModelConfig],
-            param_combo: dict) -> ModelConfig:
+    def _get_next_ensemble_model_config(self, model: ModelProfileSpec,
+                                        composing_configs: List[ModelConfig],
+                                        param_combo: dict) -> ModelConfig:
         model_config = BaseModelConfigGenerator.make_ensemble_model_config(
             model=model,
-            ensemble_composing_model_configs=ensemble_composing_configs,
+            ensemble_composing_model_configs=composing_configs,
             model_variant_name_manager=self._model_variant_name_manager,
             param_combo=param_combo)
 
@@ -398,6 +410,22 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model=model,
             model_variant_name_manager=self._model_variant_name_manager)
         return model_config
+
+    def _create_next_model_run_config(
+            self, model: ModelProfileSpec, model_index: int,
+            model_config: ModelConfig,
+            composing_model_configs: List[ModelConfig]) -> ModelRunConfig:
+        model_variant_name = model_config.get_field('name')
+        perf_analyzer_config = self._get_next_perf_analyzer_config(
+            model_variant_name, model, model_index)
+        model_run_config = ModelRunConfig(model.model_name(), model_config,
+                                          perf_analyzer_config)
+
+        if self._composing_models:
+            model_run_config.add_composing_model_configs(
+                composing_model_configs)
+
+        return model_run_config
 
     def _get_next_perf_analyzer_config(self, model_variant_name: str,
                                        model: ModelProfileSpec,
@@ -478,7 +506,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         default_run_config = RunConfig(self._triton_env)
 
         for model in self._models:
-            if model.model_name() in self._ensemble_composing_models:
+            if model.is_ensemble():
                 default_run_config.add_model_run_config(
                     self._create_default_ensemble_model_run_config(model))
             else:
@@ -504,16 +532,16 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model.model_name(), default_ensemble_model_config,
             default_perf_analyzer_config)
 
-        default_model_run_config.add_ensemble_composing_model_configs(
+        default_model_run_config.add_composing_model_configs(
             default_composing_model_configs)
 
         return default_model_run_config
 
     def _create_default_composing_model_configs(
             self, model: ModelProfileSpec) -> List[ModelConfig]:
+
         default_composing_model_configs: List[ModelConfig] = []
-        for composing_model in self._ensemble_composing_models[
-                model.model_name()]:
+        for composing_model in self._composing_models:
             default_composing_model_configs.append(
                 BaseModelConfigGenerator.make_model_config(
                     param_combo={},
@@ -536,6 +564,13 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         default_model_run_config = ModelRunConfig(model.model_name(),
                                                   default_model_config,
                                                   default_perf_analyzer_config)
+
+        default_composing_model_configs = self._create_default_composing_model_configs(
+            model)
+
+        if default_composing_model_configs:
+            default_model_run_config.add_composing_model_configs(
+                default_composing_model_configs)
 
         return default_model_run_config
 

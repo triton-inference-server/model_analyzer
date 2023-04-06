@@ -340,7 +340,7 @@ class ResultTableManager:
         """
 
         model_name = run_config_result.model_name()
-        instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters, ensemble_composing_config_names = self._tablulate_measurements_setup(
+        instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters, composing_config_names = self._tablulate_measurements_setup(
             run_config_result)
 
         passing_measurements = run_config_result.passing_measurements()
@@ -359,14 +359,12 @@ class ResultTableManager:
                     passes=passes,
                     cpu_onlys=cpu_onlys,
                     backend_parameters=backend_parameters,
-                    ensemble_composing_config_names=
-                    ensemble_composing_config_names)
+                    composing_config_names=composing_config_names)
 
     def _tablulate_measurements_setup(self, run_config_result):
         if run_config_result.run_config().is_ensemble_model():
-            model_configs = run_config_result.run_config(
-            ).ensemble_composing_configs()
-            ensemble_composing_config_names = [
+            model_configs = run_config_result.run_config().composing_configs()
+            composing_config_names = [
                 model_config.get_field("name") for model_config in model_configs
             ]
         else:
@@ -375,7 +373,7 @@ class ResultTableManager:
                 run_config_result.run_config().model_run_configs()
             ]
 
-            ensemble_composing_config_names = []
+            composing_config_names = []
 
         instance_groups = [
             model_config.instance_group_string(self._get_gpu_count())
@@ -397,26 +395,24 @@ class ResultTableManager:
             for model_config in model_configs
         ]
 
-        return instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters, ensemble_composing_config_names
+        return instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters, composing_config_names
 
     def _tabulate_measurement(self, model_name, instance_groups,
                               max_batch_sizes, dynamic_batchings,
                               run_config_measurement, passes, cpu_onlys,
-                              backend_parameters,
-                              ensemble_composing_config_names):
+                              backend_parameters, composing_config_names):
         """
         Add a single RunConfigMeasurement to the specified
         table
         """
 
         model_config_name = run_config_measurement.model_variants_name()
-        if ensemble_composing_config_names:
+        if composing_config_names:
             model_config_name = model_config_name + ": "
-            for ensemble_composing_config_name in ensemble_composing_config_names:
-                model_config_name = model_config_name + ensemble_composing_config_name
+            for composing_config_name in composing_config_names:
+                model_config_name = model_config_name + composing_config_name
 
-                if ensemble_composing_config_name != ensemble_composing_config_names[
-                        -1]:
+                if composing_config_name != composing_config_names[-1]:
                     model_config_name = model_config_name + ", "
 
         model_specific_pa_params, batch_sizes, concurrencies = self._tabulate_measurement_setup(

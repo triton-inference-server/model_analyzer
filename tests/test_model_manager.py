@@ -1053,14 +1053,14 @@ class TestModelManager(trc.TestResultCollector):
             ConfigModelProfileSpec('test_model')
         ]
         with self.assertRaises(TritonModelAnalyzerException):
-            model_manager._check_for_ensemble_model_incompatability(models)
+            model_manager._check_for_ensemble_model_incompatibility(models)
 
         # RunConfigSearch check
         models = [
             ConfigModelProfileSpec('ensemble_model'),
         ]
         with self.assertRaises(TritonModelAnalyzerException):
-            model_manager._check_for_ensemble_model_incompatability(models)
+            model_manager._check_for_ensemble_model_incompatibility(models)
         self.mock_model_config.stop()
 
     @patch('model_analyzer.triton.model.model_config.ModelConfig.is_ensemble',
@@ -1091,7 +1091,7 @@ class TestModelManager(trc.TestResultCollector):
         models = [
             ConfigModelProfileSpec('ensemble_model'),
         ]
-        model_manager._check_for_ensemble_model_incompatability(models)
+        model_manager._check_for_ensemble_model_incompatibility(models)
 
         self.assertEqual(config.run_config_search_mode, "quick")
 

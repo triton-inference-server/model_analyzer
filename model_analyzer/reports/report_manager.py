@@ -405,10 +405,14 @@ class ReportManager:
 
         if run_config.is_ensemble_model():
             caption_results_table = caption_results_table + " The ensemble's composing model values are listed in the following order: "
-            for ensemble_composing_config_name in run_config.model_run_configs(
-            )[0].get_ensemble_composing_config_names():
+        elif run_config.is_bls_model():
+            caption_results_table = caption_results_table + " The BLS composing model values are listed in the following order: "
+
+        if run_config.is_ensemble_model() or run_config.is_bls_model():
+            for composing_config_name in run_config.model_run_configs(
+            )[0].get_composing_config_names():
                 caption_results_table = caption_results_table + BaseModelConfigGenerator.extract_model_name_from_variant_name(
-                    ensemble_composing_config_name) + ", "
+                    composing_config_name) + ", "
             caption_results_table = caption_results_table[:-2]  # removes comma
 
         summary.add_paragraph(caption_results_table)
@@ -433,14 +437,16 @@ class ReportManager:
 
         multi_model = len(best_run_config.model_run_configs()) > 1
         is_ensemble = best_run_config.is_ensemble_model()
+        is_bls = best_run_config.is_bls_model()
+        has_composing_models = is_ensemble or is_bls
 
         summary_sentence = self._create_summary_sentence(
             report_key, num_configurations, num_measurements, best_run_config,
             best_run_config_measurement, gpu_name, cpu_only, multi_model,
-            is_ensemble)
+            is_ensemble, is_bls)
 
-        summary_table = self._construct_summary_result_table_cpu_only(sorted_measurements, multi_model, is_ensemble) if cpu_only else \
-                        self._construct_summary_result_table(sorted_measurements, multi_model, is_ensemble)
+        summary_table = self._construct_summary_result_table_cpu_only(sorted_measurements, multi_model, has_composing_models) if cpu_only else \
+                        self._construct_summary_result_table(sorted_measurements, multi_model, has_composing_models)
 
         return summary_table, summary_sentence
 
@@ -488,7 +494,7 @@ class ReportManager:
     def _create_summary_sentence(self, report_key, num_configurations,
                                  num_measurements, best_run_config,
                                  best_run_config_measurement, gpu_name,
-                                 cpu_only, multi_model, is_ensemble):
+                                 cpu_only, multi_model, is_ensemble, is_bls):
         measurement_phrase = self._create_summary_measurement_phrase(
             num_measurements)
         config_phrase = self._create_summary_config_phrase(
@@ -504,22 +510,52 @@ class ReportManager:
         )
 
         if is_ensemble:
-            summary_sentence = summary_sentence + "<BR><BR>"
-            best_config_name = best_run_config.model_run_configs(
-            )[0].model_config().get_field('name')
-            summary_sentence = summary_sentence + f"<strong>{best_config_name}</strong> is comprised of the following composing models: <UL> "
-
-            for ensemble_composing_config in best_run_config.model_run_configs(
-            )[0].ensemble_composing_configs():
-                summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
-                    ensemble_composing_config) + ' </LI>'
+            summary_sentence = summary_sentence + self._create_ensemble_summary_sentence(
+                best_run_config)
+        elif is_bls:
+            summary_sentence = summary_sentence + self._create_bls_summary_sentence(
+                best_run_config)
         else:
-            summary_sentence = summary_sentence + '<UL>'
-            for model_run_config in best_run_config.model_run_configs():
-                summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
-                    model_run_config.model_config()) + ' </LI>'
+            summary_sentence = summary_sentence + self._create_model_summary_sentence(
+                best_run_config)
 
         summary_sentence = summary_sentence + ' </UL>'
+        return summary_sentence
+
+    def _create_ensemble_summary_sentence(self, run_config: RunConfig) -> str:
+        summary_sentence = "<BR><BR>"
+        best_config_name = run_config.model_run_configs()[0].model_config(
+        ).get_field('name')
+
+        summary_sentence = summary_sentence + f"<strong>{best_config_name}</strong> is comprised of the following composing models: <UL> "
+        summary_sentence = summary_sentence + self._create_composing_model_summary_sentence(
+            run_config)
+
+        return summary_sentence
+
+    def _create_bls_summary_sentence(self, run_config: RunConfig) -> str:
+        summary_sentence = self._create_model_summary_sentence(run_config)
+        summary_sentence = summary_sentence + f"<BR>Which is comprised of the following composing models: <UL>"
+        summary_sentence = summary_sentence + self._create_composing_model_summary_sentence(
+            run_config)
+
+        return summary_sentence
+
+    def _create_model_summary_sentence(self, run_config: RunConfig) -> str:
+        summary_sentence = '<UL>'
+        for model_run_config in run_config.model_run_configs():
+            summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
+                model_run_config.model_config()) + ' </LI>'
+
+        return summary_sentence
+
+    def _create_composing_model_summary_sentence(self,
+                                                 run_config: RunConfig) -> str:
+        summary_sentence = ""
+        for composing_config in run_config.model_run_configs(
+        )[0].composing_configs():
+            summary_sentence = summary_sentence + '<LI> ' + self._create_summary_config_info(
+                composing_config) + ' </LI>'
 
         return summary_sentence
 
@@ -628,25 +664,26 @@ class ReportManager:
         return f", on GPU(s) {gpu_name}" if not cpu_only else ""
 
     def _construct_summary_result_table_cpu_only(self, sorted_measurements,
-                                                 multi_model, is_ensemble):
+                                                 multi_model,
+                                                 has_composing_models):
         summary_table = self._create_summary_result_table_header_cpu_only(
             multi_model)
 
         for run_config, run_config_measurement in sorted_measurements:
             row = self._create_summary_row_cpu_only(run_config,
                                                     run_config_measurement,
-                                                    is_ensemble)
+                                                    has_composing_models)
             summary_table.insert_row_by_index(row)
 
         return summary_table
 
     def _construct_summary_result_table(self, sorted_measurements, multi_model,
-                                        is_ensemble):
+                                        has_composing_models):
         summary_table = self._create_summary_result_table_header(multi_model)
 
         for run_config, run_config_measurement in sorted_measurements:
             row = self._create_summary_row(run_config, run_config_measurement,
-                                           is_ensemble)
+                                           has_composing_models)
             summary_table.insert_row_by_index(row)
 
         return summary_table
@@ -691,16 +728,16 @@ class ReportManager:
         return ResultTable(headers=header_values, title="Report Table")
 
     def _create_summary_row_cpu_only(self, run_config, run_config_measurement,
-                                     is_ensemble):
+                                     has_composing_models):
         model_config_names = ', '.join([
             model_run_config.model_config().get_field('name')
             for model_run_config in run_config.model_run_configs()
         ])
 
-        if is_ensemble:
+        if has_composing_models:
             dynamic_batching_string = self._create_summary_string([
                 model_config.dynamic_batching_string()
-                for model_config in run_config.ensemble_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         else:
             dynamic_batching_string = self._create_summary_string([
@@ -708,10 +745,10 @@ class ReportManager:
                 for model_run_config in run_config.model_run_configs()
             ])
 
-        if is_ensemble:
+        if has_composing_models:
             max_batch_sizes = ', '.join([
                 str(model_config.max_batch_size())
-                for model_config in run_config.ensemble_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         else:
             max_batch_sizes = ', '.join([
@@ -719,11 +756,11 @@ class ReportManager:
                 for model_run_config in run_config.model_run_configs()
             ])
 
-        if is_ensemble:
+        if has_composing_models:
             instance_group_strings = ', '.join([
                 model_config.instance_group_string(self._get_gpu_count())
                 for model_config in run_config.model_run_configs()
-                [0].ensemble_composing_configs()
+                [0].composing_configs()
             ])
         else:
             instance_group_strings = ', '.join([
@@ -753,11 +790,11 @@ class ReportManager:
         return row
 
     def _create_summary_row(self, run_config, run_config_measurement,
-                            is_ensemble):
-        if is_ensemble:
+                            has_composing_models):
+        if has_composing_models:
             dynamic_batching_string = self._create_summary_string([
                 model_config.dynamic_batching_string()
-                for model_config in run_config.ensemble_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         else:
             dynamic_batching_string = self._create_summary_string([
@@ -765,11 +802,11 @@ class ReportManager:
                 for model_run_config in run_config.model_run_configs()
             ])
 
-        if is_ensemble:
+        if has_composing_models:
             instance_group_string = self._create_summary_string([
                 model_config.instance_group_string(self._get_gpu_count())
                 for model_config in run_config.model_run_configs()
-                [0].ensemble_composing_configs()
+                [0].composing_configs()
             ])
         else:
             instance_group_string = self._create_summary_string([
@@ -778,10 +815,10 @@ class ReportManager:
                 for model_run_config in run_config.model_run_configs()
             ])
 
-        if is_ensemble:
+        if has_composing_models:
             max_batch_sizes_string = self._create_summary_string([
                 str(model_config.max_batch_size())
-                for model_config in run_config.ensemble_composing_configs()
+                for model_config in run_config.composing_configs()
             ])
         else:
             max_batch_sizes_string = self._create_summary_string([
@@ -982,10 +1019,17 @@ class ReportManager:
         if run_config.is_ensemble_model():
             sentence = f"<strong>{model_config_name}</strong> is comprised of the following composing models:"
 
-            for ensemble_composing_config in run_config.ensemble_composing_configs(
-            ):
+            for composing_config in run_config.composing_configs():
                 sentence = sentence + '<LI> ' + self._create_summary_config_info(
-                    ensemble_composing_config) + ' </LI>'
+                    composing_config) + ' </LI>'
+
+            sentence = sentence + f"<br>{len(measurements)} measurement(s) were obtained for the model config on {gpu_cpu_string}."
+        elif run_config.is_bls_model():
+            sentence = f"<strong>{model_config_name}</strong> is comprised of the following composing models:"
+
+            for composing_config in run_config.composing_configs():
+                sentence = sentence + '<LI> ' + self._create_summary_config_info(
+                    composing_config) + ' </LI>'
 
             sentence = sentence + f"<br>{len(measurements)} measurement(s) were obtained for the model config on {gpu_cpu_string}."
         else:
