@@ -42,11 +42,11 @@ class TestOutputValidator:
     def check_num_checkpoints(self):
         """
         Open the checkpoints directory and 
-        check that there is 3 checkpoints
+        check that there is 1 checkpoints
         """
 
         checkpoint_files = os.listdir(self._checkpoint_dir)
-        return len(checkpoint_files) == len(self._profile_models)
+        return len(checkpoint_files) == 1
 
     def check_loading_checkpoints(self):
         """
@@ -67,14 +67,14 @@ class TestOutputValidator:
     def check_interrupt_handling(self):
         """
         Open the checkpoints file and make sure there
-        are only 3 checkpoints. Additionally
+        is only 1 checkpoint. Additionally
         check the analyzer log for a SIGINT.
         Also check that the 3rd model has
         been run once
         """
 
         checkpoint_files = os.listdir(self._checkpoint_dir)
-        if len(checkpoint_files) != 2:
+        if len(checkpoint_files) != 1:
             return False
 
         with open(self._analyzer_log, 'r') as f:
