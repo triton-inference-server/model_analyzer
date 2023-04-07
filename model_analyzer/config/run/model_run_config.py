@@ -107,8 +107,12 @@ class ModelRunConfig:
         Returns a representation string for the ModelRunConfig that can be used
         as a key to uniquely identify it
         """
+        repr = self.perf_config().representation()
 
-        return self.perf_config().representation()
+        if self._composing_configs:
+            repr += " " + (',').join(self.get_composing_config_names())
+
+        return repr
 
     def _check_for_client_vs_model_batch_size(self) -> bool:
         """
