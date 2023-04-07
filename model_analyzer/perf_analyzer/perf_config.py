@@ -41,7 +41,7 @@ class PerfAnalyzerConfig:
         'ssl-https-client-certificate-type',
         'ssl-https-client-certificate-file', 'ssl-https-private-key-type',
         'ssl-https-private-key-file', 'collect-metrics', 'metrics-url',
-        'metrics-interval'
+        'metrics-interval', 'bls-composing-models'
     ]
 
     input_to_options = [
@@ -176,6 +176,13 @@ class PerfAnalyzerConfig:
                 'metrics-url': profile_config.triton_metrics_url,
                 'metrics-interval': metrics_interval
             })
+
+        if profile_config.bls_composing_models:
+            bls_composing_model_names = ','.join([
+                bls_composing_model.model_name()
+                for bls_composing_model in profile_config.bls_composing_models
+            ])
+            params.update({'bls-composing-models': bls_composing_model_names})
 
         self.update_config(params)
 

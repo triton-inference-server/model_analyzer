@@ -53,6 +53,7 @@ import signal
 import os
 import csv
 import tempfile
+import glob
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -446,7 +447,9 @@ class PerfAnalyzer:
         for perf_config in [
                 mrc.perf_config() for mrc in self._config.model_run_configs()
         ]:
-            os.remove(perf_config['latency-report-file'])
+            # Remove the latency file and all associated composing model latency files
+            for f in glob.glob(f"*{perf_config['latency-report-file']}"):
+                os.remove(f)
 
     def _extract_perf_records_from_row(
             self, requested_metrics: List[Record],
