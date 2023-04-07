@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 import yaml
@@ -266,12 +266,11 @@ class ConfigCommand:
 
     def _check_no_multi_model(self, args: Namespace,
                               yaml_config: Optional[Dict[str, List]]) -> None:
-        profile_models = self._get_config_value('profile_models', args,
-                                                yaml_config)
+        profile_models: Union[Dict, List, str] = self._get_config_value(
+            'profile_models', args, yaml_config)  # type: ignore
 
-        profile_model_count = len(profile_models) if not isinstance(
-            profile_models, str) else len(
-                profile_models.split(','))  # type: ignore
+        profile_model_count = len(profile_models.split(',')) if isinstance(
+            profile_models, str) else len(profile_models)
 
         if profile_model_count > 1:
             raise TritonModelAnalyzerException(
