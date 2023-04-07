@@ -269,8 +269,8 @@ class ConfigCommand:
         profile_models = self._get_config_value('profile_models', args,
                                                 yaml_config)
 
-        profile_model_count = len(profile_models) if isinstance(
-            profile_models, list) else len(
+        profile_model_count = len(profile_models) if not isinstance(
+            profile_models, str) else len(
                 profile_models.split(','))  # type: ignore
 
         if profile_model_count > 1:

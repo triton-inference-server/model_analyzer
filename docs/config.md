@@ -638,8 +638,7 @@ profile_models:
     cpu_only: true
   model_2:
     perf_analyzer_flags:
-    percentile: 95
-    latency-report-file: /path/to/latency/report/file
+      percentile: 95
 ```
 
 The above config tells model analyzer to profile `model_1` on CPU only,
@@ -669,7 +668,6 @@ profile_models:
       batch_sizes: 4
 perf_analyzer_flags:
   percentile: 95
-  latency-report-file: /path/to/latency/report/file
 ```
 
 ### Model-specific options for Perf Analyzer
@@ -685,7 +683,6 @@ profile_models:
   model_1:
     perf_analyzer_flags:
       percentile: 95
-      latency-report-file: /path/to/latency/report/file
 ```
 
 ### Shape, Input-Data, and Streaming
@@ -931,7 +928,6 @@ profile_models:
   model_1:
     perf_analyzer_flags:
       percentile: 95
-      latency-report-file: /path/to/latency/report/file
     model_config_parameters:
       max_batch_size: 2
       dynamic_batching:
