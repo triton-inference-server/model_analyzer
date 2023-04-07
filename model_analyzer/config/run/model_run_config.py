@@ -110,7 +110,8 @@ class ModelRunConfig:
         repr = self.perf_config().representation()
 
         if self._composing_configs:
-            repr += " " + (',').join(self.get_composing_config_names())
+            repr += " " + (',').join(
+                self.get_composing_config_names())  # type: ignore
 
         return repr
 
