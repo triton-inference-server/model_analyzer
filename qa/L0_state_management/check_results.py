@@ -42,11 +42,11 @@ class TestOutputValidator:
     def check_num_checkpoints(self):
         """
         Open the checkpoints directory and 
-        check that there is 1 checkpoints
+        check that there is 3 checkpoints
         """
 
         checkpoint_files = os.listdir(self._checkpoint_dir)
-        return len(checkpoint_files) == 1
+        return len(checkpoint_files) == 3
 
     def check_loading_checkpoints(self):
         """
