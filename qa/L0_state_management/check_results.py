@@ -46,7 +46,7 @@ class TestOutputValidator:
         """
 
         checkpoint_files = os.listdir(self._checkpoint_dir)
-        return len(checkpoint_files) == 3
+        return len(checkpoint_files) == len(self._profile_models)
 
     def check_loading_checkpoints(self):
         """
@@ -74,7 +74,7 @@ class TestOutputValidator:
         """
 
         checkpoint_files = os.listdir(self._checkpoint_dir)
-        if len(checkpoint_files) != 1:
+        if len(checkpoint_files) != 2:
             return False
 
         with open(self._analyzer_log, 'r') as f:
