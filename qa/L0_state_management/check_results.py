@@ -64,39 +64,6 @@ class TestOutputValidator:
                 return False
         return True
 
-    def check_interrupt_handling(self):
-        """
-        Open the checkpoints file and make sure there
-        is only 1 checkpoint. Additionally
-        check the analyzer log for a SIGINT.
-        Also check that the 3rd model has
-        been run once
-        """
-
-        checkpoint_files = os.listdir(self._checkpoint_dir)
-        if len(checkpoint_files) != 2:
-            return False
-
-        with open(self._analyzer_log, 'r') as f:
-            log_contents = f.read()
-
-        # check for SIGINT
-        token = "SIGINT"
-        if log_contents.find(token) == -1:
-            return False
-
-        # check that 2nd model is profiled once
-        token = f"Profiling {self._profile_models[1]}"
-        token_idx = 0
-        found_count = 0
-        while True:
-            token_idx = log_contents.find(token, token_idx + 1)
-            if token_idx == -1:
-                break
-            found_count += 1
-
-        return found_count == 1
-
     def check_early_exit(self):
         """
         Checks that no more than 1 model were profiled
