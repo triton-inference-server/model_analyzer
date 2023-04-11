@@ -110,6 +110,9 @@ bls_composing_models: <comma-delimited-string-list>
 # Batch size values to be used
 [ batch_sizes: <comma-delimited-string|list|range> | default: 1 ]
 
+# Request rate range values to be used
+[ request_rate_range: <comma-delimited-string|list|range> ]
+
 # Specifies the maximum number of retries for any retry attempt
 [ client_max_retries: <int> | default: 50 ]
 

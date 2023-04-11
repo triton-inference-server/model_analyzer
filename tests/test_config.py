@@ -2022,6 +2022,8 @@ profile_models:
                                             yaml_content: str) -> None:
         self._test_arg_conflict(base_args, yaml_content,
                                 ['--request-rate-range-search-enable'])
+        self._test_arg_conflict(base_args, yaml_content,
+                                ['--request-rate-range', '1,2,3'])
         self._test_arg_conflict(
             base_args, yaml_content,
             ['--run-config-search-min-request-rate-range', '1'])

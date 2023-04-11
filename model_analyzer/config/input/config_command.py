@@ -299,6 +299,11 @@ class ConfigCommand:
                 raise TritonModelAnalyzerException(
                     f'\nCannot have both `request-rate-range-search-enable` and `concurrency` specified in the config/CLI.'
                 )
+            elif self._get_config_value('request_rate_range', args,
+                                        yaml_config):
+                raise TritonModelAnalyzerException(
+                    f'\nCannot have both `request-rate-range` and `concurrency` specified in the config/CLI.'
+                )
             elif self._get_config_value(
                     'run_config_search_min_request_rate_range', args,
                     yaml_config):
@@ -323,6 +328,11 @@ class ConfigCommand:
                                       yaml_config):
                 raise TritonModelAnalyzerException(
                     f'\nCannot have both `request-rate-range-search-enable` and `run-config-search-min/max-concurrency` specified in the config/CLI.'
+                )
+            elif self._get_config_value('request_rate_range', args,
+                                        yaml_config):
+                raise TritonModelAnalyzerException(
+                    f'\nCannot have both `request-rate-range` and `run-config-search-min/max-concurrency` specified in the config/CLI.'
                 )
             elif self._get_config_value(
                     'run_config_search_min_request_rate_range', args,
