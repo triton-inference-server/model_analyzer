@@ -110,6 +110,9 @@ bls_composing_models: <comma-delimited-string-list>
 # Batch size values to be used
 [ batch_sizes: <comma-delimited-string|list|range> | default: 1 ]
 
+# Request rate range values to be used
+[ request_rate_range: <comma-delimited-string|list|range> ]
+
 # Specifies the maximum number of retries for any retry attempt
 [ client_max_retries: <int> | default: 50 ]
 
@@ -185,29 +188,38 @@ bls_composing_models: <comma-delimited-string-list>
 # Search mode. Options are "brute" and "quick"
 [ run_config_search_mode: <string> | default: brute]
 
-# Minimum concurrency used for the automatic config search
+# Minimum concurrency used for the automatic/quick config search
 [ run_config_search_min_concurrency: <int> | default: 1 ]
 
-# Maximum concurrency used for the automatic config search
+# Maximum concurrency used for the automatic/quick config search
 [ run_config_search_max_concurrency: <int> | default: 1024 ]
 
-# Minimum max_batch_size used for the automatic config search
+# Minimum max_batch_size used for the automatic/quick config search
 [ run_config_search_min_model_batch_size: <int> | default: 1 ]
 
-# Maximum max_batch_size used for the automatic config search
+# Maximum max_batch_size used for the automatic/quick config search
 [ run_config_search_max_model_batch_size: <int> | default: 128 ]
 
-# Minimum instance group count used for the automatic config search
+# Minimum instance group count used for the automatic/quick config search
 [ run_config_search_min_instance_count: <int> | default: 1 ]
 
-# Maximum instance group count used for the automatic config search
+# Maximum instance group count used for the automatic/quick config search
 [ run_config_search_max_instance_count: <int> | default: 5 ]
+
+# Minimum request rate range used for the automatic/quick config search
+[ run_config_search_min_request_rate_range: <int> | default: 1 ]
+
+# Maximum request rate range used for the automatic/quick config search
+[ run_config_search_max_request_rate_range: <int> | default: 1024 ]
 
 # Disables automatic config search
 [ run_config_search_disable: <bool> | default: false ]
 
 # Enables the profiling of all supplied models concurrently
 [ run_config_profile_models_concurrently_enable: <bool> | default: false]
+
+# Enables the searching of request rate range (instead of concurrency)
+[ request_rate_range_search_enable: <bool> | default: false]
 
 # Skips the generation of summary reports and tables
 [ skip_summary_reports: <bool> | default: false]

@@ -18,7 +18,7 @@ from .mocks.mock_config import MockConfig
 from .mocks.mock_numba import MockNumba
 from .mocks.mock_os import MockOSMethods
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from argparse import Namespace
 
 from .common import test_result_collector as trc
@@ -1977,6 +1977,63 @@ profile_models:
         ]
         yaml_content = ''
 
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content)
+
+    def test_concurrency_rate_request_config_combinations(self):
+        """
+        Test for concurrency with rate request conflicts
+        """
+        base_args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--profile-models', 'modelA', '-c', '1,2,3'
+        ]
+        yaml_content = ''
+
+        self._test_request_rate_config_conflicts(base_args, yaml_content)
+
+    def test_config_search_min_rate_request_config_combinations(self):
+        """
+        Test for concurrency min request with rate request conflicts
+        """
+        base_args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--profile-models', 'modelA', '--run-config-search-min-concurrency',
+            '1'
+        ]
+        yaml_content = ''
+
+        self._test_request_rate_config_conflicts(base_args, yaml_content)
+
+    def test_config_search_max_rate_request_config_combinations(self):
+        """
+        Test for concurrency max request with rate request conflicts
+        """
+        base_args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '--profile-models', 'modelA', '--run-config-search-max-concurrency',
+            '1'
+        ]
+        yaml_content = ''
+
+        self._test_request_rate_config_conflicts(base_args, yaml_content)
+
+    def _test_request_rate_config_conflicts(self, base_args: List[Any],
+                                            yaml_content: str) -> None:
+        self._test_arg_conflict(base_args, yaml_content,
+                                ['--request-rate-range-search-enable'])
+        self._test_arg_conflict(base_args, yaml_content,
+                                ['--request-rate-range', '1,2,3'])
+        self._test_arg_conflict(
+            base_args, yaml_content,
+            ['--run-config-search-min-request-rate-range', '1'])
+        self._test_arg_conflict(
+            base_args, yaml_content,
+            ['--run-config-search-max-request-rate-range', '1'])
+
+    def _test_arg_conflict(self, base_args: List[Any], yaml_content: str,
+                           new_args: List[Any]) -> None:
+        args = base_args.copy() + new_args
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(args, yaml_content)
 

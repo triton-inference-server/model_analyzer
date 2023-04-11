@@ -34,7 +34,9 @@ from .config_defaults import \
     DEFAULT_OUTPUT_MODEL_REPOSITORY, DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG, \
     DEFAULT_PERF_ANALYZER_CPU_UTIL, DEFAULT_PERF_ANALYZER_PATH, DEFAULT_PERF_MAX_AUTO_ADJUSTS, \
     DEFAULT_PERF_OUTPUT_FLAG, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, DEFAULT_RUN_CONFIG_MIN_CONCURRENCY, \
+    DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE_RANGE, DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE_RANGE, \
     DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE, DEFAULT_RUN_CONFIG_SEARCH_MODE, \
+    DEFAULT_REQUEST_RATE_RANGE_SEARCH_ENABLE, \
     DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT, \
     DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE, DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE, \
     DEFAULT_RUN_CONFIG_SEARCH_DISABLE, DEFAULT_TRITON_DOCKER_IMAGE, DEFAULT_TRITON_GRPC_ENDPOINT, \
@@ -442,6 +444,14 @@ class ConfigCommandProfile(ConfigCommand):
                 " to be used during profiling"))
         self._add_config(
             ConfigField(
+                'request_rate_range',
+                flags=['-rrr', '--request-rate-range'],
+                field_type=ConfigListNumeric(int),
+                description=
+                "Comma-delimited list of request rate range values or ranges <start:end:step>"
+                " to be used during profiling"))
+        self._add_config(
+            ConfigField(
                 'reload_model_disable',
                 field_type=ConfigPrimitive(bool),
                 parser_args={'action': 'store_true'},
@@ -509,7 +519,7 @@ class ConfigCommandProfile(ConfigCommand):
                 default_value=False,
                 flags=['--early-exit-enable'],
                 description=
-                'Flag to indicate if Model Analyzer can skip some configurations when manually searching concurrency or max_batch_size'
+                'Flag to indicate if Model Analyzer can skip some configurations when manually searching concurrency/request rate range,  or max_batch_size'
             ))
         self._add_config(
             ConfigField(
@@ -528,6 +538,24 @@ class ConfigCommandProfile(ConfigCommand):
                 default_value=DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
                 description=
                 "Min concurrency value that run config search should start with."
+            ))
+        self._add_config(
+            ConfigField(
+                'run_config_search_max_request_rate_range',
+                flags=['--run-config-search-max-request-rate-range'],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE_RANGE,
+                description=
+                "Max request rate range value that run config search should not go beyond that."
+            ))
+        self._add_config(
+            ConfigField(
+                'run_config_search_min_request_rate_range',
+                flags=['--run-config-search-min-request-rate-range'],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE_RANGE,
+                description=
+                "Min request rate range value that run config search should start with."
             ))
         self._add_config(
             ConfigField(
@@ -595,6 +623,16 @@ class ConfigCommandProfile(ConfigCommand):
                 DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE,
                 description=
                 "Enable the profiling of all supplied models concurrently."))
+        self._add_config(
+            ConfigField(
+                'request_rate_range_search_enable',
+                flags=['--request-rate-range-search-enable'],
+                field_type=ConfigPrimitive(bool),
+                parser_args={'action': 'store_true'},
+                default_value=DEFAULT_REQUEST_RATE_RANGE_SEARCH_ENABLE,
+                description=
+                "Enables the searching of request rate range (instead of concurrency)."
+            ))
 
     def _add_triton_configs(self):
         """
