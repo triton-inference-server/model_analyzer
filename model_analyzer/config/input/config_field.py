@@ -208,7 +208,7 @@ class ConfigField:
     def set_name(self, name):
         self._field_type.set_name(name)
 
-    def is_set_by_config(self) -> bool:
+    def is_set_by_user(self) -> bool:
         """
         Returns true if the user set the field
         """

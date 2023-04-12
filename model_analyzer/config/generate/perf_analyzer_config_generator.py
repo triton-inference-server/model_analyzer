@@ -52,10 +52,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             custom perf analyzer configuration
 
         model_parameters: Dict
-            model constraints for batch_sizes and/or concurrency
+            model constraints for batch_sizes, concurrency and/or request rate range
 
         early_exit_enable: Bool
-            If true, this class can early exit during search of concurrency
+            If true, this class can early exit during search of concurrency/request rate range
         """
 
         self._early_exit_enable = early_exit_enable
@@ -81,11 +81,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._perf_analyzer_flags = model_perf_analyzer_flags
 
         self._batch_sizes = sorted(model_parameters['batch_sizes'])
-        self._concurrencies = self._create_concurrency_list(
-            cli_config, model_parameters)
-
         self._cli_config = cli_config
 
+        self._concurrencies = self._create_parameter_list(model_parameters)
         self._generate_perf_configs()
 
     @staticmethod
@@ -156,16 +154,26 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._last_results = measurement
             self._concurrency_results.extend(measurement)
 
-    def _create_concurrency_list(self, cli_config: ConfigCommandProfile,
-                                 model_parameters: dict) -> List[int]:
+    def _create_parameter_list(self, model_parameters: dict) -> List[int]:
         if model_parameters['concurrency']:
             return sorted(model_parameters['concurrency'])
-        elif cli_config.run_config_search_disable:
+        elif self._cli_config.request_rate_range:
+            return sorted(self._cli_config.request_rate_range)
+        elif self._cli_config.run_config_search_disable:
             return [1]
+        elif self._wants_request_rate_range():
+            return utils.generate_doubled_list(
+                self._cli_config.run_config_search_min_request_rate_range,
+                self._cli_config.run_config_search_max_request_rate_range)
         else:
             return utils.generate_doubled_list(
-                cli_config.run_config_search_min_concurrency,
-                cli_config.run_config_search_max_concurrency)
+                self._cli_config.run_config_search_min_concurrency,
+                self._cli_config.run_config_search_max_concurrency)
+
+    def _wants_request_rate_range(self) -> bool:
+        return self._cli_config.request_rate_range_search_enable or \
+               self._cli_config.get_config()['run_config_search_min_request_rate_range'].is_set_by_user() or \
+               self._cli_config.get_config()['run_config_search_max_request_rate_range'].is_set_by_user()
 
     def _generate_perf_configs(self) -> None:
         perf_config_non_concurrency_params = self._create_non_concurrency_perf_config_params(

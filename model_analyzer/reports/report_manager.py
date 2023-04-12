@@ -592,7 +592,7 @@ class ReportManager:
             objective_gain = 0
 
         if (objective_gain > 0):
-            if self._config.get_config()['objectives'].is_set_by_config():
+            if self._config.get_config()['objectives'].is_set_by_user():
                 objective_phrase = f"is <strong>{objective_gain}%</strong> better than the default configuration at meeting the objectives"
             else:
                 if self._mode == 'online':
