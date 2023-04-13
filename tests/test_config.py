@@ -2021,15 +2021,13 @@ profile_models:
     def _test_request_rate_config_conflicts(self, base_args: List[Any],
                                             yaml_content: str) -> None:
         self._test_arg_conflict(base_args, yaml_content,
-                                ['--request-rate-range-search-enable'])
+                                ['--request-rate-search-enable'])
         self._test_arg_conflict(base_args, yaml_content,
-                                ['--request-rate-range', '1,2,3'])
-        self._test_arg_conflict(
-            base_args, yaml_content,
-            ['--run-config-search-min-request-rate-range', '1'])
-        self._test_arg_conflict(
-            base_args, yaml_content,
-            ['--run-config-search-max-request-rate-range', '1'])
+                                ['--request-rate', '1,2,3'])
+        self._test_arg_conflict(base_args, yaml_content,
+                                ['--run-config-search-min-request-rate', '1'])
+        self._test_arg_conflict(base_args, yaml_content,
+                                ['--run-config-search-max-request-rate', '1'])
 
     def _test_arg_conflict(self, base_args: List[Any], yaml_content: str,
                            new_args: List[Any]) -> None:

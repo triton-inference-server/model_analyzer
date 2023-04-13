@@ -52,10 +52,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             custom perf analyzer configuration
 
         model_parameters: Dict
-            model constraints for batch_sizes, concurrency and/or request rate range
+            model constraints for batch_sizes, concurrency and/or request rate
 
         early_exit_enable: Bool
-            If true, this class can early exit during search of concurrency/request rate range
+            If true, this class can early exit during search of concurrency/request rate
         """
 
         self._early_exit_enable = early_exit_enable
@@ -157,24 +157,24 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _create_parameter_list(self, model_parameters: dict) -> List[int]:
         if model_parameters['concurrency']:
             return sorted(model_parameters['concurrency'])
-        elif self._cli_config.request_rate_range:
-            return sorted(self._cli_config.request_rate_range)
+        elif self._cli_config.request_rate:
+            return sorted(self._cli_config.request_rate)
         elif self._cli_config.run_config_search_disable:
             return [1]
-        elif self._wants_request_rate_range():
+        elif self._wants_request_rate():
             return utils.generate_doubled_list(
-                self._cli_config.run_config_search_min_request_rate_range,
-                self._cli_config.run_config_search_max_request_rate_range)
+                self._cli_config.run_config_search_min_request_rate,
+                self._cli_config.run_config_search_max_request_rate)
         else:
             return utils.generate_doubled_list(
                 self._cli_config.run_config_search_min_concurrency,
                 self._cli_config.run_config_search_max_concurrency)
 
-    def _wants_request_rate_range(self) -> bool:
-        return self._cli_config.request_rate_range_search_enable or \
-               self._cli_config.request_rate_range or \
-               self._cli_config.get_config()['run_config_search_min_request_rate_range'].is_set_by_user() or \
-               self._cli_config.get_config()['run_config_search_max_request_rate_range'].is_set_by_user()
+    def _wants_request_rate(self) -> bool:
+        return self._cli_config.request_rate_search_enable or \
+               self._cli_config.request_rate or \
+               self._cli_config.get_config()['run_config_search_min_request_rate'].is_set_by_user() or \
+               self._cli_config.get_config()['run_config_search_max_request_rate'].is_set_by_user()
 
     def _generate_perf_configs(self) -> None:
         perf_config_non_parameter_values = self._create_non_parameter_perf_config_values(
@@ -191,7 +191,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
                 new_perf_config.update_config(params)
 
-                if self._wants_request_rate_range():
+                if self._wants_request_rate():
                     new_perf_config.update_config(
                         {'request-rate-range': parameter})
                 else:

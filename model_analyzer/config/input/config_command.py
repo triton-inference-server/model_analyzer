@@ -294,27 +294,24 @@ class ConfigCommand:
             self, args: Namespace, yaml_config: Optional[Dict[str,
                                                               List]]) -> None:
         if self._get_config_value('concurrency', args, yaml_config):
-            if self._get_config_value('request_rate_range_search_enable', args,
+            if self._get_config_value('request_rate_search_enable', args,
                                       yaml_config):
                 raise TritonModelAnalyzerException(
-                    f'\nCannot have both `request-rate-range-search-enable` and `concurrency` specified in the config/CLI.'
+                    f'\nCannot have both `request-rate-search-enable` and `concurrency` specified in the config/CLI.'
                 )
-            elif self._get_config_value('request_rate_range', args,
-                                        yaml_config):
+            elif self._get_config_value('request_rate', args, yaml_config):
                 raise TritonModelAnalyzerException(
-                    f'\nCannot have both `request-rate-range` and `concurrency` specified in the config/CLI.'
+                    f'\nCannot have both `request-rate` and `concurrency` specified in the config/CLI.'
                 )
-            elif self._get_config_value(
-                    'run_config_search_min_request_rate_range', args,
-                    yaml_config):
+            elif self._get_config_value('run_config_search_min_request_rate',
+                                        args, yaml_config):
                 raise TritonModelAnalyzerException(
-                    f'\nCannot have both `run-config-search-min-request-rate-range` and `concurrency` specified in the config/CLI.'
+                    f'\nCannot have both `run-config-search-min-request-rate` and `concurrency` specified in the config/CLI.'
                 )
-            elif self._get_config_value(
-                    'run_config_search_max_request_rate_range', args,
-                    yaml_config):
+            elif self._get_config_value('run_config_search_max_request_rate',
+                                        args, yaml_config):
                 raise TritonModelAnalyzerException(
-                    f'\nCannot have both `run-config-search-max-request-rate-range` and `concurrency` specified in the config/CLI.'
+                    f'\nCannot have both `run-config-search-max-request-rate` and `concurrency` specified in the config/CLI.'
                 )
 
     def _check_for_config_search_rate_request_conflicts(
@@ -324,27 +321,24 @@ class ConfigCommand:
                                   yaml_config) or self._get_config_value(
                                       'run_config_search_min_concurrency', args,
                                       yaml_config):
-            if self._get_config_value('request_rate_range_search_enable', args,
+            if self._get_config_value('request_rate_search_enable', args,
                                       yaml_config):
                 raise TritonModelAnalyzerException(
-                    f'\nCannot have both `request-rate-range-search-enable` and `run-config-search-min/max-concurrency` specified in the config/CLI.'
+                    f'\nCannot have both `request-rate-search-enable` and `run-config-search-min/max-concurrency` specified in the config/CLI.'
                 )
-            elif self._get_config_value('request_rate_range', args,
-                                        yaml_config):
+            elif self._get_config_value('request_rate', args, yaml_config):
                 raise TritonModelAnalyzerException(
-                    f'\nCannot have both `request-rate-range` and `run-config-search-min/max-concurrency` specified in the config/CLI.'
+                    f'\nCannot have both `request-rate` and `run-config-search-min/max-concurrency` specified in the config/CLI.'
                 )
-            elif self._get_config_value(
-                    'run_config_search_min_request_rate_range', args,
-                    yaml_config):
+            elif self._get_config_value('run_config_search_min_request_rate',
+                                        args, yaml_config):
                 raise TritonModelAnalyzerException(
-                    f'\nCannot have both `run-config-search-min-request-rate-range` and `run-config-search-min/max-concurrency` specified in the config/CLI.'
+                    f'\nCannot have both `run-config-search-min-request-rate` and `run-config-search-min/max-concurrency` specified in the config/CLI.'
                 )
-            elif self._get_config_value(
-                    'run_config_search_max_request_rate_range', args,
-                    yaml_config):
+            elif self._get_config_value('run_config_search_max_request_rate',
+                                        args, yaml_config):
                 raise TritonModelAnalyzerException(
-                    f'\nCannot have both `run-config-search-max-request-rate-range` and `run-config-search-min/max-concurrency` specified in the config/CLI.'
+                    f'\nCannot have both `run-config-search-max-request-rate` and `run-config-search-min/max-concurrency` specified in the config/CLI.'
                 )
 
     def _preprocess_and_verify_arguments(self):

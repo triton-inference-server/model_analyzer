@@ -22,7 +22,8 @@ from model_analyzer.config.generate.generator_utils import GeneratorUtils as uti
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-from model_analyzer.config.input.config_defaults import DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE_RANGE, DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE_RANGE
+from model_analyzer.config.input.config_defaults import DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, \
+    DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE, DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE
 
 
 class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
@@ -347,13 +348,13 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args)
 
-    def test_request_rate_range_list(self):
+    def test_request_rate_list(self):
         """
-        Test Request Rate Range:
-            - Shmoo RRR
+        Test Request Rate:
+            - Shmoo request-rate
             - Test with auto-search enabled & disabled
 
-        RRR: 1,2,3,4
+        Request Rate: 1,2,3,4
         Default (1) value will be used for batch size
         and 4 configs will be generated
         """
@@ -365,27 +366,29 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        request_rate_ranges = [1, 2, 3, 4]
+        request_rates = [1, 2, 3, 4]
         expected_configs = [
-            construct_perf_analyzer_config(request_rate_range=rrr)
-            for rrr in request_rate_ranges
+            construct_perf_analyzer_config(request_rate=request_rate)
+            for request_rate in request_rates
         ]
 
-        pa_cli_args = ['-rrr', '1,2,3,4']
+        pa_cli_args = ['--request-rate', '1,2,3,4']
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args)
 
-        pa_cli_args = ['-rrr', '1,2,3,4', '--run-config-search-disable']
+        pa_cli_args = [
+            '--request-rate', '1,2,3,4', '--run-config-search-disable'
+        ]
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args)
 
-    def test_request_rate_range_enable(self):
+    def test_request_rate_enable(self):
         """
-        Test Request Rate Range:
-            - Shmoo RRR
+        Test Request Rate:
+            - Shmoo request rate
             - Test with auto-search enabled & disabled
 
-        RRR: MIN-MAX
+        Request Rate: MIN-MAX
         Default (1) value will be used for batch size
         """
 
@@ -396,24 +399,24 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        request_rate_ranges = utils.generate_doubled_list(
-            DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE_RANGE,
-            DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE_RANGE)
+        request_rates = utils.generate_doubled_list(
+            DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
+            DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE)
         expected_configs = [
-            construct_perf_analyzer_config(request_rate_range=rrr)
-            for rrr in request_rate_ranges
+            construct_perf_analyzer_config(request_rate=request_rate)
+            for request_rate in request_rates
         ]
 
-        pa_cli_args = ['--request-rate-range-search-enable']
+        pa_cli_args = ['--request-rate-search-enable']
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args)
 
-    def test_max_request_rate_range(self):
+    def test_max_request_rate(self):
         """
-        Test Max Request Rate Range:
-            - Change max request rate range to non-default value
+        Test Max Request Rate:
+            - Change max request rate to non-default value
 
-        Max Request Rate Range: DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE_RANGE / 2
+        Max Request Rate: DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE / 2
         Default (1) value will be used for batch size
         """
 
@@ -424,27 +427,27 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        request_rate_ranges = utils.generate_doubled_list(
-            DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE_RANGE,
-            int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE_RANGE / 2))
+        request_rates = utils.generate_doubled_list(
+            DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
+            int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE / 2))
         expected_configs = [
-            construct_perf_analyzer_config(request_rate_range=rrr)
-            for rrr in request_rate_ranges
+            construct_perf_analyzer_config(request_rate=request_rate)
+            for request_rate in request_rates
         ]
 
         pa_cli_args = [
-            '--run-config-search-max-request-rate-range',
-            f'{int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE_RANGE / 2)}'
+            '--run-config-search-max-request-rate',
+            f'{int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE / 2)}'
         ]
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args)
 
-    def test_min_request_rate_range(self):
+    def test_min_request_rate(self):
         """
-        Test Min Request Rate Range:
-            - Change max request rate range to non-default value
+        Test Min Request Rate:
+            - Change max request rate to non-default value
 
-        Min Request Rate Range: DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE_RANGE * 2
+        Min Request Rate: DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE * 2
         Default (1) value will be used for batch size
         """
 
@@ -455,17 +458,17 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             """)
         # yapf: enable
 
-        request_rate_ranges = utils.generate_doubled_list(
-            DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE_RANGE * 2,
-            int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE_RANGE))
+        request_rates = utils.generate_doubled_list(
+            DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE * 2,
+            int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE))
         expected_configs = [
-            construct_perf_analyzer_config(request_rate_range=rrr)
-            for rrr in request_rate_ranges
+            construct_perf_analyzer_config(request_rate=request_rate)
+            for request_rate in request_rates
         ]
 
         pa_cli_args = [
-            '--run-config-search-min-request-rate-range',
-            f'{int(DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE_RANGE * 2)}'
+            '--run-config-search-min-request-rate',
+            f'{int(DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE * 2)}'
         ]
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args)
