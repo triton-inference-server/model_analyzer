@@ -283,13 +283,15 @@ class TestConfig(trc.TestResultCollector):
             ConfigModelProfileSpec('model_1',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10}),
             ConfigModelProfileSpec('model_2',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10})
         ]
@@ -398,13 +400,15 @@ profile_models:
             ConfigModelProfileSpec('vgg_16_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': [1, 2, 3, 4]
+                                       'concurrency': [1, 2, 3, 4],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10}),
             ConfigModelProfileSpec('vgg_19_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10})
         ]
@@ -450,13 +454,15 @@ profile_models:
             ConfigModelProfileSpec('vgg_16_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': [1, 2, 3, 4]
+                                       'concurrency': [1, 2, 3, 4],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10}),
             ConfigModelProfileSpec('vgg_19_graphdef',
                                    parameters={
                                        'concurrency': [1, 2, 3, 4],
-                                       'batch_sizes': [2, 4, 6]
+                                       'batch_sizes': [2, 4, 6],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10})
         ]
@@ -514,7 +520,8 @@ profile_models:
                 'vgg_16_graphdef',
                 parameters={
                     'batch_sizes': [1],
-                    'concurrency': [1, 2, 3, 4]
+                    'concurrency': [1, 2, 3, 4],
+                    'request_rate': []
                 },
                 objectives={
                     'perf_throughput': 10,
@@ -526,7 +533,8 @@ profile_models:
             ConfigModelProfileSpec('vgg_19_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10})
         ]
@@ -632,7 +640,8 @@ profile_models:
             ConfigModelProfileSpec('vgg_16_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10},
                                    model_config_parameters={
@@ -662,7 +671,8 @@ profile_models:
             ConfigModelProfileSpec('vgg_16_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10},
                                    model_config_parameters={
@@ -699,7 +709,8 @@ profile_models:
             ConfigModelProfileSpec('vgg_16_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10},
                                    model_config_parameters={
@@ -741,7 +752,8 @@ profile_models:
             ConfigModelProfileSpec('vgg_16_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10},
                                    model_config_parameters={
@@ -776,7 +788,8 @@ profile_models:
             ConfigModelProfileSpec('vgg_16_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10},
                                    model_config_parameters={
@@ -818,7 +831,8 @@ profile_models:
             ConfigModelProfileSpec('vgg_16_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10},
                                    perf_analyzer_flags={
@@ -846,7 +860,8 @@ profile_models:
             ConfigModelProfileSpec('vgg_16_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10},
                                    perf_analyzer_flags={
@@ -1111,7 +1126,8 @@ profile_models:
             ConfigModelProfileSpec('vgg_16_graphdef',
                                    parameters={
                                        'batch_sizes': [1],
-                                       'concurrency': []
+                                       'concurrency': [],
+                                       'request_rate': []
                                    },
                                    objectives={'perf_throughput': 10},
                                    model_config_parameters={
@@ -1157,7 +1173,8 @@ profile_models:
                 'vgg_16_graphdef',
                 parameters={
                     'batch_sizes': [16, 32],
-                    'concurrency': [2, 4]
+                    'concurrency': [2, 4],
+                    'request_rate': []
                 },
                 objectives={
                     'perf_throughput': 10,
@@ -1208,7 +1225,8 @@ profile_models:
                 'vgg_16_graphdef',
                 parameters={
                     'batch_sizes': [16, 32],
-                    'concurrency': [2, 4]
+                    'concurrency': [2, 4],
+                    'request_rate': []
                 },
                 objectives={'gpu_used_memory': 10},
                 constraints={'perf_latency_p99': {
@@ -1256,7 +1274,8 @@ profile_models:
                 'vgg_16_graphdef',
                 parameters={
                     'batch_sizes': [16, 32],
-                    'concurrency': [2, 4]
+                    'concurrency': [2, 4],
+                    'request_rate': []
                 },
                 objectives={'gpu_used_memory': 10},
                 constraints={'perf_latency_p99': {
@@ -1314,7 +1333,8 @@ profile_models:
             ConfigModelProfileSpec('vgg_16_graphdef',
                                    parameters={
                                        'batch_sizes': [16, 32],
-                                       'concurrency': [5, 6, 7]
+                                       'concurrency': [5, 6, 7],
+                                       'request_rate': []
                                    },
                                    objectives={'gpu_used_memory': 10},
                                    constraints={
@@ -1329,7 +1349,8 @@ profile_models:
                 'vgg_19_graphdef',
                 parameters={
                     'batch_sizes': [1, 2],
-                    'concurrency': [2, 4]
+                    'concurrency': [2, 4],
+                    'request_rate': []
                 },
                 objectives={
                     'perf_throughput': 10,

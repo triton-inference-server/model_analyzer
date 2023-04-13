@@ -386,6 +386,8 @@ class ConfigCommandProfile(ConfigCommand):
                                         'batch_sizes':
                                             ConfigListNumeric(type_=int),
                                         'concurrency':
+                                            ConfigListNumeric(type_=int),
+                                        'request_rate':
                                             ConfigListNumeric(type_=int)
                                     }),
                             'objectives':
@@ -1134,20 +1136,31 @@ class ConfigCommandProfile(ConfigCommand):
             if not model.parameters():
                 new_model['parameters'] = {
                     'batch_sizes': self.batch_sizes,
-                    'concurrency': self.concurrency
-                }
-            elif 'batch_sizes' not in model.parameters():
-                new_model['parameters'] = {
-                    'batch_sizes': self.batch_sizes,
-                    'concurrency': model.parameters()['concurrency']
-                }
-            elif 'concurrency' not in model.parameters():
-                new_model['parameters'] = {
-                    'batch_sizes': model.parameters()['batch_sizes'],
-                    'concurrency': self.concurrency
+                    'concurrency': self.concurrency,
+                    'request_rate': self.request_rate
                 }
             else:
-                new_model['parameters'] = model.parameters()
+                new_model['parameters'] = {}
+                if 'batch_sizes' in model.parameters():
+                    new_model['parameters'].update(
+                        {'batch_sizes': model.parameters()['batch_sizes']})
+                else:
+                    new_model['parameters'].update(
+                        {'batch_sizes': self.batch_sizes})
+
+                if 'concurrency' in model.parameters():
+                    new_model['parameters'].update(
+                        {'concurrency': model.parameters()['concurrency']})
+                else:
+                    new_model['parameters'].update(
+                        {'concurrency': self.concurrency})
+
+                if 'request_rate' in model.parameters():
+                    new_model['parameters'].update(
+                        {'request_rate': model.parameters()['request_rate']})
+                else:
+                    new_model['parameters'].update(
+                        {'request_rate': self.request_rate})
 
             # Perf analyzer flags
             if not model.perf_analyzer_flags():

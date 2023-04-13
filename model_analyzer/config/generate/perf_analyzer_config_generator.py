@@ -155,8 +155,13 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._parameter_results.extend(measurement)
 
     def _create_parameter_list(self, model_parameters: dict) -> List[int]:
+        # The two possible parameters are request rate or concurrency
+        # Concurrency is the default and will be used unless the user specifies
+        # request rate, either as a model parameter or a config option
         if model_parameters['concurrency']:
             return sorted(model_parameters['concurrency'])
+        elif model_parameters['request_rate']:
+            return sorted(model_parameters['request_rate'])
         elif self._cli_config.request_rate:
             return sorted(self._cli_config.request_rate)
         elif self._cli_config.run_config_search_disable:
