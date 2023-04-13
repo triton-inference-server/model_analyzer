@@ -172,6 +172,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
     def _wants_request_rate_range(self) -> bool:
         return self._cli_config.request_rate_range_search_enable or \
+               self._cli_config.request_rate_range or \
                self._cli_config.get_config()['run_config_search_min_request_rate_range'].is_set_by_user() or \
                self._cli_config.get_config()['run_config_search_max_request_rate_range'].is_set_by_user()
 
@@ -189,8 +190,13 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                     self._model_name, self._cli_config)
 
                 new_perf_config.update_config(params)
-                # FIXME: this is where RRR needs to be added
-                new_perf_config.update_config({'concurrency-range': parameter})
+
+                if self._wants_request_rate_range():
+                    new_perf_config.update_config(
+                        {'request-rate-range': parameter})
+                else:
+                    new_perf_config.update_config(
+                        {'concurrency-range': parameter})
 
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)

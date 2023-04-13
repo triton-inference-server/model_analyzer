@@ -1011,10 +1011,10 @@ class ConfigCommandProfile(ConfigCommand):
                     "Triton launch mode is set to C_API, triton logs are not supported. "
                     "Triton server error output can be obtained by setting perf_output_path."
                 )
-        # If run config search is disabled and no concurrency value is provided,
+        # If run config search is disabled and no concurrency or request rate range is provided,
         # set the default value.
         if self.run_config_search_disable:
-            if len(self.concurrency) == 0:
+            if len(self.concurrency) == 0 and len(self.request_rate_range) == 0:
                 self.concurrency = [1]
 
         # Change default RCS mode to quick for multi-model concurrent profiling

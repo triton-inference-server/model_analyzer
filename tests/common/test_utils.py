@@ -211,6 +211,7 @@ def construct_perf_analyzer_config(model_name='my-model',
                                    output_file_name='my-model-results.csv',
                                    batch_size=DEFAULT_BATCH_SIZES,
                                    concurrency=1,
+                                   request_rate_range=None,
                                    launch_mode=DEFAULT_TRITON_LAUNCH_MODE,
                                    client_protocol=DEFAULT_CLIENT_PROTOCOL,
                                    perf_analyzer_flags=None):
@@ -227,6 +228,8 @@ def construct_perf_analyzer_config(model_name='my-model',
         The batch size for this PA configuration
     concurrency: int
         The concurrency value for this PA configuration
+    request_rate_range: int
+        The request_rate_range value for this PA configuration
     launch_mode: str
         The launch mode for this PA configuration
     client_protocol: str
@@ -244,7 +247,12 @@ def construct_perf_analyzer_config(model_name='my-model',
     pa_config._options['-m'] = model_name
     pa_config._options['-f'] = output_file_name
     pa_config._options['-b'] = batch_size
-    pa_config._args['concurrency-range'] = concurrency
+
+    if request_rate_range:
+        pa_config._args['request-rate-range'] = request_rate_range
+    else:
+        pa_config._args['concurrency-range'] = concurrency
+
     pa_config._args['measurement-mode'] = DEFAULT_MEASUREMENT_MODE
 
     pa_config.update_config(perf_analyzer_flags)
