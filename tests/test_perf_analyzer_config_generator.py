@@ -382,6 +382,19 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         self._run_and_test_perf_analyzer_config_generator(
             yaml_str, expected_configs, pa_cli_args)
 
+        # yapf: disable
+        yaml_str = ("""
+            profile_models:
+              my-model:
+                parameters:
+                  request_rate: 1,2,3,4
+            """)
+        # yapf: enable
+
+        pa_cli_args = []
+        self._run_and_test_perf_analyzer_config_generator(
+            yaml_str, expected_configs, pa_cli_args)
+
     def test_request_rate_enable(self):
         """
         Test Request Rate:
