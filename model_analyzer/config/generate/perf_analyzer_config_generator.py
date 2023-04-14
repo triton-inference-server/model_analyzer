@@ -159,28 +159,36 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         # The two possible parameters are request rate or concurrency
         # Concurrency is the default and will be used unless the user specifies
         # request rate, either as a model parameter or a config option
-        if self._model_parameters['concurrency']:
-            return sorted(self._model_parameters['concurrency'])
-        elif self._model_parameters['request_rate']:
+        if self._config_specifies_request_rate():
+            return self._create_request_rate_list()
+        else:
+            return self._create_concurrency_list()
+
+    def _config_specifies_request_rate(self) -> bool:
+        return self._model_parameters['request_rate'] or \
+               self._cli_config.request_rate_search_enable or \
+               self._cli_config.get_config()['run_config_search_min_request_rate'].is_set_by_user() or \
+               self._cli_config.get_config()['run_config_search_max_request_rate'].is_set_by_user()
+
+    def _create_request_rate_list(self) -> List[int]:
+        if self._model_parameters['request_rate']:
             return sorted(self._model_parameters['request_rate'])
-        elif self._cli_config.request_rate:
-            return sorted(self._cli_config.request_rate)
         elif self._cli_config.run_config_search_disable:
             return [1]
-        elif self._config_specifies_request_rate():
+        else:
             return utils.generate_doubled_list(
                 self._cli_config.run_config_search_min_request_rate,
                 self._cli_config.run_config_search_max_request_rate)
+
+    def _create_concurrency_list(self) -> List[int]:
+        if self._model_parameters['concurrency']:
+            return sorted(self._model_parameters['concurrency'])
+        elif self._cli_config.run_config_search_disable:
+            return [1]
         else:
             return utils.generate_doubled_list(
                 self._cli_config.run_config_search_min_concurrency,
                 self._cli_config.run_config_search_max_concurrency)
-
-    def _config_specifies_request_rate(self) -> bool:
-        return self._cli_config.request_rate_search_enable or \
-               self._cli_config.request_rate or \
-               self._cli_config.get_config()['run_config_search_min_request_rate'].is_set_by_user() or \
-               self._cli_config.get_config()['run_config_search_max_request_rate'].is_set_by_user()
 
     def _generate_perf_configs(self) -> None:
         perf_config_non_parameter_values = self._create_non_parameter_perf_config_values(
@@ -197,9 +205,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
                 new_perf_config.update_config(params)
 
-                if self._model_parameters[
-                        'request_rate'] or self._config_specifies_request_rate(
-                        ):
+                if self._config_specifies_request_rate():
                     new_perf_config.update_config(
                         {'request-rate-range': parameter})
                 else:
