@@ -171,9 +171,9 @@ class ConfigCommand:
                 yaml_config):
             return
 
-        self._check_multi_model_search_mode_incompatability(args, yaml_config)
+        self._check_multi_model_search_mode_incompatibility(args, yaml_config)
 
-    def _check_multi_model_search_mode_incompatability(
+    def _check_multi_model_search_mode_incompatibility(
             self, args: Namespace, yaml_config: Optional[Dict[str,
                                                               List]]) -> None:
         if self._get_config_value('run_config_search_mode', args,

@@ -1162,6 +1162,12 @@ class ConfigCommandProfile(ConfigCommand):
                     new_model['parameters'].update(
                         {'request_rate': self.request_rate})
 
+            if new_model['parameters']['request_rate'] and new_model[
+                    'parameters']['concurrency']:
+                raise TritonModelAnalyzerException(
+                    "Cannot specify both concurrency and request rate as model parameters."
+                )
+
             # Perf analyzer flags
             if not model.perf_analyzer_flags():
                 new_model['perf_analyzer_flags'] = self.perf_analyzer_flags
