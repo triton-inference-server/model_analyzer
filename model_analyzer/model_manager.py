@@ -172,7 +172,7 @@ class ModelManager:
 
                 if self._config.run_config_search_mode == 'brute':
                     if self._config.get_config(
-                    )['run_config_search_mode'].is_set_by_config():
+                    )['run_config_search_mode'].is_set_by_user():
                         raise TritonModelAnalyzerException(
                             f'\nBrute search mode is not supported for ensemble models'
                             '\nPlease use quick search mode (--run-config-search-mode quick)'

@@ -451,10 +451,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         batch_size = int(dimension_values.get("max_batch_size", 1))
 
         min_batch_size_is_set_by_config = self._config.get_config(
-        )['run_config_search_min_model_batch_size'].is_set_by_config()
+        )['run_config_search_min_model_batch_size'].is_set_by_user()
 
         max_batch_size_is_set_by_config = self._config.get_config(
-        )['run_config_search_max_model_batch_size'].is_set_by_config()
+        )['run_config_search_max_model_batch_size'].is_set_by_user()
 
         if min_batch_size_is_set_by_config and batch_size < self._config.run_config_search_min_model_batch_size:
             return self._config.run_config_search_min_model_batch_size
@@ -469,10 +469,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         instance_count = int(dimension_values.get("instance_count", 1))
 
         min_instance_count_is_set_by_config = self._config.get_config(
-        )['run_config_search_min_instance_count'].is_set_by_config()
+        )['run_config_search_min_instance_count'].is_set_by_user()
 
         max_instance_count_is_set_by_config = self._config.get_config(
-        )['run_config_search_max_instance_count'].is_set_by_config()
+        )['run_config_search_max_instance_count'].is_set_by_user()
 
         if min_instance_count_is_set_by_config and instance_count < self._config.run_config_search_min_instance_count:
             return self._config.run_config_search_min_instance_count
@@ -489,10 +489,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         concurrency = 2 * model_batch_size * instance_count
 
         min_concurrency_is_set_by_config = self._config.get_config(
-        )['run_config_search_min_concurrency'].is_set_by_config()
+        )['run_config_search_min_concurrency'].is_set_by_user()
 
         max_concurrency_is_set_by_config = self._config.get_config(
-        )['run_config_search_max_concurrency'].is_set_by_config()
+        )['run_config_search_max_concurrency'].is_set_by_user()
 
         if min_concurrency_is_set_by_config and concurrency < self._config.run_config_search_min_concurrency:
             return self._config.run_config_search_min_concurrency

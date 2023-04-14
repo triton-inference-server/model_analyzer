@@ -52,40 +52,39 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             custom perf analyzer configuration
 
         model_parameters: Dict
-            model constraints for batch_sizes and/or concurrency
+            model constraints for batch_sizes, concurrency and/or request rate
 
         early_exit_enable: Bool
-            If true, this class can early exit during search of concurrency
+            If true, this class can early exit during search of concurrency/request rate
         """
 
         self._early_exit_enable = early_exit_enable
 
         # All configs are pregenerated in _configs[][]
         # Indexed as follows:
-        #    _configs[_curr_batch_size_index][_curr_concurrency_index]
+        #    _configs[_curr_batch_size_index][_curr_parameter_index]
         #
-        self._curr_concurrency_index = 0
+        self._curr_parameter_index = 0
         self._curr_batch_size_index = 0
         self._configs: List[List[PerfAnalyzerConfig]] = []
-        self._concurrency_warning_printed = False
+        self._parameter_warning_printed = False
 
         # Flag to indicate we have started to return results
         #
         self._generator_started = False
 
         self._last_results: List[RunConfigMeasurement] = []
-        self._concurrency_results: List[Optional[RunConfigMeasurement]] = []
+        self._parameter_results: List[Optional[RunConfigMeasurement]] = []
         self._batch_size_results: List[Optional[RunConfigMeasurement]] = []
 
         self._model_name = model_name
         self._perf_analyzer_flags = model_perf_analyzer_flags
 
         self._batch_sizes = sorted(model_parameters['batch_sizes'])
-        self._concurrencies = self._create_concurrency_list(
-            cli_config, model_parameters)
-
         self._cli_config = cli_config
 
+        self._model_parameters = model_parameters
+        self._parameters = self._create_parameter_list()
         self._generate_perf_configs()
 
     @staticmethod
@@ -96,13 +95,13 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if len(throughputs) < min_tries:
             return True
 
-        tputs_in_range = [
+        throughputs_in_range = [
             PerfAnalyzerConfigGenerator.get_throughput(throughputs[x])
             for x in range(-min_tries, 0)
         ]
 
-        first = tputs_in_range[0]
-        best = max(tputs_in_range)
+        first = throughputs_in_range[0]
+        best = max(throughputs_in_range)
 
         gain = (best - first) / first
 
@@ -127,7 +126,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
             self._generator_started = True
             config = self._configs[self._curr_batch_size_index][
-                self._curr_concurrency_index]
+                self._curr_parameter_index]
             yield (config)
 
             if self._last_results_erroneous():
@@ -154,35 +153,64 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             measurement = [max(valid_measurements)]
 
             self._last_results = measurement
-            self._concurrency_results.extend(measurement)
+            self._parameter_results.extend(measurement)
 
-    def _create_concurrency_list(self, cli_config: ConfigCommandProfile,
-                                 model_parameters: dict) -> List[int]:
-        if model_parameters['concurrency']:
-            return sorted(model_parameters['concurrency'])
-        elif cli_config.run_config_search_disable:
+    def _create_parameter_list(self) -> List[int]:
+        # The two possible parameters are request rate or concurrency
+        # Concurrency is the default and will be used unless the user specifies
+        # request rate, either as a model parameter or a config option
+        if self._config_specifies_request_rate():
+            return self._create_request_rate_list()
+        else:
+            return self._create_concurrency_list()
+
+    def _config_specifies_request_rate(self) -> bool:
+        return self._model_parameters['request_rate'] or \
+               self._cli_config.request_rate_search_enable or \
+               self._cli_config.get_config()['run_config_search_min_request_rate'].is_set_by_user() or \
+               self._cli_config.get_config()['run_config_search_max_request_rate'].is_set_by_user()
+
+    def _create_request_rate_list(self) -> List[int]:
+        if self._model_parameters['request_rate']:
+            return sorted(self._model_parameters['request_rate'])
+        elif self._cli_config.run_config_search_disable:
             return [1]
         else:
             return utils.generate_doubled_list(
-                cli_config.run_config_search_min_concurrency,
-                cli_config.run_config_search_max_concurrency)
+                self._cli_config.run_config_search_min_request_rate,
+                self._cli_config.run_config_search_max_request_rate)
+
+    def _create_concurrency_list(self) -> List[int]:
+        if self._model_parameters['concurrency']:
+            return sorted(self._model_parameters['concurrency'])
+        elif self._cli_config.run_config_search_disable:
+            return [1]
+        else:
+            return utils.generate_doubled_list(
+                self._cli_config.run_config_search_min_concurrency,
+                self._cli_config.run_config_search_max_concurrency)
 
     def _generate_perf_configs(self) -> None:
-        perf_config_non_concurrency_params = self._create_non_concurrency_perf_config_params(
+        perf_config_non_parameter_values = self._create_non_parameter_perf_config_values(
         )
 
         for params in utils.generate_parameter_combinations(
-                perf_config_non_concurrency_params):
+                perf_config_non_parameter_values):
             configs_with_concurrency = []
-            for concurrency in self._concurrencies:
+            for parameter in self._parameters:
                 new_perf_config = PerfAnalyzerConfig()
 
                 new_perf_config.update_config_from_profile_config(
                     self._model_name, self._cli_config)
 
                 new_perf_config.update_config(params)
-                new_perf_config.update_config(
-                    {'concurrency-range': concurrency})
+
+                if self._config_specifies_request_rate():
+                    new_perf_config.update_config(
+                        {'request-rate-range': parameter})
+                else:
+                    new_perf_config.update_config(
+                        {'concurrency-range': parameter})
 
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)
@@ -190,34 +218,34 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 configs_with_concurrency.append(new_perf_config)
             self._configs.append(configs_with_concurrency)
 
-    def _create_non_concurrency_perf_config_params(self) -> dict:
-        perf_config_params = {
+    def _create_non_parameter_perf_config_values(self) -> dict:
+        perf_config_values = {
             'batch-size': self._batch_sizes,
         }
 
-        return perf_config_params
+        return perf_config_values
 
     def _step(self) -> None:
-        self._step_concurrency()
+        self._step_parameter()
 
-        if self._done_walking_concurrencies():
+        if self._done_walking_parameters():
             self._add_best_throughput_to_batch_sizes()
-            self._reset_concurrencies()
+            self._reset_parameters()
             self._step_batch_size()
 
     def _add_best_throughput_to_batch_sizes(self) -> None:
-        if self._concurrency_results:
+        if self._parameter_results:
             # type is List[Optional[RCM]]
-            best = max(self._concurrency_results)  #type: ignore
+            best = max(self._parameter_results)  #type: ignore
             self._batch_size_results.append(best)
 
-    def _reset_concurrencies(self) -> None:
-        self._curr_concurrency_index = 0
-        self._concurrency_warning_printed = False
-        self._concurrency_results = []
+    def _reset_parameters(self) -> None:
+        self._curr_parameter_index = 0
+        self._parameter_warning_printed = False
+        self._parameter_results = []
 
-    def _step_concurrency(self) -> None:
-        self._curr_concurrency_index += 1
+    def _step_parameter(self) -> None:
+        self._curr_parameter_index += 1
 
     def _step_batch_size(self) -> None:
         self._curr_batch_size_index += 1
@@ -225,16 +253,16 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _done_walking(self) -> bool:
         return self._done_walking_batch_sizes()
 
-    def _done_walking_concurrencies(self) -> bool:
-        if len(self._concurrencies) == self._curr_concurrency_index:
+    def _done_walking_parameters(self) -> bool:
+        if len(self._parameters) == self._curr_parameter_index:
             return True
-        if self._early_exit_enable and not self._concurrency_throughput_gain_valid(
+        if self._early_exit_enable and not self._parameter_throughput_gain_valid(
         ):
-            if not self._concurrency_warning_printed:
+            if not self._parameter_warning_printed:
                 logger.info(
                     "No longer increasing concurrency as throughput has plateaued"
                 )
-                self._concurrency_warning_printed = True
+                self._parameter_warning_printed = True
             return True
         return False
 
@@ -255,10 +283,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _last_results_erroneous(self) -> bool:
         return not self._last_results or self._last_results[-1] is None
 
-    def _concurrency_throughput_gain_valid(self) -> bool:
-        """ Check if any of the last X concurrency results resulted in valid gain """
+    def _parameter_throughput_gain_valid(self) -> bool:
+        """ Check if any of the last X parameter results resulted in valid gain """
         return PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
-            throughputs=self._concurrency_results,
+            throughputs=self._parameter_results,
             min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES,
             min_gain=THROUGHPUT_MINIMUM_GAIN)
 
