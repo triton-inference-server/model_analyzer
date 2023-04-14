@@ -595,9 +595,14 @@ class MetricsManager:
         for perf_config in [
                 mrc.perf_config() for mrc in run_config.model_run_configs()
         ]:
-            logger.info(
-                f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
-            )
+            if perf_config['request-rate-range']:
+                logger.info(
+                    f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, request-rate-range={perf_config['request-rate-range']}"
+                )
+            else:
+                logger.info(
+                    f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
+                )
 
         # Vertical spacing when running multiple models at a time
         if len(run_config.model_run_configs()) > 1:
