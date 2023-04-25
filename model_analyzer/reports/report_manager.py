@@ -917,8 +917,13 @@ class ReportManager:
             reverse=True)
         cpu_only = model_config.cpu_only()
 
-        first_column_header = 'Request Concurrency' if self._mode == 'online' else 'Client Batch Size'
-        first_column_tag = 'concurrency-range' if self._mode == 'online' else 'batch-size'
+        if self._was_measured_with_request_rate(measurements[0]):
+            first_column_header = 'Request Rate' if self._mode == 'online' else 'Client Batch Size'
+            first_column_tag = 'request-rate-range' if self._mode == 'online' else 'batch-size'
+        else:
+            first_column_header = 'Request Concurrency' if self._mode == 'online' else 'Client Batch Size'
+            first_column_tag = 'concurrency-range' if self._mode == 'online' else 'batch-size'
+
         if not cpu_only:
             headers = [
                 first_column_header, 'p99 Latency (ms)',
@@ -1124,3 +1129,8 @@ class ReportManager:
             self._cpu_metrics_gathered_sticky = used_ram != 0
 
         return self._cpu_metrics_gathered_sticky
+
+    def _was_measured_with_request_rate(
+            self, measurement: RunConfigMeasurement) -> bool:
+        return 'request-rate-range' in measurement.model_specific_pa_params()[0] \
+            and measurement.model_specific_pa_params()[0]['request-rate-range']
