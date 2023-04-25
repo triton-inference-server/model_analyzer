@@ -2215,7 +2215,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_default",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 1
+                                        "concurrency-range": 1,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -2489,7 +2490,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_default",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 2
+                                        "concurrency-range": 2,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -2763,7 +2765,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_default",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 4
+                                        "concurrency-range": 4,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -3037,7 +3040,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_default",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 8
+                                        "concurrency-range": 8,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -3311,7 +3315,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_default",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -4013,7 +4018,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_0",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -4715,7 +4721,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_1",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -5417,7 +5424,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_2",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -6119,7 +6127,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_3",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -6821,7 +6830,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_4",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -7523,7 +7533,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_5",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -8225,7 +8236,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_6",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -8499,7 +8511,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_6",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 1
+                                        "concurrency-range": 1,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -8773,7 +8786,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_6",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 2
+                                        "concurrency-range": 2,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -9047,7 +9061,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_6",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 4
+                                        "concurrency-range": 4,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -9321,7 +9336,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_6",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 8
+                                        "concurrency-range": 8,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -10023,7 +10039,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_7",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -10297,7 +10314,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_7",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 1
+                                        "concurrency-range": 1,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -10571,7 +10589,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_7",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 2
+                                        "concurrency-range": 2,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -10845,7 +10864,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_7",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 4
+                                        "concurrency-range": 4,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -11119,7 +11139,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_7",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 8
+                                        "concurrency-range": 8,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -11821,7 +11842,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_8",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -12095,7 +12117,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_8",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 1
+                                        "concurrency-range": 1,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -12369,7 +12392,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_8",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 2
+                                        "concurrency-range": 2,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -12643,7 +12667,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_8",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 4
+                                        "concurrency-range": 4,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -12917,7 +12942,8 @@
                                     "_model_config_name": "FaceDetectionBLS_config_8",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 8
+                                        "concurrency-range": 8,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [

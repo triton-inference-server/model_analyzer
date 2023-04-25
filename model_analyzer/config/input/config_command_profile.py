@@ -44,7 +44,8 @@ from .config_defaults import \
     DEFAULT_TRITON_SERVER_PATH, DEFAULT_PERF_ANALYZER_TIMEOUT, \
     DEFAULT_EXPORT_PATH, DEFAULT_FILENAME_MODEL_INFERENCE, DEFAULT_FILENAME_MODEL_GPU, \
     DEFAULT_FILENAME_SERVER_ONLY, DEFAULT_NUM_CONFIGS_PER_MODEL, DEFAULT_NUM_TOP_MODEL_CONFIGS, \
-    DEFAULT_INFERENCE_OUTPUT_FIELDS, DEFAULT_GPU_OUTPUT_FIELDS, DEFAULT_SERVER_OUTPUT_FIELDS, \
+    DEFAULT_INFERENCE_OUTPUT_FIELDS, DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS, \
+    DEFAULT_GPU_OUTPUT_FIELDS, DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS, DEFAULT_SERVER_OUTPUT_FIELDS, \
     DEFAULT_ONLINE_OBJECTIVES, DEFAULT_ONLINE_PLOTS, DEFAULT_OFFLINE_PLOTS, DEFAULT_MODEL_WEIGHTING
 
 from model_analyzer.constants import LOGGER_NAME
@@ -1074,6 +1075,11 @@ class ConfigCommandProfile(ConfigCommand):
                         'min': self.min_throughput
                     }})
 
+        # Switch default output fields if request rate is being used (instead of concurrency)
+        if self._using_request_rate():
+            self.inference_output_fields = DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS
+            self.gpu_output_fields = DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS
+
         new_profile_models = {}
         for i, model in enumerate(self.profile_models):
             new_model = {'cpu_only': (model.cpu_only() or cpu_only)}
@@ -1197,3 +1203,16 @@ class ConfigCommandProfile(ConfigCommand):
 
             new_profile_models[model.model_name()] = new_model
         self._fields['profile_models'].set_value(new_profile_models)
+
+    def _using_request_rate(self) -> bool:
+        if self.request_rate or self.request_rate_search_enable:
+            return True
+        elif self._fields['run_config_search_max_request_rate'].is_set_by_user() or \
+             self._fields['run_config_search_min_request_rate'].is_set_by_user():
+            return True
+        else:
+            for i, model in enumerate(self.profile_models):
+                if model.parameters() and 'request_rate' in model.parameters():
+                    return True
+
+        return False

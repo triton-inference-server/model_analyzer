@@ -33,6 +33,7 @@ class ResultTableManager:
         'model_name': 'Model',
         'batch_size': 'Batch',
         'concurrency': 'Concurrency',
+        'request_rate': 'Request Rate',
         'model_config_path': 'Model Config Path',
         'instance_group': 'Instance Group',
         'max_batch_size': 'Max Batch Size',
@@ -340,7 +341,7 @@ class ResultTableManager:
         """
 
         model_name = run_config_result.model_name()
-        instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters, composing_config_names = self._tablulate_measurements_setup(
+        instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters, composing_config_names = self._tabulate_measurements_setup(
             run_config_result)
 
         passing_measurements = run_config_result.passing_measurements()
@@ -361,7 +362,7 @@ class ResultTableManager:
                     backend_parameters=backend_parameters,
                     composing_config_names=composing_config_names)
 
-    def _tablulate_measurements_setup(self, run_config_result):
+    def _tabulate_measurements_setup(self, run_config_result):
         if run_config_result.run_config().is_ensemble_model():
             model_configs = run_config_result.run_config().composing_configs()
             composing_config_names = [
@@ -415,7 +416,7 @@ class ResultTableManager:
                 if composing_config_name != composing_config_names[-1]:
                     model_config_name = model_config_name + ", "
 
-        model_specific_pa_params, batch_sizes, concurrencies = self._tabulate_measurement_setup(
+        model_specific_pa_params, batch_sizes, concurrencies, request_rates = self._tabulate_measurement_setup(
             run_config_measurement)
 
         satisfies = "Yes" if passes else "No"
@@ -423,9 +424,9 @@ class ResultTableManager:
         # Non GPU specific data
         inference_fields = self._inference_output_fields
         inference_row = self._get_common_row_items(
-            inference_fields, batch_sizes, concurrencies, satisfies, model_name,
-            model_config_name, dynamic_batchings, instance_groups,
-            max_batch_sizes, backend_parameters)
+            inference_fields, batch_sizes, concurrencies, request_rates,
+            satisfies, model_name, model_config_name, dynamic_batchings,
+            instance_groups, max_batch_sizes, backend_parameters)
 
         self._populate_inference_rows(run_config_measurement, inference_fields,
                                       inference_row)
@@ -439,8 +440,8 @@ class ResultTableManager:
                 gpu_fields = self._gpu_output_fields
 
                 gpu_row = self._get_common_row_items(
-                    gpu_fields, batch_sizes, concurrencies, satisfies,
-                    model_name, model_config_name, dynamic_batchings,
+                    gpu_fields, batch_sizes, concurrencies, request_rates,
+                    satisfies, model_name, model_config_name, dynamic_batchings,
                     instance_groups, max_batch_sizes)
 
                 self._add_uuid_to_gpu_row(gpu_row, gpu_uuid, gpu_fields)
@@ -459,8 +460,12 @@ class ResultTableManager:
             pa_params['concurrency-range']
             for pa_params in model_specific_pa_params
         ]
+        request_rates = [
+            pa_params['request-rate-range']
+            for pa_params in model_specific_pa_params
+        ]
 
-        return model_specific_pa_params, batch_sizes, concurrencies
+        return model_specific_pa_params, batch_sizes, concurrencies, request_rates
 
     def _populate_inference_rows(self, run_config_measurement, inference_fields,
                                  inference_row):
@@ -508,6 +513,7 @@ class ResultTableManager:
                               fields,
                               batch_sizes,
                               concurrencies,
+                              request_rates,
                               satisfies,
                               model_name,
                               model_config_path,
@@ -531,6 +537,11 @@ class ResultTableManager:
         concurrency_index = self._find_index_for_field(fields, 'concurrency')
         if concurrency_index is not None:
             row[concurrency_index] = format_for_csv(concurrencies)
+
+        # Request rate
+        request_rate_index = self._find_index_for_field(fields, 'request_rate')
+        if request_rate_index is not None:
+            row[request_rate_index] = format_for_csv(request_rates)
 
         # Satisfies
         satisfies_constraints_index = self._find_index_for_field(

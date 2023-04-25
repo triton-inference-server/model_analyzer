@@ -311,7 +311,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_default",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 1
+                                        "concurrency-range": 1,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -585,7 +586,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_default",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 2
+                                        "concurrency-range": 2,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -859,7 +861,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_default",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 4
+                                        "concurrency-range": 4,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -1133,7 +1136,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_default",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 8
+                                        "concurrency-range": 8,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -1407,7 +1411,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_default",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -1890,7 +1895,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_0",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 2
+                                        "concurrency-range": 2,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -2373,7 +2379,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_1",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 2
+                                        "concurrency-range": 2,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -2856,7 +2863,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_2",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 8
+                                        "concurrency-range": 8,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -3339,7 +3347,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_3",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 2
+                                        "concurrency-range": 2,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -3822,7 +3831,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_4",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 24
+                                        "concurrency-range": 24,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -4305,7 +4315,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_5",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 24
+                                        "concurrency-range": 24,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -4788,7 +4799,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_6",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 160
+                                        "concurrency-range": 160,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -5271,7 +5283,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_7",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 24
+                                        "concurrency-range": 24,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -5754,7 +5767,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_8",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 12
+                                        "concurrency-range": 12,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -6237,7 +6251,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_9",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 48
+                                        "concurrency-range": 48,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -6720,7 +6735,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_10",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -7203,7 +7219,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_11",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 32
+                                        "concurrency-range": 32,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -7686,7 +7703,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_12",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 24
+                                        "concurrency-range": 24,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -8169,7 +8187,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_13",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -8652,7 +8671,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_14",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 64
+                                        "concurrency-range": 64,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -9135,7 +9155,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_15",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 40
+                                        "concurrency-range": 40,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -9618,7 +9639,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_16",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 32
+                                        "concurrency-range": 32,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -10101,7 +10123,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_17",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 32
+                                        "concurrency-range": 32,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -10584,7 +10607,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_18",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 32
+                                        "concurrency-range": 32,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -11067,7 +11091,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_19",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 128
+                                        "concurrency-range": 128,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -11550,7 +11575,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_20",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 80
+                                        "concurrency-range": 80,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -12033,7 +12059,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_21",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 64
+                                        "concurrency-range": 64,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -12516,7 +12543,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_22",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 64
+                                        "concurrency-range": 64,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -12999,7 +13027,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_23",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 64
+                                        "concurrency-range": 64,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -13273,7 +13302,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_23",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 1
+                                        "concurrency-range": 1,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -13547,7 +13577,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_23",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 2
+                                        "concurrency-range": 2,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -13821,7 +13852,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_23",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 4
+                                        "concurrency-range": 4,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -14095,7 +14127,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_23",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 8
+                                        "concurrency-range": 8,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -14369,7 +14402,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_23",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -14643,7 +14677,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_23",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 32
+                                        "concurrency-range": 32,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -14917,7 +14952,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_23",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 128
+                                        "concurrency-range": 128,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -15191,7 +15227,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_23",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 256
+                                        "concurrency-range": 256,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -15465,7 +15502,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_23",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 512
+                                        "concurrency-range": 512,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -15948,7 +15986,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_24",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 128
+                                        "concurrency-range": 128,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -16431,7 +16470,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_25",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 48
+                                        "concurrency-range": 48,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -16914,7 +16954,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_26",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 80
+                                        "concurrency-range": 80,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -17397,7 +17438,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_27",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 64
+                                        "concurrency-range": 64,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -17880,7 +17922,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_28",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 64
+                                        "concurrency-range": 64,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -18154,7 +18197,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_28",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 1
+                                        "concurrency-range": 1,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -18428,7 +18472,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_28",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 2
+                                        "concurrency-range": 2,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -18702,7 +18747,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_28",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 4
+                                        "concurrency-range": 4,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -18976,7 +19022,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_28",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 8
+                                        "concurrency-range": 8,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -19250,7 +19297,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_28",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -19524,7 +19572,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_28",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 32
+                                        "concurrency-range": 32,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -19798,7 +19847,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_28",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 128
+                                        "concurrency-range": 128,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -20072,7 +20122,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_28",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 256
+                                        "concurrency-range": 256,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -20346,7 +20397,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_28",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 512
+                                        "concurrency-range": 512,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -20829,7 +20881,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_29",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 64
+                                        "concurrency-range": 64,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -21103,7 +21156,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_29",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 1
+                                        "concurrency-range": 1,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -21377,7 +21431,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_29",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 2
+                                        "concurrency-range": 2,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -21651,7 +21706,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_29",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 4
+                                        "concurrency-range": 4,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -21925,7 +21981,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_29",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 8
+                                        "concurrency-range": 8,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -22199,7 +22256,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_29",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 16
+                                        "concurrency-range": 16,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -22473,7 +22531,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_29",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 32
+                                        "concurrency-range": 32,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -22747,7 +22806,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_29",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 128
+                                        "concurrency-range": 128,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -23021,7 +23081,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_29",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 256
+                                        "concurrency-range": 256,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -23295,7 +23356,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_29",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 512
+                                        "concurrency-range": 512,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -23778,7 +23840,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_30",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 32
+                                        "concurrency-range": 32,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -24261,7 +24324,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_31",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 128
+                                        "concurrency-range": 128,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -24744,7 +24808,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_32",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 48
+                                        "concurrency-range": 48,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -25227,7 +25292,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_33",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 80
+                                        "concurrency-range": 80,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -25710,7 +25776,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_34",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 64
+                                        "concurrency-range": 64,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [
@@ -26193,7 +26260,8 @@
                                     "_model_config_name": "ensemble_python_resnet50_config_35",
                                     "_model_specific_pa_params": {
                                         "batch-size": 1,
-                                        "concurrency-range": 64
+                                        "concurrency-range": 64,
+                                        "request-rate-range": null
                                     },
                                     "_non_gpu_data": [
                                         [

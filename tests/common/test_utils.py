@@ -112,6 +112,20 @@ def load_bls_result_manager() -> Tuple[ResultManager, ConfigCommandProfile]:
     return _load_result_manager_helper(dir_path, yaml_str)
 
 
+def load_request_rate_result_manager(
+) -> Tuple[ResultManager, ConfigCommandProfile]:
+    """
+    Return a ResultManager with the request rate model test checkpoint loaded, as well
+    as the ConfigCommandProfile used to fake the profile step
+    """
+    dir_path = f'{ROOT_DIR}/request-rate-ckpt/'
+    yaml_str = (f"""
+        request_rate_search_enable: true
+        profile_models: vgg19_libtorch
+    """)
+    return _load_result_manager_helper(dir_path, yaml_str)
+
+
 def _load_result_manager_helper(dir_path: str, yaml_str: str):
     args = [
         'model-analyzer', 'profile', '-f', 'config.yml',
