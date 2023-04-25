@@ -108,20 +108,20 @@ class Analyzer:
         self._create_metrics_manager(client, gpus)
         self._create_model_manager(client, gpus)
 
-        # if self._config.model_repository:
-        #     self._get_server_only_metrics(client, gpus)
-        #     self._profile_models()
+        if self._config.model_repository:
+            self._get_server_only_metrics(client, gpus)
+            self._profile_models()
 
-        #     # The message is in interrupt_handler(), so we can just exit
-        #     if (self._state_manager.exiting()):
-        #         sys.exit(1)
+            # The message is in interrupt_handler(), so we can just exit
+            if (self._state_manager.exiting()):
+                sys.exit(1)
 
-        #     logger.info(self._get_profile_complete_string())
-        #     logger.info("")
-        # elif self._state_manager.starting_fresh_run():
-        #     raise TritonModelAnalyzerException(
-        #         "No model repository specified and no checkpoint found. Please either specify a model repository (-m) or load a checkpoint (--checkpoint-directory)."
-        #     )
+            logger.info(self._get_profile_complete_string())
+            logger.info("")
+        elif self._state_manager.starting_fresh_run():
+            raise TritonModelAnalyzerException(
+                "No model repository specified and no checkpoint found. Please either specify a model repository (-m) or load a checkpoint (--checkpoint-directory)."
+            )
 
         if not self._config.skip_summary_reports:
             self._create_summary_tables(verbose)
