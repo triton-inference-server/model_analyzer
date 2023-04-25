@@ -470,7 +470,7 @@ def construct_constraint_manager(yaml_config_str=None):
     Parameters
     ----------
     yaml_config_str: optional str
-        yaml config string with atleast one profile model name and optional constraints
+        yaml config string with at least one profile model name and optional constraints
     """
     args = ['model-analyzer', 'profile', '-f', 'config.yml', '-m', '.']
 
