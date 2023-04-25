@@ -1132,5 +1132,9 @@ class ReportManager:
 
     def _was_measured_with_request_rate(
             self, measurement: RunConfigMeasurement) -> bool:
-        return 'request-rate-range' in measurement.model_specific_pa_params()[0] \
-            and measurement.model_specific_pa_params()[0]['request-rate-range']
+        if 'request-rate-range' in measurement.model_specific_pa_params(
+        )[0] and measurement.model_specific_pa_params(
+        )[0]['request-rate-range']:
+            return True
+        else:
+            return False

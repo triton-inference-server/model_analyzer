@@ -113,13 +113,17 @@ class DetailedPlot:
         """
 
         # TODO-TMA-568: This needs to be updated because there will be multiple model configs
-        self._data['concurrency'].append(
-            run_config_measurement.model_specific_pa_params()[0]
-            ['concurrency-range'])
+        if 'concurrency-range' in run_config_measurement.model_specific_pa_params(
+        )[0]:
+            self._data['concurrency'].append(
+                run_config_measurement.model_specific_pa_params()[0]
+                ['concurrency-range'])
 
-        self._data['request_rate'].append(
-            run_config_measurement.model_specific_pa_params()[0]
-            ['request-rate-range'])
+        if 'request-rate-range' in run_config_measurement.model_specific_pa_params(
+        )[0]:
+            self._data['request_rate'].append(
+                run_config_measurement.model_specific_pa_params()[0]
+                ['request-rate-range'])
 
         self._data['perf_throughput'].append(
             run_config_measurement.get_non_gpu_metric_value(
