@@ -454,15 +454,19 @@ class ResultTableManager:
         model_specific_pa_params = run_config_measurement.model_specific_pa_params(
         )
         batch_sizes = [
-            pa_params['batch-size'] for pa_params in model_specific_pa_params
+            pa_params['batch-size']
+            for pa_params in model_specific_pa_params
+            if 'batch-size' in pa_params
         ]
         concurrencies = [
             pa_params['concurrency-range']
             for pa_params in model_specific_pa_params
+            if 'concurrency-range' in pa_params
         ]
         request_rates = [
             pa_params['request-rate-range']
             for pa_params in model_specific_pa_params
+            if 'request-rate-range' in pa_params
         ]
 
         return model_specific_pa_params, batch_sizes, concurrencies, request_rates
