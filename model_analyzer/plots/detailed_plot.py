@@ -148,7 +148,7 @@ class DetailedPlot:
             self._ax_latency.set_xlabel('Client Request Rate')
 
         # Sort the data by request rate or concurrency
-        if self._data['request_rate'][0]:
+        if 'request_rate' in self._data:
             sort_indices = list(
                 zip(*sorted(enumerate(self._data['request_rate']),
                             key=lambda x: x[1])))[0]
