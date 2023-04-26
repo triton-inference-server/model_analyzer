@@ -144,7 +144,7 @@ class DetailedPlot:
         """
 
         # Need to change the default x-axis plot title for request rates
-        if self._data['request_rate'][0]:
+        if 'request_rate' in self._data:
             self._ax_latency.set_xlabel('Client Request Rate')
 
         # Sort the data by request rate or concurrency
