@@ -170,7 +170,7 @@ class DetailedPlot:
             ]))
         bottoms = None
 
-        if self._data['request_rate'][0]:
+        if 'request_rate' in self._data:
             sorted_data['indices'] = list(map(str, sorted_data['request_rate']))
         else:
             sorted_data['indices'] = list(map(str, sorted_data['concurrency']))
