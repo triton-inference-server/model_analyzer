@@ -1075,10 +1075,14 @@ class ConfigCommandProfile(ConfigCommand):
                         'min': self.min_throughput
                     }})
 
-        # Switch default output fields if request rate is being used (instead of concurrency)
+        # Switch default output fields if request rate is being used
+        # and the user didn't specify a custom output field
         if self._using_request_rate():
-            self.inference_output_fields = DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS
-            self.gpu_output_fields = DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS
+            if not self._fields['inference_output_fields'].is_set_by_user():
+                self.inference_output_fields = DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS
+
+            if not self._fields['gpu_output_fields'].is_set_by_user():
+                self.gpu_output_fields = DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS
 
         new_profile_models = {}
         for i, model in enumerate(self.profile_models):
@@ -1211,8 +1215,18 @@ class ConfigCommandProfile(ConfigCommand):
              self._fields['run_config_search_min_request_rate'].is_set_by_user():
             return True
         else:
+            model_using_request_rate = False
+            model_using_concurrency = False
             for i, model in enumerate(self.profile_models):
                 if model.parameters() and 'request_rate' in model.parameters():
-                    return True
+                    model_using_request_rate = True
+                else:
+                    model_using_concurrency = True
+
+            if model_using_request_rate and model_using_concurrency:
+                raise TritonModelAnalyzerException("Parameters in all profiled models must use request-rate-range. "\
+                    "Model Analyzer does not support mixing concurrency-range and request-rate-range.")
+            else:
+                return model_using_request_rate
 
         return False
