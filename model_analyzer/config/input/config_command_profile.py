@@ -1215,18 +1215,19 @@ class ConfigCommandProfile(ConfigCommand):
              self._fields['run_config_search_min_request_rate'].is_set_by_user():
             return True
         else:
-            model_using_request_rate = False
-            model_using_concurrency = False
-            for i, model in enumerate(self.profile_models):
-                if model.parameters() and 'request_rate' in model.parameters():
-                    model_using_request_rate = True
-                else:
-                    model_using_concurrency = True
+            return self._are_models_using_request_rate()
 
-            if model_using_request_rate and model_using_concurrency:
-                raise TritonModelAnalyzerException("Parameters in all profiled models must use request-rate-range. "\
-                    "Model Analyzer does not support mixing concurrency-range and request-rate-range.")
+    def _are_models_using_request_rate(self) -> bool:
+        model_using_request_rate = False
+        model_using_concurrency = False
+        for i, model in enumerate(self.profile_models):
+            if model.parameters() and 'request_rate' in model.parameters():
+                model_using_request_rate = True
             else:
-                return model_using_request_rate
+                model_using_concurrency = True
 
-        return False
+        if model_using_request_rate and model_using_concurrency:
+            raise TritonModelAnalyzerException("Parameters in all profiled models must use request-rate-range. "\
+                "Model Analyzer does not support mixing concurrency-range and request-rate-range.")
+        else:
+            return model_using_request_rate
