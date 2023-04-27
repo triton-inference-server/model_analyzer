@@ -117,11 +117,17 @@ You can also modify the minimum/maximum values that the automatic search space w
 
 ---
 
-### [Request Concurrency Search Space](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/README.md#request-concurrency)
+### [Request Concurrency Search Space](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/docs/inference_load_modes.md#concurrency-mode))
 
 - `Default:` 1 to 1024 concurrencies, sweeping over powers of 2 (i.e. 1, 2, 4, 8, ...)
 - `--run-config-search-min-concurrency: <val>`: Changes the request concurrency minimum automatic search space value
 - `--run-config-search-max-concurrency: <val>`: Changes the request concurrency maximum automatic search space value
+
+### [Request Rate Search Space](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/docs/inference_load_modes.md#request-rate-mode)
+
+- `Default:` 1 to 1024 concurrencies, sweeping over powers of 2 (i.e. 1, 2, 4, 8, ...)
+- `--run-config-search-min-request-rate: <val>`: Changes the request rate minimum automatic search space value
+- `--run-config-search-max-request-rate: <val>`: Changes the request rate maximum automatic search space value
 
 ---
 
@@ -144,7 +150,7 @@ _This will perform an Automatic Brute Search with instance group counts: 3-5, ba
 
 ### **Interaction with Remote Triton Launch Mode**
 
-When the triton launch mode is remote, _\*\*only concurrency values can be swept._\*\*<br>
+When the triton launch mode is remote, _\*\*only concurrency or request rate values can be swept._\*\*<br>
 
 Model Analyzer will ignore any model config parameters because we have no way of accessing and modifying the model repository of the remote Triton Server.
 
