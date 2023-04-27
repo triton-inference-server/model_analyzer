@@ -513,10 +513,11 @@ cannot be specified globally.
 
 Options available under this parameter are described in table below:
 
-| Option Name   | Description                                             | Supporting Types                                   |
-| :------------ | :------------------------------------------------------ | :------------------------------------------------- |
-| `concurrency` | Request concurrency used for generating the input load. | `<range>`, `<comma-delimited-list>`, or a `<list>` |
-| `batch_sizes` | Static batch size used for generating requests.         | `<range>`, `<comma-delimited-list>`, or a `<list>` |
+| Option Name    | Description                                             | Supporting Types                                   |
+| :------------- | :------------------------------------------------------ | :------------------------------------------------- |
+| `concurrency`  | Request concurrency used for generating the input load. | `<range>`, `<comma-delimited-list>`, or a `<list>` |
+| `request_rate` | Request rate used for generating the input load.        | `<range>`, `<comma-delimited-list>`, or a `<list>` |
+| `batch_sizes`  | Static batch size used for generating requests.         | `<range>`, `<comma-delimited-list>`, or a `<list>` |
 
 An example `<parameter>` looks like below:
 
@@ -765,6 +766,7 @@ More information about this can be found in the
 - Model Analyzer also provides certain arguments to the `perf_analyzer`
   instances it launches. They are the following:
   - `concurrency-range`
+  - `request-rate-range`
   - `batch-size`
   - `model-name`
   - `measurement-mode`
@@ -773,7 +775,7 @@ More information about this can be found in the
   - `model-repository`
   - `protocol`
   - `url`
-    If provided under the `perf_analyzer_flags` section, their values will be overriden. Caution should therefore be exercised when overriding these.
+    If provided under the `perf_analyzer_flags` section, their values will be overridden. Caution should therefore be exercised when overriding these.
     <br>
 
 ## `<triton-server-flags>`
