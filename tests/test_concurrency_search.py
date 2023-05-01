@@ -16,6 +16,7 @@ from .common.test_utils import construct_run_config_measurement, evaluate_mock_c
 
 from model_analyzer.constants import THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES
 
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.concurrency_search import ConcurrencySearch
 
@@ -47,7 +48,7 @@ class TestConcurrencySearch(trc.TestResultCollector):
     def test_basic_sweep(self):
         """
         Test sweeping concurrency from min to max, when no constraints are present
-        and throughput is increasing
+        and throughput is linearly increasing
         """
         for concurrency in self._concurrency_search.search_concurrencies():
             self._concurrencies.append(concurrency)
@@ -92,6 +93,21 @@ class TestConcurrencySearch(trc.TestResultCollector):
             for c in range(4 + THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES)
         ]
         self.assertEqual(self._concurrencies, expected_concurrencies)
+
+    def test_not_adding_measurements(self):
+        """
+        Test that an exception is raised if measurements are not added
+        """
+        with self.assertRaises(TritonModelAnalyzerException):
+            for concurrency in self._concurrency_search.search_concurrencies():
+                self._concurrencies.append(concurrency)
+
+                if concurrency < 32:
+                    self._concurrency_search.add_run_config_measurement(
+                        run_config_measurement=self._construct_rcm(
+                            throughput=100 * concurrency,
+                            latency=10,
+                            concurrency=concurrency))
 
     def _construct_rcm(self, throughput: int, latency: int,
                        concurrency: int) -> RunConfigMeasurement:
