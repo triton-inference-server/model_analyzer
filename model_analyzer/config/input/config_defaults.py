@@ -108,8 +108,18 @@ DEFAULT_INFERENCE_OUTPUT_FIELDS = [
     'instance_group', 'max_batch_size', 'satisfies_constraints',
     'perf_throughput', 'perf_latency_p99'
 ]
+DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS = [
+    'model_name', 'batch_size', 'request_rate', 'model_config_path',
+    'instance_group', 'max_batch_size', 'satisfies_constraints',
+    'perf_throughput', 'perf_latency_p99'
+]
 DEFAULT_GPU_OUTPUT_FIELDS = [
     'model_name', 'gpu_uuid', 'batch_size', 'concurrency', 'model_config_path',
+    'instance_group', 'satisfies_constraints', 'gpu_used_memory',
+    'gpu_utilization', 'gpu_power_usage'
+]
+DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS = [
+    'model_name', 'gpu_uuid', 'batch_size', 'request_rate', 'model_config_path',
     'instance_group', 'satisfies_constraints', 'gpu_used_memory',
     'gpu_utilization', 'gpu_power_usage'
 ]

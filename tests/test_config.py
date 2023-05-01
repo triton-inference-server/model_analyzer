@@ -2039,6 +2039,29 @@ profile_models:
 
         self._test_request_rate_config_conflicts(base_args, yaml_content)
 
+    def test_mixing_request_rate_and_concurrency(self):
+        """
+        Test that mixing models parameters of request-rate and concurrency is illegal
+        """
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli-repository',
+            '-f', 'path-to-config-file'
+        ]
+
+        yaml_content = """
+        profile_models:
+        
+          resnet50_libtorch:
+            parameters:
+              concurrency: 4
+          add_sub:
+            parameters:
+              request_rate: 16
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand='profile')
+
     def _test_request_rate_config_conflicts(self, base_args: List[Any],
                                             yaml_content: str) -> None:
         self._test_arg_conflict(base_args, yaml_content,

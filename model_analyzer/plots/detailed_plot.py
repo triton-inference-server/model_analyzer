@@ -103,7 +103,7 @@ class DetailedPlot:
 
     def add_run_config_measurement(self, run_config_measurement):
         """
-        Adds a measurment to this plot
+        Adds a measurement to this plot
 
         Parameters
         ----------
@@ -113,9 +113,19 @@ class DetailedPlot:
         """
 
         # TODO-TMA-568: This needs to be updated because there will be multiple model configs
-        self._data['concurrency'].append(
-            run_config_measurement.model_specific_pa_params()[0]
-            ['concurrency-range'])
+        if 'concurrency-range' in run_config_measurement.model_specific_pa_params(
+        )[0] and run_config_measurement.model_specific_pa_params(
+        )[0]['concurrency-range']:
+            self._data['concurrency'].append(
+                run_config_measurement.model_specific_pa_params()[0]
+                ['concurrency-range'])
+
+        if 'request-rate-range' in run_config_measurement.model_specific_pa_params(
+        )[0] and run_config_measurement.model_specific_pa_params(
+        )[0]['request-rate-range']:
+            self._data['request_rate'].append(
+                run_config_measurement.model_specific_pa_params()[0]
+                ['request-rate-range'])
 
         self._data['perf_throughput'].append(
             run_config_measurement.get_non_gpu_metric_value(
@@ -135,13 +145,23 @@ class DetailedPlot:
         on this plot's Axes object
         """
 
-        # Sort the data by concurrency
-        concurrency_sort_indices = list(
-            zip(*sorted(enumerate(self._data['concurrency']),
-                        key=lambda x: x[1])))[0]
+        # Need to change the default x-axis plot title for request rates
+        if 'request_rate' in self._data and self._data['request_rate'][0]:
+            self._ax_latency.set_xlabel('Client Request Rate')
+
+        # Sort the data by request rate or concurrency
+        if 'request_rate' in self._data and self._data['request_rate'][0]:
+            print(f"\n\nFound request rate: {self._data['request_rate']}\n\n")
+            sort_indices = list(
+                zip(*sorted(enumerate(self._data['request_rate']),
+                            key=lambda x: x[1])))[0]
+        else:
+            sort_indices = list(
+                zip(*sorted(enumerate(self._data['concurrency']),
+                            key=lambda x: x[1])))[0]
 
         sorted_data = {
-            key: [data_list[i] for i in concurrency_sort_indices
+            key: [data_list[i] for i in sort_indices
                  ] for key, data_list in self._data.items()
         }
 
@@ -153,11 +173,14 @@ class DetailedPlot:
             ]))
         bottoms = None
 
-        sorted_data['concurrency'] = list(map(str, sorted_data['concurrency']))
+        if 'request_rate' in self._data:
+            sorted_data['indices'] = list(map(str, sorted_data['request_rate']))
+        else:
+            sorted_data['indices'] = list(map(str, sorted_data['concurrency']))
 
         # Plot latency breakdown with concurrency casted as string to make uniform x
         for metric, label in labels.items():
-            self._ax_latency.bar(sorted_data['concurrency'],
+            self._ax_latency.bar(sorted_data['indices'],
                                  sorted_data[metric],
                                  width=self._bar_width,
                                  label=label,
@@ -171,7 +194,7 @@ class DetailedPlot:
 
         # Plot the inference line
         inference_line = self._ax_throughput.plot(
-            sorted_data['concurrency'],
+            sorted_data['indices'],
             sorted_data['perf_throughput'],
             label='Inferences/second',
             marker='o',
@@ -190,8 +213,7 @@ class DetailedPlot:
                                 bbox_to_anchor=(self._legend_x, self._legend_y),
                                 prop=dict(size=self._legend_font_size))
         # Annotate inferences
-        for x, y in zip(sorted_data['concurrency'],
-                        sorted_data['perf_throughput']):
+        for x, y in zip(sorted_data['indices'], sorted_data['perf_throughput']):
             self._ax_throughput.annotate(
                 str(round(y, 2)),
                 xy=(x, y),
