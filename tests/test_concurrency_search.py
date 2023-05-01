@@ -14,6 +14,8 @@
 
 from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
 
+from model_analyzer.constants import THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES
+
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.concurrency_search import ConcurrencySearch
 
@@ -27,7 +29,17 @@ from .common import test_result_collector as trc
 class TestConcurrencySearch(trc.TestResultCollector):
 
     def setUp(self):
-        NotImplemented
+        args = ['model-analyzer', 'profile', '--profile-models', 'modelA']
+        yaml_str = ''
+        config = evaluate_mock_config(args, yaml_str)
+
+        self._min_concurrency_index = int(
+            log2(config.run_config_search_min_concurrency))
+        self._max_concurrency_index = int(
+            log2(config.run_config_search_max_concurrency))
+
+        self._concurrency_search = ConcurrencySearch(config)
+        self._concurrencies = []
 
     def tearDown(self):
         patch.stopall()
@@ -37,32 +49,49 @@ class TestConcurrencySearch(trc.TestResultCollector):
         Test sweeping concurrency from min to max, when no constraints are present
         and throughput is increasing
         """
-        args = ['model-analyzer', 'profile', '--profile-models', 'modelA']
-        yaml_str = ''
-        config = evaluate_mock_config(args, yaml_str)
+        for concurrency in self._concurrency_search.search_concurrencies():
+            self._concurrencies.append(concurrency)
 
-        run_config_measurements = []
-        concurrency_search = ConcurrencySearch(config, run_config_measurements)
+            self._concurrency_search.add_run_config_measurement(
+                run_config_measurement=self._construct_rcm(
+                    throughput=100 * concurrency,
+                    latency=10,
+                    concurrency=concurrency))
 
-        concurrencies = []
-        for concurrency in concurrency_search.search_concurrencies():
-            concurrencies.append(concurrency)
-            run_config_measurements.append(
-                self._construct_rcm(throughput=100 * concurrency,
-                                    latency=10,
-                                    concurrency=concurrency))
+        expected_concurrencies = [
+            2**c for c in range(self._min_concurrency_index,
+                                self._max_concurrency_index + 1)
+        ]
 
-        min_concurrency_index = int(
-            log2(config.run_config_search_min_concurrency))
-        max_concurrency_index = int(
-            log2(config.run_config_search_max_concurrency))
+        self.assertEqual(self._concurrencies, expected_concurrencies)
+
+    def test_basic_saturating_sweep(self):
+        """
+        Test sweeping concurrency from min to max, when no constraints are present
+        and throughput increases and then saturates
+        """
+
+        # [100, 200, 400, 800, 1000, 1000,...]
+        throughputs = [
+            100 * 2**c if c < 4 else 1000 for c in range(
+                self._min_concurrency_index, self._max_concurrency_index + 1)
+        ]
+
+        for i, concurrency in enumerate(
+                self._concurrency_search.search_concurrencies()):
+            self._concurrencies.append(concurrency)
+
+            self._concurrency_search.add_run_config_measurement(
+                run_config_measurement=self._construct_rcm(
+                    throughput=throughputs[i],
+                    latency=10,
+                    concurrency=concurrency))
 
         expected_concurrencies = [
             2**c
-            for c in range(min_concurrency_index, max_concurrency_index + 1)
+            for c in range(4 + THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES)
         ]
-
-        self.assertEqual(concurrencies, expected_concurrencies)
+        self.assertEqual(self._concurrencies, expected_concurrencies)
 
     def _construct_rcm(self, throughput: int, latency: int,
                        concurrency: int) -> RunConfigMeasurement:
@@ -79,8 +108,8 @@ class TestConcurrencySearch(trc.TestResultCollector):
         }]
 
         return construct_run_config_measurement(
-            model_name=MagicMock(),
-            model_config_names=MagicMock(),
+            model_name="test_model",
+            model_config_names=["test_model_config_0"],
             model_specific_pa_params=self.model_specific_pa_params,
             gpu_metric_values=MagicMock(),
             non_gpu_metric_values=self.rcm0_non_gpu_metric_values,

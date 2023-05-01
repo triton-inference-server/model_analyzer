@@ -20,7 +20,7 @@ from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from math import log2
 
 import logging
-from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.constants import LOGGER_NAME, THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -34,21 +34,21 @@ class ConcurrencySearch():
         around the boundary if/when the constraint is violated
     """
 
-    def __init__(
-            self, config: ConfigCommandProfile,
-            run_config_measurements: List[Optional[RunConfigMeasurement]]
-    ) -> None:
+    def __init__(self, config: ConfigCommandProfile) -> None:
         """
         Parameters
         ----------
         config: ConfigCommandProfile
             Profile configuration information
-        run_config_measurements: List of RunConfigMeasurement
-            List of RunConfigMeasurements
         """
         self._config = config
-        self._run_config_measurements = run_config_measurements
+
+        self._run_config_measurements = []
         self._binary_search_required = False
+
+    def add_run_config_measurement(
+            self, run_config_measurement: RunConfigMeasurement) -> None:
+        self._run_config_measurements.append(run_config_measurement)
 
     def search_concurrencies(self) -> Generator[int, None, None]:
         yield from self._perform_exponential_concurrency_sweep()
@@ -74,4 +74,16 @@ class ConcurrencySearch():
         yield 0
 
     def _has_objective_gain_saturated_or_constraint_violated(self) -> bool:
-        return False
+        # FIXME: need to consider constraints first!
+        if len(self._run_config_measurements
+              ) < THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES:
+            return False
+
+        first_rcm = self._run_config_measurements[
+            -THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES]
+        best_rcm = max(self._run_config_measurements[
+            -THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES:])
+
+        gain = first_rcm.compare_measurements(best_rcm)
+
+        return gain < THROUGHPUT_MINIMUM_GAIN
