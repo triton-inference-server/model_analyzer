@@ -17,7 +17,7 @@ from typing import Optional
 from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
 
 from model_analyzer.constants import THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES
-from model_analyzer.config.input.config_defaults import DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, DEFAULT_RUN_CONFIG_MIN_CONCURRENCY
+from model_analyzer.config.input.config_defaults import DEFAULT_RUN_CONFIG_MIN_CONCURRENCY, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
@@ -40,6 +40,10 @@ class TestConcurrencySearch(trc.TestResultCollector):
         self._max_concurrency_index = int(
             log2(DEFAULT_RUN_CONFIG_MAX_CONCURRENCY))
 
+        self._expected_concurrencies = [
+            2**c for c in range(self._min_concurrency_index,
+                                self._max_concurrency_index + 1)
+        ]
         self._concurrencies = []
 
     def tearDown(self):
@@ -64,12 +68,7 @@ class TestConcurrencySearch(trc.TestResultCollector):
                     concurrency=concurrency,
                     constraint_manager=constraint_manager))
 
-        expected_concurrencies = [
-            2**c for c in range(self._min_concurrency_index,
-                                self._max_concurrency_index + 1)
-        ]
-
-        self.assertEqual(self._concurrencies, expected_concurrencies)
+        self.assertEqual(self._concurrencies, self._expected_concurrencies)
 
     def test_saturating_sweep(self):
         """
@@ -112,8 +111,8 @@ class TestConcurrencySearch(trc.TestResultCollector):
         constraint_manager = ConstraintManager(config)
         concurrency_search = ConcurrencySearch(config)
 
-        expected_concurrencies = [1, 2, 4, 8, 16, 12, 10, 9]
-        latencies = [10, 20, 40, 80, 160, 120, 100, 90]
+        self._expected_concurrencies.extend([12, 10, 9])
+        latencies = [10 * c for c in self._expected_concurrencies]
 
         for i, concurrency in enumerate(
                 concurrency_search.search_concurrencies()):
@@ -126,7 +125,7 @@ class TestConcurrencySearch(trc.TestResultCollector):
                     concurrency=concurrency,
                     constraint_manager=constraint_manager))
 
-        self.assertEqual(self._concurrencies, expected_concurrencies)
+        self.assertEqual(self._concurrencies, self._expected_concurrencies)
 
     def test_sweep_with_constraints_decrease_then_increase(self):
         """
@@ -137,8 +136,8 @@ class TestConcurrencySearch(trc.TestResultCollector):
         constraint_manager = ConstraintManager(config)
         concurrency_search = ConcurrencySearch(config)
 
-        expected_concurrencies = [1, 2, 4, 8, 16, 12, 14, 15]
-        latencies = [10, 20, 40, 80, 160, 120, 140, 150]
+        self._expected_concurrencies.extend([12, 14, 15])
+        latencies = [10 * c for c in self._expected_concurrencies]
 
         for i, concurrency in enumerate(
                 concurrency_search.search_concurrencies()):
@@ -151,7 +150,7 @@ class TestConcurrencySearch(trc.TestResultCollector):
                     concurrency=concurrency,
                     constraint_manager=constraint_manager))
 
-        self.assertEqual(self._concurrencies, expected_concurrencies)
+        self.assertEqual(self._concurrencies, self._expected_concurrencies)
 
     def test_sweep_with_constraints_hitting_limit(self):
         """
@@ -163,10 +162,8 @@ class TestConcurrencySearch(trc.TestResultCollector):
         constraint_manager = ConstraintManager(config)
         concurrency_search = ConcurrencySearch(config)
 
-        expected_concurrencies = [
-            1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 768, 896, 960, 992, 976
-        ]
-        latencies = expected_concurrencies
+        self._expected_concurrencies.extend([768, 896, 960, 992, 976])
+        latencies = self._expected_concurrencies
 
         for i, concurrency in enumerate(
                 concurrency_search.search_concurrencies()):
@@ -179,7 +176,7 @@ class TestConcurrencySearch(trc.TestResultCollector):
                     concurrency=concurrency,
                     constraint_manager=constraint_manager))
 
-        self.assertEqual(self._concurrencies, expected_concurrencies)
+        self.assertEqual(self._concurrencies, self._expected_concurrencies)
 
     def test_not_adding_measurements(self):
         """
