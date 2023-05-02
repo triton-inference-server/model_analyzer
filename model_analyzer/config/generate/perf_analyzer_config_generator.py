@@ -259,9 +259,14 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if self._early_exit_enable and not self._parameter_throughput_gain_valid(
         ):
             if not self._parameter_warning_printed:
-                logger.info(
-                    "No longer increasing concurrency as throughput has plateaued"
-                )
+                if self._config_specifies_request_rate():
+                    logger.info(
+                        "No longer increasing request rate as throughput has plateaued"
+                    )
+                else:
+                    logger.info(
+                        "No longer increasing concurrency as throughput has plateaued"
+                    )
                 self._parameter_warning_printed = True
             return True
         return False

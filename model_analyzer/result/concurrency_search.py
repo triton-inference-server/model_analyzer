@@ -53,6 +53,8 @@ class ConcurrencySearch():
         self._run_config_measurements: List[RunConfigMeasurement] = []
         self._binary_search_required = False
         self._concurrencies: List[int] = []
+        self._last_failing_concurrency = None
+        self._last_passing_concurrency = None
 
     def add_run_config_measurement(
             self, run_config_measurement: RunConfigMeasurement) -> None:
@@ -63,54 +65,81 @@ class ConcurrencySearch():
         self._run_config_measurements.append(run_config_measurement)
 
     def search_concurrencies(self) -> Generator[int, None, None]:
-        for concurrency in (2**i for i in range(
-                self._min_concurrency_index, self._max_concurrency_index + 1)):
-            if not self._has_objective_gain_saturated_or_constraint_violated():
-                self._concurrencies.append(concurrency)
-                yield concurrency
-            else:
-                break
+        yield from self._perform_concurrency_sweep()
 
-        # This is to check if the final concurrency violated constraints
+        # This is to check if the max (final) concurrency swept violated constraints
         self._has_objective_gain_saturated_or_constraint_violated()
 
         if self._binary_search_required:
             yield from self._perform_binary_concurrency_search()
 
+    def _perform_concurrency_sweep(self) -> Generator[int, None, None]:
+        for concurrency in (2**i for i in range(
+                self._min_concurrency_index, self._max_concurrency_index + 1)):
+            if not self._has_objective_gain_saturated_or_constraint_violated():
+                self._concurrencies.append(concurrency)
+                yield concurrency
+
     def _perform_binary_concurrency_search(self) -> Generator[int, None, None]:
-        last_failing_concurrency = self._concurrencies[-1]
-        last_passing_concurrency = self._concurrencies[-2] if len(
+        self._last_failing_concurrency = self._concurrencies[-1]
+        self._last_passing_concurrency = self._concurrencies[-2] if len(
             self._concurrencies) > 1 else 1
 
         # FIXME: the max value will come from the config
         for i in range(0, 5):
-            if self._run_config_measurements[-1].is_passing_constraints():
-                last_passing_concurrency = self._concurrencies[-1]
-                new_concurrency = int(
-                    (last_failing_concurrency + self._concurrencies[-1]) / 2)
-            else:
-                last_failing_concurrency = self._concurrencies[-1]
-                new_concurrency = int(
-                    (last_passing_concurrency + self._concurrencies[-1]) / 2)
+            concurrency = self._determine_next_binary_concurrency()
 
-            if new_concurrency != self._concurrencies[-1]:
-                self._concurrencies.append(new_concurrency)
-                yield new_concurrency
+            if concurrency != self._concurrencies[-1]:
+                self._concurrencies.append(concurrency)
+                yield concurrency
+
+    def _determine_next_binary_concurrency(self) -> int:
+        if self._run_config_measurements[-1].is_passing_constraints():
+            self._last_passing_concurrency = self._concurrencies[-1]
+            concurrency = int(
+                (self._last_failing_concurrency + self._concurrencies[-1]) / 2)
+        else:
+            self._last_failing_concurrency = self._concurrencies[-1]
+            concurrency = int(
+                (self._last_passing_concurrency + self._concurrencies[-1]) / 2)
+
+        return concurrency
 
     def _has_objective_gain_saturated_or_constraint_violated(self) -> bool:
+        self._check_measurement_count()
+
+        if self._constraint_violated():
+            return True
+        elif not self._minimum_tries_reached():
+            return False
+        else:
+            return self._objective_gain_saturated()
+
+    def _check_measurement_count(self) -> None:
         if len(self._run_config_measurements) != len(self._concurrencies):
             raise TritonModelAnalyzerException(f"Internal Measurement count: {self._concurrencies}, doesn't match number " \
                 f"of measurements added: {len(self._run_config_measurements)}.")
 
+    def _constraint_violated(self) -> bool:
         if self._run_config_measurements and not self._run_config_measurements[
                 -1].is_passing_constraints():
             self._binary_search_required = True
             return True
+        else:
+            return False
 
+    def _minimum_tries_reached(self) -> bool:
         if len(self._run_config_measurements
               ) < THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES:
             return False
+        else:
+            return True
 
+    def _objective_gain_saturated(self) -> bool:
+        gain = self._calculate_gain()
+        return gain < THROUGHPUT_MINIMUM_GAIN
+
+    def _calculate_gain(self) -> float:
         first_rcm = self._run_config_measurements[
             -THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES]
         best_rcm = max(self._run_config_measurements[
@@ -118,4 +147,4 @@ class ConcurrencySearch():
 
         gain = first_rcm.compare_measurements(best_rcm)
 
-        return gain < THROUGHPUT_MINIMUM_GAIN
+        return gain
