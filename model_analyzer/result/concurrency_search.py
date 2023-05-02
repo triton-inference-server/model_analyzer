@@ -45,7 +45,10 @@ class ConcurrencySearch():
         config: ConfigCommandProfile
             Profile configuration information
         """
-        self._config = config
+        self._min_concurrency_index = int(
+            log2(config.run_config_search_min_concurrency))
+        self._max_concurrency_index = int(
+            log2(config.run_config_search_max_concurrency))
 
         self._run_config_measurements = []
         self._binary_search_required = False
@@ -60,25 +63,16 @@ class ConcurrencySearch():
         self._run_config_measurements.append(run_config_measurement)
 
     def search_concurrencies(self) -> Generator[int, None, None]:
-        yield from self._perform_exponential_concurrency_sweep()
-
-        if self._binary_search_required:
-            yield from self._perform_binary_concurrency_search()
-
-    def _perform_exponential_concurrency_sweep(
-            self) -> Generator[int, None, None]:
-        min_concurrency_index = int(
-            log2(self._config.run_config_search_min_concurrency))
-        max_concurrency_index = int(
-            log2(self._config.run_config_search_max_concurrency))
-
-        for concurrency in (
-                2**i
-                for i in range(min_concurrency_index, max_concurrency_index +
-                               1)):
+        for concurrency in (2**i for i in range(
+                self._min_concurrency_index, self._max_concurrency_index + 1)):
             if not self._has_objective_gain_saturated_or_constraint_violated():
                 self._measurement_count += 1
                 yield concurrency
+            else:
+                break
+
+        if self._binary_search_required:
+            yield self._perform_binary_concurrency_search()
 
     def _perform_binary_concurrency_search(self) -> Generator[int, None, None]:
         yield 0
@@ -88,7 +82,11 @@ class ConcurrencySearch():
             raise TritonModelAnalyzerException(f"Internal Measurement count: {self._measurement_count}, doesn't match number " \
                 f"of measurements added: {len(self._run_config_measurements)}.")
 
-        # FIXME: need to consider constraints first!
+        if self._run_config_measurements and not self._run_config_measurements[
+                -1].is_passing_constraints():
+            self._binary_search_required = True
+            return True
+
         if len(self._run_config_measurements
               ) < THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES:
             return False
