@@ -20,6 +20,7 @@ from model_analyzer.constants import THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_
 from model_analyzer.config.input.config_defaults import DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, DEFAULT_RUN_CONFIG_MIN_CONCURRENCY
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.result.concurrency_search import ConcurrencySearch
@@ -102,29 +103,81 @@ class TestConcurrencySearch(trc.TestResultCollector):
         ]
         self.assertEqual(self._concurrencies, expected_concurrencies)
 
-    def test_sweep_with_constraints(self):
+    def test_sweep_with_constraints_decreasing(self):
         """
-        Test sweeping concurrency from min to max, with 100ms latency constraint
-        and throughput is linearly increasing
+        Test sweeping concurrency from min to max, with 95ms latency constraint
+        and throughput is linearly increasing - which causes a decreasing binary search
         """
-        config = self._create_single_model_with_constraints()
+        config = self._create_single_model_with_constraints('95')
         constraint_manager = ConstraintManager(config)
         concurrency_search = ConcurrencySearch(config)
 
-        for concurrency in concurrency_search.search_concurrencies():
+        expected_concurrencies = [1, 2, 4, 8, 16, 12, 10, 9]
+        latencies = [10, 20, 40, 80, 160, 120, 100, 90]
+
+        for i, concurrency in enumerate(
+                concurrency_search.search_concurrencies()):
             self._concurrencies.append(concurrency)
 
             concurrency_search.add_run_config_measurement(
                 run_config_measurement=self._construct_rcm(
                     throughput=100 * concurrency,
-                    latency=10,
+                    latency=latencies[i],
                     concurrency=concurrency,
                     constraint_manager=constraint_manager))
 
+        self.assertEqual(self._concurrencies, expected_concurrencies)
+
+    def test_sweep_with_constraints_decrease_then_increase(self):
+        """
+        Test sweeping concurrency from min to max, with 155ms latency constraint
+        and throughput is linearly increasing - which causes a decreasing, then increasing binary search  
+        """
+        config = self._create_single_model_with_constraints('155')
+        constraint_manager = ConstraintManager(config)
+        concurrency_search = ConcurrencySearch(config)
+
+        expected_concurrencies = [1, 2, 4, 8, 16, 12, 14, 15]
+        latencies = [10, 20, 40, 80, 160, 120, 140, 150]
+
+        for i, concurrency in enumerate(
+                concurrency_search.search_concurrencies()):
+            self._concurrencies.append(concurrency)
+
+            concurrency_search.add_run_config_measurement(
+                run_config_measurement=self._construct_rcm(
+                    throughput=100 * concurrency,
+                    latency=latencies[i],
+                    concurrency=concurrency,
+                    constraint_manager=constraint_manager))
+
+        self.assertEqual(self._concurrencies, expected_concurrencies)
+
+    def test_sweep_with_constraints_hitting_limit(self):
+        """
+        Test sweeping concurrency from min to max, with 970ms latency constraint
+        and throughput matches concurrency, this will cause BCS to 
+        quit after 5 attempts
+        """
+        config = self._create_single_model_with_constraints('970')
+        constraint_manager = ConstraintManager(config)
+        concurrency_search = ConcurrencySearch(config)
+
         expected_concurrencies = [
-            2**c for c in range(self._min_concurrency_index,
-                                self._max_concurrency_index + 1)
+            1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 768, 896, 960, 992, 976
         ]
+        latencies = expected_concurrencies
+
+        for i, concurrency in enumerate(
+                concurrency_search.search_concurrencies()):
+            self._concurrencies.append(concurrency)
+
+            concurrency_search.add_run_config_measurement(
+                run_config_measurement=self._construct_rcm(
+                    throughput=100 * concurrency,
+                    latency=latencies[i],
+                    concurrency=concurrency,
+                    constraint_manager=constraint_manager))
 
         self.assertEqual(self._concurrencies, expected_concurrencies)
 
@@ -155,10 +208,11 @@ class TestConcurrencySearch(trc.TestResultCollector):
 
         return config
 
-    def _create_single_model_with_constraints(self):
+    def _create_single_model_with_constraints(
+            self, latency_budget: str) -> ConfigCommandProfile:
         args = [
             'model-analyzer', 'profile', '--profile-models', 'test_model',
-            '--latency-budget', '100'
+            '--latency-budget', latency_budget
         ]
         yaml_str = ''
         config = evaluate_mock_config(args, yaml_str)
