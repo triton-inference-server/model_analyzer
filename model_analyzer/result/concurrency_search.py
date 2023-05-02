@@ -50,9 +50,9 @@ class ConcurrencySearch():
         self._max_concurrency_index = int(
             log2(config.run_config_search_max_concurrency))
 
-        self._run_config_measurements = []
+        self._run_config_measurements: List[RunConfigMeasurement] = []
         self._binary_search_required = False
-        self._concurrencies = []
+        self._concurrencies: List[int] = []
 
     def add_run_config_measurement(
             self, run_config_measurement: RunConfigMeasurement) -> None:
@@ -71,7 +71,7 @@ class ConcurrencySearch():
             else:
                 break
 
-        # This is to check if the max concurrency violated constraints
+        # This is to check if the final concurrency violated constraints
         self._has_objective_gain_saturated_or_constraint_violated()
 
         if self._binary_search_required:
