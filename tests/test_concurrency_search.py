@@ -182,11 +182,10 @@ class TestConcurrencySearch(trc.TestResultCollector):
         self.assertEqual(self._concurrencies, self._expected_concurrencies)
 
     def test_sweep_with_constraints_hitting_limit(self):
-        # FIXME: TMA-1182 Replace 5 with config default
         """
         Test sweeping concurrency from min to max, with 970ms latency constraint
         and throughput matches concurrency, this will cause BCS to 
-        quit after 5 attempts 
+        quit after DEFAULT_RUN_CONFIG_MAX_BINARY_SEARCH_STEPS (5) attempts 
         """
         config = self._create_single_model_with_constraints('970')
         constraint_manager = ConstraintManager(config)

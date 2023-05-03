@@ -22,6 +22,7 @@ from math import log2
 
 import logging
 from model_analyzer.constants import LOGGER_NAME, THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES
+from model_analyzer.config.input.config_defaults import DEFAULT_RUN_CONFIG_MAX_BINARY_SEARCH_STEPS
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -143,8 +144,7 @@ class ConcurrencySearch():
         # concurrency that failed - so we expect this to be at the end of the list
         self._concurrencies.append(self._last_failing_concurrency)
 
-        # FIXME: the max value will come from the config
-        for i in range(0, 5):
+        for i in range(0, DEFAULT_RUN_CONFIG_MAX_BINARY_SEARCH_STEPS):
             concurrency = self._determine_next_binary_concurrency()
 
             if concurrency != self._concurrencies[-1]:
