@@ -182,7 +182,7 @@ class TestConcurrencySearch(trc.TestResultCollector):
         self.assertEqual(self._concurrencies, self._expected_concurrencies)
 
     def test_sweep_with_constraints_hitting_limit(self):
-        # FIXME: Replace 5 with config default
+        # FIXME: TMA-1182 Replace 5 with config default
         """
         Test sweeping concurrency from min to max, with 970ms latency constraint
         and throughput matches concurrency, this will cause BCS to 
