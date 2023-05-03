@@ -28,7 +28,7 @@ logger = logging.getLogger(LOGGER_NAME)
 
 class ConcurrencySearch():
     """
-    Determines the next concurrency value to use when searching through
+    Generates the next concurrency value to use when searching through
     RunConfigMeasurements for the best value (according to the users objective)
       - Will sweep from by powers of two from min to max concurrency
       - If the user specifies a constraint, the algorithm will perform a binary search 
@@ -76,17 +76,17 @@ class ConcurrencySearch():
     def _perform_concurrency_sweep(self) -> Generator[int, None, None]:
         for concurrency in (2**i for i in range(
                 self._min_concurrency_index, self._max_concurrency_index + 1)):
-            if self._continue_concurrency_sweep():
+            if self._should_continue_concurrency_sweep():
                 self._concurrencies.append(concurrency)
                 yield concurrency
             else:
                 logger.info(
                     "Terminating concurrency sweep - throughput is decreasing")
 
-    def _continue_concurrency_sweep(self) -> bool:
+    def _should_continue_concurrency_sweep(self) -> bool:
         self._check_measurement_count()
 
-        if not self._minimum_tries_reached():
+        if not self._are_minimum_tries_reached():
             return True
         else:
             return not self._has_objective_gain_saturated()
@@ -96,7 +96,7 @@ class ConcurrencySearch():
             raise TritonModelAnalyzerException(f"Internal Measurement count: {self._concurrencies}, doesn't match number " \
                 f"of measurements added: {len(self._run_config_measurements)}.")
 
-    def _minimum_tries_reached(self) -> bool:
+    def _are_minimum_tries_reached(self) -> bool:
         if len(self._run_config_measurements
               ) < THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES:
             return False
@@ -118,16 +118,25 @@ class ConcurrencySearch():
         return gain
 
     def _was_constraint_violated(self) -> bool:
-        for i, run_config_measurement in enumerate(
-                self._run_config_measurements):
-            if not run_config_measurement.is_passing_constraints():
+        for i in range(len(self._run_config_measurements) - 1, 1, -1):
+            if self._at_constraint_failure_boundary(i):
                 self._last_failing_concurrency = self._concurrencies[i]
-                self._last_passing_concurrency = self._concurrencies[
-                    i - 1] if i != 0 else 0
-
+                self._last_passing_concurrency = self._concurrencies[i - 1]
                 return True
 
-        return False
+        if not self._run_config_measurements[0].is_passing_constraints():
+            self._last_failing_concurrency = self._concurrencies[i]
+            self._last_passing_concurrency = 0
+            return True
+        else:
+            return False
+
+    def _at_constraint_failure_boundary(self, index: int) -> bool:
+        at_failure_boundary = not self._run_config_measurements[
+            index].is_passing_constraints() and self._run_config_measurements[
+                index - 1].is_passing_constraints()
+
+        return at_failure_boundary
 
     def _perform_binary_concurrency_search(self) -> Generator[int, None, None]:
         # This is needed because we are going to restart the search from the

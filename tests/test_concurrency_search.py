@@ -78,11 +78,12 @@ class TestConcurrencySearch(trc.TestResultCollector):
         config = self._create_single_model_no_constraints()
         constraint_manager = ConstraintManager(config)
         concurrency_search = ConcurrencySearch(config)
+        INCREASE_THROUGHPUT_COUNT = 4
 
         # [100, 200, 400, 800, 1000, 1000,...]
         throughputs = [
-            100 * 2**c if c < 4 else 1000 for c in range(
-                self._min_concurrency_index, self._max_concurrency_index + 1)
+            100 * 2**c if c < INCREASE_THROUGHPUT_COUNT else 1000 for c in
+            range(self._min_concurrency_index, self._max_concurrency_index + 1)
         ]
 
         for i, concurrency in enumerate(
@@ -98,7 +99,8 @@ class TestConcurrencySearch(trc.TestResultCollector):
 
         expected_concurrencies = [
             2**c
-            for c in range(4 + THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES)
+            for c in range(INCREASE_THROUGHPUT_COUNT +
+                           THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES)
         ]
         self.assertEqual(self._concurrencies, expected_concurrencies)
 
@@ -152,11 +154,39 @@ class TestConcurrencySearch(trc.TestResultCollector):
 
         self.assertEqual(self._concurrencies, self._expected_concurrencies)
 
+    def test_sweep_with_multiple_violation_areas(self):
+        """
+        Test sweeping concurrency from min to max, with 155ms latency constraint
+        with violations in two separate locations
+        """
+        config = self._create_single_model_with_constraints('155')
+        constraint_manager = ConstraintManager(config)
+        concurrency_search = ConcurrencySearch(config)
+
+        self._expected_concurrencies.extend([12, 14, 15])
+        latencies = [10 * c for c in self._expected_concurrencies]
+        # this adds an early constraint violation which should be ignored
+        latencies[1] = 200
+
+        for i, concurrency in enumerate(
+                concurrency_search.search_concurrencies()):
+            self._concurrencies.append(concurrency)
+
+            concurrency_search.add_run_config_measurement(
+                run_config_measurement=self._construct_rcm(
+                    throughput=100 * concurrency,
+                    latency=latencies[i],
+                    concurrency=concurrency,
+                    constraint_manager=constraint_manager))
+
+        self.assertEqual(self._concurrencies, self._expected_concurrencies)
+
     def test_sweep_with_constraints_hitting_limit(self):
+        # FIXME: Replace 5 with config default
         """
         Test sweeping concurrency from min to max, with 970ms latency constraint
         and throughput matches concurrency, this will cause BCS to 
-        quit after 5 attempts
+        quit after 5 attempts 
         """
         config = self._create_single_model_with_constraints('970')
         constraint_manager = ConstraintManager(config)
@@ -225,7 +255,6 @@ class TestConcurrencySearch(trc.TestResultCollector):
         }]
 
         self.rcm0_non_gpu_metric_values = [{
-            # modelA_config_0
             "perf_throughput": throughput,
             "perf_latency_p99": latency,
             "cpu_used_ram": 1000
