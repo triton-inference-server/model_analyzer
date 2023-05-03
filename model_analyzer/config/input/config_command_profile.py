@@ -36,7 +36,7 @@ from .config_defaults import \
     DEFAULT_PERF_OUTPUT_FLAG, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, DEFAULT_RUN_CONFIG_MIN_CONCURRENCY, \
     DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE, DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE, \
     DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE, DEFAULT_RUN_CONFIG_SEARCH_MODE, \
-    DEFAULT_REQUEST_RATE_SEARCH_ENABLE, \
+    DEFAULT_RUN_CONFIG_MAX_BINARY_SEARCH_STEPS, DEFAULT_REQUEST_RATE_SEARCH_ENABLE, \
     DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT, \
     DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE, DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE, \
     DEFAULT_RUN_CONFIG_SEARCH_DISABLE, DEFAULT_TRITON_DOCKER_IMAGE, DEFAULT_TRITON_GRPC_ENDPOINT, \
@@ -595,6 +595,15 @@ class ConfigCommandProfile(ConfigCommand):
                 default_value=DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE,
                 description=
                 "Value for the model's max_batch_size that run config search will start from."
+            ))
+        self._add_config(
+            ConfigField(
+                'run_config_search_max_binary_search_steps',
+                flags=['--run-config-search-max-binary-search-steps'],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_RUN_CONFIG_MAX_BINARY_SEARCH_STEPS,
+                description=
+                "Maximum number of steps take during the binary concurrency search."
             ))
         self._add_config(
             ConfigField(
