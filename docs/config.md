@@ -212,6 +212,9 @@ bls_composing_models: <comma-delimited-string-list>
 # Maximum request rate used for the automatic/quick config search
 [ run_config_search_max_request_rate: <int> | default: 8092 ]
 
+# Maximum number of steps taken during binary concurrency search
+[ run_config_search_max_bcs_steps: <int> | default: 5 ]
+
 # Disables automatic config search
 [ run_config_search_disable: <bool> | default: false ]
 

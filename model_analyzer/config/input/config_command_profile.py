@@ -603,7 +603,7 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=ConfigPrimitive(int),
                 default_value=DEFAULT_RUN_CONFIG_MAX_BCS_STEPS,
                 description=
-                "Maximum number of steps taken in the binary concurrency search."
+                "Maximum number of steps take during the binary concurrency search."
             ))
         self._add_config(
             ConfigField(
