@@ -76,17 +76,20 @@ class ConcurrencySearch():
     def _perform_concurrency_sweep(self) -> Generator[int, None, None]:
         for concurrency in (2**i for i in range(
                 self._min_concurrency_index, self._max_concurrency_index + 1)):
-            if not self._has_objective_gain_saturated():
+            if self._continue_concurrency_sweep():
                 self._concurrencies.append(concurrency)
                 yield concurrency
+            else:
+                logger.info(
+                    "Terminating concurrency sweep - throughput is decreasing")
 
-    def _has_objective_gain_saturated(self) -> bool:
+    def _continue_concurrency_sweep(self) -> bool:
         self._check_measurement_count()
 
         if not self._minimum_tries_reached():
-            return False
+            return True
         else:
-            return self._objective_gain_saturated()
+            return not self._has_objective_gain_saturated()
 
     def _check_measurement_count(self) -> None:
         if len(self._run_config_measurements) != len(self._concurrencies):
@@ -100,7 +103,7 @@ class ConcurrencySearch():
         else:
             return True
 
-    def _objective_gain_saturated(self) -> bool:
+    def _has_objective_gain_saturated(self) -> bool:
         gain = self._calculate_gain()
         return gain < THROUGHPUT_MINIMUM_GAIN
 
