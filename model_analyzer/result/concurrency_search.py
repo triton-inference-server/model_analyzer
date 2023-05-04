@@ -37,13 +37,19 @@ class ConcurrencySearch():
     Invariant: It is necessary for the user to add new measurements as they are taken
     """
 
-    def __init__(self, config: ConfigCommandProfile) -> None:
+    def __init__(self,
+                 config: ConfigCommandProfile,
+                 skip_parameter_sweep: bool = False) -> None:
         """
         Parameters
         ----------
         config: ConfigCommandProfile
             Profile configuration information
+        skip_parameter_sweep: bool
+            If true, skips the parameter sweep and only does the binary search
         """
+        self._skip_parameter_sweep = skip_parameter_sweep
+
         self._min_concurrency_index = int(
             log2(config.run_config_search_min_concurrency))
         self._max_concurrency_index = int(
@@ -82,9 +88,13 @@ class ConcurrencySearch():
                 self._concurrencies.append(concurrency)
                 yield concurrency
             else:
-                logger.info(
-                    "Terminating concurrency sweep - throughput is decreasing")
-                return
+                # We can't actually skip the sweep because the results need to be added
+                # but, we can suppress the logging messages
+                if not self._skip_parameter_sweep:
+                    logger.info(
+                        "Terminating concurrency sweep - throughput is decreasing"
+                    )
+                    return
 
     def _should_continue_concurrency_sweep(self) -> bool:
         self._check_measurement_count()
