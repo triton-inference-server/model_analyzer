@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
-
 from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
 
 from model_analyzer.constants import THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES
