@@ -27,6 +27,7 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.result.concurrency_search import ConcurrencySearch
 
 from model_analyzer.constants import LOGGER_NAME
 
@@ -130,26 +131,14 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
                 n=self._config.num_configs_per_model,
                 include_default=True)
 
-            for count, result in enumerate(top_results):
+            for result in top_results:
                 run_config = deepcopy(result.run_config())
-
-                max_concurrency_index = int(
-                    log2(self._config.run_config_search_max_concurrency))
-
-                run_config_measurements = []
-                for concurrency in (
-                        2**i for i in range(0, max_concurrency_index + 1)):
+                concurrency_search = ConcurrencySearch(self._config)
+                for concurrency in concurrency_search.search_concurrencies():
                     run_config = self._set_concurrency(run_config, concurrency)
                     yield run_config
-
-                    run_config_measurements.append(self._last_measurement)
-
-                    if not PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
-                            throughputs=run_config_measurements):
-                        logger.info(
-                            "Terminating concurrency sweep - throughput is decreasing"
-                        )
-                        break
+                    concurrency_search.add_run_config_measurement(
+                        self._last_measurement)
 
     def _set_concurrency(self, run_config: RunConfig,
                          concurrency: int) -> RunConfig:
