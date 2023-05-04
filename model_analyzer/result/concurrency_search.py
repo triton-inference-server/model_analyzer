@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Optional, Generator
+from typing import List, Optional, Generator
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
