@@ -18,7 +18,6 @@ from .config_generator_interface import ConfigGeneratorInterface
 
 from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-from model_analyzer.config.generate.perf_analyzer_config_generator import PerfAnalyzerConfigGenerator
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
@@ -31,7 +30,6 @@ from model_analyzer.result.parameter_search import ParameterSearch
 from model_analyzer.constants import LOGGER_NAME
 
 from copy import deepcopy
-from math import log2
 
 import logging
 
