@@ -15,22 +15,22 @@
 from typing import List, Optional, Generator
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile, is_request_rate_specified
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 from math import log2
 
 import logging
-from model_analyzer.constants import LOGGER_NAME, THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES
+from model_analyzer.constants import LOGGER_NAME, THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES
 
 logger = logging.getLogger(LOGGER_NAME)
 
 
-class ConcurrencySearch():
+class ParameterSearch():
     """
-    Generates the next concurrency value to use when searching through
+    Generates the next parameter value to use when searching through
     RunConfigMeasurements for the best value (according to the users objective)
-      - Will sweep from by powers of two from min to max concurrency
+      - Will sweep from by powers of two from min to max parameter
       - If the user specifies a constraint, the algorithm will perform a binary search 
         around the boundary if the constraint is violated
         
@@ -39,6 +39,7 @@ class ConcurrencySearch():
 
     def __init__(self,
                  config: ConfigCommandProfile,
+                 model_parameters: dict = {},
                  skip_parameter_sweep: bool = False) -> None:
         """
         Parameters
@@ -49,17 +50,27 @@ class ConcurrencySearch():
             If true, skips the parameter sweep and only does the binary search
         """
         self._skip_parameter_sweep = skip_parameter_sweep
+        self._parameter_is_request_rate = is_request_rate_specified(
+            config, model_parameters)
 
-        self._min_concurrency_index = int(
-            log2(config.run_config_search_min_concurrency))
-        self._max_concurrency_index = int(
-            log2(config.run_config_search_max_concurrency))
+        if self._parameter_is_request_rate:
+            self._min_parameter_index = int(
+                log2(config.run_config_search_min_request_rate))
+            self._max_parameter_index = int(
+                log2(config.run_config_search_max_request_rate))
+
+        else:
+            self._min_parameter_index = int(
+                log2(config.run_config_search_min_concurrency))
+            self._max_parameter_index = int(
+                log2(config.run_config_search_max_concurrency))
+
         self._max_binary_search_steps = config.run_config_search_max_binary_search_steps
 
         self._run_config_measurements: List[Optional[RunConfigMeasurement]] = []
-        self._concurrencies: List[int] = []
-        self._last_failing_concurrency = 0
-        self._last_passing_concurrency = 0
+        self._parameters: List[int] = []
+        self._last_failing_parameter = 0
+        self._last_passing_parameter = 0
 
     def add_run_config_measurement(
             self,
@@ -70,33 +81,38 @@ class ConcurrencySearch():
         """
         self._run_config_measurements.append(run_config_measurement)
 
-    def search_concurrencies(self) -> Generator[int, None, None]:
+    def search_parameters(self) -> Generator[int, None, None]:
         """
-        First performs a concurrency sweep, and then, if necessary, perform
-        a binary concurrency search around the point where the constraint
+        First performs a parameter sweep, and then, if necessary, perform
+        a binary parameter search around the point where the constraint
         violated
         """
-        yield from self._perform_concurrency_sweep()
+        yield from self._perform_parameter_sweep()
 
         if self._was_constraint_violated():
-            yield from self._perform_binary_concurrency_search()
+            yield from self._perform_binary_parameter_search()
 
-    def _perform_concurrency_sweep(self) -> Generator[int, None, None]:
-        for concurrency in (2**i for i in range(
-                self._min_concurrency_index, self._max_concurrency_index + 1)):
-            if self._should_continue_concurrency_sweep():
-                self._concurrencies.append(concurrency)
-                yield concurrency
+    def _perform_parameter_sweep(self) -> Generator[int, None, None]:
+        for parameter in (2**i for i in range(self._min_parameter_index,
+                                              self._max_parameter_index + 1)):
+            if self._should_continue_parameter_sweep():
+                self._parameters.append(parameter)
+                yield parameter
             else:
                 # We can't actually skip the sweep because the results need to be added
                 # but, we can suppress the logging messages
                 if not self._skip_parameter_sweep:
-                    logger.info(
-                        "Terminating concurrency sweep - throughput is decreasing"
-                    )
+                    if self._parameter_is_request_rate:
+                        logger.info(
+                            "Terminating request rate sweep - throughput is decreasing"
+                        )
+                    else:
+                        logger.info(
+                            "Terminating concurrency sweep - throughput is decreasing"
+                        )
                     return
 
-    def _should_continue_concurrency_sweep(self) -> bool:
+    def _should_continue_parameter_sweep(self) -> bool:
         self._check_measurement_count()
 
         if not self._are_minimum_tries_reached():
@@ -105,13 +121,13 @@ class ConcurrencySearch():
             return not self._has_objective_gain_saturated()
 
     def _check_measurement_count(self) -> None:
-        if len(self._run_config_measurements) != len(self._concurrencies):
-            raise TritonModelAnalyzerException(f"Internal Measurement count: {self._concurrencies}, doesn't match number " \
+        if len(self._run_config_measurements) != len(self._parameters):
+            raise TritonModelAnalyzerException(f"Internal Measurement count: {self._parameters}, doesn't match number " \
                 f"of measurements added: {len(self._run_config_measurements)}.")
 
     def _are_minimum_tries_reached(self) -> bool:
         if len(self._run_config_measurements
-              ) < THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES:
+              ) < THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES:
             return False
         else:
             return True
@@ -122,7 +138,7 @@ class ConcurrencySearch():
 
     def _calculate_gain(self) -> float:
         first_rcm = self._run_config_measurements[
-            -THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES]
+            -THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES]
 
         best_rcm = self._get_best_rcm()
 
@@ -142,7 +158,7 @@ class ConcurrencySearch():
         # Need to remove entries (None) with no result from PA before sorting
         pruned_rcms = [
             rcm for rcm in self._run_config_measurements[
-                -THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES:] if rcm
+                -THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES:] if rcm
         ]
         best_rcm = max(pruned_rcms) if pruned_rcms else None
 
@@ -151,15 +167,15 @@ class ConcurrencySearch():
     def _was_constraint_violated(self) -> bool:
         for i in range(len(self._run_config_measurements) - 1, 1, -1):
             if self._at_constraint_failure_boundary(i):
-                self._last_failing_concurrency = self._concurrencies[i]
-                self._last_passing_concurrency = self._concurrencies[i - 1]
+                self._last_failing_parameter = self._parameters[i]
+                self._last_passing_parameter = self._parameters[i - 1]
                 return True
 
         if self._run_config_measurements[
                 0] and not self._run_config_measurements[
                     0].is_passing_constraints():
-            self._last_failing_concurrency = self._concurrencies[i]
-            self._last_passing_concurrency = 0
+            self._last_failing_parameter = self._parameters[i]
+            self._last_passing_parameter = 0
             return True
         else:
             return False
@@ -176,29 +192,29 @@ class ConcurrencySearch():
 
         return at_failure_boundary
 
-    def _perform_binary_concurrency_search(self) -> Generator[int, None, None]:
+    def _perform_binary_parameter_search(self) -> Generator[int, None, None]:
         # This is needed because we are going to restart the search from the
-        # concurrency that failed - so we expect this to be at the end of the list
-        self._concurrencies.append(self._last_failing_concurrency)
+        # parameter that failed - so we expect this to be at the end of the list
+        self._parameters.append(self._last_failing_parameter)
 
         for i in range(0, self._max_binary_search_steps):
-            concurrency = self._determine_next_binary_concurrency()
+            parameter = self._determine_next_binary_parameter()
 
-            if concurrency != self._concurrencies[-1]:
-                self._concurrencies.append(concurrency)
-                yield concurrency
+            if parameter != self._parameters[-1]:
+                self._parameters.append(parameter)
+                yield parameter
 
-    def _determine_next_binary_concurrency(self) -> int:
+    def _determine_next_binary_parameter(self) -> int:
         if not self._run_config_measurements[-1]:
             return 0
 
         if self._run_config_measurements[-1].is_passing_constraints():
-            self._last_passing_concurrency = self._concurrencies[-1]
-            concurrency = int(
-                (self._last_failing_concurrency + self._concurrencies[-1]) / 2)
+            self._last_passing_parameter = self._parameters[-1]
+            parameter = int(
+                (self._last_failing_parameter + self._parameters[-1]) / 2)
         else:
-            self._last_failing_concurrency = self._concurrencies[-1]
-            concurrency = int(
-                (self._last_passing_concurrency + self._concurrencies[-1]) / 2)
+            self._last_failing_parameter = self._parameters[-1]
+            parameter = int(
+                (self._last_passing_parameter + self._parameters[-1]) / 2)
 
-        return concurrency
+        return parameter

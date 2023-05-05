@@ -19,7 +19,7 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from .config_generator_interface import ConfigGeneratorInterface
 from .generator_utils import GeneratorUtils as utils
 
-from model_analyzer.constants import LOGGER_NAME, THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES, THROUGHPUT_MINIMUM_CONSECUTIVE_BATCH_SIZE_TRIES
+from model_analyzer.constants import LOGGER_NAME, THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES, THROUGHPUT_MINIMUM_CONSECUTIVE_BATCH_SIZE_TRIES
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
@@ -90,7 +90,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     @staticmethod
     def throughput_gain_valid_helper(
             throughputs: List[Optional[RunConfigMeasurement]],
-            min_tries: int = THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES,
+            min_tries: int = THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES,
             min_gain: float = THROUGHPUT_MINIMUM_GAIN) -> bool:
         if len(throughputs) < min_tries:
             return True
@@ -288,7 +288,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         """ Check if any of the last X parameter results resulted in valid gain """
         return PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
             throughputs=self._parameter_results,
-            min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES,
+            min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES,
             min_gain=THROUGHPUT_MINIMUM_GAIN)
 
     def _batch_size_throughput_gain_valid(self) -> bool:

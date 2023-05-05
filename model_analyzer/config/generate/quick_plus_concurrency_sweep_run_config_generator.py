@@ -27,7 +27,7 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.result.concurrency_search import ConcurrencySearch
+from model_analyzer.result.parameter_search import ParameterSearch
 
 from model_analyzer.constants import LOGGER_NAME
 
@@ -132,11 +132,11 @@ class QuickPlusConcurrencySweepRunConfigGenerator(ConfigGeneratorInterface):
 
             for result in top_results:
                 run_config = deepcopy(result.run_config())
-                concurrency_search = ConcurrencySearch(self._config)
-                for concurrency in concurrency_search.search_concurrencies():
+                parameter_search = ParameterSearch(self._config)
+                for concurrency in parameter_search.search_parameters():
                     run_config = self._set_concurrency(run_config, concurrency)
                     yield run_config
-                    concurrency_search.add_run_config_measurement(
+                    parameter_search.add_run_config_measurement(
                         self._last_measurement)
 
     def _set_concurrency(self, run_config: RunConfig,

@@ -1247,7 +1247,7 @@ def is_request_rate_specified(config: ConfigCommandProfile,
     """
     Returns true if either the model or the config specified request rate
     """
-    return model_parameters['request_rate'] or \
+    return 'request_rate' in model_parameters and model_parameters['request_rate'] or \
            config.request_rate_search_enable or \
            config.get_config()['run_config_search_min_request_rate'].is_set_by_user() or \
            config.get_config()['run_config_search_max_request_rate'].is_set_by_user()
