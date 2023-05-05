@@ -121,10 +121,12 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface
     def _binary_search_over_top_results(
             self) -> Generator[RunConfig, None, None]:
         for model_name in self._result_manager.get_model_names():
-            all_results = self._result_manager.top_n_results(
-                model_name=model_name, include_default=True)
+            top_results = self._result_manager.top_n_results(
+                model_name=model_name,
+                n=self._config.num_configs_per_model,
+                include_default=True)
 
-            for result in all_results:
+            for result in top_results:
                 run_config = deepcopy(result.run_config())
                 concurrency_search = ConcurrencySearch(
                     self._config, skip_parameter_sweep=True)

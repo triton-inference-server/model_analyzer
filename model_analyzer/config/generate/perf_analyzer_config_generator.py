@@ -14,7 +14,7 @@
 
 from typing import List, Generator, Optional
 
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile, is_request_rate_specified
 
 from .config_generator_interface import ConfigGeneratorInterface
 from .generator_utils import GeneratorUtils as utils
@@ -159,16 +159,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         # The two possible parameters are request rate or concurrency
         # Concurrency is the default and will be used unless the user specifies
         # request rate, either as a model parameter or a config option
-        if self._config_specifies_request_rate():
+        if is_request_rate_specified(self._cli_config, self._model_parameters):
             return self._create_request_rate_list()
         else:
             return self._create_concurrency_list()
-
-    def _config_specifies_request_rate(self) -> bool:
-        return self._model_parameters['request_rate'] or \
-               self._cli_config.request_rate_search_enable or \
-               self._cli_config.get_config()['run_config_search_min_request_rate'].is_set_by_user() or \
-               self._cli_config.get_config()['run_config_search_max_request_rate'].is_set_by_user()
 
     def _create_request_rate_list(self) -> List[int]:
         if self._model_parameters['request_rate']:
@@ -205,7 +199,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
                 new_perf_config.update_config(params)
 
-                if self._config_specifies_request_rate():
+                if is_request_rate_specified(self._cli_config,
+                                             self._model_parameters):
                     new_perf_config.update_config(
                         {'request-rate-range': parameter})
                 else:
@@ -259,7 +254,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if self._early_exit_enable and not self._parameter_throughput_gain_valid(
         ):
             if not self._parameter_warning_printed:
-                if self._config_specifies_request_rate():
+                if is_request_rate_specified(self._cli_config,
+                                             self._model_parameters):
                     logger.info(
                         "No longer increasing request rate as throughput has plateaued"
                     )
