@@ -22,7 +22,7 @@ from model_analyzer.config.generate.perf_analyzer_config_generator import PerfAn
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile, is_request_rate_specified
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
@@ -128,18 +128,33 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface
 
             for result in top_results:
                 run_config = deepcopy(result.run_config())
-                parameter_search = ParameterSearch(self._config,
-                                                   skip_parameter_sweep=True)
-                for concurrency in parameter_search.search_parameters():
-                    run_config = self._set_concurrency(run_config, concurrency)
+                model_parameters = self._get_model_parameters(model_name)
+                parameter_search = ParameterSearch(
+                    config=self._config,
+                    model_parameters=model_parameters,
+                    skip_parameter_sweep=True)
+                for parameter in parameter_search.search_parameters():
+                    run_config = self._set_parameter(run_config,
+                                                     model_parameters,
+                                                     parameter)
                     yield run_config
                     parameter_search.add_run_config_measurement(
                         self._last_measurement)
 
-    def _set_concurrency(self, run_config: RunConfig,
-                         concurrency: int) -> RunConfig:
+    def _get_model_parameters(self, model_name: str) -> Dict:
+        for model in self._models:
+            if model_name == model.model_name():
+                return model.parameters()
+
+        return {}
+
+    def _set_parameter(self, run_config: RunConfig, model_parameters: Dict,
+                       parameter: int) -> RunConfig:
         for model_run_config in run_config.model_run_configs():
             perf_config = model_run_config.perf_config()
-            perf_config.update_config({'concurrency-range': concurrency})
+            if is_request_rate_specified(self._config, model_parameters):
+                perf_config.update_config({'request-rate-range': parameter})
+            else:
+                perf_config.update_config({'concurrency-range': parameter})
 
         return run_config
