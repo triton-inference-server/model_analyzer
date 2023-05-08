@@ -15,7 +15,7 @@
 from typing import List, Optional, Generator
 
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile, is_request_rate_specified
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 from math import log2
@@ -50,8 +50,8 @@ class ParameterSearch():
             If true, skips the parameter sweep and only does the binary search
         """
         self._skip_parameter_sweep = skip_parameter_sweep
-        self._parameter_is_request_rate = is_request_rate_specified(
-            config, model_parameters)
+        self._parameter_is_request_rate = config.is_request_rate_specified(
+            model_parameters)
 
         if self._parameter_is_request_rate:
             self._min_parameter_index = int(

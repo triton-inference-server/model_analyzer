@@ -21,7 +21,7 @@ from model_analyzer.config.generate.model_variant_name_manager import ModelVaria
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile, is_request_rate_specified
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
@@ -150,7 +150,7 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface
                        parameter: int) -> RunConfig:
         for model_run_config in run_config.model_run_configs():
             perf_config = model_run_config.perf_config()
-            if is_request_rate_specified(self._config, model_parameters):
+            if self._config.is_request_rate_specified(model_parameters):
                 perf_config.update_config({'request-rate-range': parameter})
             else:
                 perf_config.update_config({'concurrency-range': parameter})

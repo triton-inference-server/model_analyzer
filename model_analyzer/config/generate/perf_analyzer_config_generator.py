@@ -14,7 +14,7 @@
 
 from typing import List, Generator, Optional
 
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile, is_request_rate_specified
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 
 from .config_generator_interface import ConfigGeneratorInterface
 from .generator_utils import GeneratorUtils as utils
@@ -159,7 +159,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         # The two possible parameters are request rate or concurrency
         # Concurrency is the default and will be used unless the user specifies
         # request rate, either as a model parameter or a config option
-        if is_request_rate_specified(self._cli_config, self._model_parameters):
+        if self._cli_config.is_request_rate_specified(self._model_parameters):
             return self._create_request_rate_list()
         else:
             return self._create_concurrency_list()
@@ -199,8 +199,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
                 new_perf_config.update_config(params)
 
-                if is_request_rate_specified(self._cli_config,
-                                             self._model_parameters):
+                if self._cli_config.is_request_rate_specified(
+                        self._model_parameters):
                     new_perf_config.update_config(
                         {'request-rate-range': parameter})
                 else:
@@ -254,8 +254,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if self._early_exit_enable and not self._parameter_throughput_gain_valid(
         ):
             if not self._parameter_warning_printed:
-                if is_request_rate_specified(self._cli_config,
-                                             self._model_parameters):
+                if self._cli_config.is_request_rate_specified(
+                        self._model_parameters):
                     logger.info(
                         "No longer increasing request rate as throughput has plateaued"
                     )
