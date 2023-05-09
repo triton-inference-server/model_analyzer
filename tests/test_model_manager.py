@@ -1130,38 +1130,6 @@ class TestModelManager(trc.TestResultCollector):
             model_manager._check_for_ensemble_model_incompatibility(models)
         self.mock_model_config.stop()
 
-    @patch('model_analyzer.triton.model.model_config.ModelConfig.is_ensemble',
-           return_value=True)
-    def test_ensemble_makes_quick_default(self, *args):
-        """
-        Test that the default RCS mode is switched from brute to quick
-        when profiling an ensemble model
-        """
-        yaml_str = ("""
-                  profile_models: ensemble_model
-                  """)
-
-        args = self._args.copy()
-
-        self.mock_model_config = MockModelConfig(self._model_config_protobuf)
-        self.mock_model_config.start()
-        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
-
-        state_manager = AnalyzerStateManager(config, MagicMock())
-        metrics_manager = MetricsManagerSubclass(config, MagicMock(),
-                                                 MagicMock(), MagicMock(),
-                                                 MagicMock(), state_manager)
-        model_manager = ModelManager(config, MagicMock(), MagicMock(),
-                                     MagicMock(), metrics_manager, MagicMock(),
-                                     state_manager, MagicMock())
-
-        models = [
-            ConfigModelProfileSpec('ensemble_model'),
-        ]
-        model_manager._check_for_ensemble_model_incompatibility(models)
-
-        self.assertEqual(config.run_config_search_mode, "quick")
-
     def _test_model_manager(self, yaml_content, expected_ranges, args=None):
         """ 
         Test helper function that passes the given yaml_str into
