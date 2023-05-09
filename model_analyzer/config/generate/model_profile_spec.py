@@ -34,6 +34,9 @@ class ModelProfileSpec(ConfigModelProfileSpec):
         self._default_model_config = ModelConfig.create_model_config_dict(
             config, client, gpus, config.model_repository, spec.model_name())
 
+        if spec.model_name() in config.cpu_only_composing_models:
+            self._cpu_only = True
+
     def get_default_config(self) -> dict:
         """ Returns the default configuration for this model """
         return deepcopy(self._default_model_config)

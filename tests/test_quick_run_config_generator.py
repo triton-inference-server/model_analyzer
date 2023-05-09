@@ -910,11 +910,12 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         Also,
         - sequence batching should be on for model 1
         - dynamic batching should be on for model 2
+        - cpu_only should be set for model 2
         - existing values from the base model config should persist if they aren't overwritten
         - existing values for perf-analyzer config should persist if they aren't overwritten
         """
 
-        additional_args = []
+        additional_args = ['--cpu-only-composing-models', 'fake_model_B']
         if max_concurrency:
             additional_args.append('--run-config-search-max-concurrency')
             additional_args.append(f'{max_concurrency}')
@@ -940,11 +941,11 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         }
 
         expected_model_config1 = {
-            'cpu_only': False,
+            'cpu_only': True,
             'dynamicBatching': {},
             'instanceGroup': [{
                 'count': 6,
-                'kind': 'KIND_GPU',
+                'kind': 'KIND_CPU',
             }],
             'maxBatchSize': 16,
             'name': 'fake_model_B_config_0',
