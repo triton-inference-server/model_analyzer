@@ -19,7 +19,7 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from .config_generator_interface import ConfigGeneratorInterface
 from .generator_utils import GeneratorUtils as utils
 
-from model_analyzer.constants import LOGGER_NAME, THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES, THROUGHPUT_MINIMUM_CONSECUTIVE_BATCH_SIZE_TRIES
+from model_analyzer.constants import LOGGER_NAME, THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES, THROUGHPUT_MINIMUM_CONSECUTIVE_BATCH_SIZE_TRIES
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
@@ -90,7 +90,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     @staticmethod
     def throughput_gain_valid_helper(
             throughputs: List[Optional[RunConfigMeasurement]],
-            min_tries: int = THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES,
+            min_tries: int = THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES,
             min_gain: float = THROUGHPUT_MINIMUM_GAIN) -> bool:
         if len(throughputs) < min_tries:
             return True
@@ -159,16 +159,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         # The two possible parameters are request rate or concurrency
         # Concurrency is the default and will be used unless the user specifies
         # request rate, either as a model parameter or a config option
-        if self._config_specifies_request_rate():
+        if self._cli_config.is_request_rate_specified(self._model_parameters):
             return self._create_request_rate_list()
         else:
             return self._create_concurrency_list()
-
-    def _config_specifies_request_rate(self) -> bool:
-        return self._model_parameters['request_rate'] or \
-               self._cli_config.request_rate_search_enable or \
-               self._cli_config.get_config()['run_config_search_min_request_rate'].is_set_by_user() or \
-               self._cli_config.get_config()['run_config_search_max_request_rate'].is_set_by_user()
 
     def _create_request_rate_list(self) -> List[int]:
         if self._model_parameters['request_rate']:
@@ -205,7 +199,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
                 new_perf_config.update_config(params)
 
-                if self._config_specifies_request_rate():
+                if self._cli_config.is_request_rate_specified(
+                        self._model_parameters):
                     new_perf_config.update_config(
                         {'request-rate-range': parameter})
                 else:
@@ -259,7 +254,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         if self._early_exit_enable and not self._parameter_throughput_gain_valid(
         ):
             if not self._parameter_warning_printed:
-                if self._config_specifies_request_rate():
+                if self._cli_config.is_request_rate_specified(
+                        self._model_parameters):
                     logger.info(
                         "No longer increasing request rate as throughput has plateaued"
                     )
@@ -292,7 +288,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         """ Check if any of the last X parameter results resulted in valid gain """
         return PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
             throughputs=self._parameter_results,
-            min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_CONCURRENCY_TRIES,
+            min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES,
             min_gain=THROUGHPUT_MINIMUM_GAIN)
 
     def _batch_size_throughput_gain_valid(self) -> bool:

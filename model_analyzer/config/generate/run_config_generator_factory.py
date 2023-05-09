@@ -25,6 +25,7 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 from model_analyzer.result.result_manager import ResultManager
 from .brute_run_config_generator import BruteRunConfigGenerator
 from .quick_plus_concurrency_sweep_run_config_generator import QuickPlusConcurrencySweepRunConfigGenerator
+from .brute_plus_binary_parameter_search_run_config_generator import BrutePlusBinaryParameterSearchRunConfigGenerator
 from .search_dimensions import SearchDimensions
 from .search_dimension import SearchDimension
 from .search_config import SearchConfig
@@ -84,11 +85,12 @@ class RunConfigGeneratorFactory:
                 result_manager=result_manager,
                 model_variant_name_manager=model_variant_name_manager)
         elif (command_config.run_config_search_mode == "brute"):
-            return RunConfigGeneratorFactory._create_brute_run_config_generator(
+            return RunConfigGeneratorFactory._create_brute_plus_binary_parameter_search_run_config_generator(
                 command_config=command_config,
                 gpus=gpus,
                 models=new_models,
                 client=client,
+                result_manager=result_manager,
                 model_variant_name_manager=model_variant_name_manager)
         else:
             raise TritonModelAnalyzerException(
@@ -96,16 +98,18 @@ class RunConfigGeneratorFactory:
             )
 
     @staticmethod
-    def _create_brute_run_config_generator(
+    def _create_brute_plus_binary_parameter_search_run_config_generator(
         command_config: ConfigCommandProfile, gpus: List[GPUDevice],
         models: List[ModelProfileSpec], client: TritonClient,
+        result_manager: ResultManager,
         model_variant_name_manager: ModelVariantNameManager
     ) -> ConfigGeneratorInterface:
-        return BruteRunConfigGenerator(
+        return BrutePlusBinaryParameterSearchRunConfigGenerator(
             config=command_config,
             gpus=gpus,
             models=models,
             client=client,
+            result_manager=result_manager,
             model_variant_name_manager=model_variant_name_manager)
 
     @staticmethod

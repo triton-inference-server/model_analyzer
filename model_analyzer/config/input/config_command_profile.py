@@ -1240,3 +1240,12 @@ class ConfigCommandProfile(ConfigCommand):
                 "Model Analyzer does not support mixing concurrency-range and request-rate-range.")
         else:
             return model_using_request_rate
+
+    def is_request_rate_specified(self, model_parameters: dict) -> bool:
+        """
+        Returns true if either the model or the config specified request rate
+        """
+        return 'request_rate' in model_parameters and model_parameters['request_rate'] or \
+            self.request_rate_search_enable or \
+            self.get_config()['run_config_search_min_request_rate'].is_set_by_user() or \
+            self.get_config()['run_config_search_max_request_rate'].is_set_by_user()
