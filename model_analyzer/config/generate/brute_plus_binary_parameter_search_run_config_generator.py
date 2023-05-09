@@ -89,11 +89,12 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface
         logger.info("Done with brute mode search.")
         logger.info("")
 
-        if self._is_automatic_search_mode():
+        if self._can_binary_search_top_results():
             yield from self._binary_search_over_top_results()
-        logger.info("")
-        logger.info("Done gathering concurrency sweep measurements for reports")
-        logger.info("")
+            logger.info("")
+            logger.info(
+                "Done gathering concurrency sweep measurements for reports")
+            logger.info("")
 
     def _execute_brute_search(self) -> Generator[RunConfig, None, None]:
         self._rcg: ConfigGeneratorInterface = self._create_brute_run_config_generator(
@@ -109,9 +110,10 @@ class BrutePlusBinaryParameterSearchRunConfigGenerator(ConfigGeneratorInterface
             client=self._client,
             model_variant_name_manager=self._model_variant_name_manager)
 
-    def _is_automatic_search_mode(self) -> bool:
+    def _can_binary_search_top_results(self) -> bool:
         for model in self._models:
-            if model.model_config_parameters():
+            if model.parameters()['concurrency'] or model.parameters(
+            )['request_rate']:
                 return False
 
         return True
