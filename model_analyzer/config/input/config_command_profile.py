@@ -483,6 +483,14 @@ class ConfigCommandProfile(ConfigCommand):
                                        required=True),
                 default_value=[],
                 description='List of the models to be profiled'))
+        self._add_config(
+            ConfigField(
+                'cpu_only_composing_models',
+                field_type=ConfigListString(),
+                flags=['--cpu-only-composing-models'],
+                description=
+                ("A list of strings representing composing models that should be profiled only using the CPU. "
+                )))
 
     def _add_client_configs(self):
         """
