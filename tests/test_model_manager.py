@@ -1100,7 +1100,7 @@ class TestModelManager(trc.TestResultCollector):
     def test_cpu_only_composing_models_error(self, *args):
         """
         Test that --cpu-only-composing-models errors when 
-        set for non-ensemble models
+        set for non-ensemble/BLS models
         """
         yaml_str = ("""
                   profile_models: test_model

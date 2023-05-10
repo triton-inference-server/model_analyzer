@@ -179,10 +179,10 @@ class ModelManager:
                         )
                     else:
                         self._config.run_config_search_mode = 'quick'
-            else:
+            elif not self._config.bls_composing_models:
                 if len(self._config.cpu_only_composing_models) > 0:
                     raise TritonModelAnalyzerException(
-                        f'\nCan only specify --cpu-only-composing-models for ensemble models.'
+                        f'\nCan only specify --cpu-only-composing-models for ensemble or BLS models.'
                     )
 
     def _init_state(self):

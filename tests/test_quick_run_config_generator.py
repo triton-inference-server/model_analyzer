@@ -899,18 +899,18 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         Test that get_next_run_config() creates a proper RunConfig for ensemble
 
         Sets up a case where the coordinate is [1,2,4,5], which corresponds to
-          - composing model 1 max_batch_size = 2
-          - composing model 1 instance_count = 3
-          - composing model 1 concurrency = 2*3*2 = 12
-          - composing model 2 max_batch_size = 16
-          - composing model 2 instance_count = 6
-          - composing model 2 concurrency = 16*6*2 = 192
+          - composing model A max_batch_size = 2
+          - composing model A instance_count = 3
+          - composing model A concurrency = 2*3*2 = 12
+          - composing model B max_batch_size = 16
+          - composing model B instance_count = 6
+          - composing model B concurrency = 16*6*2 = 192
           - ensemble model concurrency = 12 (minimum value of [12, 192])
 
         Also,
-        - sequence batching should be on for model 1
-        - dynamic batching should be on for model 2
-        - cpu_only should be set for model 2
+        - sequence batching should be on for model A
+        - dynamic batching should be on for model B
+        - cpu_only should be set for model B
         - existing values from the base model config should persist if they aren't overwritten
         - existing values for perf-analyzer config should persist if they aren't overwritten
         """
@@ -924,7 +924,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             additional_args.append(f'{min_concurrency}')
 
         #yapf: disable
-        expected_model_config0 = {
+        expected_model_A_config_0 = {
             'cpu_only': False,
             'instanceGroup': [{
                 'count': 3,
@@ -940,7 +940,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             }]
         }
 
-        expected_model_config1 = {
+        expected_model_B_config_0 = {
             'cpu_only': True,
             'dynamicBatching': {},
             'instanceGroup': [{
@@ -1005,15 +1005,15 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
-        composing_model_config0 = run_config.model_run_configs(
+        composing_model_A_config_0 = run_config.model_run_configs(
         )[0].composing_configs()[0]
-        composing_model_config1 = run_config.model_run_configs(
+        composing_model_B_config_0 = run_config.model_run_configs(
         )[0].composing_configs()[1]
 
-        self.assertEqual(composing_model_config0.to_dict(),
-                         expected_model_config0)
-        self.assertEqual(composing_model_config1.to_dict(),
-                         expected_model_config1)
+        self.assertEqual(composing_model_A_config_0.to_dict(),
+                         expected_model_A_config_0)
+        self.assertEqual(composing_model_B_config_0.to_dict(),
+                         expected_model_B_config_0)
 
         if max_concurrency:
             self.assertEqual(perf_config['concurrency-range'], max_concurrency)
