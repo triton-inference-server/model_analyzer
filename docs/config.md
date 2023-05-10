@@ -276,7 +276,7 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 # List of composing models for BLS models
 bls_composing_models: <comma-delimited-string-list>
 
-# List of an ensemble's composing models that should be profiled using CPU instances only
+# List of composing models that should be profiled using CPU instances only
 cpu_only_composing_models: <comma-delimited-string-list>
 
 # List of constraints placed on the config search results
