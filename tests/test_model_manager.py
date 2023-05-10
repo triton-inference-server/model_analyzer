@@ -1095,6 +1095,41 @@ class TestModelManager(trc.TestResultCollector):
 
         self.assertEqual(config.run_config_search_mode, "quick")
 
+    @patch('model_analyzer.triton.model.model_config.ModelConfig.is_ensemble',
+           return_value=False)
+    def test_cpu_only_composing_models_error(self, *args):
+        """
+        Test that --cpu-only-composing-models errors when 
+        set for non-ensemble/BLS models
+        """
+        yaml_str = ("""
+                  profile_models: test_model
+                  """)
+
+        args = self._args.copy()
+        args.append('--cpu-only-composing-models')
+        args.append('composing_modelA,composing_modelB')
+
+        self.mock_model_config = MockModelConfig(self._model_config_protobuf)
+        self.mock_model_config.start()
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
+        state_manager = AnalyzerStateManager(config, MagicMock())
+        metrics_manager = MetricsManagerSubclass(config, MagicMock(),
+                                                 MagicMock(), MagicMock(),
+                                                 MagicMock(), state_manager)
+        model_manager = ModelManager(config, MagicMock(), MagicMock(),
+                                     MagicMock(), metrics_manager, MagicMock(),
+                                     state_manager, MagicMock())
+
+        # RunConfigSearch check
+        models = [
+            ConfigModelProfileSpec('test_model'),
+        ]
+        with self.assertRaises(TritonModelAnalyzerException):
+            model_manager._check_for_ensemble_model_incompatibility(models)
+        self.mock_model_config.stop()
+
     def _test_model_manager(self, yaml_content, expected_ranges, args=None):
         """ 
         Test helper function that passes the given yaml_str into

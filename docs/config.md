@@ -92,6 +92,9 @@ profile_models: <comma-delimited-string-list>
 # List of composing models for BLS models
 bls_composing_models: <comma-delimited-string-list>
 
+# List of composing models that should be profiled using CPU instances only
+cpu_only_composing_models: <comma-delimited-string-list>
+
 # Full path to directory to which to read and write checkpoints and profile data
 [ checkpoint_directory: <string> | default: './checkpoints' ]
 
@@ -272,6 +275,9 @@ profile_models: <comma-delimited-string-list|list|profile_model>
 
 # List of composing models for BLS models
 bls_composing_models: <comma-delimited-string-list>
+
+# List of composing models that should be profiled using CPU instances only
+cpu_only_composing_models: <comma-delimited-string-list>
 
 # List of constraints placed on the config search results
 [ constraints: <constraint> ]
