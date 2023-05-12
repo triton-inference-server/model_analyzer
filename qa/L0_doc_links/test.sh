@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LOG="`pwd`/log.txt"
+LOG="/logs/log.txt"
 CONFIG="`pwd`/mkdocs.yml"
 RET=0
+
+rm -rf /logs
+mkdir /logs
 
 #rm $LOG
 

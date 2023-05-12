@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-rm -rf /logs
-mkdir /logs
-
 SERVER_LOG=${SERVER_LOG:="/logs/server.log"}
 SERVER_TIMEOUT=${SERVER_TIMEOUT:=120}
 SERVER_HTTP_PORT=${SERVER_HTTP_PORT:=8000}
 SERVER_LD_PRELOAD=${SERVER_LD_PRELOAD:=""}
 ANALYZER_LOG=${ANALYZER_LOG:="/logs/test.log"}
+
+rm -rf /logs
+mkdir /logs
 
 # Wait until server health endpoint shows ready. Sets WAIT_RET to 0 on
 # success, 1 on failure

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TEST_LOG='test.log'
+TEST_LOG='/logs/test.log'
 EXPECTED_NUM_TESTS=`python3 count_tests.py --path ../../tests/`
 source ../common/check_analyzer_results.sh
 
@@ -42,6 +42,6 @@ fi
 # Generate html files
 echo `pwd`
 coverage html
-cp -rf htmlcov /tmp/html/
+cp -rf htmlcov /logs/html/
 
 exit $RET
