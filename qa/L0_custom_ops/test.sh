@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG_BASE="test.log"
+ANALYZER_LOG_BASE="/logs/test.log"
 source ../common/util.sh
 
-rm -f *.log
+rm -f /logs/*.log
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -30,7 +30,7 @@ CONFIG_FILE="config.yaml"
 NUM_ITERATIONS=${NUM_ITERATIONS:=4}
 MODEL_NAMES="libtorch_modulo"
 CHECKPOINT_DIRECTORY="./checkpoints"
-TRITON_LOG_BASE="triton.log"
+TRITON_LOG_BASE="/logs/triton.log"
 WAIT_TIMEOUT=1200
 
 # Generate test configs

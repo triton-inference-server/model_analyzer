@@ -16,8 +16,7 @@ LOG="/logs/log.txt"
 CONFIG="`pwd`/mkdocs.yml"
 RET=0
 
-rm -rf /logs
-mkdir /logs
+mkdir -p /logs
 
 #rm $LOG
 

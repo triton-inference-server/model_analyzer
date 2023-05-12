@@ -18,8 +18,7 @@ SERVER_HTTP_PORT=${SERVER_HTTP_PORT:=8000}
 SERVER_LD_PRELOAD=${SERVER_LD_PRELOAD:=""}
 ANALYZER_LOG=${ANALYZER_LOG:="/logs/test.log"}
 
-rm -rf /logs
-mkdir /logs
+mkdir -p /logs
 
 # Wait until server health endpoint shows ready. Sets WAIT_RET to 0 on
 # success, 1 on failure

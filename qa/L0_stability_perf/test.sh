@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG_BASE="test.log"
-PERF_LOG_BASE="perf.log"
+ANALYZER_LOG_BASE="/logs/test.log"
+PERF_LOG_BASE="/logs/perf.log"
 source ../common/util.sh
 
-rm -f *.log
+rm -f /logs/*.log
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"

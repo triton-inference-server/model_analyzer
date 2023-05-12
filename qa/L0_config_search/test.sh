@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG="test.log"
+ANALYZER_LOG="/logs/test.log"
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
 
-rm -f *.log
+rm -f /logs/*.log
 rm -rf results && mkdir -p results
 
 # Set test parameters
@@ -66,7 +66,7 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config --triton-launch-mode $launch_mode"
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $MODEL_ANALYZER_PORTS"
 
-        ANALYZER_LOG=analyzer.${launch_mode}.${config}.log
+        ANALYZER_LOG="/logs/analyzer.${launch_mode}.${config}.log"
 
         if [ $launch_mode == 'remote' ]; then
             NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-param-$launch_mode.txt
@@ -100,7 +100,7 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         rm $ANALYZER_LOG
 
         echo -e "\n*** Re-running profile\n***"
-        ANALYZER_LOG=analyzer.${launch_mode}.${config}_rerun.log
+        ANALYZER_LOG="/logs/analyzer.${launch_mode}.${config}_rerun.log"
         run_analyzer
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"

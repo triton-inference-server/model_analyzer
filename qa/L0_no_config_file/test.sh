@@ -31,7 +31,7 @@ source ../common/util.sh
 
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 
-rm -f *.log
+rm -f /logs/*.log
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
@@ -89,8 +89,8 @@ function run_server_launch_modes() {
         LAUNCH_MODE=${PARAMETERS[1]}
         PROTOCOL=${PARAMETERS[2]}
         
-        ANALYZER_LOG=analyzer.${PROFILE_MODEL}.${LAUNCH_MODE}.${PROTOCOL}.log
-        SERVER_LOG=server.${PROFILE_MODEL}.${LAUNCH_MODE}.${PROTOCOL}.log
+        ANALYZER_LOG=/logs/analyzer.${PROFILE_MODEL}.${LAUNCH_MODE}.${PROTOCOL}.log
+        SERVER_LOG=/logs/server.${PROFILE_MODEL}.${LAUNCH_MODE}.${PROTOCOL}.log
 
         MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --profile-models $PROFILE_MODEL"

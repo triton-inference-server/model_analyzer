@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG="cpu.log"
+ANALYZER_LOG="/logs/cpu.log"
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
 

@@ -14,7 +14,7 @@
 
 source ../common/util.sh
 
-rm -f *.log
+rm -f /logs/*.log
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
@@ -79,8 +79,8 @@ function run_server_launch_modes() {
         LAUNCH_MODE=${PARAMETERS[1]}
         PROTOCOL=${PARAMETERS[2]}
         
-        ANALYZER_LOG=analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
-        SERVER_LOG=${LAUNCH_MODE}.${PROTOCOL}.server.log
+        ANALYZER_LOG=/logs/analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
+        SERVER_LOG=/logs/${LAUNCH_MODE}.${PROTOCOL}.server.log
 
         MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
