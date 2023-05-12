@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TEST_LOG='test.log'
+TEST_LOG='/logs/test.log'
 source ../common/util.sh
 
-rm -f test.log
+rm -f $TEST_LOG
 
 MODEL_ANALYZER=`which model-analyzer`
 
