@@ -1,4 +1,4 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ TRITON_LOG_BASE="triton.log"
 WAIT_TIMEOUT=1200
 
 # Generate test configs
-python3 test_config_generator.py --profile-models $MODEL_NAMES --preload-path "/usr/lib/x86_64-linux-gnu/libpython3.8.so.1:$MODEL_REPOSITORY/libtorch_modulo/custom_modulo.so" --library-path /opt/tritonserver/backends/pytorch:'$LD_LIBRARY_PATH'
+python3 test_config_generator.py --profile-models $MODEL_NAMES --preload-path "/usr/lib/x86_64-linux-gnu/libpython3.10.so.1:$MODEL_REPOSITORY/libtorch_modulo/custom_modulo.so" --library-path /opt/tritonserver/backends/pytorch:'$LD_LIBRARY_PATH'
 
 LIST_OF_CONFIG_FILES=(`ls | grep .yaml`)
 
