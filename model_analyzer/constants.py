@@ -57,5 +57,8 @@ SERVER_OUTPUT_TIMEOUT_SECS = 5
 # Logging
 LOGGER_NAME = "model_analyzer_logger"
 
+# PA Error Log Filename
+PA_ERROR_LOG_FILENAME = "perf_analyzer_error.log"
+
 # Constraints
 GLOBAL_CONSTRAINTS_KEY = "__default__"

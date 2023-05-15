@@ -14,7 +14,7 @@
 
 from .record_aggregator import RecordAggregator
 from .record import RecordType
-from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
@@ -90,6 +90,7 @@ class MetricsManager:
         self._loaded_models = None
 
         self._cpu_warning_printed = False
+        self._encountered_perf_analyzer_error = False
 
         self._gpu_metrics, self._perf_metrics, self._cpu_metrics = self._categorize_metrics(
             self.metrics, self._config.collect_cpu_metrics)
@@ -99,6 +100,9 @@ class MetricsManager:
     def start_new_model(self):
         """ Indicate that profiling of a new model is starting """
         self._first_config_variant = {}
+
+    def encountered_perf_analyzer_error(self) -> bool:
+        return self._encountered_perf_analyzer_error
 
     def _init_state(self):
         """
@@ -487,6 +491,23 @@ class MetricsManager:
 
         # PerfAnalyzer run was not successful
         if status == 1:
+            self._encountered_perf_analyzer_error = True
+            perf_error_log = FileWriter(
+                f"{self._config.export_path}/{PA_ERROR_LOG_FILENAME}")
+            perf_error_log.write('Command: \n' + perf_analyzer.get_cmd() +
+                                 '\n\n',
+                                 append=True)
+
+            if perf_analyzer.output():
+                perf_error_log.write('Error: \n' + perf_analyzer.output() +
+                                     '\n',
+                                     append=True)
+            else:
+                perf_error_log.write(
+                    'Error: ' +
+                    'perf_analyzer did not produce any output. It was most likely terminated with a SIGABRT.'
+                    + '\n\n',
+                    append=True)
             return (None, None)
 
         perf_records = perf_analyzer.get_perf_records()
