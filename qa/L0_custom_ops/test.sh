@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG_BASE="/logs/test.log"
+ANALYZER_LOG_BASE="test.log"
 source ../common/util.sh
 
 rm -f /logs/*.log
@@ -30,7 +30,7 @@ CONFIG_FILE="config.yaml"
 NUM_ITERATIONS=${NUM_ITERATIONS:=4}
 MODEL_NAMES="libtorch_modulo"
 CHECKPOINT_DIRECTORY="./checkpoints"
-TRITON_LOG_BASE="/logs/triton.log"
+TRITON_LOG_BASE="triton.log"
 WAIT_TIMEOUT=1200
 
 # Generate test configs
@@ -63,9 +63,9 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     # Set up logs
     LOG_PREFIX=${CONFIG_FILE#"config-"}
     LOG_PREFIX=${LOG_PREFIX%".yaml"}
-    TRITON_LOG=${LOG_PREFIX}.${TRITON_LOG_BASE}
+    TRITON_LOG=/logs/${LOG_PREFIX}.${TRITON_LOG_BASE}
 
-    ANALYZER_LOG=${LOG_PREFIX}.${ANALYZER_LOG_BASE}
+    ANALYZER_LOG=/logs/${LOG_PREFIX}.${ANALYZER_LOG_BASE}
     touch $TRITON_LOG
     MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
