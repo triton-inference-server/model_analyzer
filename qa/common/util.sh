@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LOGS_DIR=${LOGS_DIR:="$LOGS_DIR"}
+LOGS_DIR=${LOGS_DIR:="/logs"}
 SERVER_LOG=${SERVER_LOG:="$LOGS_DIR/server.log"}
 SERVER_TIMEOUT=${SERVER_TIMEOUT:=120}
 SERVER_HTTP_PORT=${SERVER_HTTP_PORT:=8000}
