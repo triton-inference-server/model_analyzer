@@ -32,8 +32,7 @@ FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 CSV_PATH='.'
 # Clear and create directories
-mkdir $EXPORT_PATH
-mkdir $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/stability_result_p9x.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
+mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/stability_result_p9x.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
 # Generate test configs
 python3 test_config_generator.py --profile-models $MODEL_NAMES

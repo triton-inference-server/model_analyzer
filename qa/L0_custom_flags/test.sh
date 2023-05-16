@@ -32,6 +32,8 @@ GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 
+mkdir -p $CHECKPOINT_DIRECTORY
+
 MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -b $BATCH_SIZES -c $CONCURRENCY"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"

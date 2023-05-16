@@ -35,6 +35,7 @@ OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
+mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
 python3 test_config_generator.py --model-names resnet_v1_50_cpu_graphdef

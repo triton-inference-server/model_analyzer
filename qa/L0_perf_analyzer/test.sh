@@ -30,6 +30,7 @@ GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 
+mkdir -p $CHECKPOINT_DIRECTORY
 rm -rf *.yml
 rm -rf $CHECKPOINT_DIRECTORY && mkdir -p $CHECKPOINT_DIRECTORY
 

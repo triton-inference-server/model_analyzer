@@ -33,6 +33,8 @@ CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 TRITON_LOG_BASE="triton.log"
 WAIT_TIMEOUT=1200
 
+mkdir -p $CHECKPOINT_DIRECTORY
+
 # Generate test configs
 python3 test_config_generator.py --profile-models $MODEL_NAMES --preload-path "/usr/lib/x86_64-linux-gnu/libpython3.8.so.1:$MODEL_REPOSITORY/libtorch_modulo/custom_modulo.so" --library-path /opt/tritonserver/backends/pytorch:'$LD_LIBRARY_PATH'
 

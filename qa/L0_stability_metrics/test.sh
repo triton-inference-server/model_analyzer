@@ -39,7 +39,7 @@ CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 CSV_PATH='.'
 
 # Set up checkpoints
-mkdir $EXPORT_PATH
+mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY
 
 # Generate test configs
 python3 test_config_generator.py --models $MODEL_NAMES

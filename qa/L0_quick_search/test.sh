@@ -37,6 +37,7 @@ FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
+mkdir -p $EXPORT_PATH
 
 python3 test_config_generator.py --profile-models $MODEL_NAMES
 
