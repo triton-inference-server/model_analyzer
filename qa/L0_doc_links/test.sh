@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LOG="/logs/log.txt"
+LOGS_DIR="/logs"
+LOG="$LOGS_DIR/log.txt"
 CONFIG="`pwd`/mkdocs.yml"
 RET=0
 
-mkdir -p /logs
+mkdir -p $LOGS_DIR
 
 #rm $LOG
 

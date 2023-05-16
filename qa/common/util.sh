@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SERVER_LOG=${SERVER_LOG:="/logs/server.log"}
+LOGS_DIR=${LOGS_DIR:="$LOGS_DIR"}
+SERVER_LOG=${SERVER_LOG:="$LOGS_DIR/server.log"}
 SERVER_TIMEOUT=${SERVER_TIMEOUT:=120}
 SERVER_HTTP_PORT=${SERVER_HTTP_PORT:=8000}
 SERVER_LD_PRELOAD=${SERVER_LD_PRELOAD:=""}
-ANALYZER_LOG=${ANALYZER_LOG:="/logs/test.log"}
+ANALYZER_LOG=${ANALYZER_LOG:="$LOGS_DIR/test.log"}
 
-mkdir -p /logs
+mkdir -p $LOGS_DIR
 
 # Wait until server health endpoint shows ready. Sets WAIT_RET to 0 on
 # success, 1 on failure

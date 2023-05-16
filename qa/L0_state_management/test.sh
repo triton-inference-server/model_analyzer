@@ -15,7 +15,7 @@
 ANALYZER_LOG_BASE="test.log"
 source ../common/util.sh
 
-rm -f /logs/*.log && rm -rf *.yml
+rm -f $LOGS_DIR/*.log && rm -rf *.yml
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -50,7 +50,7 @@ rm -rf $EXPORT_PATH && mkdir -p $EXPORT_PATH
 
 # TEST CASE: Run the config and count the number of checkpoints
 TEST_NAME="num_checkpoints"
-ANALYZER_LOG="/logs/${TEST_NAME}.${ANALYZER_LOG_BASE}"
+ANALYZER_LOG="$LOGS_DIR/${TEST_NAME}.${ANALYZER_LOG_BASE}"
 CONFIG_FILE="config-single.yml"
 
 set +e
@@ -73,7 +73,7 @@ set -e
 
 # TEST CASE: Run the config again and make sure that no perf analyzer runs took place
 TEST_NAME="loading_checkpoints"
-ANALYZER_LOG="/logs/${TEST_NAME}.${ANALYZER_LOG_BASE}"
+ANALYZER_LOG="$LOGS_DIR/${TEST_NAME}.${ANALYZER_LOG_BASE}"
 
 set +e
 run_analyzer
@@ -98,7 +98,7 @@ rm -rf $EXPORT_PATH/*
 TEST_NAME="interrupt_handling"
 CONFIG_FILE="config-multi.yml"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
-ANALYZER_LOG="/logs/${TEST_NAME}.${ANALYZER_LOG_BASE}"
+ANALYZER_LOG="$LOGS_DIR/${TEST_NAME}.${ANALYZER_LOG_BASE}"
 
 set +e
 run_analyzer_nohup
@@ -127,7 +127,7 @@ else
 fi
 
 TEST_NAME="continue_after_checkpoint"
-ANALYZER_LOG="/logs/${TEST_NAME}.${ANALYZER_LOG_BASE}"
+ANALYZER_LOG="$LOGS_DIR/${TEST_NAME}.${ANALYZER_LOG_BASE}"
 
 run_analyzer
 if [ $? -ne 0 ]; then
@@ -151,7 +151,7 @@ rm -rf $EXPORT_PATH/*
 TEST_NAME="early_exit"
 CONFIG_FILE="config-multi.yml"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
-ANALYZER_LOG="/logs/${TEST_NAME}.${ANALYZER_LOG_BASE}"
+ANALYZER_LOG="$LOGS_DIR/${TEST_NAME}.${ANALYZER_LOG_BASE}"
 
 set +e
 run_analyzer_nohup
@@ -187,7 +187,7 @@ rm -rf $EXPORT_PATH/*
 # TEST CASE: Have results mixed across runs
 CONFIG_FILE="config-mixed-first.yml"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
-ANALYZER_LOG="/logs/measurement_consistent_prep.${ANALYZER_LOG_BASE}"
+ANALYZER_LOG="$LOGS_DIR/measurement_consistent_prep.${ANALYZER_LOG_BASE}"
 
 set +e
 run_analyzer
@@ -200,7 +200,7 @@ fi
 TEST_NAME="measurements_consistent_with_config"
 CONFIG_FILE="config-mixed-second.yml"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
-ANALYZER_LOG="/logs/${TEST_NAME}.${ANALYZER_LOG_BASE}"
+ANALYZER_LOG="$LOGS_DIR/${TEST_NAME}.${ANALYZER_LOG_BASE}"
 
 run_analyzer
 if [ $? -ne 0 ]; then

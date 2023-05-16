@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG="/logs/test.log"
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
+ANALYZER_LOG="$LOGS_DIR/test.log"
 
-rm -f /logs/*.log
+rm -f $LOGS_DIR/*.log
 rm -rf results && mkdir -p results
 
 # Set test parameters

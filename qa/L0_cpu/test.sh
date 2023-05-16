@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG="/logs/cpu.log"
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
+
+ANALYZER_LOG="$LOGS_DIR/cpu.log"
 
 rm -rf results && mkdir -p results
 rm -rf checkpoints && mkdir checkpoints

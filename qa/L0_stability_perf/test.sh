@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG_BASE="/logs/test.log"
-PERF_LOG_BASE="/logs/perf.log"
 source ../common/util.sh
+ANALYZER_LOG_BASE="test.log"
+PERF_LOG_BASE="perf.log"
 
-rm -f /logs/*.log
+rm -f $LOGS_DIR/*.log
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -59,8 +59,8 @@ MODEL_ANALYZER_SUBCOMMAND="profile"
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     LOG_PREFIX=${CONFIG_FILE#"config-"}
     MODEL_NAME=${LOG_PREFIX%".yaml"}
-    ANALYZER_LOG=${MODEL_NAME}.${ANALYZER_LOG_BASE}
-    PERF_LOG=${MODEL_NAME}.${PERF_LOG_BASE}
+    ANALYZER_LOG=$LOGS_DIR/${MODEL_NAME}.${ANALYZER_LOG_BASE}
+    PERF_LOG=$LOGS_DIR/${MODEL_NAME}.${PERF_LOG_BASE}
     
     set +e 
 

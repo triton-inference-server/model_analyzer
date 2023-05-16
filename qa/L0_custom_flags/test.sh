@@ -14,7 +14,7 @@
 
 source ../common/util.sh
 
-rm -f /logs/*.log
+rm -f $LOGS_DIR/*.log
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -54,14 +54,14 @@ fi
 RET=0
 
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
-    ANALYZER_LOG="/logs/$CONFIG_FILE.log"
+    ANALYZER_LOG="$LOGS_DIR/$CONFIG_FILE.log"
     set +e
     rm -f $CHECKPOINT_DIRECTORY/*
     
     # Run the analyzer and check the results
     TRITON_LOG_PREFIX=${CONFIG_FILE#"config-"}
     TRITON_LOG_PREFIX=${TRITON_LOG_PREFIX%".yml"}
-    TRITON_LOG=/logs/${TRITON_LOG_PREFIX}.${TRITON_LOG_BASE}
+    TRITON_LOG=$LOGS_DIR/${TRITON_LOG_PREFIX}.${TRITON_LOG_BASE}
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-output-path=${TRITON_LOG} -f $CONFIG_FILE"
 
     run_analyzer

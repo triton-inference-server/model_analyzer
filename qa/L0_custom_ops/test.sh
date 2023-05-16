@@ -15,7 +15,7 @@
 ANALYZER_LOG_BASE="test.log"
 source ../common/util.sh
 
-rm -f /logs/*.log
+rm -f $LOGS_DIR/*.log
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -63,9 +63,9 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     # Set up logs
     LOG_PREFIX=${CONFIG_FILE#"config-"}
     LOG_PREFIX=${LOG_PREFIX%".yaml"}
-    TRITON_LOG=/logs/${LOG_PREFIX}.${TRITON_LOG_BASE}
+    TRITON_LOG=$LOGS_DIR/${LOG_PREFIX}.${TRITON_LOG_BASE}
 
-    ANALYZER_LOG=/logs/${LOG_PREFIX}.${ANALYZER_LOG_BASE}
+    ANALYZER_LOG=$LOGS_DIR/${LOG_PREFIX}.${ANALYZER_LOG_BASE}
     touch $TRITON_LOG
     MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 

@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TEST_LOG='/logs/test.log'
 source ../common/util.sh
 
+TEST_LOG="$LOGS_DIR/test.log"
 rm -f $TEST_LOG
 
 MODEL_ANALYZER=`which model-analyzer`
