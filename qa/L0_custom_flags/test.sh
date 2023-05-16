@@ -22,7 +22,7 @@ REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 QA_MODELS="vgg19_libtorch resnet50_libtorch"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
-TRITON_LOG_BASE="/logs/triton.log"
+TRITON_LOG_BASE="triton.log"
 BATCH_SIZES="1"
 CONCURRENCY="1"
 TRITON_LAUNCH_MODE="local"
@@ -61,7 +61,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     # Run the analyzer and check the results
     TRITON_LOG_PREFIX=${CONFIG_FILE#"config-"}
     TRITON_LOG_PREFIX=${TRITON_LOG_PREFIX%".yml"}
-    TRITON_LOG=${TRITON_LOG_PREFIX}.${TRITON_LOG_BASE}
+    TRITON_LOG=/logs/${TRITON_LOG_PREFIX}.${TRITON_LOG_BASE}
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-output-path=${TRITON_LOG} -f $CONFIG_FILE"
 
     run_analyzer
