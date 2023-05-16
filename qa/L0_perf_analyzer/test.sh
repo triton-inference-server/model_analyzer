@@ -28,7 +28,7 @@ CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
+CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 
 rm -rf *.yml
 rm -rf $CHECKPOINT_DIRECTORY && mkdir -p $CHECKPOINT_DIRECTORY

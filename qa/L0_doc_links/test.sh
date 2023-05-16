@@ -13,7 +13,7 @@
 # limitations under the License.
 
 LOGS_DIR="/logs"
-LOG="$LOGS_DIR/log.txt"
+LOG="$LOGS_DIR/test.log"
 CONFIG="`pwd`/mkdocs.yml"
 RET=0
 

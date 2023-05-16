@@ -25,7 +25,7 @@ QA_MODELS="resnet50_libtorch"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
-EXPORT_PATH="`pwd`/results"
+EXPORT_PATH="$LOGS_DIR/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
@@ -34,7 +34,7 @@ CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
+CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 
 MODEL_ANALYZER_PROFILE_BASE_ARGS="--model-repository $MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"

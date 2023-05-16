@@ -25,7 +25,7 @@ MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 MODEL_NAMES="vgg19_libtorch"
-EXPORT_PATH="`pwd`/results"
+EXPORT_PATH="$LOGS_DIR/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
@@ -37,7 +37,7 @@ grpc_port="${PORTS[1]}"
 metrics_port="${PORTS[2]}"
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
+CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="--model-repository $MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"

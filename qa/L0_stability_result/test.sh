@@ -25,11 +25,11 @@ CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserv
 CONFIG_FILE="config.yaml"
 NUM_ITERATIONS=${NUM_ITERATIONS:=4}
 MODEL_NAMES="$(echo `ls ${MODEL_REPOSITORY}` | sed 's/ /,/g')"
-EXPORT_PATH="`pwd`/results"
+EXPORT_PATH="$LOGS_DIR/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
-CHECKPOINT_DIRECTORY="./checkpoints"
+CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 CSV_PATH='.'
 # Clear and create directories
 mkdir $EXPORT_PATH

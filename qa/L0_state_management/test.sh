@@ -23,7 +23,7 @@ REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 QA_MODELS="vgg19_libtorch resnet50_libtorch libtorch_amp_resnet50"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
-EXPORT_PATH="`pwd`/results"
+EXPORT_PATH="$LOGS_DIR/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
