@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LOGS_DIR="/logs
+LOGS_DIR="/logs"
 TEST_LOG="$LOGS_DIR/test.log"
 EXPECTED_NUM_TESTS=`python3 count_tests.py --path ../../tests/`
 source ../common/check_analyzer_results.sh
