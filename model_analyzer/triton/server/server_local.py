@@ -20,7 +20,9 @@ from model_analyzer.model_analyzer_exceptions \
 from subprocess import Popen, DEVNULL, STDOUT, TimeoutExpired
 import psutil
 import logging
+import tempfile
 import os
+from io import TextIOWrapper
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -50,6 +52,8 @@ class TritonServerLocal(TritonServer):
         self._server_path = path
         self._gpus = gpus
         self._log_path = log_path
+        self._log_file = DEVNULL
+        self._is_first_time_starting_server = True
 
         assert self._server_config['model-repository'], \
             "Triton Server requires --model-repository argument to be set."
@@ -82,11 +86,18 @@ class TritonServerLocal(TritonServer):
 
             if self._log_path:
                 try:
+                    if self._is_first_time_starting_server:
+                        if os.path.exists(self._log_path):
+                            os.remove(self._log_path)
                     self._log_file = open(self._log_path, 'a+')
                 except OSError as e:
                     raise TritonModelAnalyzerException(e)
             else:
-                self._log_file = DEVNULL
+                self._log_file = tempfile.NamedTemporaryFile()
+
+            # self._log_file = DEVNULL
+
+            self._is_first_time_starting_server = False
 
             # Construct Popen command
             try:
@@ -135,3 +146,6 @@ class TritonServerLocal(TritonServer):
                     1.0e6), (system_memory_info.available // 1.0e6)
         else:
             return 0.0, 0.0
+
+    def log_file(self) -> TextIOWrapper:
+        return self._log_file

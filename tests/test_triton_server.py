@@ -194,7 +194,10 @@ class TestTritonServerMethods(trc.TestResultCollector):
 
         # Create local server which runs triton as a subprocess
         self.server = TritonServerFactory.create_server_local(
-            path=TRITON_LOCAL_BIN_PATH, config=server_config, gpus=gpus)
+            path=TRITON_LOCAL_BIN_PATH,
+            config=server_config,
+            gpus=gpus,
+            log_path="./test_log_path")
 
         # Check that API functions are called
         self.server.start()

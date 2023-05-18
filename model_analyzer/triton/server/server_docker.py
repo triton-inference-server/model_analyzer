@@ -21,6 +21,8 @@ from .server import TritonServer
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
+from io import TextIOWrapper
+
 LOCAL_HTTP_PORT = 8000
 LOCAL_GRPC_PORT = 8001
 LOCAL_METRICS_PORT = 8002
@@ -205,3 +207,6 @@ class TritonServerDocker(TritonServer):
         # Divide by 1.0e6 to convert from kilobytes to MB
         return float(used_mem_bytes.decode("utf-8")) // 1.0e3, float(
             available_mem_bytes.decode("utf-8")) // 1.0e3
+
+    def log_file(self) -> TextIOWrapper:
+        return self._log_file

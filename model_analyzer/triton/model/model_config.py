@@ -138,7 +138,8 @@ class ModelConfig:
             config, gpus, use_model_repository=True)
 
         server.start()
-        client.wait_for_server_ready(config.client_max_retries)
+        client.wait_for_server_ready(num_retries=config.client_max_retries,
+                                     log_file=server.log_file())
 
         if (client.load_model(model_name) == -1):
             server.stop()

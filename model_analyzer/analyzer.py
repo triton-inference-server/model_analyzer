@@ -205,7 +205,9 @@ class Analyzer:
 
             logger.info('Profiling server only metrics...')
             self._server.start()
-            client.wait_for_server_ready(self._config.client_max_retries)
+            client.wait_for_server_ready(
+                num_retries=self._config.client_max_retries,
+                log_file=self._server.log_file())
             self._metrics_manager.profile_server()
             self._server.stop()
 

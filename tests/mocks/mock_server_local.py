@@ -47,6 +47,7 @@ class MockServerLocalMethods(MockServerMethods):
         self.patcher_psutil = patch(
             'model_analyzer.triton.server.server_local.psutil',
             Mock(**psutil_attrs))
+        self._log_path = "./test_log_path"
         super().__init__()
 
     def start(self):
@@ -80,7 +81,8 @@ class MockServerLocalMethods(MockServerMethods):
             [gpu.device_uuid() for gpu in gpus])
 
         self.popen_mock.assert_called_once_with(cmd,
-                                                stdout=self.pipe_mock,
+                                                stdout=open(
+                                                    self._log_path, 'a+'),
                                                 stderr=self.stdout_mock,
                                                 start_new_session=True,
                                                 universal_newlines=True,

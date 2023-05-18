@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
+
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
 import time
 import logging
+from io import TextIOWrapper
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -28,7 +31,12 @@ class TritonClient:
     TritonClientFactory
     """
 
-    def wait_for_server_ready(self, num_retries, sleep_time=1):
+    def wait_for_server_ready(
+        self,
+        num_retries,
+        sleep_time=1,
+        log_file=None,
+    ):
         """
         Parameters
         ----------
@@ -53,6 +61,18 @@ class TritonClient:
                     time.sleep(sleep_time)
                     retries -= 1
             except Exception as e:
+                if log_file:
+                    log_file.seek(0)
+                    log_output = log_file.read()
+
+                    if log_output:
+                        if "Unexpected argument:" in log_output:
+                            error_start = log_output.find(
+                                "Unexpected argument:")
+                            raise TritonModelAnalyzerException(
+                                f'Error: TritonServer did not launch successfully\n\n{log_output[error_start:]}'
+                            )
+
                 time.sleep(sleep_time)
                 retries -= 1
                 if retries == 0:
@@ -162,7 +182,7 @@ class TritonClient:
         Returns
         -------
         dict or None
-            A dictionary containg the model config.
+            A dictionary containing the model config.
         """
 
         self.wait_for_model_ready(model_name, num_retries)
