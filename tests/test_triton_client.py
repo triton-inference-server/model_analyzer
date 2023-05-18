@@ -23,6 +23,7 @@ from .mocks.mock_server_docker import MockServerDockerMethods
 from .common import test_result_collector as trc
 
 import os
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -106,6 +107,21 @@ class TestTritonClientMethods(trc.TestResultCollector):
         self.tritonclient_mock.assert_created_grpc_client_with_args(GRPC_URL)
         _test_with_client(self, client)
         self.tritonclient_mock.assert_grpc_client_waited_for_server_ready()
+
+    def test_wait_for_server_ready_with_invalid_argument(self):
+        """
+        Tests that we detect when an invalid argument is passed to the server
+        """
+        log_file = tempfile.NamedTemporaryFile()
+        log_file.write(b'Unexpected argument: UNKNOWN_CMD')
+
+        client = TritonClientFactory.create_http_client(server_url=HTTP_URL)
+        self.tritonclient_mock.raise_exception_on_wait_for_server_ready()
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            client.wait_for_server_ready(num_retries=1,
+                                         sleep_time=0.1,
+                                         log_file=log_file)
 
     def test_wait_for_model_ready(self):
 

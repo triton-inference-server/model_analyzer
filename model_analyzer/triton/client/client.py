@@ -61,21 +61,7 @@ class TritonClient:
                     time.sleep(sleep_time)
                     retries -= 1
             except Exception as e:
-                if log_file:
-                    log_file.seek(0)
-                    log_output = log_file.read()
-
-                    if not type(log_output) == str:
-                        log_output = log_output.decode('utf-8')
-
-                    if log_output:
-                        if "Unexpected argument:" in log_output:
-                            error_start = log_output.find(
-                                "Unexpected argument:")
-                            raise TritonModelAnalyzerException(
-                                f'Error: TritonServer did not launch successfully\n\n{log_output[error_start:]}'
-                            )
-
+                self._check_for_triton_log_errors(log_file)
                 time.sleep(sleep_time)
                 retries -= 1
                 if retries == 0:
@@ -197,3 +183,20 @@ class TritonClient:
         Returns true if the server is ready. Else False
         """
         return self._client.is_server_ready()
+
+    def _check_for_triton_log_errors(self, log_file):
+        if not log_file:
+            return
+
+        log_file.seek(0)
+        log_output = log_file.read()
+
+        if not type(log_output) == str:
+            log_output = log_output.decode('utf-8')
+
+        if log_output:
+            if "Unexpected argument:" in log_output:
+                error_start = log_output.find("Unexpected argument:")
+                raise TritonModelAnalyzerException(
+                    f'Error: TritonServer did not launch successfully\n\n{log_output[error_start:]}'
+                )
