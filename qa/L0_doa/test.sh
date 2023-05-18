@@ -16,7 +16,7 @@ source ../common/util.sh
 
 LOGS_DIR="/logs/L0_doa"
 ANALYZER_LOG="$LOGS_DIR/test.log"
-rm -f $ANALYZER_LOG
+mkdir -p $LOGS_DIR
 
 MODEL_ANALYZER=`which model-analyzer`
 

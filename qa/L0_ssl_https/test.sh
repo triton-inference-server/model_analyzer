@@ -17,7 +17,7 @@ LOGS_DIR="/logs/L0_ssl_https"
 
 apt update ; apt install -y nginx
 
-mkdir -p /tmp/output
+mkdir -p /tmp/output $LOGS_DIR
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
