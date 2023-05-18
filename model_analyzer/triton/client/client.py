@@ -65,6 +65,9 @@ class TritonClient:
                     log_file.seek(0)
                     log_output = log_file.read()
 
+                    if not type(log_output) == str:
+                        log_output = log_output.decode('utf-8')
+
                     if log_output:
                         if "Unexpected argument:" in log_output:
                             error_start = log_output.find(
