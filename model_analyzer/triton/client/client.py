@@ -41,6 +41,10 @@ class TritonClient:
             number of times to send a ready status
             request to the server before raising
             an exception
+        sleep_time: int
+            amount of time in seconds to sleep between retries
+        log_file: TextIOWrapper
+            file that contains the server's output log
         Raises
         ------
         TritonModelAnalyzerException
@@ -55,6 +59,7 @@ class TritonClient:
                     time.sleep(sleep_time)
                     return
                 else:
+                    self._check_for_triton_log_errors(log_file)
                     time.sleep(sleep_time)
                     retries -= 1
             except Exception as e:
