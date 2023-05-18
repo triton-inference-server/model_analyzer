@@ -24,7 +24,7 @@ class MockServerMethods(MockBase):
     """
 
     @abstractmethod
-    def assert_server_process_start_called_with(self, **args):
+    def assert_server_process_start_called_with(self, *args, **kwargs):
         """
         Asserts that the tritonserver process was started with
         the supplied arguments
