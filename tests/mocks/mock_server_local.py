@@ -15,6 +15,7 @@
 from .mock_server import MockServerMethods
 from unittest.mock import patch, Mock, MagicMock
 import os
+import tempfile
 
 
 class MockServerLocalMethods(MockServerMethods):
@@ -47,7 +48,6 @@ class MockServerLocalMethods(MockServerMethods):
         self.patcher_psutil = patch(
             'model_analyzer.triton.server.server_local.psutil',
             Mock(**psutil_attrs))
-        self._log_path = "./test_log_path"
         super().__init__()
 
     def start(self):
@@ -70,7 +70,7 @@ class MockServerLocalMethods(MockServerMethods):
         self._patchers.append(self.patcher_pipe)
         self._patchers.append(self.patcher_psutil)
 
-    def assert_server_process_start_called_with(self, cmd, gpus):
+    def assert_server_process_start_called_with(self, cmd, gpus, stdout):
         """
         Asserts that Popen was called
         with the cmd provided.
@@ -81,8 +81,7 @@ class MockServerLocalMethods(MockServerMethods):
             [gpu.device_uuid() for gpu in gpus])
 
         self.popen_mock.assert_called_once_with(cmd,
-                                                stdout=open(
-                                                    self._log_path, 'a+'),
+                                                stdout=stdout,
                                                 stderr=self.stdout_mock,
                                                 start_new_session=True,
                                                 universal_newlines=True,

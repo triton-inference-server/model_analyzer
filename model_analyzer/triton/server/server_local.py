@@ -95,8 +95,6 @@ class TritonServerLocal(TritonServer):
             else:
                 self._log_file = tempfile.NamedTemporaryFile()
 
-            # self._log_file = DEVNULL
-
             self._is_first_time_starting_server = False
 
             # Construct Popen command
