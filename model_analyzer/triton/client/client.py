@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
-
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
 import time
 import logging
-from io import TextIOWrapper
 
 logger = logging.getLogger(LOGGER_NAME)
 

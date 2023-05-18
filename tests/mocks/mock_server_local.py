@@ -15,7 +15,6 @@
 from .mock_server import MockServerMethods
 from unittest.mock import patch, Mock, MagicMock
 import os
-import tempfile
 
 
 class MockServerLocalMethods(MockServerMethods):
@@ -70,7 +69,10 @@ class MockServerLocalMethods(MockServerMethods):
         self._patchers.append(self.patcher_pipe)
         self._patchers.append(self.patcher_psutil)
 
-    def assert_server_process_start_called_with(self, cmd, gpus, stdout):
+    def assert_server_process_start_called_with(self,
+                                                cmd,
+                                                gpus,
+                                                stdout=MagicMock()):
         """
         Asserts that Popen was called
         with the cmd provided.
