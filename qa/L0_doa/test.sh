@@ -14,8 +14,9 @@
 
 source ../common/util.sh
 
-TEST_LOG="$LOGS_DIR/test.log"
-rm -f $TEST_LOG
+LOGS_DIR="/logs/L0_doa"
+ANALYZER_LOG="$LOGS_DIR/test.log"
+rm -f $ANALYZER_LOG
 
 MODEL_ANALYZER=`which model-analyzer`
 

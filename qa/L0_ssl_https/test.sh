@@ -13,12 +13,10 @@
 # limitations under the License.
 
 source ../common/util.sh
-ANALYZER_LOG="$LOGS_DIR/test.log"
+LOGS_DIR="/logs/L0_ssl_https"
 
 apt update ; apt install -y nginx
 
-rm -f $LOGS_DIR/*.log
-rm -rf results && mkdir -p results
 mkdir -p /tmp/output
 
 # Set test parameters
@@ -70,6 +68,7 @@ cp client.crt client2.crt && sed -i "s/\b\(.\)/\u\1/g" client2.crt
 SERVER=`which tritonserver`
 SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode explicit --http-port ${HTTP_PORT} --grpc-port ${PORTS[0]} --metrics-port ${PORTS[1]}"
 SERVER_HTTP_PORT=${HTTP_PORT}
+SERVER_LOG="$LOGS_DIR/server.log"
 
 run_server
 if [ "$SERVER_PID" == "0" ]; then
@@ -85,6 +84,12 @@ service nginx restart
 set +e
 
 # Test with working keys
+TEST_NAME="test_working_keys"
+TEST_LOG_DIR="$LOGS_DIR/$TEST_NAME/logs"
+ANALYZER_LOG="$TEST_LOG_DIR/test.log"
+EXPORT_PATH="$LOGS_DIR/$TEST_NAME/results"
+mkdir -p $TEST_LOG_DIR $EXPORT_PATH
+
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $WORKING_CONFIG_FILE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint https://localhost:443 --triton-grpc-endpoint localhost:${PORTS[1]}"
@@ -99,6 +104,12 @@ if [ $? -ne 0 ]; then
 fi
 
 # Test with broken keys
+TEST_NAME="test_broken_keys"
+TEST_LOG_DIR="$LOGS_DIR/$TEST_NAME/logs"
+ANALYZER_LOG="$TEST_LOG_DIR/test.log"
+EXPORT_PATH="$LOGS_DIR/$TEST_NAME/results"
+mkdir -p $TEST_LOG_DIR $EXPORT_PATH
+
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $BROKEN_CONFIG_FILE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint https://localhost:443 --triton-grpc-endpoint localhost:${PORTS[1]}"
