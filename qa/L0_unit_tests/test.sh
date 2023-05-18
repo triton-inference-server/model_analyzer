@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LOGS_DIR="/logs"
-TEST_LOG="$LOGS_DIR/test.log"
+LOGS_DIR="/logs/L0_unit_tests"
+TEST_LOG_DIR="$LOGS_DIR/logs"
+TEST_LOG="$TEST_LOG_DIR/test.log"
 EXPECTED_NUM_TESTS=`python3 count_tests.py --path ../../tests/`
 source ../common/check_analyzer_results.sh
+
+mkdir -p $TEST_LOG_DIR
 
 RET=0
 
@@ -43,6 +46,6 @@ fi
 # Generate html files
 echo `pwd`
 coverage html
-cp -rf htmlcov /tmp/html/
+cp -rf htmlcov "$LOGS_DIR/html/"
 
 exit $RET
