@@ -35,7 +35,7 @@ FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 
-mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY
+mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY $LOGS_DIR/logs
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
 python3 test_config_generator.py --profile-models $MODEL_NAMES

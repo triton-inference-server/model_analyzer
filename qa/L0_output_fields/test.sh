@@ -14,10 +14,8 @@
 
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
-ANALYZER_LOG="$LOGS_DIR/test.log"
+LOGS_DIR="/logs/L0_output_fields"
 
-rm -f $LOGS_DIR/*.log
-rm -rf results && mkdir -p results
 python3 config_generator.py
 
 # Set test parameters
@@ -25,18 +23,16 @@ MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2022_08_02"}
-EXPORT_PATH="$LOGS_DIR/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
+CHECKPOINT_DIRECTORY="."
 
-mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY
 cp $CHECKPOINT_REPOSITORY/resnet50_vgg19.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
-MODEL_ANALYZER_ANALYZE_BASE_ARGS="-e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ANALYZE_BASE_ARGS="--checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_SUBCOMMAND="analyze"
 MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
@@ -54,11 +50,17 @@ fi
 RET=0
 
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
-    rm -rf results && mkdir -p results
+
+    TEST_NAME=test_$(basename "$CONFIG_FILE" | sed 's/\.[^.]*$//')
+    TEST_LOG_DIR="$LOGS_DIR/$TEST_NAME/logs"
+    EXPORT_PATH="$LOGS_DIR/$TEST_NAME/results"
+    ANALYZER_LOG="$TEST_LOG_DIR/analyzer.${TEST_NAME}.log"
+
+    mkdir -p $TEST_LOG_DIR $EXPORT_PATH
+
     set +e
 
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -f $CONFIG_FILE" 
-    ANALYZER_LOG=$LOGS_DIR/analyzer.${CONFIG_FILE}.log
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -e $EXPORT_PATH -f $CONFIG_FILE"
 
     TEST_OUTPUT_NUM_ROWS=16
     run_analyzer
@@ -91,8 +93,6 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         fi
     fi
 
-    rm $ANALYZER_LOG
-    rm -rf $EXPORT_PATH/
     set -e
 done
 
