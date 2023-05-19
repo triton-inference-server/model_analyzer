@@ -14,10 +14,8 @@
 
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
-ANALYZER_LOG="$LOGS_DIR/test.log"
-
-rm -f $LOGS_DIR/*.log
-rm -rf results && mkdir -p results
+LOGS_DIR="/logs/L0_quick_search"
+ANALYZER_LOG="$LOGS_DIR/logs/test.log"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -32,12 +30,13 @@ GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CONFIG_FILE="config.yml"
 EXPORT_PATH="$LOGS_DIR/results"
+CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
-mkdir -p $EXPORT_PATH
+mkdir -p $EXPORT_PATH $LOGS_DIR/logs $CHECKPOINT_DIRECTORY
 
 python3 test_config_generator.py --profile-models $MODEL_NAMES
 
@@ -51,7 +50,7 @@ MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --t
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --latency-budget 10"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --skip-summary-reports"
