@@ -13,10 +13,8 @@
 # limitations under the License.
 
 source ../common/util.sh
-ANALYZER_LOG="$LOGS_DIR/test.log"
-
-rm -f $LOGS_DIR/*.log
-rm -rf results && mkdir -p results
+LOGS_DIR="/logs/L0_profile_quick"
+ANALYZER_LOG="$LOGS_DIR/logs/test.log"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -26,9 +24,12 @@ TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="http"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
+EXPORT_PATH="$LOGS_DIR/results"
+CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
+mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY $LOGS_DIR/logs
 
 # Run the analyzer and check the results
 RET=0
@@ -40,6 +41,7 @@ MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY --profile-models vgg19_libtorch --run-
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 
