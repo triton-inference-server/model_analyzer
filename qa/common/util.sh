@@ -21,6 +21,77 @@ ANALYZER_LOG=${ANALYZER_LOG:="$LOGS_DIR/test.log"}
 
 mkdir -p $LOGS_DIR
 
+create_logs_dir() {
+    # Arguments:
+    #  $1: L0 Script name 
+    # Check if the L0 script name is empty or not
+    if [ -n "$1" ]; then
+        LOGS_DIR="/logs/$1"
+    else
+        LOGS_DIR="/logs"
+    fi
+    mkdir -p "$LOGS_DIR"
+}
+
+create_result_paths() {
+    # Arguments:
+    #  -test-name <test_name>: <string> - L0 Script name 
+    #  -export-path <false>: <boolean> - If false, do not create EXPORT_PATH
+    #  -checkpoints <false>: <boolean> - If false, do not create CHECKPOINT_DIRECTORY
+
+    # By default, ANALYZER_LOG, EXPORT_PATH, and CHECKPOINT_DIRECTORY will always be created
+
+    # Set default values
+    test_name=""
+    export_path=true
+    checkpoints=true
+
+    # Parse arguments options
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -test-name) test_name=$2; shift 2;;
+            -export-path) export_path=$2; shift 2;;
+            -checkpoints) checkpoints=$2; shift 2;;
+            *) echo "Invalid option: $1" >&2; usage; return 1;;
+        esac
+    done
+
+    # Check if the test name is not an empty string
+    if [ -n "$test_name" ]; then
+        TEST_LOG_DIR="$LOGS_DIR/$test_name/logs"
+        ANALYZER_LOG="$TEST_LOG_DIR/test.log"
+        mkdir -p "$TEST_LOG_DIR"
+
+        # Create EXPORT_PATH if export_path is true
+        if [ "$export_path" = true ]; then
+            EXPORT_PATH="$LOGS_DIR/$test_name/results"
+            mkdir -p "$EXPORT_PATH"
+        fi
+
+        # Create CHECKPOINT_DIRECTORY if checkpoints is true
+        if [ "$checkpoints" = true ]; then
+            CHECKPOINT_DIRECTORY="$LOGS_DIR/$test_name/checkpoints"
+            mkdir -p "$CHECKPOINT_DIRECTORY"
+        fi
+    else
+        TEST_LOG_DIR="$LOGS_DIR/logs"
+        ANALYZER_LOG="$TEST_LOG_DIR/test.log"
+        mkdir -p "$TEST_LOG_DIR"
+
+        # Create EXPORT_PATH if export_path is true
+        if [ "$export_path" = true ]; then
+            EXPORT_PATH="$LOGS_DIR/results"
+            mkdir -p "$EXPORT_PATH"
+        fi
+
+        # Create CHECKPOINT_DIRECTORY if checkpoints is true
+        if [ "$checkpoints" = true ]; then
+            CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
+            mkdir -p "$CHECKPOINT_DIRECTORY"
+        fi
+    fi
+}
+
 # Wait until server health endpoint shows ready. Sets WAIT_RET to 0 on
 # success, 1 on failure
 function wait_for_server_ready() {

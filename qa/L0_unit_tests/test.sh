@@ -12,24 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LOGS_DIR="/logs/L0_unit_tests"
-TEST_LOG_DIR="$LOGS_DIR/logs"
-TEST_LOG="$TEST_LOG_DIR/test.log"
 EXPECTED_NUM_TESTS=`python3 count_tests.py --path ../../tests/`
 source ../common/check_analyzer_results.sh
+source ../common/util.sh
 
-mkdir -p $TEST_LOG_DIR
+create_logs_dir "L0_unit_tests"
+create_result_paths -export-path false -checkpoints false
 
 RET=0
 
 set +e
-coverage run --branch --source=../../model_analyzer -m unittest discover -v -s ../../tests  -t ../../ > $TEST_LOG 2>&1
+coverage run --branch --source=../../model_analyzer -m unittest discover -v -s ../../tests  -t ../../ > $ANALYZER_LOG 2>&1
 if [ $? -ne 0 ]; then
     RET=1
 else
-    check_unit_test_results $TEST_LOG $EXPECTED_NUM_TESTS
+    check_unit_test_results $ANALYZER_LOG $EXPECTED_NUM_TESTS
     if [ $? -ne 0 ]; then
-        cat $TEST_LOG
+        cat $ANALYZER_LOG
         echo -e "\n***\n*** Test Result Verification Failed\n***"
         RET=1
     fi
@@ -39,7 +38,7 @@ set -e
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"
 else
-    cat $TEST_LOG
+    cat $ANALYZER_LOG
     echo -e "\n***\n*** Test FAILED\n***"
 fi
 
