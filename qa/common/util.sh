@@ -59,7 +59,7 @@ create_result_paths() {
     # Check if the test name is not an empty string
     if [ -n "$test_name" ]; then
         TEST_LOG_DIR="$LOGS_DIR/$test_name/logs"
-        ANALYZER_LOG="$TEST_LOG_DIR/test.log"
+        ANALYZER_LOG="$TEST_LOG_DIR/analyzer.${test_name}.log"
         mkdir -p "$TEST_LOG_DIR"
 
         # Create EXPORT_PATH if export_path is true
@@ -75,7 +75,7 @@ create_result_paths() {
         fi
     else
         TEST_LOG_DIR="$LOGS_DIR/logs"
-        ANALYZER_LOG="$TEST_LOG_DIR/test.log"
+        ANALYZER_LOG="$TEST_LOG_DIR/analyzer.log"
         mkdir -p "$TEST_LOG_DIR"
 
         # Create EXPORT_PATH if export_path is true

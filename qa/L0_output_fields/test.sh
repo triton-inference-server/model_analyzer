@@ -14,7 +14,7 @@
 
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
-LOGS_DIR="/logs/L0_output_fields"
+create_logs_dir "L0_output_fields"
 
 python3 config_generator.py
 
@@ -52,11 +52,7 @@ RET=0
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
 
     TEST_NAME=test_$(basename "$CONFIG_FILE" | sed 's/\.[^.]*$//')
-    TEST_LOG_DIR="$LOGS_DIR/$TEST_NAME/logs"
-    EXPORT_PATH="$LOGS_DIR/$TEST_NAME/results"
-    ANALYZER_LOG="$TEST_LOG_DIR/analyzer.${TEST_NAME}.log"
-
-    mkdir -p $TEST_LOG_DIR $EXPORT_PATH
+    create_result_paths -test-name $TEST_NAME -checkpoints false
 
     set +e
 

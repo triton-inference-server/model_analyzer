@@ -14,29 +14,22 @@
 
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
-
-ANALYZER_LOG="$LOGS_DIR/cpu.log"
-
-rm -rf results && mkdir -p results
-rm -rf checkpoints && mkdir checkpoints
-rm -f $ANALYZER_LOG
+create_logs_dir "L0_cpu"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/tf_model_store"}
-EXPORT_PATH="$LOGS_DIR/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="grpc"
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
-mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY
 rm -rf $OUTPUT_MODEL_REPOSITORY
+create_result_paths
 
 python3 test_config_generator.py --model-names resnet_v1_50_cpu_graphdef
 
