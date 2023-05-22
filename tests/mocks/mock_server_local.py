@@ -69,7 +69,10 @@ class MockServerLocalMethods(MockServerMethods):
         self._patchers.append(self.patcher_pipe)
         self._patchers.append(self.patcher_psutil)
 
-    def assert_server_process_start_called_with(self, cmd, gpus):
+    def assert_server_process_start_called_with(self,
+                                                cmd,
+                                                gpus,
+                                                stdout=MagicMock()):
         """
         Asserts that Popen was called
         with the cmd provided.
@@ -80,7 +83,7 @@ class MockServerLocalMethods(MockServerMethods):
             [gpu.device_uuid() for gpu in gpus])
 
         self.popen_mock.assert_called_once_with(cmd,
-                                                stdout=self.pipe_mock,
+                                                stdout=stdout,
                                                 stderr=self.stdout_mock,
                                                 start_new_session=True,
                                                 universal_newlines=True,

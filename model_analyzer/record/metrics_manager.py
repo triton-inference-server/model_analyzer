@@ -103,7 +103,7 @@ class MetricsManager:
     def _init_state(self):
         """
         Sets MetricsManager object managed
-        state variables in AnalyerState
+        state variables in AnalyzerState
         """
 
         gpu_info = self._state_manager.get_state_variable(
@@ -361,7 +361,9 @@ class MetricsManager:
         """
         Loads a model variant in the client
         """
-        self._client.wait_for_server_ready(self._config.client_max_retries)
+        self._client.wait_for_server_ready(
+            num_retries=self._config.client_max_retries,
+            log_file=self._server.log_file())
 
         variant_name = variant_config.get_field('name')
         if self._client.load_model(model_name=variant_name) == -1:
@@ -483,7 +485,7 @@ class MetricsManager:
                 perf_output_writer.write(perf_analyzer.output() + '\n',
                                          append=True)
 
-        # PerfAnalyzer run was not succesful
+        # PerfAnalyzer run was not successful
         if status == 1:
             return (None, None)
 
@@ -539,7 +541,7 @@ class MetricsManager:
     def _get_cpu_inference_metrics(self):
         """
         Stops any monitors that just need the records to be aggregated
-        like the CPU mmetrics
+        like the CPU metrics
         """
 
         cpu_records = self._cpu_monitor.stop_recording_metrics()
@@ -558,7 +560,9 @@ class MetricsManager:
         """
 
         if self._config.triton_launch_mode != 'remote' and self._config.triton_launch_mode != 'c_api':
-            self._client.wait_for_server_ready(self._config.client_max_retries)
+            self._client.wait_for_server_ready(
+                num_retries=self._config.client_max_retries,
+                log_file=self._server.log_file())
 
             model_analyzer_gpus = [gpu.device_uuid() for gpu in self._gpus]
             triton_gpus = self._get_triton_metrics_gpus()
