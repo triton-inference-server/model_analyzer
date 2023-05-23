@@ -515,9 +515,15 @@ class MetricsManager:
 
     def _handle_unsuccessful_perf_analyzer_run(
             self, perf_analyzer: PerfAnalyzer) -> None:
-        self._encountered_perf_analyzer_error = True
         output_path = self._config.perf_output_path if self._config.perf_output_path else self._config.export_path
-        perf_error_log = FileWriter(f"{output_path}/{PA_ERROR_LOG_FILENAME}")
+        output_file = f"{output_path}/{PA_ERROR_LOG_FILENAME}"
+
+        if not self._encountered_perf_analyzer_error:
+            self._encountered_perf_analyzer_error = True
+            if os.path.exists(output_file):
+                os.remove(output_file)
+
+        perf_error_log = FileWriter(output_file)
         perf_error_log.write('Command: \n' + perf_analyzer.get_cmd() + '\n\n',
                              append=True)
 
