@@ -13,7 +13,7 @@
 # limitations under the License.
 
 source ../common/util.sh
-LOGS_DIR="/logs/L0_ssl_grpc"
+create_logs_dir "L0_ssl_grpc"
 
 mkdir -p /tmp/output
 
@@ -62,11 +62,7 @@ cp client.crt client2.crt && sed -i "s/\b\(.\)/\u\1/g" client2.crt
 
 # Test with working keys
 TEST_NAME="test_working_keys"
-TEST_LOG_DIR="$LOGS_DIR/$TEST_NAME/logs"
-ANALYZER_LOG="$TEST_LOG_DIR/test.log"
-EXPORT_PATH="$LOGS_DIR/$TEST_NAME/results"
-CHECKPOINT_DIRECTORY="$LOGS_DIR/$TEST_NAME/checkpoints"
-mkdir -p $TEST_LOG_DIR $EXPORT_PATH $CHECKPOINT_DIRECTORY
+create_result_paths -test-name $TEST_NAME
 
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $WORKING_CONFIG_FILE -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
@@ -84,11 +80,7 @@ fi
 
 # Test with broken keys
 TEST_NAME="test_broken_keys"
-TEST_LOG_DIR="$LOGS_DIR/$TEST_NAME/logs"
-ANALYZER_LOG="$TEST_LOG_DIR/test.log"
-EXPORT_PATH="$LOGS_DIR/$TEST_NAME/results"
-CHECKPOINT_DIRECTORY="$LOGS_DIR/$TEST_NAME/checkpoints"
-mkdir -p $TEST_LOG_DIR $EXPORT_PATH $CHECKPOINT_DIRECTORY
+create_result_paths -test-name $TEST_NAME
 
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $BROKEN_CONFIG_FILE -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"

@@ -14,7 +14,7 @@
 
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
-LOGS_DIR="/logs/L0_profile_request_rate"
+create_logs_dir "L0_profile_request_rate"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -40,12 +40,7 @@ python3 test_config_generator.py --profile-models $MODEL_NAMES -b $BATCH_SIZES -
 
 # Run the analyzer and check the results
 TEST_NAME="test_config"
-EXPORT_PATH="$LOGS_DIR/$TEST_NAME/results"
-CHECKPOINT_DIRECTORY="$LOGS_DIR/$TEST_NAME/checkpoints"
-ANALYZER_LOG_DIR="$LOGS_DIR/$TEST_NAME/logs"
-ANALYZER_LOG="$ANALYZER_LOG_DIR/$TEST_NAME.log"
-
-mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY $ANALYZER_LOG_DIR
+create_result_paths -test-name $TEST_NAME
 
 RET=0
 
@@ -91,12 +86,8 @@ fi
 
 # Rerun with batch size expanded to 1,4,8
 TEST_NAME="test_expanded_config"
-EXPORT_PATH="$LOGS_DIR/$TEST_NAME/results"
-CHECKPOINT_DIRECTORY="$LOGS_DIR/$TEST_NAME/checkpoints"
-ANALYZER_LOG_DIR="$LOGS_DIR/$TEST_NAME/logs"
-ANALYZER_LOG="$ANALYZER_LOG_DIR/$TEST_NAME.log"
+create_result_paths -test-name $TEST_NAME
 
-mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY $ANALYZER_LOG_DIR
 rm -rf $CONFIG_FILE
 
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $CONFIG_FILE"

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 source ../common/util.sh
-LOGS_DIR="/logs/L0_results"
+create_logs_dir "L0_results"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -22,7 +22,6 @@ MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_V
 CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2022_08_02"}
 QA_MODELS="resnet50_libtorch"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
-EXPORT_PATH="$LOGS_DIR/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
@@ -31,9 +30,8 @@ CLIENT_PROTOCOL="http"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
+create_result_paths
 
-mkdir -p $LOGS_DIR/logs $EXPORT_PATH $CHECKPOINT_DIRECTORY
 cp $CHECKPOINT_REPOSITORY/resnet50_vgg19.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
@@ -48,8 +46,9 @@ RET=0
 
 set +e
 CONFIG_FILE='config-summaries.yml'
-TEST_NAME='summaries'
-ANALYZER_LOG="$LOGS_DIR/logs/test.$TEST_NAME.log"
+TEST_NAME='test_summaries'
+ANALYZER_LOG="$TEST_LOG_DIR/analyzer.$TEST_NAME.log"
+
 MODEL_ANALYZER_SUBCOMMAND="analyze"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -f $CONFIG_FILE"
 run_analyzer
@@ -67,8 +66,9 @@ else
 fi
 
 CONFIG_FILE='config-detailed-reports.yml'
-TEST_NAME='detailed_reports'
-ANALYZER_LOG="$LOGS_DIR/logs/test.$TEST_NAME.log"
+TEST_NAME='test_detailed_reports'
+ANALYZER_LOG="$TEST_LOG_DIR/analyzer.$TEST_NAME.log"
+
 MODEL_ANALYZER_SUBCOMMAND="report"
 MODEL_ANALYZER_ARGS="-e $EXPORT_PATH -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY"
 run_analyzer
@@ -85,8 +85,6 @@ else
     fi
 fi
 set -e
-
-rm -f *.ckpt
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

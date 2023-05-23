@@ -14,8 +14,7 @@
 
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
-LOGS_DIR="/logs/L0_quick_search_multi_model"
-ANALYZER_LOG="$LOGS_DIR/logs/test.log"
+create_logs_dir "L0_quick_search_multi_model"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -29,13 +28,11 @@ PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CONFIG_FILE="config.yml"
-EXPORT_PATH="$LOGS_DIR/results"
-CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 
-mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY $LOGS_DIR/logs
+create_result_paths
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
 python3 test_config_generator.py --profile-models $MODEL_NAMES

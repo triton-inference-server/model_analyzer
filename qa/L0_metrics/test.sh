@@ -14,7 +14,7 @@
 
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
-LOGS_DIR="/logs/L0_metrics"
+create_logs_dir "L0_metrics"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -54,12 +54,7 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
     rm -rf $OUTPUT_MODEL_REPOSITORY
 
     TEST_NAME=test_$(basename "$config" | sed 's/\.[^.]*$//')
-    TEST_LOG_DIR="$LOGS_DIR/$TEST_NAME/logs"
-    EXPORT_PATH="$LOGS_DIR/$TEST_NAME/results"
-    CHECKPOINT_DIRECTORY="$LOGS_DIR/$TEST_NAME/checkpoints"
-    ANALYZER_LOG="$TEST_LOG_DIR/analyzer.${TEST_NAME}.log"
-
-    mkdir -p $TEST_LOG_DIR $EXPORT_PATH $CHECKPOINT_DIRECTORY
+    create_result_paths -test-name $TEST_NAME
 
     set +e
 
