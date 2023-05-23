@@ -13,10 +13,7 @@
 # limitations under the License.
 
 source ../common/util.sh
-ANALYZER_LOG_BASE="test.log"
-PERF_LOG_BASE="perf.log"
-
-rm -f $LOGS_DIR/*.log
+create_logs_dir "L0_stability_perf"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -31,12 +28,9 @@ OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CONCURRENCY="1"
 BENCHMARK_MODELS="bert_savedmodel resnet50_fp32_libtorch"
 MODEL_NAMES="$(echo $BENCHMARK_MODELS | sed 's/ /,/g')"
-CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 
 METRIC_TOLERANCE_PERCENT=${METRIC_TOLERANCE_PERCENT:=5}
 MEASUREMENT_REQUEST_COUNT=${MEASUREMENT_REQUEST_COUNT:=500}
-
-mkdir -p $CHECKPOINT_DIRECTORY
 
 # Generate test configs
 python3 test_config_generator.py --profile-models $MODEL_NAMES --request-count $MEASUREMENT_REQUEST_COUNT
@@ -61,13 +55,13 @@ MODEL_ANALYZER_SUBCOMMAND="profile"
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     LOG_PREFIX=${CONFIG_FILE#"config-"}
     MODEL_NAME=${LOG_PREFIX%".yaml"}
-    ANALYZER_LOG=$LOGS_DIR/${MODEL_NAME}.${ANALYZER_LOG_BASE}
-    PERF_LOG=$LOGS_DIR/${MODEL_NAME}.${PERF_LOG_BASE}
+    TEST_NAME=test_${MODEL_NAME}
+    create_result_paths -test-name $TEST_NAME
     
     set +e 
 
     # Run the model analyzer
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE"
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
     run_analyzer
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"
@@ -85,6 +79,9 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
 
    
     for concurrency in "$(echo $CONCURRENCY | sed 's/,/ /g')"; do
+        SERVER_LOG=$TEST_LOG_DIR/server_${MODEL_NAME}_${concurrency}.log
+        PERF_LOG=$TEST_LOG_DIR/perf_${MODEL_NAME}_${concurrency}.log
+
         run_server
         if [ "$SERVER_PID" == "0" ]; then
             echo -e "\n***\n*** Failed to start $SERVER\n***"
@@ -111,7 +108,6 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     done
 done
 
-rm -f $SERVER_LOG
 
 set +e
 # Check the Analyzer log for correct output
@@ -125,7 +121,6 @@ fi
 
 set -e
 
-rm -rf $CHECKPOINT_DIRECTORY/*
 rm *.yaml
 
 if [ $RET -eq 0 ]; then
