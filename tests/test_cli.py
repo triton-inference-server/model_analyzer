@@ -67,6 +67,7 @@ def get_test_options():
         OptionStruct("bool", "profile","--reload-model-disable"),
         OptionStruct("bool", "profile","--early-exit-enable"),
         OptionStruct("bool", "profile","--skip-summary-reports"),
+        OptionStruct("bool", "profile","--create-recommended-detailed-reports"),
         #Int/Float options
         # Options format:
         #   (int/float, MA step, long_option, short_option, test_value, expected_default_value)
