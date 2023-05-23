@@ -14,7 +14,7 @@
 
 from typing import List, Union, Optional
 import sys
-from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from .model_manager import ModelManager
 from .result.result_manager import ResultManager
 from .result.result_table_manager import ResultTableManager
@@ -133,6 +133,10 @@ class Analyzer:
                     logger.info(
                         self._get_report_command_help_string(
                             model.model_name()))
+
+            if self._metrics_manager.encountered_perf_analyzer_error():
+                logger.warning(f"Perf Analyzer encountered an error when profiling one or more configurations. " \
+                      f"See {self._config.export_path}/{PA_ERROR_LOG_FILENAME} for further details.\n")
 
     def report(self, mode: str) -> None:
         """

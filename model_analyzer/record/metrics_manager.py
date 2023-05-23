@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional, Tuple, Dict, List
+
 from .record_aggregator import RecordAggregator
-from .record import RecordType
-from model_analyzer.constants import LOGGER_NAME
+from .record import RecordType, Record
+from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.monitor.cpu_monitor import CPUMonitor
@@ -22,6 +24,7 @@ from model_analyzer.monitor.dcgm.dcgm_monitor import DCGMMonitor
 from model_analyzer.monitor.remote_monitor import RemoteMonitor
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
+from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 
@@ -90,6 +93,7 @@ class MetricsManager:
         self._loaded_models = None
 
         self._cpu_warning_printed = False
+        self._encountered_perf_analyzer_error = False
 
         self._gpu_metrics, self._perf_metrics, self._cpu_metrics = self._categorize_metrics(
             self.metrics, self._config.collect_cpu_metrics)
@@ -99,6 +103,9 @@ class MetricsManager:
     def start_new_model(self):
         """ Indicate that profiling of a new model is starting """
         self._first_config_variant = {}
+
+    def encountered_perf_analyzer_error(self) -> bool:
+        return self._encountered_perf_analyzer_error
 
     def _init_state(self):
         """
@@ -165,7 +172,8 @@ class MetricsManager:
             self._result_manager.add_server_data(data=server_gpu_metrics)
         self._destroy_monitors(cpu_only=cpu_only)
 
-    def execute_run_config(self, run_config):
+    def execute_run_config(
+            self, run_config: RunConfig) -> Optional[RunConfigMeasurement]:
         """
         Executes the RunConfig. Returns obtained measurement. Also sends 
         measurement to the result manager
@@ -188,7 +196,7 @@ class MetricsManager:
             if not self._load_model_variants(run_config):
                 self._server.stop()
                 self._loaded_models = None
-                return
+                return None
 
             self._loaded_models = current_model_variants
 
@@ -196,7 +204,8 @@ class MetricsManager:
 
         return measurement
 
-    def profile_models(self, run_config):
+    def profile_models(self,
+                       run_config: RunConfig) -> Optional[RunConfigMeasurement]:
         """
         Runs monitors while running perf_analyzer with a specific set of
         arguments. This will profile model inferencing.
@@ -266,7 +275,7 @@ class MetricsManager:
     def finalize(self):
         self._server.stop()
 
-    def _create_model_variants(self, run_config):
+    def _create_model_variants(self, run_config: RunConfig) -> None:
         """
         Creates and fills all model variant directories
         """
@@ -441,7 +450,9 @@ class MetricsManager:
         self._gpu_monitor = None
         self._cpu_monitor = None
 
-    def _run_perf_analyzer(self, run_config, perf_output_writer):
+    def _run_perf_analyzer(
+        self, run_config: RunConfig, perf_output_writer: Optional[FileWriter]
+    ) -> Tuple[Optional[Dict], Optional[Dict[int, List[Record]]]]:
         """
         Runs perf_analyzer and returns the aggregated metrics
 
@@ -450,7 +461,7 @@ class MetricsManager:
         run_config : RunConfig
             The RunConfig to execute on perf analyzer
 
-        perf_output_writer : OutputWriter
+        perf_output_writer : FileWriter
             Writer that writes the output from perf_analyzer to the output
             stream/file. If None, the output is not written
 
@@ -476,17 +487,10 @@ class MetricsManager:
         metrics_to_gather = self._perf_metrics + self._gpu_metrics
         status = perf_analyzer.run(metrics_to_gather, env=perf_analyzer_env)
 
-        if perf_output_writer:
-            perf_output_writer.write(
-                '============== Perf Analyzer Launched ==============\n'
-                f'Command: {perf_analyzer.get_cmd()}\n\n',
-                append=True)
-            if perf_analyzer.output():
-                perf_output_writer.write(perf_analyzer.output() + '\n',
-                                         append=True)
+        self._write_perf_analyzer_output(perf_output_writer, perf_analyzer)
 
-        # PerfAnalyzer run was not successful
         if status == 1:
+            self._handle_unsuccessful_perf_analyzer_run(perf_analyzer)
             return (None, None)
 
         perf_records = perf_analyzer.get_perf_records()
@@ -496,6 +500,41 @@ class MetricsManager:
         aggregated_gpu_records = self._aggregate_gpu_records(gpu_records)
 
         return aggregated_perf_records, aggregated_gpu_records
+
+    def _write_perf_analyzer_output(self,
+                                    perf_output_writer: Optional[FileWriter],
+                                    perf_analyzer: PerfAnalyzer) -> None:
+        if perf_output_writer:
+            perf_output_writer.write(
+                '============== Perf Analyzer Launched ==============\n'
+                f'Command: {perf_analyzer.get_cmd()}\n\n',
+                append=True)
+            if perf_analyzer.output():
+                perf_output_writer.write(perf_analyzer.output() + '\n',
+                                         append=True)
+
+    def _handle_unsuccessful_perf_analyzer_run(
+            self, perf_analyzer: PerfAnalyzer) -> None:
+        output_file = f"{self._config.export_path}/{PA_ERROR_LOG_FILENAME}"
+
+        if not self._encountered_perf_analyzer_error:
+            self._encountered_perf_analyzer_error = True
+            if os.path.exists(output_file):
+                os.remove(output_file)
+
+        perf_error_log = FileWriter(output_file)
+        perf_error_log.write('Command: \n' + perf_analyzer.get_cmd() + '\n\n',
+                             append=True)
+
+        if perf_analyzer.output():
+            perf_error_log.write('Error: \n' + perf_analyzer.output() + '\n',
+                                 append=True)
+        else:
+            perf_error_log.write(
+                'Error: ' +
+                'perf_analyzer did not produce any output. It was likely terminated with a SIGABRT.'
+                + '\n\n',
+                append=True)
 
     def _aggregate_perf_records(self, perf_records):
         per_model_perf_records = {}
