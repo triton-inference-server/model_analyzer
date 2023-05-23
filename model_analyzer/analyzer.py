@@ -136,7 +136,7 @@ class Analyzer:
 
             if self._metrics_manager.encountered_perf_analyzer_error():
                 logger.warning(f"Perf Analyzer encountered an error when profiling one or more configurations. " \
-                      f"See {PA_ERROR_LOG_FILENAME} for further details.\n")
+                      f"See {self._config.export_path}/{PA_ERROR_LOG_FILENAME} for further details.\n")
 
     def report(self, mode: str) -> None:
         """
