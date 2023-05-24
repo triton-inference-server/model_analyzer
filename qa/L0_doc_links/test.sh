@@ -13,13 +13,11 @@
 # limitations under the License.
 
 source ../common/util.sh
-create_logs_dir "L0_custom_ops"
+create_logs_dir "L0_doc_links"
 
-LOG="$LOGS_DIR/log.txt"
+LOG="$LOGS_DIR/test.log"
 CONFIG="$LOGS_DIR/mkdocs.yml"
 RET=0
-
-rm $LOG
 
 exec mkdocs serve -f $CONFIG > $LOG &
 PID=$!

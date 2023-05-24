@@ -46,8 +46,8 @@ RET=0
 
 set +e
 CONFIG_FILE='config-summaries.yml'
-TEST_NAME='test_summaries'
-ANALYZER_LOG="$TEST_LOG_DIR/analyzer.$TEST_NAME.log"
+TEST_NAME='summaries'
+ANALYZER_LOG="$TEST_LOG_DIR/analyzer.test_$TEST_NAME.log"
 
 MODEL_ANALYZER_SUBCOMMAND="analyze"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -f $CONFIG_FILE"
@@ -66,8 +66,8 @@ else
 fi
 
 CONFIG_FILE='config-detailed-reports.yml'
-TEST_NAME='test_detailed_reports'
-ANALYZER_LOG="$TEST_LOG_DIR/analyzer.$TEST_NAME.log"
+TEST_NAME='detailed_reports'
+ANALYZER_LOG="$TEST_LOG_DIR/analyzer.test_$TEST_NAME.log"
 
 MODEL_ANALYZER_SUBCOMMAND="report"
 MODEL_ANALYZER_ARGS="-e $EXPORT_PATH -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY"

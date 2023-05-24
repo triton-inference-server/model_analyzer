@@ -60,7 +60,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     LOG_PREFIX=${CONFIG_FILE#"config-"}
     LOG_PREFIX=${LOG_PREFIX%".yaml"}
 
-    TEST_NAME=test_$(basename "$config" | sed 's/\.[^.]*$//')
+    TEST_NAME=test_$(basename "$CONFIG_FILE" | sed 's/\.[^.]*$//')
     create_result_paths -test-name $TEST_NAME
     TRITON_LOG=$TEST_LOG_DIR/triton_${TEST_NAME}.log
 
