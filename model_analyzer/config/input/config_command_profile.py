@@ -233,7 +233,7 @@ class ConfigCommandProfile(ConfigCommand):
                 default_value=DEFAULT_CREATE_RECOMMENDED_DETAILED_REPORTS,
                 description=
                 "Creates the recommended detail reports after profile completes."
-                'C.'))
+            ))
 
         self._add_repository_configs()
         self._add_client_configs()
