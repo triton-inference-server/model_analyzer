@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG_BASE="test.log"
 source ../common/util.sh
-
-rm -f $LOGS_DIR/*.log
+create_logs_dir "L0_custom_ops"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -29,11 +27,7 @@ OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CONFIG_FILE="config.yaml"
 NUM_ITERATIONS=${NUM_ITERATIONS:=4}
 MODEL_NAMES="libtorch_modulo"
-CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
-TRITON_LOG_BASE="triton.log"
 WAIT_TIMEOUT=1200
-
-mkdir -p $CHECKPOINT_DIRECTORY
 
 # Generate test configs
 python3 test_config_generator.py --profile-models $MODEL_NAMES --preload-path "/usr/lib/x86_64-linux-gnu/libpython3.8.so.1:$MODEL_REPOSITORY/libtorch_modulo/custom_modulo.so" --library-path /opt/tritonserver/backends/pytorch:'$LD_LIBRARY_PATH'
@@ -65,13 +59,16 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     # Set up logs
     LOG_PREFIX=${CONFIG_FILE#"config-"}
     LOG_PREFIX=${LOG_PREFIX%".yaml"}
-    TRITON_LOG=$LOGS_DIR/${LOG_PREFIX}.${TRITON_LOG_BASE}
 
-    ANALYZER_LOG=$LOGS_DIR/${LOG_PREFIX}.${ANALYZER_LOG_BASE}
+    TEST_NAME=test_$(basename "$config" | sed 's/\.[^.]*$//')
+    create_result_paths -test-name $TEST_NAME
+    TRITON_LOG=$TEST_LOG_DIR/triton_${TEST_NAME}.log
+
     touch $TRITON_LOG
     MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
     # Run analyzer
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
     if [[ "$LOG_PREFIX" == "c_api" ]]; then    
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --perf-output-path=$TRITON_LOG"
     elif [[ "$LOG_PREFIX" == "docker" ]]; then
@@ -119,11 +116,10 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         sleep 0.5
     done
     wait $ANALYZER_PID
-    rm -f $CHECKPOINT_DIRECTORY/*
 done
 set -e
 
-rm -rf *.yaml checkpoints plots reports results
+rm -rf *.yaml
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

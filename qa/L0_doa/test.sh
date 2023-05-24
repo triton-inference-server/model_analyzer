@@ -13,10 +13,8 @@
 # limitations under the License.
 
 source ../common/util.sh
-
-LOGS_DIR="/logs/L0_doa"
-ANALYZER_LOG="$LOGS_DIR/test.log"
-mkdir -p $LOGS_DIR
+create_logs_dir "L0_doa"
+create_result_paths -export-path false -checkpoints false
 
 MODEL_ANALYZER=`which model-analyzer`
 

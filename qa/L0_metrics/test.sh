@@ -29,14 +29,12 @@ CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-
-MODEL_ANALYZER_PROFILE_BASE_ARGS="--model-repository $MODEL_REPOSITORY "
+MODEL_ANALYZER_PROFILE_BASE_ARGS="--model-repository $MODEL_REPOSITORY"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
-MODEL_ANALYZER_SUBCOMMAND="profile"
 
 python3 test_config_generator.py -m $MODEL_NAMES
 
@@ -52,16 +50,16 @@ fi
 # Run the analyzer with various configurations and check the results
 for config in ${LIST_OF_CONFIG_FILES[@]}; do
     rm -rf $OUTPUT_MODEL_REPOSITORY
+    set +e
 
     TEST_NAME=test_$(basename "$config" | sed 's/\.[^.]*$//')
     create_result_paths -test-name $TEST_NAME
 
-    set +e
-
     MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]} --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config --triton-launch-mode $TRITON_LAUNCH_MODE --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config --triton-launch-mode $TRITON_LAUNCH_MODE -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $MODEL_ANALYZER_PORTS"
 
+    MODEL_ANALYZER_SUBCOMMAND="profile"
     run_analyzer
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"

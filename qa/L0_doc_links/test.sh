@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-LOGS_DIR="/logs/L0_doc_links"
-LOG="$LOGS_DIR/test.log"
-CONFIG="`pwd`/mkdocs.yml"
+source ../common/util.sh
+create_logs_dir "L0_custom_ops"
+
+LOG="$LOGS_DIR/log.txt"
+CONFIG="$LOGS_DIR/mkdocs.yml"
 RET=0
 
-mkdir -p $LOGS_DIR
+rm $LOG
 
 exec mkdocs serve -f $CONFIG > $LOG &
 PID=$!
