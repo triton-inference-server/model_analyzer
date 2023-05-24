@@ -13,9 +13,7 @@
 # limitations under the License.
 
 source ../common/util.sh
-ANALYZER_LOG="$LOGS_DIR/test.log"
-
-rm -f $LOGS_DIR/*.log
+create_logs_dir "L0_stability_metrics"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -31,15 +29,10 @@ CONFIG_FILE="config.yaml"
 NUM_ITERATIONS=${NUM_ITERATIONS:=5}
 BENCHMARK_MODELS="`ls ${MODEL_REPOSITORY}`"
 MODEL_NAMES="$(echo $BENCHMARK_MODELS | sed 's/ /,/g')"
-EXPORT_PATH="$LOGS_DIR/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
-CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 CSV_PATH='.'
-
-# Set up checkpoints
-mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY
 
 # Generate test configs
 python3 test_config_generator.py --models $MODEL_NAMES
@@ -51,6 +44,10 @@ set +e
 
 # Run the analyzer and check the results
 for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
+    TEST_NAME=iteration_${i}
+    create_result_paths -test-name $TEST_NAME
+    ANALYZER_LOG=${TEST_LOG_DIR}analyzer.${TEST_NAME}.profile.log
+
     # First profile
     MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $CONFIG_FILE"
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
@@ -68,7 +65,8 @@ for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
     fi
 
     # Then generate results
-    MODEL_ANALYZER_ARGS="-e $EXPORT_PATH -f $CONFIG_FILE --filename-server-only=$FILENAME_SERVER_ONLY"
+    ANALYZER_LOG=${TEST_LOG_DIR}analyzer.${TEST_NAME}.generate_results.log
+    MODEL_ANALYZER_ARGS="-e $EXPORT_PATH -f $CONFIG_FILE --filename-server-only=$FILENAME_SERVER_ONLY --checkpoint-directory $CHECKPOINT_DIRECTORY"
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL "
     MODEL_ANALYZER_SUBCOMMAND="profile"
     
@@ -78,8 +76,7 @@ for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
         cat $ANALYZER_LOG
         RET=1
     fi
-    mv $EXPORT_PATH/results/$FILENAME_GPU_MODEL $CSV_PATH/result_${i}.csv
-    rm $CHECKPOINT_DIRECTORY/*
+    cp $EXPORT_PATH/results/$FILENAME_GPU_MODEL $CSV_PATH/result_${i}.csv
 done
 
 # Check the Analyzer log for correct output
@@ -92,9 +89,7 @@ if [ $? -ne 0 ]; then
 fi
 set -e
 
-rm -rf $EXPORT_PATH
 rm -rf $OUTPUT_MODEL_REPOSITORY
-rm -rf $CHECKPOINT_DIRECTORY
 rm *.csv
 
 if [ $RET -eq 0 ]; then
