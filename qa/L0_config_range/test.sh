@@ -14,18 +14,13 @@
 
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
-
-rm -f $LOGS_DIR/*.log
-rm -rf results && mkdir -p results
-
-ANALYZER_LOG="$LOGS_DIR/test.log"
+create_logs_dir "L0_config_range"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 MODEL_NAMES="vgg19_libtorch,resnet50_libtorch"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
-EXPORT_PATH="$LOGS_DIR/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
@@ -34,17 +29,14 @@ CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
-
-mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY
 
 MODEL_ANALYZER_PROFILE_BASE_ARGS="--model-repository $MODEL_REPOSITORY"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
-MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics --checkpoint-directory=$CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 
-MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY --checkpoint-directory=$CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 
 python3 config_generator.py
@@ -61,11 +53,13 @@ fi
 
 # Run the analyzer with various configurations and check the results
 for config in ${LIST_OF_CONFIG_FILES[@]}; do
-    rm -rf results && mkdir -p results && rm -rf $OUTPUT_MODEL_REPOSITORY && rm -rf $CHECKPOINT_DIRECTORY/*
+    rm -rf $OUTPUT_MODEL_REPOSITORY
     set +e
 
-    ANALYZER_LOG=$LOGS_DIR/analyzer.${config}.log
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config"
+    TEST_NAME=test_$(basename "$config" | sed 's/\.[^.]*$//')
+    create_result_paths -test-name $TEST_NAME
+
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
     NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml/\.txt/'`
     TEST_OUTPUT_NUM_ROWS=`cat $NUM_ROW_OUTPUT_FILE`
     MODEL_ANALYZER_SUBCOMMAND="profile"
@@ -95,7 +89,6 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
         RET=1
     fi
 
-    rm $ANALYZER_LOG
     set -e
 done
 
