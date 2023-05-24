@@ -1813,6 +1813,13 @@ profile_models:
 
         self._evaluate_config(new_args, yaml_content, subcommand='profile')
 
+        # Detailed report generation should fail
+        new_args = deepcopy(args)
+        new_args.append('--create-recommended-detailed-reports')
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(new_args, yaml_content, subcommand='profile')
+
     def test_quick_search_mode(self):
         """
         Test that only legal options are specified in quick search

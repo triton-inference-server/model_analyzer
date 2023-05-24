@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from typing import List, Union, Optional
-import sys
+import os, sys
 from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from .model_manager import ModelManager
 from .result.result_manager import ResultManager
@@ -130,13 +130,14 @@ class Analyzer:
             # TODO-TMA-650: Detailed reporting not supported for multi-model
             if not self._config.run_config_profile_models_concurrently_enable:
                 for model in self._config.profile_models:
-                    logger.info(
-                        self._get_report_command_help_string(
-                            model.model_name()))
+                    if self._config.create_recommended_detailed_reports:
+                        self._run_report_command(model.model_name())
+                    else:
+                        logger.info(
+                            self._get_report_command_help_string(
+                                model.model_name()))
 
-            if self._metrics_manager.encountered_perf_analyzer_error():
-                logger.warning(f"Perf Analyzer encountered an error when profiling one or more configurations. " \
-                      f"See {self._config.export_path}/{PA_ERROR_LOG_FILENAME} for further details.\n")
+        self._check_for_perf_analyzer_errors()
 
     def report(self, mode: str) -> None:
         """
@@ -287,6 +288,16 @@ class Analyzer:
             f'{len(top_3_model_config_names)} best {model_name} configurations, run '
             f'`{self._get_report_command_string(top_3_model_config_names)}`')
 
+    def _run_report_command(self, model_name: str) -> None:
+        top_3_model_config_names = self._get_top_n_model_config_names(
+            n=3, model_name=model_name)
+        top_3_string = ','.join(top_3_model_config_names)
+        logger.info(
+            f'Generating detailed reports for the best configurations {top_3_string}:'
+        )
+        os.system(
+            f'{self._get_report_command_string(top_3_model_config_names)}')
+
     def _get_report_command_string(self,
                                    top_3_model_config_names: List[str]) -> str:
         report_command_string = (f'model-analyzer report '
@@ -336,3 +347,8 @@ class Analyzer:
         ]
 
         return len(set(model_names)) > 1
+
+    def _check_for_perf_analyzer_errors(self) -> None:
+        if self._metrics_manager.encountered_perf_analyzer_error():
+            logger.warning(f"Perf Analyzer encountered an error when profiling one or more configurations. " \
+                    f"See {self._config.export_path}/{PA_ERROR_LOG_FILENAME} for further details.\n")

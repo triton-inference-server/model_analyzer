@@ -172,6 +172,8 @@ class ConfigCommand:
             return
 
         self._check_multi_model_search_mode_incompatibility(args, yaml_config)
+        self._check_multi_model_detailed_report_incompatibility(
+            args, yaml_config)
 
     def _check_multi_model_search_mode_incompatibility(
             self, args: Namespace, yaml_config: Optional[Dict[str,
@@ -181,6 +183,16 @@ class ConfigCommand:
             raise TritonModelAnalyzerException(
                 f'\nConcurrent profiling of models not supported in brute search mode.'
                 '\nPlease use quick search mode (`--run-config-search-mode quick`) or disable concurrent model profiling.'
+            )
+
+    def _check_multi_model_detailed_report_incompatibility(
+            self, args: Namespace, yaml_config: Optional[Dict[str,
+                                                              List]]) -> None:
+        if self._get_config_value('create_recommended_detailed_reports', args,
+                                  yaml_config) == True:
+            raise TritonModelAnalyzerException(
+                f'\nDetailed recommended report generation is not supported for concurrent multi-model profiling.'
+                '\nPlease disable recommended report generation or concurrent profiling.'
             )
 
     def _check_for_quick_search_incompatibility(
