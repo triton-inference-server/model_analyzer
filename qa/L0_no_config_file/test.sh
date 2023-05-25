@@ -28,12 +28,12 @@
 ###############################
 
 source ../common/util.sh
+create_logs_dir "L0_no_config_file"
 
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 
-rm -f $LOGS_DIR/*.log
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-rm -rf $OUTPUT_MODEL_REPOSITORY
+rm -rf $OUTPUT_MODEL_REPOSITORY -f *.log
 
 MODEL_REPOSITORY=$(get_output_directory)
 rm -rf $MODEL_REPOSITORY
@@ -88,12 +88,14 @@ function run_server_launch_modes() {
         PARAMETERS=(${CONFIG_PARAMETERS//-/ })
         LAUNCH_MODE=${PARAMETERS[1]}
         PROTOCOL=${PARAMETERS[2]}
-        
-        ANALYZER_LOG=$LOGS_DIR/analyzer.${PROFILE_MODEL}.${LAUNCH_MODE}.${PROTOCOL}.log
-        SERVER_LOG=$LOGS_DIR/server.${PROFILE_MODEL}.${LAUNCH_MODE}.${PROTOCOL}.log
+
+        TEST_NAME=${PROFILE_MODEL}.${LAUNCH_MODE}.${PROTOCOL}
+        create_result_paths -test-name $TEST_NAME
+
+        SERVER_LOG=$TEST_LOG_DIR/server.${TEST_NAME}.log
 
         MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --profile-models $PROFILE_MODEL"
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --profile-models $PROFILE_MODEL --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
 
         _run_single_config
 
@@ -140,9 +142,6 @@ function _run_analyzer_and_check_results() {
         return 1
     fi
     set -e
-
-    rm -rf checkpoints
-    rm -rf $OUTPUT_MODEL_REPOSITORY
 }
 
 function _check_analyzer_exit_status() {

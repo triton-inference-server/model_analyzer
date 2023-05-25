@@ -13,8 +13,8 @@
 # limitations under the License.
 
 source ../common/util.sh
+create_logs_dir "L0_server_launch_modes"
 
-rm -f $LOGS_DIR/*.log
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
@@ -78,9 +78,8 @@ function run_server_launch_modes() {
         PARAMETERS=(${CONFIG_PARAMETERS//-/ })
         LAUNCH_MODE=${PARAMETERS[1]}
         PROTOCOL=${PARAMETERS[2]}
-        
-        ANALYZER_LOG=$LOGS_DIR/analyzer.${LAUNCH_MODE}.${PROTOCOL}.log
-        SERVER_LOG=$LOGS_DIR/${LAUNCH_MODE}.${PROTOCOL}.server.log
+
+        TEST_NAME=${TEST_NAME_BASE}_${LAUNCH_MODE}.${PROTOCOL}
 
         MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
@@ -130,6 +129,10 @@ function _run_single_config() {
                 fi
             done
 
+            MODIFIED_TEST_NAME=${TEST_NAME}/${model_mode_combo//[-;=]/-}
+            create_results_path -test-name ${MODIFIED_TEST_NAME}
+            SERVER_LOG=$TEST_LOG_DIR/server.${MODIFIED_TEST_NAME}.log
+
             # For remote launch, set server args and start server
             SERVER=`which tritonserver`
             SERVER_ARGS="--model-repository=$MODEL_REPOSITORY $MODEL_CONTROL_MODE --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
@@ -142,7 +145,7 @@ function _run_single_config() {
                 exit 1
             fi
 
-            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS $RELOAD_MODEL_DISABLE `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
+            MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS $RELOAD_MODEL_DISABLE `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE  --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
             _run_analyzer_and_check_results
             if [ $? -ne 0 ]; then
                 return 1
@@ -152,11 +155,17 @@ function _run_single_config() {
         return
 
     elif [ "$LAUNCH_MODE" == "c_api" ]; then
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG}"
+        create_results_path -test-name $TEST_NAME
+        SERVER_LOG=$TEST_LOG_DIR/server.${TEST_NAME}.log
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG} --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
     elif [ "$LAUNCH_MODE" == "docker" ]; then
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_SERVER_CONTAINER_IMAGE_NAME"
+        create_results_path -test-name $TEST_NAME
+        SERVER_LOG=$TEST_LOG_DIR/server.${TEST_NAME}.log
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_SERVER_CONTAINER_IMAGE_NAME --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
     else
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG}"
+        create_results_path -test-name $TEST_NAME
+        SERVER_LOG=$TEST_LOG_DIR/server.${TEST_NAME}.log
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
     fi
 
     _run_analyzer_and_check_results
@@ -199,7 +208,6 @@ function _run_analyzer_and_check_results() {
     set -e
 
     rm -rf $OUTPUT_MODEL_REPOSITORY
-    rm -rf checkpoints && mkdir checkpoints
 }
 
 function _check_analyzer_exit_status() {
@@ -234,6 +242,8 @@ CUDA_DEVICE_ORDER="PCI_BUS_ID"
 ##########################################################
 # Test controling the GPUs with the CUDA_VISIBLE_DEVICES #
 ##########################################################
+TEST_NAME_BASE="test_cuda_visible_devices"
+
 export CUDA_VISIBLE_DEVICES=3
 run_server_launch_modes
 
@@ -248,6 +258,7 @@ unset CUDA_VISIBLE_DEVICES
 #################################################
 # Test controling the GPUs with the --gpus flag #
 #################################################
+TEST_NAME_BASE="test_gpus_flag"
 
 CURRENT_GPUS=(${GPUS[2]})
 run_server_launch_modes "$CURRENT_GPUS"
