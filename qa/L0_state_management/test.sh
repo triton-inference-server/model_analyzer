@@ -106,7 +106,7 @@ run_analyzer_nohup
 ANALYZER_PID=$!
 
 sleep 5
-until [[ $(ls $EXPORT_PATH/checkpoints | wc -l) == "1" ]]; do
+until [[ $(ls $CHECKPOINT_DIRECTORY | wc -l) == "1" ]]; do
     sleep 1
 done
 

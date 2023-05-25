@@ -49,10 +49,19 @@ create_result_paths() {
     # Parse arguments options
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -test-name) test_name=$2; shift 2;;
-            -export-path) export_path=$2; shift 2;;
-            -checkpoints) checkpoints=$2; shift 2;;
-            *) echo "Invalid option: $1" >&2; usage; return 1;;
+            -test-name)
+                test_name=$2;
+                shift 2;;
+            -export-path) 
+                export_path=$2;
+                shift 2;;
+            -checkpoints)
+                checkpoints=$2;
+                shift 2;;
+            *)
+                echo "Invalid option: $1" >&2;
+                usage; 
+                return 1;;
         esac
     done
 

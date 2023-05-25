@@ -31,7 +31,10 @@ PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 
-MODEL_ANALYZER_PROFILE_BASE_ARGS="--model-repository $MODEL_REPOSITORY"
+CHECKPOINT_DIRECTORY=$LOGS_DIR/all_checkpoints
+mkdir -p $CHECKPOINT_DIRECTORY
+
+MODEL_ANALYZER_PROFILE_BASE_ARGS="--model-repository $MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
@@ -57,9 +60,9 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
     set +e
 
     TEST_NAME=test_$(basename "$config" | sed 's/\.[^.]*$//')
-    create_result_paths -test-name $TEST_NAME
+    create_result_paths -test-name $TEST_NAME -checkpoints false
 
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config -e $EXPORT_PATH"
     NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml/\.txt/'`
     TEST_OUTPUT_NUM_ROWS=`cat $NUM_ROW_OUTPUT_FILE`
     MODEL_ANALYZER_SUBCOMMAND="profile" 
