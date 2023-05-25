@@ -59,7 +59,7 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         rm -rf $OUTPUT_MODEL_REPOSITORY
 
         TEST_NAME=$(basename "$config" | sed 's/\.[^.]*$//')_${launch_mode}
-        create_result_paths -test_name $TEST_NAME
+        create_result_paths -test-name $TEST_NAME
         SERVER_LOG=${TEST_LOG_DIR}/server.${TEST_NAME}.log
 
         set +e
