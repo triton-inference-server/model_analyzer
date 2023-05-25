@@ -603,7 +603,8 @@ def _LoadDcgmLibrary(libDcgmPath=None):
                             elif dist_name in {"fedora", "redhat", "centos", "suse"}:
                                 libDcgmPath = "/usr/lib64"
 
-                        dcgmLib = CDLL(os.path.join(libDcgmPath, "libdcgm.so.2"))
+                        dcgmLib = CDLL(os.path.join(libDcgmPath,
+                                                    "libdcgm.so.3"))
 
                 except OSError as ose:
                     _dcgmCheckReturn(DCGM_ST_LIBRARY_NOT_FOUND)
