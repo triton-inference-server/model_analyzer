@@ -64,12 +64,13 @@ class GPUDeviceFactory:
 
             for device_id in dcgm_device_ids:
                 device_atrributes = dcgm_agent.dcgmGetDeviceAttributes(
-                    dcgm_handle, device_id
-                ).identifiers
-                pci_bus_id = device_atrributes.pciBusId.decode("utf-8").upper()
-                device_uuid = str(device_atrributes.uuid, encoding="utf-8")
-                device_name = str(device_atrributes.deviceName, encoding="utf-8")
-                gpu_device = GPUDevice(device_name, device_id, pci_bus_id, device_uuid)
+                    dcgm_handle, device_id).identifiers
+                pci_bus_id = device_atrributes
+                device_uuid = str(device_atrributes.uuid, encoding='utf-8')
+                device_name = str(device_atrributes.deviceName,
+                                  encoding='utf-8')
+                gpu_device = GPUDevice(device_name, device_id, pci_bus_id,
+                                       device_uuid)
 
                 self._devices.append(gpu_device)
                 self._devices_by_bus_id[pci_bus_id] = gpu_device
