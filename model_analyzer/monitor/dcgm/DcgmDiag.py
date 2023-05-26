@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,21 +11,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
+
 
 class DcgmDiag:
 
     # Maps version codes to simple version values for range comparisons
-    _versionMap = {
-        dcgm_structs.dcgmRunDiag_version: 5
-    }
+    _versionMap = {dcgm_structs.dcgmRunDiag_version: 5}
 
-    def __init__(self, gpuIds=None, testNamesStr='', paramsStr='', verbose=True, 
+    def __init__(self,
+                 gpuIds=None,
+                 testNamesStr='',
+                 paramsStr='',
+                 verbose=True,
                  version=dcgm_structs.dcgmRunDiag_version):
         # Make sure version is valid
         if version not in DcgmDiag._versionMap:
-            raise ValueError("'%s' is not a valid version for dcgmRunDiag." % version)
+            raise ValueError("'%s' is not a valid version for dcgmRunDiag." %
+                             version)
         self.version = version
 
         if self.version == dcgm_structs.dcgmRunDiag_version7:
@@ -50,7 +55,8 @@ class DcgmDiag:
         else:
             # Make sure no number other that 1-4 were submitted
             if testNamesStr.isdigit():
-                raise ValueError("'%s' is not a valid test name." % testNamesStr)
+                raise ValueError("'%s' is not a valid test name." %
+                                 testNamesStr)
 
             # Copy to the testNames portion of the object
             names = testNamesStr.split(',')
@@ -79,8 +85,9 @@ class DcgmDiag:
                     self.runDiagInfo.gpuList = str(gpu)
                     first = False
                 else:
-                    self.runDiagInfo.gpuList = "%s,%s" % (self.runDiagInfo.gpuList, str(gpu))
-    
+                    self.runDiagInfo.gpuList = "%s,%s" % (
+                        self.runDiagInfo.gpuList, str(gpu))
+
     def SetVerbose(self, val):
         if val == True:
             self.runDiagInfo.flags |= dcgm_structs.DCGM_RUN_FLAGS_VERBOSE
@@ -118,26 +125,30 @@ class DcgmDiag:
             index += 1
 
         self.numTests += 1
-    
+
     def SetStatsOnFail(self, val):
         if val == True:
             self.runDiagInfo.flags |= dcgm_structs.DCGM_RUN_FLAGS_STATSONFAIL
 
     def SetThrottleMask(self, value):
         if DcgmDiag._versionMap[self.version] < 3:
-            raise ValueError("Throttle mask requires minimum version 3 for dcgmRunDiag.")
-        if isinstance(value, str) and len(value) >= dcgm_structs.DCGM_THROTTLE_MASK_LEN:
-            raise ValueError("Throttle mask value '%s' exceeds max length %d." 
-                             % (value, dcgm_structs.DCGM_THROTTLE_MASK_LEN - 1))
-        
+            raise ValueError(
+                "Throttle mask requires minimum version 3 for dcgmRunDiag.")
+        if isinstance(
+                value,
+                str) and len(value) >= dcgm_structs.DCGM_THROTTLE_MASK_LEN:
+            raise ValueError("Throttle mask value '%s' exceeds max length %d." %
+                             (value, dcgm_structs.DCGM_THROTTLE_MASK_LEN - 1))
+
         self.runDiagInfo.throttleMask = str(value)
-    
+
     def SetFailEarly(self, enable=True, checkInterval=5):
         if DcgmDiag._versionMap[self.version] < 5:
-            raise ValueError("Fail early requires minimum version 5 for dcgmRunDiag.")
+            raise ValueError(
+                "Fail early requires minimum version 5 for dcgmRunDiag.")
         if not isinstance(checkInterval, int):
             raise ValueError("Invalid checkInterval value: %s" % checkInterval)
-        
+
         if enable:
             self.runDiagInfo.flags |= dcgm_structs.DCGM_RUN_FLAGS_FAIL_EARLY
             self.runDiagInfo.failCheckInterval = checkInterval
@@ -145,7 +156,8 @@ class DcgmDiag:
             self.runDiagInfo.flags &= ~dcgm_structs.DCGM_RUN_FLAGS_FAIL_EARLY
 
     def Execute(self, handle):
-        return dcgm_agent.dcgmActionValidate_v2(handle, self.runDiagInfo, self.version)
+        return dcgm_agent.dcgmActionValidate_v2(handle, self.runDiagInfo,
+                                                self.version)
 
     def SetStatsPath(self, statsPath):
         if len(statsPath) >= dcgm_structs.DCGM_PATH_LEN:
@@ -172,6 +184,8 @@ class DcgmDiag:
 
     def SetDebugLevel(self, debugLevel):
         if debugLevel < 0 or debugLevel > 5:
-            raise ValueError("Cannot set debug level to %d. Debug Level must be a value from 0-5 inclusive.")
+            raise ValueError(
+                "Cannot set debug level to %d. Debug Level must be a value from 0-5 inclusive."
+            )
 
         self.runDiagInfo.debugLevel = debugLevel

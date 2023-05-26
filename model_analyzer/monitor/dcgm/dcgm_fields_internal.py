@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,9 +22,8 @@ import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 # Provides access to functions
 dcgmFP = dcgm_structs._dcgmGetFunctionPointer
 
-
 #internal-only fields
-DCGM_FI_DEV_MEM_COPY_UTIL_SAMPLES          = 210 #Memory utilization samples
-DCGM_FI_DEV_GPU_UTIL_SAMPLES               = 211 #SM utilization samples
-DCGM_FI_DEV_GRAPHICS_PIDS                  = 220 #Graphics processes running on the GPU.
-DCGM_FI_DEV_COMPUTE_PIDS                   = 221 #Compute processes running on the GPU.
+DCGM_FI_DEV_MEM_COPY_UTIL_SAMPLES = 210  #Memory utilization samples
+DCGM_FI_DEV_GPU_UTIL_SAMPLES = 211  #SM utilization samples
+DCGM_FI_DEV_GRAPHICS_PIDS = 220  #Graphics processes running on the GPU.
+DCGM_FI_DEV_COMPUTE_PIDS = 221  #Compute processes running on the GPU.

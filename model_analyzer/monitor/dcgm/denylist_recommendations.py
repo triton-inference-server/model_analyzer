@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,8 @@ try:
 except:
     # If we don't find the bindings, add the default path and try again
     if 'PYTHONPATH' in os.environ:
-        os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + ":/usr/local/dcgm/bindings"
+        os.environ['PYTHONPATH'] = os.environ[
+            'PYTHONPATH'] + ":/usr/local/dcgm/bindings"
     else:
         os.environ['PYTHONPATH'] = '/usr/local/dcgm/bindings'
 
@@ -37,25 +38,31 @@ except:
     import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
     import model_analyzer.monitor.dcgm.DcgmSystem as DcgmSystem
 
-BR_ST_HEALTHY               = 0x0000
-BR_ST_NOT_DETECTED          = 0x0001
+BR_ST_HEALTHY = 0x0000
+BR_ST_NOT_DETECTED = 0x0001
 BR_ST_FAILED_PASSIVE_HEALTH = 0x0002
-BR_ST_FAILED_ACTIVE_HEALTH  = 0x0004
+BR_ST_FAILED_ACTIVE_HEALTH = 0x0004
 
-BR_HEALTH_WATCH_BITMAP   = dcgm_structs.DCGM_HEALTH_WATCH_ALL
+BR_HEALTH_WATCH_BITMAP = dcgm_structs.DCGM_HEALTH_WATCH_ALL
 
-DIAG_SM_STRESS_DURATION       = 90.0
-DIAG_CONSTANT_POWER_DURATION  = 120.0
+DIAG_SM_STRESS_DURATION = 90.0
+DIAG_CONSTANT_POWER_DURATION = 120.0
 DIAG_CONSTANT_STRESS_DURATION = 120.0
-DIAG_DIAGNOSTIC_DURATION      = 300.0
+DIAG_DIAGNOSTIC_DURATION = 300.0
 
 global g_gpus
 global g_switches
 g_gpus = []
 g_switches = []
 
+
 class Entity(object):
-    def __init__(self, entityId, entityType=dcgm_fields.DCGM_FE_GPU, uuid=None, bdf=None):
+
+    def __init__(self,
+                 entityId,
+                 entityType=dcgm_fields.DCGM_FE_GPU,
+                 uuid=None,
+                 bdf=None):
         self.health = BR_ST_HEALTHY
         self.entityType = entityType
         self.entityId = entityId
@@ -87,6 +94,7 @@ class Entity(object):
     def GetBDF(self):
         return self.bdf
 
+
 def mark_entity_unhealthy(entities, entityId, code, reason):
     found = False
     for entity in entities:
@@ -95,6 +103,7 @@ def mark_entity_unhealthy(entities, entityId, code, reason):
             found = True
 
     return found
+
 
 def addParamString(runDiagInfo, paramIndex, paramStr):
     strIndex = 0
@@ -115,13 +124,15 @@ def setTestDurations(runDiagInfo, timePercentage):
 
     smParam = "sm stress.test_duration=%d" % (stressDuration)
     powerParam = "targeted power.test_duration=%d" % (powerDuration)
-    constantStressParam = "targeted stress.test_duration=%d" % (constantStressDuration)
+    constantStressParam = "targeted stress.test_duration=%d" % (
+        constantStressDuration)
     diagParam = "diagnostic.test_duration=%d" % (diagDuration)
 
     addParamString(runDiagInfo, 0, diagParam)
     addParamString(runDiagInfo, 1, smParam)
     addParamString(runDiagInfo, 2, constantStressParam)
     addParamString(runDiagInfo, 3, powerParam)
+
 
 def initialize_run_diag_info(settings):
     runDiagInfo = dcgm_structs.c_dcgmRunDiag_v7()
@@ -178,9 +189,11 @@ def initialize_run_diag_info(settings):
 
     return runDiagInfo, activeGpuIds
 
+
 def mark_all_unhealthy(activeGpuIds, reason):
     for gpuId in activeGpuIds:
         mark_entity_unhealthy(g_gpus, gpuId, BR_ST_FAILED_ACTIVE_HEALTH, reason)
+
 
 def result_to_str(result):
     if result == dcgm_structs.DCGM_DIAG_RESULT_PASS:
@@ -194,15 +207,19 @@ def result_to_str(result):
     else:
         return 'NOT RUN'
 
+
 def check_passive_health_checks(response, activeGpuIds):
     unhealthy = False
     for i in range(0, dcgm_structs.DCGM_SWTEST_COUNT):
-        if response.levelOneResults[i].result == dcgm_structs.DCGM_DIAG_RESULT_FAIL:
-            mark_all_unhealthy(activeGpuIds, response.levelOneResults[i].error.msg)
+        if response.levelOneResults[
+                i].result == dcgm_structs.DCGM_DIAG_RESULT_FAIL:
+            mark_all_unhealthy(activeGpuIds,
+                               response.levelOneResults[i].error.msg)
             unhealthy = True
             break
 
     return unhealthy
+
 
 def check_gpu_diagnostic(handleObj, settings):
     runDiagInfo, activeGpuIds = initialize_run_diag_info(settings)
@@ -218,13 +235,16 @@ def check_gpu_diagnostic(handleObj, settings):
     if check_passive_health_checks(response, activeGpuIds) == False:
         for gpuIndex in range(response.gpuCount):
             for testIndex in range(dcgm_structs.DCGM_PER_GPU_TEST_COUNT_V8):
-                if response.perGpuResponses[gpuIndex].results[testIndex].result == dcgm_structs.DCGM_DIAG_RESULT_FAIL:
+                if response.perGpuResponses[gpuIndex].results[
+                        testIndex].result == dcgm_structs.DCGM_DIAG_RESULT_FAIL:
                     gpuId = response.perGpuResponses[gpuIndex].gpuId
-                    mark_entity_unhealthy(g_gpus, gpuId, BR_ST_FAILED_ACTIVE_HEALTH,
-                                              response.perGpuResponses[gpuIndex].results[testIndex].result.error.msg)
+                    mark_entity_unhealthy(
+                        g_gpus, gpuId, BR_ST_FAILED_ACTIVE_HEALTH,
+                        response.perGpuResponses[gpuIndex].results[testIndex].
+                        result.error.msg)
 
                     # NVVS marks all subsequent tests as failed so there's no point in continuing
-                    break 
+                    break
 
 
 def query_passive_health(handleObj, desired_watches):
@@ -237,20 +257,26 @@ def query_passive_health(handleObj, desired_watches):
 
     return dcgmGroup.health.Check()
 
+
 def denylist_from_passive_health_check(response):
     for incidentIndex in range(response.incidentCount):
-        if response.incidents[incidentIndex].health != dcgm_structs.DCGM_HEALTH_RESULT_FAIL:
+        if response.incidents[
+                incidentIndex].health != dcgm_structs.DCGM_HEALTH_RESULT_FAIL:
             # Only add to the denylist for failures; ignore warnings
             continue
 
         entityId = response.incidents[incidentIndex].entityInfo.entityId
-        entityGroupId = response.incidents[incidentIndex].entityInfo.entityGroupId
+        entityGroupId = response.incidents[
+            incidentIndex].entityInfo.entityGroupId
         errorString = response.incidents[incidentIndex].error.msg
 
         if entityGroupId == dcgm_fields.DCGM_FE_GPU:
-            mark_entity_unhealthy(g_gpus, entityId, BR_ST_FAILED_PASSIVE_HEALTH, errorString)
+            mark_entity_unhealthy(g_gpus, entityId, BR_ST_FAILED_PASSIVE_HEALTH,
+                                  errorString)
         else:
-            mark_entity_unhealthy(g_switches, entityId, BR_ST_FAILED_PASSIVE_HEALTH, errorString)
+            mark_entity_unhealthy(g_switches, entityId,
+                                  BR_ST_FAILED_PASSIVE_HEALTH, errorString)
+
 
 def check_passive_health(handleObj, watches):
     response = query_passive_health(handleObj, watches)
@@ -258,14 +284,21 @@ def check_passive_health(handleObj, watches):
     if response.overallHealth != dcgm_structs.DCGM_HEALTH_RESULT_PASS:
         denylist_from_passive_health_check(response)
 
+
 def initialize_devices(handle, flags):
-    gpuIds = dcgm_agent.dcgmGetEntityGroupEntities(handle, dcgm_fields.DCGM_FE_GPU, flags)
-    switchIds = dcgm_agent.dcgmGetEntityGroupEntities(handle, dcgm_fields.DCGM_FE_SWITCH, flags)
+    gpuIds = dcgm_agent.dcgmGetEntityGroupEntities(handle,
+                                                   dcgm_fields.DCGM_FE_GPU,
+                                                   flags)
+    switchIds = dcgm_agent.dcgmGetEntityGroupEntities(
+        handle, dcgm_fields.DCGM_FE_SWITCH, flags)
 
     i = 0
     for gpuId in gpuIds:
         attributes = dcgm_agent.dcgmGetDeviceAttributes(handle, gpuId)
-        gpuObj = Entity(gpuId, entityType=dcgm_fields.DCGM_FE_GPU, uuid=attributes.identifiers.uuid, bdf=attributes.identifiers.pciBusId)
+        gpuObj = Entity(gpuId,
+                        entityType=dcgm_fields.DCGM_FE_GPU,
+                        uuid=attributes.identifiers.uuid,
+                        bdf=attributes.identifiers.pciBusId)
         g_gpus.append(gpuObj)
         i = i + 1
 
@@ -275,35 +308,88 @@ def initialize_devices(handle, flags):
         g_switches.append(switchObj)
         i = i + 1
 
+
 # Process command line arguments
 def __process_command_line__(settings):
     parser = argparse.ArgumentParser()
-    parser.add_argument('-g', '--num-gpus', dest='num_gpus', type=int,
+    parser.add_argument('-g',
+                        '--num-gpus',
+                        dest='num_gpus',
+                        type=int,
                         help='The expected number of GPUs.')
-    parser.add_argument('-s', '--num-switches', dest='num_switches', type=int,
+    parser.add_argument('-s',
+                        '--num-switches',
+                        dest='num_switches',
+                        type=int,
                         help='The expected number of NvSwitches.')
-    parser.add_argument('-n', '--hostname', dest='hostname', type=str,
-                        help='The hostname of the nv-hostengine we want to query.')
-    parser.add_argument('-d', '--detect', dest='detect', action='store_true',
-                        help='Run on whatever GPUs can be detected. Do not check counts.')
-    parser.add_argument('-l', '--log-file', dest='logfileName', type=str,
-                        help='The name of the log file where details should be stored. Default is stdout')
-    parser.add_argument('-u', '--unsupported-too', dest='unsupported', action='store_true',
-                        help='Get unsupported devices in addition to the ones DCGM supports')
-    parser.add_argument('-f', '--full-report', dest='fullReport', action='store_true',
+    parser.add_argument(
+        '-n',
+        '--hostname',
+        dest='hostname',
+        type=str,
+        help='The hostname of the nv-hostengine we want to query.')
+    parser.add_argument(
+        '-d',
+        '--detect',
+        dest='detect',
+        action='store_true',
+        help='Run on whatever GPUs can be detected. Do not check counts.')
+    parser.add_argument(
+        '-l',
+        '--log-file',
+        dest='logfileName',
+        type=str,
+        help=
+        'The name of the log file where details should be stored. Default is stdout'
+    )
+    parser.add_argument(
+        '-u',
+        '--unsupported-too',
+        dest='unsupported',
+        action='store_true',
+        help='Get unsupported devices in addition to the ones DCGM supports')
+    parser.add_argument('-f',
+                        '--full-report',
+                        dest='fullReport',
+                        action='store_true',
                         help='Print a health status for each GPU')
-    parser.add_argument('-c', '--csv', dest='outfmtCSV', action='store_true',
-                        help='Write output in csv format. By default, output is in json format.')
-    parser.add_argument('-w', '--watches', dest='watches', type=str,
-                        help='Specify which health watches to monitor. By default, all are watched. Any list of the following may be specified:\n\ta = All watches\n\tp = PCIE\n\tm = Memory\n\ti = Inforom\n\tt = Thermal and Power\n\tn = NVLINK')
+    parser.add_argument(
+        '-c',
+        '--csv',
+        dest='outfmtCSV',
+        action='store_true',
+        help='Write output in csv format. By default, output is in json format.'
+    )
+    parser.add_argument(
+        '-w',
+        '--watches',
+        dest='watches',
+        type=str,
+        help=
+        'Specify which health watches to monitor. By default, all are watched. Any list of the following may be specified:\n\ta = All watches\n\tp = PCIE\n\tm = Memory\n\ti = Inforom\n\tt = Thermal and Power\n\tn = NVLINK'
+    )
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-r', '--specified-test', dest='testNames', type=str,
-                       help='Option to specify what tests are run in dcgmi diag.')
-    group.add_argument('-i', '--instantaneous', dest='instant', action='store_true',
-                       help='Specify to skip the longer tests and run instantaneously')
-    group.add_argument('-t', '--time-limit', dest='timeLimit', type=int,
-                        help='The time limit in seconds that all the tests should not exceed. Diagnostics will be reduced in their time to meet this boundary.')
+    group.add_argument(
+        '-r',
+        '--specified-test',
+        dest='testNames',
+        type=str,
+        help='Option to specify what tests are run in dcgmi diag.')
+    group.add_argument(
+        '-i',
+        '--instantaneous',
+        dest='instant',
+        action='store_true',
+        help='Specify to skip the longer tests and run instantaneously')
+    group.add_argument(
+        '-t',
+        '--time-limit',
+        dest='timeLimit',
+        type=int,
+        help=
+        'The time limit in seconds that all the tests should not exceed. Diagnostics will be reduced in their time to meet this boundary.'
+    )
 
     parser.set_defaults(instant=False, detect=False, fullReport=False)
     args = parser.parse_args()
@@ -312,7 +398,9 @@ def __process_command_line__(settings):
         settings['numGpus'] = args.num_gpus
         settings['numSwitches'] = args.num_switches
     elif args.detect == False:
-        raise ValueError('Must specify either a number of gpus and switches with -g and -s or auto-detect with -d')
+        raise ValueError(
+            'Must specify either a number of gpus and switches with -g and -s or auto-detect with -d'
+        )
 
     if args.hostname:
         settings['hostname'] = args.hostname
@@ -322,11 +410,12 @@ def __process_command_line__(settings):
     if args.unsupported:
         settings['entity_get_flags'] = 0
     else:
-        settings['entity_get_flags'] = dcgm_structs.DCGM_GEGE_FLAG_ONLY_SUPPORTED
+        settings[
+            'entity_get_flags'] = dcgm_structs.DCGM_GEGE_FLAG_ONLY_SUPPORTED
 
     settings['instant'] = args.instant
     settings['fullReport'] = args.fullReport
-    
+
     if args.testNames:
         settings['testNames'] = args.testNames
     else:
@@ -358,11 +447,13 @@ def __process_command_line__(settings):
             elif c == 'a':
                 health_watches |= dcgm_structs.DCGM_HEALTH_WATCH_ALL
             else:
-                print(("Unrecognized character %s found in watch string '%s'" % (c, args.watches)))
+                print(("Unrecognized character %s found in watch string '%s'" %
+                       (c, args.watches)))
                 sys.exit(-1)
         settings['watches'] = health_watches
     else:
         settings['watches'] = BR_HEALTH_WATCH_BITMAP
+
 
 def get_entity_id_list(entities):
     ids = ""
@@ -376,29 +467,36 @@ def get_entity_id_list(entities):
 
     return ids
 
+
 def check_health(handleObj, settings, error_list):
     initialize_devices(handleObj.handle, settings['entity_get_flags'])
 
     if 'numGpus' in settings:
         if len(g_gpus) != settings['numGpus']:
-            error_list.append("%d GPUs were specified but only %d were detected with ids '%s'" % 
-                    (settings['numGpus'], len(g_gpus), get_entity_id_list(g_gpus)))
+            error_list.append(
+                "%d GPUs were specified but only %d were detected with ids '%s'"
+                %
+                (settings['numGpus'], len(g_gpus), get_entity_id_list(g_gpus)))
 
     if 'numSwitches' in settings:
         if len(g_switches) != settings['numSwitches']:
-            error_list.append("%d switches were specified but only %d were detected with ids '%s'" %
-                    (settings['numSwitches'], len(g_switches), get_entity_id_list(g_switches)))
+            error_list.append(
+                "%d switches were specified but only %d were detected with ids '%s'"
+                % (settings['numSwitches'], len(g_switches),
+                   get_entity_id_list(g_switches)))
 
-    check_passive_health(handleObj, settings['watches'])        # quick check
+    check_passive_health(handleObj, settings['watches'])  # quick check
 
     if settings['instant'] == False:
         check_gpu_diagnostic(handleObj, settings)
+
 
 def process_command_line(settings):
     try:
         __process_command_line__(settings)
     except ValueError as e:
         return str(e)
+
 
 def main():
     # Parse the command line
@@ -414,7 +512,8 @@ def main():
         error_list.append(error)
     else:
         try:
-            handleObj = pydcgm.DcgmHandle(None, settings['hostname'], dcgm_structs.DCGM_OPERATION_MODE_AUTO)
+            handleObj = pydcgm.DcgmHandle(None, settings['hostname'],
+                                          dcgm_structs.DCGM_OPERATION_MODE_AUTO)
 
             check_health(handleObj, settings, error_list)
         except dcgm_structs.DCGMError as e:
@@ -423,50 +522,52 @@ def main():
         except ValueError as e:
             error_list.append(str(e))
 
-        if 'outfmtCSV' in settings:       # show all health, then all un-healthy
+        if 'outfmtCSV' in settings:  # show all health, then all un-healthy
             for gpuObj in g_gpus:
                 if gpuObj.IsHealthy() == True:
-                    print("healthy,%s,%s" %(gpuObj.GetBDF(), gpuObj.GetUUID()))
+                    print("healthy,%s,%s" % (gpuObj.GetBDF(), gpuObj.GetUUID()))
             for gpuObj in g_gpus:
                 if gpuObj.IsHealthy() == False:
-                    print("unhealthy,%s,%s,\"%s\"" %(gpuObj.GetBDF(), gpuObj.GetUUID(),gpuObj.WhyUnhealthy()))
+                    print("unhealthy,%s,%s,\"%s\"" %
+                          (gpuObj.GetBDF(), gpuObj.GetUUID(),
+                           gpuObj.WhyUnhealthy()))
 
-        else:              # build obj that can be output in json
+        else:  # build obj that can be output in json
             denylistGpus = {}
             healthyGpus = {}
             for gpuObj in g_gpus:
                 if gpuObj.IsHealthy() == False:
                     details = {}
                     details['UUID'] = gpuObj.GetUUID()
-                    details['BDF']  = gpuObj.GetBDF()
+                    details['BDF'] = gpuObj.GetBDF()
                     details['Failure Explanation'] = gpuObj.WhyUnhealthy()
                     denylistGpus[gpuObj.GetEntityId()] = details
                 elif settings['fullReport']:
                     details = {}
                     details['UUID'] = gpuObj.GetUUID()
-                    details['BDF']  = gpuObj.GetBDF()
+                    details['BDF'] = gpuObj.GetBDF()
                     healthyGpus[gpuObj.GetEntityId()] = details
-    
+
             jsonTop['denylistedGpus'] = denylistGpus
             if settings['fullReport']:
                 jsonTop['Healthy GPUs'] = healthyGpus
 
-    if len(error_list):         # had error processing the command line
+    if len(error_list):  # had error processing the command line
         exitCode = 1
-        if 'outfmtCSV' in settings:   # json output 
+        if 'outfmtCSV' in settings:  # json output
             if len(error_list):
                 for errObj in error_list:
-                    print("errors,\"%s\"" %(errObj))
+                    print("errors,\"%s\"" % (errObj))
         else:
             jsonTop['errors'] = error_list
 
-    if 'outfmtCSV' in settings:       # show all health, then all un-healthy
+    if 'outfmtCSV' in settings:  # show all health, then all un-healthy
         pass
     else:
         print(json.dumps(jsonTop, indent=4, separators=(',', ': ')))
 
     sys.exit(exitCode)
 
+
 if __name__ == '__main__':
     main()
-

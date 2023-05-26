@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ from socket import socket, AF_INET, SOCK_DGRAM
 from time import sleep
 import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 import logging
+
 
 class DcgmJsonReader(DcgmReader):
 
@@ -50,7 +51,10 @@ class DcgmJsonReader(DcgmReader):
             lastValueList = [l[-1] for l in valuesListOfLists]
 
             # Turn FV into a conventional Python Object which can be converted to JSON
-            outObject = {self.ConvertFieldIdToTag(i.fieldId): i.value for i in lastValueList}
+            outObject = {
+                self.ConvertFieldIdToTag(i.fieldId): i.value
+                for i in lastValueList
+            }
             outJson = self.PrepareJson(gpuId, outObject)
 
             self.CustomJsonHandler(outJson)

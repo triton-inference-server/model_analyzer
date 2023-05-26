@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 def _python_version_check():
     import sys
     python_version = sys.version.split(None, 1)[0]
     if python_version < '3':
-        print('[ERROR] Detected Python version {}. These bindings are for Python 3.5+. Please load the Python 2 bindings found at /usr/local/dcgm/bindings'.format(python_version))
+        print(
+            '[ERROR] Detected Python version {}. These bindings are for Python 3.5+. Please load the Python 2 bindings found at /usr/local/dcgm/bindings'
+            .format(python_version))
         sys.exit(1)
+
+
 _python_version_check()
 
 #Bring classes into this namespace
@@ -28,13 +33,15 @@ from model_analyzer.monitor.dcgm.DcgmSystem import *
 from model_analyzer.monitor.dcgm.DcgmFieldGroup import *
 
 import os
-if '__DCGM_TESTING_FRAMEWORK_ACTIVE' in os.environ and os.environ['__DCGM_TESTING_FRAMEWORK_ACTIVE'] == '1':
+if '__DCGM_TESTING_FRAMEWORK_ACTIVE' in os.environ and os.environ[
+        '__DCGM_TESTING_FRAMEWORK_ACTIVE'] == '1':
     import utils
     import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
     dcgm_structs._dcgmInit(utils.get_testing_framework_library_path())
-
 '''
 Define a unique exception type we will return so that callers can distinguish our exceptions from python standard ones
 '''
+
+
 class DcgmException(Exception):
     pass

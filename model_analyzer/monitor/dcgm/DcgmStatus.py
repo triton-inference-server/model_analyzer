@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@ import model_analyzer.monitor.dcgm.pydcgm as pydcgm
 import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
+
 class DcgmStatus:
+
     def __init__(self):
         self.handle = dcgm_agent.dcgmStatusCreate()
         self.errors = []
@@ -27,6 +29,7 @@ class DcgmStatus:
     '''
     Take any errors stored in our handle and update self.errors with them
     '''
+
     def UpdateErrors(self):
         errorCount = dcgm_agent.dcgmStatusGetCount(self.handle)
         if errorCount < 1:
@@ -40,6 +43,7 @@ class DcgmStatus:
 
     The exception text will contain all of the errors
     '''
+
     def ThrowExceptionOnErrors(self):
         #Make sure we've captured all errors before looking at them
         self.UpdateErrors()
@@ -51,4 +55,3 @@ class DcgmStatus:
         for value in self.errors:
             errorString += "\"%s\"" % value
             raise dcgm_structs.DCGMError(value.status)
-

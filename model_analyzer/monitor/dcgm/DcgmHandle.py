@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import model_analyzer.monitor.dcgm.pydcgm as pydcgm 
+import model_analyzer.monitor.dcgm.pydcgm as pydcgm
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
+
 
 class DcgmHandle:
     '''
     Class to encapsulate a handle to DCGM and global methods to control + query the host engine
     '''
 
-    def __init__(self, handle=None, ipAddress=None,
-                 opMode=dcgm_structs.DCGM_OPERATION_MODE_AUTO, persistAfterDisconnect=False,
-                 unixSocketPath=None, timeoutMs=0):
+    def __init__(self,
+                 handle=None,
+                 ipAddress=None,
+                 opMode=dcgm_structs.DCGM_OPERATION_MODE_AUTO,
+                 persistAfterDisconnect=False,
+                 unixSocketPath=None,
+                 timeoutMs=0):
         '''
         Constructor
 
@@ -38,28 +43,29 @@ class DcgmHandle:
         '''
         self._handleCreated = False
         self._persistAfterDisconnect = persistAfterDisconnect
-        
+
         if handle is not None:
             self.handle = handle
             return
 
         self._ipAddress = ipAddress
-        
+
         #Can't provide both unix socket and ip address
         if ipAddress is not None and unixSocketPath is not None:
             raise dcgm_structs.dcgmExceptionClass(dcgm_structs.DCGM_ST_BADPARAM)
 
         #Initialize the DCGM client library
         dcgm_structs._dcgmInit()
-        dcgm_agent.dcgmInit() #Not harmful to call this multiple times in a process
+        dcgm_agent.dcgmInit(
+        )  #Not harmful to call this multiple times in a process
 
         #If neither ipAddress nor unixSocketPath are present, start an embedded host engine
         if ipAddress is None and unixSocketPath is None:
             self.handle = dcgm_agent.dcgmStartEmbedded(opMode)
             self.isEmbedded = True
             self._handleCreated = True
-            return        
-        
+            return
+
         #Set up connection parameters. We're connecting to something
         connectParams = dcgm_structs.c_dcgmConnectV2Params_v2()
         connectParams.version = dcgm_structs.c_dcgmConnectV2Params_version
@@ -68,14 +74,14 @@ class DcgmHandle:
             connectParams.persistAfterDisconnect = 1
         else:
             connectParams.persistAfterDisconnect = 0
-        
+
         if ipAddress is not None:
             connectToAddress = ipAddress
             connectParams.addressIsUnixSocket = 0
         else:
             connectToAddress = unixSocketPath
             connectParams.addressIsUnixSocket = 1
-        
+
         self.handle = dcgm_agent.dcgmConnect_v2(connectToAddress, connectParams)
         self.isEmbedded = False
         self._handleCreated = True
@@ -119,7 +125,6 @@ class DcgmHandle:
         self._handleCreated = False
         self.handle = None
 
-
     @staticmethod
     def Unload():
         '''
@@ -128,7 +133,7 @@ class DcgmHandle:
         that was create in __init__().
         '''
         dcgm_agent.dcgmShutdown()
-    
+
     def GetIpAddress(self):
         '''
         Returns the IP address associated with this handle. None=embedded connection

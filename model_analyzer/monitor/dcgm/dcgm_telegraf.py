@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ DEFAULT_TELEGRAF_PORT = 8094
 #     "xid_errors"
 #   ]
 
+
 class DcgmTelegraf(DcgmJsonReader):
     ###########################################################################
     def __init__(self, publish_hostname, publish_port, **kwargs):
@@ -56,5 +57,9 @@ class DcgmTelegraf(DcgmJsonReader):
     def CustomJsonHandler(self, outJson):
         self.SendToTelegraf(outJson)
 
-if __name__ == '__main__': # pragma: no cover
-    main(DcgmTelegraf, TELEGRAF_NAME, DEFAULT_TELEGRAF_PORT, add_target_host=True)
+
+if __name__ == '__main__':  # pragma: no cover
+    main(DcgmTelegraf,
+         TELEGRAF_NAME,
+         DEFAULT_TELEGRAF_PORT,
+         add_target_host=True)

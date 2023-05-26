@@ -1,4 +1,4 @@
-# Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,18 +30,21 @@ if 'DCGM_TESTING_FRAMEWORK' in os.environ:
     try:
         from prometheus_tester_api import start_http_server, Gauge
     except:
-        logging.critical("prometheus_tester_api missing, reinstall test framework.")
+        logging.critical(
+            "prometheus_tester_api missing, reinstall test framework.")
         sys.exit(3)
 else:
     try:
         from prometheus_client import start_http_server, Gauge
     except ImportError:
         pass
-        logging.critical("prometheus_client not installed, please run: \"pip install prometheus_client\"")
+        logging.critical(
+            "prometheus_client not installed, please run: \"pip install prometheus_client\""
+        )
         sys.exit(3)
 
 DEFAULT_FIELDS = [
-    dcgm_fields.DCGM_FI_DEV_PCI_BUSID, #Needed for plugin_instance
+    dcgm_fields.DCGM_FI_DEV_PCI_BUSID,  #Needed for plugin_instance
     dcgm_fields.DCGM_FI_DEV_POWER_USAGE,
     dcgm_fields.DCGM_FI_DEV_GPU_TEMP,
     dcgm_fields.DCGM_FI_DEV_SM_CLOCK,
@@ -66,17 +69,22 @@ DEFAULT_FIELDS = [
     dcgm_fields.DCGM_FI_DEV_NVLINK_RECOVERY_ERROR_COUNT_TOTAL,
 ]
 
+
 class DcgmPrometheus(DcgmReader):
     ###########################################################################
     def __init__(self):
         #Have DCGM update its watches twice as fast as our update interval so we don't get out of phase by our update interval
-        updateIntervalUsec = int((1000000 * g_settings['prometheusPublishInterval']) / 2)
+        updateIntervalUsec = int(
+            (1000000 * g_settings['prometheusPublishInterval']) / 2)
         #Add our PID to our field group name so we can have multiple instances running
         fieldGroupName = 'dcgm_prometheus_' + str(os.getpid())
 
-        DcgmReader.__init__(self, ignoreList=g_settings['ignoreList'], fieldIds=g_settings['publishFieldIds'],
-                updateFrequency=updateIntervalUsec,
-                fieldGroupName=fieldGroupName, hostname=g_settings['dcgmHostName'])
+        DcgmReader.__init__(self,
+                            ignoreList=g_settings['ignoreList'],
+                            fieldIds=g_settings['publishFieldIds'],
+                            updateFrequency=updateIntervalUsec,
+                            fieldGroupName=fieldGroupName,
+                            hostname=g_settings['dcgmHostName'])
         self.m_existingGauge = {}
 
     ###########################################################################
@@ -88,20 +96,21 @@ class DcgmPrometheus(DcgmReader):
     @params:
     fvs : The fieldvalue dictionary that contains info about the values of field Ids for each gpuId.
     '''
-    def CustomDataHandler(self,fvs):
+
+    def CustomDataHandler(self, fvs):
         if not self.m_existingGauge:
             self.SetupGauges()
 
         for _, fieldIds in self.m_publishFields.items():
             if fieldIds is None:
-                continue;
+                continue
 
             for fieldId in fieldIds:
                 if fieldId in self.m_dcgmIgnoreFields:
                     continue
 
                 g = self.m_existingGauge[fieldId]
-            
+
                 for gpuId in list(fvs.keys()):
                     gpuFv = fvs[gpuId]
                     val = gpuFv[fieldId][-1]
@@ -115,9 +124,12 @@ class DcgmPrometheus(DcgmReader):
                     gpuUniqueId = gpuUuid if g_settings['sendUuid'] else gpuBusId
 
                     # pylint doesn't find the labels member for Gauge, but it exists. Ignore the warning
-                    g.labels(gpuId, gpuUniqueId).set(val.value) # pylint: disable=no-member
+                    g.labels(gpuId, gpuUniqueId).set(val.value)  # pylint: disable=no-member
 
-                    logging.debug('Sent GPU %d %s %s = %s' % (gpuId, gpuUniqueId, self.m_fieldIdToInfo[fieldId].tag, str(val.value)))
+                    logging.debug(
+                        'Sent GPU %d %s %s = %s' %
+                        (gpuId, gpuUniqueId, self.m_fieldIdToInfo[fieldId].tag,
+                         str(val.value)))
 
     ###############################################################################
     '''
@@ -128,25 +140,30 @@ class DcgmPrometheus(DcgmReader):
     For specific information about which fields monotonically increase, see the API guide or
     dcgm_fields.h
     '''
+
     def SetupGauges(self):
         for _, fieldIds in self.m_publishFields.items():
             if fieldIds is None:
-                continue;
+                continue
 
             for fieldId in fieldIds:
                 if fieldId in self.m_dcgmIgnoreFields:
                     continue
 
-                uniqueIdName = 'GpuUuid' if g_settings['sendUuid'] else 'GpuBusID'
+                uniqueIdName = 'GpuUuid' if g_settings[
+                    'sendUuid'] else 'GpuBusID'
 
                 fieldTag = self.m_fieldIdToInfo[fieldId].tag
-                self.m_existingGauge[fieldId] = Gauge("dcgm_"+fieldTag,'DCGM_PROMETHEUS',['GpuID', uniqueIdName])
+                self.m_existingGauge[fieldId] = Gauge("dcgm_" + fieldTag,
+                                                      'DCGM_PROMETHEUS',
+                                                      ['GpuID', uniqueIdName])
 
     ###############################################################################
     '''
     Scrape the fieldvalue data and publish. This function calls the process function of
     the base class DcgmReader.
     '''
+
     def Scrape(self, data=None):
         return self.Process()
 
@@ -162,7 +179,7 @@ class DcgmPrometheus(DcgmReader):
         for _, fieldIds in self.m_publishFields.items():
             if fieldIds is None:
                 continue
-                
+
             for fieldId in fieldIds:
                 if fieldId in self.m_dcgmIgnoreFields:
                     continue
@@ -170,7 +187,8 @@ class DcgmPrometheus(DcgmReader):
                 if fieldTagList == '':
                     fieldTagList = self.m_fieldIdToInfo[fieldId].tag
                 else:
-                    fieldTagList = fieldTagList + ", %s" % (self.m_fieldIdToInfo[fieldId].tag)
+                    fieldTagList = fieldTagList + ", %s" % (
+                        self.m_fieldIdToInfo[fieldId].tag)
 
         logging.info("Publishing fields: '%s'" % (fieldTagList))
 
@@ -182,9 +200,11 @@ class DcgmPrometheus(DcgmReader):
     def LogInfo(self, msg):
         logging.info(msg)
 
+
 ###############################################################################
 def exit_handler(signum, frame):
     g_settings['shouldExit'] = True
+
 
 ###############################################################################
 def main_loop(prometheus_obj, publish_interval):
@@ -199,6 +219,7 @@ def main_loop(prometheus_obj, publish_interval):
     except KeyboardInterrupt:
         print("Caught CTRL-C. Exiting")
 
+
 ###############################################################################
 def initialize_globals():
     '''
@@ -208,12 +229,12 @@ def initialize_globals():
     g_settings = {}
 
     g_settings['shouldExit'] = False
-
     '''
     List of the ids that are present in g_settings['publishFieldIds'] but ignored for watch.
     '''
-    g_settings['ignoreList'] = [dcgm_fields.DCGM_FI_DEV_PCI_BUSID, ]
-
+    g_settings['ignoreList'] = [
+        dcgm_fields.DCGM_FI_DEV_PCI_BUSID,
+    ]
     '''
     Those are initialized by the CLI parser. We only list them here for clarity.
     '''
@@ -225,6 +246,7 @@ def initialize_globals():
     ]:
         g_settings[key] = None
 
+
 ###############################################################################
 def parse_command_line():
     parser = cli.create_parser(
@@ -232,8 +254,12 @@ def parse_command_line():
         field_ids=DEFAULT_FIELDS,
     )
 
-    cli.add_custom_argument(parser, '--send-uuid', dest='send_uuid', default=False,
-                            action='store_true', help='Send GPU UUID instead of bus id')
+    cli.add_custom_argument(parser,
+                            '--send-uuid',
+                            dest='send_uuid',
+                            default=False,
+                            action='store_true',
+                            help='Send GPU UUID instead of bus id')
 
     args = cli.run_parser(parser)
     field_ids = cli.get_field_ids(args)
@@ -256,14 +282,22 @@ def parse_command_line():
     g_settings['sendUuid'] = args.send_uuid
 
     if logfile != None:
-        logging.basicConfig(level=numeric_log_level, filename=logfile, filemode='w+', format='%(asctime)s %(levelname)s: %(message)s')
+        logging.basicConfig(level=numeric_log_level,
+                            filename=logfile,
+                            filemode='w+',
+                            format='%(asctime)s %(levelname)s: %(message)s')
     else:
-        logging.basicConfig(level=numeric_log_level, stream=sys.stdout, filemode='w+', format='%(asctime)s %(levelname)s: %(message)s')
+        logging.basicConfig(level=numeric_log_level,
+                            stream=sys.stdout,
+                            filemode='w+',
+                            format='%(asctime)s %(levelname)s: %(message)s')
+
 
 ###############################################################################
 def initialize_signal_handlers():
     signal.signal(signal.SIGINT, exit_handler)
     signal.signal(signal.SIGTERM, exit_handler)
+
 
 ###############################################################################
 def main():
@@ -275,7 +309,8 @@ def main():
 
     prometheus_obj = DcgmPrometheus()
 
-    logging.info("Starting Prometheus server on port " + str(g_settings['prometheusPort']))
+    logging.info("Starting Prometheus server on port " +
+                 str(g_settings['prometheusPort']))
 
     #start prometheus client server.
     start_http_server(g_settings['prometheusPort'])
@@ -285,6 +320,7 @@ def main():
     main_loop(prometheus_obj, g_settings['prometheusPublishInterval'])
 
     prometheus_obj.Shutdown()
+
 
 if __name__ == '__main__':
     main()
