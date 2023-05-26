@@ -132,6 +132,7 @@ function _run_single_config() {
             MODIFIED_TEST_NAME=${TEST_NAME}/${MA_EXPECTED_RESULT}-${MODEL_CONTROL_MODE//[--=]/-}-${RELOAD_MODEL_DISABLE//[--=]/-}
             create_result_paths -test-name ${MODIFIED_TEST_NAME}
             SERVER_LOG=$TEST_LOG_DIR/server.log
+            ANALYZER_LOG=$TEST_LOG_DIR/analyzer.log
 
             # For remote launch, set server args and start server
             SERVER=`which tritonserver`
