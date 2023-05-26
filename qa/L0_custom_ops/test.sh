@@ -28,7 +28,6 @@ CONFIG_FILE="config.yaml"
 NUM_ITERATIONS=${NUM_ITERATIONS:=4}
 MODEL_NAMES="libtorch_modulo"
 WAIT_TIMEOUT=1200
-CHECKPOINT_DIRECTORY="$LOGS_DIR/all_checkpoints"
 
 # Generate test configs
 python3 test_config_generator.py --profile-models $MODEL_NAMES --preload-path "/usr/lib/x86_64-linux-gnu/libpython3.8.so.1:$MODEL_REPOSITORY/libtorch_modulo/custom_modulo.so" --library-path /opt/tritonserver/backends/pytorch:'$LD_LIBRARY_PATH'
@@ -40,7 +39,7 @@ if [ ${#LIST_OF_CONFIG_FILES[@]} -le 0 ]; then
     exit 1
 fi
 
-MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
@@ -69,7 +68,6 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
     # Run analyzer
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -e $EXPORT_PATH"
     if [[ "$LOG_PREFIX" == "c_api" ]]; then    
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --perf-output-path=$TRITON_LOG"
     elif [[ "$LOG_PREFIX" == "docker" ]]; then
@@ -77,6 +75,9 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     else
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --triton-output-path=$TRITON_LOG"
     fi           
+
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
+
     run_analyzer
 
     if [[ ! -z `grep "symbol lookup error" $TRITON_LOG` ]]; then

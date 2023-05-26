@@ -61,7 +61,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     TRITON_LOG_PREFIX=${CONFIG_FILE#"config-"}
     TRITON_LOG_PREFIX=${TRITON_LOG_PREFIX%".yml"}
     TRITON_LOG=$TEST_LOG_DIR/${TRITON_LOG_PREFIX}.${TRITON_LOG_BASE}
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-output-path=${TRITON_LOG} -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY"
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-output-path=${TRITON_LOG} -f $CONFIG_FILE -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 
     run_analyzer
     if [ $? -ne 0 ]; then

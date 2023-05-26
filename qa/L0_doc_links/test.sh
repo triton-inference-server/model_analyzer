@@ -15,8 +15,9 @@
 source ../common/util.sh
 create_logs_dir "L0_doc_links"
 
-LOG="$LOGS_DIR/test.log"
-CONFIG="$LOGS_DIR/mkdocs.yml"
+mkdir -p $LOGS_DIR/logs
+LOG=$LOGS_DIR/logs/test.log
+CONFIG="`pwd`/mkdocs.yml"
 RET=0
 
 exec mkdocs serve -f $CONFIG > $LOG &

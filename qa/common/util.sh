@@ -34,12 +34,11 @@ create_logs_dir() {
 }
 
 create_result_paths() {
+    # Creates ANALYZER_LOG, EXPORT_PATH, CHECKPOINT_DIRECTORY and TEST_LOG_DIR
     # Arguments:
-    #  -test-name <test_name>: <string> - L0 Script name 
-    #  -export-path <false>: <boolean> - If false, do not create EXPORT_PATH
-    #  -checkpoints <false>: <boolean> - If false, do not create CHECKPOINT_DIRECTORY
-
-    # By default, ANALYZER_LOG, EXPORT_PATH, and CHECKPOINT_DIRECTORY will always be created
+    #  -test-name <test_name>: <string> - L0 Script name (optional argument)
+    #  -export-path <false>: <boolean> - If false, skip creating EXPORT_PATH (optional argument)
+    #  -checkpoints <false>: <boolean> - If false, skip creating CHECKPOINT_DIRECTORY (optional argument)
 
     # Set default values
     test_name=""

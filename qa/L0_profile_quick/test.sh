@@ -13,8 +13,7 @@
 # limitations under the License.
 
 source ../common/util.sh
-LOGS_DIR="/logs/L0_profile_quick"
-ANALYZER_LOG="$LOGS_DIR/logs/test.log"
+create_logs_dir "L0_profile_quick"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -24,12 +23,10 @@ TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="http"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
-EXPORT_PATH="$LOGS_DIR/results"
-CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 
+create_result_paths
 rm -rf $OUTPUT_MODEL_REPOSITORY
-mkdir -p $EXPORT_PATH $CHECKPOINT_DIRECTORY $LOGS_DIR/logs
 
 # Run the analyzer and check the results
 RET=0

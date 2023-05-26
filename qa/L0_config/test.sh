@@ -31,7 +31,7 @@ PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 
-CHECKPOINT_DIRECTORY=$LOGS_DIR/all_checkpoints
+CHECKPOINT_DIRECTORY=$LOGS_DIR/checkpoints
 mkdir -p $CHECKPOINT_DIRECTORY
 
 MODEL_ANALYZER_PROFILE_BASE_ARGS="--model-repository $MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
@@ -59,7 +59,7 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
     rm -rf $OUTPUT_MODEL_REPOSITORY
     set +e
 
-    TEST_NAME=test_$(basename "$config" | sed 's/\.[^.]*$//')
+    TEST_NAME=tests/test_$(basename "$config" | sed 's/\.[^.]*$//')
     create_result_paths -test-name $TEST_NAME -checkpoints false
 
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config -e $EXPORT_PATH"

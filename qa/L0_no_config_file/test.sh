@@ -33,7 +33,7 @@ create_logs_dir "L0_no_config_file"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-rm -rf $OUTPUT_MODEL_REPOSITORY -f *.log
+rm -rf $OUTPUT_MODEL_REPOSITORY *.log
 
 MODEL_REPOSITORY=$(get_output_directory)
 rm -rf $MODEL_REPOSITORY

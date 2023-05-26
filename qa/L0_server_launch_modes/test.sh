@@ -130,7 +130,7 @@ function _run_single_config() {
             done
 
             MODIFIED_TEST_NAME=${TEST_NAME}/${model_mode_combo//[-;=]/-}
-            create_results_path -test-name ${MODIFIED_TEST_NAME}
+            create_result_paths -test-name ${MODIFIED_TEST_NAME}
             SERVER_LOG=$TEST_LOG_DIR/server.${MODIFIED_TEST_NAME}.log
 
             # For remote launch, set server args and start server
@@ -155,15 +155,15 @@ function _run_single_config() {
         return
 
     elif [ "$LAUNCH_MODE" == "c_api" ]; then
-        create_results_path -test-name $TEST_NAME
+        create_result_paths -test-name $TEST_NAME
         SERVER_LOG=$TEST_LOG_DIR/server.${TEST_NAME}.log
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG} --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
     elif [ "$LAUNCH_MODE" == "docker" ]; then
-        create_results_path -test-name $TEST_NAME
+        create_result_paths -test-name $TEST_NAME
         SERVER_LOG=$TEST_LOG_DIR/server.${TEST_NAME}.log
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_SERVER_CONTAINER_IMAGE_NAME --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
     else
-        create_results_path -test-name $TEST_NAME
+        create_result_paths -test-name $TEST_NAME
         SERVER_LOG=$TEST_LOG_DIR/server.${TEST_NAME}.log
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
     fi
