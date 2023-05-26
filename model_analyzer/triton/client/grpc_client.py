@@ -68,7 +68,7 @@ class TritonGRPCClient(TritonClient):
         Returns
         -------
         dict
-            A dictionary containg the model config.
+            A dictionary containing the model config.
         """
 
         self.wait_for_model_ready(model_name, num_retries)

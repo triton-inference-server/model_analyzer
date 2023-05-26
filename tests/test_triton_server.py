@@ -204,7 +204,8 @@ class TestTritonServerMethods(trc.TestResultCollector):
                 TRITON_LOCAL_BIN_PATH, '--model-repository',
                 MODEL_REPOSITORY_PATH
             ],
-            gpus=gpus)
+            gpus=gpus,
+            stdout=self.server._log_file)
 
         self.server.stop()
         self.server_local_mock.assert_server_process_terminate_called()

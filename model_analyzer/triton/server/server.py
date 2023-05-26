@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
+from io import TextIOWrapper
 
 
 class TritonServer(ABC):
@@ -36,6 +37,12 @@ class TritonServer(ABC):
     def stop(self):
         """
         Stops and cleans up after the server
+        """
+
+    @abstractmethod
+    def log_file(self) -> TextIOWrapper:
+        """
+        Returns the server's log file
         """
 
     @abstractmethod

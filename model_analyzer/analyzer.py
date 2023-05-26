@@ -14,7 +14,7 @@
 
 from typing import List, Union, Optional
 import sys
-from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from .model_manager import ModelManager
 from .result.result_manager import ResultManager
 from .result.result_table_manager import ResultTableManager
@@ -134,6 +134,10 @@ class Analyzer:
                         self._get_report_command_help_string(
                             model.model_name()))
 
+            if self._metrics_manager.encountered_perf_analyzer_error():
+                logger.warning(f"Perf Analyzer encountered an error when profiling one or more configurations. " \
+                      f"See {self._config.export_path}/{PA_ERROR_LOG_FILENAME} for further details.\n")
+
     def report(self, mode: str) -> None:
         """
         Subcommand: REPORT
@@ -205,7 +209,9 @@ class Analyzer:
 
             logger.info('Profiling server only metrics...')
             self._server.start()
-            client.wait_for_server_ready(self._config.client_max_retries)
+            client.wait_for_server_ready(
+                num_retries=self._config.client_max_retries,
+                log_file=self._server.log_file())
             self._metrics_manager.profile_server()
             self._server.stop()
 

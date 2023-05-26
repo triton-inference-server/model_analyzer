@@ -16,6 +16,7 @@ from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 
+from subprocess import DEVNULL
 import time
 import logging
 
@@ -28,7 +29,12 @@ class TritonClient:
     TritonClientFactory
     """
 
-    def wait_for_server_ready(self, num_retries, sleep_time=1):
+    def wait_for_server_ready(
+        self,
+        num_retries,
+        sleep_time=1,
+        log_file=None,
+    ):
         """
         Parameters
         ----------
@@ -36,6 +42,10 @@ class TritonClient:
             number of times to send a ready status
             request to the server before raising
             an exception
+        sleep_time: int
+            amount of time in seconds to sleep between retries
+        log_file: TextIOWrapper
+            file that contains the server's output log
         Raises
         ------
         TritonModelAnalyzerException
@@ -50,9 +60,11 @@ class TritonClient:
                     time.sleep(sleep_time)
                     return
                 else:
+                    self._check_for_triton_log_errors(log_file)
                     time.sleep(sleep_time)
                     retries -= 1
             except Exception as e:
+                self._check_for_triton_log_errors(log_file)
                 time.sleep(sleep_time)
                 retries -= 1
                 if retries == 0:
@@ -162,7 +174,7 @@ class TritonClient:
         Returns
         -------
         dict or None
-            A dictionary containg the model config.
+            A dictionary containing the model config.
         """
 
         self.wait_for_model_ready(model_name, num_retries)
@@ -174,3 +186,20 @@ class TritonClient:
         Returns true if the server is ready. Else False
         """
         return self._client.is_server_ready()
+
+    def _check_for_triton_log_errors(self, log_file):
+        if not log_file or log_file == DEVNULL:
+            return
+
+        log_file.seek(0)
+        log_output = log_file.read()
+
+        if not type(log_output) == str:
+            log_output = log_output.decode('utf-8')
+
+        if log_output:
+            if "Unexpected argument:" in log_output:
+                error_start = log_output.find("Unexpected argument:")
+                raise TritonModelAnalyzerException(
+                    f'Error: TritonServer did not launch successfully\n\n{log_output[error_start:]}'
+                )
