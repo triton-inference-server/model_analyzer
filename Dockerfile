@@ -27,7 +27,7 @@ ARG BASE_IMAGE
 ARG TRITONSDK_BASE_IMAGE
 
 # DCGM version to install for Model Analyzer
-ENV DCGM_VERSION=3.1.8
+ENV DCGM_VERSION=2.4.7
 
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
