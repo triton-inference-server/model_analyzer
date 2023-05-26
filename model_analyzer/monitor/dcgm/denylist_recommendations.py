@@ -18,12 +18,12 @@ import json
 import os
 
 try:
-    import pydcgm
-    import dcgm_agent
-    import dcgm_structs
-    import dcgm_errors
-    import dcgm_fields
-    import DcgmSystem
+    import model_analyzer.monitor.dcgm.pydcgm as pydcgm
+    import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
+    import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
+    import model_analyzer.monitor.dcgm.dcgm_errors as dcgm_errors
+    import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
+    import model_analyzer.monitor.dcgm.DcgmSystem as DcgmSystem
 except:
     # If we don't find the bindings, add the default path and try again
     if 'PYTHONPATH' in os.environ:
@@ -31,11 +31,11 @@ except:
     else:
         os.environ['PYTHONPATH'] = '/usr/local/dcgm/bindings'
 
-    import pydcgm
-    import dcgm_agent
-    import dcgm_structs
-    import dcgm_fields
-    import DcgmSystem
+    import model_analyzer.monitor.dcgm.pydcgm as pydcgm
+    import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
+    import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
+    import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
+    import model_analyzer.monitor.dcgm.DcgmSystem as DcgmSystem
 
 BR_ST_HEALTHY               = 0x0000
 BR_ST_NOT_DETECTED          = 0x0001

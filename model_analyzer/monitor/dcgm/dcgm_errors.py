@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import ctypes
-import dcgm_structs
+import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
 DCGM_FR_OK                                  = 0  # No error
 DCGM_FR_UNKNOWN                             = 1  # Unknown error code

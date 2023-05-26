@@ -17,7 +17,7 @@
 
 from ctypes import *
 from ctypes.util import find_library
-import dcgm_structs
+import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
 # Provides access to functions
 dcgmFP = dcgm_structs._dcgmGetFunctionPointer

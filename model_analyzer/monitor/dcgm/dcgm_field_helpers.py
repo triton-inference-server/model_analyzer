@@ -15,13 +15,13 @@
 # limitations under the License.
 
 import time
-import dcgm_fields
-import dcgm_fields_internal
-import dcgm_structs
-import dcgm_agent
+import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
+import model_analyzer.monitor.dcgm.dcgm_fields_internal as dcgm_fields_internal
+import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
+import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
 import ctypes
-import dcgmvalue
-import pydcgm
+import model_analyzer.monitor.dcgm.dcgmvalue as dcgmvalue
+import model_analyzer.monitor.dcgm.pydcgm as pydcgm
 import json
 
 '''

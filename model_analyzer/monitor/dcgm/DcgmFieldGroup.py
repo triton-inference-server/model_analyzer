@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import dcgm_agent
-import dcgm_structs
+import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
+import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
 '''
 Class for managing a group of field IDs in the host engine.

@@ -17,8 +17,8 @@
 # Python bindings for the internal API of DCGM library (dcgm_agent.h)
 ##
 
-import dcgm_structs
-import dcgm_fields
+import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
+import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 from ctypes import *
 import functools
 

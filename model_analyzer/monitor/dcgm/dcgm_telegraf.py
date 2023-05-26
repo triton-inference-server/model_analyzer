@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from common.dcgm_client_main import main
-from DcgmJsonReader import DcgmJsonReader
+from model_analyzer.monitor.dcgm.common.dcgm_client_main import main
+from model_analyzer.monitor.dcgm.DcgmJsonReader import DcgmJsonReader
 from socket import socket, AF_INET, SOCK_DGRAM
 
 # Displayed to the user

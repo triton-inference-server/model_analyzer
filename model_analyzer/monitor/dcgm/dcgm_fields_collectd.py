@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dcgm_fields import *
-from dcgm_fields_internal import *
+from  model_analyzer.monitor.dcgm.dcgm_fields import *
+from  model_analyzer.monitor.dcgm.dcgm_fields_internal import *
 import sys
 
 class CollectdMetadata:

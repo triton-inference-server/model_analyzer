@@ -13,10 +13,10 @@
 # limitations under the License.
 import subprocess
 import signal, os
-import pydcgm
-import dcgm_structs
+import model_analyzer.monitor.dcgm.pydcgm as pydcgm
+import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 import threading
-import dcgm_fields
+import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 import sys
 import logging
 

@@ -24,7 +24,7 @@ import os
 import threading
 import string
 import json
-import dcgmvalue
+import model_analyzer.monitor.dcgm.dcgmvalue as dcgmvalue
 import platform
 from inspect import isclass
 

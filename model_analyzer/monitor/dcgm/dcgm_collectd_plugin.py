@@ -22,12 +22,12 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 parent_dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
 sys.path.insert(0, parent_dir_path)
 
-import dcgm_fields_collectd
-import pydcgm
-import dcgm_fields
-import dcgm_structs
+import model_analyzer.monitor.dcgm.dcgm_fields_collectd as dcgm_fields_collectd
+import model_analyzer.monitor.dcgm.pydcgm as pydcgm
+import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
+import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 import threading
-from DcgmReader import DcgmReader
+from model_analyzer.monitor.dcgm.DcgmReader import DcgmReader
 
 if 'DCGM_TESTING_FRAMEWORK' in os.environ:
     try:

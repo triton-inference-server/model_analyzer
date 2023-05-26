@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from DcgmReader import DcgmReader
+from model_analyzer.monitor.dcgm.DcgmReader import DcgmReader
 from json import dumps as toJson
 from os import environ
 from socket import socket, AF_INET, SOCK_DGRAM
 from time import sleep
-import dcgm_fields
+import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 import logging
 
 class DcgmJsonReader(DcgmReader):

@@ -21,16 +21,16 @@ def _python_version_check():
 _python_version_check()
 
 #Bring classes into this namespace
-from DcgmHandle import *
-from DcgmGroup import *
-from DcgmStatus import *
-from DcgmSystem import *
-from DcgmFieldGroup import *
+from model_analyzer.monitor.dcgm.DcgmHandle import *
+from model_analyzer.monitor.dcgm.DcgmGroup import *
+from model_analyzer.monitor.dcgm.DcgmStatus import *
+from model_analyzer.monitor.dcgm.DcgmSystem import *
+from model_analyzer.monitor.dcgm.DcgmFieldGroup import *
 
 import os
 if '__DCGM_TESTING_FRAMEWORK_ACTIVE' in os.environ and os.environ['__DCGM_TESTING_FRAMEWORK_ACTIVE'] == '1':
     import utils
-    import dcgm_structs
+    import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
     dcgm_structs._dcgmInit(utils.get_testing_framework_library_path())
 
 '''

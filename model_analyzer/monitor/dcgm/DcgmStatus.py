@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pydcgm
-import dcgm_agent
-import dcgm_structs
+import model_analyzer.monitor.dcgm.pydcgm as pydcgm
+import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
+import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
 class DcgmStatus:
     def __init__(self):

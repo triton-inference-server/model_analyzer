@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import dcgm_fields
+import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 import time
 import logging
 import os
@@ -23,8 +23,8 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 parent_dir_path = os.path.abspath(os.path.join(dir_path, os.pardir))
 sys.path.insert(0, parent_dir_path)
 
-from DcgmReader import DcgmReader
-from common import dcgm_client_cli_parser as cli
+from model_analyzer.monitor.dcgm.DcgmReader import DcgmReader
+from model_analyzer.monitor.dcgm.common import dcgm_client_cli_parser as cli
 
 if 'DCGM_TESTING_FRAMEWORK' in os.environ:
     try:
