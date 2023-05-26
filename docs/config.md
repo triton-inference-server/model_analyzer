@@ -230,8 +230,8 @@ cpu_only_composing_models: <comma-delimited-string-list>
 # Skips the generation of summary reports and tables
 [ skip_summary_reports: <bool> | default: false]
 
-# Creates the recommended detailed reports after profile completes
-[ create_recommended_detailed_reports: <bool> | default: false]
+# Skips the generation of detailed reports and tables
+[ skip_detailed_reports: <bool> | default: false]
 
 # Number of top configs to show in summary plots
 [ num_configs_per_model: <int> | default: 3]

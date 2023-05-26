@@ -47,7 +47,7 @@ from .config_defaults import \
     DEFAULT_INFERENCE_OUTPUT_FIELDS, DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS, \
     DEFAULT_GPU_OUTPUT_FIELDS, DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS, DEFAULT_SERVER_OUTPUT_FIELDS, \
     DEFAULT_ONLINE_OBJECTIVES, DEFAULT_ONLINE_PLOTS, DEFAULT_OFFLINE_PLOTS, DEFAULT_MODEL_WEIGHTING, \
-    DEFAULT_CREATE_RECOMMENDED_DETAILED_REPORTS
+    DEFAULT_SKIP_DETAILED_REPORTS
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.triton.server.server_config import \
@@ -226,14 +226,13 @@ class ConfigCommandProfile(ConfigCommand):
                 'Skips the generation of analysis summary reports and tables.'))
         self._add_config(
             ConfigField(
-                'create_recommended_detailed_reports',
-                flags=['--create-recommended-detailed-reports'],
+                'skip_detailed_reports',
+                flags=['--skip-detailed-reports'],
                 field_type=ConfigPrimitive(bool),
                 parser_args={'action': 'store_true'},
-                default_value=DEFAULT_CREATE_RECOMMENDED_DETAILED_REPORTS,
+                default_value=DEFAULT_SKIP_DETAILED_REPORTS,
                 description=
-                "Creates the recommended detail reports after profile completes."
-            ))
+                "Skips the generation of detailed summary reports and tables."))
 
         self._add_repository_configs()
         self._add_client_configs()
