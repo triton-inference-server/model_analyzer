@@ -59,9 +59,10 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
     rm -rf $OUTPUT_MODEL_REPOSITORY
     set +e
 
-    TEST_NAME=tests/test_$(basename "$config" | sed 's/\.[^.]*$//')
-    create_result_paths -test-name $TEST_NAME -checkpoints false
+    TEST_NAME=test_$(basename "$config" | sed 's/\.[^.]*$//')
+    create_result_paths -test-name tests/$TEST_NAME -checkpoints false
 
+    ANALYZER_LOG=$TEST_LOG_DIR/analyzer.${TEST_NAME}.log
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config -e $EXPORT_PATH"
     NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml/\.txt/'`
     TEST_OUTPUT_NUM_ROWS=`cat $NUM_ROW_OUTPUT_FILE`
