@@ -65,13 +65,9 @@ class GPUDeviceFactory:
             for device_id in dcgm_device_ids:
                 device_atrributes = dcgm_agent.dcgmGetDeviceAttributes(
                     dcgm_handle, device_id).identifiers
-                pci_bus_id = device_atrributes
+                pci_bus_id = device_atrributes.pciBusId
                 device_uuid = device_atrributes.uuid
                 device_name = device_atrributes.deviceName
-
-                print(
-                    f'{type(pci_bus_id)}: {pci_bus_id}\n{type(device_uuid)}: {device_uuid}\n{type(device_name)}: {device_name}\n'
-                )
 
                 gpu_device = GPUDevice(device_name, device_id, pci_bus_id,
                                        device_uuid)
