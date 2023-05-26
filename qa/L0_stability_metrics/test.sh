@@ -46,7 +46,7 @@ set +e
 for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
     TEST_NAME=iteration_${i}
     create_result_paths -test-name $TEST_NAME
-    ANALYZER_LOG=${TEST_LOG_DIR}analyzer.${TEST_NAME}.profile.log
+    ANALYZER_LOG=${TEST_LOG_DIR}/analyzer.${TEST_NAME}.profile.log
 
     # First profile
     MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $CONFIG_FILE"
@@ -65,7 +65,7 @@ for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
     fi
 
     # Then generate results
-    ANALYZER_LOG=${TEST_LOG_DIR}analyzer.${TEST_NAME}.generate_results.log
+    ANALYZER_LOG=${TEST_LOG_DIR}/analyzer.${TEST_NAME}.generate_results.log
     MODEL_ANALYZER_ARGS="-e $EXPORT_PATH -f $CONFIG_FILE --filename-server-only=$FILENAME_SERVER_ONLY --checkpoint-directory $CHECKPOINT_DIRECTORY"
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL "
     MODEL_ANALYZER_SUBCOMMAND="profile"
