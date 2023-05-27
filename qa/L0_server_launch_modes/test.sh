@@ -79,7 +79,7 @@ function run_server_launch_modes() {
         LAUNCH_MODE=${PARAMETERS[1]}
         PROTOCOL=${PARAMETERS[2]}
 
-        TEST_NAME=${TEST_NAME_BASE}_${LAUNCH_MODE}.${PROTOCOL}
+        TEST_NAME=${TEST_NAME_BASE}/test_${LAUNCH_MODE}.${PROTOCOL}
 
         MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS `convert_gpu_array_to_flag ${gpus[@]}` -f $CONFIG_FILE"
@@ -157,15 +157,18 @@ function _run_single_config() {
 
     elif [ "$LAUNCH_MODE" == "c_api" ]; then
         create_result_paths -test-name $TEST_NAME
-        SERVER_LOG=$TEST_LOG_DIR/server.${TEST_NAME}.log
+        SERVER_LOG=$TEST_LOG_DIR/server.log
+        ANALYZER_LOG=$TEST_LOG_DIR/analyzer.log
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --perf-output-path=${SERVER_LOG} --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
     elif [ "$LAUNCH_MODE" == "docker" ]; then
         create_result_paths -test-name $TEST_NAME
-        SERVER_LOG=$TEST_LOG_DIR/server.${TEST_NAME}.log
+        SERVER_LOG=$TEST_LOG_DIR/server.log
+        ANALYZER_LOG=$TEST_LOG_DIR/analyzer.log
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --triton-docker-image=$TRITON_SERVER_CONTAINER_IMAGE_NAME --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
     else
         create_result_paths -test-name $TEST_NAME
-        SERVER_LOG=$TEST_LOG_DIR/server.${TEST_NAME}.log
+        SERVER_LOG=$TEST_LOG_DIR/server.log
+        ANALYZER_LOG=$TEST_LOG_DIR/analyzer.log
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-output-path=${SERVER_LOG} --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
     fi
 
@@ -243,14 +246,16 @@ CUDA_DEVICE_ORDER="PCI_BUS_ID"
 ##########################################################
 # Test controling the GPUs with the CUDA_VISIBLE_DEVICES #
 ##########################################################
-TEST_NAME_BASE="test_cuda_visible_devices"
 
+TEST_NAME_BASE="test_cuda_visible_devices_1"
 export CUDA_VISIBLE_DEVICES=3
 run_server_launch_modes
 
+TEST_NAME_BASE="test_cuda_visible_devices_2"
 export CUDA_VISIBLE_DEVICES=1,2
 run_server_launch_modes
 
+TEST_NAME_BASE="test_cuda_visible_devices_3"
 export CUDA_VISIBLE_DEVICES=0,1,2
 run_server_launch_modes
 
@@ -259,21 +264,25 @@ unset CUDA_VISIBLE_DEVICES
 #################################################
 # Test controling the GPUs with the --gpus flag #
 #################################################
-TEST_NAME_BASE="test_gpus_flag"
 
+TEST_NAME_BASE="test_gpus_flag_1"
 CURRENT_GPUS=(${GPUS[2]})
 run_server_launch_modes "$CURRENT_GPUS"
 
+TEST_NAME_BASE="test_gpus_flag_2"
 CURRENT_GPUS=${GPUS[@]:1}
 run_server_launch_modes "$CURRENT_GPUS"
 
+TEST_NAME_BASE="test_gpus_flag_3"
 CURRENT_GPUS="empty_gpu_flag"
 run_server_launch_modes "$CURRENT_GPUS"
 
 # Test with GPU ID
+TEST_NAME_BASE="test_gpus_flag_4"
 CURRENT_GPUS="0"
 run_server_launch_modes "$CURRENT_GPUS"
 
+TEST_NAME_BASE="test_gpus_flag_5"
 CURRENT_GPUS="1 2"
 run_server_launch_modes "$CURRENT_GPUS"
 
