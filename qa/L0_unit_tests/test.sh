@@ -44,7 +44,6 @@ fi
 
 # Generate html files
 echo `pwd`
-coverage html
-cp -rf htmlcov "$LOGS_DIR/html/"
+coverage html --directory $LOGS_DIR/html/
 
 exit $RET
