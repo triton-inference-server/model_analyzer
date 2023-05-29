@@ -59,7 +59,6 @@ create_result_paths() {
                 shift 2;;
             *)
                 echo "Invalid option: $1" >&2;
-                usage; 
                 return 1;;
         esac
     done
