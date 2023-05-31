@@ -87,20 +87,6 @@ class TestConfigGenerator:
         with open('./config-additive-args-count-no-adjust.yml', 'w') as f:
             yaml.dump(model_config, f)
 
-    def generate_perf_output_timeout(self):
-        model_config = {
-            'profile_models': ['vgg19_libtorch'],
-            'skip_summary_reports': True,  # Don't fail analyzing no results
-            'perf_output': True,
-            'perf_analyzer_timeout': 2,
-            'perf_analyzer_flags': {
-                'measurement-mode': 'time_windows',
-                'measurement-interval': 2,
-            }
-        }
-        with open('./config-perf-output-timeout.yml', 'w') as f:
-            yaml.dump(model_config, f)
-
 
 if __name__ == '__main__':
     TestConfigGenerator()

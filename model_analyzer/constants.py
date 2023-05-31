@@ -62,3 +62,6 @@ PA_ERROR_LOG_FILENAME = "perf_analyzer_error.log"
 
 # Constraints
 GLOBAL_CONSTRAINTS_KEY = "__default__"
+
+# Measurement constants
+INVALID_MEASUREMENT_THRESHOLD = 2
