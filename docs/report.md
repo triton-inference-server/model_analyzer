@@ -58,6 +58,6 @@ See the [**configuring model
 analyzer**](./config.md) section for more details on how to configure these
 reports.
 
-Detailed reports for the top-N (default=3) configurations, are also generated at the end of `profile`.
+Detailed reports for the top-N (based on the value of `--num-configs-per-model`) configurations are also generated at the end of `profile`.
 To disable detailed report generation after `profile` use `--skip-detailed-reports` or set the
 `skip_detailed_reports` yaml option to `false`.
