@@ -80,7 +80,7 @@ class ModelManager:
         if state_manager.starting_fresh_run():
             self._init_state()
 
-        self._measurement_attempts = 0
+        self._failed_measurement_attempts = 0
         self._received_measurement_values_from_pa = False
 
         self._model_variant_name_manager = ModelVariantNameManager.from_dict(
@@ -207,14 +207,15 @@ class ModelManager:
         if measurement:
             self._received_measurement_values_from_pa = True
         else:
-            self._measurement_attempts += 1
+            self._failed_measurement_attempts += 1
 
     def _stop_ma_if_no_valid_measurement_threshold_reached(self) -> None:
         if self._received_measurement_values_from_pa:
             return
 
-        if self._measurement_attempts >= INVALID_MEASUREMENT_THRESHOLD:
+        if self._failed_measurement_attempts >= INVALID_MEASUREMENT_THRESHOLD:
             raise TritonModelAnalyzerException(
-                            f'The first {INVALID_MEASUREMENT_THRESHOLD} attempts to acquire measurements have failed. ' \
-                            'Please examine the Tritonserver/PA error logs to determine what has gone wrong.'
-                        )
+                f'The first {INVALID_MEASUREMENT_THRESHOLD} attempts to acquire measurements ' \
+                'have failed. Please examine the Tritonserver/PA error logs ' \
+                'to determine what has gone wrong.'
+            )
