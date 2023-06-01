@@ -22,7 +22,7 @@ logger = logging.getLogger(LOGGER_NAME)
 
 class CLI:
     """
-    CLI class to parse the commandline arguments
+    CLI class to parse the command line arguments
     """
 
     def __init__(self):
@@ -49,7 +49,7 @@ class CLI:
             '-v',
             '--verbose',
             action='store_true',
-            help='Show detailed logs, messags and status.')
+            help='Show detailed logs, messages and status.')
         self._parser.add_argument('-m',
                                   '--mode',
                                   type=str,

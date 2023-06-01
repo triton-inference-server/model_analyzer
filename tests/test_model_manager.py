@@ -691,7 +691,7 @@ class TestModelManager(trc.TestResultCollector):
 
     def test_throughput_early_exit_minimum_runs(self):
         """
-        Test that there is an early backoff when sweeping concurrency
+        Test that there is an early back off when sweeping concurrency
 
         The behavior is that MA will try at least 4 concurrencies. If 
         at that point none of the last 3 attempts have had satisfactory 
@@ -738,7 +738,7 @@ class TestModelManager(trc.TestResultCollector):
 
     def test_no_early_exit_if_not_auto_search(self):
         """
-        Test that there is NOT an early backoff when sweeping concurrency if not in auto sweep mode
+        Test that there is NOT an early back off when sweeping concurrency if not in auto sweep mode
 
         This test hardcodes the 'throughput' to 1, so for all model
         configs the gain will be invalid. However, it should still sweep
@@ -780,7 +780,7 @@ class TestModelManager(trc.TestResultCollector):
 
     def test_throughput_early_exit(self):
         """
-        Test that there is an early backoff when sweeping concurrency
+        Test that there is an early back off when sweeping concurrency
 
         The behavior is that MA stop if it had 4 concurrencies in a row
         without any valid gain amongst any of them
@@ -822,9 +822,10 @@ class TestModelManager(trc.TestResultCollector):
             ]
             self._test_model_manager(yaml_str, expected_ranges)
 
+    @patch('model_analyzer.model_manager.INVALID_MEASUREMENT_THRESHOLD', 999)
     def test_bad_result_early_PA_exit(self):
         """
-        Test that there is an early backoff for bad result (out of memory)
+        Test that there is an early back off for bad result (out of memory)
 
         If no measurements are returned in an attempt, no further concurrencies
         should be tried.
@@ -863,9 +864,30 @@ class TestModelManager(trc.TestResultCollector):
             mock_method.return_value = None
             self._test_model_manager(yaml_str, expected_ranges)
 
+    def test_report_failure_no_measurements(self):
+        """
+        Test that MA takes an exception if we detect no measurements returned from
+        PA at the start of profile
+        """
+
+        yaml_str = ("""
+            profile_models: test_model
+            run_config_search_max_concurrency: 128
+            run_config_search_max_instance_count: 2
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
+            run_config_search_disable: False
+            """)
+
+        with patch.object(MetricsManagerSubclass,
+                          "_get_next_perf_throughput_value") as mock_method:
+            mock_method.return_value = None
+            with self.assertRaises(TritonModelAnalyzerException):
+                self._test_model_manager(yaml_str, None)
+
     def test_lower_throughput_early_batch_size_exit(self):
         """
-        Test that there is an early backoff for throughput decreasing
+        Test that there is an early back off for throughput decreasing
         when sweeping max_batch_size
 
         If a list of measurements is provided with a lower max throughput than the previous
@@ -919,10 +941,10 @@ class TestModelManager(trc.TestResultCollector):
             #yapf: disable
             mock_method.side_effect = [
                 1, 2, 4,     # Default config, concurrency 1,2,4
-                1, 2, 4,     # 1 Instance, Batch size 8, concurency 1,2,4
+                1, 2, 4,     # 1 Instance, Batch size 8, concurrency 1,2,4
                 2, 4, 8,     # 1 Instance, Batch size 16, concurrency 1,2,4
                 2, 4, 8,     # 1 Instance, Batch size 32, concurrency 1,2,4
-                1, 2, 4,     # 1 Instance, Batch size 8, concurency 1,2,4
+                1, 2, 4,     # 1 Instance, Batch size 8, concurrency 1,2,4
                 8, 4, 2,     # 1 Instance, Batch size 16, concurrency 1,2,4
                 4, 8, 16,    # 1 Instance, Batch size 32, concurrency 1,2,4
                 4, 8, 16     # 1 Instance, Batch size 64, concurrency 1,2,4

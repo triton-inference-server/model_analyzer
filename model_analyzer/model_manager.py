@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Optional
 
-from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.constants import LOGGER_NAME, INVALID_MEASUREMENT_THRESHOLD
 from model_analyzer.config.generate.run_config_generator_factory import RunConfigGeneratorFactory
 from .model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
@@ -29,6 +29,7 @@ from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 import logging
 
@@ -79,6 +80,9 @@ class ModelManager:
         if state_manager.starting_fresh_run():
             self._init_state()
 
+        self._failed_measurement_attempts = 0
+        self._received_measurement_values_from_pa = False
+
         self._model_variant_name_manager = ModelVariantNameManager.from_dict(
             self._state_manager.get_state_variable(
                 'ModelManager.model_variant_name_manager'))
@@ -121,6 +125,9 @@ class ModelManager:
             if run_config.is_legal_combination():
                 measurement = self._metrics_manager.execute_run_config(
                     run_config)
+
+                self._check_for_valid_measurement(measurement)
+                self._stop_ma_if_no_valid_measurement_threshold_reached()
             else:
                 logger.info("Skipping illegal run configuration")
                 measurement = None
@@ -188,9 +195,27 @@ class ModelManager:
     def _init_state(self):
         """
         Sets ModelManager object managed
-        state variables in AnalyerState
+        state variables in AnalyzerState
         """
 
         self._state_manager.set_state_variable(
             'ModelManager.model_variant_name_manager',
             self._state_manager.default_encode(ModelVariantNameManager()))
+
+    def _check_for_valid_measurement(
+            self, measurement: Optional[RunConfigMeasurement]) -> None:
+        if measurement:
+            self._received_measurement_values_from_pa = True
+        else:
+            self._failed_measurement_attempts += 1
+
+    def _stop_ma_if_no_valid_measurement_threshold_reached(self) -> None:
+        if self._received_measurement_values_from_pa:
+            return
+
+        if self._failed_measurement_attempts >= INVALID_MEASUREMENT_THRESHOLD:
+            raise TritonModelAnalyzerException(
+                f'The first {INVALID_MEASUREMENT_THRESHOLD} attempts to acquire measurements ' \
+                'have failed. Please examine the Tritonserver/PA error logs ' \
+                'to determine what has gone wrong.'
+            )

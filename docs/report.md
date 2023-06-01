@@ -33,8 +33,8 @@ $ model-analyzer profile --profile-models <list of model names> --checkpoint-dir
 The export directory will, by default, contain 3 subdirectories. The summary
 report for a model will be located in `[export-path]/reports/summaries/<model name>`. The report will look like the one shown [_here_](../examples/online_summary.pdf).
 
-To disable summary report generation use `--summarize=false` or set the
-`summarize` yaml option to `false`.
+To disable summary report generation use `--skip-summary-reports` or set the
+`skip_summary_reports` yaml option to `false`.
 
 ## Detailed Reports
 
@@ -57,3 +57,7 @@ look like the one shown [_here_](../examples/online_detailed_report.pdf).
 See the [**configuring model
 analyzer**](./config.md) section for more details on how to configure these
 reports.
+
+Detailed reports for the top-N (based on the value of `--num-configs-per-model`) configurations are also generated at the end of `profile`.
+To disable detailed report generation after `profile` use `--skip-detailed-reports` or set the
+`skip_detailed_reports` yaml option to `false`.
