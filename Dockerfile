@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:23.04-py3
-ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:23.04-py3-sdk
+ARG BASE_IMAGE=nvcr.io/nvidia/tritonserver:23.05-py3
+ARG TRITONSDK_BASE_IMAGE=nvcr.io/nvidia/tritonserver:23.05-py3-sdk
 
 ARG MODEL_ANALYZER_VERSION=1.29.0dev
 ARG MODEL_ANALYZER_CONTAINER_VERSION=23.06dev
@@ -27,7 +27,7 @@ ARG BASE_IMAGE
 ARG TRITONSDK_BASE_IMAGE
 
 # DCGM version to install for Model Analyzer
-ENV DCGM_VERSION=2.2.9
+ENV DCGM_VERSION=2.4.7
 
 # Ensure apt-get won't prompt for selecting options
 ENV DEBIAN_FRONTEND=noninteractive
@@ -42,7 +42,7 @@ RUN mkdir -p /opt/triton-model-analyzer
 
 RUN [ "$(uname -m)" != "x86_64" ] && arch="sbsa" || arch="x86_64" && \
     curl -o /tmp/cuda-keyring.deb \
-    https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/$arch/cuda-keyring_1.0-1_all.deb && \
+    https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/$arch/cuda-keyring_1.0-1_all.deb && \
     apt-get install /tmp/cuda-keyring.deb && rm /tmp/cuda-keyring.deb && \
     apt-get update && apt-get install -y --no-install-recommends software-properties-common && \
     apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION}; 
