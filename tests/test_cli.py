@@ -167,6 +167,7 @@ def get_test_options():
         OptionStruct("noop", "yaml_profile", "perf_analyzer_flags"),
         OptionStruct("noop", "yaml_profile", "triton_docker_labels"),
         OptionStruct("noop", "yaml_profile", "triton_server_environment"),
+        OptionStruct("noop", "yaml_profile", "triton_docker_args"),
         OptionStruct("noop", "yaml_profile", "plots")
     ]
     #yapf: enable

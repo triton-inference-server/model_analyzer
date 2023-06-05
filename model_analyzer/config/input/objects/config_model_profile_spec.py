@@ -14,6 +14,7 @@
 
 from model_analyzer.result.model_constraints import ModelConstraints
 
+
 class ConfigModelProfileSpec:
     """
     A class representing the configuration used for
@@ -30,7 +31,8 @@ class ConfigModelProfileSpec:
                  model_config_parameters=None,
                  perf_analyzer_flags=None,
                  triton_server_flags=None,
-                 triton_server_environment=None):
+                 triton_server_environment=None,
+                 triton_docker_args=None):
         """
         Parameters
         ----------
@@ -58,6 +60,9 @@ class ConfigModelProfileSpec:
         triton_server_environment: dict
             The environment variables to be set for the tritonserver instances
             launched by model analyzer
+        triton_docker_args: dict
+            The docker args to be set for the tritonserver instances
+            launched by model analyzer
         """
 
         self._model_name = model_name
@@ -71,6 +76,7 @@ class ConfigModelProfileSpec:
         self._perf_analyzer_flags = perf_analyzer_flags
         self._triton_server_flags = triton_server_flags
         self._triton_server_environment = triton_server_environment
+        self._triton_docker_args = triton_docker_args
 
     def cpu_only(self):
         """
@@ -171,6 +177,16 @@ class ConfigModelProfileSpec:
         """
 
         return self._triton_server_environment
+
+    def triton_docker_args(self):
+        """
+        Returns
+        -------
+        dict
+            The triton docker args
+        """
+
+        return self._triton_docker_args
 
     @staticmethod
     def model_object_to_config_model_profile_spec(value):

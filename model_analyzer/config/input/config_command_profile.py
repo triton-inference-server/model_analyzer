@@ -286,6 +286,8 @@ class ConfigCommandProfile(ConfigCommand):
             })
         triton_server_environment_scheme = ConfigObject(
             schema={'*': ConfigPrimitive(str)})
+        triton_docker_args_scheme = ConfigObject(
+            schema={'*': ConfigPrimitive(str)})
         self._add_config(
             ConfigField(
                 'perf_analyzer_flags',
@@ -306,6 +308,13 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=triton_server_environment_scheme,
                 description=
                 'Allows setting environment variables for tritonserver server instances launched by Model Analyzer'
+            ))
+        self._add_config(
+            ConfigField(
+                'triton_docker_args',
+                field_type=triton_docker_args_scheme,
+                description=
+                'Allows setting docker variables for tritonserver server instances launched by Model Analyzer'
             ))
 
         objectives_scheme = ConfigUnion([
@@ -404,7 +413,9 @@ class ConfigCommandProfile(ConfigCommand):
                             'triton_server_flags':
                                 triton_server_flags_scheme,
                             'triton_server_environment':
-                                triton_server_environment_scheme
+                                triton_server_environment_scheme,
+                            'triton_docker_args':
+                                triton_docker_args_scheme
                         })
             },
             output_mapper=ConfigModelProfileSpec.
@@ -1031,6 +1042,12 @@ class ConfigCommandProfile(ConfigCommand):
                     "Triton launch mode is set to C_API, triton logs are not supported. "
                     "Triton server error output can be obtained by setting perf_output_path."
                 )
+
+        if self.triton_launch_mode != 'docker':
+            if self.triton_docker_args:
+                logger.warning(
+                    "Triton launch mode is not set to docker. Model Analyzer cannot set "
+                    "triton_docker_args.")
         # If run config search is disabled and no concurrency or request rate is provided,
         # set the default value.
         if self.run_config_search_disable:
@@ -1215,6 +1232,12 @@ class ConfigCommandProfile(ConfigCommand):
                 new_model[
                     'triton_server_environment'] = model.triton_server_environment(
                     )
+
+            # triton docker args
+            if not model.triton_docker_args():
+                new_model['triton_docker_args'] = self.triton_docker_args
+            else:
+                new_model['triton_docker_args'] = model.triton_docker_args()
 
             # Transfer model config parameters directly
             if model.model_config_parameters():

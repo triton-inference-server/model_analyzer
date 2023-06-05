@@ -1556,6 +1556,37 @@ profile_models:
                 'LD_LIBRARY_PATH': '/path/to/test/lib'
             })
 
+    def test_triton_docker_args(self):
+        args = [
+            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
+            '-f', 'path-to-config-file', '--triton-launch-mode', 'docker'
+        ]
+        yaml_content = """
+            profile_models: model1, model2
+            triton_docker_args:
+                arg1: foo
+                arg2: goo
+            """
+        config = self._evaluate_config(args, yaml_content)
+        self.assertDictEqual(config.get_all_config()['triton_docker_args'], {
+            'arg1': 'foo',
+            'arg2': 'goo'
+        })
+
+        yaml_content = """
+            profile_models: 
+                model1:
+                    triton_docker_args:
+                        arg1: foo
+                        arg2: goo
+            """
+        config = self._evaluate_config(args, yaml_content)
+        self.assertDictEqual(
+            config.get_all_config()['profile_models'][0].triton_docker_args(), {
+                'arg1': 'foo',
+                'arg2': 'goo'
+            })
+
     def test_report_configs(self):
         args = [
             'model-analyzer', 'report', '--report-model-configs', 'test-model'
