@@ -284,10 +284,77 @@ class ConfigCommandProfile(ConfigCommand):
                             type_=str))
                 for k in PerfAnalyzerConfig.allowed_keys()
             })
+
         triton_server_environment_scheme = ConfigObject(
             schema={'*': ConfigPrimitive(str)})
+
+        # This comes from /usr/local/lib/python3.8/dist-packages/docker/models/containers.py
+        # Only supporting values that are bool, int, string, or lists of strings
         triton_docker_args_scheme = ConfigObject(
-            schema={'*': ConfigPrimitive(str)})
+            schema={
+                'image': ConfigPrimitive(str),
+                'command': ConfigPrimitive(str),
+                'auto_remove': ConfigPrimitive(bool),
+                'blkio_weight_device': ConfigListString(),
+                'blkio_weight': ConfigPrimitive(int),
+                'cap_add': ConfigListString(),
+                'cap_drop': ConfigListString(),
+                'cgroup_parent': ConfigPrimitive(str),
+                'cgroupns': ConfigPrimitive(str),
+                'cpu_count': ConfigPrimitive(int),
+                'cpu_percent': ConfigPrimitive(int),
+                'cpu_period': ConfigPrimitive(int),
+                'cpu_quota': ConfigPrimitive(int),
+                'cpu_rt_period': ConfigPrimitive(int),
+                'cpu_shares': ConfigPrimitive(int),
+                'cpuset_cpus': ConfigPrimitive(str),
+                'cpuset_mems': ConfigPrimitive(str),
+                'detach': ConfigPrimitive(bool),
+                'domainname': ConfigPrimitive(str),
+                'entrypoint': ConfigPrimitive(str),
+                'environment': ConfigListString(),
+                'hostname': ConfigPrimitive(str),
+                'init': ConfigPrimitive(bool),
+                'init_path': ConfigPrimitive(str),
+                'ipc_mode': ConfigPrimitive(str),
+                'isolation': ConfigPrimitive(str),
+                'kernel_memory': ConfigPrimitive(str),
+                'labels': ConfigListString(),
+                'mac_address': ConfigPrimitive(str),
+                'mem_limit': ConfigPrimitive(str),
+                'mem_reservation': ConfigPrimitive(str),
+                'memswap_limit': ConfigPrimitive(str),
+                'name': ConfigPrimitive(str),
+                'nano_cpus': ConfigPrimitive(int),
+                'network': ConfigPrimitive(str),
+                'network_disabled': ConfigPrimitive(bool),
+                'network_mode': ConfigPrimitive(str),
+                'oom_kill_disable': ConfigPrimitive(bool),
+                'oom_score_adj': ConfigPrimitive(int),
+                'pid_mode': ConfigPrimitive(str),
+                'pids_limit': ConfigPrimitive(int),
+                'platform': ConfigPrimitive(str),
+                'privileged': ConfigPrimitive(bool),
+                'publish_all_ports': ConfigPrimitive(bool),
+                'remove': ConfigPrimitive(bool),
+                'runtime': ConfigPrimitive(str),
+                'shm_size': ConfigPrimitive(str),
+                'stdin_open': ConfigPrimitive(bool),
+                'stdout': ConfigPrimitive(bool),
+                'stderr': ConfigPrimitive(bool),
+                'stop_signal': ConfigPrimitive(str),
+                'stream': ConfigPrimitive(bool),
+                'tty': ConfigPrimitive(bool),
+                'use_config_proxy': ConfigPrimitive(bool),
+                'user': ConfigPrimitive(str),
+                'userns_mode': ConfigPrimitive(str),
+                'uts_mode': ConfigPrimitive(str),
+                'version': ConfigPrimitive(str),
+                'volume_driver': ConfigPrimitive(str),
+                'volumes': ConfigListString(),
+                'working_dir': ConfigPrimitive(str)
+            })
+
         self._add_config(
             ConfigField(
                 'perf_analyzer_flags',

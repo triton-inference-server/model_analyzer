@@ -1564,27 +1564,27 @@ profile_models:
         yaml_content = """
             profile_models: model1, model2
             triton_docker_args:
-                arg1: foo
-                arg2: goo
+                image: foo
+                command: goo
             """
         config = self._evaluate_config(args, yaml_content)
         self.assertDictEqual(config.get_all_config()['triton_docker_args'], {
-            'arg1': 'foo',
-            'arg2': 'goo'
+            'image': 'foo',
+            'command': 'goo'
         })
 
         yaml_content = """
             profile_models: 
                 model1:
                     triton_docker_args:
-                        arg1: foo
-                        arg2: goo
+                        image: foo
+                        command: goo
             """
         config = self._evaluate_config(args, yaml_content)
         self.assertDictEqual(
             config.get_all_config()['profile_models'][0].triton_docker_args(), {
-                'arg1': 'foo',
-                'arg2': 'goo'
+                'image': 'foo',
+                'command': 'goo'
             })
 
     def test_report_configs(self):
