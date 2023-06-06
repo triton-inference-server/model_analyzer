@@ -1045,8 +1045,8 @@ class ConfigCommandProfile(ConfigCommand):
             logger.warning(
                 f"--export-path not specified. Using {self._fields['export_path'].default_value()}"
             )
-        elif os.path.exists(self.export_path) and os.path.isfile(
-                self.export_path):
+        elif os.path.exists(
+                self.export_path) and not os.path.isdir(self.export_path):
             raise TritonModelAnalyzerException(
                 f"Export path {self.export_path} is not a directory.")
         elif not os.path.exists(self.export_path):
