@@ -41,7 +41,8 @@ class TritonServerFactory:
                              log_path=None,
                              mounts=None,
                              labels=None,
-                             shm_size=None):
+                             shm_size=None,
+                             args=None):
         """
         Parameters
         ----------
@@ -61,6 +62,8 @@ class TritonServerFactory:
             container. (Not the same as environment variables)
         shm-size: str
             The size of /dev/shm for the triton docker container.
+        args: dict
+            name-value pairs of triton docker args
         Returns
         -------
         TritonServerDocker
@@ -72,7 +75,8 @@ class TritonServerFactory:
                                   log_path=log_path,
                                   mounts=mounts,
                                   labels=labels,
-                                  shm_size=shm_size)
+                                  shm_size=shm_size,
+                                  args=args)
 
     @staticmethod
     def create_server_local(path, config, gpus, log_path=None):
@@ -220,7 +224,8 @@ class TritonServerFactory:
             log_path=config.triton_output_path,
             mounts=config.triton_docker_mounts,
             labels=config.triton_docker_labels,
-            shm_size=config.triton_docker_shm_size)
+            shm_size=config.triton_docker_shm_size,
+            args=config.triton_docker_args)
 
         return server
 
