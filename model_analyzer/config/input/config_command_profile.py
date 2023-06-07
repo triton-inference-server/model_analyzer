@@ -288,7 +288,8 @@ class ConfigCommandProfile(ConfigCommand):
         triton_server_environment_scheme = ConfigObject(
             schema={'*': ConfigPrimitive(str)})
 
-        # This comes from /usr/local/lib/python3.8/dist-packages/docker/models/containers.py
+        # This comes from the installed python package:
+        # <install_path>/lib/python3.8/dist-packages/docker/models/containers.py
         # Only supporting values that are bool, int, string, or lists of strings
         triton_docker_args_scheme = ConfigObject(
             schema={
