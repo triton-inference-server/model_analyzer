@@ -1587,6 +1587,74 @@ profile_models:
                 'command': 'goo'
             })
 
+        # This is testing that all options can be parsed by the YAML
+        yaml_content = """
+            profile_models: model1, model2
+            triton_docker_args:
+                image: abc
+                command: abc
+                auto_remove: true
+                blkio_weight_device: ['abc']
+                blkio_weight: 1
+                cap_add: ['abc']
+                cap_drop: ['abc']
+                cgroup_parent: abc
+                cgroupns: abc
+                cpu_count: 1
+                cpu_percent: 1
+                cpu_period: 1
+                cpu_quota: 1
+                cpu_rt_period: 1
+                cpu_shares: 1
+                cpuset_cpus: abc
+                cpuset_mems: abc
+                detach: true
+                domainname: abc
+                entrypoint: abc
+                environment: ['abc']
+                hostname: abc
+                init: true
+                init_path: abc
+                ipc_mode: abc
+                isolation: abc
+                kernel_memory: abc
+                labels: abc
+                mac_address: abc
+                mem_limit: abc
+                mem_reservation: abc
+                memswap_limit: abc
+                name: abc
+                nano_cpus: 1
+                network: abc
+                network_disabled: true
+                network_mode: abc
+                oom_kill_disable: true
+                oom_score_adj: 1
+                pid_mode: abc
+                pids_limit: 1
+                platform: abc
+                privileged: true
+                publish_all_ports: true
+                remove: true
+                runtime: abc
+                shm_size: abc
+                stdin_open: true
+                stdout: true
+                stderr: true
+                stop_signal: abc
+                stream: true
+                tty: true
+                use_config_proxy: true
+                user: abc
+                userns_mode: abc
+                uts_mode: abc
+                version: abc
+                volume_driver: abc
+                volumes: ['abc']
+                working_dir: abc
+            """
+        config = self._evaluate_config(args, yaml_content)
+
     def test_report_configs(self):
         args = [
             'model-analyzer', 'report', '--report-model-configs', 'test-model'
