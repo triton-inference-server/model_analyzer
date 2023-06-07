@@ -1653,7 +1653,7 @@ profile_models:
                 volumes: ['abc']
                 working_dir: abc
             """
-        config = self._evaluate_config(args, yaml_content)
+        _ = self._evaluate_config(args, yaml_content)
 
     def test_report_configs(self):
         args = [
