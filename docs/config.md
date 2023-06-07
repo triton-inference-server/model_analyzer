@@ -302,8 +302,8 @@ cpu_only_composing_models: <comma-delimited-string-list>
 # launched in docker launch mode
 [ triton_docker_labels: <dict> ]
 
-# Dict of name=value pairs containing arguments that will be applied to the tritonserver docker
-# container launched in docker launch mode
+# Dict of name=value pairs containing arguments (applied to the run command) that will be
+# applied to the tritonserver docker container launched in docker launch mode
 [ triton_docker_args: <dict> ]
 ```
 
