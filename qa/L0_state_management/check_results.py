@@ -74,7 +74,7 @@ class TestOutputValidator:
         """
 
         checkpoint_files = os.listdir(self._checkpoint_dir)
-        if len(checkpoint_files) != 2:
+        if len(checkpoint_files) != 1:
             return False
 
         with open(self._analyzer_log, 'r') as f:
