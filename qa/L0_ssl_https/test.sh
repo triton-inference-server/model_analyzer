@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG="test.log"
 source ../common/util.sh
+create_logs_dir "L0_ssl_https"
 
 apt update ; apt install -y nginx
-
-rm -f *.log
-rm -rf results && mkdir -p results
-mkdir -p /tmp/output
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -70,6 +66,7 @@ cp client.crt client2.crt && sed -i "s/\b\(.\)/\u\1/g" client2.crt
 SERVER=`which tritonserver`
 SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode explicit --http-port ${HTTP_PORT} --grpc-port ${PORTS[0]} --metrics-port ${PORTS[1]}"
 SERVER_HTTP_PORT=${HTTP_PORT}
+SERVER_LOG="$LOGS_DIR/server.log"
 
 run_server
 if [ "$SERVER_PID" == "0" ]; then
@@ -85,7 +82,10 @@ service nginx restart
 set +e
 
 # Test with working keys
-MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $WORKING_CONFIG_FILE"
+TEST_NAME="test_working_keys"
+create_result_paths -test-name $TEST_NAME
+
+MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $WORKING_CONFIG_FILE -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint https://localhost:443 --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url https://localhost:${PORTS[2]}/metrics"
@@ -99,7 +99,10 @@ if [ $? -ne 0 ]; then
 fi
 
 # Test with broken keys
-MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $BROKEN_CONFIG_FILE"
+TEST_NAME="test_broken_keys"
+create_result_paths -test-name $TEST_NAME
+
+MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $BROKEN_CONFIG_FILE -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint https://localhost:443 --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url https://localhost:${PORTS[2]}/metrics"

@@ -12,11 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG="test.log"
 source ../common/util.sh
-
-rm -f *.log
-rm -rf results && mkdir -p results
+create_logs_dir
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -34,6 +31,7 @@ OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CONFIG_FILE="config.yml"
 
 rm -rf $OUTPUT_MODEL_REPOSITORY
+create_result_paths
 
 python3 test_config_generator.py --profile-models $MODEL_NAMES
 
@@ -45,7 +43,7 @@ set +e
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $CONFIG_FILE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 run_analyzer

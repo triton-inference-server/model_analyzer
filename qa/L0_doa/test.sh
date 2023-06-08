@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-TEST_LOG='test.log'
 source ../common/util.sh
-
-rm -f test.log
+create_logs_dir "L0_doa"
+create_result_paths -export-path false -checkpoints false
 
 MODEL_ANALYZER=`which model-analyzer`
 

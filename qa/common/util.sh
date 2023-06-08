@@ -12,11 +12,92 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-SERVER_LOG=${SERVER_LOG:="./server.log"}
+LOGS_DIR=${LOGS_DIR:="/logs"}
+SERVER_LOG=${SERVER_LOG:="$LOGS_DIR/server.log"}
 SERVER_TIMEOUT=${SERVER_TIMEOUT:=120}
 SERVER_HTTP_PORT=${SERVER_HTTP_PORT:=8000}
 SERVER_LD_PRELOAD=${SERVER_LD_PRELOAD:=""}
-ANALYZER_LOG=${ANALYZER_LOG:="./test.log"}
+ANALYZER_LOG=${ANALYZER_LOG:="$LOGS_DIR/test.log"}
+
+mkdir -p $LOGS_DIR
+
+create_logs_dir() {
+    # Arguments:
+    #  $1: L0 Script name 
+    # Check if the L0 script name is empty or not
+    if [ -n "$1" ]; then
+        LOGS_DIR="/logs/$1"
+    else
+        LOGS_DIR="/logs"
+    fi
+    mkdir -p "$LOGS_DIR"
+}
+
+create_result_paths() {
+    # Creates ANALYZER_LOG, EXPORT_PATH, CHECKPOINT_DIRECTORY and TEST_LOG_DIR
+    # Arguments:
+    #  -test-name <test_name>: <string> - L0 Script name (optional argument)
+    #  -export-path <false>: <boolean> - If false, skip creating EXPORT_PATH (optional argument)
+    #  -checkpoints <false>: <boolean> - If false, skip creating CHECKPOINT_DIRECTORY (optional argument)
+
+    # Set default values
+    test_name=""
+    export_path=true
+    checkpoints=true
+
+    # Parse arguments options
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -test-name)
+                test_name=$2;
+                shift 2;;
+            -export-path) 
+                export_path=$2;
+                shift 2;;
+            -checkpoints)
+                checkpoints=$2;
+                shift 2;;
+            *)
+                echo "Invalid option: $1" >&2;
+                return 1;;
+        esac
+    done
+
+    # Check if the test name is not an empty string
+    if [ -n "$test_name" ]; then
+        TEST_LOG_DIR="$LOGS_DIR/$test_name/logs"
+        ANALYZER_LOG="$TEST_LOG_DIR/analyzer.${test_name}.log"
+        mkdir -p "$TEST_LOG_DIR"
+
+        # Create EXPORT_PATH if export_path is true
+        if [ "$export_path" = true ]; then
+            EXPORT_PATH="$LOGS_DIR/$test_name/results"
+            mkdir -p "$EXPORT_PATH"
+        fi
+
+        # Create CHECKPOINT_DIRECTORY if checkpoints is true
+        if [ "$checkpoints" = true ]; then
+            CHECKPOINT_DIRECTORY="$LOGS_DIR/$test_name/checkpoints"
+            mkdir -p "$CHECKPOINT_DIRECTORY"
+        fi
+    else
+        TEST_LOG_DIR="$LOGS_DIR/logs"
+        ANALYZER_LOG="$TEST_LOG_DIR/analyzer.log"
+        mkdir -p "$TEST_LOG_DIR"
+
+        # Create EXPORT_PATH if export_path is true
+        if [ "$export_path" = true ]; then
+            EXPORT_PATH="$LOGS_DIR/results"
+            mkdir -p "$EXPORT_PATH"
+        fi
+
+        # Create CHECKPOINT_DIRECTORY if checkpoints is true
+        if [ "$checkpoints" = true ]; then
+            CHECKPOINT_DIRECTORY="$LOGS_DIR/checkpoints"
+            mkdir -p "$CHECKPOINT_DIRECTORY"
+        fi
+    fi
+}
 
 # Wait until server health endpoint shows ready. Sets WAIT_RET to 0 on
 # success, 1 on failure

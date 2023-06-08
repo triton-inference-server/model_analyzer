@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG_BASE="test.log"
 source ../common/util.sh
+create_logs_dir "L0_state_management"
 
-rm -f *.log && rm -rf *.yml
+rm -rf *.yml
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -23,7 +23,6 @@ REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 QA_MODELS="vgg19_libtorch resnet50_libtorch libtorch_amp_resnet50"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
-EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
@@ -32,9 +31,8 @@ CLIENT_PROTOCOL="http"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-CHECKPOINT_DIRECTORY=$EXPORT_PATH/checkpoints
 
-MODEL_ANALYZER_PROFILE_BASE_ARGS="-m $MODEL_REPOSITORY --run-config-search-disable --checkpoint-directory $CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_PROFILE_BASE_ARGS="-m $MODEL_REPOSITORY --run-config-search-disable"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
@@ -46,16 +44,16 @@ python3 test_config_generator.py -m $MODEL_NAMES
 
 RET=0
 
-rm -rf $EXPORT_PATH && mkdir -p $EXPORT_PATH
-
 # TEST CASE: Run the config and count the number of checkpoints
 TEST_NAME="num_checkpoints"
-ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
 CONFIG_FILE="config-single.yml"
+
+# Create new EXPORT_PATH, CHECKPOINT_DIRECTORY and ANALYZER_LOG
+create_result_paths -test-name $TEST_NAME
 
 set +e
 
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
 run_analyzer
 if [ $? -ne 0 ]; then
     echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
@@ -73,7 +71,10 @@ set -e
 
 # TEST CASE: Run the config again and make sure that no perf analyzer runs took place
 TEST_NAME="loading_checkpoints"
-ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
+
+# Create new EXPORT_PATH and ANALYZER_LOG
+create_result_paths -test-name $TEST_NAME -checkpoints false
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
 
 set +e
 run_analyzer
@@ -91,21 +92,21 @@ else
 fi
 set -e
 
-# Clear checkpoints and results
-rm -rf $EXPORT_PATH/*
-
 # TEST CASE: run config multple and send SIGINT after 2 models run
 TEST_NAME="interrupt_handling"
+
+# Create new EXPORT_PATH, CHECKPOINT_DIRECTORY and ANALYZER_LOG
+create_result_paths -test-name $TEST_NAME
+
 CONFIG_FILE="config-multi.yml"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
-ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
 
 set +e
 run_analyzer_nohup
 ANALYZER_PID=$!
 
 sleep 5
-until [[ $(ls $EXPORT_PATH/checkpoints | wc -l) == "1" ]]; do
+until [[ $(ls $CHECKPOINT_DIRECTORY | wc -l) == "1" ]]; do
     sleep 1
 done
 
@@ -126,8 +127,10 @@ else
     
 fi
 
+# Create new EXPORT_PATH and ANALYZER_LOG
 TEST_NAME="continue_after_checkpoint"
-ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
+create_result_paths -test-name $TEST_NAME -checkpoints false
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
 
 run_analyzer
 if [ $? -ne 0 ]; then
@@ -144,14 +147,14 @@ else
 fi
 set -e
 
-# Clear checkpoints and results
-rm -rf $EXPORT_PATH/*
-
 # TEST CASE: Run config-multiple and send 3 SIGINT after server is profiled
 TEST_NAME="early_exit"
+
+# Create new EXPORT_PATH, CHECKPOINT_DIRECTORY and ANALYZER_LOG
+create_result_paths -test-name $TEST_NAME
+
 CONFIG_FILE="config-multi.yml"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
-ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
 
 set +e
 run_analyzer_nohup
@@ -181,13 +184,14 @@ else
     fi
 fi
 
-# Clear checkpoints and results
-rm -rf $EXPORT_PATH/*
-
 # TEST CASE: Have results mixed across runs
+TEST_NAME="measurements_consistent_with_config_1"
+
+# Create new EXPORT_PATH, CHECKPOINT_DIRECTORY and ANALYZER_LOG
+create_result_paths -test-name $TEST_NAME
+
 CONFIG_FILE="config-mixed-first.yml"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
-ANALYZER_LOG="measurement_consistent_prep.${ANALYZER_LOG_BASE}"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
 
 set +e
 run_analyzer
@@ -199,8 +203,10 @@ fi
 
 TEST_NAME="measurements_consistent_with_config"
 CONFIG_FILE="config-mixed-second.yml"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE"
-ANALYZER_LOG="${TEST_NAME}.${ANALYZER_LOG_BASE}"
+
+# Create new EXPORT_PATH and ANALYZER_LOG
+create_result_paths -test-name ${TEST_NAME}_2 -checkpoints false
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
 
 run_analyzer
 if [ $? -ne 0 ]; then
@@ -215,8 +221,6 @@ if [ $? -ne 0 ]; then
     cat $ANALYZER_LOG
     RET=1
 fi
-
-rm -rf $EXPORT_PATH/*
 
 if [ $RET -eq 0 ]; then
     echo -e "\n***\n*** Test PASSED\n***"

@@ -12,12 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG="test.log"
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
-
-rm -f *.log
-rm -rf results && mkdir -p results
+create_logs_dir "L0_config_search"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -37,10 +34,10 @@ metrics_port="${PORTS[2]}"
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
-MODEL_ANALYZER_PROFILE_BASE_ARGS="--model-repository $MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_PROFILE_BASE_ARGS="--model-repository $MODEL_REPOSITORY"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
-MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY --checkpoint-directory $CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS  --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_PROFILE_BASE_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
 MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
@@ -59,14 +56,17 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
 
     # Run the analyzer with various configurations and check the results
     for config in ${LIST_OF_CONFIG_FILES[@]}; do
-        rm -rf results && mkdir -p results && rm -rf $OUTPUT_MODEL_REPOSITORY && rm -rf $CHECKPOINT_DIRECTORY/*
+        rm -rf $OUTPUT_MODEL_REPOSITORY
+
+        TEST_NAME=$(basename "$config" | sed 's/\.[^.]*$//')_${launch_mode}
+        create_result_paths -test-name $TEST_NAME
+        SERVER_LOG=${TEST_LOG_DIR}/server.${TEST_NAME}.log
+
         set +e
 
         MODEL_ANALYZER_PORTS="--triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]} --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
-        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config --triton-launch-mode $launch_mode"
+        MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_PROFILE_BASE_ARGS -f $config --triton-launch-mode $launch_mode -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $MODEL_ANALYZER_PORTS"
-
-        ANALYZER_LOG=analyzer.${launch_mode}.${config}.log
 
         if [ $launch_mode == 'remote' ]; then
             NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-param-$launch_mode.txt
@@ -97,10 +97,9 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
             cat $ANALYZER_LOG
             RET=1
         fi
-        rm $ANALYZER_LOG
 
         echo -e "\n*** Re-running profile\n***"
-        ANALYZER_LOG=analyzer.${launch_mode}.${config}_rerun.log
+        ANALYZER_LOG=${TEST_LOG_DIR}/analyzer.${TEST_NAME}_rerun.log
         run_analyzer
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
@@ -159,9 +158,6 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
                 RET=1
             fi
         fi
-
-        rm $ANALYZER_LOG
-        rm -rf $EXPORT_PATH/*
         set -e
     done
 done

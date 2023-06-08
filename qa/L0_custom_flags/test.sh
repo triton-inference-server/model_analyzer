@@ -13,8 +13,7 @@
 # limitations under the License.
 
 source ../common/util.sh
-
-rm -f *.log
+create_logs_dir "L0_custom_flags"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -30,10 +29,9 @@ CLIENT_PROTOCOL="grpc"
 PORTS=(`find_available_ports 3`)
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
-CHECKPOINT_DIRECTORY="`pwd`/checkpoints"
 
 MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY -b $BATCH_SIZES -c $CONCURRENCY"
-MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE --checkpoint-directory $CHECKPOINT_DIRECTORY"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
@@ -54,15 +52,16 @@ fi
 RET=0
 
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
-    ANALYZER_LOG="$CONFIG_FILE.log"
+    TEST_NAME=test_$(basename "$CONFIG_FILE" | sed 's/\.[^.]*$//')
+    create_result_paths -test-name $TEST_NAME
+
     set +e
-    rm -f $CHECKPOINT_DIRECTORY/*
     
     # Run the analyzer and check the results
     TRITON_LOG_PREFIX=${CONFIG_FILE#"config-"}
     TRITON_LOG_PREFIX=${TRITON_LOG_PREFIX%".yml"}
-    TRITON_LOG=${TRITON_LOG_PREFIX}.${TRITON_LOG_BASE}
-    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-output-path=${TRITON_LOG} -f $CONFIG_FILE"
+    TRITON_LOG=$TEST_LOG_DIR/${TRITON_LOG_PREFIX}.${TRITON_LOG_BASE}
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS --triton-output-path=${TRITON_LOG} -f $CONFIG_FILE -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 
     run_analyzer
     if [ $? -ne 0 ]; then

@@ -12,10 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ANALYZER_LOG="test.log"
 source ../common/util.sh
-
-rm -f *.log
+create_logs_dir "L0_stability_result"
 
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
@@ -25,15 +23,13 @@ CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserv
 CONFIG_FILE="config.yaml"
 NUM_ITERATIONS=${NUM_ITERATIONS:=4}
 MODEL_NAMES="$(echo `ls ${MODEL_REPOSITORY}` | sed 's/ /,/g')"
-EXPORT_PATH="`pwd`/results"
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 CHECKPOINT_DIRECTORY="./checkpoints"
 CSV_PATH='.'
 # Clear and create directories
-mkdir $EXPORT_PATH
-mkdir $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/stability_result_p9x.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
+mkdir -p $CHECKPOINT_DIRECTORY && cp $CHECKPOINT_REPOSITORY/stability_result_p9x.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
 # Generate test configs
 python3 test_config_generator.py --profile-models $MODEL_NAMES
@@ -43,19 +39,24 @@ RET=0
 
 set +e
 
-MODEL_ANALYZER_ARGS="--profile-models $MODEL_NAMES --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH --filename-server-only=$FILENAME_SERVER_ONLY"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL -f $CONFIG_FILE"
+MODEL_ANALYZER_BASE_ARGS="-m $MODEL_REPOSITORY --checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY --override-output-model-repository"
+MODEL_ANALYZER_BASE_ARGS="$MODEL_ANALYZER_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL -f $CONFIG_FILE"
 MODEL_ANALYZER_SUBCOMMAND="profile"
 
 # Run the analyzer and check the results
 for (( i=1; i<=$NUM_ITERATIONS; i++ )); do
+    TEST_NAME=iteration_${i}
+    create_result_paths -test-name $TEST_NAME -checkpoints false
+
+    MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -e $EXPORT_PATH"
+
     run_analyzer
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Failed. model-analyzer $MODEL_ANALYZER_SUBCOMMAND exited with non-zero exit code. \n***"
         cat $ANALYZER_LOG
         RET=1
     fi
-    mv $EXPORT_PATH/results/$FILENAME_INFERENCE_MODEL $CSV_PATH/result_${i}.csv
+    cp $EXPORT_PATH/results/$FILENAME_INFERENCE_MODEL $CSV_PATH/result_${i}.csv
 done
 
 # Check the Analyzer log for correct output
@@ -68,7 +69,6 @@ if [ $? -ne 0 ]; then
 fi
 set -e
 
-rm -rf $EXPORT_PATH
 rm -rf $CHECKPOINT_DIRECTORY
 rm *.csv
 
