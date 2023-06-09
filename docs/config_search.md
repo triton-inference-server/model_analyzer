@@ -285,7 +285,6 @@ _This mode has the following limitations:_
 
 - Can only be run in `quick` search mode
 - Only supports up to four composing models
-- Does not support `cpu_only` option for composing models
 - Composing models cannot be ensemble or BLS models
 
 Ensemble models can be optimized using the Quick Search mode's hill climbing algorithm to search the composing models' configuration spaces in parallel, looking for the maximal objective value within the specified constraints. Model Analyzer has observed positive outcomes towards finding the maximum objective value; with runtimes under one hour (compared to the days it would take a brute force run to complete) for ensembles that contain up to four composing models.
