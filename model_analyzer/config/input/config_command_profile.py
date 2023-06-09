@@ -284,8 +284,78 @@ class ConfigCommandProfile(ConfigCommand):
                             type_=str))
                 for k in PerfAnalyzerConfig.allowed_keys()
             })
+
         triton_server_environment_scheme = ConfigObject(
             schema={'*': ConfigPrimitive(str)})
+
+        # This comes from the installed python package:
+        # <install_path>/lib/python3.8/dist-packages/docker/models/containers.py
+        # Only supporting values that are bool, int, string, or lists of strings
+        triton_docker_args_scheme = ConfigObject(
+            schema={
+                'image': ConfigPrimitive(str),
+                'command': ConfigPrimitive(str),
+                'auto_remove': ConfigPrimitive(bool),
+                'blkio_weight_device': ConfigListString(),
+                'blkio_weight': ConfigPrimitive(int),
+                'cap_add': ConfigListString(),
+                'cap_drop': ConfigListString(),
+                'cgroup_parent': ConfigPrimitive(str),
+                'cgroupns': ConfigPrimitive(str),
+                'cpu_count': ConfigPrimitive(int),
+                'cpu_percent': ConfigPrimitive(int),
+                'cpu_period': ConfigPrimitive(int),
+                'cpu_quota': ConfigPrimitive(int),
+                'cpu_rt_period': ConfigPrimitive(int),
+                'cpu_shares': ConfigPrimitive(int),
+                'cpuset_cpus': ConfigPrimitive(str),
+                'cpuset_mems': ConfigPrimitive(str),
+                'detach': ConfigPrimitive(bool),
+                'domainname': ConfigPrimitive(str),
+                'entrypoint': ConfigPrimitive(str),
+                'environment': ConfigListString(),
+                'hostname': ConfigPrimitive(str),
+                'init': ConfigPrimitive(bool),
+                'init_path': ConfigPrimitive(str),
+                'ipc_mode': ConfigPrimitive(str),
+                'isolation': ConfigPrimitive(str),
+                'kernel_memory': ConfigPrimitive(str),
+                'labels': ConfigListString(),
+                'mac_address': ConfigPrimitive(str),
+                'mem_limit': ConfigPrimitive(str),
+                'mem_reservation': ConfigPrimitive(str),
+                'memswap_limit': ConfigPrimitive(str),
+                'name': ConfigPrimitive(str),
+                'nano_cpus': ConfigPrimitive(int),
+                'network': ConfigPrimitive(str),
+                'network_disabled': ConfigPrimitive(bool),
+                'network_mode': ConfigPrimitive(str),
+                'oom_kill_disable': ConfigPrimitive(bool),
+                'oom_score_adj': ConfigPrimitive(int),
+                'pid_mode': ConfigPrimitive(str),
+                'pids_limit': ConfigPrimitive(int),
+                'platform': ConfigPrimitive(str),
+                'privileged': ConfigPrimitive(bool),
+                'publish_all_ports': ConfigPrimitive(bool),
+                'remove': ConfigPrimitive(bool),
+                'runtime': ConfigPrimitive(str),
+                'shm_size': ConfigPrimitive(str),
+                'stdin_open': ConfigPrimitive(bool),
+                'stdout': ConfigPrimitive(bool),
+                'stderr': ConfigPrimitive(bool),
+                'stop_signal': ConfigPrimitive(str),
+                'stream': ConfigPrimitive(bool),
+                'tty': ConfigPrimitive(bool),
+                'use_config_proxy': ConfigPrimitive(bool),
+                'user': ConfigPrimitive(str),
+                'userns_mode': ConfigPrimitive(str),
+                'uts_mode': ConfigPrimitive(str),
+                'version': ConfigPrimitive(str),
+                'volume_driver': ConfigPrimitive(str),
+                'volumes': ConfigListString(),
+                'working_dir': ConfigPrimitive(str)
+            })
+
         self._add_config(
             ConfigField(
                 'perf_analyzer_flags',
@@ -306,6 +376,13 @@ class ConfigCommandProfile(ConfigCommand):
                 field_type=triton_server_environment_scheme,
                 description=
                 'Allows setting environment variables for tritonserver server instances launched by Model Analyzer'
+            ))
+        self._add_config(
+            ConfigField(
+                'triton_docker_args',
+                field_type=triton_docker_args_scheme,
+                description=
+                'Allows setting docker variables for tritonserver server instances launched by Model Analyzer'
             ))
 
         objectives_scheme = ConfigUnion([
@@ -404,7 +481,9 @@ class ConfigCommandProfile(ConfigCommand):
                             'triton_server_flags':
                                 triton_server_flags_scheme,
                             'triton_server_environment':
-                                triton_server_environment_scheme
+                                triton_server_environment_scheme,
+                            'triton_docker_args':
+                                triton_docker_args_scheme
                         })
             },
             output_mapper=ConfigModelProfileSpec.
@@ -1031,6 +1110,12 @@ class ConfigCommandProfile(ConfigCommand):
                     "Triton launch mode is set to C_API, triton logs are not supported. "
                     "Triton server error output can be obtained by setting perf_output_path."
                 )
+
+        if self.triton_launch_mode != 'docker':
+            if self.triton_docker_args:
+                logger.warning(
+                    "Triton launch mode is not set to docker. Model Analyzer cannot set "
+                    "triton_docker_args.")
         # If run config search is disabled and no concurrency or request rate is provided,
         # set the default value.
         if self.run_config_search_disable:
@@ -1218,6 +1303,12 @@ class ConfigCommandProfile(ConfigCommand):
                 new_model[
                     'triton_server_environment'] = model.triton_server_environment(
                     )
+
+            # triton docker args
+            if not model.triton_docker_args():
+                new_model['triton_docker_args'] = self.triton_docker_args
+            else:
+                new_model['triton_docker_args'] = model.triton_docker_args()
 
             # Transfer model config parameters directly
             if model.model_config_parameters():
