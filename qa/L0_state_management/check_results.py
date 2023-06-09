@@ -85,18 +85,17 @@ class TestOutputValidator:
         if log_contents.find(token) == -1:
             return False
 
-        # check that 2nd model is profiled once
-        #token = f"Profiling {self._profile_models[1]}"
-        #token_idx = 0
-        #found_count = 0
-        #while True:
-        #    token_idx = log_contents.find(token, token_idx + 1)
-        #    if token_idx == -1:
-        #        break
-        #    found_count += 1
-#
-        #return found_count == 1
-        return True
+        # check that 1st model is profiled twice
+        token = f"Profiling {self._profile_models[0]}"
+        token_idx = 0
+        found_count = 0
+        while True:
+            token_idx = log_contents.find(token, token_idx + 1)
+            if token_idx == -1:
+                break
+            found_count += 1
+
+        return found_count == 2
 
     def check_early_exit(self):
         """
