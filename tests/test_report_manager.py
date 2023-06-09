@@ -138,6 +138,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             "model_analyzer.config.input.config_command_report"
         ])
         self.os_mock.start()
+        self.os_mock.set_os_path_isfile_return_value(False)
         # Required patch ordering here
         # html_report must be patched before pdf_report
         # Likely due to patching dealing with parent + child classes
