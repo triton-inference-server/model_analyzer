@@ -79,3 +79,11 @@ class MockOSMethods(MockBase):
 
         for mock in self._os_mocks.values():
             mock.path.join.return_value = value
+
+    def set_os_path_isfile_return_value(self, value):
+        """
+        Sets the return value for os.path.isfile
+        """
+
+        for mock in self._os_mocks.values():
+            mock.path.isfile.return_value = value
