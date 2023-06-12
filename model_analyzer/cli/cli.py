@@ -19,6 +19,8 @@ from model_analyzer.constants import LOGGER_NAME
 
 logger = logging.getLogger(LOGGER_NAME)
 
+import sys as _sys
+
 
 class CLI:
     """
@@ -118,7 +120,7 @@ class CLI:
                     **config_field.parser_args(),
                 )
 
-    def parse(self):
+    def parse(self, input_args=None):
         """
         Parse CLI options using ArgumentParsers 
         and set config values.
@@ -128,12 +130,16 @@ class CLI:
         args : Namespace
             Object that contains the parse CLI commands
             Used for the global options
+        input_args: List
+            The list of arguments to be parsed 
+            (if None then command line arguments will be used)
         config: CommandConfig
             The config corresponding to the command being run,
             already filled in with values from CLI or YAML.
         """
 
-        args = self._parser.parse_args()
+        args = self._parser.parse_args(input_args)
+
         if args.subcommand is None:
             self._parser.print_help()
             self._parser.exit()

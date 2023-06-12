@@ -32,9 +32,9 @@ from .model_analyzer_exceptions \
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.server.server import TritonServer
 
-from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
+from model_analyzer.cli.cli import CLI
 
-from tests.common.test_utils import evaluate_mock_config
+from model_analyzer.config.generate.base_model_config_generator import BaseModelConfigGenerator
 
 from .triton.client.client import TritonClient
 from .device.gpu_device import GPUDevice
@@ -289,9 +289,11 @@ class Analyzer:
             f'Generating detailed reports for the best configurations {top_n_string}:'
         )
 
+        # [1:] removes 'model-analyzer' from the args
         args = self._get_report_command_string(top_n_model_config_names).split(
-            ' ')
-        self._config = evaluate_mock_config(args, '', subcommand='report')
+            ' ')[1:]
+
+        self._config = self._create_report_config(args)
         self.report(mode)
 
     def _get_report_command_string(self,
@@ -359,3 +361,10 @@ class Analyzer:
                     logger.info(
                         self._get_report_command_help_string(
                             model.model_name()))
+
+    def _create_report_config(self, args: list) -> ConfigCommandReport:
+        config = ConfigCommandReport()
+        cli = CLI()
+        cli.add_subcommand(cmd='report', help="", config=config)
+        cli.parse(args)
+        return config
