@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import List, Union, Optional
+from copy import deepcopy
 import os, sys
 from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from .model_manager import ModelManager
@@ -293,8 +294,10 @@ class Analyzer:
         args = self._get_report_command_string(top_n_model_config_names).split(
             ' ')[1:]
 
+        original_profile_config = deepcopy(self._config)
         self._config = self._create_report_config(args)
         self.report(mode)
+        self._config = original_profile_config
 
     def _get_report_command_string(self,
                                    top_n_model_config_names: List[str]) -> str:
