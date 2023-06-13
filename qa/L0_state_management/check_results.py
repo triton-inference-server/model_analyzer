@@ -136,8 +136,6 @@ class TestOutputValidator:
 
         # resnet50 libtorch normally has 4 runs:
         #   ([2 models, one of which is default] x [2 concurrencies])
-        # but 1 was checkpointed from the previous interrupted run, so it
-        # will do the remaining 3
         #
         # vgg19 will have 2 runs:
         #   ([2 models, one of which is default] x [1 concurrency])
