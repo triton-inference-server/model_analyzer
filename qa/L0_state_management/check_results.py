@@ -46,7 +46,7 @@ class TestOutputValidator:
         """
 
         checkpoint_files = os.listdir(self._checkpoint_dir)
-        return len(checkpoint_files) == len(self._profile_models)
+        return len(checkpoint_files) == 1
 
     def check_loading_checkpoints(self):
         """
@@ -74,7 +74,7 @@ class TestOutputValidator:
         """
 
         checkpoint_files = os.listdir(self._checkpoint_dir)
-        if len(checkpoint_files) != 2:
+        if len(checkpoint_files) != 1:
             return False
 
         with open(self._analyzer_log, 'r') as f:
@@ -85,8 +85,8 @@ class TestOutputValidator:
         if log_contents.find(token) == -1:
             return False
 
-        # check that 2nd model is profiled once
-        token = f"Profiling {self._profile_models[1]}"
+        # check that 1st model is profiled twice
+        token = f"Profiling {self._profile_models[0]}"
         token_idx = 0
         found_count = 0
         while True:
@@ -95,7 +95,7 @@ class TestOutputValidator:
                 break
             found_count += 1
 
-        return found_count == 1
+        return found_count == 2
 
     def check_early_exit(self):
         """
@@ -117,7 +117,7 @@ class TestOutputValidator:
         return True
 
     def check_continue_after_checkpoint(self,
-                                        expected_resnet_count=3,
+                                        expected_resnet_count=4,
                                         expected_vgg_count=2):
         """
         Check that the 2nd model onwards have been run the correct
@@ -136,8 +136,6 @@ class TestOutputValidator:
 
         # resnet50 libtorch normally has 4 runs:
         #   ([2 models, one of which is default] x [2 concurrencies])
-        # but 1 was checkpointed from the previous interrupted run, so it
-        # will do the remaining 3
         #
         # vgg19 will have 2 runs:
         #   ([2 models, one of which is default] x [1 concurrency])

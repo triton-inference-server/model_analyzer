@@ -92,7 +92,11 @@ else
 fi
 set -e
 
-# TEST CASE: run config multple and send SIGINT after 2 models run
+# TEST CASE: run config-multi.yml(first model contains two configurations) and 
+# wait for the first checkpoint file to be generated before sending a SIGINT signal.
+# The above checkpoint file ensures first config of the first model is profiled.
+# This interruption ensures the completion of the second configuration for the first model.
+
 TEST_NAME="interrupt_handling"
 
 # Create new EXPORT_PATH, CHECKPOINT_DIRECTORY and ANALYZER_LOG
