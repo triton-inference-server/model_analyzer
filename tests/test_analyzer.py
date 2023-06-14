@@ -64,7 +64,8 @@ class TestAnalyzer(trc.TestResultCollector):
                     _create_metrics_manager=MagicMock(),
                     _create_model_manager=MagicMock(),
                     _get_server_only_metrics=MagicMock(),
-                    _profile_models=MagicMock())
+                    _profile_models=MagicMock(),
+                    _check_for_perf_analyzer_errors=MagicMock())
     def test_profile_skip_summary_reports(self, **mocks):
         """
         Tests when the skip_summary_reports config option is turned on,

@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Union, Optional, Tuple
+
 import logging
 import argparse
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
+
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
+
 from model_analyzer.constants import LOGGER_NAME
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -118,10 +124,19 @@ class CLI:
                     **config_field.parser_args(),
                 )
 
-    def parse(self):
+    def parse(
+        self,
+        input_args: Optional[List] = None
+    ) -> Tuple[Namespace, Union[ConfigCommandProfile, ConfigCommandReport]]:
         """
         Parse CLI options using ArgumentParsers 
         and set config values.
+
+        Parameters
+        ----------
+        input_args: List
+            The list of arguments to be parsed 
+            (if None then command line arguments will be used)
 
         Returns
         -------
@@ -133,7 +148,8 @@ class CLI:
             already filled in with values from CLI or YAML.
         """
 
-        args = self._parser.parse_args()
+        args = self._parser.parse_args(input_args)
+
         if args.subcommand is None:
             self._parser.print_help()
             self._parser.exit()
