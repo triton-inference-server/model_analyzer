@@ -25,8 +25,6 @@ from model_analyzer.constants import LOGGER_NAME
 
 logger = logging.getLogger(LOGGER_NAME)
 
-import sys as _sys
-
 
 class CLI:
     """
@@ -134,14 +132,17 @@ class CLI:
         Parse CLI options using ArgumentParsers 
         and set config values.
 
+        Parameters
+        ----------
+        input_args: List
+            The list of arguments to be parsed 
+            (if None then command line arguments will be used)
+
         Returns
         -------
         args : Namespace
             Object that contains the parse CLI commands
             Used for the global options
-        input_args: List
-            The list of arguments to be parsed 
-            (if None then command line arguments will be used)
         config: CommandConfig
             The config corresponding to the command being run,
             already filled in with values from CLI or YAML.

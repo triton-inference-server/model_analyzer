@@ -14,7 +14,7 @@
 
 from typing import List, Union, Optional
 from copy import deepcopy
-import os, sys
+import sys
 from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from .model_manager import ModelManager
 from .result.result_manager import ResultManager
