@@ -68,7 +68,7 @@ class CLI:
         self._parser.add_argument(
             '--version',
             action='store_true',
-            help='Show the current version of Model Analyzer.')
+            help='Show the Model Analyzer version.')
 
     def add_subcommand(self, cmd, help, config=None):
         """
@@ -132,8 +132,11 @@ class CLI:
                 )
 
     def _show_ma_version(self):
+        """
+        Displays the current version of Model Analyzer and exits.
+        """
         if len(sys.argv) > 2:
-            print('error: The --version flag cannot be combined with other arguments')
+            print('Error: Invalid combination of arguments: --version cannot be used with other arguments')
             sys.exit(1)
         else:
             try:
