@@ -21,7 +21,7 @@ from argparse import ArgumentParser, Namespace
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
-from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.constants import LOGGER_NAME, VERSION_FILE_PATH
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -62,6 +62,11 @@ class CLI:
                                   default='online',
                                   choices=['online', 'offline'],
                                   help='Choose a preset configuration mode.')
+        self._parser.add_argument(
+            '--version',
+            action='version',
+            version=self._get_ma_version(),
+            help='Show the current version of Model Analyzer.')
 
     def add_subcommand(self, cmd, help, config=None):
         """
@@ -124,6 +129,11 @@ class CLI:
                     **config_field.parser_args(),
                 )
 
+    def _get_ma_version(self):
+        with open(VERSION_FILE_PATH) as f:
+            version = f.read()
+        return version
+    
     def parse(
         self,
         input_args: Optional[List] = None

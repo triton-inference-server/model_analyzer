@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pathlib import Path
 from typing import Dict, Any
 
 # Config constants
@@ -65,3 +66,6 @@ GLOBAL_CONSTRAINTS_KEY = "__default__"
 
 # Measurement constants
 INVALID_MEASUREMENT_THRESHOLD = 2
+
+# Version file path
+VERSION_FILE_PATH = Path(__file__).parent.parent / "VERSION"
