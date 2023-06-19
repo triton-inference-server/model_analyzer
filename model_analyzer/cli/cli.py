@@ -14,12 +14,14 @@
 
 from typing import List, Union, Optional, Tuple
 
+import sys
 import logging
 import argparse
 from argparse import ArgumentParser, Namespace
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 from model_analyzer.constants import LOGGER_NAME, VERSION_FILE_PATH
 
@@ -56,16 +58,16 @@ class CLI:
             '--verbose',
             action='store_true',
             help='Show detailed logs, messages and status.')
-        self._parser.add_argument('-m',
-                                  '--mode',
-                                  type=str,
-                                  default='online',
-                                  choices=['online', 'offline'],
-                                  help='Choose a preset configuration mode.')
+        self._parser.add_argument(
+            '-m',
+            '--mode',
+            type=str,
+            default='online',
+            choices=['online', 'offline'],
+            help='Choose a preset configuration mode.')
         self._parser.add_argument(
             '--version',
-            action='version',
-            version=self._get_ma_version(),
+            action='store_true',
             help='Show the current version of Model Analyzer.')
 
     def add_subcommand(self, cmd, help, config=None):
@@ -129,10 +131,19 @@ class CLI:
                     **config_field.parser_args(),
                 )
 
-    def _get_ma_version(self):
-        with open(VERSION_FILE_PATH) as f:
-            version = f.read()
-        return version
+    def _show_ma_version(self):
+        if len(sys.argv) > 2:
+            print('error: The --version flag cannot be combined with other arguments')
+            sys.exit(1)
+        else:
+            try:
+                with open(VERSION_FILE_PATH) as f:
+                    version = f.read()
+                print(version.strip())
+                sys.exit(0)
+            except FileNotFoundError as e:
+                raise TritonModelAnalyzerException(
+                f"VERSION file not found : {e}")
     
     def parse(
         self,
@@ -159,6 +170,9 @@ class CLI:
         """
 
         args = self._parser.parse_args(input_args)
+
+        if args.version:
+            self._show_ma_version()
 
         if args.subcommand is None:
             self._parser.print_help()
