@@ -568,7 +568,7 @@ class MetricsManager:
         return gpu_metrics
 
     def _expected_gpu_records(self) -> bool:
-        if self._config.triton_launch_mode == 'remote':
+        if self._config.triton_launch_mode == 'remote' or self._config.triton_launch_mode == 'c_api':
             return False
 
         return True
