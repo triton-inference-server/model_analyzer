@@ -559,13 +559,19 @@ class MetricsManager:
         # Stop and destroy DCGM monitor
         gpu_records = self._gpu_monitor.stop_recording_metrics()
 
-        if not gpu_records:
+        if not gpu_records and self._expected_gpu_records():
             raise TritonModelAnalyzerException(
                 f'No GPU metrics returned. Please check that the `triton_metrics_url` value is set correctly.'
             )
 
         gpu_metrics = self._aggregate_gpu_records(gpu_records)
         return gpu_metrics
+
+    def _expected_gpu_records(self) -> bool:
+        if self._config.triton_launch_mode == 'remote':
+            return False
+
+        return True
 
     def _aggregate_gpu_records(self, gpu_records):
         # Insert all records into aggregator and get aggregated DCGM records
