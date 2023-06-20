@@ -15,6 +15,7 @@
 from typing import List, Union, Optional, Tuple
 
 import sys
+import pkg_resources
 import logging
 import argparse
 from argparse import ArgumentParser, Namespace
@@ -23,7 +24,7 @@ from model_analyzer.config.input.config_command_profile import ConfigCommandProf
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-from model_analyzer.constants import LOGGER_NAME, VERSION_FILE_PATH
+from model_analyzer.constants import LOGGER_NAME, PACKAGE_NAME
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -136,18 +137,18 @@ class CLI:
         Displays the current version of Model Analyzer and exits.
         """
         if len(sys.argv) > 2:
-            print('Error: Invalid combination of arguments: --version cannot be used with other arguments')
+            print(
+                'Error: Invalid combination of arguments: --version cannot be used with other arguments')
             sys.exit(1)
         else:
             try:
-                with open(VERSION_FILE_PATH) as f:
-                    version = f.read()
-                print(version.strip())
+                version = pkg_resources.get_distribution(PACKAGE_NAME).version
+                print(version)
                 sys.exit(0)
-            except FileNotFoundError as e:
+            except pkg_resources.DistributionNotFound:
                 raise TritonModelAnalyzerException(
-                f"VERSION file not found : {e}")
-    
+                    f"Version information is not available")
+
     def parse(
         self,
         input_args: Optional[List] = None

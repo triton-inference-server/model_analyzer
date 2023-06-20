@@ -67,5 +67,5 @@ GLOBAL_CONSTRAINTS_KEY = "__default__"
 # Measurement constants
 INVALID_MEASUREMENT_THRESHOLD = 2
 
-# Version file path
-VERSION_FILE_PATH = Path(__file__).parent.parent / "VERSION"
+# Model analyzer package name
+PACKAGE_NAME = "triton-model-analyzer"
