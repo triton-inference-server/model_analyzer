@@ -15,7 +15,7 @@
 from typing import List, Union, Optional, Tuple
 
 import sys
-import pkg_resources
+import importlib_metadata
 import logging
 import argparse
 from argparse import ArgumentParser, Namespace
@@ -142,10 +142,10 @@ class CLI:
             sys.exit(1)
         else:
             try:
-                version = pkg_resources.get_distribution(PACKAGE_NAME).version
+                version = importlib_metadata.version(PACKAGE_NAME)
                 print(version)
                 sys.exit(0)
-            except pkg_resources.DistributionNotFound:
+            except importlib_metadata.PackageNotFoundError:
                 raise TritonModelAnalyzerException(
                     f"Version information is not available")
 
