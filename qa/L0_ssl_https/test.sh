@@ -24,7 +24,7 @@ MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_V
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="remote"}
 CLIENT_PROTOCOL="http"
 PORTS=(`find_available_ports 2`)
-HTTP_PORT=8000
+HTTP_PORT="8000"
 GRPC_PORT="${PORTS[1]}"
 METRICS_PORT="${PORTS[2]}"
 GPUS=(`get_all_gpus_uuids`)
