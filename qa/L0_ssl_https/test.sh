@@ -25,8 +25,8 @@ TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="remote"}
 CLIENT_PROTOCOL="http"
 PORTS=(`find_available_ports 2`)
 HTTP_PORT="8000"
-GRPC_PORT="${PORTS[1]}"
-METRICS_PORT="${PORTS[2]}"
+GRPC_PORT="${PORTS[0]}"
+METRICS_PORT="${PORTS[1]}"
 GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 WORKING_CONFIG_FILE="working_config.yml"
