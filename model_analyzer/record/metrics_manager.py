@@ -422,7 +422,8 @@ class MetricsManager:
                 self._destroy_monitors()
                 raise
             finally:
-                if not self._gpu_monitor.is_monitoring_connected():
+                if not self._gpu_monitor.is_monitoring_connected(
+                ) and self._config.triton_launch_mode != 'c_api':
                     raise TritonModelAnalyzerException(
                     f'Failed to connect to Tritonserver\'s GPU metrics monitor. ' \
                     f'Please check that the `triton_metrics_url` value is set correctly: {self._config.triton_metrics_url}.'
