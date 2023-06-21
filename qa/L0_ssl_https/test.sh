@@ -23,8 +23,8 @@ REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="remote"}
 CLIENT_PROTOCOL="http"
-PORTS=(`find_available_ports 3`)
-HTTP_PORT="${PORTS[0]}"
+PORTS=(`find_available_ports 2`)
+HTTP_PORT=8000
 GRPC_PORT="${PORTS[1]}"
 METRICS_PORT="${PORTS[2]}"
 GPUS=(`get_all_gpus_uuids`)
@@ -89,7 +89,7 @@ create_result_paths -test-name $TEST_NAME
 
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $WORKING_CONFIG_FILE -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${HTTP_PORT} --triton-grpc-endpoint localhost:${GRPC_PORT}"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint https://localhost:443 --triton-grpc-endpoint localhost:${GRPC_PORT}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${METRICS_PORT}/metrics"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_SUBCOMMAND="profile"
@@ -106,7 +106,7 @@ create_result_paths -test-name $TEST_NAME
 
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $BROKEN_CONFIG_FILE -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${HTTP_PORT} --triton-grpc-endpoint localhost:${GRPC_PORT}"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint https://localhost:443 --triton-grpc-endpoint localhost:${GRPC_PORT}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${METRICS_PORT}/metrics"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
 MODEL_ANALYZER_SUBCOMMAND="profile"
