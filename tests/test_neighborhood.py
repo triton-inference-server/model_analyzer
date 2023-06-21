@@ -757,6 +757,7 @@ class TestNeighborhood(trc.TestResultCollector):
         step_vector = n._get_step_vector()
         self.assertEqual(step_vector, Coordinate([0, 0, 0]))
 
+        n.force_slow_mode()
         new_coord = n.determine_new_home()
         self.assertEqual(new_coord, Coordinate([1, 1, 1]))
 

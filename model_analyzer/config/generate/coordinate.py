@@ -24,7 +24,7 @@ class Coordinate:
     def __init__(self, val: Union['Coordinate', List[int]]):
         """
         val: list
-            List of floats or integers cooresponding to the location in space
+            List of floats or integers corresponding to the location in space
         """
         if isinstance(val, Coordinate):
             val = val._values
@@ -73,6 +73,12 @@ class Coordinate:
             if v != other[i]:
                 return False
         return True
+
+    def __lt__(self, other: Any) -> bool:
+        for i, v in enumerate(self._values):
+            if v != other[i]:
+                return v < other[i]
+        return False
 
     def round(self) -> None:
         """ Rounds the coordinate in-place """
