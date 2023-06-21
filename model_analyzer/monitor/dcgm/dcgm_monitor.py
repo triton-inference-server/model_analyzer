@@ -89,6 +89,9 @@ class DCGMMonitor(Monitor):
             dcgm_handle, self.group_id, self.dcgm_field_group_id.value,
             structs.DCGM_OPERATION_MODE_MANUAL, frequency, 3600, 0, 0)
 
+    def is_monitoring_connected(self) -> bool:
+        return True
+
     def _monitoring_iteration(self):
         self.group_watcher.GetMore()
 

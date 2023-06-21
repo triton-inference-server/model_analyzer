@@ -41,6 +41,9 @@ class CPUMonitor(Monitor):
         self._cpu_memory_records = []
         self._server = server
 
+    def is_monitoring_connected(self) -> bool:
+        return True
+
     def _monitoring_iteration(self):
         """
         Get memory info of process and 

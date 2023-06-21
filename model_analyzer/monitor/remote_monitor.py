@@ -52,10 +52,18 @@ class RemoteMonitor(Monitor):
                 f"GPU monitoring does not currently support the following metrics: {unsupported_metrics}]"
             )
 
+    def is_monitoring_connected(self) -> bool:
+        try:
+            status_code = requests.get(self._metrics_url).status_code
+        except:
+            return False
+
+        return status_code == requests.code["okay"]
+
     def _monitoring_iteration(self):
         """
         When this function runs, it requests all the metrics
-        that triton has collected aand organizes them into
+        that triton has collected and organizes them into
         the dict. This function should run as fast
         as possible
         """
@@ -66,7 +74,7 @@ class RemoteMonitor(Monitor):
     def _collect_records(self):
         """
         This function will organize the metrics responses
-        and creat Records out of them
+        and create Records out of them
         """
 
         records = []

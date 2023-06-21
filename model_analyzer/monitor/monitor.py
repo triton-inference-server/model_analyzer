@@ -87,6 +87,20 @@ class Monitor(ABC):
 
         pass
 
+    @abstractmethod
+    def is_monitoring_connected(self) -> bool:
+        """
+        This method is called to determine if we can connect to the
+        monitor
+        
+        Returns
+        -------
+        bool
+           True if connection to the monitor was successful
+        """
+
+        pass
+
     def start_recording_metrics(self):
         """
         Start recording the metrics.
@@ -97,7 +111,7 @@ class Monitor(ABC):
 
     def stop_recording_metrics(self):
         """
-        Stop recording metrics. This will stop monitring all the metrics.
+        Stop recording metrics. This will stop monitoring all the metrics.
 
         Returns
         ------
