@@ -132,7 +132,7 @@ class CLI:
                     **config_field.parser_args(),
                 )
 
-    def _show_ma_version(self):
+    def _show_model_analyzer_version(self):
         """
         Displays the current version of Model Analyzer and exits.
         """
@@ -171,7 +171,7 @@ class CLI:
         args = self._parser.parse_args(input_args)
 
         if args.version:
-            self._show_ma_version()
+            self._show_model_analyzer_version()
 
         if args.subcommand is None:
             self._parser.print_help()
