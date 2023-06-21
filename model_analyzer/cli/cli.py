@@ -136,18 +136,13 @@ class CLI:
         """
         Displays the current version of Model Analyzer and exits.
         """
-        if len(sys.argv) > 2:
-            print(
-                'Error: Invalid combination of arguments: --version cannot be used with other arguments')
-            sys.exit(1)
-        else:
-            try:
-                version = importlib_metadata.version(PACKAGE_NAME)
-                print(version)
-                sys.exit(0)
-            except importlib_metadata.PackageNotFoundError:
-                raise TritonModelAnalyzerException(
-                    f"Version information is not available")
+        try:
+            version = importlib_metadata.version(PACKAGE_NAME)
+            print(version)
+            sys.exit(0)
+        except importlib_metadata.PackageNotFoundError:
+            raise TritonModelAnalyzerException(
+                f"Version information is not available")
 
     def parse(
         self,
