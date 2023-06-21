@@ -58,7 +58,7 @@ class RemoteMonitor(Monitor):
         except:
             return False
 
-        return status_code == requests.code["okay"]
+        return status_code == requests.codes["okay"]
 
     def _monitoring_iteration(self):
         """
