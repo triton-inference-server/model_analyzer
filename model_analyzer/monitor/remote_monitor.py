@@ -55,7 +55,7 @@ class RemoteMonitor(Monitor):
     def is_monitoring_connected(self) -> bool:
         try:
             status_code = requests.get(self._metrics_url).status_code
-        except:
+        except Exception as ex:
             return False
 
         return status_code == requests.codes["okay"]
