@@ -143,9 +143,8 @@ class SimplePlot:
 
         for model_config_name, data in self._data.items():
             # Sort the data by x-axis
-            x_data, y_data = (
-                list(t)
-                for t in zip(*sorted(zip(data['x_data'], data['y_data']))))
+            x_data, y_data = (list(t) for t in zip(
+                *sorted(zip(data['x_data'], data['y_data']))))
 
             if self._monotonic:
                 filtered_x, filtered_y = [x_data[0]], [y_data[0]]

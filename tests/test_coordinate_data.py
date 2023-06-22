@@ -85,8 +85,14 @@ class TestCoordinateData(trc.TestResultCollector):
         coordinate1 = Coordinate([0, 4, 1])
         coordinate2 = Coordinate([1, 2, 3])
 
-        rcm0 = self._construct_rcm(10, 5, config_name="modelA_config_0", model_name="modelA")
-        rcm1 = self._construct_rcm(20, 8, config_name="modelB_config_0", model_name="modelB")
+        rcm0 = self._construct_rcm(10,
+                                   5,
+                                   config_name="modelA_config_0",
+                                   model_name="modelA")
+        rcm1 = self._construct_rcm(20,
+                                   8,
+                                   config_name="modelB_config_0",
+                                   model_name="modelB")
         rcm2 = None
 
         coordinate_data.set_measurement(coordinate0, rcm0)

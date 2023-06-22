@@ -30,7 +30,7 @@ class ModelConstraints:
         self._constraints = {}
         if constraints:
             self._constraints = constraints
-        
+
     def to_dict(self):
         """
         Returns constraints dictionary
@@ -54,7 +54,7 @@ class ModelConstraints:
             return True
         else:
             return False
-    
+
     def __getitem__(self, name):
         """
         To subscript constraints using metric name
@@ -70,8 +70,7 @@ class ModelConstraints:
         else:
             msg = f"'{name}' key not found in constraints"
             raise KeyError(msg)
-    
-            
+
     def __bool__(self):
         """
         To check if constraints are empty
@@ -80,7 +79,7 @@ class ModelConstraints:
             return True
         else:
             return False
-    
+
     def __eq__(self, other):
         """
         To compare two ModelConstraints objects

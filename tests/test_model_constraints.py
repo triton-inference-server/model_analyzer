@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from model_analyzer.result.model_constraints import ModelConstraints
 
 import unittest
 from unittest.mock import patch
 from .common import test_result_collector as trc
 
+
 class TestModelConstraints(trc.TestResultCollector):
+
     def setUp(self):
         NotImplemented
 
@@ -45,7 +46,7 @@ class TestModelConstraints(trc.TestResultCollector):
 
         self.assertEqual(constraints_obj_1.to_dict(), constraints_dict_1)
         self.assertEqual(constraints_obj_2.to_dict(), constraints_dict_2)
-    
+
     def test_has_metric(self):
         """
         Test that constraints object has a given key

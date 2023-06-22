@@ -110,7 +110,7 @@ class RunConfigResult:
         insort(self._measurements, run_config_measurement)
 
         if self._constraint_manager.satisfies_constraints(
-                                                   run_config_measurement):
+                run_config_measurement):
             insort(self._passing_measurements, run_config_measurement)
         else:
             insort(self._failing_measurements, run_config_measurement)
