@@ -416,10 +416,18 @@ class MetricsManager:
                 self._gpu_monitor = RemoteMonitor(
                     self._config.triton_metrics_url,
                     self._config.monitoring_interval, self._gpu_metrics)
+
                 self._gpu_monitor.start_recording_metrics()
             except TritonModelAnalyzerException:
                 self._destroy_monitors()
                 raise
+            finally:
+                if not self._gpu_monitor.is_monitoring_connected(
+                ) and self._config.triton_launch_mode != 'c_api':
+                    raise TritonModelAnalyzerException(
+                    f'Failed to connect to Tritonserver\'s GPU metrics monitor. ' \
+                    f'Please check that the `triton_metrics_url` value is set correctly: {self._config.triton_metrics_url}.'
+                    )
 
         self._cpu_monitor = CPUMonitor(self._server,
                                        self._config.monitoring_interval,
@@ -558,7 +566,6 @@ class MetricsManager:
 
         # Stop and destroy DCGM monitor
         gpu_records = self._gpu_monitor.stop_recording_metrics()
-
         gpu_metrics = self._aggregate_gpu_records(gpu_records)
         return gpu_metrics
 
