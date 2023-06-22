@@ -119,3 +119,18 @@ class TestCoordinate(trc.TestResultCollector):
     def test_stringification(self):
         c1 = Coordinate([2, 4, 1, 7])
         self.assertEqual("[2, 4, 1, 7]", c1.__str__())
+
+    def test_compare(self):
+        c1 = Coordinate([1, 3, 2])
+        c2 = Coordinate([1, 3, 2])
+        c3 = Coordinate([1, 3, 1])
+        c4 = Coordinate([1, 3, 3])
+        c5 = Coordinate([2, 1, 3])
+        c6 = Coordinate([0, 1, 3])
+
+        self.assertEqual(c1, c2)
+        self.assertGreater(c1, c3)
+        self.assertLess(c3, c1)
+        self.assertLess(c1, c4)
+        self.assertLess(c1, c5)
+        self.assertGreater(c1, c6)
