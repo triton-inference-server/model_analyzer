@@ -14,14 +14,17 @@
 
 from typing import List, Union, Optional, Tuple
 
+import sys
+import importlib_metadata
 import logging
 import argparse
 from argparse import ArgumentParser, Namespace
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.constants import LOGGER_NAME, PACKAGE_NAME
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -56,12 +59,17 @@ class CLI:
             '--verbose',
             action='store_true',
             help='Show detailed logs, messages and status.')
-        self._parser.add_argument('-m',
-                                  '--mode',
-                                  type=str,
-                                  default='online',
-                                  choices=['online', 'offline'],
-                                  help='Choose a preset configuration mode.')
+        self._parser.add_argument(
+            '-m',
+            '--mode',
+            type=str,
+            default='online',
+            choices=['online', 'offline'],
+            help='Choose a preset configuration mode.')
+        self._parser.add_argument(
+            '--version',
+            action='store_true',
+            help='Show the Model Analyzer version.')
 
     def add_subcommand(self, cmd, help, config=None):
         """
@@ -124,6 +132,18 @@ class CLI:
                     **config_field.parser_args(),
                 )
 
+    def _show_model_analyzer_version(self):
+        """
+        Displays the current version of Model Analyzer and exits.
+        """
+        try:
+            version = importlib_metadata.version(PACKAGE_NAME)
+            print(version)
+            sys.exit(0)
+        except importlib_metadata.PackageNotFoundError:
+            raise TritonModelAnalyzerException(
+                f"Version information is not available")
+
     def parse(
         self,
         input_args: Optional[List] = None
@@ -149,6 +169,9 @@ class CLI:
         """
 
         args = self._parser.parse_args(input_args)
+
+        if args.version:
+            self._show_model_analyzer_version()
 
         if args.subcommand is None:
             self._parser.print_help()

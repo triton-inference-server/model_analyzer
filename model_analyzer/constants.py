@@ -65,3 +65,6 @@ GLOBAL_CONSTRAINTS_KEY = "__default__"
 
 # Measurement constants
 INVALID_MEASUREMENT_THRESHOLD = 2
+
+# Model analyzer package name
+PACKAGE_NAME = "triton-model-analyzer"
