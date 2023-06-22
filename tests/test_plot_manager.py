@@ -104,7 +104,9 @@ class TestPlotManager(trc.TestResultCollector):
 
         constraint_manager = ConstraintManager(config)
         self._single_model_result_manager = ResultManager(
-            config=config, state_manager=state_manager, constraint_manager=constraint_manager)
+            config=config,
+            state_manager=state_manager,
+            constraint_manager=constraint_manager)
 
         self._single_model_config = config
 
@@ -126,7 +128,9 @@ class TestPlotManager(trc.TestResultCollector):
 
         constraint_manager = ConstraintManager(config)
         self._multi_model_result_manager = ResultManager(
-            config=config, state_manager=state_manager, constraint_manager=constraint_manager)
+            config=config,
+            state_manager=state_manager,
+            constraint_manager=constraint_manager)
 
         self._multi_model_config = config
 

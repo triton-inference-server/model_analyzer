@@ -24,6 +24,7 @@ from model_analyzer.result.model_constraints import ModelConstraints
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
 
+
 class ConstraintManager:
     """
     Handles processing and applying
@@ -34,20 +35,21 @@ class ConstraintManager:
     config: ConfigCommandProfile or ConfigCommandReport
     """
 
-    def __init__(self, config: Union[ConfigCommandProfile, ConfigCommandReport]) -> None:
+    def __init__(
+            self, config: Union[ConfigCommandProfile,
+                                ConfigCommandReport]) -> None:
         self._constraints = {}
 
         if config:
             # Model constraints
             if "profile_models" in config.get_config():
                 for model in config.profile_models:
-                    self._constraints[model.model_name()
-                                            ] = model.constraints()
+                    self._constraints[model.model_name()] = model.constraints()
 
             # Global constraints
             if "constraints" in config.get_all_config():
-                self._constraints[GLOBAL_CONSTRAINTS_KEY] = ModelConstraints(config.get_all_config()[
-                    "constraints"])
+                self._constraints[GLOBAL_CONSTRAINTS_KEY] = ModelConstraints(
+                    config.get_all_config()["constraints"])
 
     def get_constraints_for_all_models(self):
         """
@@ -59,8 +61,8 @@ class ConstraintManager:
 
         return self._constraints
 
-    def satisfies_constraints(self,
-            run_config_measurement: 'RunConfigMeasurement') -> bool:
+    def satisfies_constraints(
+            self, run_config_measurement: 'RunConfigMeasurement') -> bool:
         """
         Checks that the measurements, for every model, satisfy 
         the provided list of constraints
@@ -77,18 +79,20 @@ class ConstraintManager:
         """
 
         if self._constraints:
-            for (model_name, model_metrics) in run_config_measurement.data().items():
+            for (model_name,
+                 model_metrics) in run_config_measurement.data().items():
                 for metric in model_metrics:
                     if self._metric_matches_constraint(
                             metric, self._constraints[model_name]):
                         if self._get_failure_percentage(
-                                metric, self._constraints[model_name][metric.tag]) > 0:
+                                metric,
+                                self._constraints[model_name][metric.tag]) > 0:
                             return False
 
         return True
 
-    def constraint_failure_percentage(self,
-            run_config_measurement: 'RunConfigMeasurement') -> float:
+    def constraint_failure_percentage(
+            self, run_config_measurement: 'RunConfigMeasurement') -> float:
         """
         Additive percentage, for every measurement, in every model, of how much 
         the RCM is failing the constraints by
@@ -100,7 +104,8 @@ class ConstraintManager:
         failure_percentage: float = 0
 
         if self._constraints:
-            for (model_name, model_metrics) in run_config_measurement.data().items():
+            for (model_name,
+                 model_metrics) in run_config_measurement.data().items():
                 for metric in model_metrics:
                     if self._metric_matches_constraint(
                             metric, self._constraints[model_name]):
@@ -109,15 +114,15 @@ class ConstraintManager:
 
         return failure_percentage * 100
 
-    def _metric_matches_constraint(self,
-            metric: Record, constraint: ModelConstraints) -> bool:
+    def _metric_matches_constraint(self, metric: Record,
+                                   constraint: ModelConstraints) -> bool:
         if constraint.has_metric(metric.tag):
             return True
         else:
             return False
 
-    def _get_failure_percentage(self, metric: Record, constraint: Dict[str,
-                                                                 int]) -> float:
+    def _get_failure_percentage(self, metric: Record,
+                                constraint: Dict[str, int]) -> float:
 
         failure_percentage = 0
 

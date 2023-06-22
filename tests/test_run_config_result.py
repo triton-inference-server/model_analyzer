@@ -25,8 +25,7 @@ from tests.common.test_utils import construct_run_config_measurement, \
 class TestRunConfigResult(trc.TestResultCollector):
 
     def setUp(self):
-        self.default_constraint_manager = construct_constraint_manager(
-            """
+        self.default_constraint_manager = construct_constraint_manager("""
             profile_models: 
               modelA:
                 constraints:
@@ -36,8 +35,7 @@ class TestRunConfigResult(trc.TestResultCollector):
                 constraints:
                   perf_latency_p99:
                     max: 50
-            """
-        )
+            """)
         self._construct_empty_rcr()
         self._construct_throughput_with_latency_constraint_rcr()
         self._construct_throughput_with_latency_constraint_multi_model_rcr()
@@ -279,7 +277,7 @@ class TestRunConfigResult(trc.TestResultCollector):
                                          comparator=MagicMock(),
                                          constraint_manager=MagicMock())
 
-    def _construct_throughput_with_latency_constraint_rcr(self):    
+    def _construct_throughput_with_latency_constraint_rcr(self):
         self._rcr_throughput_with_latency_constraint = \
             RunConfigResult(model_name=MagicMock(),
                             run_config=MagicMock(),

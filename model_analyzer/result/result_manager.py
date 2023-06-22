@@ -62,7 +62,8 @@ class ResultManager:
         self._constraint_manager = constraint_manager
 
         # Data structures for sorting results
-        self._per_model_sorted_results: DefaultDict[str, SortedResults] = defaultdict(SortedResults)
+        self._per_model_sorted_results: DefaultDict[
+            str, SortedResults] = defaultdict(SortedResults)
         self._across_model_sorted_results: SortedResults = SortedResults()
 
         if state_manager.starting_fresh_run():
