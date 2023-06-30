@@ -303,7 +303,6 @@ def dcgmStatusPopError(status_handle):
         return c_errorInfo
     else:
         return None
-    return c_errorInfo
 
 
 def dcgmStatusClear(status_handle):

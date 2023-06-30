@@ -27,6 +27,7 @@
 name: "CodeQL"
 
 on:
+    branches: [ 'main', 'fix_codeql_errors' ]
   pull_request:
 
 jobs:

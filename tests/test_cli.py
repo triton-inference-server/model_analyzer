@@ -500,7 +500,6 @@ class TestCLI(trc.TestResultCollector):
                     expected_default_value
                 )
         else:
-            expected_value_converted = expected_value.split(",")
             expected_value_converted = self._convert_string_to_string_list(
                 expected_value
             )

@@ -411,7 +411,7 @@ class ResultTableManager:
             model_config.dynamic_batching_string() for model_config in model_configs
         ]
         cpu_onlys = [
-            run_config_result.run_config().cpu_only() for model_config in model_configs
+            run_config_result.run_config().cpu_only() for _ in model_configs
         ]
         backend_parameters = [
             model_config._model_config.parameters for model_config in model_configs

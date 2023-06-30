@@ -492,8 +492,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         self.assertIn("--percentile=96", default_run_config.representation())
 
-    def tearDown(self):
-        patch.stopall()
 
     def test_default_ensemble_config_generation(self):
         """

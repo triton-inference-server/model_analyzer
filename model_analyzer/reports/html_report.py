@@ -25,9 +25,14 @@ class HTMLReport(Report):
     constructed in html
     """
 
-    def __init__(self):
-        self._head = ""
-        self._body = ""
+    def __init__(self, html_report=None):
+        if html_report is not None:
+            self._head = html_report._head
+            self._body = html_report._body
+        else:
+            self._head = ""
+            self._body = ""
+
 
     def head(self):
         """

@@ -27,10 +27,7 @@ class PDFReport(HTMLReport):
     """
 
     def __init__(self, html_report=None):
-        super().__init__()
-        if html_report is not None:
-            self._head = html_report._head
-            self._body = html_report._body
+        super().__init__(html_report)
 
     def write_report(self, filename):
         """

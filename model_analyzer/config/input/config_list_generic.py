@@ -76,7 +76,6 @@ class ConfigListGeneric(ConfigValue):
         self._type = type_
         self._cli_type = str
         self._value = []
-        self._output_mapper = output_mapper
 
     def set_value(self, value):
         """
