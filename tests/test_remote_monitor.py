@@ -74,9 +74,6 @@ class TestRemoteMonitor(trc.TestResultCollector):
         self.mock_requests.start()
         self.mock_requests.set_get_request_response(TEST_METRICS_RESPONSE)
 
-    def tearDown(self):
-        patch.stopall()
-
     def test_record_memory(self):
         # One measurement every 0.1 seconds
         frequency = 0.1
@@ -168,6 +165,7 @@ class TestRemoteMonitor(trc.TestResultCollector):
         gpu_monitor.destroy()
 
     def tearDown(self):
+        patch.stopall()
         self.mock_requests.stop()
 
 

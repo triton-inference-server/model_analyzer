@@ -883,7 +883,7 @@ profile_models:
             """
         with self.assertRaises(TritonModelAnalyzerException):
             # latency_report_file is not additive
-            config = self._evaluate_config(args, yaml_content)
+            self._evaluate_config(args, yaml_content)
 
         yaml_content = """
             profile_models:
@@ -1506,7 +1506,7 @@ profile_models:
                 backend-config: test_backend_config
             """
         with self.assertRaises(TritonModelAnalyzerException):
-            config = self._evaluate_config(args, yaml_content)
+            self._evaluate_config(args, yaml_content)
 
         yaml_content = """
             profile_models:

@@ -252,7 +252,6 @@ class DcgmFieldGroupWatcher(DcgmFieldValueCollection):
         self._nextSinceTimestamp = 0
         if startTimestamp > 0:
             self._nextSinceTimestamp = startTimestamp
-        self._numValuesSeen = 0
 
         # Start watches
         self._WatchFieldGroup()
@@ -418,7 +417,6 @@ class DcgmFieldGroupEntityWatcher(DcgmFieldValueEntityCollection):
         self._nextSinceTimestamp = 0
         if startTimestamp > 0:
             self._nextSinceTimestamp = startTimestamp
-        self._numValuesSeen = 0
 
         # Start watches
         self._WatchFieldGroup()

@@ -815,7 +815,6 @@ def DcgmFieldGetById(fieldId):
     """
     DcgmFieldsInit()
 
-    retVal = c_dcgm_field_meta_t()
     fn = dcgmFP("DcgmFieldGetById")
     fn.restype = POINTER(c_dcgm_field_meta_t)
     c_field_meta_ptr = fn(fieldId)
@@ -843,7 +842,7 @@ def DcgmFieldGetByTag(tag):
     """
     DcgmFieldsInit()
 
-    retVal = c_dcgm_field_meta_t()
+    c_dcgm_field_meta_t()
     fn = dcgmFP("DcgmFieldGetByTag")
     fn.restype = POINTER(c_dcgm_field_meta_t)
     c_field_meta_ptr = fn(c_char_p(tag))

@@ -31,9 +31,6 @@ class TestFileWriterMethods(trc.TestResultCollector):
             mock_paths=['model_analyzer.output.file_writer'])
         self.io_mock.start()
 
-    def tearDown(self):
-        patch.stopall()
-
     def test_write(self):
         # Create and use writer
         writer = FileWriter(filename=TEST_FILENAME)
@@ -61,6 +58,7 @@ class TestFileWriterMethods(trc.TestResultCollector):
         self.io_mock.assert_print_called_with_args(self._mock_path, 'test')
 
     def tearDown(self):
+        patch.stopall()
         self.io_mock.stop()
 
 

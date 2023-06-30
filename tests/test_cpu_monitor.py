@@ -39,9 +39,6 @@ class TestCPUMonitor(trc.TestResultCollector):
         self.server_local_mock = MockServerLocalMethods()
         self.server_local_mock.start()
 
-    def tearDown(self):
-        patch.stopall()
-
     def test_record_cpu_memory(self):
         server_config = TritonServerConfig()
         server_config['model-repository'] = MODEL_REPOSITORY_PATH
@@ -109,6 +106,7 @@ class TestCPUMonitor(trc.TestResultCollector):
         server.stop()
 
     def tearDown(self):
+        patch.stopall()
         self.server_local_mock.stop()
 
 

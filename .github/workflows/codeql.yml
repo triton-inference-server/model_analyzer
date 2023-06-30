@@ -28,10 +28,10 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ 'main' ]
+    branches: [ 'main', 'fix_codeql_errors' ]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ 'main' ]
+    branches: [ 'main', 'fix_codeql_errors' ]
   schedule:
     - cron: '0 1 * * 1-6'
 

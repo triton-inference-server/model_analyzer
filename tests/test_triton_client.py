@@ -66,12 +66,12 @@ class TestTritonClientMethods(trc.TestResultCollector):
     def test_create_client(self):
 
         # Create GRPC client
-        client = TritonClientFactory.create_grpc_client(server_url=GRPC_URL)
+        TritonClientFactory.create_grpc_client(server_url=GRPC_URL)
         self.tritonclient_mock.assert_created_grpc_client_with_args(
             url=GRPC_URL)
 
         # Create HTTP client
-        client = TritonClientFactory.create_http_client(server_url=HTTP_URL)
+        TritonClientFactory.create_http_client(server_url=HTTP_URL)
         self.tritonclient_mock.assert_created_http_client_with_args(
             url=HTTP_URL)
 

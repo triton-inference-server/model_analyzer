@@ -51,9 +51,6 @@ class TestDCGMMonitor(trc.TestResultCollector):
                       TEST_UUID)
         ]
 
-    def tearDown(self):
-        patch.stopall()
-
     def test_record_memory(self):
         # One measurement every 0.01 seconds
         frequency = 1
@@ -146,6 +143,7 @@ class TestDCGMMonitor(trc.TestResultCollector):
         dcgm_monitor.destroy()
 
     def tearDown(self):
+        patch.stopall()
         self.mock_dcgm.stop()
         self.mock_numba.stop()
 
