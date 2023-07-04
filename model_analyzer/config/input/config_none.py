@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .config_value import ConfigValue
-from .config_status import ConfigStatus
 from model_analyzer.constants import CONFIG_PARSER_FAILURE
+
+from .config_status import ConfigStatus
+from .config_value import ConfigValue
 
 
 class ConfigNone(ConfigValue):
@@ -22,12 +25,14 @@ class ConfigNone(ConfigValue):
     A wrapper class for the primitive datatypes.
     """
 
-    def __init__(self,
-                 preprocess=None,
-                 required=False,
-                 validator=None,
-                 output_mapper=None,
-                 name=None):
+    def __init__(
+        self,
+        preprocess=None,
+        required=False,
+        validator=None,
+        output_mapper=None,
+        name=None,
+    ):
         """
         Parameters
         ----------
@@ -62,4 +67,5 @@ class ConfigNone(ConfigValue):
             return ConfigStatus(
                 CONFIG_PARSER_FAILURE,
                 f'Value "{value}" for field "{self.name()}" should be None',
-                self)
+                self,
+            )

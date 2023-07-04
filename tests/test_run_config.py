@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,17 +17,15 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
+from model_analyzer.config.run.model_run_config import ModelRunConfig
+from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.triton.model.model_config import ModelConfig
 
 from .common import test_result_collector as trc
 
-from model_analyzer.config.run.model_run_config import ModelRunConfig
-from model_analyzer.config.run.run_config import RunConfig
-
 
 class TestRunConfig(trc.TestResultCollector):
-
     def setUp(self):
         NotImplemented
 
@@ -33,10 +33,10 @@ class TestRunConfig(trc.TestResultCollector):
         patch.stopall()
 
     def test_triton_env(self):
-        """ 
+        """
         Test triton env initialized correctly and returns correctly from function
         """
-        fake_env = {'a': 5, 'b': {'c': 7}}
+        fake_env = {"a": 5, "b": {"c": 7}}
         rc = RunConfig(fake_env)
         self.assertEqual(rc.triton_environment(), fake_env)
 
@@ -60,9 +60,9 @@ class TestRunConfig(trc.TestResultCollector):
         Test that representation() is just a string join of member ModelRunConfig's representations
         """
         pc1 = PerfAnalyzerConfig()
-        pc1.update_config({'model-name': "TestModel1"})
+        pc1.update_config({"model-name": "TestModel1"})
         pc2 = PerfAnalyzerConfig()
-        pc2.update_config({'model-name': "TestModel2"})
+        pc2.update_config({"model-name": "TestModel2"})
         mrc1 = ModelRunConfig("model1", MagicMock(), pc1)
         mrc2 = ModelRunConfig("model2", MagicMock(), pc2)
         rc = RunConfig({})
@@ -77,8 +77,8 @@ class TestRunConfig(trc.TestResultCollector):
         Test that representation removes measurement request count
         """
         pc = PerfAnalyzerConfig()
-        pc.update_config({'model-name': "TestModel1"})
-        pc.update_config({'measurement-request-count': "500"})
+        pc.update_config({"model-name": "TestModel1"})
+        pc.update_config({"measurement-request-count": "500"})
 
         mrc = ModelRunConfig("model1", MagicMock(), pc)
 
@@ -87,7 +87,7 @@ class TestRunConfig(trc.TestResultCollector):
 
     def test_cpu_only(self):
         """
-        Test that cpu_only() is only true if all ModelConfigs are cpu_only() 
+        Test that cpu_only() is only true if all ModelConfigs are cpu_only()
         """
         cpu_only_true_mc = ModelConfig({})
         cpu_only_true_mc.set_cpu_only(True)
@@ -106,58 +106,52 @@ class TestRunConfig(trc.TestResultCollector):
 
     def test_mrc_with_illegal_combinations(self):
         """
-        Test ModelRunConfig with illegal comibinations 
+        Test ModelRunConfig with illegal comibinations
         """
         mc = ModelConfig({})
         pc = PerfAnalyzerConfig()
 
         # Valid client batch-size and invalid model preferred_batch_size
-        pc['batch-size'] = 2
-        mc.set_config({
-            "name": "test_model",
-            "max_batch_size": 4,
-            "dynamic_batching": {
-                "preferred_batch_size": [4, 8]
+        pc["batch-size"] = 2
+        mc.set_config(
+            {
+                "name": "test_model",
+                "max_batch_size": 4,
+                "dynamic_batching": {"preferred_batch_size": [4, 8]},
             }
-        })
+        )
         mrc = ModelRunConfig("modelA", mc, pc)
         self.assertFalse(mrc.is_legal_combination())
 
         # Invalid client batch-size and invalid model preferred_batch_size
-        pc['batch-size'] = 8
+        pc["batch-size"] = 8
         mrc = ModelRunConfig("modelB", mc, pc)
         self.assertFalse(mrc.is_legal_combination())
 
         # Invalid client batch-size and valid model preferred_batch_size
-        mc.set_config({
-            "max_batch_size": 4,
-            "dynamic_batching": {
-                "preferred_batch_size": [2]
-            }
-        })
+        mc.set_config(
+            {"max_batch_size": 4, "dynamic_batching": {"preferred_batch_size": [2]}}
+        )
         mrc = ModelRunConfig("modelC", mc, pc)
         self.assertFalse(mrc.is_legal_combination())
 
     def test_mrc_with_legal_combinations(self):
         """
-        Test ModelRunConfig with legal comibinations 
+        Test ModelRunConfig with legal comibinations
         """
         mc = ModelConfig({})
         pc = PerfAnalyzerConfig()
 
         # Valid client batch-size and no model preferred_batch_size
-        pc['batch-size'] = 2
+        pc["batch-size"] = 2
         mc.set_config({"max_batch_size": 8})
         mrc = ModelRunConfig("modelA", mc, pc)
         self.assertTrue(mrc.is_legal_combination())
 
         # Valid client batch-size and valid model preferred_batch_size
-        mc.set_config({
-            "max_batch_size": 8,
-            "dynamic_batching": {
-                "preferred_batch_size": [4]
-            }
-        })
+        mc.set_config(
+            {"max_batch_size": 8, "dynamic_batching": {"preferred_batch_size": [4]}}
+        )
         mrc = ModelRunConfig("modelB", mc, pc)
         self.assertTrue(mrc.is_legal_combination())
 
@@ -170,29 +164,29 @@ class TestRunConfig(trc.TestResultCollector):
         composing_model_configs = [ModelConfig({}), ModelConfig({})]
 
         # Invalid client batch-size and valid model preferred_batch_size for composing_config[1]
-        pc['batch-size'] = 2
+        pc["batch-size"] = 2
         mc.set_config({"max_batch_size": 8, "name": "test_model"})
         mrc = ModelRunConfig("modelC", mc, pc)
 
-        composing_model_configs[0].set_config({
-            "name": "composing_config_A",
-            "max_batch_size": 4,
-            "dynamic_batching": {
-                "preferred_batch_size": [2]
+        composing_model_configs[0].set_config(
+            {
+                "name": "composing_config_A",
+                "max_batch_size": 4,
+                "dynamic_batching": {"preferred_batch_size": [2]},
             }
-        })
-        composing_model_configs[1].set_config({
-            "name": "composing_config_B",
-            "max_batch_size": 4,
-            "dynamic_batching": {
-                "preferred_batch_size": [4, 8]
+        )
+        composing_model_configs[1].set_config(
+            {
+                "name": "composing_config_B",
+                "max_batch_size": 4,
+                "dynamic_batching": {"preferred_batch_size": [4, 8]},
             }
-        })
+        )
 
         mrc.add_composing_model_configs(composing_model_configs)
 
         self.assertFalse(mrc.is_legal_combination())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

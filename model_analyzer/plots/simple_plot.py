@@ -1,4 +1,6 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,20 +15,21 @@
 # limitations under the License.
 
 import os
-import matplotlib.pyplot as plt
 from collections import defaultdict
 
-from model_analyzer.record.metrics_manager import MetricsManager
+import matplotlib.pyplot as plt
+
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.record.metrics_manager import MetricsManager
 
 
 class SimplePlot:
     """
     A wrapper class around a matplotlib
-    plot that adapts with the kinds of 
+    plot that adapts with the kinds of
     plots the model analyzer wants to generates
 
-    A singe plot holds data for multiple 
+    A singe plot holds data for multiple
     model configs, but only holds one
     type of plot
     """
@@ -37,7 +40,7 @@ class SimplePlot:
         ----------
         name: str
             The name of the file that the plot
-            will be saved as 
+            will be saved as
         title : str
             The title of this plot/figure
         x_axis : str
@@ -61,13 +64,13 @@ class SimplePlot:
 
     def add_run_config_measurement(self, label, run_config_measurement):
         """
-        Adds a measurment to this plot
+        Adds a measurement to this plot
 
         Parameters
         ----------
         label : str
             The name of the config(s) this measurement
-            is taken from. 
+            is taken from.
         run_config_measurement : RunConfigMeasurement
             The measurement containing the data to
             be plotted.
@@ -76,33 +79,37 @@ class SimplePlot:
         if label not in self._data:
             self._data[label] = defaultdict(list)
 
-        if self._x_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
-            self._data[label]['x_data'].append(
+        if self._x_axis.replace("_", "-") in PerfAnalyzerConfig.allowed_keys():
+            self._data[label]["x_data"].append(
                 run_config_measurement.model_specific_pa_params()[0][
-                    self._x_axis.replace('_', '-')])
+                    self._x_axis.replace("_", "-")
+                ]
+            )
         else:
             if MetricsManager.is_gpu_metric(tag=self._x_axis):
-                self._data[label]['x_data'].append(
-                    run_config_measurement.get_gpu_metric_value(
-                        tag=self._x_axis))
+                self._data[label]["x_data"].append(
+                    run_config_measurement.get_gpu_metric_value(tag=self._x_axis)
+                )
             else:
-                self._data[label]['x_data'].append(
-                    run_config_measurement.get_non_gpu_metric_value(
-                        tag=self._x_axis))
+                self._data[label]["x_data"].append(
+                    run_config_measurement.get_non_gpu_metric_value(tag=self._x_axis)
+                )
 
-        if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
-            self._data[label]['y_data'].append(
+        if self._y_axis.replace("_", "-") in PerfAnalyzerConfig.allowed_keys():
+            self._data[label]["y_data"].append(
                 run_config_measurement.model_specific_pa_params()[0][
-                    self._y_axis.replace('_', '-')])
+                    self._y_axis.replace("_", "-")
+                ]
+            )
         else:
             if MetricsManager.is_gpu_metric(tag=self._y_axis):
-                self._data[label]['y_data'].append(
-                    run_config_measurement.get_gpu_metric_value(
-                        tag=self._y_axis))
+                self._data[label]["y_data"].append(
+                    run_config_measurement.get_gpu_metric_value(tag=self._y_axis)
+                )
             else:
-                self._data[label]['y_data'].append(
-                    run_config_measurement.get_non_gpu_metric_value(
-                        tag=self._y_axis))
+                self._data[label]["y_data"].append(
+                    run_config_measurement.get_non_gpu_metric_value(tag=self._y_axis)
+                )
 
     def clear(self):
         """
@@ -120,31 +127,34 @@ class SimplePlot:
         ----------
         constraints: ModelConstraints object
             The keys are metric tags and values are dicts whose
-            keys are constraint types (min, max) and values are their 
+            keys are constraint types (min, max) and values are their
             values
         """
 
         self._ax.set_title(self._title)
 
-        if self._x_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
-            self._x_header = self._x_axis.replace('_', ' ').title()
+        if self._x_axis.replace("_", "-") in PerfAnalyzerConfig.allowed_keys():
+            self._x_header = self._x_axis.replace("_", " ").title()
         else:
-            self._x_header = MetricsManager.get_metric_types(
-                [self._x_axis])[0].header(aggregation_tag='')
+            self._x_header = MetricsManager.get_metric_types([self._x_axis])[0].header(
+                aggregation_tag=""
+            )
 
-        if self._y_axis.replace('_', '-') in PerfAnalyzerConfig.allowed_keys():
-            self._y_header = self._y_axis.replace('_', ' ').title()
+        if self._y_axis.replace("_", "-") in PerfAnalyzerConfig.allowed_keys():
+            self._y_header = self._y_axis.replace("_", " ").title()
         else:
-            self._y_header = MetricsManager.get_metric_types(
-                [self._y_axis])[0].header(aggregation_tag='')
+            self._y_header = MetricsManager.get_metric_types([self._y_axis])[0].header(
+                aggregation_tag=""
+            )
 
         self._ax.set_xlabel(self._x_header)
         self._ax.set_ylabel(self._y_header)
 
         for model_config_name, data in self._data.items():
             # Sort the data by x-axis
-            x_data, y_data = (list(t) for t in zip(
-                *sorted(zip(data['x_data'], data['y_data']))))
+            x_data, y_data = (
+                list(t) for t in zip(*sorted(zip(data["x_data"], data["y_data"])))
+            )
 
             if self._monotonic:
                 filtered_x, filtered_y = [x_data[0]], [y_data[0]]
@@ -154,22 +164,22 @@ class SimplePlot:
                         filtered_y.append(y_data[i])
                 x_data, y_data = filtered_x, filtered_y
 
-            self._ax.plot(x_data, y_data, marker='o', label=model_config_name)
+            self._ax.plot(x_data, y_data, marker="o", label=model_config_name)
 
         # Plot constraints
         if constraints:
             if constraints.has_metric(self._x_axis):
                 for _, constraint_val in constraints[self._x_axis].items():
                     constraint_label = f"Target {self._x_header.rsplit(' ',1)[0]}"
-                    self._ax.axvline(x=constraint_val,
-                                     linestyle='--',
-                                     label=constraint_label)
+                    self._ax.axvline(
+                        x=constraint_val, linestyle="--", label=constraint_label
+                    )
             if constraints.has_metric(self._y_axis):
                 for _, constraint_val in constraints[self._y_axis].items():
                     constraint_label = f"Target {self._y_header.rsplit(' ', 1)[0]}"
-                    self._ax.axhline(y=constraint_val,
-                                     linestyle='--',
-                                     label=constraint_label)
+                    self._ax.axhline(
+                        y=constraint_val, linestyle="--", label=constraint_label
+                    )
             # plot h lines
         self._ax.legend()
         self._ax.grid()
@@ -177,7 +187,7 @@ class SimplePlot:
     def data(self):
         """
         Get the data in this plot
-        
+
         Returns
         -------
         dict

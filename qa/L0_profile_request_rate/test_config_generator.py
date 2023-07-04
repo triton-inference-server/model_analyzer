@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+
 import yaml
 
 
@@ -20,7 +23,7 @@ class TestConfigGenerator:
     """
     This class contains functions that
     create configs for various test scenarios.
-    
+
     The `setup` function does the work common to all tests
 
     TO ADD A TEST: Simply add a member function whose name starts
@@ -31,7 +34,7 @@ class TestConfigGenerator:
         test_functions = [
             self.__getattribute__(name)
             for name in dir(self)
-            if name.startswith('generate')
+            if name.startswith("generate")
         ]
 
         for test_function in test_functions:
@@ -41,34 +44,35 @@ class TestConfigGenerator:
     def setup(self):
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            '-m',
-            '--profile-models',
+            "-m",
+            "--profile-models",
             type=str,
             required=True,
-            help='Comma seperated list of models to be profiled')
-        parser.add_argument('-b',
-                            '--batch-sizes',
-                            type=str,
-                            required=True,
-                            help='List of batch sizes')
-        parser.add_argument('-r',
-                            '--request-rate',
-                            type=str,
-                            required=True,
-                            help='List of request rates')
+            help="Comma separated list of models to be profiled",
+        )
+        parser.add_argument(
+            "-b", "--batch-sizes", type=str, required=True, help="List of batch sizes"
+        )
+        parser.add_argument(
+            "-r",
+            "--request-rate",
+            type=str,
+            required=True,
+            help="List of request rates",
+        )
 
         args = parser.parse_args()
         self.config = {
-            'batch_sizes': args.batch_sizes.split(','),
-            'request_rate': args.request_rate.split(',')
+            "batch_sizes": args.batch_sizes.split(","),
+            "request_rate": args.request_rate.split(","),
         }
-        self.config['profile_models'] = sorted(args.profile_models.split(','))
-        self.config['run_config_search_disable'] = True
+        self.config["profile_models"] = sorted(args.profile_models.split(","))
+        self.config["run_config_search_disable"] = True
 
     def generate_config(self):
-        with open('config.yml', 'w+') as f:
+        with open("config.yml", "w+") as f:
             yaml.dump(self.config, f)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     TestConfigGenerator()

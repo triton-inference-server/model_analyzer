@@ -1,4 +1,6 @@
-# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,8 +19,8 @@ from abc import ABC, abstractmethod
 
 class Report(ABC):
     """
-    Defines functions that need to 
-    be implemented by all report 
+    Defines functions that need to
+    be implemented by all report
     types
 
     This will be a html
@@ -79,6 +81,6 @@ class Report(ABC):
     @abstractmethod
     def get_file_extension(self):
         """
-        Return the file extension for 
+        Return the file extension for
         the type of report
         """

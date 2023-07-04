@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,11 +17,10 @@
 import abc
 from abc import abstractmethod
 
-from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+from model_analyzer.constants import CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
 from .config_status import ConfigStatus
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
 
 
 class ConfigValue(abc.ABC):
@@ -27,12 +28,14 @@ class ConfigValue(abc.ABC):
     Parent class for all the types used in the ConfigField.
     """
 
-    def __init__(self,
-                 preprocess=None,
-                 required=False,
-                 validator=None,
-                 output_mapper=None,
-                 name=None):
+    def __init__(
+        self,
+        preprocess=None,
+        required=False,
+        validator=None,
+        output_mapper=None,
+        name=None,
+    ):
         """
         Parameters
         ----------
@@ -88,22 +91,23 @@ class ConfigValue(abc.ABC):
         if type(return_result) is dict:
             final_return_result = {}
             for key, value_ in return_result.items():
-                if hasattr(value_, 'value'):
+                if hasattr(value_, "value"):
                     final_return_result[key] = value_.value()
                 else:
                     raise TritonModelAnalyzerException(
-                        'ConfigObject should always have a '
-                        '"value" attribute for each value.')
+                        "ConfigObject should always have a "
+                        '"value" attribute for each value.'
+                    )
             return_result = final_return_result
         elif type(return_result) is list:
             return_results = []
             for item in return_result:
-                if hasattr(item, 'value'):
+                if hasattr(item, "value"):
                     return_results.append(item.value())
                 else:
                     return_results.append(item)
             return_result = return_results
-        elif hasattr(return_result, 'value'):
+        elif hasattr(return_result, "value"):
             return_result = return_result.value()
 
         return return_result

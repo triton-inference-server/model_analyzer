@@ -1,4 +1,6 @@
-# Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,26 +14,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from typing import List, Optional
 
-from model_analyzer.constants import LOGGER_NAME, INVALID_MEASUREMENT_THRESHOLD
-from model_analyzer.config.generate.run_config_generator_factory import RunConfigGeneratorFactory
-from .model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-
+from model_analyzer.config.generate.model_variant_name_manager import (
+    ModelVariantNameManager,
+)
+from model_analyzer.config.generate.run_config_generator_factory import (
+    RunConfigGeneratorFactory,
+)
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.objects.config_model_profile_spec import (
+    ConfigModelProfileSpec,
+)
+from model_analyzer.constants import INVALID_MEASUREMENT_THRESHOLD, LOGGER_NAME
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.record.metrics_manager import MetricsManager
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.result.result_manager import ResultManager
-from model_analyzer.record.metrics_manager import MetricsManager
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.triton.client.client import TritonClient
-from model_analyzer.triton.server.server import TritonServer
-from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
-from model_analyzer.triton.model.model_config import ModelConfig
-from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.server.server import TritonServer
 
-import logging
+from .model_analyzer_exceptions import TritonModelAnalyzerException
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -42,11 +49,17 @@ class ModelManager:
     It also records the best results for each model.
     """
 
-    def __init__(self, config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 client: TritonClient, server: TritonServer,
-                 metrics_manager: MetricsManager, result_manager: ResultManager,
-                 state_manager: AnalyzerStateManager,
-                 constraint_manager: ConstraintManager):
+    def __init__(
+        self,
+        config: ConfigCommandProfile,
+        gpus: List[GPUDevice],
+        client: TritonClient,
+        server: TritonServer,
+        metrics_manager: MetricsManager,
+        result_manager: ResultManager,
+        state_manager: AnalyzerStateManager,
+        constraint_manager: ConstraintManager,
+    ):
         """
         Parameters
         ----------
@@ -85,7 +98,9 @@ class ModelManager:
 
         self._model_variant_name_manager = ModelVariantNameManager.from_dict(
             self._state_manager.get_state_variable(
-                'ModelManager.model_variant_name_manager'))
+                "ModelManager.model_variant_name_manager"
+            )
+        )
 
     def run_models(self, models: List[ConfigModelProfileSpec]) -> None:
         """
@@ -116,15 +131,15 @@ class ModelManager:
             models=models,
             client=self._client,
             result_manager=self._result_manager,
-            model_variant_name_manager=self._model_variant_name_manager)
+            model_variant_name_manager=self._model_variant_name_manager,
+        )
 
         for run_config in rcg.get_configs():
             if self._state_manager.exiting():
                 break
 
             if run_config.is_legal_combination():
-                measurement = self._metrics_manager.execute_run_config(
-                    run_config)
+                measurement = self._metrics_manager.execute_run_config(run_config)
 
                 self._check_for_valid_measurement(measurement)
                 self._stop_ma_if_no_valid_measurement_threshold_reached()
@@ -138,9 +153,9 @@ class ModelManager:
 
                 measurement.set_metric_weightings(metric_objectives=objectives)
                 measurement.set_constraint_manager(
-                    constraint_manager=self._constraint_manager)
-                measurement.set_model_config_weighting(
-                    model_config_weights=weightings)
+                    constraint_manager=self._constraint_manager
+                )
+                measurement.set_model_config_weighting(model_config_weights=weightings)
 
             rcg.set_last_results([measurement])
             self._state_manager.save_checkpoint()
@@ -151,11 +166,12 @@ class ModelManager:
         self._server.update_config(params=server_config_copy.server_args())
 
         model_variant_name_manager_dict = self._state_manager.default_encode(
-            self._model_variant_name_manager)
+            self._model_variant_name_manager
+        )
 
         self._state_manager.set_state_variable(
-            'ModelManager.model_variant_name_manager',
-            model_variant_name_manager_dict)
+            "ModelManager.model_variant_name_manager", model_variant_name_manager_dict
+        )
 
     def _get_triton_server_flags(self, models):
         triton_server_flags = models[0].triton_server_flags()
@@ -167,30 +183,33 @@ class ModelManager:
                 )
 
     def _check_for_ensemble_model_incompatibility(
-            self, models: List[ConfigModelProfileSpec]) -> None:
+        self, models: List[ConfigModelProfileSpec]
+    ) -> None:
         for model in models:
             model_config = ModelConfig.create_from_profile_spec(
-                model, self._config, self._client, self._gpus)
+                model, self._config, self._client, self._gpus
+            )
 
             if model_config.is_ensemble():
                 if len(models) > 1:
                     raise TritonModelAnalyzerException(
-                        f'\nProfiling of multiple models is not supported for ensemble models'
+                        f"\nProfiling of multiple models is not supported for ensemble models"
                     )
 
-                if self._config.run_config_search_mode == 'brute':
-                    if self._config.get_config(
-                    )['run_config_search_mode'].is_set_by_user():
+                if self._config.run_config_search_mode == "brute":
+                    if self._config.get_config()[
+                        "run_config_search_mode"
+                    ].is_set_by_user():
                         raise TritonModelAnalyzerException(
-                            f'\nBrute search mode is not supported for ensemble models'
-                            '\nPlease use quick search mode (--run-config-search-mode quick)'
+                            f"\nBrute search mode is not supported for ensemble models"
+                            "\nPlease use quick search mode (--run-config-search-mode quick)"
                         )
                     else:
-                        self._config.run_config_search_mode = 'quick'
+                        self._config.run_config_search_mode = "quick"
             elif not self._config.bls_composing_models:
                 if len(self._config.cpu_only_composing_models) > 0:
                     raise TritonModelAnalyzerException(
-                        f'\nCan only specify --cpu-only-composing-models for ensemble or BLS models.'
+                        f"\nCan only specify --cpu-only-composing-models for ensemble or BLS models."
                     )
 
     def _init_state(self):
@@ -200,11 +219,13 @@ class ModelManager:
         """
 
         self._state_manager.set_state_variable(
-            'ModelManager.model_variant_name_manager',
-            self._state_manager.default_encode(ModelVariantNameManager()))
+            "ModelManager.model_variant_name_manager",
+            self._state_manager.default_encode(ModelVariantNameManager()),
+        )
 
     def _check_for_valid_measurement(
-            self, measurement: Optional[RunConfigMeasurement]) -> None:
+        self, measurement: Optional[RunConfigMeasurement]
+    ) -> None:
         if measurement:
             self._received_measurement_values_from_pa = True
         else:
@@ -216,7 +237,7 @@ class ModelManager:
 
         if self._failed_measurement_attempts >= INVALID_MEASUREMENT_THRESHOLD:
             raise TritonModelAnalyzerException(
-                f'The first {INVALID_MEASUREMENT_THRESHOLD} attempts to acquire measurements ' \
-                'have failed. Please examine the Tritonserver/PA error logs ' \
-                'to determine what has gone wrong.'
+                f"The first {INVALID_MEASUREMENT_THRESHOLD} attempts to acquire measurements "
+                "have failed. Please examine the Tritonserver/PA error logs "
+                "to determine what has gone wrong."
             )

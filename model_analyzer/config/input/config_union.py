@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.constants import CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+
 from .config_status import ConfigStatus
 from .config_value import ConfigValue
-from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
 
 
 class ConfigUnion(ConfigValue):
@@ -23,13 +25,15 @@ class ConfigUnion(ConfigValue):
     ConfigUnion allows the value to be any of multiple ConfigValue types.
     """
 
-    def __init__(self,
-                 types,
-                 preprocess=None,
-                 required=False,
-                 validator=None,
-                 output_mapper=None,
-                 name=None):
+    def __init__(
+        self,
+        types,
+        preprocess=None,
+        required=False,
+        validator=None,
+        output_mapper=None,
+        name=None,
+    ):
         """
         Create a new ConfigUnion.
 
@@ -71,18 +75,18 @@ class ConfigUnion(ConfigValue):
         else:
             message = (
                 f'Value "{value}" cannot be set for field "{self.name()}".'
-                ' This field allows multiple types of values.'
-                ' You only need to fix one of the errors below:\n')
+                " This field allows multiple types of values."
+                " You only need to fix one of the errors below:\n"
+            )
             for config_status in config_statuses:
-                message_lines = config_status.message().split('\n')
+                message_lines = config_status.message().split("\n")
 
                 # ConfigUnion needs to repeat the same structure. The lines
                 # below make a couple of adjustments to ensure that
                 # lines are printed correctly.
                 if type(config_status.config_object()) is ConfigUnion:
-
                     # Make sure that the line is not empty
-                    if not message_lines[0].strip() == '':
+                    if not message_lines[0].strip() == "":
                         message += f"\t* {message_lines[0]}\n"
                         for message_line in message_lines[1:]:
                             message += f"\t {message_line}\n"

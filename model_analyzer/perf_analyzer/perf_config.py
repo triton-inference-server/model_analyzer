@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
 from model_analyzer.config.input.config_defaults import DEFAULT_MEASUREMENT_MODE
 from model_analyzer.constants import SECONDS_TO_MILLISECONDS_MULTIPLIER
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class PerfAnalyzerConfig:
@@ -25,37 +26,74 @@ class PerfAnalyzerConfig:
     """
 
     perf_analyzer_args = [
-        'service-kind', 'model-signature-name', 'async', 'sync',
-        'measurement-interval', 'concurrency-range', 'request-rate-range',
-        'request-distribution', 'request-intervals', 'binary-search',
-        'num-of-sequences', 'latency-threshold', 'max-threads',
-        'stability-percentage', 'max-trials', 'percentile', 'input-data',
-        'shared-memory', 'output-shared-memory-size', 'shape',
-        'sequence-length', 'sequence-id-range', 'string-length', 'string-data',
-        'measurement-mode', 'measurement-request-count', 'streaming',
-        'grpc-compression-algorithm', 'triton-server-directory',
-        'model-repository', 'ssl-grpc-use-ssl',
-        'ssl-grpc-root-certifications-file', 'ssl-grpc-private-key-file',
-        'ssl-grpc-certificate-chain-file', 'ssl-https-verify-peer',
-        'ssl-https-verify-host', 'ssl-https-ca-certificates-file',
-        'ssl-https-client-certificate-type',
-        'ssl-https-client-certificate-file', 'ssl-https-private-key-type',
-        'ssl-https-private-key-file', 'collect-metrics', 'metrics-url',
-        'metrics-interval', 'bls-composing-models'
+        "service-kind",
+        "model-signature-name",
+        "async",
+        "sync",
+        "measurement-interval",
+        "concurrency-range",
+        "request-rate-range",
+        "request-distribution",
+        "request-intervals",
+        "binary-search",
+        "num-of-sequences",
+        "latency-threshold",
+        "max-threads",
+        "stability-percentage",
+        "max-trials",
+        "percentile",
+        "input-data",
+        "shared-memory",
+        "output-shared-memory-size",
+        "shape",
+        "sequence-length",
+        "sequence-id-range",
+        "string-length",
+        "string-data",
+        "measurement-mode",
+        "measurement-request-count",
+        "streaming",
+        "grpc-compression-algorithm",
+        "triton-server-directory",
+        "model-repository",
+        "ssl-grpc-use-ssl",
+        "ssl-grpc-root-certifications-file",
+        "ssl-grpc-private-key-file",
+        "ssl-grpc-certificate-chain-file",
+        "ssl-https-verify-peer",
+        "ssl-https-verify-host",
+        "ssl-https-ca-certificates-file",
+        "ssl-https-client-certificate-type",
+        "ssl-https-client-certificate-file",
+        "ssl-https-private-key-type",
+        "ssl-https-private-key-file",
+        "collect-metrics",
+        "metrics-url",
+        "metrics-interval",
+        "bls-composing-models",
     ]
 
     input_to_options = [
-        'model-name', 'model-version', 'batch-size', 'url', 'protocol',
-        'latency-report-file', 'http-header'
+        "model-name",
+        "model-version",
+        "batch-size",
+        "url",
+        "protocol",
+        "latency-report-file",
+        "http-header",
     ]
 
-    input_to_verbose = ['verbose', 'extra-verbose', 'verbose-csv']
+    input_to_verbose = ["verbose", "extra-verbose", "verbose-csv"]
 
-    additive_args = ['input-data', 'shape']
+    additive_args = ["input-data", "shape"]
 
     boolean_args = [
-        'streaming', 'async', 'sync', 'binary-search', 'ssl-grpc-use-ssl',
-        'collect-metrics'
+        "streaming",
+        "async",
+        "sync",
+        "binary-search",
+        "ssl-grpc-use-ssl",
+        "collect-metrics",
     ]
 
     def __init__(self):
@@ -66,35 +104,35 @@ class PerfAnalyzerConfig:
         self._args = {k: None for k in self.perf_analyzer_args}
 
         self._options = {
-            '-m': None,
-            '-x': None,
-            '-b': None,
-            '-u': None,
-            '-i': None,
-            '-f': None,
-            '-H': None
+            "-m": None,
+            "-x": None,
+            "-b": None,
+            "-u": None,
+            "-i": None,
+            "-f": None,
+            "-H": None,
         }
-        self._verbose = {'-v': None, '-v -v': None, '--verbose-csv': None}
+        self._verbose = {"-v": None, "-v -v": None, "--verbose-csv": None}
 
         self._input_to_options = {
-            'model-name': '-m',
-            'model-version': '-x',
-            'batch-size': '-b',
-            'url': '-u',
-            'protocol': '-i',
-            'latency-report-file': '-f',
-            'http-header': '-H'
+            "model-name": "-m",
+            "model-version": "-x",
+            "batch-size": "-b",
+            "url": "-u",
+            "protocol": "-i",
+            "latency-report-file": "-f",
+            "http-header": "-H",
         }
 
         self._input_to_verbose = {
-            'verbose': '-v',
-            'extra-verbose': '-v -v',
-            'verbose-csv': '--verbose-csv'
+            "verbose": "-v",
+            "extra-verbose": "-v -v",
+            "verbose-csv": "--verbose-csv",
         }
 
         self._additive_args = {
-            (self._input_to_options[k] if k in self._input_to_options else k):
-            None for k in self.additive_args
+            (self._input_to_options[k] if k in self._input_to_options else k): None
+            for k in self.additive_args
         }
 
     @classmethod
@@ -147,42 +185,47 @@ class PerfAnalyzerConfig:
         """
 
         params = {
-            'model-name': model_name,
-            'latency-report-file': model_name + "-results.csv",
-            'measurement-mode': DEFAULT_MEASUREMENT_MODE,
-            'verbose-csv': '--verbose-csv'
+            "model-name": model_name,
+            "latency-report-file": model_name + "-results.csv",
+            "measurement-mode": DEFAULT_MEASUREMENT_MODE,
+            "verbose-csv": "--verbose-csv",
         }
 
-        if profile_config.triton_launch_mode == 'c_api':
-            params.update({
-                'service-kind': 'triton_c_api',
-                'triton-server-directory': profile_config.triton_install_path,
-                'model-repository': profile_config.output_model_repository_path
-            })
+        if profile_config.triton_launch_mode == "c_api":
+            params.update(
+                {
+                    "service-kind": "triton_c_api",
+                    "triton-server-directory": profile_config.triton_install_path,
+                    "model-repository": profile_config.output_model_repository_path,
+                }
+            )
         else:
-            if profile_config.client_protocol == 'http':
+            if profile_config.client_protocol == "http":
                 url = profile_config.triton_http_endpoint
             else:
                 url = profile_config.triton_grpc_endpoint
 
-            params.update({
-                'protocol': profile_config.client_protocol,
-                'url': url
-            })
+            params.update({"protocol": profile_config.client_protocol, "url": url})
 
-            metrics_interval = profile_config.monitoring_interval * SECONDS_TO_MILLISECONDS_MULTIPLIER
-            params.update({
-                'collect-metrics': 'True',
-                'metrics-url': profile_config.triton_metrics_url,
-                'metrics-interval': metrics_interval
-            })
+            metrics_interval = (
+                profile_config.monitoring_interval * SECONDS_TO_MILLISECONDS_MULTIPLIER
+            )
+            params.update(
+                {
+                    "collect-metrics": "True",
+                    "metrics-url": profile_config.triton_metrics_url,
+                    "metrics-interval": metrics_interval,
+                }
+            )
 
         if profile_config.bls_composing_models:
-            bls_composing_model_names = ','.join([
-                bls_composing_model.model_name()
-                for bls_composing_model in profile_config.bls_composing_models
-            ])
-            params.update({'bls-composing-models': bls_composing_model_names})
+            bls_composing_model_names = ",".join(
+                [
+                    bls_composing_model.model_name()
+                    for bls_composing_model in profile_config.bls_composing_models
+                ]
+            )
+            params.update({"bls-composing-models": bls_composing_model_names})
 
         self.update_config(params)
 
@@ -190,8 +233,11 @@ class PerfAnalyzerConfig:
     def from_dict(cls, perf_config_dict):
         perf_config = PerfAnalyzerConfig()
         for key in [
-                '_args', '_options', '_verbose', '_input_to_verbose',
-                '_input_to_options'
+            "_args",
+            "_options",
+            "_verbose",
+            "_input_to_verbose",
+            "_input_to_options",
         ]:
             if key in perf_config_dict:
                 setattr(perf_config, key, perf_config_dict[key])
@@ -202,7 +248,7 @@ class PerfAnalyzerConfig:
         Returns
         -------
         str
-            a string representation of the PA config 
+            a string representation of the PA config
             that removes values which can vary between
             runs, but should be ignored when determining
             if a previous (checkpointed) run can be used
@@ -224,9 +270,9 @@ class PerfAnalyzerConfig:
         """
 
         return {
-            'batch-size': self._options['-b'],
-            'concurrency-range': self._args['concurrency-range'],
-            'request-rate-range': self._args['request-rate-range']
+            "batch-size": self._options["-b"],
+            "concurrency-range": self._args["concurrency-range"],
+            "request-rate-range": self._args["request-rate-range"],
         }
 
     @classmethod
@@ -241,17 +287,17 @@ class PerfAnalyzerConfig:
             The cli string representation
         """
 
-        perf_str_tokens = cli_string.split(' ')
+        perf_str_tokens = cli_string.split(" ")
 
         try:
-            url_index = perf_str_tokens.index('-u')
+            url_index = perf_str_tokens.index("-u")
             # remove -u and the element that comes after it
             perf_str_tokens.pop(url_index)
             perf_str_tokens.pop(url_index)
         except ValueError:
             pass
 
-        return ' '.join(perf_str_tokens)
+        return " ".join(perf_str_tokens)
 
     @classmethod
     def remove_mrc_from_cli_string(cls, cli_string):
@@ -265,17 +311,18 @@ class PerfAnalyzerConfig:
             The cli string representation
         """
 
-        perf_str_tokens = cli_string.split(' ')
+        perf_str_tokens = cli_string.split(" ")
 
         mrc_index = [
-            i for i, s in enumerate(perf_str_tokens)
-            if '--measurement-request-count' in s
+            i
+            for i, s in enumerate(perf_str_tokens)
+            if "--measurement-request-count" in s
         ]
 
         if mrc_index:
             perf_str_tokens.pop(mrc_index[0])
 
-        return ' '.join(perf_str_tokens)
+        return " ".join(perf_str_tokens)
 
     def to_cli_string(self):
         """
@@ -296,7 +343,7 @@ class PerfAnalyzerConfig:
         args.extend(self._parse_verbose_options())
         args.extend(self._parse_long_options())
 
-        return ' '.join(args)
+        return " ".join(args)
 
     def _parse_short_options(self):
         """
@@ -307,9 +354,9 @@ class PerfAnalyzerConfig:
             if value:
                 if key in self._additive_args:
                     for additive_value in value:
-                        temp_args.append(f'{key} {additive_value}')
+                        temp_args.append(f"{key} {additive_value}")
                 else:
-                    temp_args.append(f'{key} {value}')
+                    temp_args.append(f"{key} {value}")
         return temp_args
 
     def _parse_verbose_options(self):
@@ -320,7 +367,7 @@ class PerfAnalyzerConfig:
 
     def _parse_long_options(self):
         """
-        Parse the perf analyzer long args 
+        Parse the perf analyzer long args
         """
         temp_args = []
         for key, value in self._args.items():
@@ -330,15 +377,15 @@ class PerfAnalyzerConfig:
                 if key in self._additive_args:
                     if type(value) is list:
                         for additive_value in value:
-                            temp_args.append(f'--{key}={additive_value}')
+                            temp_args.append(f"--{key}={additive_value}")
                     elif type(value) is str:
-                        temp_args.append(f'--{key}={value}')
+                        temp_args.append(f"--{key}={value}")
                     else:
                         raise TritonModelAnalyzerException(
                             f"Unexpected type {type(value)} for perf_analyzer_flag {key}."
                         )
                 else:
-                    temp_args.append(f'--{key}={value}')
+                    temp_args.append(f"--{key}={value}")
         return temp_args
 
     def _parse_boolean_args(self, key, value, temp_args):
@@ -346,10 +393,11 @@ class PerfAnalyzerConfig:
         Parse perf analyzer long args that should not add a value to the cli string
         """
         assert type(value) in [
-            str, type(None)
+            str,
+            type(None),
         ], f"Data type for arg {key} must be a (boolean) string instead of {type(value)}"
         if value != None and value.lower() == "true":
-            temp_args.append(f'--{key}')
+            temp_args.append(f"--{key}")
         return temp_args
 
     def __getitem__(self, key):
@@ -380,7 +428,8 @@ class PerfAnalyzerConfig:
             return self._verbose[self._input_to_verbose[key]]
         else:
             raise TritonModelAnalyzerException(
-                f'Key {key} does not exist in perf_analyzer_flags.')
+                f"Key {key} does not exist in perf_analyzer_flags."
+            )
 
     def __setitem__(self, key, value):
         """
@@ -410,7 +459,8 @@ class PerfAnalyzerConfig:
         else:
             raise TritonModelAnalyzerException(
                 f"The argument '{key}' to the perf_analyzer "
-                "is not supported by the model analyzer.")
+                "is not supported by the model analyzer."
+            )
 
     def __contains__(self, key):
         """

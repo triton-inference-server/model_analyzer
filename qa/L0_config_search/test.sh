@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -113,14 +114,14 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         fi
 
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS"
-        
+
         SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
         MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
         MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}
         METRICS_NUM_COLUMNS=10
         INFERENCE_NUM_COLUMNS=9
         SERVER_METRICS_NUM_COLUMNS=5
-        
+
         # Check that rerun skipped getting server metrics
         grep "GPU devices match checkpoint" $ANALYZER_LOG | wc -l
         if [ $? -eq 0]; then
@@ -144,10 +145,10 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         # Check that GPUs don't match and we return an error
         if [ $launch_mode != 'remote' ]; then
             sed -i 's/GPU-/GPU-1-/g' $CHECKPOINT_DIRECTORY/1.ckpt
-            
+
             run_analyzer
             if [ $? -e 0 ]; then
-                echo -e "\n***\n*** Test Output Verification Failed. model-analyzer exited sucessfully, but GPUs did not match checkpoint. \n***"
+                echo -e "\n***\n*** Test Output Verification Failed. model-analyzer exited successfully, but GPUs did not match checkpoint. \n***"
                 cat $ANALYZER_LOG
                 RET=1
             fi

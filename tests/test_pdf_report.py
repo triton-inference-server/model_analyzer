@@ -1,4 +1,6 @@
-# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +17,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from .common import test_result_collector as trc
 from model_analyzer.reports.pdf_report import PDFReport
+
+from .common import test_result_collector as trc
 
 
 class TestPDFReportMethods(trc.TestResultCollector):
@@ -32,23 +35,27 @@ class TestPDFReportMethods(trc.TestResultCollector):
         patch.stopall()
 
     def test_write_report(self):
-        with patch('model_analyzer.reports.pdf_report.pdfkit',
-                   MagicMock()) as pdfkit_mock:
-            self.report.add_title('Test PDF Report')
-            self.report.add_subheading('Throughput vs. Latency')
-            test_paragraph = ("This is a test paragraph with a lot to say."
-                              " There is more than one line in this paragraph.")
+        with patch(
+            "model_analyzer.reports.pdf_report.pdfkit", MagicMock()
+        ) as pdfkit_mock:
+            self.report.add_title("Test PDF Report")
+            self.report.add_subheading("Throughput vs. Latency")
+            test_paragraph = (
+                "This is a test paragraph with a lot to say."
+                " There is more than one line in this paragraph."
+            )
             self.report.add_paragraph(test_paragraph, font_size=14)
-            self.report.write_report('test_report_filename')
+            self.report.write_report("test_report_filename")
 
             expected_report_body = (
                 "<html><head><style></style></head><body><center><h1>Test PDF Report</h1></center><h3>Throughput vs. Latency</h3>"
-                f"<div style=\"font-size:14\"><p>{test_paragraph}</p></div>"
-                "</body></html>")
-            pdfkit_mock.from_string.assert_called_with(expected_report_body,
-                                                       'test_report_filename',
-                                                       options={'quiet': ''})
+                f'<div style="font-size:14"><p>{test_paragraph}</p></div>'
+                "</body></html>"
+            )
+            pdfkit_mock.from_string.assert_called_with(
+                expected_report_body, "test_report_filename", options={"quiet": ""}
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +15,8 @@
 # limitations under the License.
 
 import abc
-from typing import List, Optional, Generator, Any
+from typing import Any, Generator, List, Optional
+
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 
@@ -24,13 +27,15 @@ class ConfigGeneratorInterface(abc.ABC):
 
     @classmethod
     def __subclasshook__(cls, subclass: Any) -> bool:
-        return (hasattr(subclass, '__init__') and \
-                callable(subclass.__init__) and \
-                hasattr(subclass, 'get_configs') and \
-                callable(subclass.get_configs) and \
-                hasattr(subclass, 'set_last_results') and \
-                callable(subclass.set_last_results) or \
-                NotImplemented)
+        return (
+            hasattr(subclass, "__init__")
+            and callable(subclass.__init__)
+            and hasattr(subclass, "get_configs")
+            and callable(subclass.get_configs)
+            and hasattr(subclass, "set_last_results")
+            and callable(subclass.set_last_results)
+            or NotImplemented
+        )
 
     @abc.abstractmethod
     def __init__(self) -> None:
@@ -42,5 +47,6 @@ class ConfigGeneratorInterface(abc.ABC):
 
     @abc.abstractmethod
     def set_last_results(
-            self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
+        self, measurements: List[Optional[RunConfigMeasurement]]
+    ) -> None:
         raise NotImplementedError

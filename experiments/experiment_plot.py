@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -101,17 +103,19 @@ class ExperimentPlot:
         result = result.head(n=n).reset_index(drop=True)
         return result
 
-    def plot_histogram(self,
-                       data,
-                       title,
-                       x_label,
-                       y_label="Frequency",
-                       xticks=None,
-                       bins=None,
-                       align="left",
-                       figsize=None,
-                       fontsize=None,
-                       alpha=0.7):
+    def plot_histogram(
+        self,
+        data,
+        title,
+        x_label,
+        y_label="Frequency",
+        xticks=None,
+        bins=None,
+        align="left",
+        figsize=None,
+        fontsize=None,
+        alpha=0.7,
+    ):
         """
         Plot histogram of the given data.
 
@@ -121,13 +125,15 @@ class ExperimentPlot:
             A dictionary that maps a name to its corresponding
             data of type pd.DataFrame.
         """
-        self._ax = data.plot(kind="hist",
-                             xticks=xticks,
-                             bins=bins,
-                             align=align,
-                             figsize=figsize,
-                             fontsize=fontsize,
-                             alpha=alpha)
+        self._ax = data.plot(
+            kind="hist",
+            xticks=xticks,
+            bins=bins,
+            align=align,
+            figsize=figsize,
+            fontsize=fontsize,
+            alpha=alpha,
+        )
 
         self._ax.set_title(title, fontsize=fontsize)
         self._ax.set_xlabel(x_label, fontsize=fontsize)
@@ -163,5 +169,7 @@ class ExperimentPlot:
         if self._ax:
             self._fig.savefig(filepath, dpi=dpi)
         else:
-            raise ValueError("A plot has not been generated yet. "
-                             "Please plot the figure before saving it.")
+            raise ValueError(
+                "A plot has not been generated yet. "
+                "Please plot the figure before saving it."
+            )

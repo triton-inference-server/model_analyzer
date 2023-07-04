@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,7 +49,7 @@ class PerfThroughput(IncreasingRecord):
         -------
         Total value of the list
         """
-        return (lambda values: sum(values))
+        return lambda values: sum(values)
 
     @staticmethod
     def header(aggregation_tag=False):
@@ -55,11 +57,11 @@ class PerfThroughput(IncreasingRecord):
         Parameters
         ----------
         aggregation_tag: bool
-            An optional tag that may be displayed 
-            as part of the header indicating that 
-            this record has been aggregated using 
-            max, min or average etc. 
-             
+            An optional tag that may be displayed
+            as part of the header indicating that
+            this record has been aggregated using
+            max, min or average etc.
+
         Returns
         -------
         str
@@ -79,8 +81,8 @@ class PerfThroughput(IncreasingRecord):
 
     def __lt__(self, other):
         """
-        Allows checking if 
-        this record is less than 
+        Allows checking if
+        this record is less than
         the other
         """
 

@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,13 +17,13 @@
 import ctypes
 import json
 
+import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
 import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
-import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
 import model_analyzer.monitor.dcgm.dcgm_value as dcgmvalue
 
 
-class DcgmFieldValue():
+class DcgmFieldValue:
     """
     Helper class that makes a python-friendly field value from one returned
     from the python bindings
@@ -49,8 +51,10 @@ class DcgmFieldValue():
         if self.fieldType == dcgm_fields.DCGM_FT_DOUBLE:
             self.value = float(rawValue.value.dbl)
             self.isBlank = dcgmvalue.DCGM_FP64_IS_BLANK(self.value)
-        elif self.fieldType == dcgm_fields.DCGM_FT_INT64 or \
-                self.fieldType == dcgm_fields.DCGM_FT_TIMESTAMP:
+        elif (
+            self.fieldType == dcgm_fields.DCGM_FT_INT64
+            or self.fieldType == dcgm_fields.DCGM_FT_TIMESTAMP
+        ):
             self.value = int(rawValue.value.i64)
             self.isBlank = dcgmvalue.DCGM_INT64_IS_BLANK(self.value)
         elif self.fieldType == dcgm_fields.DCGM_FT_STRING:
@@ -59,24 +63,28 @@ class DcgmFieldValue():
         elif self.fieldType == dcgm_fields.DCGM_FT_BINARY:
             if self.fieldId == dcgm_fields.DCGM_FI_DEV_ACCOUNTING_DATA:
                 accStats = dcgm_structs.c_dcgmDevicePidAccountingStats_v1()
-                ctypes.memmove(ctypes.addressof(accStats), rawValue.value.blob,
-                               accStats.FieldsSizeof())
+                ctypes.memmove(
+                    ctypes.addressof(accStats),
+                    rawValue.value.blob,
+                    accStats.FieldsSizeof(),
+                )
             if self.fieldId == dcgm_fields.DCGM_FI_DEV_COMPUTE_PIDS:
                 accStats = dcgm_structs.c_dcgmDeviceVgpuProcessUtilInfo_v1()
-                ctypes.memmove(ctypes.addressof(accStats), rawValue.value.blob,
-                               accStats.FieldsSizeof())
+                ctypes.memmove(
+                    ctypes.addressof(accStats),
+                    rawValue.value.blob,
+                    accStats.FieldsSizeof(),
+                )
             elif self.fieldId == dcgm_fields.DCGM_FI_SYNC_BOOST:
                 # Not exposed publicly for now
                 self.value = None
             else:
-                raise Exception("Blobs not handled yet for fieldId %d" %
-                                self.fieldId)
+                raise Exception("Blobs not handled yet for fieldId %d" % self.fieldId)
         else:
             raise Exception("Unhandled fieldType: %s" % self.fieldType)
 
 
 class DcgmFieldValueTimeSeries:
-
     def __init__(self):
         # Values in timestamp order
         self.values = []
@@ -109,43 +117,42 @@ class FieldValueEncoder(json.JSONEncoder):
         i = 0
         for key in obj:
             if isinstance(key, DcgmFieldValue):
-                if (key.isBlank):
+                if key.isBlank:
                     continue
-                nested_json.append({
-                    'Timestamp': key.ts,
-                    'FieldId': key.fieldId,
-                    'Value': key.value
-                })
+                nested_json.append(
+                    {"Timestamp": key.ts, "FieldId": key.fieldId, "Value": key.value}
+                )
             else:
                 return json.JSONEncoder.default(
-                    self, obj)  # Let default encoder throw exception
+                    self, obj
+                )  # Let default encoder throw exception
         return nested_json
 
 
-def py_helper_dcgm_field_values_since_callback(gpuId, values, numValues,
-                                               userData):
-
+def py_helper_dcgm_field_values_since_callback(gpuId, values, numValues, userData):
     userData = ctypes.cast(userData, ctypes.py_object).value
     userData._ProcessValues(gpuId, values[0:numValues])
     return 0
 
 
-helper_dcgm_field_values_since_callback =\
-    dcgm_agent.dcgmFieldValueEnumeration_f(
-        py_helper_dcgm_field_values_since_callback
-        )
+helper_dcgm_field_values_since_callback = dcgm_agent.dcgmFieldValueEnumeration_f(
+    py_helper_dcgm_field_values_since_callback
+)
 
 
-def py_helper_dcgm_field_values_since_callback_v2(entityGroupId, entityId,
-                                                  values, numValues, userData):
+def py_helper_dcgm_field_values_since_callback_v2(
+    entityGroupId, entityId, values, numValues, userData
+):
     userData = ctypes.cast(userData, ctypes.py_object).value
     userData._ProcessValues(entityGroupId, entityId, values[0:numValues])
     return 0
 
 
-helper_dcgm_field_values_since_callback_v2 =\
+helper_dcgm_field_values_since_callback_v2 = (
     dcgm_agent.dcgmFieldValueEntityEnumeration_f(
-        py_helper_dcgm_field_values_since_callback_v2)
+        py_helper_dcgm_field_values_since_callback_v2
+    )
+)
 
 
 class DcgmFieldValueCollection:
@@ -189,15 +196,23 @@ class DcgmFieldValueCollection:
         that ahead of time with dcgmGroup.samples.WatchFields()
         """
         ret = dcgm_agent.dcgmGetLatestValues(
-            self._handle, self._groupId, fieldGroup.fieldGroupId,
-            helper_dcgm_field_values_since_callback, self)
+            self._handle,
+            self._groupId,
+            fieldGroup.fieldGroupId,
+            helper_dcgm_field_values_since_callback,
+            self,
+        )
         # Will throw exception on error
         dcgm_structs._dcgmCheckReturn(ret)
 
     def GetLatestValues_v2(self, fieldGroup):
         ret = dcgm_agent.dcgmGetLatestValues_v2(
-            self._handle, self._groupId, fieldGroup.fieldGroupId,
-            helper_dcgm_field_values_since_callback_v2, self)
+            self._handle,
+            self._groupId,
+            fieldGroup.fieldGroupId,
+            helper_dcgm_field_values_since_callback_v2,
+            self,
+        )
         # Will throw exception on error
         dcgm_structs._dcgmCheckReturn(ret)
 
@@ -216,8 +231,17 @@ class DcgmFieldGroupWatcher(DcgmFieldValueCollection):
     from it
     """
 
-    def __init__(self, handle, groupId, fieldGroup, operationMode, updateFreq,
-                 maxKeepAge, maxKeepSamples, startTimestamp):
+    def __init__(
+        self,
+        handle,
+        groupId,
+        fieldGroup,
+        operationMode,
+        updateFreq,
+        maxKeepAge,
+        maxKeepSamples,
+        startTimestamp,
+    ):
         """
         handle :
             DCGM handle from dcgm_agent.dcgmInit()
@@ -261,9 +285,14 @@ class DcgmFieldGroupWatcher(DcgmFieldValueCollection):
         """
         Initiate the host engine watch on the fields
         """
-        ret = dcgm_agent.dcgmWatchFields(self._handle, self._groupId,
-                                         self._fieldGroup, self._updateFreq,
-                                         self._maxKeepAge, self._maxKeepSamples)
+        ret = dcgm_agent.dcgmWatchFields(
+            self._handle,
+            self._groupId,
+            self._fieldGroup,
+            self._updateFreq,
+            self._maxKeepAge,
+            self._maxKeepSamples,
+        )
         # Will throw exception on error
         dcgm_structs._dcgmCheckReturn(ret)
 
@@ -293,25 +322,30 @@ class DcgmFieldGroupWatcher(DcgmFieldValueCollection):
             dcgm_structs._dcgmCheckReturn(ret)
 
         self._nextSinceTimestamp = dcgm_agent.dcgmGetValuesSince(
-            self._handle, self._groupId, self._fieldGroup,
-            self._nextSinceTimestamp, helper_dcgm_field_values_since_callback,
-            self)
+            self._handle,
+            self._groupId,
+            self._fieldGroup,
+            self._nextSinceTimestamp,
+            helper_dcgm_field_values_since_callback,
+            self,
+        )
         afterCount = self._numValuesSeen
         return afterCount - beforeCount
 
 
-def py_helper_dcgm_field_values_since_entity_callback(entityGroupId, entityId,
-                                                      values, numValues,
-                                                      userData):
-
+def py_helper_dcgm_field_values_since_entity_callback(
+    entityGroupId, entityId, values, numValues, userData
+):
     userData = ctypes.cast(userData, ctypes.py_object).value
     userData._ProcessValues(entityGroupId, entityId, values[0:numValues])
     return 0
 
 
-helper_dcgm_field_values_since_entity_callback = \
+helper_dcgm_field_values_since_entity_callback = (
     dcgm_agent.dcgmFieldValueEntityEnumeration_f(
-        py_helper_dcgm_field_values_since_entity_callback)
+        py_helper_dcgm_field_values_since_entity_callback
+    )
+)
 
 
 class DcgmFieldValueEntityCollection:
@@ -347,10 +381,10 @@ class DcgmFieldValueEntityCollection:
 
             if value.fieldId not in self.values[entityGroupId][entityId]:
                 self.values[entityGroupId][entityId][
-                    value.fieldId] = DcgmFieldValueTimeSeries()
+                    value.fieldId
+                ] = DcgmFieldValueTimeSeries()
 
-            self.values[entityGroupId][entityId][value.fieldId].InsertValue(
-                value)
+            self.values[entityGroupId][entityId][value.fieldId].InsertValue(value)
 
     def GetLatestValues(self, fieldGroup):
         """
@@ -361,8 +395,12 @@ class DcgmFieldValueEntityCollection:
         that ahead of time with dcgmGroup.samples.WatchFields()
         """
         ret = dcgm_agent.dcgmGetLatestValues_v2(
-            self._handle, self._groupId, fieldGroup.fieldGroupId,
-            helper_dcgm_field_values_since_entity_callback, self)
+            self._handle,
+            self._groupId,
+            fieldGroup.fieldGroupId,
+            helper_dcgm_field_values_since_entity_callback,
+            self,
+        )
         # Will throw exception on error
         dcgm_structs._dcgmCheckReturn(ret)
 
@@ -381,8 +419,17 @@ class DcgmFieldGroupEntityWatcher(DcgmFieldValueEntityCollection):
     returned from it
     """
 
-    def __init__(self, handle, groupId, fieldGroup, operationMode, updateFreq,
-                 maxKeepAge, maxKeepSamples, startTimestamp):
+    def __init__(
+        self,
+        handle,
+        groupId,
+        fieldGroup,
+        operationMode,
+        updateFreq,
+        maxKeepAge,
+        maxKeepSamples,
+        startTimestamp,
+    ):
         """
         Constructor
 
@@ -427,10 +474,14 @@ class DcgmFieldGroupEntityWatcher(DcgmFieldValueEntityCollection):
         """
         Initiate the host engine watch on the fields
         """
-        ret = dcgm_agent.dcgmWatchFields(self._handle, self._groupId,
-                                         self._fieldGroup.fieldGroupId,
-                                         self._updateFreq, self._maxKeepAge,
-                                         self._maxKeepSamples)
+        ret = dcgm_agent.dcgmWatchFields(
+            self._handle,
+            self._groupId,
+            self._fieldGroup.fieldGroupId,
+            self._updateFreq,
+            self._maxKeepAge,
+            self._maxKeepSamples,
+        )
         # Will throw exception on error
         dcgm_structs._dcgmCheckReturn(ret)
 
@@ -455,8 +506,12 @@ class DcgmFieldGroupEntityWatcher(DcgmFieldValueEntityCollection):
             dcgm_structs._dcgmCheckReturn(ret)
 
         self._nextSinceTimestamp = dcgm_agent.dcgmGetValuesSince_v2(
-            self._handle, self._groupId, self._fieldGroup.fieldGroupId,
+            self._handle,
+            self._groupId,
+            self._fieldGroup.fieldGroupId,
             self._nextSinceTimestamp,
-            helper_dcgm_field_values_since_entity_callback, self)
+            helper_dcgm_field_values_since_entity_callback,
+            self,
+        )
         afterCount = self._numValuesSeen
         return afterCount - beforeCount

@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,27 +14,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+import os
+
+from model_analyzer.config.input.config_utils import (
+    file_path_validator,
+    parent_path_validator,
+)
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
-from model_analyzer.config.input.config_utils import file_path_validator, parent_path_validator
-from .config_union import ConfigUnion
-from .config_object import ConfigObject
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
+from .config_command import ConfigCommand
+from .config_defaults import (
+    DEFAULT_CHECKPOINT_DIRECTORY,
+    DEFAULT_EXPORT_PATH,
+    DEFAULT_OFFLINE_REPORT_PLOTS,
+    DEFAULT_ONLINE_REPORT_PLOTS,
+    DEFAULT_REPORT_FORMAT,
+)
 from .config_enum import ConfigEnum
+from .config_field import ConfigField
 from .config_list_generic import ConfigListGeneric
 from .config_list_string import ConfigListString
-from .config_defaults import \
-    DEFAULT_CHECKPOINT_DIRECTORY, DEFAULT_EXPORT_PATH, \
-    DEFAULT_OFFLINE_REPORT_PLOTS, DEFAULT_ONLINE_REPORT_PLOTS, DEFAULT_REPORT_FORMAT
-from .config_field import ConfigField
+from .config_object import ConfigObject
 from .config_primitive import ConfigPrimitive
-from .config_command import ConfigCommand
-
-from .objects.config_plot import ConfigPlot
+from .config_union import ConfigUnion
 from .objects.config_model_report_spec import ConfigModelReportSpec
-
-import os
-import logging
+from .objects.config_plot import ConfigPlot
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -44,99 +52,122 @@ class ConfigCommandReport(ConfigCommand):
 
     def _fill_config(self):
         """
-        Builder function makes calls to add config to 
+        Builder function makes calls to add config to
         fill the config with options
         """
 
         self._add_config(
             ConfigField(
-                'config_file',
-                flags=['-f', '--config-file'],
+                "config_file",
+                flags=["-f", "--config-file"],
                 field_type=ConfigPrimitive(str),
-                description="Path to Config File for subcommand 'report'."))
+                description="Path to Config File for subcommand 'report'.",
+            )
+        )
         self._add_config(
             ConfigField(
-                'checkpoint_directory',
-                flags=['-s', '--checkpoint-directory'],
+                "checkpoint_directory",
+                flags=["-s", "--checkpoint-directory"],
                 default_value=DEFAULT_CHECKPOINT_DIRECTORY,
-                field_type=ConfigPrimitive(str,
-                                           validator=parent_path_validator),
-                description=
-                "Full path to directory to which to read and write checkpoints and profile data."
-            ))
-        self._add_config(
-            ConfigField('export_path',
-                        flags=['-e', '--export-path'],
-                        default_value=DEFAULT_EXPORT_PATH,
-                        field_type=ConfigPrimitive(
-                            str, validator=file_path_validator),
-                        description=
-                        "Full path to directory in which to store the results"))
-        plots_scheme = ConfigObject(schema={
-            '*':
-                ConfigObject(
-                    schema={
-                        'title': ConfigPrimitive(type_=str),
-                        'x_axis': ConfigPrimitive(type_=str),
-                        'y_axis': ConfigPrimitive(type_=str),
-                        'monotonic': ConfigPrimitive(type_=bool)
-                    })
-        },
-                                    output_mapper=ConfigPlot.from_object)
+                field_type=ConfigPrimitive(str, validator=parent_path_validator),
+                description="Full path to directory to which to read and write checkpoints and profile data.",
+            )
+        )
         self._add_config(
             ConfigField(
-                'plots',
-                field_type=ConfigUnion([
-                    plots_scheme,
-                    ConfigListGeneric(type_=plots_scheme,
-                                      output_mapper=ConfigPlot.from_list)
-                ]),
+                "export_path",
+                flags=["-e", "--export-path"],
+                default_value=DEFAULT_EXPORT_PATH,
+                field_type=ConfigPrimitive(str, validator=file_path_validator),
+                description="Full path to directory in which to store the results",
+            )
+        )
+        plots_scheme = ConfigObject(
+            schema={
+                "*": ConfigObject(
+                    schema={
+                        "title": ConfigPrimitive(type_=str),
+                        "x_axis": ConfigPrimitive(type_=str),
+                        "y_axis": ConfigPrimitive(type_=str),
+                        "monotonic": ConfigPrimitive(type_=bool),
+                    }
+                )
+            },
+            output_mapper=ConfigPlot.from_object,
+        )
+        self._add_config(
+            ConfigField(
+                "plots",
+                field_type=ConfigUnion(
+                    [
+                        plots_scheme,
+                        ConfigListGeneric(
+                            type_=plots_scheme, output_mapper=ConfigPlot.from_list
+                        ),
+                    ]
+                ),
                 default_value=DEFAULT_ONLINE_REPORT_PLOTS,
-                description=
-                'Model analyzer uses the information in this section to construct plots of the results.'
-            ))
+                description="Model analyzer uses the information in this section to construct plots of the results.",
+            )
+        )
 
         report_model_scheme = ConfigObject(
             required=True,
             schema={
                 # Any key is allowed, but the keys must follow the pattern
                 # below
-                '*': ConfigObject(schema={'plots': plots_scheme})
+                "*": ConfigObject(schema={"plots": plots_scheme})
             },
-            output_mapper=ConfigModelReportSpec.
-            model_object_to_config_model_report_spec)
+            output_mapper=ConfigModelReportSpec.model_object_to_config_model_report_spec,
+        )
         self._add_config(
             ConfigField(
-                'report_model_configs',
-                flags=['-n', '--report-model-configs'],
-                field_type=ConfigUnion([
-                    report_model_scheme,
-                    ConfigListGeneric(ConfigUnion([
+                "report_model_configs",
+                flags=["-n", "--report-model-configs"],
+                field_type=ConfigUnion(
+                    [
                         report_model_scheme,
-                        ConfigPrimitive(str,
-                                        output_mapper=ConfigModelReportSpec.
-                                        model_str_to_config_model_report_spec)
-                    ]),
-                                      required=True,
-                                      output_mapper=ConfigModelReportSpec.
-                                      model_mixed_to_config_model_report_spec),
-                    ConfigListString(output_mapper=ConfigModelReportSpec.
-                                     model_list_to_config_model_report_spec),
-                ],
-                                       required=True),
+                        ConfigListGeneric(
+                            ConfigUnion(
+                                [
+                                    report_model_scheme,
+                                    ConfigPrimitive(
+                                        str,
+                                        output_mapper=ConfigModelReportSpec.model_str_to_config_model_report_spec,
+                                    ),
+                                ]
+                            ),
+                            required=True,
+                            output_mapper=ConfigModelReportSpec.model_mixed_to_config_model_report_spec,
+                        ),
+                        ConfigListString(
+                            output_mapper=ConfigModelReportSpec.model_list_to_config_model_report_spec
+                        ),
+                    ],
+                    required=True,
+                ),
                 description=(
-                    'Comma delimited list of the names of model configs'
-                    ' for which to generate detailed reports.')))
+                    "Comma delimited list of the names of model configs"
+                    " for which to generate detailed reports."
+                ),
+            )
+        )
         self._add_config(
-            ConfigField('output_formats',
-                        flags=['-o', '--output-formats'],
-                        default_value=DEFAULT_REPORT_FORMAT,
-                        field_type=ConfigUnion([
-                            ConfigListGeneric(type_=ConfigEnum(
-                                choices=['pdf', 'csv', 'png'])),
-                            ConfigListString()
-                        ]),
-                        description='Output file format for detailed report.'))
+            ConfigField(
+                "output_formats",
+                flags=["-o", "--output-formats"],
+                default_value=DEFAULT_REPORT_FORMAT,
+                field_type=ConfigUnion(
+                    [
+                        ConfigListGeneric(
+                            type_=ConfigEnum(choices=["pdf", "csv", "png"])
+                        ),
+                        ConfigListString(),
+                    ]
+                ),
+                description="Output file format for detailed report.",
+            )
+        )
 
     def set_config_values(self, args):
         """
@@ -156,11 +187,10 @@ class ConfigCommandReport(ConfigCommand):
             this exception
         """
 
-        if args.mode == 'online':
-            self._fields['plots'].set_default_value(DEFAULT_ONLINE_REPORT_PLOTS)
-        elif args.mode == 'offline':
-            self._fields['plots'].set_default_value(
-                DEFAULT_OFFLINE_REPORT_PLOTS)
+        if args.mode == "online":
+            self._fields["plots"].set_default_value(DEFAULT_ONLINE_REPORT_PLOTS)
+        elif args.mode == "offline":
+            self._fields["plots"].set_default_value(DEFAULT_OFFLINE_REPORT_PLOTS)
 
         super().set_config_values(args)
 
@@ -180,7 +210,8 @@ class ConfigCommandReport(ConfigCommand):
             )
         elif self.export_path and not os.path.isdir(self.export_path):
             raise TritonModelAnalyzerException(
-                f"Export path {self.export_path} is not a directory.")
+                f"Export path {self.export_path} is not a directory."
+            )
 
     def _autofill_values(self):
         """
@@ -194,25 +225,28 @@ class ConfigCommandReport(ConfigCommand):
 
             # Plots
             if not model.plots():
-                new_report_model_config['plots'] = {
+                new_report_model_config["plots"] = {
                     plot.name(): {
-                        'title': plot.title(),
-                        'x_axis': plot.x_axis(),
-                        'y_axis': plot.y_axis(),
-                        'monotonic': plot.monotonic()
-                    } for plot in self.plots
+                        "title": plot.title(),
+                        "x_axis": plot.x_axis(),
+                        "y_axis": plot.y_axis(),
+                        "monotonic": plot.monotonic(),
+                    }
+                    for plot in self.plots
                 }
             else:
-                new_report_model_config['plots'] = {
+                new_report_model_config["plots"] = {
                     plot.name(): {
-                        'title': plot.title(),
-                        'x_axis': plot.x_axis(),
-                        'y_axis': plot.y_axis(),
-                        'monotonic': plot.monotonic()
-                    } for plot in model.plots()
+                        "title": plot.title(),
+                        "x_axis": plot.x_axis(),
+                        "y_axis": plot.y_axis(),
+                        "monotonic": plot.monotonic(),
+                    }
+                    for plot in model.plots()
                 }
 
             new_report_model_configs[
-                model.model_config_name()] = new_report_model_config
+                model.model_config_name()
+            ] = new_report_model_config
 
-        self._fields['report_model_configs'].set_value(new_report_model_configs)
+        self._fields["report_model_configs"].set_value(new_report_model_configs)

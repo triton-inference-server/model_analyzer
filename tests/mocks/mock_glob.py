@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import MagicMock, Mock, patch
+
 from .mock_base import MockBase
-from unittest.mock import Mock, MagicMock, patch
 
 
 class MockGlobMethods(MockBase):
@@ -22,10 +25,10 @@ class MockGlobMethods(MockBase):
     """
 
     def __init__(self):
-        glob_attrs = {'glob': MagicMock(return_value=[])}
+        glob_attrs = {"glob": MagicMock(return_value=[])}
         self.patcher_glob = patch(
-            'model_analyzer.state.analyzer_state_manager.glob',
-            Mock(**glob_attrs))
+            "model_analyzer.state.analyzer_state_manager.glob", Mock(**glob_attrs)
+        )
         super().__init__()
 
     def start(self):

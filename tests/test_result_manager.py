@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,25 +15,26 @@
 # limitations under the License.
 
 import unittest
+from unittest.mock import MagicMock, patch
 
+from model_analyzer.config.input.config_command_report import ConfigCommandReport
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.result.constraint_manager import ConstraintManager
+from model_analyzer.result.result_manager import ResultManager
+from model_analyzer.result.sorted_results import SortedResults
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
 from .common import test_result_collector as trc
-from .common.test_utils import load_single_model_result_manager, load_multi_model_result_manager
-
-from unittest.mock import patch, MagicMock
-from model_analyzer.result.sorted_results import SortedResults
-from model_analyzer.result.result_manager import ResultManager
-from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
-from model_analyzer.config.input.config_command_report import ConfigCommandReport
-from model_analyzer.result.constraint_manager import ConstraintManager
+from .common.test_utils import (
+    load_multi_model_result_manager,
+    load_single_model_result_manager,
+)
 
 
 class TestResultManager(trc.TestResultCollector):
-
     def test_server_data(self):
         """
-        Test that add_server_data() and get_server_only_data() 
+        Test that add_server_data() and get_server_only_data()
         are effectively mirrored set/get functions
         """
 
@@ -39,9 +42,10 @@ class TestResultManager(trc.TestResultCollector):
         result_manager = ResultManager(
             config=ConfigCommandReport(),
             state_manager=state_manager,
-            constraint_manager=ConstraintManager(config=MagicMock()))
+            constraint_manager=ConstraintManager(config=MagicMock()),
+        )
 
-        server_data = {'a': 5, 'b': 7}
+        server_data = {"a": 5, "b": 7}
         result_manager.add_server_data(server_data)
 
         self.assertEqual(server_data, result_manager.get_server_only_data())
@@ -49,7 +53,7 @@ class TestResultManager(trc.TestResultCollector):
     def test_measurements(self):
         """
         Test add_run_config_measurement and get_model_configs_run_config_measurements
-        
+
         Confirm that run_config_measurements are stored per-model, and then per-variant, and
         then in a list per-representation
         Confirm that the measurements can be read out via get_model_configs_run_config_measurements()
@@ -59,7 +63,8 @@ class TestResultManager(trc.TestResultCollector):
         result_manager = ResultManager(
             config=ConfigCommandReport(),
             state_manager=state_manager,
-            constraint_manager=ConstraintManager(config=MagicMock()))
+            constraint_manager=ConstraintManager(config=MagicMock()),
+        )
 
         fake_run_config1a = MagicMock()
         fake_run_config1a.models_name.return_value = "Model1"
@@ -86,45 +91,53 @@ class TestResultManager(trc.TestResultCollector):
         rcm1c = MagicMock()
         rcm2 = MagicMock()
 
-        result_manager._add_rcm_to_results(run_config=fake_run_config1a,
-                                           run_config_measurement=rcm1a)
-        result_manager._add_rcm_to_results(run_config=fake_run_config1b,
-                                           run_config_measurement=rcm1b)
-        result_manager._add_rcm_to_results(run_config=fake_run_config1c,
-                                           run_config_measurement=rcm1c)
-        result_manager._add_rcm_to_results(run_config=fake_run_config2,
-                                           run_config_measurement=rcm2)
+        result_manager._add_rcm_to_results(
+            run_config=fake_run_config1a, run_config_measurement=rcm1a
+        )
+        result_manager._add_rcm_to_results(
+            run_config=fake_run_config1b, run_config_measurement=rcm1b
+        )
+        result_manager._add_rcm_to_results(
+            run_config=fake_run_config1c, run_config_measurement=rcm1c
+        )
+        result_manager._add_rcm_to_results(
+            run_config=fake_run_config2, run_config_measurement=rcm2
+        )
 
         config, measurements = result_manager.get_model_configs_run_config_measurements(
-            "Model1_config_default")
+            "Model1_config_default"
+        )
         self.assertEqual(config, fake_run_config1a)
         self.assertEqual(2, len(measurements))
 
         config, measurements = result_manager.get_model_configs_run_config_measurements(
-            "Model1_config_0")
+            "Model1_config_0"
+        )
         self.assertEqual(config, fake_run_config1c)
         self.assertEqual(1, len(measurements))
 
         config, measurements = result_manager.get_model_configs_run_config_measurements(
-            "Model2_config_default")
+            "Model2_config_default"
+        )
         self.assertEqual(config, fake_run_config2)
         self.assertEqual(1, len(measurements))
 
     def test_get_single_model_names(self):
-        """ Test get_model_names for a single-model run """
+        """Test get_model_names for a single-model run"""
         result_manager, _ = load_single_model_result_manager()
         self.assertEqual(result_manager.get_model_names(), ["add_sub"])
 
     def test_get_multi_model_names(self):
-        """ Test get_model_names for a multi-model run """
+        """Test get_model_names for a multi-model run"""
         result_manager, _ = load_multi_model_result_manager()
-        self.assertEqual(result_manager.get_model_names(),
-                         ["resnet50_libtorch,vgg19_libtorch"])
+        self.assertEqual(
+            result_manager.get_model_names(), ["resnet50_libtorch,vgg19_libtorch"]
+        )
 
     def test_get_model_sorted_results_bad_name(self):
-        """ 
-        Test get_model_sorted_results will assert when called 
-        with name that doesn't exist 
+        """
+        Test get_model_sorted_results will assert when called
+        with name that doesn't exist
         """
 
         result_manager, _ = load_multi_model_result_manager()
@@ -132,9 +145,9 @@ class TestResultManager(trc.TestResultCollector):
             result_manager.get_model_sorted_results("SHOULD_ERROR")
 
     def test_get_single_model_sorted_results(self):
-        """ 
+        """
         Test get_model_sorted_results returns a valid list
-        with only results for that model 
+        with only results for that model
         """
         result_manager, _ = load_single_model_result_manager()
         result_manager._add_rcm_to_results(MagicMock(), MagicMock())
@@ -143,10 +156,11 @@ class TestResultManager(trc.TestResultCollector):
         self.assertEqual(5, len(sorted_results.results()))
 
     def test_get_multi_model_sorted_results(self):
-        """ Test get_model_sorted_results returns a valid list """
+        """Test get_model_sorted_results returns a valid list"""
         result_manager, _ = load_multi_model_result_manager()
         sorted_results = result_manager.get_model_sorted_results(
-            "resnet50_libtorch,vgg19_libtorch")
+            "resnet50_libtorch,vgg19_libtorch"
+        )
         self.assertTrue(isinstance(sorted_results, SortedResults))
         self.assertEqual(9, len(sorted_results.results()))
 
@@ -168,8 +182,9 @@ class TestResultManager(trc.TestResultCollector):
         old_profile_models = result_manager._config.profile_models
         old_profile_models.append(fake_model)
         result_manager._config.profile_models = old_profile_models
-        result_manager._run_comparators[
-            'FakeModel'] = result_manager._run_comparators['add_sub']
+        result_manager._run_comparators["FakeModel"] = result_manager._run_comparators[
+            "add_sub"
+        ]
 
         fake_run_config = MagicMock()
         fake_run_config.models_name.return_value = "FakeModel"

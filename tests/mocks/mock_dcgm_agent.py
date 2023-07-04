@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,15 +19,14 @@ from unittest.mock import MagicMock
 import model_analyzer.monitor.dcgm.dcgm_structs as structs
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-TEST_PCI_BUS_ID = '00000000:6A:00.0'
-TEST_UUID = 'dddddddd-bbbb-aaaa-cccc-ffffffffffff'
+TEST_PCI_BUS_ID = "00000000:6A:00.0"
+TEST_UUID = "dddddddd-bbbb-aaaa-cccc-ffffffffffff"
 
 
 class MockDCGMAgent:
-
     device_groups = {}
     field_groups = {}
-    devices = [{'pci_bus_id': TEST_PCI_BUS_ID, 'uuid': TEST_UUID}]
+    devices = [{"pci_bus_id": TEST_PCI_BUS_ID, "uuid": TEST_UUID}]
 
     @staticmethod
     def dcgmInit():
@@ -81,8 +82,8 @@ class MockDCGMAgent:
 
         gpu_device = MockDCGMAgent.devices[device]
         device_attribute = MagicMock()
-        device_attribute.identifiers.pciBusId = gpu_device['pci_bus_id']
-        device_attribute.identifiers.uuid = gpu_device['uuid']
+        device_attribute.identifiers.pciBusId = gpu_device["pci_bus_id"]
+        device_attribute.identifiers.uuid = gpu_device["uuid"]
         return device_attribute
 
     @staticmethod
@@ -148,7 +149,7 @@ class MockDCGMAgent:
 
         if gpu_device_id in device_group:
             raise TritonModelAnalyzerException(
-                f'GPU device {gpu_device_id} already exists in the device group'
+                f"GPU device {gpu_device_id} already exists in the device group"
             )
 
         device_group.append(gpu_device_id)

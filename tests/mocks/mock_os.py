@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .mock_base import MockBase
-from unittest.mock import Mock, MagicMock, patch
 import os
+from unittest.mock import MagicMock, Mock, patch
+
+from .mock_base import MockBase
 
 
 class MockOSMethods(MockBase):
@@ -24,22 +27,20 @@ class MockOSMethods(MockBase):
 
     def __init__(self, mock_paths):
         path_attrs = {
-            'join': MagicMock(return_value=""),
-            'abspath': MagicMock(return_value=""),
-            'isdir': MagicMock(return_value=True),
-            'exists': MagicMock(return_value=True),
-            'isfile': MagicMock(return_value=True),
-            'split': os.path.split
+            "join": MagicMock(return_value=""),
+            "abspath": MagicMock(return_value=""),
+            "isdir": MagicMock(return_value=True),
+            "exists": MagicMock(return_value=True),
+            "isfile": MagicMock(return_value=True),
+            "split": os.path.split,
         }
         os_attrs = {
-            'path': Mock(**path_attrs),
-            'mkdir': MagicMock(),
-            'makedirs': MagicMock(),
-            'getenv': MagicMock(),
-            'listdir': MagicMock(return_value=[]),
-            'environ': {
-                'VARIABLE': 'value'
-            }
+            "path": Mock(**path_attrs),
+            "mkdir": MagicMock(),
+            "makedirs": MagicMock(),
+            "getenv": MagicMock(),
+            "listdir": MagicMock(return_value=[]),
+            "environ": {"VARIABLE": "value"},
         }
         self._mock_paths = mock_paths
         self._patchers_os = {}

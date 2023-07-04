@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +19,7 @@ from model_analyzer.config.run.model_run_config import ModelRunConfig
 
 class RunConfig:
     """
-    Encapsulates all the information needed to run one or more models 
+    Encapsulates all the information needed to run one or more models
     at the same time in Perf Analyzer
     """
 
@@ -50,17 +52,18 @@ class RunConfig:
         Returns a representation string for the RunConfig that can be used
         as a key to uniquely identify it
         """
-        return ''.join(
-            [mrc.representation() for mrc in self.model_run_configs()])
+        return "".join([mrc.representation() for mrc in self.model_run_configs()])
 
     def is_legal_combination(self):
         """
         Returns true if all model_run_configs are valid
         """
-        return all([
-            model_run_config.is_legal_combination()
-            for model_run_config in self._model_run_configs
-        ])
+        return all(
+            [
+                model_run_config.is_legal_combination()
+                for model_run_config in self._model_run_configs
+            ]
+        )
 
     def is_ensemble_model(self) -> bool:
         """
@@ -80,10 +83,12 @@ class RunConfig:
         """
         Returns true if all model_run_configs only operate on the CPU
         """
-        return all([
-            model_run_config.model_config().cpu_only()
-            for model_run_config in self._model_run_configs
-        ])
+        return all(
+            [
+                model_run_config.model_config().cpu_only()
+                for model_run_config in self._model_run_configs
+            ]
+        )
 
     def triton_environment(self):
         """
@@ -97,13 +102,12 @@ class RunConfig:
         return self._triton_env
 
     def models_name(self):
-        """ Returns a single comma-joined name of the original model names """
-        return ','.join([mrc.model_name() for mrc in self.model_run_configs()])
+        """Returns a single comma-joined name of the original model names"""
+        return ",".join([mrc.model_name() for mrc in self.model_run_configs()])
 
     def model_variants_name(self):
-        """ Returns a single comma-joined name of the model variant names """
-        return ','.join(
-            [mrc.model_variant_name() for mrc in self.model_run_configs()])
+        """Returns a single comma-joined name of the model variant names"""
+        return ",".join([mrc.model_variant_name() for mrc in self.model_run_configs()])
 
     def composing_configs(self):
         """
@@ -116,9 +120,8 @@ class RunConfig:
     def from_dict(cls, run_config_dict):
         run_config = RunConfig({})
 
-        run_config._triton_env = run_config_dict['_triton_env']
-        for mrc_dict in run_config_dict['_model_run_configs']:
-            run_config._model_run_configs.append(
-                ModelRunConfig.from_dict(mrc_dict))
+        run_config._triton_env = run_config_dict["_triton_env"]
+        for mrc_dict in run_config_dict["_model_run_configs"]:
+            run_config._model_run_configs.append(ModelRunConfig.from_dict(mrc_dict))
 
         return run_config

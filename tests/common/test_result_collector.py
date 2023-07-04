@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 import json
+import unittest
 
 
 class TestResultCollector(unittest.TestCase):
@@ -26,18 +28,13 @@ class TestResultCollector(unittest.TestCase):
 
     @classmethod
     def setResult(cls, total, errors, failures):
-        cls.total, cls.errors, cls.failures = \
-            total, errors, failures
+        cls.total, cls.errors, cls.failures = total, errors, failures
 
     @classmethod
     def tearDownClass(cls):
         # this method is called when all the unit tests in a class are
         # finished.
-        json_res = {
-            'total': cls.total,
-            'errors': cls.errors,
-            'failures': cls.failures
-        }
+        json_res = {"total": cls.total, "errors": cls.errors, "failures": cls.failures}
         print(json.dumps(json_res))
 
     def run(self, result=None):

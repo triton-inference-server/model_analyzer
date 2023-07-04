@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +15,9 @@
 # limitations under the License.
 
 import argparse
-import yaml
 import sys
+
+import yaml
 
 
 class TestOutputValidator:
@@ -25,14 +28,14 @@ class TestOutputValidator:
 
     def __init__(self, config, profile_models, analyzer_log, triton_log):
         self._config = config
-        self._profile_models = profile_models.split(',')
+        self._profile_models = profile_models.split(",")
         self._analyzer_log = analyzer_log
         self._triton_log = triton_log
 
         check_functions = [
             self.__getattribute__(name)
             for name in dir(self)
-            if name.startswith('check')
+            if name.startswith("check")
         ]
 
         passed_test = True
@@ -54,13 +57,15 @@ class TestOutputValidator:
         True if test passes else False
         """
 
-        if 'perf_analyzer_flags' in self._config and 'percentile' in self._config[
-                'perf_analyzer_flags']:
-            with open(self._analyzer_log, 'r') as f:
+        if (
+            "perf_analyzer_flags" in self._config
+            and "percentile" in self._config["perf_analyzer_flags"]
+        ):
+            with open(self._analyzer_log, "r") as f:
                 contents = f.read()
 
             # In contents, search for "stabilizing with px latency"
-            percentile = self._config['perf_analyzer_flags']['percentile']
+            percentile = self._config["perf_analyzer_flags"]["percentile"]
             token = f"Stabilizing using p{percentile} latency"
 
             # Ensure the token appears the correct number of times in the output contents
@@ -70,7 +75,8 @@ class TestOutputValidator:
                 if next_token_idx == -1:
                     print(
                         f"\n***\n***  Perf Analyzer not stabilizing on p{percentile} latency"
-                        f"for {profile_model}. \n***")
+                        f"for {profile_model}. \n***"
+                    )
                     return False
         return True
 
@@ -83,15 +89,16 @@ class TestOutputValidator:
         True if test passes else False
         """
 
-        if 'perf_analyzer_flags' in self._config and 'measurement-mode' in self._config[
-                'perf_analyzer_flags']:
-            with open(self._analyzer_log, 'r') as f:
+        if (
+            "perf_analyzer_flags" in self._config
+            and "measurement-mode" in self._config["perf_analyzer_flags"]
+        ):
+            with open(self._analyzer_log, "r") as f:
                 contents = f.read()
 
             # In contents, search for "stabilizing with px latency"
-            measurement_mode = self._config['perf_analyzer_flags'][
-                'measurement-mode']
-            assert (measurement_mode == 'time_windows')
+            measurement_mode = self._config["perf_analyzer_flags"]["measurement-mode"]
+            assert measurement_mode == "time_windows"
             token = "time_windows"
 
             # Ensure the token appears in the text
@@ -110,19 +117,19 @@ class TestOutputValidator:
         True if test passes else False
         """
 
-        for profile_model, config_model in self._config['profile_models'].items(
-        ):
-            if 'perf_analyzer_flags' in config_model:
-                with open(self._analyzer_log, 'r') as f:
+        for profile_model, config_model in self._config["profile_models"].items():
+            if "perf_analyzer_flags" in config_model:
+                with open(self._analyzer_log, "r") as f:
                     contents = f.read()
 
                 # In contents, search for "stabilizing with px latency"
-                percentile = config_model['perf_analyzer_flags']['percentile']
+                percentile = config_model["perf_analyzer_flags"]["percentile"]
                 token = f"Stabilizing using p{percentile} latency"
                 if contents.find(token) == -1:
                     print(
                         f"\n***\n***  Perf Analyzer not stabilizing on p{percentile} latency"
-                        f"for {profile_model}. \n***")
+                        f"for {profile_model}. \n***"
+                    )
                     return False
         return True
 
@@ -136,26 +143,29 @@ class TestOutputValidator:
         True if test passes else False
         """
 
-        if 'triton_server_flags' in self._config:
-            with open(self._triton_log, 'r') as f:
+        if "triton_server_flags" in self._config:
+            with open(self._triton_log, "r") as f:
                 contents = f.read()
 
             # Look for strict-model-config false
             next_token_idx = 0
-            for profile_model in self._config['profile_models']:
-                next_token_idx = contents.find('strict_model_config',
-                                               next_token_idx)
+            for profile_model in self._config["profile_models"]:
+                next_token_idx = contents.find("strict_model_config", next_token_idx)
                 if next_token_idx == -1:
                     print(
                         f"\n***\n*** strict-model-config for model {profile_model} not found in Triton log.\n***"
                     )
                     return False
-                line = contents[contents[:next_token_idx].rfind('\n'):contents.
-                                find('\n', next_token_idx)]
-                strict_model_config_val = bool(
-                    int(line.replace(' ', '').split('|')[2]))
-                if strict_model_config_val != self._config[
-                        'triton_server_flags']['strict_model_config']:
+                line = contents[
+                    contents[:next_token_idx].rfind("\n") : contents.find(
+                        "\n", next_token_idx
+                    )
+                ]
+                strict_model_config_val = bool(int(line.replace(" ", "").split("|")[2]))
+                if (
+                    strict_model_config_val
+                    != self._config["triton_server_flags"]["strict_model_config"]
+                ):
                     print(
                         f"\n***\n*** strict-model-config value does not match for model {profile_model}.\n***"
                     )
@@ -172,17 +182,18 @@ class TestOutputValidator:
         True if test passes else False
         """
 
-        if 'triton_server_flags' not in self._config \
-                and 'perf_analyzer_flags' not in self._config:
-            with open(self._triton_log, 'r') as f:
+        if (
+            "triton_server_flags" not in self._config
+            and "perf_analyzer_flags" not in self._config
+        ):
+            with open(self._triton_log, "r") as f:
                 contents = f.read()
 
             # Get all the exit_timeout values from config
             timeouts_from_config = []
-            for config_model in self._config['profile_models']:
-                if 'triton_server_flags' in config_model:
-                    timeouts_from_config.append(
-                        config_model['triton_server_flags'])
+            for config_model in self._config["profile_models"]:
+                if "triton_server_flags" in config_model:
+                    timeouts_from_config.append(config_model["triton_server_flags"])
                 else:
                     return True
 
@@ -190,16 +201,18 @@ class TestOutputValidator:
             timeouts_from_log = []
             next_token_idx = 0
             for profile_model in self._profile_models:
-                next_token_idx = contents.find('exit_timeout', next_token_idx)
+                next_token_idx = contents.find("exit_timeout", next_token_idx)
                 if next_token_idx == -1:
                     print(
                         f"\n***\n*** Timeout for model {profile_model} not found in Triton log.\n***"
                     )
                     return False
-                line = contents[contents[:next_token_idx].rfind('\n'):contents.
-                                find('\n', next_token_idx)]
-                timeouts_from_log.append(
-                    int(line.replace(' ', '').split('|')[2]))
+                line = contents[
+                    contents[:next_token_idx].rfind("\n") : contents.find(
+                        "\n", next_token_idx
+                    )
+                ]
+                timeouts_from_log.append(int(line.replace(" ", "").split("|")[2]))
 
             if timeouts_from_config == timeouts_from_log:
                 return True
@@ -211,30 +224,39 @@ class TestOutputValidator:
         return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f',
-                        '--config-file',
-                        type=str,
-                        required=True,
-                        help='The config file for this test')
-    parser.add_argument('-m',
-                        '--profile-models',
-                        type=str,
-                        required=True,
-                        help='The models being used for this test')
-    parser.add_argument('--analyzer-log-file',
-                        type=str,
-                        required=True,
-                        help='The full path to the analyzer log')
-    parser.add_argument('--triton-log-file',
-                        type=str,
-                        required=True,
-                        help='The full path to the triton log')
+    parser.add_argument(
+        "-f",
+        "--config-file",
+        type=str,
+        required=True,
+        help="The config file for this test",
+    )
+    parser.add_argument(
+        "-m",
+        "--profile-models",
+        type=str,
+        required=True,
+        help="The models being used for this test",
+    )
+    parser.add_argument(
+        "--analyzer-log-file",
+        type=str,
+        required=True,
+        help="The full path to the analyzer log",
+    )
+    parser.add_argument(
+        "--triton-log-file",
+        type=str,
+        required=True,
+        help="The full path to the triton log",
+    )
     args = parser.parse_args()
 
-    with open(args.config_file, 'r') as f:
+    with open(args.config_file, "r") as f:
         config = yaml.safe_load(f)
 
-    TestOutputValidator(config, args.profile_models, args.analyzer_log_file,
-                        args.triton_log_file)
+    TestOutputValidator(
+        config, args.profile_models, args.analyzer_log_file, args.triton_log_file
+    )

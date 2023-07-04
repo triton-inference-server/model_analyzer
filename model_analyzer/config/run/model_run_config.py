@@ -1,4 +1,6 @@
-# Copyright (c) 2021-2022, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Dict
+import logging
+from typing import Dict, List, Optional
 
 from model_analyzer.constants import LOGGER_NAME
-import logging
-
-from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.triton.model.model_config import ModelConfig
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -28,11 +29,16 @@ class ModelRunConfig:
     Encapsulates all the information (ModelConfig + PerfConfig) needed to run
     a model in Perf Analyzer
     """
+
     DEFAULT_MAX_BATCH_SIZE = 1
     DEFAULT_PERF_BATCH_SIZE = 1
 
-    def __init__(self, model_name: str, model_config: ModelConfig,
-                 perf_config: PerfAnalyzerConfig) -> None:
+    def __init__(
+        self,
+        model_name: str,
+        model_config: ModelConfig,
+        perf_config: PerfAnalyzerConfig,
+    ) -> None:
         """
         Parameters
         ----------
@@ -72,7 +78,7 @@ class ModelRunConfig:
             Model variant name
         """
 
-        return self.model_config().get_field('name')
+        return self.model_config().get_field("name")
 
     def model_config(self) -> ModelConfig:
         """
@@ -89,7 +95,7 @@ class ModelRunConfig:
         Returns
         -------
         PerfAnalyzerConfig
-            run parameters corresponding to this run of 
+            run parameters corresponding to this run of
             the perf analyzer
         """
 
@@ -110,8 +116,7 @@ class ModelRunConfig:
         repr = self.perf_config().representation()
 
         if self._composing_configs:
-            repr += " " + (',').join(
-                self.get_composing_config_names())  # type: ignore
+            repr += " " + (",").join(self.get_composing_config_names())  # type: ignore
 
         return repr
 
@@ -121,10 +126,16 @@ class ModelRunConfig:
         """
         model_config = self._model_config.get_config()
 
-        max_batch_size = model_config[
-            'max_batch_size'] if 'max_batch_size' in model_config else self.DEFAULT_MAX_BATCH_SIZE
-        perf_batch_size = self._perf_config[
-            'batch-size'] if 'batch-size' in self._perf_config else self.DEFAULT_PERF_BATCH_SIZE
+        max_batch_size = (
+            model_config["max_batch_size"]
+            if "max_batch_size" in model_config
+            else self.DEFAULT_MAX_BATCH_SIZE
+        )
+        perf_batch_size = (
+            self._perf_config["batch-size"]
+            if "batch-size" in self._perf_config
+            else self.DEFAULT_PERF_BATCH_SIZE
+        )
 
         legal = max_batch_size >= perf_batch_size
         if not legal:
@@ -143,13 +154,19 @@ class ModelRunConfig:
         model_configs = self._create_model_config_dicts()
 
         for model_config in model_configs:
-            max_batch_size = model_config[
-                'max_batch_size'] if 'max_batch_size' in model_config else self.DEFAULT_MAX_BATCH_SIZE
+            max_batch_size = (
+                model_config["max_batch_size"]
+                if "max_batch_size" in model_config
+                else self.DEFAULT_MAX_BATCH_SIZE
+            )
 
-            if 'dynamic_batching' in model_config and 'preferred_batch_size' in model_config[
-                    'dynamic_batching']:
+            if (
+                "dynamic_batching" in model_config
+                and "preferred_batch_size" in model_config["dynamic_batching"]
+            ):
                 max_preferred_batch_size = max(
-                    model_config['dynamic_batching']['preferred_batch_size'])
+                    model_config["dynamic_batching"]["preferred_batch_size"]
+                )
                 legal = max_batch_size >= max_preferred_batch_size
 
                 if not legal:
@@ -162,17 +179,19 @@ class ModelRunConfig:
 
     def _create_model_config_dicts(self) -> List[Dict]:
         """
-        Create a list of model config dictionaries for 
+        Create a list of model config dictionaries for
         the given model + composing models
         """
-        model_configs = [] if self.is_ensemble_model() else [
-            self._model_config.get_config()
-        ]
+        model_configs = (
+            [] if self.is_ensemble_model() else [self._model_config.get_config()]
+        )
 
-        model_configs.extend([
-            composing_config.get_config()
-            for composing_config in self._composing_configs
-        ])
+        model_configs.extend(
+            [
+                composing_config.get_config()
+                for composing_config in self._composing_configs
+            ]
+        )
 
         return model_configs
 
@@ -180,8 +199,10 @@ class ModelRunConfig:
         """
         Returns true if the run_config is valid and should be run. Else false
         """
-        legal = self._check_for_client_vs_model_batch_size() and \
-            self._check_for_preferred_vs_model_batch_size()
+        legal = (
+            self._check_for_client_vs_model_batch_size()
+            and self._check_for_preferred_vs_model_batch_size()
+        )
 
         return legal
 
@@ -197,8 +218,7 @@ class ModelRunConfig:
         """
         # If composing configs are present and it's not an ensemble it must be a BLS
         # Note: this will need to change if we allow ensembles to contain BLS models
-        return (not self._model_config.is_ensemble() and
-                len(self._composing_configs) > 0)
+        return not self._model_config.is_ensemble() and len(self._composing_configs) > 0
 
     def get_composing_config_names(self) -> Optional[List[str]]:
         """
@@ -210,7 +230,8 @@ class ModelRunConfig:
         ]
 
     def add_composing_model_configs(
-            self, composing_model_configs: List[ModelConfig]) -> None:
+        self, composing_model_configs: List[ModelConfig]
+    ) -> None:
         """
         Adds a list of composing model configs
         """
@@ -220,17 +241,18 @@ class ModelRunConfig:
     @classmethod
     def from_dict(cls, model_run_config_dict):
         model_run_config = ModelRunConfig(None, None, None)
-        model_run_config._model_name = model_run_config_dict['_model_name']
+        model_run_config._model_name = model_run_config_dict["_model_name"]
         model_run_config._model_config = ModelConfig.from_dict(
-            model_run_config_dict['_model_config'])
+            model_run_config_dict["_model_config"]
+        )
         model_run_config._perf_config = PerfAnalyzerConfig.from_dict(
-            model_run_config_dict['_perf_config'])
+            model_run_config_dict["_perf_config"]
+        )
 
-        if '_composing_configs' in model_run_config_dict:
+        if "_composing_configs" in model_run_config_dict:
             model_run_config._composing_configs = [
                 ModelConfig.from_dict(composing_config_dict)
-                for composing_config_dict in
-                model_run_config_dict['_composing_configs']
+                for composing_config_dict in model_run_config_dict["_composing_configs"]
             ]
 
         return model_run_config

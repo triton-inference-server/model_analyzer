@@ -1,4 +1,6 @@
-# Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.constants import LOGGER_NAME
-from .pdf_report import PDFReport
-from .html_report import HTMLReport
 import logging
 import shutil
+
+from model_analyzer.constants import LOGGER_NAME
+
+from .html_report import HTMLReport
+from .pdf_report import PDFReport
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -37,9 +41,9 @@ class ReportFactory:
             if not ReportFactory.WARNING_PRINTED:
                 ReportFactory.WARNING_PRINTED = True
                 logging.warning(
-                    f'Warning: html reports are being generated instead of pdf because '
-                    f'{ReportFactory.PDF_PACKAGE} is not installed. If you want pdf '
-                    f'reports, run the following command and then rerun Model Analyzer: '
+                    f"Warning: html reports are being generated instead of pdf because "
+                    f"{ReportFactory.PDF_PACKAGE} is not installed. If you want pdf "
+                    f"reports, run the following command and then rerun Model Analyzer: "
                     f'"sudo apt-get update && sudo apt-get install wkhtmltopdf"'
                 )
             return ReportFactory._create_html_report()

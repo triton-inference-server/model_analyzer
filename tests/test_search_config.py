@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,21 +17,24 @@
 from model_analyzer.config.generate.search_config import SearchConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
 from model_analyzer.config.generate.search_dimensions import SearchDimensions
+
 from .common import test_result_collector as trc
 
 
 class TestSearchConfig(trc.TestResultCollector):
-
     def test_basic(self):
         sc = SearchConfig(SearchDimensions(), 0, 0)
         self.assertEqual(0, sc.get_num_dimensions())
 
     def test_config(self):
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         sc = SearchConfig(dimensions=dims, radius=4, min_initialized=2)
 
@@ -45,11 +50,13 @@ class TestSearchConfig(trc.TestResultCollector):
 
     def test_get_min_indexes(self):
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 1,
-                            10),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 1, 10),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
         sc = SearchConfig(dims, 0, 0)
 
         self.assertEqual([1, 0], sc.get_min_indexes())
@@ -59,10 +66,13 @@ class TestSearchConfig(trc.TestResultCollector):
         Test that we can get a NeighborhoodConfig from a SearchConfig and properly override the radius
         """
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         sc = SearchConfig(dimensions=dims, radius=4, min_initialized=2)
 

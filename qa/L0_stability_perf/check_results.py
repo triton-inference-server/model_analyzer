@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,11 +15,11 @@
 # limitations under the License.
 
 import argparse
-import sys
 import glob
 import os
-from collections import defaultdict
 import re
+import sys
+from collections import defaultdict
 
 
 class TestOutputValidator:
@@ -29,7 +31,7 @@ class TestOutputValidator:
     def __init__(self, test_name, threshold):
         self._tolerance_percent = threshold
 
-        check_function = self.__getattribute__(f'check_{test_name}')
+        check_function = self.__getattribute__(f"check_{test_name}")
 
         if check_function():
             sys.exit(0)
@@ -48,7 +50,7 @@ class TestOutputValidator:
         # Note that the values may be ordered differently (perf log first then test log)
         log_pairs = defaultdict(list)
         for log_path in log_paths:
-            model_name = os.path.relpath(log_path, os.getcwd()).split('.')[0]
+            model_name = os.path.relpath(log_path, os.getcwd()).split(".")[0]
             log_pairs[model_name].append(log_path)
 
         # compare the values within paired logs
@@ -56,19 +58,17 @@ class TestOutputValidator:
             throughputs, latencies = [], []
             for log in sorted(log_pair):
                 # Open log and match regex
-                with open(log, 'r+') as f:
+                with open(log, "r+") as f:
                     log_contents = f.read()
 
-                throughput = re.search('Throughput: (\d+\.\d+|\d+)',
-                                       log_contents)
+                throughput = re.search("Throughput: (\d+\.\d+|\d+)", log_contents)
                 if throughput:
                     throughputs.append(float(throughput.group(1)))
                 else:
                     print(f"\n***\n*** No throughput found in {log} \n***")
                     return False
 
-                p99_latency = re.search('p99 latency: (\d+\.\d+|\d+)',
-                                        log_contents)
+                p99_latency = re.search("p99 latency: (\d+\.\d+|\d+)", log_contents)
                 if p99_latency:
                     latencies.append(float(p99_latency.group(1)))
                 else:
@@ -76,12 +76,14 @@ class TestOutputValidator:
                     return False
 
             # Once all throughputs and latencies are collected, compute diff percentage
-            throughput_diff = 100 * (throughputs[0] -
-                                     throughputs[1]) / throughputs[0]
+            throughput_diff = 100 * (throughputs[0] - throughputs[1]) / throughputs[0]
 
             latency_diff = 100 * (latencies[1] - latencies[0]) / latencies[1]
 
-            if throughput_diff > self._tolerance_percent and latency_diff > self._tolerance_percent:
+            if (
+                throughput_diff > self._tolerance_percent
+                and latency_diff > self._tolerance_percent
+            ):
                 print(
                     f"\n***\n*** Model Analyzer throughput and latency differ "
                     f"greatly from perf analyzer standalone for model {model_name}. "
@@ -105,19 +107,20 @@ class TestOutputValidator:
         return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-t',
-                        '--test-name',
-                        type=str,
-                        required=True,
-                        help='The name of the test to be run.')
     parser.add_argument(
-        '--tolerance',
+        "-t",
+        "--test-name",
+        type=str,
+        required=True,
+        help="The name of the test to be run.",
+    )
+    parser.add_argument(
+        "--tolerance",
         type=float,
         default=1,
-        help=
-        'The allowed percentage difference of model analyzer metrics from perf_analyzer metrics. '
+        help="The allowed percentage difference of model analyzer metrics from perf_analyzer metrics. ",
     )
     args = parser.parse_args()
 

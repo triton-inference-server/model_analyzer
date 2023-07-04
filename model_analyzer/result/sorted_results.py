@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,21 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional
-
+import logging
 from copy import deepcopy
+from typing import List, Optional
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.result.run_config_result import RunConfigResult
-
-import logging
 
 logger = logging.getLogger(LOGGER_NAME)
 
 
 class SortedResults:
     """
-    A data structure used by the result manager 
+    A data structure used by the result manager
     to store and sort results
     """
 
@@ -58,11 +58,13 @@ class SortedResults:
         """
 
         existing_run_config_result = self._find_existing_run_config_result(
-            run_config_result)
+            run_config_result
+        )
 
         if existing_run_config_result:
             self._add_measurements_to_existing_run_config_result(
-                existing_run_config_result, run_config_result)
+                existing_run_config_result, run_config_result
+            )
         else:
             self._add_new_run_config_result(run_config_result)
 
@@ -80,39 +82,42 @@ class SortedResults:
             The n best results for this model,
             must all be passing results
         """
-        passing_results, failing_results = self._create_passing_and_failing_lists(
-        )
+        passing_results, failing_results = self._create_passing_and_failing_lists()
 
         if len(passing_results) == 0:
             logger.warning(
                 f"Requested top {n} configs, but none satisfied constraints. "
-                "Showing available constraint failing configs for this model.")
+                "Showing available constraint failing configs for this model."
+            )
 
             return self._get_top_n_results(failing_results, n)
         else:
             return self._get_top_n_results(passing_results, n)
 
     def _find_existing_run_config_result(
-            self,
-            run_config_result: RunConfigResult) -> Optional[RunConfigResult]:
+        self, run_config_result: RunConfigResult
+    ) -> Optional[RunConfigResult]:
         if not run_config_result.run_config():
             return None
 
         for rcr in self._run_config_results:
-            if run_config_result.run_config().model_variants_name(
-            ) == rcr.run_config().model_variants_name():
+            if (
+                run_config_result.run_config().model_variants_name()
+                == rcr.run_config().model_variants_name()
+            ):
                 return rcr
 
         return None
 
     def _add_measurements_to_existing_run_config_result(
-            self, existing_run_config_result: RunConfigResult,
-            new_run_config_result: RunConfigResult) -> None:
+        self,
+        existing_run_config_result: RunConfigResult,
+        new_run_config_result: RunConfigResult,
+    ) -> None:
         for rcm in new_run_config_result.run_config_measurements():
             existing_run_config_result.add_run_config_measurement(rcm)
 
-    def _add_new_run_config_result(self,
-                                   run_config_result: RunConfigResult) -> None:
+    def _add_new_run_config_result(self, run_config_result: RunConfigResult) -> None:
         new_run_config_result = deepcopy(run_config_result)
 
         self._run_config_results.append(new_run_config_result)
@@ -130,14 +135,17 @@ class SortedResults:
 
         return passing, failing
 
-    def _get_top_n_results(self, results: List[RunConfigResult],
-                           n: int) -> List[RunConfigResult]:
+    def _get_top_n_results(
+        self, results: List[RunConfigResult], n: int
+    ) -> List[RunConfigResult]:
         if n == SortedResults.GET_ALL_RESULTS:
             return results
         if n > len(results):
-            logger.warning(f"Requested top {n} configs, "
-                           f"but found only {len(results)}. "
-                           "Showing all available configs for this model.")
+            logger.warning(
+                f"Requested top {n} configs, "
+                f"but found only {len(results)}. "
+                "Showing all available configs for this model."
+            )
 
         result_len = min(n, len(results))
         return results[0:result_len]

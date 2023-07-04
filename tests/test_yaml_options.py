@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +15,14 @@
 # limitations under the License.
 
 import yaml
-from .common import test_result_collector as trc
+
 from model_analyzer.config.input.yaml_config_validator import YamlConfigValidator
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
+from .common import test_result_collector as trc
+
 
 class TestYamlOptions(trc.TestResultCollector):
-
     def test_correct_option(self):
         correct_option = "client_max_retries"
         YamlConfigValidator._create_valid_option_set()
@@ -28,8 +31,7 @@ class TestYamlOptions(trc.TestResultCollector):
     def test_misspelled_option(self):
         misspelled_option = "profile_model"
         YamlConfigValidator._create_valid_option_set()
-        self.assertFalse(
-            YamlConfigValidator._is_valid_option(misspelled_option))
+        self.assertFalse(YamlConfigValidator._is_valid_option(misspelled_option))
 
     def test_using_hyphens_not_underscores(self):
         hyphen_option = "triton-server-flags"
@@ -39,15 +41,18 @@ class TestYamlOptions(trc.TestResultCollector):
     def test_multiple_options(self):
         """
         Tests multiple options.
-        The following are incorrect: 
-            "profile_model", 
+        The following are incorrect:
+            "profile_model",
             "triton-server-flags",
-            "DURATION_seconds", 
+            "DURATION_seconds",
             ""
         """
         options = {
-            "client_max_retries", "profile_model", "triton-server-flags",
-            "DURATION_seconds", ""
+            "client_max_retries",
+            "profile_model",
+            "triton-server-flags",
+            "DURATION_seconds",
+            "",
         }
         count = 0
         YamlConfigValidator._create_valid_option_set()
@@ -55,8 +60,9 @@ class TestYamlOptions(trc.TestResultCollector):
             if not YamlConfigValidator._is_valid_option(entry):
                 count += 1
         self.assertEqual(
-            count, 4,
-            f"{count} incorrect yaml options are present in the yaml configuration file"
+            count,
+            4,
+            f"{count} incorrect yaml options are present in the yaml configuration file",
         )
 
     def test_valid_yaml_file(self):
@@ -71,7 +77,7 @@ class TestYamlOptions(trc.TestResultCollector):
                         instance_group:
                         -
                             kind: KIND_GPU
-                            count: [1,2]                        
+                            count: [1,2]
             """)
         # yapf: enable
 
@@ -80,7 +86,7 @@ class TestYamlOptions(trc.TestResultCollector):
 
     def test_invalid_yaml_file(self):
         """
-        Raises an exception because run-config-search-max-instance-count: 16 uses 
+        Raises an exception because run-config-search-max-instance-count: 16 uses
         hyphens instead of the required underscores
         """
         # yapf: disable
@@ -94,7 +100,7 @@ class TestYamlOptions(trc.TestResultCollector):
                         instance_group:
                         -
                             kind: KIND_GPU
-                            count: [1,2]                        
+                            count: [1,2]
             """)
         # yapf: enable
 

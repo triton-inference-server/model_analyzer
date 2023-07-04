@@ -1,4 +1,5 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/bin/bash
+# Copyright (c) 2020-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,7 +57,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     create_result_paths -test-name $TEST_NAME
 
     set +e
-    
+
     # Run the analyzer and check the results
     TRITON_LOG_PREFIX=${CONFIG_FILE#"config-"}
     TRITON_LOG_PREFIX=${TRITON_LOG_PREFIX%".yml"}
@@ -69,7 +70,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         cat $ANALYZER_LOG
         RET=1
     else
-        python3 check_results.py -f $CONFIG_FILE -m $MODEL_NAMES --analyzer-log-file $ANALYZER_LOG --triton-log-file $TRITON_LOG 
+        python3 check_results.py -f $CONFIG_FILE -m $MODEL_NAMES --analyzer-log-file $ANALYZER_LOG --triton-log-file $TRITON_LOG
         if [ $? -ne 0 ]; then
             echo -e "\n***\n*** Test Output Verification Failed for $ANALYZER_LOG.\n***"
             cat $ANALYZER_LOG

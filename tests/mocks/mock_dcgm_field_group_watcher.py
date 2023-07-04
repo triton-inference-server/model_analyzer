@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .mock_dcgm_agent import MockDCGMAgent
-
+import time
 from collections import defaultdict
 from unittest.mock import MagicMock
 
-import time
+from .mock_dcgm_agent import MockDCGMAgent
 
 TEST_RECORD_VALUE = 2.4
 
@@ -27,8 +28,17 @@ class MockDCGMFieldGroupWatcherHelper:
     Mock of the DCGMFieldGroupWatcher class
     """
 
-    def __init__(self, handle, group_id, field_group, operation_mode,
-                 update_freq, max_keep_age, max_keep_samples, start_timestamp):
+    def __init__(
+        self,
+        handle,
+        group_id,
+        field_group,
+        operation_mode,
+        update_freq,
+        max_keep_age,
+        max_keep_samples,
+        start_timestamp,
+    ):
         """
         handle : dcgm_handle
             DCGM handle from dcgm_agent.dcgmInit()
@@ -65,7 +75,7 @@ class MockDCGMFieldGroupWatcherHelper:
 
     def GetMore(self):
         """
-        This function perfoms a single iteration of monitoring
+        This function performs a single iteration of monitoring
         """
 
         group_name = list(MockDCGMAgent.device_groups)[self._group_id]
@@ -74,7 +84,6 @@ class MockDCGMFieldGroupWatcherHelper:
 
         for device in device_group:
             for field in MockDCGMAgent.field_groups[field_group_name]:
-
                 # Sample Record
                 record = MagicMock()
                 record.value = TEST_RECORD_VALUE

@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 from abc import ABC, abstractmethod
 from multiprocessing.pool import ThreadPool
-import time
 
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class Monitor(ABC):
@@ -92,7 +93,7 @@ class Monitor(ABC):
         """
         This method is called to determine if we can connect to the
         monitor
-        
+
         Returns
         -------
         bool
@@ -125,7 +126,8 @@ class Monitor(ABC):
         if not self._thread_active:
             raise TritonModelAnalyzerException(
                 "start_recording_metrics should be "
-                "called before stop_recording_metrics")
+                "called before stop_recording_metrics"
+            )
 
         self._thread_active = False
         self._thread = None

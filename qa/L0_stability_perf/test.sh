@@ -1,4 +1,5 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/bin/bash
+# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,8 +58,8 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     MODEL_NAME=${LOG_PREFIX%".yaml"}
     TEST_NAME=test_${MODEL_NAME}
     create_result_paths -test-name $TEST_NAME
-    
-    set +e 
+
+    set +e
 
     # Run the model analyzer
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --checkpoint-directory $CHECKPOINT_DIRECTORY -e $EXPORT_PATH"
@@ -77,7 +78,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     SERVER_ARGS="$SERVER_ARGS --http-port ${PORTS[0]} --grpc-port ${PORTS[1]} --metrics-port ${PORTS[2]}"
     SERVER_HTTP_PORT=${PORTS[0]}
 
-   
+
     for concurrency in "$(echo $CONCURRENCY | sed 's/,/ /g')"; do
         SERVER_LOG=$TEST_LOG_DIR/server_${MODEL_NAME}_${concurrency}.log
         PERF_LOG=$TEST_LOG_DIR/perf_${MODEL_NAME}_${concurrency}.log
@@ -93,7 +94,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
 
         PERF_ANALYZER_ARGS="-i $CLIENT_PROTOCOL -u localhost:${PORTS[1]} -m $MODEL_NAME --concurrency-range $concurrency --percentile 95"
         PERF_ANALYZER_ARGS="$PERF_ANALYZER_ARGS --measurement-mode count_windows --measurement-request-count $MEASUREMENT_REQUEST_COUNT"
-        
+
         $PERF_ANALYZER $PERF_ANALYZER_ARGS >> $PERF_LOG 2>&1
         if [ ! $? -eq 0 ]; then
             cat $PERF_LOG
@@ -104,7 +105,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
         set -e
         # Kill triton
         kill $SERVER_PID
-        wait $SERVER_PID 
+        wait $SERVER_PID
     done
 done
 

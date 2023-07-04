@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,14 +18,14 @@ import unittest
 from unittest.mock import patch
 
 from model_analyzer.record.record_aggregator import RecordAggregator
-from model_analyzer.record.types.perf_throughput import PerfThroughput
-from model_analyzer.record.types.perf_latency_p99 import PerfLatencyP99
 from model_analyzer.record.types.gpu_utilization import GPUUtilization
+from model_analyzer.record.types.perf_latency_p99 import PerfLatencyP99
+from model_analyzer.record.types.perf_throughput import PerfThroughput
+
 from .common import test_result_collector as trc
 
 
 class TestRecordAggregatorMethods(trc.TestResultCollector):
-
     def setUp(self):
         NotImplemented
 
@@ -63,11 +65,14 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         self.assertIsInstance(
             retrieved_throughput,
             PerfThroughput,
-            msg="Record types do not match after filter_records")
+            msg="Record types do not match after filter_records",
+        )
 
-        self.assertEqual(retrieved_throughput.value(),
-                         throughput_record.value(),
-                         msg="Values do not match after filter_records")
+        self.assertEqual(
+            retrieved_throughput.value(),
+            throughput_record.value(),
+            msg="Values do not match after filter_records",
+        )
 
     def test_filter_records_filtered(self):
         record_aggregator = RecordAggregator()
@@ -76,8 +81,9 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         with self.assertRaises(Exception):
             record_aggregator.filter_records(filters=[(lambda x: False)])
         with self.assertRaises(Exception):
-            record_aggregator.filter_records(record_types=[None, None],
-                                             filters=[(lambda x: False)])
+            record_aggregator.filter_records(
+                record_types=[None, None], filters=[(lambda x: False)]
+            )
 
         # Insert 3 throughputs
         record_aggregator.insert(PerfThroughput(5))
@@ -86,8 +92,8 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
 
         # Test get with filters
         retrieved_records = record_aggregator.filter_records(
-            record_types=[PerfThroughput],
-            filters=[(lambda v: v.value() >= 5)]).get_records()
+            record_types=[PerfThroughput], filters=[(lambda v: v.value() >= 5)]
+        ).get_records()
 
         # Should return 2 records
         self.assertEqual(len(retrieved_records[PerfThroughput]), 2)
@@ -104,12 +110,11 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         # Test get with multiple headers
         retrieved_records = record_aggregator.filter_records(
             record_types=[PerfLatencyP99, PerfThroughput],
-            filters=[(lambda v: v.value() == 3),
-                     (lambda v: v.value() < 5)]).get_records()
+            filters=[(lambda v: v.value() == 3), (lambda v: v.value() < 5)],
+        ).get_records()
 
         retrieved_values = {
-            record_type:
-            [record.value() for record in retrieved_records[record_type]]
+            record_type: [record.value() for record in retrieved_records[record_type]]
             for record_type in [PerfLatencyP99, PerfThroughput]
         }
 
@@ -133,13 +138,15 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         self.assertEqual(list(records[PerfThroughput]), [0, 1])
         self.assertEqual(
             list(records[PerfThroughput].values()),
-            [PerfThroughput(5.0), PerfThroughput(10.0)])
+            [PerfThroughput(5.0), PerfThroughput(10.0)],
+        )
 
         records = record_aggregator.groupby([PerfThroughput], groupby_criteria)
         self.assertEqual(list(records[PerfThroughput]), [0, 1])
         self.assertEqual(
             list(records[PerfThroughput].values()),
-            [PerfThroughput(5.0), PerfThroughput(10.0)])
+            [PerfThroughput(5.0), PerfThroughput(10.0)],
+        )
 
     def test_aggregate(self):
         record_aggregator = RecordAggregator()
@@ -154,13 +161,17 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
         max_vals = record_aggregator.aggregate(record_types=[PerfThroughput])
         avg_vals = record_aggregator.aggregate(record_types=[GPUUtilization])
 
-        self.assertEqual(max_vals[PerfThroughput],
-                         PerfThroughput(9),
-                         msg="Aggregation failed with max")
+        self.assertEqual(
+            max_vals[PerfThroughput],
+            PerfThroughput(9),
+            msg="Aggregation failed with max",
+        )
 
-        self.assertEqual(avg_vals[GPUUtilization],
-                         GPUUtilization(4.5),
-                         msg="Aggregation failed with max")
+        self.assertEqual(
+            avg_vals[GPUUtilization],
+            GPUUtilization(4.5),
+            msg="Aggregation failed with max",
+        )
 
 
 if __name__ == "__main__":

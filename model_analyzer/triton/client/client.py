@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
-
-from subprocess import DEVNULL
-import time
 import logging
+import time
+from subprocess import DEVNULL
+
+from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -70,8 +71,8 @@ class TritonClient:
                 if retries == 0:
                     raise TritonModelAnalyzerException(e)
         raise TritonModelAnalyzerException(
-            "Could not determine server readiness. "
-            "Number of retries exceeded.")
+            "Could not determine server readiness. " "Number of retries exceeded."
+        )
 
     def load_model(self, model_name):
         """
@@ -92,9 +93,9 @@ class TritonClient:
 
         try:
             self._client.load_model(model_name)
-            logger.debug(f'Model {model_name} loaded')
+            logger.debug(f"Model {model_name} loaded")
         except Exception as e:
-            logger.info(f'Model {model_name} load failed: {e}')
+            logger.info(f"Model {model_name} load failed: {e}")
             return -1
 
     def unload_model(self, model_name):
@@ -116,9 +117,9 @@ class TritonClient:
 
         try:
             self._client.unload_model(model_name)
-            logger.debug(f'Model {model_name} unloaded')
+            logger.debug(f"Model {model_name} unloaded")
         except Exception as e:
-            logger.info(f'Model {model_name} unload failed: {e}')
+            logger.info(f"Model {model_name} unload failed: {e}")
             return -1
 
     def wait_for_model_ready(self, model_name, num_retries, sleep_time=1):
@@ -155,8 +156,7 @@ class TritonClient:
                 time.sleep(sleep_time)
                 retries -= 1
 
-        logger.info(
-            f'Model readiness failed for model {model_name}. Error {error}')
+        logger.info(f"Model readiness failed for model {model_name}. Error {error}")
         return -1
 
     def get_model_config(self, model_name, num_retries):
@@ -182,7 +182,7 @@ class TritonClient:
         return model_config_dict
 
     def is_server_ready(self):
-        """ 
+        """
         Returns true if the server is ready. Else False
         """
         return self._client.is_server_ready()
@@ -195,11 +195,11 @@ class TritonClient:
         log_output = log_file.read()
 
         if not type(log_output) == str:
-            log_output = log_output.decode('utf-8')
+            log_output = log_output.decode("utf-8")
 
         if log_output:
             if "Unexpected argument:" in log_output:
                 error_start = log_output.find("Unexpected argument:")
                 raise TritonModelAnalyzerException(
-                    f'Error: TritonServer did not launch successfully\n\n{log_output[error_start:]}'
+                    f"Error: TritonServer did not launch successfully\n\n{log_output[error_start:]}"
                 )

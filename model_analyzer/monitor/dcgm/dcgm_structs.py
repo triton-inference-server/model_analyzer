@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ctypes import *
-import sys
-import os
-import threading
-import string
 import json
-import model_analyzer.monitor.dcgm.dcgm_value as dcgmvalue
+import os
 import platform
+import string
+import sys
+import threading
+from ctypes import *
+
 import distro
+
+import model_analyzer.monitor.dcgm.dcgm_value as dcgmvalue
 
 DCGM_MAX_STR_LENGTH = 256
 DCGM_MAX_NUM_DEVICES = 32  # DCGM 2.0 and newer = 32. DCGM 1.8 and older = 16
@@ -66,7 +70,7 @@ DCGM_ST_OK = 0
 DCGM_ST_BADPARAM = -1
 # A generic, unspecified error
 DCGM_ST_GENERIC_ERROR = -3
-# An out of memory error occured
+# An out of memory error occurred
 DCGM_ST_MEMORY = -4
 # Setting not configured
 DCGM_ST_NOT_CONFIGURED = -5
@@ -155,7 +159,7 @@ DCGM_ST_INSUFFICIENT_DRIVER_VERSION = -44
 DCGM_ST_INSTANCE_NOT_FOUND = -45
 # The specified GPU compute instance does not exist
 DCGM_ST_COMPUTE_INSTANCE_NOT_FOUND = -46
-# Couldn't kill a child process within the retries
+# Could not kill a child process within the retries
 DCGM_ST_CHILD_NOT_KILLED = -47
 # Detected an error in a 3rd-party library
 DCGM_ST_3RD_PARTY_LIBRARY_ERROR = -48
@@ -175,11 +179,11 @@ DCGM_GROUP_DEFAULT_COMPUTE_INSTANCES = 4
 # All entities are added to this default group
 DCGM_GROUP_DEFAULT_ENTITIES = 5
 
-DCGM_GROUP_ALL_GPUS = 0x7fffffff
-DCGM_GROUP_ALL_NVSWITCHES = 0x7ffffffe
-DCGM_GROUP_ALL_INSTANCES = 0x7ffffffd
-DCGM_GROUP_ALL_COMPUTE_INSTANCES = 0x7ffffffc
-DCGM_GROUP_ALL_ENTITIES = 0x7ffffffb
+DCGM_GROUP_ALL_GPUS = 0x7FFFFFFF
+DCGM_GROUP_ALL_NVSWITCHES = 0x7FFFFFFE
+DCGM_GROUP_ALL_INSTANCES = 0x7FFFFFFD
+DCGM_GROUP_ALL_COMPUTE_INSTANCES = 0x7FFFFFFC
+DCGM_GROUP_ALL_ENTITIES = 0x7FFFFFFB
 
 # Maximum number of entities per entity group
 DCGM_GROUP_MAX_ENTITIES = 64
@@ -268,102 +272,58 @@ class DCGMError(Exception):
     _valClassMapping = dict()
     # List of currently known error codes
     _error_code_to_string = {
-        DCGM_ST_OK:
-            "Success",
-        DCGM_ST_BADPARAM:
-            "Bad parameter passed to function",
-        DCGM_ST_GENERIC_ERROR:
-            "Generic unspecified error",
-        DCGM_ST_MEMORY:
-            "Out of memory error",
-        DCGM_ST_NOT_CONFIGURED:
-            "Setting not configured",
-        DCGM_ST_NOT_SUPPORTED:
-            "Feature not supported",
-        DCGM_ST_INIT_ERROR:
-            "DCGM initialization error",
-        DCGM_ST_NVML_ERROR:
-            "NVML error",
-        DCGM_ST_PENDING:
-            "Object is in a pending state",
-        DCGM_ST_UNINITIALIZED:
-            "Object is in an undefined state",
-        DCGM_ST_TIMEOUT:
-            "Timeout",
-        DCGM_ST_VER_MISMATCH:
-            "API version mismatch",
-        DCGM_ST_UNKNOWN_FIELD:
-            "Unknown field",
-        DCGM_ST_NO_DATA:
-            "No data is available",
-        DCGM_ST_STALE_DATA:
-            "Data is considered stale",
-        DCGM_ST_NOT_WATCHED:
-            "Field is not being updated",
-        DCGM_ST_NO_PERMISSION:
-            "Not permissioned",
-        DCGM_ST_GPU_IS_LOST:
-            "GPU is unreachable",
-        DCGM_ST_RESET_REQUIRED:
-            "GPU requires a reset",
-        DCGM_ST_FUNCTION_NOT_FOUND:
-            "Unable to find function",
-        DCGM_ST_CONNECTION_NOT_VALID:
-            "The connection to the host engine is not valid any longer",
-        DCGM_ST_GPU_NOT_SUPPORTED:
-            "This GPU is not supported by DCGM",
-        DCGM_ST_GROUP_INCOMPATIBLE:
-            "GPUs are incompatible with each other for\
+        DCGM_ST_OK: "Success",
+        DCGM_ST_BADPARAM: "Bad parameter passed to function",
+        DCGM_ST_GENERIC_ERROR: "Generic unspecified error",
+        DCGM_ST_MEMORY: "Out of memory error",
+        DCGM_ST_NOT_CONFIGURED: "Setting not configured",
+        DCGM_ST_NOT_SUPPORTED: "Feature not supported",
+        DCGM_ST_INIT_ERROR: "DCGM initialization error",
+        DCGM_ST_NVML_ERROR: "NVML error",
+        DCGM_ST_PENDING: "Object is in a pending state",
+        DCGM_ST_UNINITIALIZED: "Object is in an undefined state",
+        DCGM_ST_TIMEOUT: "Timeout",
+        DCGM_ST_VER_MISMATCH: "API version mismatch",
+        DCGM_ST_UNKNOWN_FIELD: "Unknown field",
+        DCGM_ST_NO_DATA: "No data is available",
+        DCGM_ST_STALE_DATA: "Data is considered stale",
+        DCGM_ST_NOT_WATCHED: "Field is not being updated",
+        DCGM_ST_NO_PERMISSION: "Not permissioned",
+        DCGM_ST_GPU_IS_LOST: "GPU is unreachable",
+        DCGM_ST_RESET_REQUIRED: "GPU requires a reset",
+        DCGM_ST_FUNCTION_NOT_FOUND: "Unable to find function",
+        DCGM_ST_CONNECTION_NOT_VALID: "The connection to the host engine is not valid any longer",
+        DCGM_ST_GPU_NOT_SUPPORTED: "This GPU is not supported by DCGM",
+        DCGM_ST_GROUP_INCOMPATIBLE: "GPUs are incompatible with each other for\
                  the requested operation",
-        DCGM_ST_MAX_LIMIT:
-            "Max limit reached for the object",
-        DCGM_ST_LIBRARY_NOT_FOUND:
-            "DCGM library could not be found",
-        DCGM_ST_DUPLICATE_KEY:
-            "Duplicate key passed to function",
-        DCGM_ST_GPU_IN_SYNC_BOOST_GROUP:
-            "GPU is already a part of a sync boost group",
-        DCGM_ST_GPU_NOT_IN_SYNC_BOOST_GROUP:
-            "GPU is not a part of the sync boost group",
-        DCGM_ST_REQUIRES_ROOT:
-            "This operation is not supported when the host engine\
+        DCGM_ST_MAX_LIMIT: "Max limit reached for the object",
+        DCGM_ST_LIBRARY_NOT_FOUND: "DCGM library could not be found",
+        DCGM_ST_DUPLICATE_KEY: "Duplicate key passed to function",
+        DCGM_ST_GPU_IN_SYNC_BOOST_GROUP: "GPU is already a part of a sync boost group",
+        DCGM_ST_GPU_NOT_IN_SYNC_BOOST_GROUP: "GPU is not a part of the sync boost group",
+        DCGM_ST_REQUIRES_ROOT: "This operation is not supported when the host engine\
                 is running as non root",
-        DCGM_ST_NVVS_ERROR:
-            "DCGM GPU Diagnostic returned an error.",
-        DCGM_ST_INSUFFICIENT_SIZE:
-            "An input argument is not large enough",
-        DCGM_ST_FIELD_UNSUPPORTED_BY_API:
-            "The given field ID is not supported by the API being called",
-        DCGM_ST_MODULE_NOT_LOADED:
-            "This request is serviced by a module of DCGM that\
+        DCGM_ST_NVVS_ERROR: "DCGM GPU Diagnostic returned an error.",
+        DCGM_ST_INSUFFICIENT_SIZE: "An input argument is not large enough",
+        DCGM_ST_FIELD_UNSUPPORTED_BY_API: "The given field ID is not supported by the API being called",
+        DCGM_ST_MODULE_NOT_LOADED: "This request is serviced by a module of DCGM that\
                 is not currently loaded",
-        DCGM_ST_IN_USE:
-            "The requested operation could not be completed because\
+        DCGM_ST_IN_USE: "The requested operation could not be completed because\
                 the affected resource is in use",
-        DCGM_ST_GROUP_IS_EMPTY:
-            "The specified group is empty, and this operation\
+        DCGM_ST_GROUP_IS_EMPTY: "The specified group is empty, and this operation\
                 is incompatible with an empty group",
-        DCGM_ST_PROFILING_NOT_SUPPORTED:
-            "Profiling is not supported for this group of GPUs or GPU",
-        DCGM_ST_PROFILING_LIBRARY_ERROR:
-            "The third-party Profiling module returned an unrecoverable error",
-        DCGM_ST_PROFILING_MULTI_PASS:
-            "The requested profiling metrics\
+        DCGM_ST_PROFILING_NOT_SUPPORTED: "Profiling is not supported for this group of GPUs or GPU",
+        DCGM_ST_PROFILING_LIBRARY_ERROR: "The third-party Profiling module returned an unrecoverable error",
+        DCGM_ST_PROFILING_MULTI_PASS: "The requested profiling metrics\
                 cannot be collected in a single pass",
-        DCGM_ST_DIAG_ALREADY_RUNNING:
-            "A diag instance is already running, cannot\
+        DCGM_ST_DIAG_ALREADY_RUNNING: "A diag instance is already running, cannot\
                 run a new diag until the current one finishes",
-        DCGM_ST_DIAG_BAD_JSON:
-            "The GPU Diagnostic returned Json that cannot be parsed.",
-        DCGM_ST_DIAG_BAD_LAUNCH:
-            "Error while launching the GPU Diagnostic.",
-        DCGM_ST_DIAG_VARIANCE:
-            "The results of training DCGM GPU Diagnostic cannot\
+        DCGM_ST_DIAG_BAD_JSON: "The GPU Diagnostic returned Json that cannot be parsed.",
+        DCGM_ST_DIAG_BAD_LAUNCH: "Error while launching the GPU Diagnostic.",
+        DCGM_ST_DIAG_VARIANCE: "The results of training DCGM GPU Diagnostic cannot\
                 be trusted because they vary too much from run to run",
-        DCGM_ST_DIAG_THRESHOLD_EXCEEDED:
-            "A field value met or exceeded the error threshold.",
-        DCGM_ST_INSUFFICIENT_DRIVER_VERSION:
-            "The installed driver version is insufficient for this API"
+        DCGM_ST_DIAG_THRESHOLD_EXCEEDED: "A field value met or exceeded the error threshold.",
+        DCGM_ST_INSUFFICIENT_DRIVER_VERSION: "The installed driver version is insufficient for this API",
     }
 
     def __new__(typ, value):
@@ -382,7 +342,8 @@ class DCGMError(Exception):
         try:
             if self.value not in DCGMError._error_code_to_string:
                 DCGMError._error_code_to_string[self.value] = str(
-                    _dcgmErrorString(self.value))
+                    _dcgmErrorString(self.value)
+                )
             msg = DCGMError._error_code_to_string[self.value]
         # Ensure we catch all exceptions, otherwise the error code will be
         # hidden in a traceback
@@ -428,24 +389,22 @@ def _extractDCGMErrorsAsClasses():
     """
 
     this_module = sys.modules[__name__]
-    dcgmErrorsNames = filter(lambda x: x.startswith("DCGM_ST_"),
-                             dir(this_module))
+    dcgmErrorsNames = filter(lambda x: x.startswith("DCGM_ST_"), dir(this_module))
     for err_name in dcgmErrorsNames:
         # e.g. Turn DCGM_ST_UNINITIALIZED into DCGMError_Uninitialized
         class_name = "DCGMError_" + string.capwords(
-            err_name.replace("DCGM_ST_", ""), "_").replace("_", "")
+            err_name.replace("DCGM_ST_", ""), "_"
+        ).replace("_", "")
         err_val = getattr(this_module, err_name)
 
         def gen_new(val):
-
             def new(typ):
                 obj = DCGMError.__new__(typ, val)
                 return obj
 
             return new
 
-        new_error_class = type(class_name, (DCGMError,),
-                               {'__new__': gen_new(err_val)})
+        new_error_class = type(class_name, (DCGMError,), {"__new__": gen_new(err_val)})
         new_error_class.__module__ = __name__
         setattr(this_module, class_name, new_error_class)
         DCGMError._valClassMapping[err_val] = new_error_class
@@ -475,7 +434,7 @@ class _PrintableStructure(Structure):
     e.g. class that has _field_ 'hex_value', c_uint could be formatted with
       _fmt_ = {"hex_value" : "%08X"}
     to produce nicer output.
-    Default fomratting string for all fields can be set with key "<default>"
+    Default formatting string for all fields can be set with key "<default>"
     like:
       _fmt_ = {"<default>" : "%d MHz"} # e.g all values are numbers in MHz.
     If not set it's assumed to be just "%s"
@@ -602,24 +561,25 @@ def _LoadDcgmLibrary(libDcgmPath=None):
                         dcgmLib = CDLL(
                             os.path.join(
                                 os.getenv("ProgramFiles", "C:/Program Files"),
-                                "NVIDIA Corporation/NVSMI/dcgm.dll"))
+                                "NVIDIA Corporation/NVSMI/dcgm.dll",
+                            )
+                        )
                     else:
                         if not libDcgmPath:
-                            dist_name, dist_version, dist_id = \
-                                distro.linux_distribution(
-                                    full_distribution_name=0
-                                )
+                            (
+                                dist_name,
+                                dist_version,
+                                dist_id,
+                            ) = distro.linux_distribution(full_distribution_name=0)
                             dist_name = dist_name.lower()
-                            if dist_name in {'ubuntu', 'debian'}:
-                                libDcgmPath = '/usr/lib/{}-linux-gnu'.format(
-                                    platform.machine())
-                            elif dist_name in {
-                                    'fedora', 'redhat', 'centos', 'suse'
-                            }:
-                                libDcgmPath = '/usr/lib64'
+                            if dist_name in {"ubuntu", "debian"}:
+                                libDcgmPath = "/usr/lib/{}-linux-gnu".format(
+                                    platform.machine()
+                                )
+                            elif dist_name in {"fedora", "redhat", "centos", "suse"}:
+                                libDcgmPath = "/usr/lib64"
 
-                        dcgmLib = CDLL(os.path.join(libDcgmPath,
-                                                    "libdcgm.so.2"))
+                        dcgmLib = CDLL(os.path.join(libDcgmPath, "libdcgm.so.2"))
 
                 except OSError as ose:
                     _dcgmCheckReturn(DCGM_ST_LIBRARY_NOT_FOUND)
@@ -669,15 +629,19 @@ def _dcgmErrorString(result):
 
 
 class c_dcgmConnectV2Params_v1(_PrintableStructure):
-    _fields_ = [('version', c_uint), ('persistAfterDisconnect', c_uint)]
+    _fields_ = [("version", c_uint), ("persistAfterDisconnect", c_uint)]
 
 
 c_dcgmConnectV2Params_version1 = make_dcgm_version(c_dcgmConnectV2Params_v1, 1)
 
 
 class c_dcgmConnectV2Params_v2(_PrintableStructure):
-    _fields_ = [('version', c_uint), ('persistAfterDisconnect', c_uint),
-                ('timeoutMs', c_uint), ('addressIsUnixSocket', c_uint)]
+    _fields_ = [
+        ("version", c_uint),
+        ("persistAfterDisconnect", c_uint),
+        ("timeoutMs", c_uint),
+        ("addressIsUnixSocket", c_uint),
+    ]
 
 
 c_dcgmConnectV2Params_version2 = make_dcgm_version(c_dcgmConnectV2Params_v2, 2)
@@ -686,8 +650,8 @@ c_dcgmConnectV2Params_version = c_dcgmConnectV2Params_version2
 
 class c_dcgmHostengineHealth_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint),
-        ('overallHealth', c_uint),
+        ("version", c_uint),
+        ("overallHealth", c_uint),
     ]
 
 
@@ -698,9 +662,9 @@ dcgmHostengineHealth_version = dcgmHostengineHealth_version1
 # Represents memory and proc clocks for a device
 class c_dcgmClockSet_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint),
-        ('memClock', c_uint),  # Memory Clock
-        ('smClock', c_uint)  # SM Clock
+        ("version", c_uint),
+        ("memClock", c_uint),  # Memory Clock
+        ("smClock", c_uint),  # SM Clock
     ]
 
 
@@ -709,8 +673,8 @@ class c_dcgmClockSet_v1(_PrintableStructure):
 # Added in DCGM 1.5.0
 class c_dcgmGroupEntityPair_t(_PrintableStructure):
     _fields_ = [
-        ('entityGroupId', c_uint32),  # Entity Group ID entity belongs to
-        ('entityId', c_uint32)  # Entity ID of the entity
+        ("entityGroupId", c_uint32),  # Entity Group ID entity belongs to
+        ("entityId", c_uint32),  # Entity ID of the entity
     ]
 
 
@@ -719,10 +683,12 @@ class c_dcgmGroupEntityPair_t(_PrintableStructure):
 #  * Added in DCGM 1.5.0
 #  */
 class c_dcgmGroupInfo_v2(_PrintableStructure):
-    _fields_ = [('version', c_uint), ('count', c_uint),
-                ('groupName', c_char * DCGM_MAX_STR_LENGTH),
-                ('entityList',
-                 c_dcgmGroupEntityPair_t * DCGM_GROUP_MAX_ENTITIES)]
+    _fields_ = [
+        ("version", c_uint),
+        ("count", c_uint),
+        ("groupName", c_char * DCGM_MAX_STR_LENGTH),
+        ("entityList", c_dcgmGroupEntityPair_t * DCGM_GROUP_MAX_ENTITIES),
+    ]
 
 
 c_dcgmGroupInfo_version2 = make_dcgm_version(c_dcgmGroupInfo_v2, 2)
@@ -745,10 +711,11 @@ class c_dcgmMigHierarchyInfo_t(_PrintableStructure):
     Represents a pair of entity pairings to uniquely identify an entity and
     its place in the hierarchy.
     """
+
     _fields_ = [
-        ('entity', c_dcgmGroupEntityPair_t),
-        ('parent', c_dcgmGroupEntityPair_t),
-        ('sliceProfile', c_uint),
+        ("entity", c_dcgmGroupEntityPair_t),
+        ("parent", c_dcgmGroupEntityPair_t),
+        ("sliceProfile", c_uint),
     ]
 
 
@@ -773,10 +740,11 @@ class c_dcgmMigHierarchy_v1(_PrintableStructure):
     """
     Structure to store the GPU hierarchy for a system
     """
+
     _fields_ = [
-        ('version', c_uint),
-        ('count', c_uint),
-        ('entityList', c_dcgmMigHierarchyInfo_t * DCGM_MAX_HIERARCHY_INFO),
+        ("version", c_uint),
+        ("count", c_uint),
+        ("entityList", c_dcgmMigHierarchyInfo_t * DCGM_MAX_HIERARCHY_INFO),
     ]
 
 
@@ -785,10 +753,10 @@ c_dcgmMigHierarchy_version1 = make_dcgm_version(c_dcgmMigHierarchy_v1, 1)
 
 class c_dcgmDeleteMigEntity_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint),
-        ('entityGroupId', c_uint32),
-        ('entityId', c_uint32),
-        ('flags', c_uint),
+        ("version", c_uint),
+        ("entityGroupId", c_uint32),
+        ("entityId", c_uint32),
+        ("flags", c_uint),
     ]
 
 
@@ -805,11 +773,11 @@ DcgmMigCreateComputeInstance = 1
 
 class c_dcgmCreateMigEntity_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint),
-        ('parentId', c_uint32),
-        ('profile', c_uint32),
-        ('createOption', c_uint32),
-        ('flags', c_uint),
+        ("version", c_uint),
+        ("parentId", c_uint32),
+        ("profile", c_uint32),
+        ("createOption", c_uint32),
+        ("flags", c_uint),
     ]
 
 
@@ -820,93 +788,137 @@ class c_dcgmErrorInfo_v1(_PrintableStructure):
     """
     Structure to represent error attributes
     """
-    _fields_ = [('gpuId', c_uint), ('fieldId', c_ushort), ('status', c_int)]
+
+    _fields_ = [("gpuId", c_uint), ("fieldId", c_ushort), ("status", c_int)]
 
 
 class c_dcgmDeviceSupportedClockSets_v1(_PrintableStructure):
     """
     Represents list of supported clocks for a device
     """
-    _fields_ = [('version', c_uint), ('count', c_uint),
-                ('clockSet', c_dcgmClockSet_v1 * DCGM_MAX_CLOCKS)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("count", c_uint),
+        ("clockSet", c_dcgmClockSet_v1 * DCGM_MAX_CLOCKS),
+    ]
 
 
 class c_dcgmDevicePidAccountingStats_v1(_PrintableStructure):
     """
     epresents accounting information for a device and pid
     """
-    _fields_ = [('version', c_uint32), ('pid', c_uint32),
-                ('gpuUtilization', c_uint32), ('memoryUtilization', c_uint32),
-                ('maxMemoryUsage', c_uint64), ('startTimestamp', c_uint64),
-                ('activeTimeUsec', c_uint64)]
+
+    _fields_ = [
+        ("version", c_uint32),
+        ("pid", c_uint32),
+        ("gpuUtilization", c_uint32),
+        ("memoryUtilization", c_uint32),
+        ("maxMemoryUsage", c_uint64),
+        ("startTimestamp", c_uint64),
+        ("activeTimeUsec", c_uint64),
+    ]
 
 
 class c_dcgmDeviceThermals_v1(_PrintableStructure):
     """
     Represents thermal information
     """
-    _fields_ = [('version', c_uint), ('slowdownTemp', c_uint),
-                ('shutdownTemp', c_uint)]
+
+    _fields_ = [("version", c_uint), ("slowdownTemp", c_uint), ("shutdownTemp", c_uint)]
 
 
 class c_dcgmDevicePowerLimits_v1(_PrintableStructure):
     """
     Represents various power limits
     """
-    _fields_ = [('version', c_uint), ('curPowerLimit', c_uint),
-                ('defaultPowerLimit', c_uint), ('enforcedPowerLimit', c_uint),
-                ('minPowerLimit', c_uint), ('maxPowerLimit', c_uint)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("curPowerLimit", c_uint),
+        ("defaultPowerLimit", c_uint),
+        ("enforcedPowerLimit", c_uint),
+        ("minPowerLimit", c_uint),
+        ("maxPowerLimit", c_uint),
+    ]
 
 
 class c_dcgmDeviceIdentifiers_v1(_PrintableStructure):
     """
     Represents device identifiers
     """
-    _fields_ = [('version', c_uint),
-                ('brandName', c_char * DCGM_MAX_STR_LENGTH),
-                ('deviceName', c_char * DCGM_MAX_STR_LENGTH),
-                ('pciBusId', c_char * DCGM_MAX_STR_LENGTH),
-                ('serial', c_char * DCGM_MAX_STR_LENGTH),
-                ('uuid', c_char * DCGM_MAX_STR_LENGTH),
-                ('vbios', c_char * DCGM_MAX_STR_LENGTH),
-                ('inforomImageVersion', c_char * DCGM_MAX_STR_LENGTH),
-                ('pciDeviceId', c_uint32), ('pciSubSystemId', c_uint32),
-                ('driverVersion', c_char * DCGM_MAX_STR_LENGTH),
-                ('virtualizationMode', c_uint32)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("brandName", c_char * DCGM_MAX_STR_LENGTH),
+        ("deviceName", c_char * DCGM_MAX_STR_LENGTH),
+        ("pciBusId", c_char * DCGM_MAX_STR_LENGTH),
+        ("serial", c_char * DCGM_MAX_STR_LENGTH),
+        ("uuid", c_char * DCGM_MAX_STR_LENGTH),
+        ("vbios", c_char * DCGM_MAX_STR_LENGTH),
+        ("inforomImageVersion", c_char * DCGM_MAX_STR_LENGTH),
+        ("pciDeviceId", c_uint32),
+        ("pciSubSystemId", c_uint32),
+        ("driverVersion", c_char * DCGM_MAX_STR_LENGTH),
+        ("virtualizationMode", c_uint32),
+    ]
 
 
 class c_dcgmDeviceMemoryUsage_v1(_PrintableStructure):
     """
     Represents memory utilization
     """
-    _fields_ = [('version', c_uint), ('bar1Total', c_uint), ('fbTotal', c_uint),
-                ('fbUsed', c_uint), ('fbFree', c_uint)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("bar1Total", c_uint),
+        ("fbTotal", c_uint),
+        ("fbUsed", c_uint),
+        ("fbFree", c_uint),
+    ]
 
 
 class c_dcgmDeviceVgpuUtilInfo_v1(_PrintableStructure):
     """
     Represents utilization values of vGPUs running on the device
     """
-    _fields_ = [('version', c_uint), ('vgpuId', c_uint), ('smUtil', c_uint),
-                ('memUtil', c_uint), ('encUtil', c_uint), ('decUtil', c_uint)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("vgpuId", c_uint),
+        ("smUtil", c_uint),
+        ("memUtil", c_uint),
+        ("encUtil", c_uint),
+        ("decUtil", c_uint),
+    ]
 
 
 # /**
 #  * Utilization values for processes running within vGPU VMs using the device
 #  */
 class c_dcgmDeviceVgpuProcessUtilInfo_v1(_PrintableStructure):
-    _fields_ = [('version', c_uint), ('vgpuId', c_uint), ('pid', c_uint),
-                ('processName', c_char * DCGM_VGPU_NAME_BUFFER_SIZE),
-                ('smUtil', c_uint), ('memUtil', c_uint), ('encUtil', c_uint),
-                ('decUtil', c_uint)]
+    _fields_ = [
+        ("version", c_uint),
+        ("vgpuId", c_uint),
+        ("pid", c_uint),
+        ("processName", c_char * DCGM_VGPU_NAME_BUFFER_SIZE),
+        ("smUtil", c_uint),
+        ("memUtil", c_uint),
+        ("encUtil", c_uint),
+        ("decUtil", c_uint),
+    ]
 
 
 # /**
 #  * Represents current encoder statistics for the given device/vGPU instance
 #  */
 class c_dcgmDeviceEncStats_v1(_PrintableStructure):
-    _fields_ = [('version', c_uint), ('sessionCount', c_uint),
-                ('averageFps', c_uint), ('averageLatency', c_uint)]
+    _fields_ = [
+        ("version", c_uint),
+        ("sessionCount", c_uint),
+        ("averageFps", c_uint),
+        ("averageLatency", c_uint),
+    ]
 
 
 class c_dcgmDeviceVgpuEncSessions_v1(_PrintableStructure):
@@ -914,10 +926,18 @@ class c_dcgmDeviceVgpuEncSessions_v1(_PrintableStructure):
     Represents information about active encoder sessions on the given vGPU
     instance
     """
-    _fields_ = [('version', c_uint), ('vgpuId', c_uint), ('sessionId', c_uint),
-                ('pid', c_uint), ('codecType', c_uint), ('hResolution', c_uint),
-                ('vResolution', c_uint), ('averageFps', c_uint),
-                ('averageLatency', c_uint)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("vgpuId", c_uint),
+        ("sessionId", c_uint),
+        ("pid", c_uint),
+        ("codecType", c_uint),
+        ("hResolution", c_uint),
+        ("vResolution", c_uint),
+        ("averageFps", c_uint),
+        ("averageLatency", c_uint),
+    ]
 
 
 class c_dcgmDeviceFbcStats_v1(_PrintableStructure):
@@ -925,8 +945,13 @@ class c_dcgmDeviceFbcStats_v1(_PrintableStructure):
     Represents current frame buffer capture sessions statistics for the given
     device/vGPU instance
     """
-    _fields_ = [('version', c_uint), ('sessionCount', c_uint),
-                ('averageFps', c_uint), ('averageLatency', c_uint)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("sessionCount", c_uint),
+        ("averageFps", c_uint),
+        ("averageLatency", c_uint),
+    ]
 
 
 class c_dcgmDeviceFbcSessionInfo_t(_PrintableStructure):
@@ -934,42 +959,63 @@ class c_dcgmDeviceFbcSessionInfo_t(_PrintableStructure):
     Represents information about active FBC session on the given device/vGPU
     instance
     """
-    _fields_ = [('version', c_uint), ('sessionId', c_uint), ('pid', c_uint),
-                ('vgpuId', c_uint), ('displayOrdinal', c_uint),
-                ('sessionType', c_uint), ('sessionFlags', c_uint),
-                ('hMaxResolution', c_uint), ('vMaxResolution', c_uint),
-                ('hResolution', c_uint), ('vResolution', c_uint),
-                ('averageFps', c_uint), ('averageLatency', c_uint)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("sessionId", c_uint),
+        ("pid", c_uint),
+        ("vgpuId", c_uint),
+        ("displayOrdinal", c_uint),
+        ("sessionType", c_uint),
+        ("sessionFlags", c_uint),
+        ("hMaxResolution", c_uint),
+        ("vMaxResolution", c_uint),
+        ("hResolution", c_uint),
+        ("vResolution", c_uint),
+        ("averageFps", c_uint),
+        ("averageLatency", c_uint),
+    ]
 
 
 class c_dcgmDeviceFbcSessions_v1(_PrintableStructure):
     """
     Represents all the active FBC sessions on the given device/vGPU instance
     """
-    _fields_ = [('version', c_uint), ('sessionCount', c_uint),
-                ('sessionInfo',
-                 c_dcgmDeviceFbcSessionInfo_t * DCGM_MAX_FBC_SESSIONS)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("sessionCount", c_uint),
+        ("sessionInfo", c_dcgmDeviceFbcSessionInfo_t * DCGM_MAX_FBC_SESSIONS),
+    ]
 
 
 class c_dcgmDeviceVgpuTypeInfo_v1(_PrintableStructure):
     """
     Represents static info related to vGPU types supported on the device
     """
-    _fields_ = [('version', c_uint), ('vgpuTypeId', c_uint),
-                ('vgpuTypeName', c_char * DCGM_VGPU_NAME_BUFFER_SIZE),
-                ('vgpuTypeClass', c_char * DCGM_VGPU_NAME_BUFFER_SIZE),
-                ('vgpuTypeLicense', c_char * DCGM_GRID_LICENSE_BUFFER_SIZE),
-                ('deviceId', c_uint), ('subsystemId', c_uint),
-                ('numDisplayHeads', c_uint), ('maxInstances', c_uint),
-                ('frameRateLimit', c_uint), ('maxResolutionX', c_uint),
-                ('maxResolutionY', c_uint), ('fbTotal', c_uint)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("vgpuTypeId", c_uint),
+        ("vgpuTypeName", c_char * DCGM_VGPU_NAME_BUFFER_SIZE),
+        ("vgpuTypeClass", c_char * DCGM_VGPU_NAME_BUFFER_SIZE),
+        ("vgpuTypeLicense", c_char * DCGM_GRID_LICENSE_BUFFER_SIZE),
+        ("deviceId", c_uint),
+        ("subsystemId", c_uint),
+        ("numDisplayHeads", c_uint),
+        ("maxInstances", c_uint),
+        ("frameRateLimit", c_uint),
+        ("maxResolutionX", c_uint),
+        ("maxResolutionY", c_uint),
+        ("fbTotal", c_uint),
+    ]
 
 
 class c_dcgmDeviceSettings_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint),
-        ('persistenceModeEnabled', c_uint),
-        ('migModeEnabled', c_uint),
+        ("version", c_uint),
+        ("persistenceModeEnabled", c_uint),
+        ("migModeEnabled", c_uint),
     ]
 
 
@@ -977,13 +1023,16 @@ class c_dcgmDeviceAttributes_v1(_PrintableStructure):
     """
     Represents attributes corresponding to a device
     """
-    _fields_ = [('version', c_uint),
-                ('clockSets', c_dcgmDeviceSupportedClockSets_v1),
-                ('thermalSettings', c_dcgmDeviceThermals_v1),
-                ('powerLimits', c_dcgmDevicePowerLimits_v1),
-                ('identifiers', c_dcgmDeviceIdentifiers_v1),
-                ('memoryUsage', c_dcgmDeviceMemoryUsage_v1),
-                ('unused', c_char * 208)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("clockSets", c_dcgmDeviceSupportedClockSets_v1),
+        ("thermalSettings", c_dcgmDeviceThermals_v1),
+        ("powerLimits", c_dcgmDevicePowerLimits_v1),
+        ("identifiers", c_dcgmDeviceIdentifiers_v1),
+        ("memoryUsage", c_dcgmDeviceMemoryUsage_v1),
+        ("unused", c_char * 208),
+    ]
 
 
 dcgmDeviceAttributes_version1 = make_dcgm_version(c_dcgmDeviceAttributes_v1, 1)
@@ -993,14 +1042,15 @@ class c_dcgmDeviceAttributes_v2(_PrintableStructure):
     """
     Represents attributes corresponding to a device
     """
+
     _fields_ = [
-        ('version', c_uint),
-        ('clockSets', c_dcgmDeviceSupportedClockSets_v1),
-        ('thermalSettings', c_dcgmDeviceThermals_v1),
-        ('powerLimits', c_dcgmDevicePowerLimits_v1),
-        ('identifiers', c_dcgmDeviceIdentifiers_v1),
-        ('memoryUsage', c_dcgmDeviceMemoryUsage_v1),
-        ('settings', c_dcgmDeviceSettings_v1),
+        ("version", c_uint),
+        ("clockSets", c_dcgmDeviceSupportedClockSets_v1),
+        ("thermalSettings", c_dcgmDeviceThermals_v1),
+        ("powerLimits", c_dcgmDevicePowerLimits_v1),
+        ("identifiers", c_dcgmDeviceIdentifiers_v1),
+        ("memoryUsage", c_dcgmDeviceMemoryUsage_v1),
+        ("settings", c_dcgmDeviceSettings_v1),
     ]
 
 
@@ -1011,51 +1061,60 @@ class c_dcgmVgpuDeviceAttributes_v6(_PrintableStructure):
     """
     Represents vGPU attributes corresponding to a device
     """
+
     _fields_ = [
-        ('version', c_uint), ('activeVgpuInstanceCount', c_uint),
-        ('activeVgpuInstanceIds', c_uint * DCGM_MAX_VGPU_INSTANCES_PER_PGPU),
-        ('creatableVgpuTypeCount', c_uint),
-        ('creatableVgpuTypeIds', c_uint * DCGM_MAX_VGPU_TYPES_PER_PGPU),
-        ('supportedVgpuTypeCount', c_uint),
-        ('supportedVgpuTypeInfo',
-         c_dcgmDeviceVgpuTypeInfo_v1 * DCGM_MAX_VGPU_TYPES_PER_PGPU),
-        ('vgpuUtilInfo',
-         c_dcgmDeviceVgpuUtilInfo_v1 * DCGM_MAX_VGPU_TYPES_PER_PGPU),
-        ('gpuUtil', c_uint), ('memCopyUtil', c_uint), ('encUtil', c_uint),
-        ('decUtil', c_uint)
+        ("version", c_uint),
+        ("activeVgpuInstanceCount", c_uint),
+        ("activeVgpuInstanceIds", c_uint * DCGM_MAX_VGPU_INSTANCES_PER_PGPU),
+        ("creatableVgpuTypeCount", c_uint),
+        ("creatableVgpuTypeIds", c_uint * DCGM_MAX_VGPU_TYPES_PER_PGPU),
+        ("supportedVgpuTypeCount", c_uint),
+        (
+            "supportedVgpuTypeInfo",
+            c_dcgmDeviceVgpuTypeInfo_v1 * DCGM_MAX_VGPU_TYPES_PER_PGPU,
+        ),
+        ("vgpuUtilInfo", c_dcgmDeviceVgpuUtilInfo_v1 * DCGM_MAX_VGPU_TYPES_PER_PGPU),
+        ("gpuUtil", c_uint),
+        ("memCopyUtil", c_uint),
+        ("encUtil", c_uint),
+        ("decUtil", c_uint),
     ]
 
 
-dcgmVgpuDeviceAttributes_version6 = make_dcgm_version(
-    c_dcgmVgpuDeviceAttributes_v6, 1)
+dcgmVgpuDeviceAttributes_version6 = make_dcgm_version(c_dcgmVgpuDeviceAttributes_v6, 1)
 
 
 class c_dcgmVgpuInstanceAttributes_v1(_PrintableStructure):
     """
     Represents attributes specific to vGPU instance
     """
-    _fields_ = [('version', c_uint),
-                ('vmId', c_char * DCGM_DEVICE_UUID_BUFFER_SIZE),
-                ('vmName', c_char * DCGM_DEVICE_UUID_BUFFER_SIZE),
-                ('vgpuTypeId', c_uint),
-                ('vgpuUuid', c_char * DCGM_DEVICE_UUID_BUFFER_SIZE),
-                ('vgpuDriverVersion', c_char * DCGM_DEVICE_UUID_BUFFER_SIZE),
-                ('fbUsage', c_uint), ('licenseStatus', c_uint),
-                ('frameRateLimit', c_uint)]
+
+    _fields_ = [
+        ("version", c_uint),
+        ("vmId", c_char * DCGM_DEVICE_UUID_BUFFER_SIZE),
+        ("vmName", c_char * DCGM_DEVICE_UUID_BUFFER_SIZE),
+        ("vgpuTypeId", c_uint),
+        ("vgpuUuid", c_char * DCGM_DEVICE_UUID_BUFFER_SIZE),
+        ("vgpuDriverVersion", c_char * DCGM_DEVICE_UUID_BUFFER_SIZE),
+        ("fbUsage", c_uint),
+        ("licenseStatus", c_uint),
+        ("frameRateLimit", c_uint),
+    ]
 
 
 dcgmVgpuInstanceAttributes_version1 = make_dcgm_version(
-    c_dcgmVgpuInstanceAttributes_v1, 1)
+    c_dcgmVgpuInstanceAttributes_v1, 1
+)
 
 
 class c_dcgmConfigPowerLimit(_PrintableStructure):
-    _fields_ = [('type', c_uint), ('val', c_uint)]
+    _fields_ = [("type", c_uint), ("val", c_uint)]
 
 
 class c_dcgmConfigPerfStateSettings_t(_PrintableStructure):
     _fields_ = [
-        ('syncBoost', c_uint),
-        ('targetClocks', c_dcgmClockSet_v1),
+        ("syncBoost", c_uint),
+        ("targetClocks", c_dcgmClockSet_v1),
     ]
 
 
@@ -1063,12 +1122,12 @@ class c_dcgmConfigPerfStateSettings_t(_PrintableStructure):
 class c_dcgmDeviceConfig_v1(_PrintableStructure):
     _fields_ = [
         # version must always be first
-        ('version', c_uint),
-        ('gpuId', c_uint),
-        ('mEccMode', c_uint),
-        ('mComputeMode', c_uint),
-        ('mPerfState', c_dcgmConfigPerfStateSettings_t),
-        ('mPowerLimit', c_dcgmConfigPowerLimit)
+        ("version", c_uint),
+        ("gpuId", c_uint),
+        ("mEccMode", c_uint),
+        ("mComputeMode", c_uint),
+        ("mPerfState", c_dcgmConfigPerfStateSettings_t),
+        ("mPowerLimit", c_dcgmConfigPowerLimit),
     ]
 
 
@@ -1079,12 +1138,12 @@ dcgmDeviceConfig_version1 = make_dcgm_version(c_dcgmDeviceConfig_v1, 1)
 class c_dcgmDeviceVgpuConfig_v1(_PrintableStructure):
     _fields_ = [
         # version must always be first
-        ('version', c_uint),
-        ('gpuId', c_uint),
-        ('mEccMode', c_uint),
-        ('mComputeMode', c_uint),
-        ('mPerfState', c_dcgmConfigPerfStateSettings_t),
-        ('mPowerLimit', c_dcgmConfigPowerLimit)
+        ("version", c_uint),
+        ("gpuId", c_uint),
+        ("mEccMode", c_uint),
+        ("mComputeMode", c_uint),
+        ("mPerfState", c_dcgmConfigPerfStateSettings_t),
+        ("mPowerLimit", c_dcgmConfigPowerLimit),
     ]
 
     def SetBlank(self):
@@ -1105,8 +1164,8 @@ dcgmDeviceVgpuConfig_version1 = make_dcgm_version(c_dcgmDeviceVgpuConfig_v1, 1)
 class c_dcgmPolicyUpdate_v1(_PrintableStructure):
     _fields_ = [
         # version must always be first
-        ('version', c_uint),
-        ('power', c_uint)
+        ("version", c_uint),
+        ("power", c_uint),
     ]
 
 
@@ -1120,10 +1179,10 @@ _dcgmRecvUpdates_t = c_void_p
 class c_dcgmPolicyViolation_v1(_PrintableStructure):
     _fields_ = [
         # version must always be first
-        ('version', c_uint),
-        ('notifyOnEccDbe', c_uint),
-        ('notifyOnPciEvent', c_uint),
-        ('notifyOnMaxRetiredPages', c_uint)
+        ("version", c_uint),
+        ("notifyOnEccDbe", c_uint),
+        ("notifyOnPciEvent", c_uint),
+        ("notifyOnMaxRetiredPages", c_uint),
     ]
 
 
@@ -1141,8 +1200,7 @@ class c_dcgmUnwatchFieldValue_v1(_PrintableStructure):
     _fields_ = []
 
 
-dcgmUnwatchFieldValue_version1 = make_dcgm_version(c_dcgmUnwatchFieldValue_v1,
-                                                   1)
+dcgmUnwatchFieldValue_version1 = make_dcgm_version(c_dcgmUnwatchFieldValue_v1, 1)
 
 
 class c_dcgmUpdateAllFields_v1(_PrintableStructure):
@@ -1192,26 +1250,26 @@ DCGM_DIAG_RESULT_NOT_RUN = 4
 
 class c_dcgmPolicyConditionParmTypes_t(Union):
     _fields_ = [
-        ('boolean', c_bool),
-        ('llval', c_longlong),
+        ("boolean", c_bool),
+        ("llval", c_longlong),
     ]
 
 
 class c_dcgmPolicyConditionParms_t(_PrintableStructure):
-    _fields_ = [('tag', c_uint), ('val', c_dcgmPolicyConditionParmTypes_t)]
+    _fields_ = [("tag", c_uint), ("val", c_dcgmPolicyConditionParmTypes_t)]
 
 
 class c_dcgmPolicy_v1(_PrintableStructure):
     _fields_ = [
         # version must always be first
-        ('version', c_uint),
-        ('condition', c_uint),  # an OR'd list of DCGM_POLICY_COND_*
-        ('mode', c_uint),
-        ('isolation', c_uint),
-        ('action', c_uint),
-        ('validation', c_uint),
-        ('response', c_uint),
-        ('parms', c_dcgmPolicyConditionParms_t * DCGM_POLICY_COND_MAX)
+        ("version", c_uint),
+        ("condition", c_uint),  # an OR'd list of DCGM_POLICY_COND_*
+        ("mode", c_uint),
+        ("isolation", c_uint),
+        ("action", c_uint),
+        ("validation", c_uint),
+        ("response", c_uint),
+        ("parms", c_dcgmPolicyConditionParms_t * DCGM_POLICY_COND_MAX),
     ]
 
 
@@ -1221,17 +1279,17 @@ dcgmPolicy_version1 = make_dcgm_version(c_dcgmPolicy_v1, 1)
 class c_dcgmPolicyConditionPci_t(_PrintableStructure):
     _fields_ = [
         ("timestamp", c_longlong),  # timestamp of the error
-        ("counter", c_uint)  # value of the PCIe replay counter
+        ("counter", c_uint),  # value of the PCIe replay counter
     ]
 
 
 class c_dcgmPolicyConditionDbe_t(_PrintableStructure):
-    LOCATIONS = {'L1': 0, 'L2': 1, 'DEVICE': 2, 'REGISTER': 3, 'TEXTURE': 4}
+    LOCATIONS = {"L1": 0, "L2": 1, "DEVICE": 2, "REGISTER": 3, "TEXTURE": 4}
 
     _fields_ = [
         ("timestamp", c_longlong),  # timestamp of the error
         ("location", c_int),  # location of the error (one of self.LOCATIONS)
-        ("numerrors", c_uint)  # number of errors
+        ("numerrors", c_uint),  # number of errors
     ]
 
 
@@ -1239,21 +1297,21 @@ class c_dcgmPolicyConditionMpr_t(_PrintableStructure):
     _fields_ = [
         ("timestamp", c_longlong),  # timestamp of the error
         ("sbepages", c_uint),  # number of pending pages due to SBE
-        ("dbepages", c_uint)  # number of pending pages due to DBE
+        ("dbepages", c_uint),  # number of pending pages due to DBE
     ]
 
 
 class c_dcgmPolicyConditionThermal_t(_PrintableStructure):
     _fields_ = [
         ("timestamp", c_longlong),  # timestamp of the error
-        ("thermalViolation", c_uint)  # Temperature reached that violated policy
+        ("thermalViolation", c_uint),  # Temperature reached that violated policy
     ]
 
 
 class c_dcgmPolicyConditionPower_t(_PrintableStructure):
     _fields_ = [
         ("timestamp", c_longlong),  # timestamp of the error
-        ("powerViolation", c_uint)  # Power value reached that violated policyy
+        ("powerViolation", c_uint),  # Power value reached that violated policyy
     ]
 
 
@@ -1261,60 +1319,71 @@ class c_dcgmPolicyConditionNvlink_t(_PrintableStructure):
     _fields_ = [
         ("timestamp", c_longlong),  # timestamp of the error
         ("fieldId", c_ushort),  # FieldId of the nvlink error counter
-        ("counter", c_uint)  # Error value reached that violated policyy
+        ("counter", c_uint),  # Error value reached that violated policyy
     ]
 
 
 class c_dcgmPolicyConditionXID_t(_PrintableStructure):
     _fields_ = [
         ("timestamp", c_longlong),  # timestamp of the error
-        ("errnum", c_uint)  # XID error number
+        ("errnum", c_uint),  # XID error number
     ]
 
 
 class c_dcgmPolicyCallbackResponse_v1(_PrintableStructure):
-
     class Value(Union):
         # implement more of the fields when a test requires them
         _fields_ = [
             ("dbe", c_dcgmPolicyConditionDbe_t),  # ECC DBE return structure
-            ("pci",
-             c_dcgmPolicyConditionPci_t),  # PCI replay error return structure
-            ("mpr", c_dcgmPolicyConditionMpr_t
+            ("pci", c_dcgmPolicyConditionPci_t),  # PCI replay error return structure
+            (
+                "mpr",
+                c_dcgmPolicyConditionMpr_t,
             ),  # Max retired pages limit return structure
-            ("thermal", c_dcgmPolicyConditionThermal_t
+            (
+                "thermal",
+                c_dcgmPolicyConditionThermal_t,
             ),  # Thermal policy violations return structure
-            ("power", c_dcgmPolicyConditionPower_t
+            (
+                "power",
+                c_dcgmPolicyConditionPower_t,
             ),  # Power policy violations return structure
-            ("nvlink", c_dcgmPolicyConditionNvlink_t
+            (
+                "nvlink",
+                c_dcgmPolicyConditionNvlink_t,
             ),  # Nvlink policy violations return structure..
-            ("xid", c_dcgmPolicyConditionXID_t
-            )  # XID policy violations return structure
+            (
+                "xid",
+                c_dcgmPolicyConditionXID_t,
+            ),  # XID policy violations return structure
         ]
 
     _fields_ = [
         ("version", c_uint),
         ("condition", c_int),  # an OR'ed list of DCGM_POLICY_COND_*
-        ("val", Value)
+        ("val", Value),
     ]
 
 
 class c_dcgmFieldValue_v1_value(Union):
-    _fields_ = [('i64', c_int64), ('dbl', c_double),
-                ('str', c_char * DCGM_MAX_STR_LENGTH),
-                ('blob', c_byte * DCGM_MAX_BLOB_LENGTH)]
+    _fields_ = [
+        ("i64", c_int64),
+        ("dbl", c_double),
+        ("str", c_char * DCGM_MAX_STR_LENGTH),
+        ("blob", c_byte * DCGM_MAX_BLOB_LENGTH),
+    ]
 
 
 # This structure is used to represent value for the field to be queried.
 class c_dcgmFieldValue_v1(_PrintableStructure):
     _fields_ = [
         # version must always be first
-        ('version', c_uint),
-        ('fieldId', c_ushort),
-        ('fieldType', c_short),
-        ('status', c_int),
-        ('ts', c_int64),
-        ('value', c_dcgmFieldValue_v1_value)
+        ("version", c_uint),
+        ("fieldId", c_ushort),
+        ("fieldType", c_short),
+        ("status", c_int),
+        ("ts", c_int64),
+        ("value", c_dcgmFieldValue_v1_value),
     ]
 
 
@@ -1326,15 +1395,15 @@ dcgmFieldValue_version1 = make_dcgm_version(c_dcgmFieldValue_v1, 1)
 class c_dcgmFieldValue_v2(_PrintableStructure):
     _fields_ = [
         # version must always be first
-        ('version', c_uint),
-        ('entityGroupId', c_uint),
-        ('entityId', c_uint),
-        ('fieldId', c_ushort),
-        ('fieldType', c_short),
-        ('status', c_int),
-        ('unused', c_uint),
-        ('ts', c_int64),
-        ('value', c_dcgmFieldValue_v1_value)
+        ("version", c_uint),
+        ("entityGroupId", c_uint),
+        ("entityId", c_uint),
+        ("fieldId", c_ushort),
+        ("fieldType", c_short),
+        ("status", c_int),
+        ("unused", c_uint),
+        ("ts", c_int64),
+        ("value", c_dcgmFieldValue_v1_value),
     ]
 
 
@@ -1365,7 +1434,7 @@ DCGM_HEALTH_RESULT_FAIL = 20
 
 
 class c_dcgmDiagErrorDetail_t(_PrintableStructure):
-    _fields_ = [('msg', c_char * 1024), ('code', c_uint)]
+    _fields_ = [("msg", c_char * 1024), ("code", c_uint)]
 
 
 DCGM_HEALTH_WATCH_MAX_INCIDENTS = DCGM_GROUP_MAX_ENTITIES
@@ -1373,19 +1442,19 @@ DCGM_HEALTH_WATCH_MAX_INCIDENTS = DCGM_GROUP_MAX_ENTITIES
 
 class c_dcgmIncidentInfo_t(_PrintableStructure):
     _fields_ = [
-        ('system', c_uint),
-        ('health', c_uint32),
-        ('error', c_dcgmDiagErrorDetail_t),
-        ('entityInfo', c_dcgmGroupEntityPair_t),
+        ("system", c_uint),
+        ("health", c_uint32),
+        ("error", c_dcgmDiagErrorDetail_t),
+        ("entityInfo", c_dcgmGroupEntityPair_t),
     ]
 
 
 class c_dcgmHealthResponse_v4(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint32),
-        ('overallHealth', c_uint32),
-        ('incidentCount', c_uint32),
-        ('incidents', c_dcgmIncidentInfo_t * DCGM_HEALTH_WATCH_MAX_INCIDENTS),
+        ("version", c_uint32),
+        ("overallHealth", c_uint32),
+        ("incidentCount", c_uint32),
+        ("incidents", c_dcgmIncidentInfo_t * DCGM_HEALTH_WATCH_MAX_INCIDENTS),
     ]
 
 
@@ -1393,9 +1462,13 @@ dcgmHealthResponse_version4 = make_dcgm_version(c_dcgmHealthResponse_v4, 4)
 
 
 class c_dcgmHealthSetParams_v2(_PrintableStructure):
-    _fields_ = [('version', c_uint32), ('groupId', c_void_p),
-                ('systems', c_uint32), ('updateInterval', c_int64),
-                ('maxKeepAge', c_double)]
+    _fields_ = [
+        ("version", c_uint32),
+        ("groupId", c_void_p),
+        ("systems", c_uint32),
+        ("updateInterval", c_int64),
+        ("maxKeepAge", c_double),
+    ]
 
 
 dcgmHealthSetParams_version2 = make_dcgm_version(c_dcgmHealthSetParams_v2, 2)
@@ -1403,26 +1476,23 @@ dcgmHealthSetParams_version2 = make_dcgm_version(c_dcgmHealthSetParams_v2, 2)
 
 # Pid info structs
 class c_dcgmStatSummaryInt64_t(_PrintableStructure):
-    _fields_ = [('minValue', c_int64), ('maxValue', c_int64),
-                ('average', c_int64)]
+    _fields_ = [("minValue", c_int64), ("maxValue", c_int64), ("average", c_int64)]
 
 
 class c_dcgmStatSummaryInt32_t(_PrintableStructure):
-    _fields_ = [('minValue', c_int32), ('maxValue', c_int32),
-                ('average', c_int32)]
+    _fields_ = [("minValue", c_int32), ("maxValue", c_int32), ("average", c_int32)]
 
 
 class c_dcgmStatSummaryFp64_t(_PrintableStructure):
-    _fields_ = [('minValue', c_double), ('maxValue', c_double),
-                ('average', c_double)]
+    _fields_ = [("minValue", c_double), ("maxValue", c_double), ("average", c_double)]
 
 
 class c_dcgmProcessUtilInfo_t(_PrintableStructure):
-    _fields_ = [('pid', c_uint), ('smUtil', c_double), ('memUtil', c_double)]
+    _fields_ = [("pid", c_uint), ("smUtil", c_double), ("memUtil", c_double)]
 
 
 class c_dcgmHealthResponseInfo_t(_PrintableStructure):
-    _fields_ = [('system', c_uint), ('health', c_uint)]
+    _fields_ = [("system", c_uint), ("health", c_uint)]
 
 
 DCGM_MAX_PID_INFO_NUM = 16
@@ -1430,51 +1500,55 @@ DCGM_MAX_PID_INFO_NUM = 16
 
 class c_dcgmPidSingleInfo_t(_PrintableStructure):
     _fields_ = [
-        ('gpuId', c_uint32),
-        ('energyConsumed', c_int64),
-        ('pcieRxBandwidth', c_dcgmStatSummaryInt64_t),
-        ('pcieTxBandwidth', c_dcgmStatSummaryInt64_t),
-        ('pcieReplays', c_int64),
-        ('startTime', c_int64),
-        ('endTime', c_int64),
-        ('processUtilization', c_dcgmProcessUtilInfo_t),
-        ('smUtilization', c_dcgmStatSummaryInt32_t),
-        ('memoryUtilization', c_dcgmStatSummaryInt32_t),
-        ('eccSingleBit', c_uint32),  # Deprecated
-        ('eccDoubleBit', c_uint32),
-        ('memoryClock', c_dcgmStatSummaryInt32_t),
-        ('smClock', c_dcgmStatSummaryInt32_t),
-        ('numXidCriticalErrors', c_int32),
-        ('xidCriticalErrorsTs', c_int64 * 10),
-        ('numOtherComputePids', c_int32),
-        ('otherComputePids', c_uint32 * DCGM_MAX_PID_INFO_NUM),
-        ('numOtherGraphicsPids', c_int32),
-        ('otherGraphicsPids', c_uint32 * DCGM_MAX_PID_INFO_NUM),
-        ('maxGpuMemoryUsed', c_int64),
-        ('powerViolationTime', c_int64),
-        ('thermalViolationTime', c_int64),
-        ('reliabilityViolationTime', c_int64),
-        ('boardLimitViolationTime', c_int64),
-        ('lowUtilizationTime', c_int64),
-        ('syncBoostTime', c_int64),
-        ('overallHealth', c_uint),
-        ('incidentCount', c_uint),
-        ('systems', c_dcgmHealthResponseInfo_t * DCGM_HEALTH_WATCH_COUNT_V1)
+        ("gpuId", c_uint32),
+        ("energyConsumed", c_int64),
+        ("pcieRxBandwidth", c_dcgmStatSummaryInt64_t),
+        ("pcieTxBandwidth", c_dcgmStatSummaryInt64_t),
+        ("pcieReplays", c_int64),
+        ("startTime", c_int64),
+        ("endTime", c_int64),
+        ("processUtilization", c_dcgmProcessUtilInfo_t),
+        ("smUtilization", c_dcgmStatSummaryInt32_t),
+        ("memoryUtilization", c_dcgmStatSummaryInt32_t),
+        ("eccSingleBit", c_uint32),  # Deprecated
+        ("eccDoubleBit", c_uint32),
+        ("memoryClock", c_dcgmStatSummaryInt32_t),
+        ("smClock", c_dcgmStatSummaryInt32_t),
+        ("numXidCriticalErrors", c_int32),
+        ("xidCriticalErrorsTs", c_int64 * 10),
+        ("numOtherComputePids", c_int32),
+        ("otherComputePids", c_uint32 * DCGM_MAX_PID_INFO_NUM),
+        ("numOtherGraphicsPids", c_int32),
+        ("otherGraphicsPids", c_uint32 * DCGM_MAX_PID_INFO_NUM),
+        ("maxGpuMemoryUsed", c_int64),
+        ("powerViolationTime", c_int64),
+        ("thermalViolationTime", c_int64),
+        ("reliabilityViolationTime", c_int64),
+        ("boardLimitViolationTime", c_int64),
+        ("lowUtilizationTime", c_int64),
+        ("syncBoostTime", c_int64),
+        ("overallHealth", c_uint),
+        ("incidentCount", c_uint),
+        ("systems", c_dcgmHealthResponseInfo_t * DCGM_HEALTH_WATCH_COUNT_V1),
     ]
 
 
 class c_dcgmPidInfo_v2(_PrintableStructure):
-    _fields_ = [('version', c_uint32), ('pid', c_uint32), ('unused', c_uint32),
-                ('numGpus', c_int32), ('summary', c_dcgmPidSingleInfo_t),
-                ('gpus', c_dcgmPidSingleInfo_t * DCGM_MAX_NUM_DEVICES)]
+    _fields_ = [
+        ("version", c_uint32),
+        ("pid", c_uint32),
+        ("unused", c_uint32),
+        ("numGpus", c_int32),
+        ("summary", c_dcgmPidSingleInfo_t),
+        ("gpus", c_dcgmPidSingleInfo_t * DCGM_MAX_NUM_DEVICES),
+    ]
 
 
 dcgmPidInfo_version2 = make_dcgm_version(c_dcgmPidInfo_v2, 2)
 
 
 class c_dcgmRunningProcess_v1(_PrintableStructure):
-    _fields_ = [('version', c_uint32), ('pid', c_uint32),
-                ('memoryUsed', c_uint64)]
+    _fields_ = [("version", c_uint32), ("pid", c_uint32), ("memoryUsed", c_uint64)]
 
 
 dcgmRunningProcess_version1 = make_dcgm_version(c_dcgmRunningProcess_v1, 1)
@@ -1482,56 +1556,65 @@ dcgmRunningProcess_version1 = make_dcgm_version(c_dcgmRunningProcess_v1, 1)
 
 class c_dcgmGpuUsageInfo_t(_PrintableStructure):
     _fields_ = [
-        ('gpuId', c_uint32),
-        ('energyConsumed', c_int64),
-        ('powerUsage', c_dcgmStatSummaryFp64_t),
-        ('pcieRxBandwidth', c_dcgmStatSummaryInt64_t),
-        ('pcieTxBandwidth', c_dcgmStatSummaryInt64_t),
-        ('pcieReplays', c_int64),
-        ('startTime', c_int64),
-        ('endTime', c_int64),
-        ('smUtilization', c_dcgmStatSummaryInt32_t),
-        ('memoryUtilization', c_dcgmStatSummaryInt32_t),
-        ('eccSingleBit', c_uint32),  # Deprecated
-        ('eccDoubleBit', c_uint32),
-        ('memoryClock', c_dcgmStatSummaryInt32_t),
-        ('smClock', c_dcgmStatSummaryInt32_t),
-        ('numXidCriticalErrors', c_int32),
-        ('xidCriticalErrorsTs', c_int64 * 10),
-        ('numComputePids', c_int32),
-        ('computePids', c_dcgmProcessUtilInfo_t * DCGM_MAX_PID_INFO_NUM),
-        ('numGraphicsPids', c_int32),
-        ('graphicsPids', c_dcgmProcessUtilInfo_t * DCGM_MAX_PID_INFO_NUM),
-        ('maxGpuMemoryUsed', c_int64),
-        ('powerViolationTime', c_int64),
-        ('thermalViolationTime', c_int64),
-        ('reliabilityViolationTime', c_int64),
-        ('boardLimitViolationTime', c_int64),
-        ('lowUtilizationTime', c_int64),
-        ('syncBoostTime', c_int64),
-        ('overallHealth', c_uint),
-        ('incidentCount', c_uint),
-        ('systems', c_dcgmHealthResponseInfo_t * DCGM_HEALTH_WATCH_COUNT_V1)
+        ("gpuId", c_uint32),
+        ("energyConsumed", c_int64),
+        ("powerUsage", c_dcgmStatSummaryFp64_t),
+        ("pcieRxBandwidth", c_dcgmStatSummaryInt64_t),
+        ("pcieTxBandwidth", c_dcgmStatSummaryInt64_t),
+        ("pcieReplays", c_int64),
+        ("startTime", c_int64),
+        ("endTime", c_int64),
+        ("smUtilization", c_dcgmStatSummaryInt32_t),
+        ("memoryUtilization", c_dcgmStatSummaryInt32_t),
+        ("eccSingleBit", c_uint32),  # Deprecated
+        ("eccDoubleBit", c_uint32),
+        ("memoryClock", c_dcgmStatSummaryInt32_t),
+        ("smClock", c_dcgmStatSummaryInt32_t),
+        ("numXidCriticalErrors", c_int32),
+        ("xidCriticalErrorsTs", c_int64 * 10),
+        ("numComputePids", c_int32),
+        ("computePids", c_dcgmProcessUtilInfo_t * DCGM_MAX_PID_INFO_NUM),
+        ("numGraphicsPids", c_int32),
+        ("graphicsPids", c_dcgmProcessUtilInfo_t * DCGM_MAX_PID_INFO_NUM),
+        ("maxGpuMemoryUsed", c_int64),
+        ("powerViolationTime", c_int64),
+        ("thermalViolationTime", c_int64),
+        ("reliabilityViolationTime", c_int64),
+        ("boardLimitViolationTime", c_int64),
+        ("lowUtilizationTime", c_int64),
+        ("syncBoostTime", c_int64),
+        ("overallHealth", c_uint),
+        ("incidentCount", c_uint),
+        ("systems", c_dcgmHealthResponseInfo_t * DCGM_HEALTH_WATCH_COUNT_V1),
     ]
 
 
 class c_dcgmJobInfo_v3(_PrintableStructure):
-    _fields_ = [('version', c_uint32), ('numGpus', c_int32),
-                ('summary', c_dcgmGpuUsageInfo_t),
-                ('gpus', c_dcgmGpuUsageInfo_t * DCGM_MAX_NUM_DEVICES)]
+    _fields_ = [
+        ("version", c_uint32),
+        ("numGpus", c_int32),
+        ("summary", c_dcgmGpuUsageInfo_t),
+        ("gpus", c_dcgmGpuUsageInfo_t * DCGM_MAX_NUM_DEVICES),
+    ]
 
 
 dcgmJobInfo_version3 = make_dcgm_version(c_dcgmJobInfo_v3, 3)
 
 
 class c_dcgmDiagTestResult_v2(_PrintableStructure):
-    _fields_ = [('result', c_uint), ('error', c_dcgmDiagErrorDetail_t),
-                ('info', c_char * 1024)]
+    _fields_ = [
+        ("result", c_uint),
+        ("error", c_dcgmDiagErrorDetail_t),
+        ("info", c_char * 1024),
+    ]
 
 
 class c_dcgmDiagResponsePerGpu_v2(_PrintableStructure):
-    _fields_ = [('gpuId', c_uint), ('hwDiagnosticReturn', c_uint),
-                ('results', c_dcgmDiagTestResult_v2 * DCGM_PER_GPU_TEST_COUNT)]
+    _fields_ = [
+        ("gpuId", c_uint),
+        ("hwDiagnosticReturn", c_uint),
+        ("results", c_dcgmDiagTestResult_v2 * DCGM_PER_GPU_TEST_COUNT),
+    ]
 
 
 DCGM_SWTEST_COUNT = 10
@@ -1540,11 +1623,13 @@ LEVEL_ONE_MAX_RESULTS = 16
 
 class c_dcgmDiagResponse_v6(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint), ('gpuCount', c_uint),
-        ('levelOneTestCount', c_uint),
-        ('levelOneResults', c_dcgmDiagTestResult_v2 * LEVEL_ONE_MAX_RESULTS),
-        ('perGpuResponses', c_dcgmDiagResponsePerGpu_v2 * DCGM_MAX_NUM_DEVICES),
-        ('systemError', c_dcgmDiagErrorDetail_t), ('trainingMsg', c_char * 1024)
+        ("version", c_uint),
+        ("gpuCount", c_uint),
+        ("levelOneTestCount", c_uint),
+        ("levelOneResults", c_dcgmDiagTestResult_v2 * LEVEL_ONE_MAX_RESULTS),
+        ("perGpuResponses", c_dcgmDiagResponsePerGpu_v2 * DCGM_MAX_NUM_DEVICES),
+        ("systemError", c_dcgmDiagErrorDetail_t),
+        ("trainingMsg", c_char * 1024),
     ]
 
 
@@ -1554,26 +1639,28 @@ DCGM_AFFINITY_BITMASK_ARRAY_SIZE = 8
 
 
 class c_dcgmDeviceTopologyPath_t(_PrintableStructure):
-    _fields_ = [('gpuId', c_uint32), ('path', c_uint32),
-                ('localNvLinkIds', c_uint32)]
+    _fields_ = [("gpuId", c_uint32), ("path", c_uint32), ("localNvLinkIds", c_uint32)]
 
 
 class c_dcgmDeviceTopology_v1(_PrintableStructure):
-    _fields_ = [('version', c_uint32),
-                ('cpuAffinityMask', c_ulong * DCGM_AFFINITY_BITMASK_ARRAY_SIZE),
-                ('numGpus', c_uint32),
-                ('gpuPaths',
-                 c_dcgmDeviceTopologyPath_t * (DCGM_MAX_NUM_DEVICES - 1))]
+    _fields_ = [
+        ("version", c_uint32),
+        ("cpuAffinityMask", c_ulong * DCGM_AFFINITY_BITMASK_ARRAY_SIZE),
+        ("numGpus", c_uint32),
+        ("gpuPaths", c_dcgmDeviceTopologyPath_t * (DCGM_MAX_NUM_DEVICES - 1)),
+    ]
 
 
 dcgmDeviceTopology_version1 = make_dcgm_version(c_dcgmDeviceTopology_v1, 1)
 
 
 class c_dcgmGroupTopology_v1(_PrintableStructure):
-    _fields_ = [('version', c_uint32),
-                ('groupCpuAffinityMask',
-                 c_ulong * DCGM_AFFINITY_BITMASK_ARRAY_SIZE),
-                ('numaOptimalFlag', c_uint32), ('slowestPath', c_uint32)]
+    _fields_ = [
+        ("version", c_uint32),
+        ("groupCpuAffinityMask", c_ulong * DCGM_AFFINITY_BITMASK_ARRAY_SIZE),
+        ("numaOptimalFlag", c_uint32),
+        ("slowestPath", c_uint32),
+    ]
 
 
 dcgmGroupTopology_version1 = make_dcgm_version(c_dcgmGroupTopology_v1, 1)
@@ -1586,19 +1673,24 @@ DCGM_MAX_FIELD_IDS_PER_FIELD_GROUP = 128
 
 
 class c_dcgmFieldGroupInfo_v1(_PrintableStructure):
-    _fields_ = [('version', c_uint32), ('numFieldIds', c_uint32),
-                ('fieldGroupId', c_void_p),
-                ('fieldGroupName', c_char * DCGM_MAX_STR_LENGTH),
-                ('fieldIds', c_uint16 * DCGM_MAX_FIELD_IDS_PER_FIELD_GROUP)]
+    _fields_ = [
+        ("version", c_uint32),
+        ("numFieldIds", c_uint32),
+        ("fieldGroupId", c_void_p),
+        ("fieldGroupName", c_char * DCGM_MAX_STR_LENGTH),
+        ("fieldIds", c_uint16 * DCGM_MAX_FIELD_IDS_PER_FIELD_GROUP),
+    ]
 
 
 dcgmFieldGroupInfo_version1 = make_dcgm_version(c_dcgmFieldGroupInfo_v1, 1)
 
 
 class c_dcgmAllFieldGroup_v1(_PrintableStructure):
-    _fields_ = [('version', c_uint32), ('numFieldGroups', c_uint32),
-                ('fieldGroups',
-                 c_dcgmFieldGroupInfo_v1 * DCGM_MAX_NUM_FIELD_GROUPS)]
+    _fields_ = [
+        ("version", c_uint32),
+        ("numFieldGroups", c_uint32),
+        ("fieldGroups", c_dcgmFieldGroupInfo_v1 * DCGM_MAX_NUM_FIELD_GROUPS),
+    ]
 
 
 dcgmAllFieldGroup_version1 = make_dcgm_version(c_dcgmAllFieldGroup_v1, 1)
@@ -1608,6 +1700,7 @@ class DCGM_INTROSPECT_LVL(object):
     """
     Identifies a level to retrieve field introspection info for
     """
+
     INVALID = 0
     FIELD = 1
     FIELD_GROUP = 2
@@ -1618,27 +1711,28 @@ class c_dcgmIntrospectContext_v1(_PrintableStructure):
     """
     Identifies the retrieval context for introspection API calls.
     """
+
     _fields_ = [
-        ('version', c_uint32),
+        ("version", c_uint32),
         # one of DCGM_INTROSPECT_LVL_?
-        ('introspectLvl', c_int),
+        ("introspectLvl", c_int),
         # Only needed if \ref introspectLvl is FIELD_GROUP
-        ('fieldGroupId', c_void_p)
+        ("fieldGroupId", c_void_p),
     ]
 
 
-dcgmIntrospectContext_version1 = make_dcgm_version(c_dcgmIntrospectContext_v1,
-                                                   1)
+dcgmIntrospectContext_version1 = make_dcgm_version(c_dcgmIntrospectContext_v1, 1)
 
 
 class c_dcgmIntrospectMemory_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint32),
+        ("version", c_uint32),
         (
             # The total number of bytes being used to store all of the fields
             # being watched
-            'bytesUsed',
-            c_longlong)
+            "bytesUsed",
+            c_longlong,
+        ),
     ]
 
 
@@ -1649,99 +1743,132 @@ class c_dcgmIntrospectFieldsExecTime_v1(_PrintableStructure):
     _fields_ = [
         (
             # version number (dcgmIntrospectFieldsExecTime_version)
-            'version',
-            c_uint32),
+            "version",
+            c_uint32,
+        ),
         (
             # the mean update frequency of all fields
-            'meanUpdateFreqUsec',
-            c_longlong),
+            "meanUpdateFreqUsec",
+            c_longlong,
+        ),
         (
             # the sum of every field's most recent execution time after they
             # have been normalized to \ref meanUpdateFreqUsec.
             # This is roughly how long it takes to update fields every \ref
             # meanUpdateFreqUsec
-            'recentUpdateUsec',
-            c_double),
+            "recentUpdateUsec",
+            c_double,
+        ),
         (
             # The total amount of time, ever, that has been spent updating all
             # the fields
-            'totalEverUpdateUsec',
-            c_longlong),
+            "totalEverUpdateUsec",
+            c_longlong,
+        ),
     ]
 
 
 dcgmIntrospectFieldsExecTime_version1 = make_dcgm_version(
-    c_dcgmIntrospectFieldsExecTime_v1, 1)
+    c_dcgmIntrospectFieldsExecTime_v1, 1
+)
 
 
 class c_dcgmIntrospectFullFieldsExecTime_v2(_PrintableStructure):
-    '''
+    """
     Full introspection info for field execution time
-    '''
+    """
+
     _fields_ = [
-        ('version', c_uint32),
-        ('aggregateInfo', c_dcgmIntrospectFieldsExecTime_v1
+        ("version", c_uint32),
+        (
+            "aggregateInfo",
+            c_dcgmIntrospectFieldsExecTime_v1,
         ),  # info that includes global and device scope
-        ('hasGlobalInfo',
-         c_int),  # 0 means \ref globalInfo is populated, !0 means it's not
-        ('globalInfo', c_dcgmIntrospectFieldsExecTime_v1
+        (
+            "hasGlobalInfo",
+            c_int,
+        ),  # 0 means \ref globalInfo is populated, !0 means it's not
+        (
+            "globalInfo",
+            c_dcgmIntrospectFieldsExecTime_v1,
         ),  # info that only includes global field scope
-        ('gpuInfoCount',
-         c_uint),  # count of how many entries in \ref gpuInfo are populated
-        ('gpuIdsForGpuInfo', c_uint * DCGM_MAX_NUM_DEVICES
+        (
+            "gpuInfoCount",
+            c_uint,
+        ),  # count of how many entries in \ref gpuInfo are populated
+        (
+            "gpuIdsForGpuInfo",
+            c_uint * DCGM_MAX_NUM_DEVICES,
         ),  # the GPU ID at a given index identifies which gpu
         # the corresponding entry in \ref gpuInfo is from
-        ('gpuInfo', c_dcgmIntrospectFieldsExecTime_v1 * DCGM_MAX_NUM_DEVICES
+        (
+            "gpuInfo",
+            c_dcgmIntrospectFieldsExecTime_v1 * DCGM_MAX_NUM_DEVICES,
         ),  # info that is separated by the
         # GPU ID that the watches were for
     ]
 
 
 dcgmIntrospectFullFieldsExecTime_version2 = make_dcgm_version(
-    c_dcgmIntrospectFullFieldsExecTime_v2, 2)
+    c_dcgmIntrospectFullFieldsExecTime_v2, 2
+)
 
 
 class c_dcgmIntrospectFullMemory_v1(_PrintableStructure):
-    '''
+    """
     Full introspection info for field memory
-    '''
+    """
+
     _fields_ = [
-        ('version', c_uint32),
-        ('aggregateInfo', c_dcgmIntrospectMemory_v1
+        ("version", c_uint32),
+        (
+            "aggregateInfo",
+            c_dcgmIntrospectMemory_v1,
         ),  # info that includes global and device scope
-        ('hasGlobalInfo',
-         c_int),  # 0 means \ref globalInfo is populated, !0 means it's not
-        ('globalInfo', c_dcgmIntrospectMemory_v1
+        (
+            "hasGlobalInfo",
+            c_int,
+        ),  # 0 means \ref globalInfo is populated, !0 means it's not
+        (
+            "globalInfo",
+            c_dcgmIntrospectMemory_v1,
         ),  # info that only includes global field scope
-        ('gpuInfoCount',
-         c_uint),  # count of how many entries in \ref gpuInfo are populated
-        ('gpuIdsForGpuInfo', c_uint * DCGM_MAX_NUM_DEVICES
+        (
+            "gpuInfoCount",
+            c_uint,
+        ),  # count of how many entries in \ref gpuInfo are populated
+        (
+            "gpuIdsForGpuInfo",
+            c_uint * DCGM_MAX_NUM_DEVICES,
         ),  # the GPU ID at a given index identifies which gpu
         # the corresponding entry in \ref gpuInfo is from
-        ('gpuInfo', c_dcgmIntrospectMemory_v1 * DCGM_MAX_NUM_DEVICES
+        (
+            "gpuInfo",
+            c_dcgmIntrospectMemory_v1 * DCGM_MAX_NUM_DEVICES,
         ),  # info that is separated by the
         # GPU ID that the watches were for
     ]
 
 
-dcgmIntrospectFullMemory_version1 = make_dcgm_version(
-    c_dcgmIntrospectFullMemory_v1, 1)
+dcgmIntrospectFullMemory_version1 = make_dcgm_version(c_dcgmIntrospectFullMemory_v1, 1)
 
 
 class c_dcgmIntrospectCpuUtil_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint32),  # version number (dcgmIntrospectCpuUtil_version)
-        ('total',
-         c_double),  # fraction of device's CPU resources that were used
-        ('kernel', c_double
+        ("version", c_uint32),  # version number (dcgmIntrospectCpuUtil_version)
+        ("total", c_double),  # fraction of device's CPU resources that were used
+        (
+            "kernel",
+            c_double,
         ),  # fraction of device's CPU resources that were used in kernel mode
-        ('user', c_double
+        (
+            "user",
+            c_double,
         ),  # fraction of device's CPU resources that were used in user mode
     ]
 
 
-dcgmIntrospectCpuUtil_version1 = make_dcgm_version(c_dcgmIntrospectCpuUtil_v1,
-                                                   1)
+dcgmIntrospectCpuUtil_version1 = make_dcgm_version(c_dcgmIntrospectCpuUtil_v1, 1)
 
 DCGM_MAX_CONFIG_FILE_LEN = 10000
 DCGM_MAX_TEST_NAMES = 20
@@ -1765,63 +1892,82 @@ DCGM_RUN_FLAGS_FAIL_EARLY = 0x0010
 
 class c_dcgmRunDiag_v6(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint),  # version of this message
+        ("version", c_uint),  # version of this message
         (
             # flags specifying binary options for running it. Currently verbose
             # and stats on fail
-            'flags',
-            c_uint),
-        ('debugLevel', c_uint
+            "flags",
+            c_uint,
+        ),
+        (
+            "debugLevel",
+            c_uint,
         ),  # 0-5 for the debug level the GPU diagnostic will use for logging
         (
             # group of GPUs to verify. Cannot be specified together with
             # gpuList.
-            'groupId',
-            c_void_p),
-        ('validate', c_uint),  # 0-3 for which tests to run. Optional.
-        ('testNames', c_char * DCGM_MAX_TEST_NAMES *
-         DCGM_MAX_TEST_NAMES_LEN),  # Specifed list of test names. Optional.
+            "groupId",
+            c_void_p,
+        ),
+        ("validate", c_uint),  # 0-3 for which tests to run. Optional.
+        (
+            "testNames",
+            c_char * DCGM_MAX_TEST_NAMES * DCGM_MAX_TEST_NAMES_LEN,
+        ),  # Specified list of test names. Optional.
         (
             # Parameters to set for specified tests in the format:
             # testName.parameterName=parameterValue. Optional.
-            'testParms',
-            c_char * DCGM_MAX_TEST_PARMS * DCGM_MAX_TEST_PARMS_LEN),
+            "testParms",
+            c_char * DCGM_MAX_TEST_PARMS * DCGM_MAX_TEST_PARMS_LEN,
+        ),
         (
             # Comma-separated list of gpus. Cannot be specified with the
             # groupId.
-            'gpuList',
-            c_char * DCGM_GPU_LIST_LEN),
-        ('debugLogFile', c_char * DCGM_PATH_LEN
+            "gpuList",
+            c_char * DCGM_GPU_LIST_LEN,
+        ),
+        (
+            "debugLogFile",
+            c_char * DCGM_PATH_LEN,
         ),  # Alternate name for the debug log file that should be used
-        ('statsPath', c_char * DCGM_PATH_LEN
+        (
+            "statsPath",
+            c_char * DCGM_PATH_LEN,
         ),  # Path that the plugin's statistics files should be written to
-        ('configFileContents', c_char * DCGM_MAX_CONFIG_FILE_LEN
+        (
+            "configFileContents",
+            c_char * DCGM_MAX_CONFIG_FILE_LEN,
         ),  # Contents of nvvs config file (likely yaml)
         (
             # Throttle reasons to ignore as either integer mask or csv list of
             # reasons
-            'throttleMask',
-            c_char * DCGM_THROTTLE_MASK_LEN),
-        ('pluginPath',
-         c_char * DCGM_PATH_LEN),  # Custom path to the diagnostic plugins
-        ('trainingValues', c_uint),  # Number of iterations for training.
+            "throttleMask",
+            c_char * DCGM_THROTTLE_MASK_LEN,
+        ),
+        ("pluginPath", c_char * DCGM_PATH_LEN),  # Custom path to the diagnostic plugins
+        ("trainingValues", c_uint),  # Number of iterations for training.
         (
             # Acceptable training variance as a percentage of the value.
             # (0-100)
-            'trainingVariance',
-            c_uint),
+            "trainingVariance",
+            c_uint,
+        ),
         (
             # Acceptable training tolerance as a percentage of the value.
             # (0-100)
-            'trainingTolerance',
-            c_uint),
-        ('goldenValuesFile', c_char *
-         DCGM_PATH_LEN),  # The path where the golden values should be recorded
+            "trainingTolerance",
+            c_uint,
+        ),
+        (
+            "goldenValuesFile",
+            c_char * DCGM_PATH_LEN,
+        ),  # The path where the golden values should be recorded
         (
             # How often the fail early checks should occur when
             # DCGM_RUN_FLAGS_FAIL_EARLY is set.
-            'failCheckInterval',
-            c_uint),
+            "failCheckInterval",
+            c_uint,
+        ),
     ]
 
 
@@ -1852,11 +1998,13 @@ DCGM_TOPO_HINT_F_IGNOREHEALTH = 0x00000001
 
 class c_dcgmTopoSchedHint_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint),  # version of this message
-        ('inputGpuIds', c_uint64),  # bitmask of the GPU ids to choose from
-        ('numGpus', c_uint32),  # the number of GPUs that DCGM should chooose
-        ('hintFlags',
-         c_uint64),  # Hints to ignore certain factors for the scheduling hint
+        ("version", c_uint),  # version of this message
+        ("inputGpuIds", c_uint64),  # bitmask of the GPU ids to choose from
+        ("numGpus", c_uint32),  # the number of GPUs that DCGM should choose
+        (
+            "hintFlags",
+            c_uint64,
+        ),  # Hints to ignore certain factors for the scheduling hint
     ]
 
 
@@ -1878,8 +2026,10 @@ DcgmNvLinkLinkStateUp = 3
 # State of NvLink links for a GPU
 class c_dcgmNvLinkGpuLinkStatus_v1(_PrintableStructure):
     _fields_ = [
-        ('entityId', c_uint32),  # Entity ID of the GPU (gpuId)
-        ('linkState', c_uint32 * DCGM_NVLINK_MAX_LINKS_PER_GPU_LEGACY1
+        ("entityId", c_uint32),  # Entity ID of the GPU (gpuId)
+        (
+            "linkState",
+            c_uint32 * DCGM_NVLINK_MAX_LINKS_PER_GPU_LEGACY1,
         ),  # Link state of each link of this GPU
     ]
 
@@ -1887,18 +2037,22 @@ class c_dcgmNvLinkGpuLinkStatus_v1(_PrintableStructure):
 # State of NvLink links for a GPU
 class c_dcgmNvLinkGpuLinkStatus_v2(_PrintableStructure):
     _fields_ = [
-        ('entityId', c_uint32),  # Entity ID of the GPU (gpuId)
-        ('linkState', c_uint32 *
-         DCGM_NVLINK_MAX_LINKS_PER_GPU),  # Link state of each link of this GPU
+        ("entityId", c_uint32),  # Entity ID of the GPU (gpuId)
+        (
+            "linkState",
+            c_uint32 * DCGM_NVLINK_MAX_LINKS_PER_GPU,
+        ),  # Link state of each link of this GPU
     ]
 
 
 # State of NvLink links for a NvSwitch
 class c_dcgmNvLinkNvSwitchLinkStatus_t(_PrintableStructure):
     _fields_ = [
-        ('entityId', c_uint32),  # Entity ID of the NvSwitch (physicalId)
-        ('linkState', c_uint32 * DCGM_NVLINK_MAX_LINKS_PER_NVSWITCH
-        )  # Link state of each link of this NvSwitch
+        ("entityId", c_uint32),  # Entity ID of the NvSwitch (physicalId)
+        (
+            "linkState",
+            c_uint32 * DCGM_NVLINK_MAX_LINKS_PER_NVSWITCH,
+        ),  # Link state of each link of this NvSwitch
     ]
 
 
@@ -1906,16 +2060,22 @@ class c_dcgmNvLinkStatus_v1(_PrintableStructure):
     """
     NvSwitch link status for all GPUs and NvSwitches in the system
     """
+
     _fields_ = [
-        ('version', c_uint32
+        (
+            "version",
+            c_uint32,
         ),  # version of this message. Should be dcgmNvLinkStatus_version1
-        ('numGpus', c_uint32),  # Number of GPUs populated in gpus[]
-        ('gpus', c_dcgmNvLinkGpuLinkStatus_v1 *
-         DCGM_MAX_NUM_DEVICES),  # Per-GPU NvLink link statuses
-        ('numNvSwitches',
-         c_uint32),  # Number of NvSwitches populated in nvSwitches[]
-        ('nvSwitches', c_dcgmNvLinkNvSwitchLinkStatus_t * DCGM_MAX_NUM_SWITCHES
-        )  # Per-NvSwitch NvLink link statuses
+        ("numGpus", c_uint32),  # Number of GPUs populated in gpus[]
+        (
+            "gpus",
+            c_dcgmNvLinkGpuLinkStatus_v1 * DCGM_MAX_NUM_DEVICES,
+        ),  # Per-GPU NvLink link statuses
+        ("numNvSwitches", c_uint32),  # Number of NvSwitches populated in nvSwitches[]
+        (
+            "nvSwitches",
+            c_dcgmNvLinkNvSwitchLinkStatus_t * DCGM_MAX_NUM_SWITCHES,
+        ),  # Per-NvSwitch NvLink link statuses
     ]
 
 
@@ -1923,19 +2083,25 @@ dcgmNvLinkStatus_version1 = make_dcgm_version(c_dcgmNvLinkStatus_v1, 1)
 
 
 class c_dcgmNvLinkStatus_v2(_PrintableStructure):
-    '''
+    """
     NvSwitch link status for all GPUs and NvSwitches in the system
-    '''
+    """
+
     _fields_ = [
-        ('version', c_uint32
+        (
+            "version",
+            c_uint32,
         ),  # version of this message. Should be dcgmNvLinkStatus_version1
-        ('numGpus', c_uint32),  # Number of GPUs populated in gpus[]
-        ('gpus', c_dcgmNvLinkGpuLinkStatus_v2 *
-         DCGM_MAX_NUM_DEVICES),  # Per-GPU NvLink link statuses
-        ('numNvSwitches',
-         c_uint32),  # Number of NvSwitches populated in nvSwitches[]
-        ('nvSwitches', c_dcgmNvLinkNvSwitchLinkStatus_t * DCGM_MAX_NUM_SWITCHES
-        )  # Per-NvSwitch NvLink link statuses
+        ("numGpus", c_uint32),  # Number of GPUs populated in gpus[]
+        (
+            "gpus",
+            c_dcgmNvLinkGpuLinkStatus_v2 * DCGM_MAX_NUM_DEVICES,
+        ),  # Per-GPU NvLink link statuses
+        ("numNvSwitches", c_uint32),  # Number of NvSwitches populated in nvSwitches[]
+        (
+            "nvSwitches",
+            c_dcgmNvLinkNvSwitchLinkStatus_t * DCGM_MAX_NUM_SWITCHES,
+        ),  # Per-NvSwitch NvLink link statuses
     ]
 
 
@@ -1953,35 +2119,33 @@ DCGM_SUMMARY_SIZE = 7
 
 
 class c_dcgmSummaryResponse_t(_PrintableStructure):
-
     class ResponseValue(Union):
         _fields_ = [
-            ('i64', c_int64),
-            ('dbl', c_double),
+            ("i64", c_int64),
+            ("dbl", c_double),
         ]
 
     _fields_ = [
-        ('fieldType', c_uint),
-        ('summaryCount', c_uint),
-        ('values', ResponseValue * DCGM_SUMMARY_SIZE),
+        ("fieldType", c_uint),
+        ("summaryCount", c_uint),
+        ("values", ResponseValue * DCGM_SUMMARY_SIZE),
     ]
 
 
 class c_dcgmFieldSummaryRequest_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint),
-        ('fieldId', c_ushort),
-        ('entityGroupType', c_uint32),
-        ('entityId', c_uint),
-        ('summaryTypeMask', c_uint32),
-        ('startTime', c_uint64),
-        ('endTime', c_uint64),
-        ('response', c_dcgmSummaryResponse_t),
+        ("version", c_uint),
+        ("fieldId", c_ushort),
+        ("entityGroupType", c_uint32),
+        ("entityId", c_uint),
+        ("summaryTypeMask", c_uint32),
+        ("startTime", c_uint64),
+        ("endTime", c_uint64),
+        ("response", c_dcgmSummaryResponse_t),
     ]
 
 
-dcgmFieldSummaryRequest_version1 = make_dcgm_version(
-    c_dcgmFieldSummaryRequest_v1, 1)
+dcgmFieldSummaryRequest_version1 = make_dcgm_version(c_dcgmFieldSummaryRequest_v1, 1)
 
 # Module IDs
 DcgmModuleIdCore = 0  # Core DCGM
@@ -2010,22 +2174,20 @@ DCGM_MODULE_STATUSES_CAPACITY = 16
 
 class c_dcgmModuleGetStatusesModule_t(_PrintableStructure):
     _fields_ = [
-        ('id', c_uint32),  # One of DcgmModuleId*
-        ('status', c_uint32),  # One of DcgmModuleStatus*
+        ("id", c_uint32),  # One of DcgmModuleId*
+        ("status", c_uint32),  # One of DcgmModuleStatus*
     ]
 
 
 class c_dcgmModuleGetStatuses_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint),
-        ('numStatuses', c_uint32),
-        ('statuses',
-         c_dcgmModuleGetStatusesModule_t * DCGM_MODULE_STATUSES_CAPACITY),
+        ("version", c_uint),
+        ("numStatuses", c_uint32),
+        ("statuses", c_dcgmModuleGetStatusesModule_t * DCGM_MODULE_STATUSES_CAPACITY),
     ]
 
 
-dcgmModuleGetStatuses_version1 = make_dcgm_version(c_dcgmModuleGetStatuses_v1,
-                                                   1)
+dcgmModuleGetStatuses_version1 = make_dcgm_version(c_dcgmModuleGetStatuses_v1, 1)
 
 # Maximum number of metric ID groups that can exist in DCGM
 DCGM_PROF_MAX_NUM_GROUPS = 10
@@ -2036,39 +2198,37 @@ DCGM_PROF_MAX_FIELD_IDS_PER_GROUP = 8
 
 class c_dcgmProfMetricGroupInfo_t(_PrintableStructure):
     _fields_ = [
-        ('majorId', c_ushort),
-        ('minorId', c_ushort),
-        ('numFieldIds', c_uint32),
-        ('fieldIds', c_ushort * DCGM_PROF_MAX_FIELD_IDS_PER_GROUP),
+        ("majorId", c_ushort),
+        ("minorId", c_ushort),
+        ("numFieldIds", c_uint32),
+        ("fieldIds", c_ushort * DCGM_PROF_MAX_FIELD_IDS_PER_GROUP),
     ]
 
 
 class c_dcgmProfGetMetricGroups_v2(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint32),
-        ('unused', c_uint32),
-        ('groupId', c_void_p),
-        ('numMetricGroups', c_uint32),
-        ('unused1', c_uint32),
-        ('metricGroups',
-         c_dcgmProfMetricGroupInfo_t * DCGM_PROF_MAX_NUM_GROUPS),
+        ("version", c_uint32),
+        ("unused", c_uint32),
+        ("groupId", c_void_p),
+        ("numMetricGroups", c_uint32),
+        ("unused1", c_uint32),
+        ("metricGroups", c_dcgmProfMetricGroupInfo_t * DCGM_PROF_MAX_NUM_GROUPS),
     ]
 
 
-dcgmProfGetMetricGroups_version1 = make_dcgm_version(
-    c_dcgmProfGetMetricGroups_v2, 2)
+dcgmProfGetMetricGroups_version1 = make_dcgm_version(c_dcgmProfGetMetricGroups_v2, 2)
 
 
 class c_dcgmProfWatchFields_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint32),
-        ('groupId', c_void_p),
-        ('numFieldIds', c_uint32),
-        ('fieldIds', c_ushort * 16),
-        ('updateFreq', c_int64),
-        ('maxKeepAge', c_double),
-        ('maxKeepSamples', c_int32),
-        ('flags', c_uint32),
+        ("version", c_uint32),
+        ("groupId", c_void_p),
+        ("numFieldIds", c_uint32),
+        ("fieldIds", c_ushort * 16),
+        ("updateFreq", c_int64),
+        ("maxKeepAge", c_double),
+        ("maxKeepSamples", c_int32),
+        ("flags", c_uint32),
     ]
 
 
@@ -2077,20 +2237,19 @@ dcgmProfWatchFields_version1 = make_dcgm_version(c_dcgmProfWatchFields_v1, 1)
 
 class c_dcgmProfUnwatchFields_v1(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint32),
-        ('groupId', c_void_p),
-        ('flags', c_uint32),
+        ("version", c_uint32),
+        ("groupId", c_void_p),
+        ("flags", c_uint32),
     ]
 
 
-dcgmProfUnwatchFields_version1 = make_dcgm_version(c_dcgmProfUnwatchFields_v1,
-                                                   1)
+dcgmProfUnwatchFields_version1 = make_dcgm_version(c_dcgmProfUnwatchFields_v1, 1)
 
 
 class c_dcgmVersionInfo_v2(_PrintableStructure):
     _fields_ = [
-        ('version', c_uint32),
-        ('rawBuildInfoString', c_char * (DCGM_MAX_STR_LENGTH * 2)),
+        ("version", c_uint32),
+        ("rawBuildInfoString", c_char * (DCGM_MAX_STR_LENGTH * 2)),
     ]
 
 

@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .result_table import ResultTable
-from .result_utils import format_for_csv
+import logging
+import os
+
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.output.file_writer import FileWriter
-import os
-import logging
+
+from .result_table import ResultTable
+from .result_utils import format_for_csv
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -26,25 +30,25 @@ class ResultTableManager:
     """
     This class provides methods to create, and add to
     ResultTables. Each ResultTable holds results from
-    multiple runs.    
+    multiple runs.
     """
 
     headers = {
-        'model_name': 'Model',
-        'batch_size': 'Batch',
-        'concurrency': 'Concurrency',
-        'request_rate': 'Request Rate',
-        'model_config_path': 'Model Config Path',
-        'instance_group': 'Instance Group',
-        'max_batch_size': 'Max Batch Size',
-        'satisfies_constraints': 'Satisfies Constraints',
-        'gpu_uuid': 'GPU UUID'
+        "model_name": "Model",
+        "batch_size": "Batch",
+        "concurrency": "Concurrency",
+        "request_rate": "Request Rate",
+        "model_config_path": "Model Config Path",
+        "instance_group": "Instance Group",
+        "max_batch_size": "Max Batch Size",
+        "satisfies_constraints": "Satisfies Constraints",
+        "gpu_uuid": "GPU UUID",
     }
 
-    server_only_table_key = 'server_gpu_metrics'
-    model_gpu_table_key = 'model_gpu_metrics'
-    model_inference_table_key = 'model_inference_metrics'
-    backend_parameter_key_prefix = 'backend_parameter/'
+    server_only_table_key = "server_gpu_metrics"
+    model_gpu_table_key = "model_gpu_metrics"
+    model_inference_table_key = "model_inference_metrics"
+    backend_parameter_key_prefix = "backend_parameter/"
 
     def __init__(self, config, result_manager):
         self._config = config
@@ -76,14 +80,15 @@ class ResultTableManager:
         # Fill rows in descending order
         for model in self._result_manager.get_model_names():
             for result in self._result_manager.get_model_sorted_results(
-                    model).results():
+                model
+            ).results():
                 self._tabulate_measurements(result)
 
     def write_results(self):
         """
         Writes table to console
         """
-        self._write_results(writer=FileWriter(), column_separator=' ')
+        self._write_results(writer=FileWriter(), column_separator=" ")
 
     def export_results(self):
         """
@@ -92,35 +97,42 @@ class ResultTableManager:
         files.
         """
 
-        results_export_directory = os.path.join(self._config.export_path,
-                                                'results')
+        results_export_directory = os.path.join(self._config.export_path, "results")
         os.makedirs(results_export_directory, exist_ok=True)
 
-        self._export_results(name="server only",
-                             dir=results_export_directory,
-                             filename=self._config.filename_server_only,
-                             key=self.server_only_table_key)
+        self._export_results(
+            name="server only",
+            dir=results_export_directory,
+            filename=self._config.filename_server_only,
+            key=self.server_only_table_key,
+        )
 
-        self._export_results(name="inference",
-                             dir=results_export_directory,
-                             filename=self._config.filename_model_inference,
-                             key=self.model_inference_table_key)
+        self._export_results(
+            name="inference",
+            dir=results_export_directory,
+            filename=self._config.filename_model_inference,
+            key=self.model_inference_table_key,
+        )
 
-        self._export_results(name="GPU",
-                             dir=results_export_directory,
-                             filename=self._config.filename_model_gpu,
-                             key=self.model_gpu_table_key)
+        self._export_results(
+            name="GPU",
+            dir=results_export_directory,
+            filename=self._config.filename_model_gpu,
+            key=self.model_gpu_table_key,
+        )
 
     def _export_results(self, name, dir, filename, key):
         table = self._result_tables[key]
         if table.size():
             outfile = os.path.join(dir, filename)
             logger.info(f"Exporting {name} metrics to {outfile}")
-            self._write_result(table=table,
-                               writer=FileWriter(filename=outfile),
-                               column_separator=',',
-                               ignore_widths=True,
-                               include_title=False)
+            self._write_result(
+                table=table,
+                writer=FileWriter(filename=outfile),
+                column_separator=",",
+                ignore_widths=True,
+                include_title=False,
+            )
 
     def _determine_table_headers(self):
         # Finds which metric(s) are actually collected during profile phase.
@@ -139,19 +151,18 @@ class ResultTableManager:
         # Measurements
         results = self._result_manager.get_results()
 
-        for run_config_measurement in results.get_list_of_run_config_measurements(
-        ):
+        for run_config_measurement in results.get_list_of_run_config_measurements():
             for gpu_metrics in run_config_measurement.gpu_data().values():
                 for gpu_metric in gpu_metrics:
                     if gpu_metric.tag not in gpu_metrics_from_measurements:
-                        gpu_metrics_from_measurements[
-                            gpu_metric.tag] = gpu_metric
+                        gpu_metrics_from_measurements[gpu_metric.tag] = gpu_metric
 
             for non_gpu_metric_list in run_config_measurement.non_gpu_data():
                 for non_gpu_metric in non_gpu_metric_list:
                     if non_gpu_metric.tag not in non_gpu_metrics_from_measurements:
                         non_gpu_metrics_from_measurements[
-                            non_gpu_metric.tag] = non_gpu_metric
+                            non_gpu_metric.tag
+                        ] = non_gpu_metric
 
         gpu_specific_metrics = gpu_metrics_from_measurements.values()
         non_gpu_specific_metrics = non_gpu_metrics_from_measurements.values()
@@ -171,16 +182,20 @@ class ResultTableManager:
                 server_output_headers.append(self.headers[server_output_field])
             elif server_output_field in self._gpu_metrics_to_headers:
                 server_output_headers.append(
-                    self._gpu_metrics_to_headers[server_output_field])
+                    self._gpu_metrics_to_headers[server_output_field]
+                )
             else:
                 logger.warning(
-                    f'Server output field "{server_output_field}", has no data')
+                    f'Server output field "{server_output_field}", has no data'
+                )
                 continue
             server_output_fields.append(server_output_field)
 
-        self._add_result_table(table_key=self.server_only_table_key,
-                               title='Server Only',
-                               headers=server_output_headers)
+        self._add_result_table(
+            table_key=self.server_only_table_key,
+            title="Server Only",
+            headers=server_output_headers,
+        )
         self._server_output_fields = server_output_fields
 
     def _create_inference_table(self):
@@ -189,13 +204,12 @@ class ResultTableManager:
         inference_output_fields = []
         for inference_output_field in self._config.inference_output_fields:
             if inference_output_field in self.headers:
-                inference_output_headers.append(
-                    self.headers[inference_output_field])
+                inference_output_headers.append(self.headers[inference_output_field])
             elif inference_output_field in self._non_gpu_metrics_to_headers:
                 inference_output_headers.append(
-                    self._non_gpu_metrics_to_headers[inference_output_field])
-            elif inference_output_field.startswith(
-                    self.backend_parameter_key_prefix):
+                    self._non_gpu_metrics_to_headers[inference_output_field]
+                )
+            elif inference_output_field.startswith(self.backend_parameter_key_prefix):
                 inference_output_headers.append(inference_output_field)
             else:
                 logger.warning(
@@ -207,7 +221,7 @@ class ResultTableManager:
         self._inference_output_fields = inference_output_fields
         self._add_result_table(
             table_key=self.model_inference_table_key,
-            title='Models (Inference)',
+            title="Models (Inference)",
             headers=inference_output_headers,
         )
 
@@ -219,18 +233,20 @@ class ResultTableManager:
                 gpu_output_headers.append(self.headers[gpu_output_field])
             elif gpu_output_field in self._gpu_metrics_to_headers:
                 gpu_output_headers.append(
-                    self._gpu_metrics_to_headers[gpu_output_field])
+                    self._gpu_metrics_to_headers[gpu_output_field]
+                )
             else:
-                logger.warning(
-                    f'GPU output field "{gpu_output_field}", has no data')
+                logger.warning(f'GPU output field "{gpu_output_field}", has no data')
                 continue
             gpu_output_fields.append(gpu_output_field)
 
         self._gpu_output_fields = gpu_output_fields
         # Model GPU Metrics
-        self._add_result_table(table_key=self.model_gpu_table_key,
-                               title='Models (GPU Metrics)',
-                               headers=gpu_output_headers)
+        self._add_result_table(
+            table_key=self.model_gpu_table_key,
+            title="Models (GPU Metrics)",
+            headers=gpu_output_headers,
+        )
 
     def _find_index_for_field(self, fields, field_name):
         try:
@@ -258,31 +274,34 @@ class ResultTableManager:
         """
 
         for table in self._result_tables.values():
-            self._write_result(table,
-                               writer,
-                               column_separator,
-                               ignore_widths=False)
+            self._write_result(table, writer, column_separator, ignore_widths=False)
 
-    def _write_result(self,
-                      table,
-                      writer,
-                      column_separator,
-                      ignore_widths=False,
-                      include_title=True):
+    def _write_result(
+        self, table, writer, column_separator, ignore_widths=False, include_title=True
+    ):
         """
         Utility function that writes any table
         """
 
         if include_title:
-            writer.write('\n'.join([
-                table.title() + ":",
-                table.to_formatted_string(separator=column_separator,
-                                          ignore_widths=ignore_widths), "\n"
-            ]))
+            writer.write(
+                "\n".join(
+                    [
+                        table.title() + ":",
+                        table.to_formatted_string(
+                            separator=column_separator, ignore_widths=ignore_widths
+                        ),
+                        "\n",
+                    ]
+                )
+            )
         else:
             writer.write(
-                table.to_formatted_string(separator=column_separator,
-                                          ignore_widths=ignore_widths) + "\n\n")
+                table.to_formatted_string(
+                    separator=column_separator, ignore_widths=ignore_widths
+                )
+                + "\n\n"
+            )
 
     def _get_gpu_count(self):
         return self._result_tables[self.server_only_table_key].size()
@@ -303,24 +322,22 @@ class ResultTableManager:
         for gpu_uuid, metrics in server_only_data.items():
             data_row = [None] * len(server_fields)
 
-            model_name_index = self._find_index_for_field(
-                server_fields, 'model_name')
+            model_name_index = self._find_index_for_field(server_fields, "model_name")
             if model_name_index is not None:
-                data_row[model_name_index] = 'triton-server'
+                data_row[model_name_index] = "triton-server"
 
-            gpu_uuid_index = self._find_index_for_field(server_fields,
-                                                        'gpu_uuid')
+            gpu_uuid_index = self._find_index_for_field(server_fields, "gpu_uuid")
             if gpu_uuid_index is not None:
                 data_row[gpu_uuid_index] = gpu_uuid
 
             for metric in metrics:
-                metric_tag_index = self._find_index_for_field(
-                    server_fields, metric.tag)
+                metric_tag_index = self._find_index_for_field(server_fields, metric.tag)
 
                 if metric_tag_index is not None:
                     data_row[metric_tag_index] = round(metric.value(), 1)
             self._result_tables[self.server_only_table_key].insert_row_by_index(
-                data_row)
+                data_row
+            )
 
     def _add_result_table(self, table_key, title, headers):
         """
@@ -330,8 +347,7 @@ class ResultTableManager:
         comparator for that table.
         """
 
-        self._result_tables[table_key] = ResultTable(headers=headers,
-                                                     title=title)
+        self._result_tables[table_key] = ResultTable(headers=headers, title=title)
 
     def _tabulate_measurements(self, run_config_result):
         """
@@ -341,15 +357,22 @@ class ResultTableManager:
         """
 
         model_name = run_config_result.model_name()
-        instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters, composing_config_names = self._tabulate_measurements_setup(
-            run_config_result)
+        (
+            instance_groups,
+            max_batch_sizes,
+            dynamic_batchings,
+            cpu_onlys,
+            backend_parameters,
+            composing_config_names,
+        ) = self._tabulate_measurements_setup(run_config_result)
 
         passing_measurements = run_config_result.passing_measurements()
         failing_measurements = run_config_result.failing_measurements()
 
-        for (run_config_measurements, passes) in [(passing_measurements, True),
-                                                  (failing_measurements, False)
-                                                 ]:
+        for run_config_measurements, passes in [
+            (passing_measurements, True),
+            (failing_measurements, False),
+        ]:
             for run_config_measurement in run_config_measurements:
                 self._tabulate_measurement(
                     model_name=model_name,
@@ -360,7 +383,8 @@ class ResultTableManager:
                     passes=passes,
                     cpu_onlys=cpu_onlys,
                     backend_parameters=backend_parameters,
-                    composing_config_names=composing_config_names)
+                    composing_config_names=composing_config_names,
+                )
 
     def _tabulate_measurements_setup(self, run_config_result):
         if run_config_result.run_config().is_ensemble_model():
@@ -370,8 +394,8 @@ class ResultTableManager:
             ]
         else:
             model_configs = [
-                model_run_configs.model_config() for model_run_configs in
-                run_config_result.run_config().model_run_configs()
+                model_run_configs.model_config()
+                for model_run_configs in run_config_result.run_config().model_run_configs()
             ]
 
             composing_config_names = []
@@ -384,24 +408,36 @@ class ResultTableManager:
             model_config.max_batch_size() for model_config in model_configs
         ]
         dynamic_batchings = [
-            model_config.dynamic_batching_string()
-            for model_config in model_configs
+            model_config.dynamic_batching_string() for model_config in model_configs
         ]
         cpu_onlys = [
-            run_config_result.run_config().cpu_only()
-            for model_config in model_configs
+            run_config_result.run_config().cpu_only() for model_config in model_configs
         ]
         backend_parameters = [
-            model_config._model_config.parameters
-            for model_config in model_configs
+            model_config._model_config.parameters for model_config in model_configs
         ]
 
-        return instance_groups, max_batch_sizes, dynamic_batchings, cpu_onlys, backend_parameters, composing_config_names
+        return (
+            instance_groups,
+            max_batch_sizes,
+            dynamic_batchings,
+            cpu_onlys,
+            backend_parameters,
+            composing_config_names,
+        )
 
-    def _tabulate_measurement(self, model_name, instance_groups,
-                              max_batch_sizes, dynamic_batchings,
-                              run_config_measurement, passes, cpu_onlys,
-                              backend_parameters, composing_config_names):
+    def _tabulate_measurement(
+        self,
+        model_name,
+        instance_groups,
+        max_batch_sizes,
+        dynamic_batchings,
+        run_config_measurement,
+        passes,
+        cpu_onlys,
+        backend_parameters,
+        composing_config_names,
+    ):
         """
         Add a single RunConfigMeasurement to the specified
         table
@@ -416,23 +452,38 @@ class ResultTableManager:
                 if composing_config_name != composing_config_names[-1]:
                     model_config_name = model_config_name + ", "
 
-        model_specific_pa_params, batch_sizes, concurrencies, request_rates = self._tabulate_measurement_setup(
-            run_config_measurement)
+        (
+            model_specific_pa_params,
+            batch_sizes,
+            concurrencies,
+            request_rates,
+        ) = self._tabulate_measurement_setup(run_config_measurement)
 
         satisfies = "Yes" if passes else "No"
 
         # Non GPU specific data
         inference_fields = self._inference_output_fields
         inference_row = self._get_common_row_items(
-            inference_fields, batch_sizes, concurrencies, request_rates,
-            satisfies, model_name, model_config_name, dynamic_batchings,
-            instance_groups, max_batch_sizes, backend_parameters)
+            inference_fields,
+            batch_sizes,
+            concurrencies,
+            request_rates,
+            satisfies,
+            model_name,
+            model_config_name,
+            dynamic_batchings,
+            instance_groups,
+            max_batch_sizes,
+            backend_parameters,
+        )
 
-        self._populate_inference_rows(run_config_measurement, inference_fields,
-                                      inference_row)
+        self._populate_inference_rows(
+            run_config_measurement, inference_fields, inference_row
+        )
 
         self._result_tables[self.model_inference_table_key].insert_row_by_index(
-            inference_row)
+            inference_row
+        )
 
         # GPU specific data (only put measurement if not cpu only)
         if not any(cpu_onlys):
@@ -440,134 +491,139 @@ class ResultTableManager:
                 gpu_fields = self._gpu_output_fields
 
                 gpu_row = self._get_common_row_items(
-                    gpu_fields, batch_sizes, concurrencies, request_rates,
-                    satisfies, model_name, model_config_name, dynamic_batchings,
-                    instance_groups, max_batch_sizes)
+                    gpu_fields,
+                    batch_sizes,
+                    concurrencies,
+                    request_rates,
+                    satisfies,
+                    model_name,
+                    model_config_name,
+                    dynamic_batchings,
+                    instance_groups,
+                    max_batch_sizes,
+                )
 
                 self._add_uuid_to_gpu_row(gpu_row, gpu_uuid, gpu_fields)
                 self._add_metrics_to_gpu_row(gpu_row, metrics, gpu_fields)
 
-                self._result_tables[
-                    self.model_gpu_table_key].insert_row_by_index(row=gpu_row)
+                self._result_tables[self.model_gpu_table_key].insert_row_by_index(
+                    row=gpu_row
+                )
 
     def _tabulate_measurement_setup(self, run_config_measurement):
-        model_specific_pa_params = run_config_measurement.model_specific_pa_params(
-        )
+        model_specific_pa_params = run_config_measurement.model_specific_pa_params()
         batch_sizes = [
-            pa_params['batch-size']
+            pa_params["batch-size"]
             for pa_params in model_specific_pa_params
-            if 'batch-size' in pa_params
+            if "batch-size" in pa_params
         ]
         concurrencies = [
-            pa_params['concurrency-range']
+            pa_params["concurrency-range"]
             for pa_params in model_specific_pa_params
-            if 'concurrency-range' in pa_params
+            if "concurrency-range" in pa_params
         ]
         request_rates = [
-            pa_params['request-rate-range']
+            pa_params["request-rate-range"]
             for pa_params in model_specific_pa_params
-            if 'request-rate-range' in pa_params
+            if "request-rate-range" in pa_params
         ]
 
         return model_specific_pa_params, batch_sizes, concurrencies, request_rates
 
-    def _populate_inference_rows(self, run_config_measurement, inference_fields,
-                                 inference_row):
+    def _populate_inference_rows(
+        self, run_config_measurement, inference_fields, inference_row
+    ):
         # FIXME: TMA-686 - Need to figure out what to do if models have different tags
         for metric in run_config_measurement.non_gpu_data()[0]:
-            metric_tag_index = self._find_index_for_field(
-                inference_fields, metric.tag)
+            metric_tag_index = self._find_index_for_field(inference_fields, metric.tag)
             if metric_tag_index is not None:
-                inference_row[
-                    metric_tag_index] = self._create_non_gpu_metric_row_entry(
-                        run_config_measurement, metric)
+                inference_row[metric_tag_index] = self._create_non_gpu_metric_row_entry(
+                    run_config_measurement, metric
+                )
 
     def _add_uuid_to_gpu_row(self, gpu_row, gpu_uuid, gpu_fields):
-        gpu_uuid_index = self._find_index_for_field(gpu_fields, 'gpu_uuid')
+        gpu_uuid_index = self._find_index_for_field(gpu_fields, "gpu_uuid")
 
         if gpu_uuid_index is not None:
             gpu_row[gpu_uuid_index] = gpu_uuid
 
     def _add_metrics_to_gpu_row(self, gpu_row, metrics, gpu_fields):
         for metric in metrics:
-            metric_tag_index = self._find_index_for_field(
-                gpu_fields, metric.tag)
+            metric_tag_index = self._find_index_for_field(gpu_fields, metric.tag)
 
             if metric_tag_index is not None:
                 gpu_row[metric_tag_index] = round(metric.value(), 1)
 
     def _create_non_gpu_metric_row_entry(self, run_config_measurement, metric):
-        metric_value = run_config_measurement.get_non_gpu_metric_value(
-            metric.tag)
+        metric_value = run_config_measurement.get_non_gpu_metric_value(metric.tag)
         non_gpu_metrics = run_config_measurement.get_non_gpu_metric(metric.tag)
 
         if len(non_gpu_metrics) > 1:
             rounded_non_gpu_metrics = [
-                round(metric.value(), 1) for metric in
-                run_config_measurement.get_non_gpu_metric(metric.tag)
+                round(metric.value(), 1)
+                for metric in run_config_measurement.get_non_gpu_metric(metric.tag)
             ]
 
-            return format_for_csv(
-                [round(metric_value, 1), rounded_non_gpu_metrics])
+            return format_for_csv([round(metric_value, 1), rounded_non_gpu_metrics])
 
         else:
             return format_for_csv(round(metric_value, 1))
 
-    def _get_common_row_items(self,
-                              fields,
-                              batch_sizes,
-                              concurrencies,
-                              request_rates,
-                              satisfies,
-                              model_name,
-                              model_config_path,
-                              dynamic_batchings,
-                              instance_groups,
-                              max_batch_sizes,
-                              backend_parameters=None):
+    def _get_common_row_items(
+        self,
+        fields,
+        batch_sizes,
+        concurrencies,
+        request_rates,
+        satisfies,
+        model_name,
+        model_config_path,
+        dynamic_batchings,
+        instance_groups,
+        max_batch_sizes,
+        backend_parameters=None,
+    ):
         row = [None] * len(fields)
 
         # Model Name
-        model_name_index = self._find_index_for_field(fields, 'model_name')
+        model_name_index = self._find_index_for_field(fields, "model_name")
         if model_name_index is not None:
             row[model_name_index] = format_for_csv(model_name)
 
         # Batch Size
-        batch_size_index = self._find_index_for_field(fields, 'batch_size')
+        batch_size_index = self._find_index_for_field(fields, "batch_size")
         if batch_size_index is not None:
             row[batch_size_index] = format_for_csv(batch_sizes)
 
         # Concurrency
-        concurrency_index = self._find_index_for_field(fields, 'concurrency')
+        concurrency_index = self._find_index_for_field(fields, "concurrency")
         if concurrency_index is not None:
             row[concurrency_index] = format_for_csv(concurrencies)
 
         # Request rate
-        request_rate_index = self._find_index_for_field(fields, 'request_rate')
+        request_rate_index = self._find_index_for_field(fields, "request_rate")
         if request_rate_index is not None:
             row[request_rate_index] = format_for_csv(request_rates)
 
         # Satisfies
         satisfies_constraints_index = self._find_index_for_field(
-            fields, 'satisfies_constraints')
+            fields, "satisfies_constraints"
+        )
         if satisfies_constraints_index is not None:
             row[satisfies_constraints_index] = format_for_csv(satisfies)
 
         # Model Config Path
-        model_config_path_idx = self._find_index_for_field(
-            fields, 'model_config_path')
+        model_config_path_idx = self._find_index_for_field(fields, "model_config_path")
         if model_config_path_idx is not None:
             row[model_config_path_idx] = format_for_csv(model_config_path)
 
         # Instance Group
-        instance_group_idx = self._find_index_for_field(fields,
-                                                        'instance_group')
+        instance_group_idx = self._find_index_for_field(fields, "instance_group")
         if instance_group_idx is not None:
             row[instance_group_idx] = format_for_csv(instance_groups)
 
         # Max Batch Size
-        max_batch_size_idx = self._find_index_for_field(fields,
-                                                        'max_batch_size')
+        max_batch_size_idx = self._find_index_for_field(fields, "max_batch_size")
         if max_batch_size_idx is not None:
             row[max_batch_size_idx] = format_for_csv(max_batch_sizes)
 
@@ -576,13 +632,16 @@ class ResultTableManager:
             for key in fields:
                 if key.startswith(self.backend_parameter_key_prefix):
                     backend_parameter_key = key.replace(
-                        self.backend_parameter_key_prefix, '')
-                    backend_parameter_idx = self._find_index_for_field(
-                        fields, key)
+                        self.backend_parameter_key_prefix, ""
+                    )
+                    backend_parameter_idx = self._find_index_for_field(fields, key)
 
-                    if backend_parameter_idx is not None and \
-                        backend_parameter_key in backend_parameters:
+                    if (
+                        backend_parameter_idx is not None
+                        and backend_parameter_key in backend_parameters
+                    ):
                         row[backend_parameter_idx] = backend_parameters[
-                            backend_parameter_key].string_value
+                            backend_parameter_key
+                        ].string_value
 
         return row

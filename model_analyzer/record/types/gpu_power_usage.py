@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +15,7 @@
 # limitations under the License.
 
 from functools import total_ordering
+
 from model_analyzer.record.gpu_record import DecreasingGPURecord
 
 
@@ -93,8 +96,7 @@ class GPUPowerUsage(DecreasingGPURecord):
         to produce a brand new record.
         """
 
-        return GPUPowerUsage(device_uuid=None,
-                             value=(self.value() + other.value()))
+        return GPUPowerUsage(device_uuid=None, value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
@@ -102,5 +104,4 @@ class GPUPowerUsage(DecreasingGPURecord):
         to produce a brand new record.
         """
 
-        return GPUPowerUsage(device_uuid=None,
-                             value=(other.value() - self.value()))
+        return GPUPowerUsage(device_uuid=None, value=(other.value() - self.value()))

@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,14 +15,13 @@
 # limitations under the License.
 
 from model_analyzer.config.generate.search_dimension import SearchDimension
+
 from .common import test_result_collector as trc
 
 
 class TestSearchDimension(trc.TestResultCollector):
-
     def test_linear(self):
-        sd = SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 0,
-                             10)
+        sd = SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 0, 10)
 
         self.assertEqual("foo", sd.get_name())
         self.assertEqual(0, sd.get_min_idx())
@@ -37,8 +38,7 @@ class TestSearchDimension(trc.TestResultCollector):
         self.assertEqual(8, sd.get_value_at_idx(3))
 
     def test_out_of_bounds(self):
-        sd = SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 2,
-                             10)
+        sd = SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR, 2, 10)
 
         with self.assertRaises(IndexError):
             sd.get_value_at_idx(1)

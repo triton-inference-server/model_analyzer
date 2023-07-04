@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,11 +28,7 @@ class SearchDimension:
     DIMENSION_TYPE_EXPONENTIAL = 1
     DIMENSION_NO_MAX = sys.maxsize
 
-    def __init__(self,
-                 name: str,
-                 type: int,
-                 min: int = 0,
-                 max: int = DIMENSION_NO_MAX):
+    def __init__(self, name: str, type: int, min: int = 0, max: int = DIMENSION_NO_MAX):
         """
         Parameters
         ----------
@@ -49,19 +47,19 @@ class SearchDimension:
         self._max = max
 
     def get_min_idx(self) -> int:
-        """ Return the minimum index for this dimension"""
+        """Return the minimum index for this dimension"""
         return self._min
 
     def get_max_idx(self) -> int:
-        """ Return the maximum index for this dimension"""
+        """Return the maximum index for this dimension"""
         return self._max
 
     def get_name(self) -> str:
-        """ Return the name for this dimension """
+        """Return the name for this dimension"""
         return self._name
 
     def get_value_at_idx(self, idx: int) -> int:
-        """ Return the value of the dimension at the given index """
+        """Return the value of the dimension at the given index"""
         if idx < self._min or idx > self._max:
             raise IndexError(
                 f"Index {idx} is out of range for search dimension {self._name}"

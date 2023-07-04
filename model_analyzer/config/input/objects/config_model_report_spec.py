@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -92,8 +94,8 @@ class ConfigModelReportSpec:
         models = []
         for model_config_name, model_properties in value.items():
             models.append(
-                ConfigModelReportSpec(model_config_name,
-                                      **model_properties.value()))
+                ConfigModelReportSpec(model_config_name, **model_properties.value())
+            )
 
         return models
 
@@ -164,8 +166,8 @@ class ConfigModelReportSpec:
         return new_models
 
     def __repr__(self):
-        model_object = {'model_config_name': self._model_config_name}
+        model_object = {"model_config_name": self._model_config_name}
         if self._plots:
-            model_object['plots'] = self._plots
+            model_object["plots"] = self._plots
 
         return str(model_object)

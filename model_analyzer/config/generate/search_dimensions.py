@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .search_dimension import SearchDimension
-from .coordinate import Coordinate
+from typing import Any, Dict, Iterator, List
 
-from typing import Any, Iterator, List, Dict
+from .coordinate import Coordinate
+from .search_dimension import SearchDimension
 
 
 class SearchDimensions:
@@ -27,9 +29,8 @@ class SearchDimensions:
         self._dimensions: List[SearchDimension] = []
         self._dimension_keys: List[Any] = []
 
-    def add_dimensions(self, key: Any,
-                       dimensions: List[SearchDimension]) -> None:
-        """ 
+    def add_dimensions(self, key: Any, dimensions: List[SearchDimension]) -> None:
+        """
         Add dimensions and associate them all with the given key
 
         Parameters
@@ -45,16 +46,17 @@ class SearchDimensions:
             self._dimension_keys.append(key)
 
     def get_values_for_coordinate(
-            self, coordinate: Coordinate) -> Dict[Any, Dict[str, Any]]:
+        self, coordinate: Coordinate
+    ) -> Dict[Any, Dict[str, Any]]:
         """
-        Given a Coordinate, return all dimension_name:dimension_value pairs associated with 
+        Given a Coordinate, return all dimension_name:dimension_value pairs associated with
         that coordinate, organized by the dimension's key
-        
+
         Parameters
         ----------
-        
+
         coordinate: Coordinate
-            The coordinate to get values for 
+            The coordinate to get values for
 
         Returns: Dict of Dicts
             ret[key][SearchDimension name] = value

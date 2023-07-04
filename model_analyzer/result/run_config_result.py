@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
-
-from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.config.run.run_config import RunConfig
-from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
-from model_analyzer.result.constraint_manager import ConstraintManager
-from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-
+import logging
 from bisect import insort
 from functools import total_ordering
-import logging
+from typing import List
+
+from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.result.constraint_manager import ConstraintManager
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -35,9 +36,13 @@ class RunConfigResult:
     to a particular ResultTable
     """
 
-    def __init__(self, model_name: str, run_config: RunConfig,
-                 comparator: RunConfigResultComparator,
-                 constraint_manager: ConstraintManager):
+    def __init__(
+        self,
+        model_name: str,
+        run_config: RunConfig,
+        comparator: RunConfigResultComparator,
+        constraint_manager: ConstraintManager,
+    ):
         """
         Parameters
         ----------
@@ -75,11 +80,11 @@ class RunConfigResult:
         return self._model_name
 
     def run_config(self):
-        """ 
+        """
         Returns
         -------
         RunConfig
-            associated with this result 
+            associated with this result
         """
         return self._run_config
 
@@ -98,7 +103,7 @@ class RunConfigResult:
     def add_run_config_measurement(self, run_config_measurement):
         """
         This function checks whether a RunConfigMeasurement
-        passes the constraints and adds the measurements to 
+        passes the constraints and adds the measurements to
         the corresponding heap
 
         Parameters
@@ -109,8 +114,7 @@ class RunConfigResult:
 
         insort(self._measurements, run_config_measurement)
 
-        if self._constraint_manager.satisfies_constraints(
-                run_config_measurement):
+        if self._constraint_manager.satisfies_constraints(run_config_measurement):
             insort(self._passing_measurements, run_config_measurement)
         else:
             insort(self._failing_measurements, run_config_measurement)
@@ -155,7 +159,7 @@ class RunConfigResult:
         Parameters
         ----------
         n : int
-            The number of top RunConfigMeasurements 
+            The number of top RunConfigMeasurements
             to retrieve
 
         Returns
@@ -178,15 +182,16 @@ class RunConfigResult:
                 )
 
             return [
-                failing_measurement for failing_measurement in reversed(
-                    self._failing_measurements[-n:])
+                failing_measurement
+                for failing_measurement in reversed(self._failing_measurements[-n:])
             ]
 
         if n > len(self._passing_measurements):
             logger.warning(
                 f"Requested top {n} RunConfigMeasurements, but "
                 f"found only {len(self._passing_measurements)}. "
-                "Showing all available measurements for this config.")
+                "Showing all available measurements for this config."
+            )
 
         return [
             passing_measurement

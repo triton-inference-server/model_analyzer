@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,18 +22,21 @@ needed across the result module
 def format_for_csv(obj, interior=False):
     """
     Takes an object, which could be a string, int, or list of either
-    and formats it so it will be parsable in a csv 
+    and formats it so it will be parsable in a csv
     """
     if type(obj) == list:
         if len(obj) > 1:
             if interior:
                 return f" [{','.join([str(o) for o in obj])}]"
             else:
-                return "\"" + ",".join(
-                    [format_for_csv(o, interior=True) for o in obj]) + "\""
+                return (
+                    '"'
+                    + ",".join([format_for_csv(o, interior=True) for o in obj])
+                    + '"'
+                )
         else:
             return str(obj[0])
     elif type(obj) == str and "," in obj:
-        return "\"" + obj + "\""
+        return '"' + obj + '"'
     else:
         return str(obj)

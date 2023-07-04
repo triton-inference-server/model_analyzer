@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +15,10 @@
 # limitations under the License.
 
 import argparse
-import yaml
 import os
 import sys
+
+import yaml
 
 
 class TestOutputValidator:
@@ -27,7 +30,7 @@ class TestOutputValidator:
     def __init__(self, config, test_name, export_path):
         self._config = config
         self._export_path = export_path
-        check_function = self.__getattribute__(f'check_{test_name}')
+        check_function = self.__getattribute__(f"check_{test_name}")
 
         if check_function():
             sys.exit(0)
@@ -44,26 +47,35 @@ class TestOutputValidator:
         True if all exist, False otherwise
         """
 
-        for model in config['profile_models']:
+        for model in config["profile_models"]:
             if not os.path.exists(
-                    os.path.join(self._export_path, 'reports', 'summaries',
-                                 model, 'result_summary.pdf')):
+                os.path.join(
+                    self._export_path,
+                    "reports",
+                    "summaries",
+                    model,
+                    "result_summary.pdf",
+                )
+            ):
                 print(f"\n***\n*** Summary not found for {model}.\n***")
                 return False
 
         # First check for the best models report
-        profile_models = set(config['profile_models'])
+        profile_models = set(config["profile_models"])
         report_dirs = set(
-            os.listdir(os.path.join(self._export_path, 'reports', 'summaries')))
+            os.listdir(os.path.join(self._export_path, "reports", "summaries"))
+        )
         if len(report_dirs - profile_models) != 1:
             print("\n***\n*** Top models summary not found.\n***")
             return False
 
         # Should be only 1 element in set difference
-        for dir in (report_dirs - profile_models):
+        for dir in report_dirs - profile_models:
             if not os.path.exists(
-                    os.path.join(self._export_path, 'reports', 'summaries', dir,
-                                 'result_summary.pdf')):
+                os.path.join(
+                    self._export_path, "reports", "summaries", dir, "result_summary.pdf"
+                )
+            ):
                 print("\n***\n*** Top models summary not found.\n***")
                 return False
 
@@ -75,37 +87,47 @@ class TestOutputValidator:
         in the required location
         """
 
-        for model_config in config['report_model_configs']:
+        for model_config in config["report_model_configs"]:
             if not os.path.exists(
-                    os.path.join(self._export_path, 'reports', 'detailed',
-                                 model_config, 'detailed_report.pdf')):
-                print(
-                    f"\n***\n*** Detailed report not found for {model_config}.\n***"
+                os.path.join(
+                    self._export_path,
+                    "reports",
+                    "detailed",
+                    model_config,
+                    "detailed_report.pdf",
                 )
+            ):
+                print(f"\n***\n*** Detailed report not found for {model_config}.\n***")
                 return False
         return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f',
-                        '--config-file',
-                        type=str,
-                        required=True,
-                        help='The config file for this test')
-    parser.add_argument('-d',
-                        '--export-path',
-                        type=str,
-                        required=True,
-                        help='The full path to the export directory')
-    parser.add_argument('-t',
-                        '--test-name',
-                        type=str,
-                        required=True,
-                        help='The name of the test to be run.')
+    parser.add_argument(
+        "-f",
+        "--config-file",
+        type=str,
+        required=True,
+        help="The config file for this test",
+    )
+    parser.add_argument(
+        "-d",
+        "--export-path",
+        type=str,
+        required=True,
+        help="The full path to the export directory",
+    )
+    parser.add_argument(
+        "-t",
+        "--test-name",
+        type=str,
+        required=True,
+        help="The name of the test to be run.",
+    )
     args = parser.parse_args()
 
-    with open(args.config_file, 'r') as f:
+    with open(args.config_file, "r") as f:
         config = yaml.safe_load(f)
 
     TestOutputValidator(config, args.test_name, args.export_path)

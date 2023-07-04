@@ -1,4 +1,6 @@
-# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .html_report import HTMLReport
 import pdfkit
+
+from .html_report import HTMLReport
 
 
 class PDFReport(HTMLReport):
@@ -40,13 +43,11 @@ class PDFReport(HTMLReport):
             The name of the report
         """
 
-        pdfkit.from_string(self.document(),
-                           f'{filename}',
-                           options={'quiet': ''})
+        pdfkit.from_string(self.document(), f"{filename}", options={"quiet": ""})
 
     def get_file_extension(self):
         """
-        Return the file extension for 
+        Return the file extension for
         the type of report
         """
         return "pdf"

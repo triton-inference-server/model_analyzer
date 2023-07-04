@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,20 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
+
 from .mock_base import MockBase
 
 
 class MockMatplotlibMethods(MockBase):
     """
-    Mock class that mocks 
+    Mock class that mocks
     matplotlib
     """
 
     def __init__(self):
-        plt_attrs = {'subplots': Mock(return_value=(MagicMock(), MagicMock()))}
-        self.patcher_pyplot = patch('model_analyzer.plots.simple_plot.plt',
-                                    Mock(**plt_attrs))
+        plt_attrs = {"subplots": Mock(return_value=(MagicMock(), MagicMock()))}
+        self.patcher_pyplot = patch(
+            "model_analyzer.plots.simple_plot.plt", Mock(**plt_attrs)
+        )
         super().__init__()
 
     def start(self):
@@ -55,12 +59,12 @@ class MockMatplotlibMethods(MockBase):
         """
 
         self.pyplot_mock.subplots.return_value[1].plot.assert_called_with(
-            x_data, y_data, marker=marker, label=label)
+            x_data, y_data, marker=marker, label=label
+        )
 
     def assert_called_save_with_args(self, filepath):
         """
         Checks for call to figure.savefig
         """
 
-        self.pyplot_mock.subplots.return_value[0].savefig.assert_called_with(
-            filepath)
+        self.pyplot_mock.subplots.return_value[0].savefig.assert_called_with(filepath)

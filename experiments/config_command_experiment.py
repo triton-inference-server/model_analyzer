@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +20,7 @@ from model_analyzer.config.input.config_primitive import ConfigPrimitive
 
 
 class ConfigCommandExperiment(ConfigCommandProfile):
-    """ 
+    """
     Extended ConfigCommandProfile with extra options for experiment algorithm configuration
     """
 
@@ -26,33 +28,39 @@ class ConfigCommandExperiment(ConfigCommandProfile):
         super()._fill_config()
         self._add_config(
             ConfigField(
-                'exponential_inst_count',
+                "exponential_inst_count",
                 field_type=ConfigPrimitive(bool),
-                flags=['--exponential-inst-count'],
-                parser_args={'action': 'store_true'},
+                flags=["--exponential-inst-count"],
+                parser_args={"action": "store_true"},
                 default_value=False,
-                description=
-                'Whether or not the inst count dimension should be linear or exponential'
-            ))
+                description="Whether or not the inst count dimension should be linear or exponential",
+            )
+        )
         self._add_config(
-            ConfigField('radius',
-                        field_type=ConfigPrimitive(int),
-                        flags=['--radius'],
-                        default_value=3,
-                        description='The size of the neighborhood radius'))
+            ConfigField(
+                "radius",
+                field_type=ConfigPrimitive(int),
+                flags=["--radius"],
+                default_value=3,
+                description="The size of the neighborhood radius",
+            )
+        )
         self._add_config(
-            ConfigField('min_mbs_index',
-                        field_type=ConfigPrimitive(int),
-                        flags=['--min-mbs-index'],
-                        default_value=0,
-                        description='The minimum index for max batch size'))
+            ConfigField(
+                "min_mbs_index",
+                field_type=ConfigPrimitive(int),
+                flags=["--min-mbs-index"],
+                default_value=0,
+                description="The minimum index for max batch size",
+            )
+        )
 
         self._add_config(
             ConfigField(
-                'min_initialized',
+                "min_initialized",
                 field_type=ConfigPrimitive(int),
-                flags=['--min-initialized'],
+                flags=["--min-initialized"],
                 default_value=3,
-                description=
-                'The minimum number of datapoints needed in a neighborhood before stepping'
-            ))
+                description="The minimum number of datapoints needed in a neighborhood before stepping",
+            )
+        )

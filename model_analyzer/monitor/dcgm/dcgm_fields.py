@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,17 +15,18 @@
 # limitations under the License.
 
 from ctypes import *
+
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
 # Provides access to functions
 dcgmFP = dcgm_structs._dcgmGetFunctionPointer
 
 # Field Types are a single byte. List these in ASCII order
-DCGM_FT_BINARY = 'b'  # Blob of binary data representing a structure
-DCGM_FT_DOUBLE = 'd'  # 8-byte double precision
-DCGM_FT_INT64 = 'i'  # 8-byte signed integer
-DCGM_FT_STRING = 's'  # Null-terminated ASCII Character string
-DCGM_FT_TIMESTAMP = 't'  # 8-byte signed integer usec since 1970
+DCGM_FT_BINARY = "b"  # Blob of binary data representing a structure
+DCGM_FT_DOUBLE = "d"  # 8-byte double precision
+DCGM_FT_INT64 = "i"  # 8-byte signed integer
+DCGM_FT_STRING = "s"  # Null-terminated ASCII Character string
+DCGM_FT_TIMESTAMP = "t"  # 8-byte signed integer usec since 1970
 
 # Field scope. What are these fields associated with
 DCGM_FS_GLOBAL = 0  # Field is global (ex: driver version)
@@ -721,7 +724,7 @@ class _PrintableStructure(Structure):
     e.g. class that has _field_ 'hex_value', c_uint could be formatted with
       _fmt_ = {"hex_value" : "%08X"}
     to produce nicer output.
-    Default fomratting string for all fields can be set with key "<default>"
+    Default formatting string for all fields can be set with key "<default>"
     like:
       _fmt_ = {"<default>" : "%d MHz"} # e.g all values are numbers in MHz.
     If not set it's assumed to be just "%s"
@@ -729,6 +732,7 @@ class _PrintableStructure(Structure):
     Exact format of returned str from this class is subject to change in the
     future.
     """
+
     _fmt_ = {}
 
     def __str__(self):
@@ -742,7 +746,7 @@ class _PrintableStructure(Structure):
             elif "<default>" in self._fmt_:
                 fmt = self._fmt_["<default>"]
             result.append(("%s: " + fmt) % (key, value))
-        return self.__class__.__name__ + "(" + ', '.join(result) + ")"
+        return self.__class__.__name__ + "(" + ", ".join(result) + ")"
 
 
 # Provides access to functions from dcgm_agent_internal
@@ -754,8 +758,11 @@ UNIT_LENGTH = 4
 
 # Structure to hold formatting information for values
 class c_dcgm_field_output_format_t(_PrintableStructure):
-    _fields_ = [('shortName', c_char * SHORTNAME_LENGTH),
-                ('unit', c_char * UNIT_LENGTH), ('width', c_short)]
+    _fields_ = [
+        ("shortName", c_char * SHORTNAME_LENGTH),
+        ("unit", c_char * UNIT_LENGTH),
+        ("width", c_short),
+    ]
 
 
 TAG_LENGTH = 48
@@ -765,12 +772,12 @@ TAG_LENGTH = 48
 class c_dcgm_field_meta_t(_PrintableStructure):
     _fields_ = [
         # version must always be first
-        ('fieldId', c_short),
-        ('fieldType', c_char),
-        ('size', c_ubyte),
-        ('tag', c_char * TAG_LENGTH),
-        ('scope', c_int),
-        ('valueFormat', c_dcgm_field_output_format_t)
+        ("fieldId", c_short),
+        ("fieldType", c_char),
+        ("size", c_ubyte),
+        ("tag", c_char * TAG_LENGTH),
+        ("scope", c_int),
+        ("valueFormat", c_dcgm_field_output_format_t),
     ]
 
 
@@ -782,8 +789,16 @@ class pySamplingProperties:
     sampling event type.
     """
 
-    def __init__(self, name, sampling_type, sample_val_type, timeIntervalIdle,
-                 timeIntervalBoost, min_value, max_value):
+    def __init__(
+        self,
+        name,
+        sampling_type,
+        sample_val_type,
+        timeIntervalIdle,
+        timeIntervalBoost,
+        min_value,
+        max_value,
+    ):
         self.name = name
         self.sampling_type = sampling_type
         self.timeIntervalIdle = timeIntervalIdle

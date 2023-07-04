@@ -1,4 +1,6 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,21 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .mock_base import MockBase
 from unittest.mock import Mock, patch
+
+from .mock_base import MockBase
 
 
 class MockRequests(MockBase):
-
     def __init__(self, mock_paths):
         self._mock_paths = mock_paths
-        response_attrs = {'content': Mock()}
-        request_attrs = {'get': Mock(**response_attrs)}
+        response_attrs = {"content": Mock()}
+        request_attrs = {"get": Mock(**response_attrs)}
         self._patchers_requests = {}
         self._request_mocks = {}
         for path in mock_paths:
-            self._patchers_requests[path] = patch(f"{path}.requests",
-                                                  Mock(**request_attrs))
+            self._patchers_requests[path] = patch(
+                f"{path}.requests", Mock(**request_attrs)
+            )
         super().__init__()
 
     def _fill_patchers(self):

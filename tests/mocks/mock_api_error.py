@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,4 +21,4 @@ class MockAPIError(Exception):
     """
 
     def __init__(self):
-        self.explanation = 'port is already allocated'
+        self.explanation = "port is already allocated"

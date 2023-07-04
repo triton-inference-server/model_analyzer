@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .config_value import ConfigValue
+from model_analyzer.constants import CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+
 from .config_status import ConfigStatus
-from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+from .config_value import ConfigValue
 
 
 class ConfigListString(ConfigValue):
@@ -23,12 +25,14 @@ class ConfigListString(ConfigValue):
     A list of string values.
     """
 
-    def __init__(self,
-                 preprocess=None,
-                 required=False,
-                 validator=None,
-                 output_mapper=None,
-                 name=None):
+    def __init__(
+        self,
+        preprocess=None,
+        required=False,
+        validator=None,
+        output_mapper=None,
+        name=None,
+    ):
         """
         Instantiate a new ConfigListString
 
@@ -54,7 +58,8 @@ class ConfigListString(ConfigValue):
                 return ConfigStatus(
                     CONFIG_PARSER_FAILURE,
                     f'The value for field "{self.name()}" should be a list'
-                    ' and the length must be larger than zero.')
+                    " and the length must be larger than zero.",
+                )
 
         super().__init__(preprocess, required, validator, output_mapper, name)
         self._type = self._cli_type = str
@@ -78,7 +83,7 @@ class ConfigListString(ConfigValue):
 
         new_value = []
         if self._is_string(value):
-            value = value.split(',')
+            value = value.split(",")
             for item in value:
                 new_value.append(self._type(item))
         elif self._is_list(value):
@@ -86,17 +91,21 @@ class ConfigListString(ConfigValue):
                 if not self._is_primitive(item):
                     return ConfigStatus(
                         CONFIG_PARSER_FAILURE,
-                        'The value for each item in the list should'
+                        "The value for each item in the list should"
                         f' be a primitive value not "{item}" for field '
-                        f'"{self.name()}".', self)
+                        f'"{self.name()}".',
+                        self,
+                    )
                 new_value.append(self._type(item))
         else:
             if self._is_dict(value):
                 return ConfigStatus(
                     CONFIG_PARSER_FAILURE,
                     f'The value for field "{self.name()}" should not be'
-                    ' a dictionary, current '
-                    f'value is "{value}".', self)
+                    " a dictionary, current "
+                    f'value is "{value}".',
+                    self,
+                )
             new_value = [self._type(value)]
 
         return super().set_value(new_value)

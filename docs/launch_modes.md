@@ -53,7 +53,7 @@ container as well.
 
 Finally, when launching model analyzer, the argument `--output-model-repository`
 must be provided as a directory inside `<path-to-output-model-repository>`. This
-directory need not exist. 
+directory need not exist.
 
 ```
 --output-model-repository=<path-to-output-model-repository>/output
@@ -67,13 +67,13 @@ Triton SDK Container. You will need Docker installed, though.
 | CLI Option | **`--triton-launch-mode=local`** |
 | - | - |
 
-Local mode is the default mode if no `triton-launch-mode` is specified. 
+Local mode is the default mode if no `triton-launch-mode` is specified.
 
 In this mode, Model Analyzer will launch Triton Server using the local binary
 supplied using `--triton-server-path`, or if none is supplied, the
-`tritonserver` binary in `$PATH`. 
+`tritonserver` binary in `$PATH`.
 
-There are multiple ways to get Model Analyzer and TritonServer executables together for local mode, 
+There are multiple ways to get Model Analyzer and TritonServer executables together for local mode,
 such as [building a container](install.md#specific-version-with-local-launch-mode) that contains both, or [pip installing](install.md#pip) Model analyzer wherever you already
 have a TritonServer executable
 
@@ -94,9 +94,9 @@ and want the increased performance from the C API. Similar to the
 the Model Analyzer is being used.
 
 The server metrics that Model Analyzer gathers and reports are not available directly
-from the triton server when running in C-API mode. Instead, Model Analyzer will attempt to 
+from the triton server when running in C-API mode. Instead, Model Analyzer will attempt to
 gather this information itself. This can lead to less precise results, and will generally result
-in GPU utilization and power numbers being underreported. 
+in GPU utilization and power numbers being underreported.
 
 ### Remote
 

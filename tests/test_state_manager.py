@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,45 +14,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
-
-from .mocks.mock_glob import MockGlobMethods
-from .mocks.mock_os import MockOSMethods
-from .mocks.mock_json import MockJSONMethods
-from .mocks.mock_io import MockIOMethods
-
-from .common import test_result_collector as trc
-
 import unittest
 from unittest.mock import MagicMock, patch
 
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
+
+from .common import test_result_collector as trc
 from .common.test_utils import evaluate_mock_config
+from .mocks.mock_glob import MockGlobMethods
+from .mocks.mock_io import MockIOMethods
+from .mocks.mock_json import MockJSONMethods
+from .mocks.mock_os import MockOSMethods
 
 
 class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
-
     @patch(
-        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments',
-        MagicMock())
+        "model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments",
+        MagicMock(),
+    )
     def setUp(self):
         args = [
-            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file', '--profile-models', 'test_model'
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli_repository",
+            "-f",
+            "path-to-config-file",
+            "--profile-models",
+            "test_model",
         ]
-        yaml_str = ("""
+        yaml_str = """
             export_path: /test_export_path/
-        """)
+        """
 
         # start mocks
         self.mock_io = MockIOMethods(
-            mock_paths=['model_analyzer.state.analyzer_state_manager'])
+            mock_paths=["model_analyzer.state.analyzer_state_manager"]
+        )
         self.mock_json = MockJSONMethods()
-        self.mock_os = MockOSMethods(mock_paths=[
-            'model_analyzer.state.analyzer_state_manager',
-            'model_analyzer.config.input.config_utils'
-        ])
+        self.mock_os = MockOSMethods(
+            mock_paths=[
+                "model_analyzer.state.analyzer_state_manager",
+                "model_analyzer.config.input.config_utils",
+            ]
+        )
         self.mock_glob = MockGlobMethods()
 
         self.mock_io.start()
@@ -91,18 +99,20 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
 
         # Load checkpoint files with ckpt files
         self.mock_os.set_os_path_exists_return_value(True)
-        self.mock_os.set_os_path_join_return_value('0.ckpt')
+        self.mock_os.set_os_path_join_return_value("0.ckpt")
         self.state_manager.load_checkpoint(checkpoint_required=False)
         self.assertFalse(self.state_manager.starting_fresh_run())
 
         # Load checkpoint throws error
         self.mock_json.set_json_load_side_effect(EOFError)
-        with self.assertRaises(TritonModelAnalyzerException,
-                               msg='Checkpoint file 0.ckpt is'
-                               ' empty or corrupted. Remove it from checkpoint'
-                               ' directory.'):
+        with self.assertRaises(
+            TritonModelAnalyzerException,
+            msg="Checkpoint file 0.ckpt is"
+            " empty or corrupted. Remove it from checkpoint"
+            " directory.",
+        ):
             self.mock_os.set_os_path_exists_return_value(True)
-            self.mock_os.set_os_path_join_return_value('0.ckpt')
+            self.mock_os.set_os_path_join_return_value("0.ckpt")
             self.state_manager.load_checkpoint(checkpoint_required=False)
             self.assertFalse(self.state_manager.starting_fresh_run())
 
@@ -113,28 +123,26 @@ class TestAnalyzerStateManagerMethods(trc.TestResultCollector):
 
         # single checkpoint file
         for i in range(5):
-            self.mock_glob.set_glob_return_value([f'{i}.ckpt'])
+            self.mock_glob.set_glob_return_value([f"{i}.ckpt"])
             self.assertEqual(self.state_manager._latest_checkpoint(), i)
 
         # Multiple checkpoint files consecutive, sorted
-        self.mock_glob.set_glob_return_value([f'{i}.ckpt' for i in range(5)])
+        self.mock_glob.set_glob_return_value([f"{i}.ckpt" for i in range(5)])
         self.assertEqual(self.state_manager._latest_checkpoint(), 4)
 
         # Multiple checkpoint files consecutive, unsorted
-        self.mock_glob.set_glob_return_value(
-            [f'{i}.ckpt' for i in range(5, 1, -1)])
+        self.mock_glob.set_glob_return_value([f"{i}.ckpt" for i in range(5, 1, -1)])
         self.assertEqual(self.state_manager._latest_checkpoint(), 5)
 
         # Multiple files nonconsecutive unsorted
-        self.mock_glob.set_glob_return_value(
-            [f'{i}.ckpt' for i in [1, 3, 5, 2, 0, 4]])
+        self.mock_glob.set_glob_return_value([f"{i}.ckpt" for i in [1, 3, 5, 2, 0, 4]])
         self.assertEqual(self.state_manager._latest_checkpoint(), 5)
 
         # Malformed checkpoint filename
-        self.mock_glob.set_glob_return_value(['XYZ.ckpt'])
+        self.mock_glob.set_glob_return_value(["XYZ.ckpt"])
         with self.assertRaises(TritonModelAnalyzerException):
             self.state_manager._latest_checkpoint()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

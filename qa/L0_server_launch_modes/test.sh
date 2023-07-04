@@ -1,4 +1,5 @@
-# Copyright (c) 2020,21 NVIDIA CORPORATION. All rights reserved.
+#!/bin/bash
+# Copyright (c) 2020-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -96,17 +97,17 @@ function run_server_launch_modes() {
 
 function _run_single_config() {
     # Set arguments for various launch modes
-    if [ "$LAUNCH_MODE" == "remote" ]; then    
+    if [ "$LAUNCH_MODE" == "remote" ]; then
 
         # EP = "expected pass"
         # EF = "expected fail"
         model_mode_combos=(
             '--model-control-mode=explicit;;EP'
             ';--reload-model-disable;EP'
-            '--model-control-mode=explicit;--reload-model-disable;EF' 
-            # The following 'expected fail' test is commented-out since the intended 
+            '--model-control-mode=explicit;--reload-model-disable;EF'
+            # The following 'expected fail' test is commented-out since the intended
             # server exception does not cause MA to return a non-zero exit status
-            # ';;EF'   
+            # ';;EF'
             )
 
         for model_mode_combo in ${model_mode_combos[@]}
@@ -138,7 +139,7 @@ function _run_single_config() {
             SERVER=`which tritonserver`
             SERVER_ARGS="--model-repository=$MODEL_REPOSITORY $MODEL_CONTROL_MODE --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"
             SERVER_HTTP_PORT=${http_port}
-    
+
             run_server
             if [ "$SERVER_PID" == "0" ]; then
                 echo -e "\n***\n*** Failed to start $SERVER\n***"
@@ -150,7 +151,7 @@ function _run_single_config() {
             _run_analyzer_and_check_results
             if [ $? -ne 0 ]; then
                 return 1
-            fi        
+            fi
         done
 
         return
@@ -175,7 +176,7 @@ function _run_single_config() {
     _run_analyzer_and_check_results
     if [ $? -ne 0 ]; then
         return 1
-    fi        
+    fi
 }
 
 function _run_analyzer_and_check_results() {
@@ -244,7 +245,7 @@ function _check_analyzer_exit_status() {
 CUDA_DEVICE_ORDER="PCI_BUS_ID"
 
 ##########################################################
-# Test controling the GPUs with the CUDA_VISIBLE_DEVICES #
+# Test controlling the GPUs with the CUDA_VISIBLE_DEVICES #
 ##########################################################
 
 TEST_NAME_BASE="test_cuda_visible_devices_1"
@@ -262,7 +263,7 @@ run_server_launch_modes
 unset CUDA_VISIBLE_DEVICES
 
 #################################################
-# Test controling the GPUs with the --gpus flag #
+# Test controlling the GPUs with the --gpus flag #
 #################################################
 
 TEST_NAME_BASE="test_gpus_flag_1"

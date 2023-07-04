@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, Optional, Dict
+from typing import Dict, Optional, Tuple
+
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
@@ -26,21 +29,20 @@ class CoordinateData:
     """
 
     def __init__(self) -> None:
-        self._measurements: Dict[CoordinateKey,
-                                 Optional[RunConfigMeasurement]] = {}
+        self._measurements: Dict[CoordinateKey, Optional[RunConfigMeasurement]] = {}
         self._visit_counts: Dict[CoordinateKey, int] = {}
         self._is_measured: Dict[CoordinateKey, bool] = {}
 
-    def get_measurement(
-            self, coordinate: Coordinate) -> Optional[RunConfigMeasurement]:
+    def get_measurement(self, coordinate: Coordinate) -> Optional[RunConfigMeasurement]:
         """
         Return the measurement data of the given coordinate.
         """
         key: CoordinateKey = tuple(coordinate)
         return self._measurements.get(key, None)
 
-    def set_measurement(self, coordinate: Coordinate,
-                        measurement: Optional[RunConfigMeasurement]) -> None:
+    def set_measurement(
+        self, coordinate: Coordinate, measurement: Optional[RunConfigMeasurement]
+    ) -> None:
         """
         Set the measurement for the given coordinate.
         """
@@ -69,7 +71,7 @@ class CoordinateData:
 
     def get_visit_count(self, coordinate: Coordinate) -> int:
         """
-        Get the visit count for the given coordinate. 
+        Get the visit count for the given coordinate.
         Returns 0 if the coordinate hasn't been visited yet
         """
         key: CoordinateKey = tuple(coordinate)

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright (c) 2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,35 +14,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Optional, Generator
-
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-
-from math import log2
-
 import logging
-from model_analyzer.constants import LOGGER_NAME, THROUGHPUT_MINIMUM_GAIN, THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES
+from math import log2
+from typing import Generator, List, Optional
+
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.constants import (
+    LOGGER_NAME,
+    THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES,
+    THROUGHPUT_MINIMUM_GAIN,
+)
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 logger = logging.getLogger(LOGGER_NAME)
 
 
-class ParameterSearch():
+class ParameterSearch:
     """
     Generates the next parameter value to use when searching through
     RunConfigMeasurements for the best value (according to the users objective)
       - Will sweep from by powers of two from min to max parameter
-      - If the user specifies a constraint, the algorithm will perform a binary search 
+      - If the user specifies a constraint, the algorithm will perform a binary search
         around the boundary if the constraint is violated
-        
+
     Invariant: It is necessary for the user to add new measurements as they are taken
     """
 
-    def __init__(self,
-                 config: ConfigCommandProfile,
-                 model_parameters: dict = {},
-                 skip_parameter_sweep: bool = False) -> None:
+    def __init__(
+        self,
+        config: ConfigCommandProfile,
+        model_parameters: dict = {},
+        skip_parameter_sweep: bool = False,
+    ) -> None:
         """
         Parameters
         ----------
@@ -51,19 +57,24 @@ class ParameterSearch():
         """
         self._skip_parameter_sweep = skip_parameter_sweep
         self._parameter_is_request_rate = config.is_request_rate_specified(
-            model_parameters)
+            model_parameters
+        )
 
         if self._parameter_is_request_rate:
             self._min_parameter_index = int(
-                log2(config.run_config_search_min_request_rate))
+                log2(config.run_config_search_min_request_rate)
+            )
             self._max_parameter_index = int(
-                log2(config.run_config_search_max_request_rate))
+                log2(config.run_config_search_max_request_rate)
+            )
 
         else:
             self._min_parameter_index = int(
-                log2(config.run_config_search_min_concurrency))
+                log2(config.run_config_search_min_concurrency)
+            )
             self._max_parameter_index = int(
-                log2(config.run_config_search_max_concurrency))
+                log2(config.run_config_search_max_concurrency)
+            )
 
         self._max_binary_search_steps = config.run_config_search_max_binary_search_steps
 
@@ -73,8 +84,8 @@ class ParameterSearch():
         self._last_passing_parameter = 0
 
     def add_run_config_measurement(
-            self,
-            run_config_measurement: Optional[RunConfigMeasurement]) -> None:
+        self, run_config_measurement: Optional[RunConfigMeasurement]
+    ) -> None:
         """
         Adds a new RunConfigMeasurement
         Invariant: Assumed that RCMs are added in the same order they are measured
@@ -93,8 +104,10 @@ class ParameterSearch():
             yield from self._perform_binary_parameter_search()
 
     def _perform_parameter_sweep(self) -> Generator[int, None, None]:
-        for parameter in (2**i for i in range(self._min_parameter_index,
-                                              self._max_parameter_index + 1)):
+        for parameter in (
+            2**i
+            for i in range(self._min_parameter_index, self._max_parameter_index + 1)
+        ):
             if self._should_continue_parameter_sweep():
                 self._parameters.append(parameter)
                 yield parameter
@@ -122,12 +135,16 @@ class ParameterSearch():
 
     def _check_measurement_count(self) -> None:
         if len(self._run_config_measurements) != len(self._parameters):
-            raise TritonModelAnalyzerException(f"Internal Measurement count: {self._parameters}, doesn't match number " \
-                f"of measurements added: {len(self._run_config_measurements)}.")
+            raise TritonModelAnalyzerException(
+                f"Internal Measurement count: {self._parameters}, doesn't match number "
+                f"of measurements added: {len(self._run_config_measurements)}."
+            )
 
     def _are_minimum_tries_reached(self) -> bool:
-        if len(self._run_config_measurements
-              ) < THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES:
+        if (
+            len(self._run_config_measurements)
+            < THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES
+        ):
             return False
         else:
             return True
@@ -138,7 +155,8 @@ class ParameterSearch():
 
     def _calculate_gain(self) -> float:
         first_rcm = self._run_config_measurements[
-            -THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES]
+            -THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES
+        ]
 
         best_rcm = self._get_best_rcm()
 
@@ -157,8 +175,11 @@ class ParameterSearch():
     def _get_best_rcm(self) -> Optional[RunConfigMeasurement]:
         # Need to remove entries (None) with no result from PA before sorting
         pruned_rcms = [
-            rcm for rcm in self._run_config_measurements[
-                -THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES:] if rcm
+            rcm
+            for rcm in self._run_config_measurements[
+                -THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES:
+            ]
+            if rcm
         ]
         best_rcm = max(pruned_rcms) if pruned_rcms else None
 
@@ -171,9 +192,10 @@ class ParameterSearch():
                 self._last_passing_parameter = self._parameters[i - 1]
                 return True
 
-        if self._run_config_measurements[
-                0] and not self._run_config_measurements[
-                    0].is_passing_constraints():
+        if (
+            self._run_config_measurements[0]
+            and not self._run_config_measurements[0].is_passing_constraints()
+        ):
             self._last_failing_parameter = self._parameters[i]
             self._last_passing_parameter = 0
             return True
@@ -181,14 +203,20 @@ class ParameterSearch():
             return False
 
     def _at_constraint_failure_boundary(self, index: int) -> bool:
-        if not self._run_config_measurements[
-                index] or not self._run_config_measurements[index - 1]:
+        if (
+            not self._run_config_measurements[index]
+            or not self._run_config_measurements[index - 1]
+        ):
             return False
 
-        at_failure_boundary = not self._run_config_measurements[  # type: ignore
-            index].is_passing_constraints() and self._run_config_measurements[
-                index -  # type: ignore
-                1].is_passing_constraints()
+        at_failure_boundary = (
+            not self._run_config_measurements[  # type: ignore
+                index
+            ].is_passing_constraints()
+            and self._run_config_measurements[
+                index - 1  # type: ignore
+            ].is_passing_constraints()
+        )
 
         return at_failure_boundary
 
@@ -210,11 +238,9 @@ class ParameterSearch():
 
         if self._run_config_measurements[-1].is_passing_constraints():
             self._last_passing_parameter = self._parameters[-1]
-            parameter = int(
-                (self._last_failing_parameter + self._parameters[-1]) / 2)
+            parameter = int((self._last_failing_parameter + self._parameters[-1]) / 2)
         else:
             self._last_failing_parameter = self._parameters[-1]
-            parameter = int(
-                (self._last_passing_parameter + self._parameters[-1]) / 2)
+            parameter = int((self._last_passing_parameter + self._parameters[-1]) / 2)
 
         return parameter

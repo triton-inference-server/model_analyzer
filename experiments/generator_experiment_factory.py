@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,21 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-from model_analyzer.config.generate.search_dimension import SearchDimension
 from unittest.mock import MagicMock, patch
-from model_analyzer.config.generate.run_config_generator_factory import RunConfigGeneratorFactory
+
+from model_analyzer.config.generate.model_variant_name_manager import (
+    ModelVariantNameManager,
+)
+from model_analyzer.config.generate.run_config_generator_factory import (
+    RunConfigGeneratorFactory,
+)
+from model_analyzer.config.generate.search_dimension import SearchDimension
 
 
 class GeneratorExperimentFactory:
-
     command_config = None
 
     @staticmethod
     def create_generator(config_command):
-        """ 
+        """
         Create and return a RunConfig generator of the requested name
-        
+
         As a side-effect, some patching may occur to allow the generator
         to run offline (without Perf Analyzer)
 
@@ -41,34 +47,46 @@ class GeneratorExperimentFactory:
         GeneratorExperimentFactory.config_command = config_command
 
         p1 = patch(
-            'model_analyzer.config.generate.run_config_generator_factory.RunConfigGeneratorFactory._get_batching_supported_dimensions',
-            GeneratorExperimentFactory.get_batching_supported_dimensions)
+            "model_analyzer.config.generate.run_config_generator_factory.RunConfigGeneratorFactory._get_batching_supported_dimensions",
+            GeneratorExperimentFactory.get_batching_supported_dimensions,
+        )
         p2 = patch(
-            'model_analyzer.config.generate.run_config_generator_factory.RunConfigGeneratorFactory._get_batching_not_supported_dimensions',
-            GeneratorExperimentFactory.get_batching_not_supported_dimensions)
+            "model_analyzer.config.generate.run_config_generator_factory.RunConfigGeneratorFactory._get_batching_not_supported_dimensions",
+            GeneratorExperimentFactory.get_batching_not_supported_dimensions,
+        )
         p1.start()
         p2.start()
         mvn = ModelVariantNameManager()
         generator = RunConfigGeneratorFactory.create_run_config_generator(
-            config_command, MagicMock(), config_command.profile_models,
-            MagicMock(), MagicMock(), mvn)
+            config_command,
+            MagicMock(),
+            config_command.profile_models,
+            MagicMock(),
+            MagicMock(),
+            mvn,
+        )
         return generator
 
     @staticmethod
     def get_batching_supported_dimensions():
         mbs_min = GeneratorExperimentFactory.config_command.min_mbs_index
         ret = [
-            SearchDimension(f"max_batch_size",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL, mbs_min)
+            SearchDimension(
+                f"max_batch_size", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, mbs_min
+            )
         ]
         if GeneratorExperimentFactory.config_command.exponential_inst_count:
             ret.append(
-                SearchDimension(f"instance_count",
-                                SearchDimension.DIMENSION_TYPE_EXPONENTIAL))
+                SearchDimension(
+                    f"instance_count", SearchDimension.DIMENSION_TYPE_EXPONENTIAL
+                )
+            )
         else:
             ret.append(
-                SearchDimension(f"instance_count",
-                                SearchDimension.DIMENSION_TYPE_LINEAR))
+                SearchDimension(
+                    f"instance_count", SearchDimension.DIMENSION_TYPE_LINEAR
+                )
+            )
         return ret
 
     @staticmethod
@@ -76,15 +94,20 @@ class GeneratorExperimentFactory:
         mbs_min = GeneratorExperimentFactory.config_command.min_mbs_index
 
         ret = [
-            SearchDimension(f"concurrency",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL, mbs_min)
+            SearchDimension(
+                f"concurrency", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, mbs_min
+            )
         ]
         if GeneratorExperimentFactory.config_command.exponential_inst_count:
             ret.append(
-                SearchDimension(f"instance_count",
-                                SearchDimension.DIMENSION_TYPE_EXPONENTIAL))
+                SearchDimension(
+                    f"instance_count", SearchDimension.DIMENSION_TYPE_EXPONENTIAL
+                )
+            )
         else:
             ret.append(
-                SearchDimension(f"instance_count",
-                                SearchDimension.DIMENSION_TYPE_LINEAR))
+                SearchDimension(
+                    f"instance_count", SearchDimension.DIMENSION_TYPE_LINEAR
+                )
+            )
         return ret

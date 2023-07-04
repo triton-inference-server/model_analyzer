@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-from model_analyzer.constants import LOGGER_NAME, MAX_NUMBER_OF_INTERRUPTS
-from model_analyzer.state.analyzer_state import AnalyzerState
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
-
-import traceback
-import signal
-import json
-import os
 import glob
+import json
 import logging
+import os
+import signal
+import sys
+import traceback
+
+from model_analyzer.constants import LOGGER_NAME, MAX_NUMBER_OF_INTERRUPTS
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.state.analyzer_state import AnalyzerState
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -100,7 +101,7 @@ class AnalyzerStateManager:
         ----------
         name: str
             The name of the variable
-        value: Any 
+        value: Any
             the value to set for that variable
         """
 
@@ -110,9 +111,9 @@ class AnalyzerStateManager:
     def load_checkpoint(self, checkpoint_required):
         """
         Load the state of the Model Analyzer from
-        most recent checkpoint file, also 
+        most recent checkpoint file, also
         set whether we are starting a fresh run
-        
+
         Parameters
         ----------
         checkpoint_required : bool
@@ -120,29 +121,30 @@ class AnalyzerStateManager:
         """
 
         latest_checkpoint_file = os.path.join(
-            self._checkpoint_dir, f"{self._latest_checkpoint()}.ckpt")
+            self._checkpoint_dir, f"{self._latest_checkpoint()}.ckpt"
+        )
         if os.path.exists(latest_checkpoint_file):
             logger.info(f"Loaded checkpoint from file {latest_checkpoint_file}")
-            with open(latest_checkpoint_file, 'r') as f:
+            with open(latest_checkpoint_file, "r") as f:
                 try:
-
                     self._current_state = AnalyzerState.from_dict(json.load(f))
                 except EOFError:
                     raise TritonModelAnalyzerException(
-                        f'Checkpoint file {latest_checkpoint_file} is'
-                        ' empty or corrupted. Remove it from checkpoint'
-                        ' directory.')
+                        f"Checkpoint file {latest_checkpoint_file} is"
+                        " empty or corrupted. Remove it from checkpoint"
+                        " directory."
+                    )
             self._starting_fresh_run = False
         else:
             if checkpoint_required:
-                raise TritonModelAnalyzerException(f'No checkpoint file found')
+                raise TritonModelAnalyzerException(f"No checkpoint file found")
             else:
                 logger.info("No checkpoint file found, starting a fresh run.")
 
     def default_encode(self, obj):
         if isinstance(obj, bytes):
-            return obj.decode('utf-8')
-        elif hasattr(obj, 'to_dict'):
+            return obj.decode("utf-8")
+        elif hasattr(obj, "to_dict"):
             return obj.to_dict()
         else:
             return obj.__dict__
@@ -158,17 +160,17 @@ class AnalyzerStateManager:
             The state object to be saved
         """
 
-        ckpt_filename = os.path.join(self._checkpoint_dir,
-                                     f"{self._checkpoint_index}.ckpt")
+        ckpt_filename = os.path.join(
+            self._checkpoint_dir, f"{self._checkpoint_index}.ckpt"
+        )
         if self._state_changed:
-            with open(ckpt_filename, 'w') as f:
+            with open(ckpt_filename, "w") as f:
                 json.dump(self._current_state, f, default=self.default_encode)
             logger.info(f"Saved checkpoint to {ckpt_filename}")
 
             self._state_changed = False
         else:
-            logger.info(
-                f"No changes made to analyzer data, no checkpoint saved.")
+            logger.info(f"No changes made to analyzer data, no checkpoint saved.")
 
     def interrupt_handler(self, signal, frame):
         """
@@ -181,12 +183,14 @@ class AnalyzerStateManager:
         if logger.getEffectiveLevel() <= logging.DEBUG:
             traceback.print_stack(limit=15)
         logger.info(
-            f'Received SIGINT {self._exiting}/{MAX_NUMBER_OF_INTERRUPTS}. '
-            'Will attempt to exit after current measurement.')
+            f"Received SIGINT {self._exiting}/{MAX_NUMBER_OF_INTERRUPTS}. "
+            "Will attempt to exit after current measurement."
+        )
         if self._exiting >= MAX_NUMBER_OF_INTERRUPTS:
             logger.info(
-                f'Received SIGINT maximum number of times. Saving state and exiting immediately. '
-                'perf_analyzer may still be running')
+                f"Received SIGINT maximum number of times. Saving state and exiting immediately. "
+                "perf_analyzer may still be running"
+            )
             self.save_checkpoint()
 
             # Exit server
@@ -200,13 +204,12 @@ class AnalyzerStateManager:
         checkpoint directory, return its index.
         """
 
-        checkpoint_files = glob.glob(
-            os.path.join(self._checkpoint_dir, '*.ckpt'))
+        checkpoint_files = glob.glob(os.path.join(self._checkpoint_dir, "*.ckpt"))
         if not checkpoint_files:
             return -1
         try:
-            return max([
-                int(os.path.split(f)[1].split('.')[0]) for f in checkpoint_files
-            ])
+            return max(
+                [int(os.path.split(f)[1].split(".")[0]) for f in checkpoint_files]
+            )
         except Exception as e:
             raise TritonModelAnalyzerException(e)

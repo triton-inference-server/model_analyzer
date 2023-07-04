@@ -1,4 +1,6 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from functools import total_ordering
 import logging
+from functools import total_ordering
 
 from model_analyzer.record.record import DecreasingRecord
 
@@ -45,11 +47,11 @@ class PerfLatency(DecreasingRecord):
         Parameters
         ----------
         aggregation_tag: bool
-            An optional tag that may be displayed 
-            as part of the header indicating that 
-            this record has been aggregated using 
-            max, min or average etc. 
-             
+            An optional tag that may be displayed
+            as part of the header indicating that
+            this record has been aggregated using
+            max, min or average etc.
+
         Returns
         -------
         str
@@ -71,8 +73,8 @@ class PerfLatency(DecreasingRecord):
 
     def __lt__(self, other):
         """
-        Allows checking if 
-        this record is less than 
+        Allows checking if
+        this record is less than
         the other
         """
 
@@ -104,5 +106,6 @@ class PerfLatency(DecreasingRecord):
     def _print_deprecate_warning(cls):
         if not cls._printed_deprecate_warning:
             logging.warning(
-                "`perf_latency` is deprecated, use `perf_latency_p99` instead.")
+                "`perf_latency` is deprecated, use `perf_latency_p99` instead."
+            )
             cls._printed_deprecate_warning = True

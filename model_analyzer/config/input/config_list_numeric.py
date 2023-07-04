@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .config_value import ConfigValue
+from model_analyzer.constants import CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+
 from .config_status import ConfigStatus
-from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+from .config_value import ConfigValue
 
 
 class ConfigListNumeric(ConfigValue):
@@ -23,13 +25,15 @@ class ConfigListNumeric(ConfigValue):
     A list of numeric values.
     """
 
-    def __init__(self,
-                 type_,
-                 preprocess=None,
-                 required=False,
-                 validator=None,
-                 output_mapper=None,
-                 name=None):
+    def __init__(
+        self,
+        type_,
+        preprocess=None,
+        required=False,
+        validator=None,
+        output_mapper=None,
+        name=None,
+    ):
         """
         Create a new list of numeric values.
 
@@ -59,7 +63,8 @@ class ConfigListNumeric(ConfigValue):
                 return ConfigStatus(
                     CONFIG_PARSER_FAILURE,
                     f'The value for field "{self.name()}" should be a list'
-                    ' and the length must be larger than zero.')
+                    " and the length must be larger than zero.",
+                )
 
         super().__init__(preprocess, required, validator, output_mapper, name)
         self._type = type_
@@ -98,31 +103,36 @@ class ConfigListNumeric(ConfigValue):
         try:
             if self._is_string(value):
                 self._value = []
-                value = value.split(',')
+                value = value.split(",")
 
             if self._is_list(value):
                 new_value = self._process_list(value)
 
             elif self._is_dict(value):
-                two_key_condition = len(
-                    value) == 2 and 'start' in value and 'stop' in value
-                three_key_condition = len(
-                    value) == 3 and 'start' in value and 'stop' in value\
-                    and 'step' in value
+                two_key_condition = (
+                    len(value) == 2 and "start" in value and "stop" in value
+                )
+                three_key_condition = (
+                    len(value) == 3
+                    and "start" in value
+                    and "stop" in value
+                    and "step" in value
+                )
                 if two_key_condition or three_key_condition:
                     step = 1
-                    start = int(value['start'])
-                    stop = int(value['stop'])
+                    start = int(value["start"])
+                    stop = int(value["stop"])
                     if start > stop:
                         return ConfigStatus(
                             CONFIG_PARSER_FAILURE,
                             f'When a dictionary is used for field "{self.name()}",'
                             ' "start" should be less than "stop".'
-                            f' Current value is {value}.',
-                            config_object=self)
+                            f" Current value is {value}.",
+                            config_object=self,
+                        )
 
-                    if 'step' in value:
-                        step = int(value['step'])
+                    if "step" in value:
+                        step = int(value["step"])
                     new_value = list(range(start, stop + 1, step))
                 else:
                     return ConfigStatus(
@@ -130,7 +140,8 @@ class ConfigListNumeric(ConfigValue):
                         f'If a dictionary is used for field "{self.name()}", it'
                         ' should only contain "start" and "stop" key with an'
                         f' optional "step" key. Currently, contains {list(value)}.',
-                        config_object=self)
+                        config_object=self,
+                    )
             else:
                 new_value = [type_(value)]
         except ValueError as e:

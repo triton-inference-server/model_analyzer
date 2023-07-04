@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,18 +23,20 @@ class ConfigModelProfileSpec:
     a single model.
     """
 
-    def __init__(self,
-                 model_name,
-                 cpu_only=False,
-                 objectives=None,
-                 constraints=None,
-                 weighting=None,
-                 parameters=None,
-                 model_config_parameters=None,
-                 perf_analyzer_flags=None,
-                 triton_server_flags=None,
-                 triton_server_environment=None,
-                 triton_docker_args=None):
+    def __init__(
+        self,
+        model_name,
+        cpu_only=False,
+        objectives=None,
+        constraints=None,
+        weighting=None,
+        parameters=None,
+        model_config_parameters=None,
+        perf_analyzer_flags=None,
+        triton_server_flags=None,
+        triton_server_environment=None,
+        triton_docker_args=None,
+    ):
         """
         Parameters
         ----------
@@ -45,7 +49,7 @@ class ConfigModelProfileSpec:
         constraints : None or dict
             Constraints required by the model
         weighting: int
-            Model weighting 
+            Model weighting
         parameters : None or dict
             Constraints on batch_size and concurrency values need to be
             specified here.
@@ -208,7 +212,8 @@ class ConfigModelProfileSpec:
         models = []
         for model_name, model_properties in value.items():
             models.append(
-                ConfigModelProfileSpec(model_name, **model_properties.value()))
+                ConfigModelProfileSpec(model_name, **model_properties.value())
+            )
 
         return models
 
@@ -279,25 +284,24 @@ class ConfigModelProfileSpec:
         return new_models
 
     def __repr__(self):
-        model_object = {'model_name': self._model_name}
-        model_object['cpu_only'] = self._cpu_only
+        model_object = {"model_name": self._model_name}
+        model_object["cpu_only"] = self._cpu_only
         if self._objectives:
-            model_object['objectives'] = self._objectives
+            model_object["objectives"] = self._objectives
 
         if self._parameters:
-            model_object['parameters'] = self._parameters
+            model_object["parameters"] = self._parameters
 
         if self._constraints:
-            model_object['constraints'] = self._constraints
+            model_object["constraints"] = self._constraints
 
         if self._weighting:
-            model_object['weighting'] = self._weighting
+            model_object["weighting"] = self._weighting
 
         if self._model_config_parameters:
-            model_object['model_config_parameters'] = \
-                self._model_config_parameters
+            model_object["model_config_parameters"] = self._model_config_parameters
 
         if self._perf_analyzer_flags:
-            model_object['perf_analyzer_flags'] = self._perf_analyzer_flags
+            model_object["perf_analyzer_flags"] = self._perf_analyzer_flags
 
         return str(model_object)

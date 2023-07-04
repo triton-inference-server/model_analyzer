@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,21 +15,28 @@
 # limitations under the License.
 
 import unittest
-from tests.common.test_utils import construct_perf_analyzer_config, evaluate_mock_config, construct_run_config_measurement
+from unittest.mock import MagicMock, patch
 
-from model_analyzer.config.generate.perf_analyzer_config_generator import PerfAnalyzerConfigGenerator
+from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
+from model_analyzer.config.generate.perf_analyzer_config_generator import (
+    PerfAnalyzerConfigGenerator,
+)
+from model_analyzer.config.input.config_defaults import (
+    DEFAULT_RUN_CONFIG_MAX_CONCURRENCY,
+    DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE,
+    DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
+)
+from tests.common.test_utils import (
+    construct_perf_analyzer_config,
+    construct_run_config_measurement,
+    evaluate_mock_config,
+)
+
 from .common import test_result_collector as trc
 from .mocks.mock_os import MockOSMethods
-from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
-from unittest.mock import MagicMock
-from unittest.mock import patch
-
-from model_analyzer.config.input.config_defaults import DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, \
-    DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE, DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE
 
 
 class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
-
     def __init__(self, methodname):
         super().__init__(methodname)
         self._perf_throughput = 1
@@ -40,31 +49,20 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         the highest total throughput
         """
         measurement1 = self.make_multi_model_measurement(
-            ["modelA", "modelB"], [{
-                "perf_throughput": 1
-            }, {
-                "perf_throughput": 2
-            }])
+            ["modelA", "modelB"], [{"perf_throughput": 1}, {"perf_throughput": 2}]
+        )
 
         measurement2 = self.make_multi_model_measurement(
-            ["modelA", "modelB"], [{
-                "perf_throughput": 7
-            }, {
-                "perf_throughput": 7
-            }])
+            ["modelA", "modelB"], [{"perf_throughput": 7}, {"perf_throughput": 7}]
+        )
 
         measurement3 = self.make_multi_model_measurement(
-            ["modelA", "modelB"], [{
-                "perf_throughput": 10
-            }, {
-                "perf_throughput": 2
-            }])
+            ["modelA", "modelB"], [{"perf_throughput": 10}, {"perf_throughput": 2}]
+        )
 
-        pacg = PerfAnalyzerConfigGenerator(MagicMock(),
-                                           MagicMock(),
-                                           MagicMock(),
-                                           MagicMock(),
-                                           early_exit_enable=False)
+        pacg = PerfAnalyzerConfigGenerator(
+            MagicMock(), MagicMock(), MagicMock(), MagicMock(), early_exit_enable=False
+        )
 
         pacg.set_last_results([measurement1, measurement2, measurement3])
         self.assertEqual(pacg._last_results[0], measurement2)
@@ -87,13 +85,13 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         concurrencies = utils.generate_doubled_list(
-            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+        )
         expected_configs = [
             construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
 
-        self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs)
+        self._run_and_test_perf_analyzer_config_generator(yaml_str, expected_configs)
 
     def test_search_disabled(self):
         """
@@ -114,7 +112,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         expected_configs = [construct_perf_analyzer_config()]
 
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, '--run-config-search-disable')
+            yaml_str, expected_configs, "--run-config-search-disable"
+        )
 
     def test_c_api(self):
         """
@@ -133,14 +132,16 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         concurrencies = utils.generate_doubled_list(
-            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+        )
         expected_configs = [
-            construct_perf_analyzer_config(concurrency=c, launch_mode='c_api')
+            construct_perf_analyzer_config(concurrency=c, launch_mode="c_api")
             for c in concurrencies
         ]
 
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, '--triton-launch-mode=c_api')
+            yaml_str, expected_configs, "--triton-launch-mode=c_api"
+        )
 
     def test_http(self):
         """
@@ -159,15 +160,16 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         concurrencies = utils.generate_doubled_list(
-            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+        )
         expected_configs = [
-            construct_perf_analyzer_config(concurrency=c,
-                                           client_protocol='http')
+            construct_perf_analyzer_config(concurrency=c, client_protocol="http")
             for c in concurrencies
         ]
 
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, '--client-protocol=http')
+            yaml_str, expected_configs, "--client-protocol=http"
+        )
 
     def test_batch_size_search_disabled(self):
         """
@@ -192,9 +194,10 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             construct_perf_analyzer_config(batch_size=b) for b in batch_sizes
         ]
 
-        pa_cli_args = ['-b 1,2,4', '--run-config-search-disable']
+        pa_cli_args = ["-b 1,2,4", "--run-config-search-disable"]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
     def test_batch_size_search_enabled(self):
         """
@@ -215,16 +218,18 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         batch_sizes = [1, 2, 4]
         concurrencies = utils.generate_doubled_list(
-            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+        )
         expected_configs = [
             construct_perf_analyzer_config(batch_size=b, concurrency=c)
             for b in batch_sizes
             for c in concurrencies
         ]
 
-        pa_cli_args = ['-b 1,2,4']
+        pa_cli_args = ["-b 1,2,4"]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
     def test_concurrency(self):
         """
@@ -249,13 +254,15 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
 
-        pa_cli_args = ['-c 1,2,3,4']
+        pa_cli_args = ["-c 1,2,3,4"]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
-        pa_cli_args = ['-c 1,2,3,4', '--run-config-search-disable']
+        pa_cli_args = ["-c 1,2,3,4", "--run-config-search-disable"]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
     def test_batch_size_and_concurrency(self):
         """
@@ -286,13 +293,15 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             for c in concurrencies
         ]
 
-        pa_cli_args = ['-b 1,2,4', '-c 1,2,3,4']
+        pa_cli_args = ["-b 1,2,4", "-c 1,2,3,4"]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
-        pa_cli_args = ['-b 1,2,4', '-c 1,2,3,4', '--run-config-search-disable']
+        pa_cli_args = ["-b 1,2,4", "-c 1,2,3,4", "--run-config-search-disable"]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
     def test_max_concurrency(self):
         """
@@ -316,9 +325,10 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
 
-        pa_cli_args = ['--run-config-search-max-concurrency', '16']
+        pa_cli_args = ["--run-config-search-max-concurrency", "16"]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
     def test_min_concurrency(self):
         """
@@ -342,11 +352,14 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         ]
 
         pa_cli_args = [
-            '--run-config-search-min-concurrency', '5',
-            '--run-config-search-max-concurrency', '16'
+            "--run-config-search-min-concurrency",
+            "5",
+            "--run-config-search-max-concurrency",
+            "16",
         ]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
     def test_request_rate_list(self):
         """
@@ -372,15 +385,15 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             for request_rate in request_rates
         ]
 
-        pa_cli_args = ['--request-rate', '1,2,3,4']
+        pa_cli_args = ["--request-rate", "1,2,3,4"]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
-        pa_cli_args = [
-            '--request-rate', '1,2,3,4', '--run-config-search-disable'
-        ]
+        pa_cli_args = ["--request-rate", "1,2,3,4", "--run-config-search-disable"]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
         # yapf: disable
         yaml_str = ("""
@@ -393,7 +406,8 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         pa_cli_args = []
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
     def test_request_rate_enable(self):
         """
@@ -413,16 +427,17 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         request_rates = utils.generate_doubled_list(
-            DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
-            DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE)
+            DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE, DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE
+        )
         expected_configs = [
             construct_perf_analyzer_config(request_rate=request_rate)
             for request_rate in request_rates
         ]
 
-        pa_cli_args = ['--request-rate-search-enable']
+        pa_cli_args = ["--request-rate-search-enable"]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
     def test_max_request_rate(self):
         """
@@ -442,18 +457,20 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         request_rates = utils.generate_doubled_list(
             DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
-            int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE / 2))
+            int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE / 2),
+        )
         expected_configs = [
             construct_perf_analyzer_config(request_rate=request_rate)
             for request_rate in request_rates
         ]
 
         pa_cli_args = [
-            '--run-config-search-max-request-rate',
-            f'{int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE / 2)}'
+            "--run-config-search-max-request-rate",
+            f"{int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE / 2)}",
         ]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
     def test_min_request_rate(self):
         """
@@ -473,18 +490,20 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         request_rates = utils.generate_doubled_list(
             DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE * 2,
-            int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE))
+            int(DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE),
+        )
         expected_configs = [
             construct_perf_analyzer_config(request_rate=request_rate)
             for request_rate in request_rates
         ]
 
         pa_cli_args = [
-            '--run-config-search-min-request-rate',
-            f'{int(DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE * 2)}'
+            "--run-config-search-min-request-rate",
+            f"{int(DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE * 2)}",
         ]
         self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs, pa_cli_args)
+            yaml_str, expected_configs, pa_cli_args
+        )
 
     def test_perf_analyzer_flags(self):
         """
@@ -507,15 +526,16 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         concurrencies = utils.generate_doubled_list(
-            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+        )
         expected_configs = [
             construct_perf_analyzer_config(
-                concurrency=c, perf_analyzer_flags={'percentile': '96'})
+                concurrency=c, perf_analyzer_flags={"percentile": "96"}
+            )
             for c in concurrencies
         ]
 
-        self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs)
+        self._run_and_test_perf_analyzer_config_generator(yaml_str, expected_configs)
 
     def test_perf_analyzer_config_ssl_options(self):
         """
@@ -542,26 +562,28 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         concurrencies = utils.generate_doubled_list(
-            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+            1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY
+        )
         expected_configs = [
             construct_perf_analyzer_config(
                 concurrency=c,
                 perf_analyzer_flags={
-                    'ssl-grpc-root-certifications-file': 'a',
-                    'ssl-grpc-private-key-file': 'b',
-                    'ssl-grpc-certificate-chain-file': 'c',
-                    'ssl-https-verify-peer': '1',
-                    'ssl-https-verify-host': '2',
-                    'ssl-https-ca-certificates-file': 'd',
-                    'ssl-https-client-certificate-type': 'e',
-                    'ssl-https-client-certificate-file': 'f',
-                    'ssl-https-private-key-type': 'g',
-                    'ssl-https-private-key-file': 'h',
-                }) for c in concurrencies
+                    "ssl-grpc-root-certifications-file": "a",
+                    "ssl-grpc-private-key-file": "b",
+                    "ssl-grpc-certificate-chain-file": "c",
+                    "ssl-https-verify-peer": "1",
+                    "ssl-https-verify-host": "2",
+                    "ssl-https-ca-certificates-file": "d",
+                    "ssl-https-client-certificate-type": "e",
+                    "ssl-https-client-certificate-file": "f",
+                    "ssl-https-private-key-type": "g",
+                    "ssl-https-private-key-file": "h",
+                },
+            )
+            for c in concurrencies
         ]
 
-        self._run_and_test_perf_analyzer_config_generator(
-            yaml_str, expected_configs)
+        self._run_and_test_perf_analyzer_config_generator(yaml_str, expected_configs)
 
     def test_early_exit_on_no_plateau(self):
         """
@@ -580,11 +602,10 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
 
-        pa_cli_args = ['--run-config-search-max-concurrency', '64']
-        self._run_and_test_perf_analyzer_config_generator(yaml_str,
-                                                          expected_configs,
-                                                          pa_cli_args,
-                                                          early_exit=True)
+        pa_cli_args = ["--run-config-search-max-concurrency", "64"]
+        self._run_and_test_perf_analyzer_config_generator(
+            yaml_str, expected_configs, pa_cli_args, early_exit=True
+        )
 
     def test_early_exit_on_yes_plateau(self):
         """
@@ -603,14 +624,14 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
 
-        pa_cli_args = ['--run-config-search-max-concurrency', '64']
-        with patch.object(TestPerfAnalyzerConfigGenerator,
-                          "_get_next_perf_throughput_value") as mock_method:
+        pa_cli_args = ["--run-config-search-max-concurrency", "64"]
+        with patch.object(
+            TestPerfAnalyzerConfigGenerator, "_get_next_perf_throughput_value"
+        ) as mock_method:
             mock_method.side_effect = [1, 2, 4, 4, 4, 4, 4]
-            self._run_and_test_perf_analyzer_config_generator(yaml_str,
-                                                              expected_configs,
-                                                              pa_cli_args,
-                                                              early_exit=True)
+            self._run_and_test_perf_analyzer_config_generator(
+                yaml_str, expected_configs, pa_cli_args, early_exit=True
+            )
 
     def test_early_exit_off_yes_plateau(self):
         """
@@ -629,90 +650,79 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             construct_perf_analyzer_config(concurrency=c) for c in concurrencies
         ]
 
-        pa_cli_args = ['--run-config-search-max-concurrency', '64']
-        with patch.object(TestPerfAnalyzerConfigGenerator,
-                          "_get_next_perf_throughput_value") as mock_method:
+        pa_cli_args = ["--run-config-search-max-concurrency", "64"]
+        with patch.object(
+            TestPerfAnalyzerConfigGenerator, "_get_next_perf_throughput_value"
+        ) as mock_method:
             mock_method.side_effect = [1, 2, 4, 4, 4, 4, 4]
-            self._run_and_test_perf_analyzer_config_generator(yaml_str,
-                                                              expected_configs,
-                                                              pa_cli_args,
-                                                              early_exit=False)
+            self._run_and_test_perf_analyzer_config_generator(
+                yaml_str, expected_configs, pa_cli_args, early_exit=False
+            )
 
     def test_throughput_gain_based_on_max(self):
         # Expect false because no increases
         throughput_values = [50, 40, 30, 20]
         expected_result = False
-        self._test_throughput_gain_valid_helper(throughput_values,
-                                                expected_result)
+        self._test_throughput_gain_valid_helper(throughput_values, expected_result)
 
         # Expect false because no increases in the last 4
         throughput_values = [10, 20, 30, 40, 50, 40, 30, 20]
         expected_result = False
-        self._test_throughput_gain_valid_helper(throughput_values,
-                                                expected_result)
+        self._test_throughput_gain_valid_helper(throughput_values, expected_result)
 
         # Expect false because gain is only 5%
         throughput_values = [50, 50, 50, 52.5]
         expected_result = False
-        self._test_throughput_gain_valid_helper(throughput_values,
-                                                expected_result)
+        self._test_throughput_gain_valid_helper(throughput_values, expected_result)
 
         # Expect false because gain is only 5%
         throughput_values = [50, 35, 45, 51.5]
         expected_result = False
-        self._test_throughput_gain_valid_helper(throughput_values,
-                                                expected_result)
+        self._test_throughput_gain_valid_helper(throughput_values, expected_result)
 
         # Expect true because gain is more than 5%
         throughput_values = [50, 50, 50, 52.51]
         expected_result = True
-        self._test_throughput_gain_valid_helper(throughput_values,
-                                                expected_result)
+        self._test_throughput_gain_valid_helper(throughput_values, expected_result)
 
         # Expect true because not enough data
         throughput_values = [50, 10]
         expected_result = True
-        self._test_throughput_gain_valid_helper(throughput_values,
-                                                expected_result)
+        self._test_throughput_gain_valid_helper(throughput_values, expected_result)
 
         # Expect true because of increases
         throughput_values = [50, 100, 200, 400]
         expected_result = True
-        self._test_throughput_gain_valid_helper(throughput_values,
-                                                expected_result)
+        self._test_throughput_gain_valid_helper(throughput_values, expected_result)
 
         # Expect false because no new max
         throughput_values = [50, 10, 50, 10]
         expected_result = False
-        self._test_throughput_gain_valid_helper(throughput_values,
-                                                expected_result)
+        self._test_throughput_gain_valid_helper(throughput_values, expected_result)
 
-    def _test_throughput_gain_valid_helper(self, throughput_values,
-                                           expected_result):
+    def _test_throughput_gain_valid_helper(self, throughput_values, expected_result):
         throughputs = [
             construct_run_config_measurement(
                 model_name=MagicMock(),
                 model_config_names=["test_model_config_name"],
                 model_specific_pa_params=MagicMock(),
                 gpu_metric_values=MagicMock(),
-                non_gpu_metric_values=[{
-                    "perf_throughput": throughput_value
-                }]) for throughput_value in throughput_values
+                non_gpu_metric_values=[{"perf_throughput": throughput_value}],
+            )
+            for throughput_value in throughput_values
         ]
 
-        pacg = PerfAnalyzerConfigGenerator(MagicMock(),
-                                           MagicMock(),
-                                           MagicMock(),
-                                           MagicMock(),
-                                           early_exit_enable=False)
+        pacg = PerfAnalyzerConfigGenerator(
+            MagicMock(), MagicMock(), MagicMock(), MagicMock(), early_exit_enable=False
+        )
 
         result = PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
-            throughputs=throughputs, min_tries=4, min_gain=0.05)
+            throughputs=throughputs, min_tries=4, min_gain=0.05
+        )
 
         self.assertEqual(result, expected_result)
 
     def _get_next_measurement(self):
-
         throughput_value = self._get_next_perf_throughput_value()
         if throughput_value is None:
             return None
@@ -722,22 +732,23 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                 model_config_names=["test_model_config_name"],
                 model_specific_pa_params=MagicMock(),
                 gpu_metric_values=MagicMock(),
-                non_gpu_metric_values=[{
-                    "perf_throughput": throughput_value
-                }])
+                non_gpu_metric_values=[{"perf_throughput": throughput_value}],
+            )
 
     def _get_next_perf_throughput_value(self):
         self._perf_throughput *= 2
         return self._perf_throughput
 
-    def _run_and_test_perf_analyzer_config_generator(self,
-                                                     yaml_str,
-                                                     expected_configs,
-                                                     pa_cli_args=None,
-                                                     early_exit=False):
+    def _run_and_test_perf_analyzer_config_generator(
+        self, yaml_str, expected_configs, pa_cli_args=None, early_exit=False
+    ):
         args = [
-            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli_repository",
+            "-f",
+            "path-to-config-file",
         ]
 
         if type(pa_cli_args) == list:
@@ -748,9 +759,12 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         config = evaluate_mock_config(args, yaml_str, subcommand="profile")
 
         pacg = PerfAnalyzerConfigGenerator(
-            config, config.profile_models[0].model_name(),
+            config,
+            config.profile_models[0].model_name(),
             config.profile_models[0].perf_analyzer_flags(),
-            config.profile_models[0].parameters(), early_exit)
+            config.profile_models[0].parameters(),
+            early_exit,
+        )
 
         perf_analyzer_configs = []
         for perf_config in pacg.get_configs():
@@ -759,40 +773,59 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
 
         self.assertEqual(len(expected_configs), len(perf_analyzer_configs))
         for i in range(len(expected_configs)):
-            self.assertEqual(expected_configs[i]._options['-m'],
-                             perf_analyzer_configs[i]._options['-m'])
-            self.assertEqual(expected_configs[i]._options['-b'],
-                             perf_analyzer_configs[i]._options['-b'])
-            self.assertEqual(expected_configs[i]._options['-i'],
-                             perf_analyzer_configs[i]._options['-i'])
-            self.assertEqual(expected_configs[i]._options['-u'],
-                             perf_analyzer_configs[i]._options['-u'])
+            self.assertEqual(
+                expected_configs[i]._options["-m"],
+                perf_analyzer_configs[i]._options["-m"],
+            )
+            self.assertEqual(
+                expected_configs[i]._options["-b"],
+                perf_analyzer_configs[i]._options["-b"],
+            )
+            self.assertEqual(
+                expected_configs[i]._options["-i"],
+                perf_analyzer_configs[i]._options["-i"],
+            )
+            self.assertEqual(
+                expected_configs[i]._options["-u"],
+                perf_analyzer_configs[i]._options["-u"],
+            )
 
             self.assertEqual(
-                expected_configs[i]._args['concurrency-range'],
-                perf_analyzer_configs[i]._args['concurrency-range'])
-            self.assertEqual(expected_configs[i]._args['measurement-mode'],
-                             perf_analyzer_configs[i]._args['measurement-mode'])
-            self.assertEqual(expected_configs[i]._args['service-kind'],
-                             perf_analyzer_configs[i]._args['service-kind'])
+                expected_configs[i]._args["concurrency-range"],
+                perf_analyzer_configs[i]._args["concurrency-range"],
+            )
             self.assertEqual(
-                expected_configs[i]._args['triton-server-directory'],
-                perf_analyzer_configs[i]._args['triton-server-directory'])
-            self.assertEqual(expected_configs[i]._args['model-repository'],
-                             perf_analyzer_configs[i]._args['model-repository'])
+                expected_configs[i]._args["measurement-mode"],
+                perf_analyzer_configs[i]._args["measurement-mode"],
+            )
+            self.assertEqual(
+                expected_configs[i]._args["service-kind"],
+                perf_analyzer_configs[i]._args["service-kind"],
+            )
+            self.assertEqual(
+                expected_configs[i]._args["triton-server-directory"],
+                perf_analyzer_configs[i]._args["triton-server-directory"],
+            )
+            self.assertEqual(
+                expected_configs[i]._args["model-repository"],
+                perf_analyzer_configs[i]._args["model-repository"],
+            )
 
             # Future-proofing (in case a new field gets added)
-            self.assertEqual(expected_configs[i]._options,
-                             perf_analyzer_configs[i]._options)
-            self.assertEqual(expected_configs[i]._args,
-                             perf_analyzer_configs[i]._args)
-            self.assertEqual(expected_configs[i]._additive_args,
-                             perf_analyzer_configs[i]._additive_args)
+            self.assertEqual(
+                expected_configs[i]._options, perf_analyzer_configs[i]._options
+            )
+            self.assertEqual(expected_configs[i]._args, perf_analyzer_configs[i]._args)
+            self.assertEqual(
+                expected_configs[i]._additive_args,
+                perf_analyzer_configs[i]._additive_args,
+            )
 
     def setUp(self):
         # Mock path validation
         self.mock_os = MockOSMethods(
-            mock_paths=['model_analyzer.config.input.config_utils'])
+            mock_paths=["model_analyzer.config.input.config_utils"]
+        )
         self.mock_os.start()
 
     def tearDown(self):
@@ -805,8 +838,9 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             model_config_names=model_names,
             model_specific_pa_params=MagicMock(),
             gpu_metric_values=MagicMock(),
-            non_gpu_metric_values=non_gpu_metric_values)
+            non_gpu_metric_values=non_gpu_metric_values,
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

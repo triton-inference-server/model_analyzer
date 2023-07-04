@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .monitor import Monitor
-
 from model_analyzer.record.types.cpu_available_ram import CPUAvailableRAM
 from model_analyzer.record.types.cpu_used_ram import CPUUsedRAM
+
+from .monitor import Monitor
 
 
 class CPUMonitor(Monitor):
@@ -46,7 +48,7 @@ class CPUMonitor(Monitor):
 
     def _monitoring_iteration(self):
         """
-        Get memory info of process and 
+        Get memory info of process and
         append
         """
         if (CPUUsedRAM in self._metrics) or (CPUAvailableRAM in self._metrics):
@@ -60,7 +62,7 @@ class CPUMonitor(Monitor):
         """
         Returns
         -------
-        List of Records 
+        List of Records
             the records metrics
         """
 

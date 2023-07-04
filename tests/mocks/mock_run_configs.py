@@ -1,4 +1,6 @@
-# Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,31 +17,33 @@
 import itertools
 
 
-class MockRunConfig():
-    """ 
+class MockRunConfig:
+    """
     Mock class that only contains the important values from the model_config and
     perf_config from a ModelRunConfig object
     """
 
     def load_from_model_run_config(self, model_run_config):
-        """ Populate from a ModelRunConfig object """
+        """Populate from a ModelRunConfig object"""
         model_config = model_run_config.model_config().get_config()
         perf_config = model_run_config.perf_config()
         self._load_from_model_and_perf_config(model_config, perf_config)
 
     def load_from_dict(self, dict):
-        """ Populate from a dictionary """
+        """Populate from a dictionary"""
         self._config = dict
 
     def get_config_tuple(self):
-        """ 
-        Convert and return the data from a dict into a tuple 
+        """
+        Convert and return the data from a dict into a tuple
         of (key,value,key,value,...) where the keys are in a
         sorted order
         """
-        list_of_key_value_pairs = [(y, self._config[y])
-                                   for y in sorted(self._config.keys())
-                                   if self._config[y] != None]
+        list_of_key_value_pairs = [
+            (y, self._config[y])
+            for y in sorted(self._config.keys())
+            if self._config[y] != None
+        ]
         out_tuple = tuple(item for x in list_of_key_value_pairs for item in x)
         return out_tuple
 
@@ -63,23 +67,24 @@ class MockRunConfig():
         if model_config.get("dynamic_batching") is not None:
             dynamic_batching = 0
             max_queue_delay = model_config["dynamic_batching"].get(
-                "max_queue_delay_microseconds")
+                "max_queue_delay_microseconds"
+            )
 
         batch_size = perf_config.__getitem__("batch-size")
         concurrency = perf_config.__getitem__("concurrency-range")
 
         self._config = {
-            'kind': kind,
-            'batch_sizes': batch_size,
-            'batching': dynamic_batching,
-            'concurrency': concurrency,
-            'instances': instances,
-            'max_batch_size': max_batch_size,
-            'max_queue_delay': max_queue_delay
+            "kind": kind,
+            "batch_sizes": batch_size,
+            "batching": dynamic_batching,
+            "concurrency": concurrency,
+            "instances": instances,
+            "max_batch_size": max_batch_size,
+            "max_queue_delay": max_queue_delay,
         }
 
 
-class MockRunConfigs():
+class MockRunConfigs:
     """
     This class holds a list of MockRunConfig
     """
@@ -88,23 +93,23 @@ class MockRunConfigs():
         self._configs = []
 
     def get_num_configs(self) -> int:
-        """ Returns the number of configs """
+        """Returns the number of configs"""
         return len(self._configs)
 
     def get_configs_set(self) -> set:
-        """ Returns a set of the configs """
+        """Returns a set of the configs"""
         configs_set = {config.get_config_tuple() for config in self._configs}
         return configs_set
 
     def add_from_model_run_config(self, config):
-        """ Add a single config from a ModelRunConfig """
+        """Add a single config from a ModelRunConfig"""
 
         mock_run_config = MockRunConfig()
         mock_run_config.load_from_model_run_config(config)
         self._configs.append(mock_run_config)
 
     def add_from_dict(self, config):
-        """ Add a single config from a dict """
+        """Add a single config from a dict"""
 
         mock_run_config = MockRunConfig()
         mock_run_config.load_from_dict(config)
@@ -112,7 +117,7 @@ class MockRunConfigs():
 
     def populate_from_ranges(self, ranges):
         """
-        Given a dict of key-to-list, create the set of ModelRunConfigs based on 
+        Given a dict of key-to-list, create the set of ModelRunConfigs based on
         the full cartesian product of each dict in the list
 
         For example, passing in

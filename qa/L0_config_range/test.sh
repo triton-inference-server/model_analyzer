@@ -1,4 +1,5 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/bin/bash
+# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,7 +70,7 @@ for config in ${LIST_OF_CONFIG_FILES[@]}; do
         cat $ANALYZER_LOG
         RET=1
     fi
-    
+
     SERVER_METRICS_FILE=${EXPORT_PATH}/results/${FILENAME_SERVER_ONLY}
     MODEL_METRICS_GPU_FILE=${EXPORT_PATH}/results/${FILENAME_GPU_MODEL}
     MODEL_METRICS_INFERENCE_FILE=${EXPORT_PATH}/results/${FILENAME_INFERENCE_MODEL}

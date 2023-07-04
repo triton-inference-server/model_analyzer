@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .config_value import ConfigValue
+from model_analyzer.constants import CONFIG_PARSER_FAILURE
+
 from .config_status import ConfigStatus
-from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE
+from .config_value import ConfigValue
 
 
 class ConfigEnum(ConfigValue):
@@ -23,13 +25,15 @@ class ConfigEnum(ConfigValue):
     Enum type support for config.
     """
 
-    def __init__(self,
-                 choices,
-                 preprocess=None,
-                 required=False,
-                 validator=None,
-                 output_mapper=None,
-                 name=None):
+    def __init__(
+        self,
+        choices,
+        preprocess=None,
+        required=False,
+        validator=None,
+        output_mapper=None,
+        name=None,
+    ):
         """
         Create a new enum config field.
 
@@ -61,7 +65,8 @@ class ConfigEnum(ConfigValue):
                 CONFIG_PARSER_FAILURE,
                 f'Value "{value}" for field "{self.name()}" is not acceptable.'
                 f' Value should be one of the following values: "{choices}".',
-                self)
+                self,
+            )
 
         return super().set_value(value)
 

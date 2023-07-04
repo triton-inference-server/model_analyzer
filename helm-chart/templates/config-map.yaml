@@ -32,7 +32,7 @@ data:
     concurrency: 1,2
     batch_sizes: 1
 
-    profile_models: 
+    profile_models:
       add_sub:
         model_config_parameters:
           instance_group:

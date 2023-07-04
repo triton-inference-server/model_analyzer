@@ -1,4 +1,6 @@
-# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,15 +15,16 @@
 # limitations under the License.
 
 import argparse
-import yaml
 import os
+
+import yaml
 
 
 class TestConfigGenerator:
     """
     This class contains functions that
     create configs for various test scenarios.
-    
+
     The `setup` function does the work common to all tests
 
     TO ADD A TEST: Simply add a member function whose name starts
@@ -32,7 +35,7 @@ class TestConfigGenerator:
         test_functions = [
             self.__getattribute__(name)
             for name in dir(self)
-            if name.startswith('generate')
+            if name.startswith("generate")
         ]
 
         for test_function in test_functions:
@@ -42,53 +45,55 @@ class TestConfigGenerator:
     def setup(self):
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            '-p',
-            '--protocols',
+            "-p",
+            "--protocols",
             type=str,
             required=True,
-            help='Comma separated list of client protocols for this test')
+            help="Comma separated list of client protocols for this test",
+        )
         parser.add_argument(
-            '-l',
-            '--launch-modes',
+            "-l",
+            "--launch-modes",
             type=str,
             required=True,
-            help='Comma separated list of launch modes for this test')
+            help="Comma separated list of launch modes for this test",
+        )
 
         self.args = parser.parse_args()
-        self.protocols = sorted(self.args.protocols.split(','))
-        self.launch_modes = sorted(self.args.launch_modes.split(','))
+        self.protocols = sorted(self.args.protocols.split(","))
+        self.launch_modes = sorted(self.args.launch_modes.split(","))
 
         self.config = {}
-        self.config['run_config_search_disable'] = True
-        self.config['batch_sizes'] = 4
-        self.config['concurrency'] = 4
-        self.config['perf_analyzer_cpu_util'] = 6000
+        self.config["run_config_search_disable"] = True
+        self.config["batch_sizes"] = 4
+        self.config["concurrency"] = 4
+        self.config["perf_analyzer_cpu_util"] = 6000
 
     def generate_configs(self):
         for launch_mode in self.launch_modes:
-            self.config['triton_launch_mode'] = launch_mode
+            self.config["triton_launch_mode"] = launch_mode
             self.set_triton_server_path(launch_mode, self.config)
             self.set_triton_install_path(launch_mode, self.config)
 
-            if launch_mode == 'c_api':
-                self.config['perf_output'] = True
-                with open(f'config-{launch_mode}-c_api.yaml', 'w') as f:
+            if launch_mode == "c_api":
+                self.config["perf_output"] = True
+                with open(f"config-{launch_mode}-c_api.yaml", "w") as f:
                     yaml.dump(self.config, f)
             else:
-                self.config['perf_output'] = False
+                self.config["perf_output"] = False
                 for protocol in self.protocols:
-                    self.config['client_protocol'] = protocol
-                    if launch_mode == 'docker':
+                    self.config["client_protocol"] = protocol
+                    if launch_mode == "docker":
                         # Set docker image and put in the CI runner's labels
-                        if 'TRITON_LAUNCH_DOCKER_IMAGE' in os.environ:
-                            self.config['triton_docker_image'] = os.environ[
-                                'TRITON_LAUNCH_DOCKER_IMAGE']
-                        if 'RUNNER_ID' in os.environ:
-                            self.config['triton_docker_labels'] = {
-                                'RUNNER_ID': os.environ['RUNNER_ID']
+                        if "TRITON_LAUNCH_DOCKER_IMAGE" in os.environ:
+                            self.config["triton_docker_image"] = os.environ[
+                                "TRITON_LAUNCH_DOCKER_IMAGE"
+                            ]
+                        if "RUNNER_ID" in os.environ:
+                            self.config["triton_docker_labels"] = {
+                                "RUNNER_ID": os.environ["RUNNER_ID"]
                             }
-                    with open(f'config-{launch_mode}-{protocol}.yaml',
-                              'w') as f:
+                    with open(f"config-{launch_mode}-{protocol}.yaml", "w") as f:
                         yaml.dump(self.config, f)
 
     def set_triton_server_path(self, launch_mode, config):
@@ -97,10 +102,10 @@ class TestConfigGenerator:
             for all configuration except 'local'
         This ensures only the 'local' launch mode uses 'triton_server_path'.
         """
-        config.pop('triton_server_path', None)
+        config.pop("triton_server_path", None)
 
-        if launch_mode != 'local':
-            config['triton_server_path'] = '/path/to/nowhere'
+        if launch_mode != "local":
+            config["triton_server_path"] = "/path/to/nowhere"
 
     def set_triton_install_path(self, launch_mode, config):
         """
@@ -108,11 +113,11 @@ class TestConfigGenerator:
             for all configuration except 'c_api'
         This ensures only the 'c_api' launch mode uses 'triton_install_path'.
         """
-        config.pop('triton_install_path', None)
+        config.pop("triton_install_path", None)
 
-        if launch_mode != 'c_api':
-            config['triton_install_path'] = '/path/to/nowhere'
+        if launch_mode != "c_api":
+            config["triton_install_path"] = "/path/to/nowhere"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     TestConfigGenerator()
