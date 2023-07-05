@@ -23,8 +23,7 @@ class LogFormatter(logging.Formatter):
     def __init__(self):
         logger = logging.getLogger(LOGGER_NAME)
         self._log_level = logger.getEffectiveLevel()
-        super().__init__()
-        self.datefmt = "%H:%M:%S"
+        super().__init__(datefmt="%H:%M:%S")
 
     def format(self, record):
         front = "%(asctime)s " if self._log_level is logging.DEBUG else ""
