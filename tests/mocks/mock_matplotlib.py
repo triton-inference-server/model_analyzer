@@ -31,6 +31,7 @@ class MockMatplotlibMethods(MockBase):
             "model_analyzer.plots.simple_plot.plt", Mock(**plt_attrs)
         )
         super().__init__()
+        self._fill_patchers()
 
     def start(self):
         """

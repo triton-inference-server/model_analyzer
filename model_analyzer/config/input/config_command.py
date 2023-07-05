@@ -36,7 +36,6 @@ class ConfigCommand:
         """
 
         self._fields = {}
-        self._fill_config()
 
     def _add_config(self, config_field):
         """

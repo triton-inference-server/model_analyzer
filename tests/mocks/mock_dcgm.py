@@ -25,6 +25,9 @@ class MockDCGM(MockBase):
     """
     Mocks dcgm_agent methods.
     """
+    def __init__(self):
+        super().__init__()
+        self._fill_patchers()
 
     def _fill_patchers(self):
         patchers = self._patchers

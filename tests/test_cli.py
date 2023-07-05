@@ -499,6 +499,8 @@ class TestCLI(trc.TestResultCollector):
                 expected_default_value_converted = self._convert_string_to_int_list(
                     expected_default_value
                 )
+            else:
+                expected_default_value_converted = None
         else:
             expected_value_converted = self._convert_string_to_string_list(
                 expected_value
@@ -507,6 +509,8 @@ class TestCLI(trc.TestResultCollector):
                 expected_default_value_converted = self._convert_string_to_string_list(
                     expected_default_value
                 )
+            else:
+                expected_default_value_converted = None
 
         long_option_with_underscores = self._convert_flag_to_use_underscores(
             long_option

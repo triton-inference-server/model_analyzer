@@ -23,6 +23,7 @@ class MockModelConfig(MockBase):
     def __init__(self, model_file_content=None):
         self._model_file_content = model_file_content
         super().__init__()
+        self._fill_patchers()
 
     def _fill_patchers(self):
         patchers = self._patchers

@@ -37,6 +37,7 @@ class MockIOMethods(MockBase):
             self._patchers_open[path] = patch(f"{path}.open", mock_open(read_data=data))
             self._patchers_print[path] = patch(f"{path}.print", MagicMock())
         super().__init__()
+        self._fill_patchers()
 
     def start(self):
         """
