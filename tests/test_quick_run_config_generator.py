@@ -19,6 +19,7 @@ from unittest.mock import MagicMock, patch
 
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
+from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
 )
@@ -224,17 +225,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         """
         qrcg = self._qrcg
         qrcg._coordinate_to_measure = Coordinate([5, 7])
-
-        # yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
 
         expected_model_config = {
             'cpu_only': False,
@@ -492,7 +482,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         self.assertIn("--percentile=96", default_run_config.representation())
 
-
     def test_default_ensemble_config_generation(self):
         """
         Test that the default ensemble config is generated correctly
@@ -557,7 +546,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             0
         ].composing_configs()
 
-        self.assertIn("my-model_config_default", default_run_config.representation())
+        self.assertIn("my-model_config_default",
+                      default_run_config.representation())
         self.assertEqual(
             ensemble_composing_configs[0].get_field("name"),
             "fake_model_A_config_default",
@@ -639,7 +629,8 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             0
         ].composing_configs()
 
-        self.assertIn("my-model_config_default", default_run_config.representation())
+        self.assertIn("my-model_config_default",
+                      default_run_config.representation())
         self.assertEqual(
             bls_composing_configs[0].get_field("name"),
             "bls_composing_modelA_config_default",
@@ -714,17 +705,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
-        # yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
-
         expected_model_config = {
             'cpu_only': False,
             'dynamicBatching': {},
@@ -780,17 +760,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         )
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
-
-        # yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
 
         expected_model_config = {
             'cpu_only': False,
@@ -848,17 +817,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
-        # yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
-
         expected_model_config = {
             'cpu_only': False,
             'dynamicBatching': {},
@@ -914,17 +872,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         )
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
-
-        # yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
 
         expected_model_config = {
             'cpu_only': False,
@@ -1121,6 +1068,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             0
         ].composing_configs()[1]
 
+        self.assertIsInstance(model_config, ModelConfig)
         self.assertEqual(
             composing_model_A_config_0.to_dict(), expected_model_A_config_0
         )

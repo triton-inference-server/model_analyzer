@@ -41,9 +41,6 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 from .common import test_result_collector as trc
 
 
-def setUp(self):
-    NotImplemented
-
 
 def tearDown(self):
     patch.stopall()

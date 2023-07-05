@@ -489,7 +489,6 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
     def _construct_rcm1(self):
         model_name = "modelA,modelB"
         model_config_name = ["modelA_config_2", "modelB_config_3"]
-        model_variants_name = "".join(model_config_name)
         model_specific_pa_params = [
             {"batch_size": 3, "concurrency": 3},
             {"batch_size": 4, "concurrency": 4},
@@ -542,7 +541,6 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
     def _construct_rcm2(self):
         model_name = "modelA,modelB"
         model_config_name = ["modelA_config_1", "modelB_config_2"]
-        model_variants_name = "".join(model_config_name)
         model_specific_pa_params = [
             {"batch_size": 3, "concurrency": 3},
             {"batch_size": 4, "concurrency": 4},
@@ -595,7 +593,6 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
     def _construct_rcm3(self):
         model_name = "modelA,modelB"
         model_config_name = ["modelA_config_1", "modelB_config_2"]
-        model_variants_name = "".join(model_config_name)
         model_specific_pa_params = [
             {"batch_size": 3, "concurrency": 3},
             {"batch_size": 4, "concurrency": 4},
@@ -648,7 +645,6 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
     def _construct_rcm4(self):
         model_name = "modelA"
         model_config_name = ["modelA_config_0"]
-        model_variants_name = "".join(self.model_config_name)
         model_specific_pa_params = [
             {"batch_size": 1, "concurrency": 1},
             {"batch_size": 2, "concurrency": 2},
@@ -658,7 +654,6 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
             "0": {"gpu_used_memory": 6000, "gpu_utilization": 60},
             "1": {"gpu_used_memory": 10000, "gpu_utilization": 20},
         }
-        avg_gpu_metric_values = {"gpu_used_memory": 8000, "gpu_utilization": 40}
 
         self.rcm4_non_gpu_metric_values = [
             {
@@ -696,7 +691,6 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
     def _construct_rcm5(self):
         model_name = "modelA"
         model_config_name = ["modelA_config_0"]
-        model_variants_name = "".join(self.model_config_name)
         model_specific_pa_params = [
             {"batch_size": 1, "concurrency": 1},
             {"batch_size": 2, "concurrency": 2},
@@ -706,7 +700,6 @@ class TestRunConfigMeasurement(trc.TestResultCollector):
             "0": {"gpu_used_memory": 6000, "gpu_utilization": 60},
             "1": {"gpu_used_memory": 10000, "gpu_utilization": 20},
         }
-        avg_gpu_metric_values = {"gpu_used_memory": 8000, "gpu_utilization": 40}
 
         self.rcm5_non_gpu_metric_values = [
             {

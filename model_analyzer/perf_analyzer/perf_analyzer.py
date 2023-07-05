@@ -22,7 +22,7 @@ import re
 import signal
 import tempfile
 from subprocess import STDOUT, Popen
-from typing import Any, Dict, List, Tuple, Union
+from typing import Dict, List
 
 import psutil
 
@@ -42,7 +42,6 @@ from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
 from model_analyzer.record.types.gpu_utilization import GPUUtilization
 from model_analyzer.record.types.perf_client_response_wait import PerfClientResponseWait
 from model_analyzer.record.types.perf_client_send_recv import PerfClientSendRecv
-from model_analyzer.record.types.perf_latency import PerfLatency
 from model_analyzer.record.types.perf_latency_avg import PerfLatencyAvg
 from model_analyzer.record.types.perf_latency_p90 import PerfLatencyP90
 from model_analyzer.record.types.perf_latency_p95 import PerfLatencyP95

@@ -23,8 +23,6 @@ from .common import test_result_collector as trc
 
 
 class TestModelConstraints(trc.TestResultCollector):
-    def setUp(self):
-        NotImplemented
 
     def tearDown(self):
         patch.stopall()

@@ -55,8 +55,6 @@ TEST_CSV_STR = (
 
 
 class TestResultTableMethods(trc.TestResultCollector):
-    def setUp(self):
-        NotImplemented
 
     def tearDown(self):
         patch.stopall()

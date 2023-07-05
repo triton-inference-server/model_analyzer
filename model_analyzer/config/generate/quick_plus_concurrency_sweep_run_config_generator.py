@@ -16,15 +16,11 @@
 
 import logging
 from copy import deepcopy
-from math import log2
-from typing import Dict, Generator, List, Optional
+from typing import Generator, List, Optional
 
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
-)
-from model_analyzer.config.generate.perf_analyzer_config_generator import (
-    PerfAnalyzerConfigGenerator,
 )
 from model_analyzer.config.generate.quick_run_config_generator import (
     QuickRunConfigGenerator,

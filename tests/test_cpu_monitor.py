@@ -94,7 +94,7 @@ class TestCPUMonitor(trc.TestResultCollector):
         cpu_monitor = CPUMonitor(server, frequency, metrics)
         cpu_monitor.start_recording_metrics()
         time.sleep(monitoring_time)
-        records = cpu_monitor.stop_recording_metrics()
+        cpu_monitor.stop_recording_metrics()
 
         # Assert no library calls
         self.server_local_mock.assert_cpu_stats_not_called()

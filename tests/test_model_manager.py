@@ -72,8 +72,6 @@ class MetricsManagerSubclass(MetricsManager):
 
 
 class TestModelManager(trc.TestResultCollector):
-    def setUp(self):
-        NotImplemented
 
     def tearDown(self):
         patch.stopall()

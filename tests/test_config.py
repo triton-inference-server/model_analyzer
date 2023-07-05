@@ -140,7 +140,6 @@ class TestConfig(trc.TestResultCollector):
             self.assertIsInstance(
                 model_config.raw_value().raw_value()[model_name], ConfigObject
             )
-            model_config = model_config.raw_value().raw_value()[model_name]
         else:
             self.assertIsInstance(model_config, ConfigObject)
             if check_parameters:
@@ -933,7 +932,7 @@ profile_models:
 
             """
         with self.assertRaises(TritonModelAnalyzerException):
-            config = self._evaluate_config(args, yaml_content)
+            self._evaluate_config(args, yaml_content)
 
     def test_config_sweep(self):
         config_sweep = ConfigSweep(ConfigPrimitive(int))
