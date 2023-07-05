@@ -700,7 +700,7 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
                 }]) for throughput_value in throughput_values
         ]
 
-        pacg = PerfAnalyzerConfigGenerator(MagicMock(),
+        PerfAnalyzerConfigGenerator(MagicMock(),
                                            MagicMock(),
                                            MagicMock(),
                                            MagicMock(),

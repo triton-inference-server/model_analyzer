@@ -64,9 +64,6 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
                                             result_manager=self.result_manager,
                                             constraint_manager=MagicMock())
 
-    def setUp(self):
-        NotImplemented
-
     def test_ensemble_summary(self):
         """
         Ensures the summary report sentence and table are accurate for a basic ensemble model (loaded from a checkpoint)

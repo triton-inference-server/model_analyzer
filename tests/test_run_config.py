@@ -26,9 +26,6 @@ from model_analyzer.config.run.run_config import RunConfig
 
 class TestRunConfig(trc.TestResultCollector):
 
-    def setUp(self):
-        NotImplemented
-
     def tearDown(self):
         patch.stopall()
 

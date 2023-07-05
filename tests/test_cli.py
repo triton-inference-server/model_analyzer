@@ -41,9 +41,6 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 
-def setUp(self):
-    NotImplemented
-
 
 def tearDown(self):
     patch.stopall()

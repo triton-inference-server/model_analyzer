@@ -97,8 +97,6 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
                 self.assertEqual(metric3.value(), -7)
             elif record_type in self.more_is_better_types:
                 self.assertEqual(metric3.value(), 7)
-            else:
-                fail
 
     def test_mult(self):
         """
@@ -139,16 +137,12 @@ class TestRecordAggregatorMethods(trc.TestResultCollector):
                 self.assertLess(metric1, metric2)
             elif record_type in self.more_is_better_types:
                 self.assertLess(metric2, metric1)
-            else:
-                fail
 
             # Test __gt__ (True if 1 better than 2)
             if record_type in self.less_is_better_types:
                 self.assertLess(metric1, metric2)
             elif record_type in self.more_is_better_types:
                 self.assertGreater(metric1, metric2)
-            else:
-                fail
 
             # Test __eq__
             metric1 = record_type(value=12)

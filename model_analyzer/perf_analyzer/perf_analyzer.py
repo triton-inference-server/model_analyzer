@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, List, Union, Tuple
+from typing import Dict, List
 from model_analyzer.model_analyzer_exceptions \
     import TritonModelAnalyzerException
 from model_analyzer.record.types.perf_latency_avg import PerfLatencyAvg
 from model_analyzer.record.types.perf_latency_p90 import PerfLatencyP90
 from model_analyzer.record.types.perf_latency_p95 import PerfLatencyP95
 from model_analyzer.record.types.perf_latency_p99 import PerfLatencyP99
-from model_analyzer.record.types.perf_latency import PerfLatency
 from model_analyzer.record.types.perf_throughput import PerfThroughput
 from model_analyzer.record.types.perf_client_response_wait \
     import PerfClientResponseWait

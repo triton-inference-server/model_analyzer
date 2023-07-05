@@ -467,8 +467,8 @@ class TestNeighborhood(trc.TestResultCollector):
 
         vectors, measurements = n._get_measurements_passing_constraints()
         for ev, em in zip(expected_vectors, expected_measurements):
-            self.assertTrue(ev in vectors)
-            self.assertTrue(em in measurements)
+            self.assertIn(ev, vectors)
+            self.assertIn(em, measurements)
 
     def test_step_vector_both_home_and_neighbors_passing_constraints(self):
         """

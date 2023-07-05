@@ -26,6 +26,7 @@ from model_analyzer.config.generate.run_config_generator_factory import RunConfi
 from model_analyzer.config.generate.quick_run_config_generator import QuickRunConfigGenerator
 from model_analyzer.config.input.objects.config_model_profile_spec import ConfigModelProfileSpec
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
+from model_analyzer.triton.model.model_config import ModelConfig
 
 from tests.common.test_utils import evaluate_mock_config
 
@@ -243,15 +244,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         #yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
 
         expected_model_config = {
             'cpu_only': False,
@@ -649,15 +641,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         #yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
 
         expected_model_config = {
             'cpu_only': False,
@@ -709,15 +692,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         #yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
 
         expected_model_config = {
             'cpu_only': False,
@@ -769,15 +743,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         #yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
 
         expected_model_config = {
             'cpu_only': False,
@@ -829,15 +794,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         #yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
 
         expected_model_config = {
             'cpu_only': False,
@@ -1008,6 +964,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         composing_model_B_config_0 = run_config.model_run_configs(
         )[0].composing_configs()[1]
 
+        self.assertIsInstance(model_config, ModelConfig)
         self.assertEqual(composing_model_A_config_0.to_dict(),
                          expected_model_A_config_0)
         self.assertEqual(composing_model_B_config_0.to_dict(),
