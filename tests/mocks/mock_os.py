@@ -47,6 +47,7 @@ class MockOSMethods(MockBase):
         for path in mock_paths:
             self._patchers_os[path] = patch(f"{path}.os", Mock(**os_attrs))
         super().__init__()
+        self._fill_patchers()
 
     def start(self):
         """

@@ -52,6 +52,7 @@ class MockPerfAnalyzerMethods(MockBase):
             'model_analyzer.perf_analyzer.perf_analyzer.tempfile.NamedTemporaryFile',
             Mock(return_value=self.mock_file))
         super().__init__()
+        self._fill_patchers()
 
     def start(self):
         """

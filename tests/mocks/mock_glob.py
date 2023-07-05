@@ -27,6 +27,7 @@ class MockGlobMethods(MockBase):
             'model_analyzer.state.analyzer_state_manager.glob',
             Mock(**glob_attrs))
         super().__init__()
+        self._fill_patchers()
 
     def start(self):
         """

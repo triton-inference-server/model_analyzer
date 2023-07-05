@@ -51,6 +51,7 @@ class MockServerDockerMethods(MockServerMethods):
             'model_analyzer.triton.server.server_docker.docker',
             Mock(**docker_attrs))
         super().__init__()
+        self._fill_patchers()
 
     def start(self):
         """ 

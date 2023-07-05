@@ -50,6 +50,7 @@ class MockNumba(MockBase):
             self._patchers_numba[path] = patch(f"{path}.numba",
                                                Mock(**numba_attrs))
         super().__init__()
+        self._fill_patchers()
 
     def _fill_patchers(self):
         """

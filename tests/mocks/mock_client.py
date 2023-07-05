@@ -42,6 +42,7 @@ class MockTritonClientMethods(MockBase):
             'model_analyzer.triton.client.grpc_client.grpcclient.InferenceServerClient',
             Mock(return_value=mock_grpc_client))
         super().__init__()
+        self._fill_patchers()
 
     def start(self):
         """

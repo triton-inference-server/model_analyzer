@@ -28,6 +28,7 @@ class MockRequests(MockBase):
             self._patchers_requests[path] = patch(f"{path}.requests",
                                                   Mock(**request_attrs))
         super().__init__()
+        self._fill_patchers()
 
     def _fill_patchers(self):
         """

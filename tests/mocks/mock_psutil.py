@@ -17,6 +17,9 @@ from unittest.mock import MagicMock, patch
 
 
 class MockPSUtil(MockBase):
+    def __init__(self):
+        super().__init__()
+        self._fill_patchers()
 
     def _fill_patchers(self):
         mock_process = MagicMock()

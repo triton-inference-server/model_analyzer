@@ -22,6 +22,7 @@ class MockConfig(MockBase):
         self.args = args
         self.yaml_file_content = yaml_file_content
         super().__init__()
+        self._fill_patchers()
 
     def _fill_patchers(self):
         patchers = self._patchers

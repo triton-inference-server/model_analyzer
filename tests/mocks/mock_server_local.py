@@ -48,6 +48,7 @@ class MockServerLocalMethods(MockServerMethods):
             'model_analyzer.triton.server.server_local.psutil',
             Mock(**psutil_attrs))
         super().__init__()
+        self._fill_patchers()
 
     def start(self):
         """ 
