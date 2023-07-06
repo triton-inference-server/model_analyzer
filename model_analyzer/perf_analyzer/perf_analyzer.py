@@ -214,9 +214,10 @@ class PerfAnalyzer:
         last perf_analyzer run
         """
 
-        if self._output:
-            return self._output
-        logger.info('perf_analyzer did not produce any output.')
+        if not self._output:
+            logger.info('perf_analyzer did not produce any output.')
+
+        return self._output
 
     def get_cmd(self):
         """ 
@@ -348,6 +349,7 @@ class PerfAnalyzer:
         try:
             result = tmp_output.decode('utf-8')
         except:
+            # Ignore the result on decode failed
             pass
 
         return result

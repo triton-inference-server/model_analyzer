@@ -133,7 +133,7 @@ class Record(metaclass=RecordType):
         -------
         Average value of the list
         """
-        return (lambda values: mean(values))
+        return mean
 
     @staticmethod
     @abstractmethod

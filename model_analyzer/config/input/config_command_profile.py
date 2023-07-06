@@ -68,7 +68,6 @@ from google.protobuf.descriptor import FieldDescriptor
 import os
 import numba
 import argparse
-from numba import cuda
 import psutil
 import logging
 
@@ -1162,7 +1161,7 @@ class ConfigCommandProfile(ConfigCommand):
         config values.
         """
         cpu_only = False
-        if len(self.gpus) == 0 or not cuda.is_available():
+        if len(self.gpus) == 0 or not numba.cuda.is_available():
             cpu_only = True
 
         # Set global constraints if latency budget is specified

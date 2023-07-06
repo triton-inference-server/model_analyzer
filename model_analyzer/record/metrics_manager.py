@@ -331,6 +331,7 @@ class MetricsManager:
                     self._first_config_variant[original_name] = os.path.join(
                         self._output_model_repo_path, variant_name)
             except FileExistsError:
+                # Ignore if the file already exists
                 pass
 
     def _load_model_variants(self, run_config):

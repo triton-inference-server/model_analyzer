@@ -99,3 +99,5 @@ class ExperimentEvaluator:
                 for x in run_config.model_run_configs()
             ])
             return str
+        else:
+            return None

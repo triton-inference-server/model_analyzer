@@ -355,6 +355,7 @@ class TritonServer():
                     raise Exception("Tritonserver already running")
             except (psutil.NoSuchProcess, psutil.AccessDenied,
                     psutil.ZombieProcess):
+                # Ignore exception
                 pass
 
         print(

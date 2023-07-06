@@ -159,7 +159,7 @@ class SweepCheckpoints:
             cmd = f"{cmd} --exponential-inst-count"
 
         if key != "normal" and ckpt + model not in self.results["normal"]:
-            return
+            return None
 
         if key == "latency_budget":
             old_results = self.results["normal"][ckpt + model]
@@ -180,7 +180,7 @@ class SweepCheckpoints:
         if 'Percentile' not in result_data or 'Generator num configs' not in result_data or result_data[
                 'Percentile'] == "None":
             print(f"{model} failed! Skipping")
-            return
+            return None
 
         cmd = cmd.replace("main.py", "main.py -v")
         result = SweepResult(result_data, cmd, model)

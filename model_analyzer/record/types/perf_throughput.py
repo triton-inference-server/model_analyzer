@@ -47,7 +47,7 @@ class PerfThroughput(IncreasingRecord):
         -------
         Total value of the list
         """
-        return (lambda values: sum(values))
+        return sum
 
     @staticmethod
     def header(aggregation_tag=False):
