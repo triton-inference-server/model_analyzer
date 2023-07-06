@@ -54,7 +54,7 @@ class RemoteMonitor(Monitor):
 
     def is_monitoring_connected(self) -> bool:
         try:
-            status_code = requests.get(self._metrics_url).status_code
+            status_code = requests.get(self._metrics_url, timeout=10).status_code
         except Exception as ex:
             return False
 
@@ -69,7 +69,7 @@ class RemoteMonitor(Monitor):
         """
 
         self._metrics_responses.append(
-            str(requests.get(self._metrics_url).content, encoding='ascii'))
+            str(requests.get(self._metrics_url, timeout=10).content, encoding='ascii'))
 
     def _collect_records(self):
         """
