@@ -110,3 +110,5 @@ class ExperimentEvaluator:
                 ]
             )
             return str
+        else:
+            return None
