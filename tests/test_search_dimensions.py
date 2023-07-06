@@ -55,7 +55,7 @@ class TestSearchDimensions(trc.TestResultCollector):
         self.assertEqual(count, 3)
 
         with self.assertRaises(IndexError):
-            dims[3]
+            _ = dims[3]
 
     def test_get_values(self):
         """

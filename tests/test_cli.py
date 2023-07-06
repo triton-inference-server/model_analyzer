@@ -387,7 +387,7 @@ class TestCLI(trc.TestResultCollector):
         expected_value_string = option_struct.expected_value
         expected_value = self._convert_string_to_numeric(
             option_struct.expected_value)
-        expected_default_value = None if option_struct.expected_default_value == None else self._convert_string_to_numeric(
+        expected_default_value = None if option_struct.expected_default_value is None else self._convert_string_to_numeric(
             option_struct.expected_default_value)
 
         long_option_with_underscores = self._convert_flag_to_use_underscores(

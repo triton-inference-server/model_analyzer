@@ -1157,7 +1157,7 @@ class TestModelManager(trc.TestResultCollector):
         dicts expected_ranges
         """
 
-        if args == None:
+        if args is None:
             args = self._args
 
         # Use mock model config or else TritonModelAnalyzerException will be thrown as it tries to read from disk

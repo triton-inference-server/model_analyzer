@@ -17,8 +17,7 @@ from typing import List, Union, Optional, Tuple
 import sys
 import importlib_metadata
 import logging
-import argparse
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace, SUPPRESS
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
@@ -118,14 +117,14 @@ class CLI:
                     parser_args['action'] == 'store_false'):
                 subparser.add_argument(
                     *config_field.flags(),
-                    default=argparse.SUPPRESS,
+                    default=SUPPRESS,
                     help=config_field.description(),
                     **config_field.parser_args(),
                 )
             else:
                 subparser.add_argument(
                     *config_field.flags(),
-                    default=argparse.SUPPRESS,
+                    default=SUPPRESS,
                     choices=config_field.choices(),
                     help=config_field.description(),
                     type=config_field.cli_type(),
