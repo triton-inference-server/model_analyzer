@@ -21,6 +21,8 @@ class ConfigCommandExperiment(ConfigCommandProfile):
     """ 
     Extended ConfigCommandProfile with extra options for experiment algorithm configuration
     """
+    def __init__(self):
+        super().__init__()
 
     def _fill_config(self):
         super()._fill_config()
