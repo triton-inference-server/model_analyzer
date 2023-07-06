@@ -117,6 +117,7 @@ class ConfigCommandProfile(ConfigCommand):
     """
     def __init__(self):
         super().__init__()
+        self._fill_config()
 
     def _resolve_protobuf_field(self, field: FieldDescriptor) -> ConfigSweep:
         """
