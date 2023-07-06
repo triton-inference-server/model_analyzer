@@ -14,8 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import abc
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
 from model_analyzer.constants import CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -23,7 +22,7 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 from .config_status import ConfigStatus
 
 
-class ConfigValue(abc.ABC):
+class ConfigValue(ABC):
     """
     Parent class for all the types used in the ConfigField.
     """

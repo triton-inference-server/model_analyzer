@@ -14,10 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
 import logging
 import sys
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser, Namespace, SUPPRESS
 from typing import List, Optional, Tuple, Union
 
 import importlib_metadata
@@ -123,14 +122,14 @@ class CLI:
             ):
                 subparser.add_argument(
                     *config_field.flags(),
-                    default=argparse.SUPPRESS,
+                    default=SUPPRESS,
                     help=config_field.description(),
                     **config_field.parser_args(),
                 )
             else:
                 subparser.add_argument(
                     *config_field.flags(),
-                    default=argparse.SUPPRESS,
+                    default=SUPPRESS,
                     choices=config_field.choices(),
                     help=config_field.description(),
                     type=config_field.cli_type(),

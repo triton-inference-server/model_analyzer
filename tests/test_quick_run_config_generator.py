@@ -75,6 +75,7 @@ def mock_ensemble_configs(*args, **kwargs):
     elif model_name == "fake_model_B":
         return fake_base_composing_config1
 
+    return None
 
 def mock_composing_ensemble_configs(*args, **kwargs):
     fake_config = {
