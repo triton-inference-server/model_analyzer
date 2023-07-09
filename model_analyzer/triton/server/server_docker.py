@@ -76,7 +76,7 @@ class TritonServerDocker(TritonServer):
 
         try:
             self._docker_client.images.get(self._tritonserver_image)
-        except:
+        except Exception:
             logger.info(f"Pulling docker image {self._tritonserver_image}")
             self._docker_client.images.pull(self._tritonserver_image)
 

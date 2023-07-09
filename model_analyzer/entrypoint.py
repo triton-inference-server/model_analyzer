@@ -212,7 +212,7 @@ def fail_if_server_already_running(client, config):
     is_server_running = True
     try:
         client.is_server_ready()
-    except:
+    except Exception:
         is_server_running = False
     finally:
         if is_server_running:

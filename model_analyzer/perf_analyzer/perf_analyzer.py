@@ -348,7 +348,7 @@ class PerfAnalyzer:
         result = ""
         try:
             result = tmp_output.decode('utf-8')
-        except:
+        except Exception:
             # Ignore the result on decode failed
             pass
 
