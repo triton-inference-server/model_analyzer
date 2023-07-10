@@ -25,7 +25,8 @@ import requests
 from prometheus_client.parser import text_string_to_metric_families
 
 from model_analyzer.config.generate.base_model_config_generator import (
-    BaseModelConfigGenerator,)
+    BaseModelConfigGenerator,
+)
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.constants import LOGGER_NAME, PA_ERROR_LOG_FILENAME
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -69,8 +70,7 @@ class MetricsManager:
         "cpu_used_ram",
     ]
 
-    def __init__(self, config, client, server, gpus, result_manager,
-                 state_manager):
+    def __init__(self, config, client, server, gpus, result_manager, state_manager):
         """
         Parameters
         ----------
@@ -94,10 +94,12 @@ class MetricsManager:
         self._output_model_repo_path = config.output_model_repository_path
 
         if len(config.profile_models) != len(
-                set([model._model_name for model in config.profile_models])):
+            set([model._model_name for model in config.profile_models])
+        ):
             raise TritonModelAnalyzerException(
                 f"Duplicate model names detected: "
-                f"{[model._model_name for model in config.profile_models]}")
+                f"{[model._model_name for model in config.profile_models]}"
+            )
         self._first_config_variant = {}
         self._config = config
         self._client = client
@@ -113,8 +115,7 @@ class MetricsManager:
             self._gpu_metrics,
             self._perf_metrics,
             self._cpu_metrics,
-        ) = self._categorize_metrics(self.metrics,
-                                     self._config.collect_cpu_metrics)
+        ) = self._categorize_metrics(self.metrics, self._config.collect_cpu_metrics)
         self._gpus = gpus
         self._init_state()
 
@@ -131,8 +132,7 @@ class MetricsManager:
         state variables in AnalyzerState
         """
 
-        gpu_info = self._state_manager.get_state_variable(
-            "MetricsManager.gpu_info")
+        gpu_info = self._state_manager.get_state_variable("MetricsManager.gpu_info")
 
         if self._state_manager.starting_fresh_run() or gpu_info is None:
             gpu_info = {}
@@ -145,7 +145,8 @@ class MetricsManager:
                 with device:
                     # convert bytes to GB
                     device_info["total_memory"] = (
-                        numba.cuda.current_context().get_memory_info().total)
+                        numba.cuda.current_context().get_memory_info().total
+                    )
                 gpu_info[self._gpus[i].device_uuid()] = device_info
 
         self._state_manager.set_state_variable("MetricsManager.gpus", gpu_info)
@@ -191,7 +192,8 @@ class MetricsManager:
         self._destroy_monitors(cpu_only=cpu_only)
 
     def execute_run_config(
-            self, run_config: RunConfig) -> Optional[RunConfigMeasurement]:
+        self, run_config: RunConfig
+    ) -> Optional[RunConfigMeasurement]:
         """
         Executes the RunConfig. Returns obtained measurement. Also sends
         measurement to the result manager
@@ -202,8 +204,7 @@ class MetricsManager:
         # If this run config was already run, do not run again, just get the measurement
         measurement = self._get_measurement_if_config_duplicate(run_config)
         if measurement:
-            logger.info(
-                "Existing measurement found for run config. Skipping profile")
+            logger.info("Existing measurement found for run config. Skipping profile")
             return measurement
 
         current_model_variants = run_config.model_variants_name()
@@ -222,8 +223,7 @@ class MetricsManager:
 
         return measurement
 
-    def profile_models(self,
-                       run_config: RunConfig) -> Optional[RunConfigMeasurement]:
+    def profile_models(self, run_config: RunConfig) -> Optional[RunConfigMeasurement]:
         """
         Runs monitors while running perf_analyzer with a specific set of
         arguments. This will profile model inferencing.
@@ -239,8 +239,11 @@ class MetricsManager:
             The gpu specific and non gpu metrics
         """
 
-        perf_output_writer = (None if not self._config.perf_output else
-                              FileWriter(self._config.perf_output_path))
+        perf_output_writer = (
+            None
+            if not self._config.perf_output
+            else FileWriter(self._config.perf_output_path)
+        )
         cpu_only = run_config.cpu_only()
 
         self._print_run_config_info(run_config)
@@ -248,7 +251,8 @@ class MetricsManager:
         self._start_monitors(cpu_only=cpu_only)
 
         perf_analyzer_metrics, model_gpu_metrics = self._run_perf_analyzer(
-            run_config, perf_output_writer)
+            run_config, perf_output_writer
+        )
 
         if not perf_analyzer_metrics:
             self._stop_monitors(cpu_only=cpu_only)
@@ -265,7 +269,8 @@ class MetricsManager:
         run_config_measurement = None
         if model_gpu_metrics is not None and perf_analyzer_metrics is not None:
             run_config_measurement = RunConfigMeasurement(
-                run_config.model_variants_name(), model_gpu_metrics)
+                run_config.model_variants_name(), model_gpu_metrics
+            )
 
             # Combine all per-model measurements into the RunConfigMeasurement
             #
@@ -274,11 +279,12 @@ class MetricsManager:
                 model_name = perf_config["model-name"]
 
                 model_non_gpu_metrics = list(
-                    perf_analyzer_metrics[model_name].values()) + list(
-                        model_cpu_metrics.values())
+                    perf_analyzer_metrics[model_name].values()
+                ) + list(model_cpu_metrics.values())
 
                 model_specific_pa_params = (
-                    perf_config.extract_model_specific_parameters())
+                    perf_config.extract_model_specific_parameters()
+                )
 
                 run_config_measurement.add_model_config_measurement(
                     perf_config["model-name"],
@@ -287,7 +293,8 @@ class MetricsManager:
                 )
 
             self._result_manager.add_run_config_measurement(
-                run_config, run_config_measurement)
+                run_config, run_config_measurement
+            )
 
         return run_config_measurement
 
@@ -299,31 +306,35 @@ class MetricsManager:
         Creates and fills all model variant directories
         """
         for mrc in run_config.model_run_configs():
-            self._create_model_variant(original_name=mrc.model_name(),
-                                       variant_config=mrc.model_config())
+            self._create_model_variant(
+                original_name=mrc.model_name(), variant_config=mrc.model_config()
+            )
 
             for composing_config in mrc.composing_configs():
                 variant_name = composing_config.get_field("name")
                 original_name = (
-                    BaseModelConfigGenerator.
-                    extract_model_name_from_variant_name(variant_name))
+                    BaseModelConfigGenerator.extract_model_name_from_variant_name(
+                        variant_name
+                    )
+                )
 
                 self._create_model_variant(original_name, composing_config)
 
                 # Create a version with the original (no _config_#/default appended) name
                 original_composing_config = (
-                    BaseModelConfigGenerator.
-                    create_original_config_from_variant(composing_config))
+                    BaseModelConfigGenerator.create_original_config_from_variant(
+                        composing_config
+                    )
+                )
                 self._create_model_variant(
                     original_name,
                     original_composing_config,
                     ignore_first_config_variant=True,
                 )
 
-    def _create_model_variant(self,
-                              original_name,
-                              variant_config,
-                              ignore_first_config_variant=False):
+    def _create_model_variant(
+        self, original_name, variant_config, ignore_first_config_variant=False
+    ):
         """
         Creates a directory for the model config variant in the output model
         repository and fills directory with config
@@ -334,17 +345,16 @@ class MetricsManager:
             model_repository = self._config.model_repository
 
             original_model_dir = os.path.join(model_repository, original_name)
-            new_model_dir = os.path.join(self._output_model_repo_path,
-                                         variant_name)
+            new_model_dir = os.path.join(self._output_model_repo_path, variant_name)
             try:
                 # Create the directory for the new model
                 os.makedirs(new_model_dir, exist_ok=True)
                 self._first_config_variant.setdefault(original_name, None)
 
                 if ignore_first_config_variant:
-                    variant_config.write_config_to_file(new_model_dir,
-                                                        original_model_dir,
-                                                        None)
+                    variant_config.write_config_to_file(
+                        new_model_dir, original_model_dir, None
+                    )
                 else:
                     variant_config.write_config_to_file(
                         new_model_dir,
@@ -354,7 +364,8 @@ class MetricsManager:
 
                 if self._first_config_variant[original_name] is None:
                     self._first_config_variant[original_name] = os.path.join(
-                        self._output_model_repo_path, variant_name)
+                        self._output_model_repo_path, variant_name
+                    )
             except FileExistsError:
                 pass
 
@@ -370,10 +381,13 @@ class MetricsManager:
             if mrc.is_bls_model():
                 for composing_config in mrc.composing_configs():
                     original_composing_config = (
-                        BaseModelConfigGenerator.
-                        create_original_config_from_variant(composing_config))
+                        BaseModelConfigGenerator.create_original_config_from_variant(
+                            composing_config
+                        )
+                    )
                     if not self._load_model_variant(
-                            variant_config=original_composing_config):
+                        variant_config=original_composing_config
+                    ):
                         return False
 
         return True
@@ -405,9 +419,12 @@ class MetricsManager:
         if self._client.load_model(model_name=variant_name) == -1:
             return False
 
-        if (self._client.wait_for_model_ready(
-                model_name=variant_name,
-                num_retries=self._config.client_max_retries) == -1):
+        if (
+            self._client.wait_for_model_ready(
+                model_name=variant_name, num_retries=self._config.client_max_retries
+            )
+            == -1
+        ):
             return False
         return True
 
@@ -421,14 +438,14 @@ class MetricsManager:
         model_variants_name = run_config.model_variants_name()
         key = run_config.representation()
 
-        results = self._state_manager.get_state_variable(
-            "ResultManager.results")
+        results = self._state_manager.get_state_variable("ResultManager.results")
 
         if not results.contains_model_variant(models_name, model_variants_name):
             return False
 
         measurements = results.get_model_variants_measurements_dict(
-            models_name, model_variants_name)
+            models_name, model_variants_name
+        )
 
         return measurements.get(key, None)
 
@@ -451,16 +468,18 @@ class MetricsManager:
                 self._destroy_monitors()
                 raise
             finally:
-                if (not self._gpu_monitor.is_monitoring_connected() and
-                        self._config.triton_launch_mode != "c_api"):
+                if (
+                    not self._gpu_monitor.is_monitoring_connected()
+                    and self._config.triton_launch_mode != "c_api"
+                ):
                     raise TritonModelAnalyzerException(
                         f"Failed to connect to Tritonserver's GPU metrics monitor. "
                         f"Please check that the `triton_metrics_url` value is set correctly: {self._config.triton_metrics_url}."
                     )
 
-        self._cpu_monitor = CPUMonitor(self._server,
-                                       self._config.monitoring_interval,
-                                       self._cpu_metrics)
+        self._cpu_monitor = CPUMonitor(
+            self._server, self._config.monitoring_interval, self._cpu_metrics
+        )
         self._cpu_monitor.start_recording_metrics()
 
     def _stop_monitors(self, cpu_only=False):
@@ -512,7 +531,8 @@ class MetricsManager:
         # IF running with C_API, need to set CUDA_VISIBLE_DEVICES here
         if self._config.triton_launch_mode == "c_api":
             perf_analyzer_env["CUDA_VISIBLE_DEVICES"] = ",".join(
-                [gpu.device_uuid() for gpu in self._gpus])
+                [gpu.device_uuid() for gpu in self._gpus]
+            )
 
         perf_analyzer = PerfAnalyzer(
             path=self._config.perf_analyzer_path,
@@ -539,9 +559,9 @@ class MetricsManager:
 
         return aggregated_perf_records, aggregated_gpu_records
 
-    def _write_perf_analyzer_output(self,
-                                    perf_output_writer: Optional[FileWriter],
-                                    perf_analyzer: PerfAnalyzer) -> None:
+    def _write_perf_analyzer_output(
+        self, perf_output_writer: Optional[FileWriter], perf_analyzer: PerfAnalyzer
+    ) -> None:
         if perf_output_writer:
             perf_output_writer.write(
                 "============== Perf Analyzer Launched ==============\n"
@@ -549,11 +569,11 @@ class MetricsManager:
                 append=True,
             )
             if perf_analyzer.output():
-                perf_output_writer.write(perf_analyzer.output() + "\n",
-                                         append=True)
+                perf_output_writer.write(perf_analyzer.output() + "\n", append=True)
 
     def _handle_unsuccessful_perf_analyzer_run(
-            self, perf_analyzer: PerfAnalyzer) -> None:
+        self, perf_analyzer: PerfAnalyzer
+    ) -> None:
         output_file = f"{self._config.export_path}/{PA_ERROR_LOG_FILENAME}"
 
         if not self._encountered_perf_analyzer_error:
@@ -562,16 +582,18 @@ class MetricsManager:
                 os.remove(output_file)
 
         perf_error_log = FileWriter(output_file)
-        perf_error_log.write("Command: \n" + perf_analyzer.get_cmd() + "\n\n",
-                             append=True)
+        perf_error_log.write(
+            "Command: \n" + perf_analyzer.get_cmd() + "\n\n", append=True
+        )
 
         if perf_analyzer.output():
-            perf_error_log.write("Error: \n" + perf_analyzer.output() + "\n",
-                                 append=True)
+            perf_error_log.write(
+                "Error: \n" + perf_analyzer.output() + "\n", append=True
+            )
         else:
             perf_error_log.write(
-                "Error: " +
-                "perf_analyzer did not produce any output. It was likely terminated with a SIGABRT."
+                "Error: "
+                + "perf_analyzer did not produce any output. It was likely terminated with a SIGABRT."
                 + "\n\n",
                 append=True,
             )
@@ -608,7 +630,8 @@ class MetricsManager:
 
         records_groupby_gpu = {}
         records_groupby_gpu = gpu_record_aggregator.groupby(
-            self._gpu_metrics, lambda record: record.device_uuid())
+            self._gpu_metrics, lambda record: record.device_uuid()
+        )
 
         gpu_metrics = defaultdict(list)
         for _, metric in records_groupby_gpu.items():
@@ -637,8 +660,10 @@ class MetricsManager:
             If they are using different GPUs this exception will be raised.
         """
 
-        if (self._config.triton_launch_mode != "remote" and
-                self._config.triton_launch_mode != "c_api"):
+        if (
+            self._config.triton_launch_mode != "remote"
+            and self._config.triton_launch_mode != "c_api"
+        ):
             self._client.wait_for_server_ready(
                 num_retries=self._config.client_max_retries,
                 log_file=self._server.log_file(),
@@ -662,9 +687,10 @@ class MetricsManager:
             The arguments passed into the CLI
         """
 
-        triton_prom_str = str(requests.get(self._config.triton_metrics_url,
-                                           timeout=10).content,
-                              encoding="ascii")
+        triton_prom_str = str(
+            requests.get(self._config.triton_metrics_url, timeout=10).content,
+            encoding="ascii",
+        )
         metrics = text_string_to_metric_families(triton_prom_str)
 
         triton_gpus = []
@@ -677,7 +703,7 @@ class MetricsManager:
 
     def _print_run_config_info(self, run_config):
         for perf_config in [
-                mrc.perf_config() for mrc in run_config.model_run_configs()
+            mrc.perf_config() for mrc in run_config.model_run_configs()
         ]:
             if perf_config["request-rate-range"]:
                 logger.info(
