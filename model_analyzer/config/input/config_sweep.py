@@ -44,7 +44,6 @@ class ConfigSweep(ConfigValue):
         """
 
         self._sweep_type = sweep_type
-        self._is_sweepable = False
         super().__init__(preprocess, required, validator, output_mapper)
 
     def set_value(self, value):

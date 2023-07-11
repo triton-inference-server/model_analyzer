@@ -93,6 +93,7 @@ class TritonClient:
         try:
             self._client.load_model(model_name)
             logger.debug(f'Model {model_name} loaded')
+            return None
         except Exception as e:
             logger.info(f'Model {model_name} load failed: {e}')
             return -1
@@ -112,11 +113,17 @@ class TritonClient:
         ------
         TritonModelAnalyzerException
             If server throws Exception
+        
+        Returns
+        ------
+        int or None
+            Returns -1 if the failed.
         """
 
         try:
             self._client.unload_model(model_name)
             logger.debug(f'Model {model_name} unloaded')
+            return None
         except Exception as e:
             logger.info(f'Model {model_name} unload failed: {e}')
             return -1
@@ -139,6 +146,11 @@ class TritonClient:
         TritonModelAnalyzerException
             If could not determine model readiness
             in given num_retries
+        
+        Returns
+        ------
+        int or None
+            Returns -1 if the failed.
         """
 
         retries = num_retries
@@ -146,7 +158,7 @@ class TritonClient:
         while retries > 0:
             try:
                 if self._client.is_model_ready(model_name):
-                    return
+                    return None
                 else:
                     time.sleep(sleep_time)
                     retries -= 1
