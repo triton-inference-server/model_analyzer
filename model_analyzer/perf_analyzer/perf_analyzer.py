@@ -479,8 +479,8 @@ class PerfAnalyzer:
                 perf_value = value / reduction_factor
 
                 perf_records.append(
-                    perf_metric[PerfAnalyzer.RECORD_CLASS](perf_value)
-                )  # type: ignore
+                    perf_metric[PerfAnalyzer.RECORD_CLASS](perf_value)  # type: ignore
+                )
 
         return perf_records
 
