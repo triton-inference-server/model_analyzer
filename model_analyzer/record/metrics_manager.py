@@ -630,7 +630,7 @@ class MetricsManager:
         """
 
         triton_prom_str = str(requests.get(
-            self._config.triton_metrics_url).content,
+            self._config.triton_metrics_url, timeout=10).content,
                               encoding='ascii')
         metrics = text_string_to_metric_families(triton_prom_str)
 
