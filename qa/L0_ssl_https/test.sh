@@ -40,23 +40,23 @@ RET=0
 
 # Generate valid CA
 openssl genrsa -passout pass:1234 -des3 -out ca.key 4096
-openssl req -passing pass:1234 -new -x509 -days 365 -key ca.key -out ca.crt -subj  "/C=SP/ST=Spain/L=Valdepenias/O=Test/OU=Test/CN=Root CA"
+openssl req -passin pass:1234 -new -x509 -days 365 -key ca.key -out ca.crt -subj  "/C=SP/ST=Spain/L=Valdepenias/O=Test/OU=Test/CN=Root CA"
 
 # Generate valid Server Key/Cert
 openssl genrsa -passout pass:1234 -des3 -out server.key 4096
-openssl req -passing pass:1234 -new -key server.key -out server.csr -subj  "/C=SP/ST=Spain/L=Valdepenias/O=Test/OU=Server/CN=localhost"
-openssl x509 -req -passing pass:1234 -days 365 -in server.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out server.crt
+openssl req -passin pass:1234 -new -key server.key -out server.csr -subj  "/C=SP/ST=Spain/L=Valdepenias/O=Test/OU=Server/CN=localhost"
+openssl x509 -req -passin pass:1234 -days 365 -in server.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out server.crt
 
 # Remove passphrase from the Server Key
-openssl rsa -passing pass:1234 -in server.key -out server.key
+openssl rsa -passin pass:1234 -in server.key -out server.key
 
 # Generate valid Client Key/Cert
 openssl genrsa -passout pass:1234 -des3 -out client.key 4096
-openssl req -passing pass:1234 -new -key client.key -out client.csr -subj  "/C=SP/ST=Spain/L=Valdepenias/O=Test/OU=Client/CN=localhost"
-openssl x509 -passing pass:1234 -req -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out client.crt
+openssl req -passin pass:1234 -new -key client.key -out client.csr -subj  "/C=SP/ST=Spain/L=Valdepenias/O=Test/OU=Client/CN=localhost"
+openssl x509 -passin pass:1234 -req -days 365 -in client.csr -CA ca.crt -CAkey ca.key -set_serial 01 -out client.crt
 
 # Remove passphrase from Client Key
-openssl rsa -passing pass:1234 -in client.key -out client.key
+openssl rsa -passin pass:1234 -in client.key -out client.key
 
 cp server.crt /etc/nginx/cert.crt
 cp server.key /etc/nginx/cert.key
