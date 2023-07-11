@@ -38,6 +38,7 @@ class ModelProfileSpec(ConfigModelProfileSpec):
         client: TritonClient,
         gpus: List[GPUDevice],
     ):
+        super().__init__(spec.model_name())
         self.__dict__ = deepcopy(spec.__dict__)
 
         self._default_model_config = ModelConfig.create_model_config_dict(
