@@ -1,4 +1,6 @@
-# Copyright 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import ANY, MagicMock, Mock, patch
+
 from .mock_base import MockBase
-from unittest.mock import patch, Mock, MagicMock, ANY
 
 
 class MockTritonClientMethods(MockBase):
     """
-    Mocks the tritonclient module functions 
+    Mocks the tritonclient module functions
     used in model_analyzer/triton/client
     Provides functions to check operation.
     """
@@ -27,20 +30,22 @@ class MockTritonClientMethods(MockBase):
 
     def __init__(self):
         client_attrs = {
-            'load_model': MagicMock(),
-            'unload_model': MagicMock(),
-            'is_model_ready': MagicMock(return_value=True),
-            'is_server_ready': MagicMock(return_value=True),
-            'get_model_config': MagicMock()
+            "load_model": MagicMock(),
+            "unload_model": MagicMock(),
+            "is_model_ready": MagicMock(return_value=True),
+            "is_server_ready": MagicMock(return_value=True),
+            "get_model_config": MagicMock(),
         }
         mock_http_client = Mock(**client_attrs)
         mock_grpc_client = Mock(**client_attrs)
         self.patcher_http_client = patch(
-            'model_analyzer.triton.client.http_client.httpclient.InferenceServerClient',
-            Mock(return_value=mock_http_client))
+            "model_analyzer.triton.client.http_client.httpclient.InferenceServerClient",
+            Mock(return_value=mock_http_client),
+        )
         self.patcher_grpc_client = patch(
-            'model_analyzer.triton.client.grpc_client.grpcclient.InferenceServerClient',
-            Mock(return_value=mock_grpc_client))
+            "model_analyzer.triton.client.grpc_client.grpcclient.InferenceServerClient",
+            Mock(return_value=mock_grpc_client),
+        )
         super().__init__()
 
     def start(self):
@@ -59,29 +64,30 @@ class MockTritonClientMethods(MockBase):
         self._patchers.append(self.patcher_http_client)
         self._patchers.append(self.patcher_grpc_client)
 
-    def assert_created_grpc_client_with_args(self,
-                                             url,
-                                             ssl=False,
-                                             root_certificates=None,
-                                             private_key=None,
-                                             certificate_chain=None):
+    def assert_created_grpc_client_with_args(
+        self,
+        url,
+        ssl=False,
+        root_certificates=None,
+        private_key=None,
+        certificate_chain=None,
+    ):
         """
         Assert that the correct InferServerClient was
         indeed constructed with the specified url and SSL options
         """
 
-        self.grpc_mock.assert_called_with(url=url,
-                                          ssl=ssl,
-                                          root_certificates=root_certificates,
-                                          private_key=private_key,
-                                          certificate_chain=certificate_chain)
+        self.grpc_mock.assert_called_with(
+            url=url,
+            ssl=ssl,
+            root_certificates=root_certificates,
+            private_key=private_key,
+            certificate_chain=certificate_chain,
+        )
 
-    def assert_created_http_client_with_args(self,
-                                             url,
-                                             ssl_options={},
-                                             ssl=False,
-                                             ssl_context_factory=ANY,
-                                             insecure=True):
+    def assert_created_http_client_with_args(
+        self, url, ssl_options={}, ssl=False, ssl_context_factory=ANY, insecure=True
+    ):
         """
         Assert that the correct InferServerClient was
         indeed constructed with the specified url  and SSL options
@@ -92,7 +98,8 @@ class MockTritonClientMethods(MockBase):
             ssl_options=ssl_options,
             ssl=ssl,
             ssl_context_factory=ssl_context_factory,
-            insecure=insecure)
+            insecure=insecure,
+        )
 
     def assert_grpc_client_waited_for_server_ready(self):
         """
@@ -116,8 +123,7 @@ class MockTritonClientMethods(MockBase):
         indeed called is_model_ready with correct model
         """
 
-        self.grpc_mock.return_value.is_model_ready.assert_called_with(
-            model_name)
+        self.grpc_mock.return_value.is_model_ready.assert_called_with(model_name)
 
     def assert_http_client_waited_for_model_ready(self, model_name):
         """
@@ -125,8 +131,7 @@ class MockTritonClientMethods(MockBase):
         indeed called is_model_ready with correct model
         """
 
-        self.http_mock.return_value.is_model_ready.assert_called_with(
-            model_name)
+        self.http_mock.return_value.is_model_ready.assert_called_with(model_name)
 
     def raise_exception_on_load(self):
         """

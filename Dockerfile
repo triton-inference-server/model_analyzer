@@ -45,8 +45,8 @@ RUN [ "$(uname -m)" != "x86_64" ] && arch="sbsa" || arch="x86_64" && \
     https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/$arch/cuda-keyring_1.0-1_all.deb && \
     apt-get install /tmp/cuda-keyring.deb && rm /tmp/cuda-keyring.deb && \
     apt-get update && apt-get install -y --no-install-recommends software-properties-common && \
-    apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION}; 
-    
+    apt-get install -y datacenter-gpu-manager=1:${DCGM_VERSION};
+
     # Install Docker
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && \
     echo \

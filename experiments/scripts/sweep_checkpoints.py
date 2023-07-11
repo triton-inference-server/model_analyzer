@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import json
-import subprocess
+import os
 import re
+import subprocess
 from statistics import mean, median, mode
 
 PATH = "/mnt/nvdl/datasets/inferenceserver/mnaas-checkpoints"
@@ -26,31 +28,24 @@ THROUGHPUT_ONLY = False  # If true, only run maximize_throughput
 
 
 class SweepResult:
-    """ Holds result for a single experiment """
+    """Holds result for a single experiment"""
 
     def __init__(self, result_data, cmd, model) -> None:
-        self.percentile = float(result_data['Percentile'])
-        self.actual_measurements = int(
-            result_data['Generator num measurements'])
+        self.percentile = float(result_data["Percentile"])
+        self.actual_measurements = int(result_data["Generator num measurements"])
         self.missing_measurements = int(
-            result_data['Generator missing num measurements'])
-        self.generator_best_latency = float(
-            result_data['Generator best latency'])
-        self.generator_best_throughput = float(
-            result_data['Generator best throughput'])
+            result_data["Generator missing num measurements"]
+        )
+        self.generator_best_latency = float(result_data["Generator best latency"])
+        self.generator_best_throughput = float(result_data["Generator best throughput"])
         self.num_measurements = self.actual_measurements + self.missing_measurements
         self.cmd = cmd
         self.model = model
 
 
 class SweepCheckpoints:
-
     def __init__(self) -> None:
-        self.results = {
-            "normal": {},
-            "latency_budget": {},
-            "min_throughput": {}
-        }
+        self.results = {"normal": {}, "latency_budget": {}, "min_throughput": {}}
 
     def run(self):
         self._run_all_models("normal")
@@ -83,7 +78,7 @@ class SweepCheckpoints:
             print(f"File {ckpt} not found")
             exit(1)
 
-        with open(ckpt, 'r') as f:
+        with open(ckpt, "r") as f:
             contents = json.load(f)
             models = list(contents["ResultManager.results"]["_results"].keys())
         return models
@@ -93,10 +88,10 @@ class SweepCheckpoints:
         Returns a dict of key values from an experiment output
         """
         ret = {}
-        output_str = output.decode('utf-8')
+        output_str = output.decode("utf-8")
         lines = output_str.split("\n")
         for line in lines:
-            if re.search(':', line):
+            if re.search(":", line):
                 pair = line.split(":", 1)
                 if pair[0] != "WARNING":
                     ret[pair[0]] = pair[1].lstrip()
@@ -111,7 +106,6 @@ class SweepCheckpoints:
             ckpts = ckpts[1:3]
 
         for i, ckpt in enumerate(ckpts):
-
             print(f"{i+1} out of {len(ckpts)} checkpoints")
             print(ckpt)
 
@@ -127,8 +121,9 @@ class SweepCheckpoints:
             for model in models:
                 total_models += 1
 
-                result = self._run_experiment(model, ckpt, min_mbs_index,
-                                              is_linear_inst, key)
+                result = self._run_experiment(
+                    model, ckpt, min_mbs_index, is_linear_inst, key
+                )
                 if result:
                     self.results[key][ckpt + model] = result
 
@@ -173,12 +168,15 @@ class SweepCheckpoints:
             cmd = f"{cmd} --min-throughput={min_tput} -f minimize_latency.yml"
 
         print(f"  {cmd}")
-        cmd_list = cmd.split(' ')
+        cmd_list = cmd.split(" ")
         result = subprocess.run(cmd_list, stdout=subprocess.PIPE)
         result_data = self._parse_experiment_output(result.stdout)
 
-        if 'Percentile' not in result_data or 'Generator num configs' not in result_data or result_data[
-                'Percentile'] == "None":
+        if (
+            "Percentile" not in result_data
+            or "Generator num configs" not in result_data
+            or result_data["Percentile"] == "None"
+        ):
             print(f"{model} failed! Skipping")
             return
 
@@ -202,7 +200,6 @@ class SweepCheckpoints:
         NUM_MEASUREMENTS_MIN = 5
 
         for k, result in results.items():
-
             percentile = result.percentile
             num_measurement = result.num_measurements
 
@@ -258,7 +255,7 @@ class SweepCheckpoints:
             print(f"  {x}")
 
     def cleanup_checkpoints(self, path):
-        """ 
+        """
         Given a path, recursively search all folders for all folders
         with one or more checkpoints in it. In each of those folders,
         rename the highest numbered checkpoint to be 0.ckpt and delete

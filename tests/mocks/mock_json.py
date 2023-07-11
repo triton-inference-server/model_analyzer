@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import MagicMock, Mock, patch
+
 from .mock_base import MockBase
-from unittest.mock import Mock, MagicMock, patch
 
 
 class MockJSONMethods(MockBase):
@@ -22,10 +25,10 @@ class MockJSONMethods(MockBase):
     """
 
     def __init__(self):
-        json_attrs = {'load': MagicMock(), 'dump': MagicMock()}
+        json_attrs = {"load": MagicMock(), "dump": MagicMock()}
         self.patcher_json = patch(
-            'model_analyzer.state.analyzer_state_manager.json',
-            Mock(**json_attrs))
+            "model_analyzer.state.analyzer_state_manager.json", Mock(**json_attrs)
+        )
         super().__init__()
 
     def start(self):

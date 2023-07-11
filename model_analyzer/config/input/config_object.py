@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .config_value import ConfigValue
-from .config_status import ConfigStatus
-from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE
 from copy import deepcopy
+
+from model_analyzer.constants import CONFIG_PARSER_FAILURE
+
+from .config_status import ConfigStatus
+from .config_value import ConfigValue
 
 
 class ConfigObject(ConfigValue):
@@ -24,13 +27,15 @@ class ConfigObject(ConfigValue):
     Representation of dictionaries in Config
     """
 
-    def __init__(self,
-                 schema,
-                 preprocess=None,
-                 required=False,
-                 validator=None,
-                 output_mapper=None,
-                 name=None):
+    def __init__(
+        self,
+        schema,
+        preprocess=None,
+        required=False,
+        validator=None,
+        output_mapper=None,
+        name=None,
+    ):
         """
         schema : dict
             A dictionary where the keys are the object keys and the values
@@ -83,14 +88,17 @@ class ConfigObject(ConfigValue):
 
                 # If the key is not available in the schema, but wildcard is
                 # present, we use the schema for the wildcard.
-                elif '*' in schema:
-                    new_item = deepcopy(schema['*'])
+                elif "*" in schema:
+                    new_item = deepcopy(schema["*"])
                 else:
                     return ConfigStatus(
-                        CONFIG_PARSER_FAILURE, f'Key "{key}" should not be '
-                        f'specified in field "{self.name()}".', self)
+                        CONFIG_PARSER_FAILURE,
+                        f'Key "{key}" should not be '
+                        f'specified in field "{self.name()}".',
+                        self,
+                    )
 
-                new_item.set_name(f'{self.name()}.{key}')
+                new_item.set_name(f"{self.name()}.{key}")
                 new_value[key] = new_item
 
                 # If it was not able to set the value, for this
@@ -102,7 +110,9 @@ class ConfigObject(ConfigValue):
             return ConfigStatus(
                 CONFIG_PARSER_FAILURE,
                 f'Value for field "{self.name()}" should be an object.'
-                f' Type {type(value)} is provided instead.', self)
+                f" Type {type(value)} is provided instead.",
+                self,
+            )
 
         return super().set_value(new_value)
 

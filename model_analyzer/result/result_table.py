@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
-
 from model_analyzer.constants import RESULT_TABLE_COLUMN_PADDING
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class ResultTable:
@@ -37,9 +37,7 @@ class ResultTable:
 
         self._headers = headers
         self._title = title
-        self._column_widths = [
-            len(header) + self.column_padding for header in headers
-        ]
+        self._column_widths = [len(header) + self.column_padding for header in headers]
         self._rows = []
 
     def title(self):
@@ -113,14 +111,16 @@ class ResultTable:
         if len(row) != len(self._headers):
             raise TritonModelAnalyzerException(
                 f"Inserted row contains {len(row)} values."
-                f"There are {len(self._headers)} provided headers.")
+                f"There are {len(self._headers)} provided headers."
+            )
         if index is None:
             index = len(self._rows)
         self._rows.insert(index, row[:])
 
         for i in range(len(row)):
             self._column_widths[i] = max(
-                len(str(row[i])) + self.column_padding, self._column_widths[i])
+                len(str(row[i])) + self.column_padding, self._column_widths[i]
+            )
 
     def get_row_by_index(self, index):
         """
@@ -139,7 +139,8 @@ class ResultTable:
 
         if index < 0 or index >= len(self._rows):
             raise TritonModelAnalyzerException(
-                f"Index {index} out of range for get_row")
+                f"Index {index} out of range for get_row"
+            )
         return self._rows[index]
 
     def remove_row_by_index(self, index):
@@ -155,13 +156,15 @@ class ResultTable:
 
         if len(self._rows) == 0:
             raise TritonModelAnalyzerException(
-                "Attempting to remove result from an empty ResultTable!")
+                "Attempting to remove result from an empty ResultTable!"
+            )
         if index < 0 or index >= len(self._rows):
             raise TritonModelAnalyzerException(
-                f"Index {index} out of range for remove_row_by_index")
+                f"Index {index} out of range for remove_row_by_index"
+            )
         self._rows.pop(index)
 
-    def to_formatted_string(self, separator='', ignore_widths=False):
+    def to_formatted_string(self, separator="", ignore_widths=False):
         """
         Converts the table into its string representation
         making it easy to write by a writer
@@ -183,9 +186,8 @@ class ResultTable:
 
         output_rows = []
         for row in [self._headers] + self._rows:
-            output_rows.append(
-                self._row_to_string(row, separator, ignore_widths))
-        return '\n'.join(output_rows)
+            output_rows.append(self._row_to_string(row, separator, ignore_widths))
+        return "\n".join(output_rows)
 
     def _row_to_string(self, row, separator, ignore_widths):
         """
@@ -195,10 +197,12 @@ class ResultTable:
         if ignore_widths:
             return separator.join([str(row[j]) for j in range(len(row))])
         else:
-            return separator.join([
-                self._pad_or_trunc(str(row[j]), self._column_widths[j])
-                for j in range(len(row))
-            ])
+            return separator.join(
+                [
+                    self._pad_or_trunc(str(row[j]), self._column_widths[j])
+                    for j in range(len(row))
+                ]
+            )
 
     def _pad_or_trunc(self, string, length):
         """
@@ -208,6 +212,6 @@ class ResultTable:
 
         diff = length - len(string)
         if diff >= 0:
-            return string + (' ') * diff
+            return string + (" ") * diff
         else:
             return string[:diff]

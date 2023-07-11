@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
+import model_analyzer.monitor.dcgm.dcgm_field_helpers as dcgm_field_helpers
+import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
+import model_analyzer.monitor.dcgm.dcgm_structs as structs
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.monitor.monitor import Monitor
 from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
+from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
 from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
 from model_analyzer.record.types.gpu_utilization import GPUUtilization
-from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
-from model_analyzer.model_analyzer_exceptions import \
-    TritonModelAnalyzerException
-
-import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
-import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
-import model_analyzer.monitor.dcgm.dcgm_field_helpers as dcgm_field_helpers
-import model_analyzer.monitor.dcgm.dcgm_structs as structs
 
 
 class DCGMMonitor(Monitor):
@@ -36,7 +36,7 @@ class DCGMMonitor(Monitor):
         GPUUsedMemory: dcgm_fields.DCGM_FI_DEV_FB_USED,
         GPUFreeMemory: dcgm_fields.DCGM_FI_DEV_FB_FREE,
         GPUUtilization: dcgm_fields.DCGM_FI_DEV_GPU_UTIL,
-        GPUPowerUsage: dcgm_fields.DCGM_FI_DEV_POWER_USAGE
+        GPUPowerUsage: dcgm_fields.DCGM_FI_DEV_POWER_USAGE,
     }
 
     def __init__(self, gpus, frequency, metrics, dcgmPath=None):
@@ -61,16 +61,16 @@ class DCGMMonitor(Monitor):
 
         # Start DCGM in the embedded mode to use the shared library
         self.dcgm_handle = dcgm_handle = dcgm_agent.dcgmStartEmbedded(
-            structs.DCGM_OPERATION_MODE_MANUAL)
+            structs.DCGM_OPERATION_MODE_MANUAL
+        )
 
         # Create DCGM monitor group
-        self.group_id = dcgm_agent.dcgmGroupCreate(dcgm_handle,
-                                                   structs.DCGM_GROUP_EMPTY,
-                                                   "triton-monitor")
+        self.group_id = dcgm_agent.dcgmGroupCreate(
+            dcgm_handle, structs.DCGM_GROUP_EMPTY, "triton-monitor"
+        )
         # Add the GPUs to the group
         for gpu in self._gpus:
-            dcgm_agent.dcgmGroupAddDevice(dcgm_handle, self.group_id,
-                                          gpu.device_id())
+            dcgm_agent.dcgmGroupAddDevice(dcgm_handle, self.group_id, gpu.device_id())
 
         frequency = int(self._frequency * 1000)
         fields = []
@@ -80,14 +80,23 @@ class DCGMMonitor(Monitor):
         except KeyError:
             dcgm_agent.dcgmShutdown()
             raise TritonModelAnalyzerException(
-                f'{metric} is not supported by Model Analyzer DCGM Monitor')
+                f"{metric} is not supported by Model Analyzer DCGM Monitor"
+            )
 
         self.dcgm_field_group_id = dcgm_agent.dcgmFieldGroupCreate(
-            dcgm_handle, fields, 'triton-monitor')
+            dcgm_handle, fields, "triton-monitor"
+        )
 
         self.group_watcher = dcgm_field_helpers.DcgmFieldGroupWatcher(
-            dcgm_handle, self.group_id, self.dcgm_field_group_id.value,
-            structs.DCGM_OPERATION_MODE_MANUAL, frequency, 3600, 0, 0)
+            dcgm_handle,
+            self.group_id,
+            self.dcgm_field_group_id.value,
+            structs.DCGM_OPERATION_MODE_MANUAL,
+            frequency,
+            3600,
+            0,
+            0,
+        )
 
     def is_monitoring_connected(self) -> bool:
         return True
@@ -107,13 +116,15 @@ class DCGMMonitor(Monitor):
                 for metric_type in self._metrics:
                     dcgm_field = self.model_analyzer_to_dcgm_field[metric_type]
                     for measurement in metrics[dcgm_field].values:
-
                         if measurement.value is not None:
                             # DCGM timestamp is in nanoseconds
                             records.append(
-                                metric_type(value=float(measurement.value),
-                                            device_uuid=gpu.device_uuid(),
-                                            timestamp=measurement.ts))
+                                metric_type(
+                                    value=float(measurement.value),
+                                    device_uuid=gpu.device_uuid(),
+                                    timestamp=measurement.ts,
+                                )
+                            )
 
         return records
 

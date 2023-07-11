@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .report import Report
 import base64
+
+from .report import Report
 
 
 class HTMLReport(Report):
@@ -32,7 +35,7 @@ class HTMLReport(Report):
         the html document
         """
 
-        return f'<head><style>{self._head}</style></head>'
+        return f"<head><style>{self._head}</style></head>"
 
     def body(self):
         """
@@ -40,7 +43,7 @@ class HTMLReport(Report):
         the html document
         """
 
-        return f'<body>{self._body}</body>'
+        return f"<body>{self._body}</body>"
 
     def document(self):
         """
@@ -48,7 +51,7 @@ class HTMLReport(Report):
         this HTMLReport
         """
 
-        return f'<html>{self.head()}{self.body()}</html>'
+        return f"<html>{self.head()}{self.body()}</html>"
 
     def add_title(self, title):
         """
@@ -58,7 +61,7 @@ class HTMLReport(Report):
             The title of the report
         """
 
-        self._body += f'<center><h1>{title}</h1></center>'
+        self._body += f"<center><h1>{title}</h1></center>"
 
     def add_subheading(self, subheading):
         """
@@ -68,13 +71,9 @@ class HTMLReport(Report):
             The subheading of the given section
         """
 
-        self._body += f'<h3>{subheading}</h3>'
+        self._body += f"<h3>{subheading}</h3>"
 
-    def add_images(self,
-                   images,
-                   image_captions,
-                   image_width=100,
-                   float="center"):
+    def add_images(self, images, image_captions, image_width=100, float="center"):
         """
         Parameters
         ----------
@@ -83,7 +82,7 @@ class HTMLReport(Report):
             be added to this image row
         image_captions : list of str
             List of image captions
-        image_width: int 
+        image_width: int
             Percentage of the the row of images
             will occupy.
         float: str
@@ -93,10 +92,12 @@ class HTMLReport(Report):
         image_row = ""
         for img, caption in zip(images, image_captions):
             with open(img, "rb") as image_file:
-                data_uri = base64.b64encode(image_file.read()).decode('ascii')
-                image_row += f"<div class=\"image\" style=\"float:{float};width:{image_width//len(images)}%\">"
-                image_row += f"<img src=\"data:image/png;base64,{data_uri}\" style=\"width:100%\">"
-                image_row += f"<center><div style=\"font-weight:bold;font-size:12;padding-bottom:20px\">{caption}</div></center>"
+                data_uri = base64.b64encode(image_file.read()).decode("ascii")
+                image_row += f'<div class="image" style="float:{float};width:{image_width//len(images)}%">'
+                image_row += (
+                    f'<img src="data:image/png;base64,{data_uri}" style="width:100%">'
+                )
+                image_row += f'<center><div style="font-weight:bold;font-size:12;padding-bottom:20px">{caption}</div></center>'
                 image_row += "</div>"
 
         self._body += f"<center><div>{image_row}</div></center>"
@@ -110,7 +111,7 @@ class HTMLReport(Report):
             the report as a paragraph
         """
 
-        self._body += f'<div style=\"font-size:{font_size}\"><p>{paragraph}</p></div>'
+        self._body += f'<div style="font-size:{font_size}"><p>{paragraph}</p></div>'
 
     def add_line_breaks(self, num_breaks=1):
         """
@@ -122,7 +123,7 @@ class HTMLReport(Report):
         """
 
         for _ in range(num_breaks):
-            self._body += '<br>'
+            self._body += "<br>"
 
     def add_table(self, table):
         """
@@ -132,36 +133,42 @@ class HTMLReport(Report):
             The table we want to add
         """
 
-        def table_style(border="1px solid black",
-                        padding="5px 10px",
-                        font_size="11pt",
-                        text_align="center",
-                        width="80%"):
-            return (f"border: {border};"
-                    f"border-collapse: collapse;"
-                    f"text-align: {text_align};"
-                    f"width: {width};"
-                    f"padding: {padding};"
-                    f"font-size: {font_size}")
+        def table_style(
+            border="1px solid black",
+            padding="5px 10px",
+            font_size="11pt",
+            text_align="center",
+            width="80%",
+        ):
+            return (
+                f"border: {border};"
+                f"border-collapse: collapse;"
+                f"text-align: {text_align};"
+                f"width: {width};"
+                f"padding: {padding};"
+                f"font-size: {font_size}"
+            )
 
         html_table = ""
         # Add headers
-        headers = "".join([
-            f'<th style=\"{table_style()}\">{h}</th>' for h in table.headers()
-        ])
-        html_table += f'<tr>{headers}</tr>'
+        headers = "".join(
+            [f'<th style="{table_style()}">{h}</th>' for h in table.headers()]
+        )
+        html_table += f"<tr>{headers}</tr>"
 
         # Add data
         for i in range(table.size()):
-            row_data = "".join([
-                f'<td style=\"{table_style()}\">{d}</td>'
-                for d in table.get_row_by_index(i)
-            ])
-            html_table += f'<tr>{row_data}</tr>'
+            row_data = "".join(
+                [
+                    f'<td style="{table_style()}">{d}</td>'
+                    for d in table.get_row_by_index(i)
+                ]
+            )
+            html_table += f"<tr>{row_data}</tr>"
 
         # Wrap with table details
-        html_table = f'<table style=\"{table_style()}\">{html_table}</table>'
-        self._body += f'<center>{html_table}</center>'
+        html_table = f'<table style="{table_style()}">{html_table}</table>'
+        self._body += f"<center>{html_table}</center>"
 
     def write_report(self, filename):
         """
@@ -173,12 +180,12 @@ class HTMLReport(Report):
         filename : str
             The name of the report
         """
-        with open(f"{filename}", 'w') as file:
+        with open(f"{filename}", "w") as file:
             file.write(self.document())
 
     def get_file_extension(self):
         """
-        Return the file extension for 
+        Return the file extension for
         the type of report
         """
         return "html"

@@ -1,4 +1,6 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from .monitor import Monitor
+import logging
+
+import requests
+from prometheus_client.parser import text_string_to_metric_families
+
 from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.record.types.gpu_utilization import GPUUtilization
-from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.record.types.gpu_free_memory import GPUFreeMemory
 from model_analyzer.record.types.gpu_power_usage import GPUPowerUsage
+from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
+from model_analyzer.record.types.gpu_utilization import GPUUtilization
 
-from prometheus_client.parser import text_string_to_metric_families
-import requests
-import logging
+from .monitor import Monitor
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -34,10 +38,10 @@ class RemoteMonitor(Monitor):
     """
 
     gpu_metrics = {
-        'nv_gpu_utilization': GPUUtilization,
-        'nv_gpu_memory_used_bytes': GPUUsedMemory,
-        'nv_gpu_power_usage': GPUPowerUsage,
-        'nv_gpu_memory_total_bytes': GPUFreeMemory
+        "nv_gpu_utilization": GPUUtilization,
+        "nv_gpu_memory_used_bytes": GPUUsedMemory,
+        "nv_gpu_power_usage": GPUPowerUsage,
+        "nv_gpu_memory_total_bytes": GPUFreeMemory,
     }
 
     def __init__(self, metrics_url, frequency, metrics):
@@ -69,7 +73,8 @@ class RemoteMonitor(Monitor):
         """
 
         self._metrics_responses.append(
-            str(requests.get(self._metrics_url, timeout=10).content, encoding='ascii'))
+            str(requests.get(self._metrics_url, timeout=10).content, encoding="ascii")
+        )
 
     def _collect_records(self):
         """
@@ -85,34 +90,38 @@ class RemoteMonitor(Monitor):
             calculate_free_memory_after_pass = False
             gpu_memory_used_bytes = None
             for metric in metrics:
-                if metric.name in self.gpu_metrics and self.gpu_metrics[
-                        metric.name] in self._metrics:
+                if (
+                    metric.name in self.gpu_metrics
+                    and self.gpu_metrics[metric.name] in self._metrics
+                ):
                     for sample in metric.samples:
-                        if sample.name == 'nv_gpu_memory_used_bytes':
+                        if sample.name == "nv_gpu_memory_used_bytes":
                             processed_gpu_used_memory = True
                             gpu_memory_used_bytes = sample.value
                             self._create_and_add_record(
-                                records, sample, gpu_memory_used_bytes // 1.0e6)
-                        elif sample.name == 'nv_gpu_memory_total_bytes':
+                                records, sample, gpu_memory_used_bytes // 1.0e6
+                            )
+                        elif sample.name == "nv_gpu_memory_total_bytes":
                             if processed_gpu_used_memory:
                                 self._create_and_add_record(
-                                    records, sample,
-                                    (sample.value - gpu_memory_used_bytes) //
-                                    1.0e6)
+                                    records,
+                                    sample,
+                                    (sample.value - gpu_memory_used_bytes) // 1.0e6,
+                                )
                             else:
                                 total_memory_metric = metric
                                 calculate_free_memory_after_pass = True
-                        elif sample.name == 'nv_gpu_utilization':
-                            self._create_and_add_record(records, sample,
-                                                        sample.value * 100)
+                        elif sample.name == "nv_gpu_utilization":
+                            self._create_and_add_record(
+                                records, sample, sample.value * 100
+                            )
                         else:
-                            self._create_and_add_record(records, sample,
-                                                        sample.value)
+                            self._create_and_add_record(records, sample, sample.value)
             if calculate_free_memory_after_pass:
                 for sample in total_memory_metric.samples:
                     self._create_and_add_record(
-                        records, sample,
-                        (sample.value - gpu_memory_used_bytes) // 1.0e6)
+                        records, sample, (sample.value - gpu_memory_used_bytes) // 1.0e6
+                    )
 
         return records
 
@@ -121,5 +130,8 @@ class RemoteMonitor(Monitor):
         Adds a record to given dict
         """
 
-        records.append(self.gpu_metrics[sample.name](
-            value=sample_value, device_uuid=sample.labels['gpu_uuid']))
+        records.append(
+            self.gpu_metrics[sample.name](
+                value=sample_value, device_uuid=sample.labels["gpu_uuid"]
+            )
+        )

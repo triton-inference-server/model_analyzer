@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,19 +15,17 @@
 # limitations under the License.
 
 import argparse
-import os
 import importlib
 import inspect
+import os
 import sys
 
-sys.path.insert(0, '../../')
+sys.path.insert(0, "../../")
 
 
 def args():
-    parser = argparse.ArgumentParser('test_counter')
-    parser.add_argument('--path',
-                        help='Path to use for counting the tests',
-                        type=str)
+    parser = argparse.ArgumentParser("test_counter")
+    parser.add_argument("--path", help="Path to use for counting the tests", type=str)
     opt = parser.parse_args()
     return opt
 
@@ -36,10 +36,9 @@ if __name__ == "__main__":
     path = opt.path
 
     for file_path in os.listdir(path):
-
         # All the test files start with "Test"
-        if file_path.startswith('test_'):
-            module_name = 'tests.' + file_path.split('.')[0]
+        if file_path.startswith("test_"):
+            module_name = "tests." + file_path.split(".")[0]
             module = importlib.import_module(module_name)
             classes = inspect.getmembers(module, inspect.isclass)
             for class_tuple in classes:
@@ -47,12 +46,11 @@ if __name__ == "__main__":
                 class_object = class_tuple[1]
 
                 # All the test classes start with "Test"
-                if class_name.startswith('Test'):
-                    methods = inspect.getmembers(class_object,
-                                                 inspect.isroutine)
+                if class_name.startswith("Test"):
+                    methods = inspect.getmembers(class_object, inspect.isroutine)
                     for method_tuple in methods:
                         method_name = method_tuple[0]
-                        if method_name.startswith('test_'):
+                        if method_name.startswith("test_"):
                             number_of_tests += 1
 
     # Print the number of tests

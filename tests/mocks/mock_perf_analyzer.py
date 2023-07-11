@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import MagicMock, Mock, patch
+
 from .mock_base import MockBase
-from unittest.mock import patch, Mock, MagicMock
 
 
 class MockCalledProcessError(Exception):
@@ -29,7 +32,7 @@ class MockCalledProcessError(Exception):
 
 class MockPerfAnalyzerMethods(MockBase):
     """
-    Mocks the subprocess module functions used in 
+    Mocks the subprocess module functions used in
     model_analyzer/perf_analyzer/perf_analyzer.py
     Provides functions to check operation.
     """
@@ -43,14 +46,16 @@ class MockPerfAnalyzerMethods(MockBase):
         self.mock_popen_constructor.return_value = self.mock_popen
 
         self.patcher_popen_stdout_read = patch(
-            'model_analyzer.perf_analyzer.perf_analyzer.Popen',
-            self.mock_popen_constructor)
+            "model_analyzer.perf_analyzer.perf_analyzer.Popen",
+            self.mock_popen_constructor,
+        )
 
         self.mock_file = MagicMock()
-        self.mock_file.read.return_value = b''
+        self.mock_file.read.return_value = b""
         self.patcher_open = patch(
-            'model_analyzer.perf_analyzer.perf_analyzer.tempfile.NamedTemporaryFile',
-            Mock(return_value=self.mock_file))
+            "model_analyzer.perf_analyzer.perf_analyzer.tempfile.NamedTemporaryFile",
+            Mock(return_value=self.mock_file),
+        )
         super().__init__()
 
     def start(self):
@@ -73,7 +78,7 @@ class MockPerfAnalyzerMethods(MockBase):
         Sets the return value of mock_file
         """
 
-        self.mock_file.read.return_value = output_string.encode('utf-8')
+        self.mock_file.read.return_value = output_string.encode("utf-8")
 
     def get_perf_analyzer_popen_call_count(self):
         """
@@ -95,4 +100,4 @@ class MockPerfAnalyzerMethods(MockBase):
         and return values of the
         mocks in this module
         """
-        self.mock_file.read.return_value = b''
+        self.mock_file.read.return_value = b""

@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,26 +15,33 @@
 # limitations under the License.
 
 import unittest
+from unittest.mock import MagicMock, patch
 
+from model_analyzer.config.generate.brute_run_config_generator import (
+    BruteRunConfigGenerator,
+)
+from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
-from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
-from model_analyzer.config.generate.brute_run_config_generator import BruteRunConfigGenerator
-from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
+from model_analyzer.config.generate.model_run_config_generator import (
+    ModelRunConfigGenerator,
+)
+from model_analyzer.config.generate.model_variant_name_manager import (
+    ModelVariantNameManager,
+)
+from model_analyzer.config.input.config_defaults import (
+    DEFAULT_RUN_CONFIG_MAX_CONCURRENCY,
+    DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT,
+    DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE,
+)
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
 from .common import test_result_collector as trc
 from .common.test_utils import construct_run_config_measurement, evaluate_mock_config
 from .mocks.mock_model_config import MockModelConfig
 from .mocks.mock_os import MockOSMethods
-from unittest.mock import MagicMock, patch
-
-from model_analyzer.config.generate.generator_utils import GeneratorUtils as utils
-
-from model_analyzer.config.input.config_defaults import \
-    DEFAULT_RUN_CONFIG_MAX_CONCURRENCY, DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT, DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE
 
 
 class TestRunConfigGenerator(trc.TestResultCollector):
-
     def __init__(self, methodname):
         super().__init__(methodname)
         self._fake_throughput = 1
@@ -56,15 +65,21 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         # yapf: enable
 
         expected_pa_configs = len(
-            utils.generate_doubled_list(1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY))
+            utils.generate_doubled_list(1, DEFAULT_RUN_CONFIG_MAX_CONCURRENCY)
+        )
 
-        expected_model_configs = DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT \
-                               * len(utils.generate_doubled_list(1,DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE)) \
-                               + 1
+        expected_model_configs = (
+            DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT
+            * len(
+                utils.generate_doubled_list(1, DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE)
+            )
+            + 1
+        )
         expected_num_of_configs = expected_pa_configs * expected_model_configs
 
         self._run_and_test_run_config_generator(
-            yaml_str, expected_config_count=expected_num_of_configs)
+            yaml_str, expected_config_count=expected_num_of_configs
+        )
 
     def test_two_models(self):
         """
@@ -100,16 +115,19 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         expected_num_calls_to_set_last_results = 78
 
-        with patch.object(ModelRunConfigGenerator,
-                          "set_last_results",
-                          side_effect=ModelRunConfigGenerator.set_last_results,
-                          autospec=True) as mock_method:
-
+        with patch.object(
+            ModelRunConfigGenerator,
+            "set_last_results",
+            side_effect=ModelRunConfigGenerator.set_last_results,
+            autospec=True,
+        ) as mock_method:
             self._run_and_test_run_config_generator(
-                yaml_str, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs
+            )
 
-            self.assertEqual(mock_method.call_count,
-                             expected_num_calls_to_set_last_results)
+            self.assertEqual(
+                mock_method.call_count, expected_num_calls_to_set_last_results
+            )
 
     def test_two_uneven_models(self):
         """
@@ -151,7 +169,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         expected_num_of_configs = 150
 
         self._run_and_test_run_config_generator(
-            yaml_str, expected_config_count=expected_num_of_configs)
+            yaml_str, expected_config_count=expected_num_of_configs
+        )
 
     def test_three_uneven_models(self):
         """
@@ -213,15 +232,19 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         # All 2 times that the middle generator is done with default config will pass results to the root generator
         expected_num_calls_to_set_last_results = 1276
 
-        with patch.object(ModelRunConfigGenerator,
-                          "set_last_results",
-                          side_effect=ModelRunConfigGenerator.set_last_results,
-                          autospec=True) as mock_method:
+        with patch.object(
+            ModelRunConfigGenerator,
+            "set_last_results",
+            side_effect=ModelRunConfigGenerator.set_last_results,
+            autospec=True,
+        ) as mock_method:
             self._run_and_test_run_config_generator(
-                yaml_str, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs
+            )
 
-            self.assertEqual(mock_method.call_count,
-                             expected_num_calls_to_set_last_results)
+            self.assertEqual(
+                mock_method.call_count, expected_num_calls_to_set_last_results
+            )
 
     def test_early_backoff_leaf_model(self):
         """
@@ -264,11 +287,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         perf_throughput_values[6] = perf_throughput_values[5]
         perf_throughput_values[7] = perf_throughput_values[5]
 
-        with patch.object(TestRunConfigGenerator,
-                          "_get_next_perf_throughput_value") as mock_method:
+        with patch.object(
+            TestRunConfigGenerator, "_get_next_perf_throughput_value"
+        ) as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_str, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs
+            )
 
     def test_early_backoff_root_model(self):
         """
@@ -313,11 +338,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         for i in range(36, 68):
             perf_throughput_values[i] = perf_throughput_values[i - 36]
 
-        with patch.object(TestRunConfigGenerator,
-                          "_get_next_perf_throughput_value") as mock_method:
+        with patch.object(
+            TestRunConfigGenerator, "_get_next_perf_throughput_value"
+        ) as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_str, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs
+            )
 
     def test_measurement_list(self):
         """
@@ -361,11 +388,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         perf_throughput_values = list(range(260))
         perf_throughput_values[67] = 1
 
-        with patch.object(TestRunConfigGenerator,
-                          "_get_next_perf_throughput_value") as mock_method:
+        with patch.object(
+            TestRunConfigGenerator, "_get_next_perf_throughput_value"
+        ) as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_str, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs
+            )
 
     def test_matching_triton_server_env(self):
         """
@@ -393,7 +422,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         expected_num_of_configs = 68
         self._run_and_test_run_config_generator(
-            yaml_str, expected_config_count=expected_num_of_configs)
+            yaml_str, expected_config_count=expected_num_of_configs
+        )
 
     def test_mismatching_triton_server_env(self):
         """
@@ -422,7 +452,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         with self.assertRaises(TritonModelAnalyzerException):
             expected_num_of_configs = 100
             self._run_and_test_run_config_generator(
-                yaml_str, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs
+            )
 
     def test_none_result_in_max_batch_size(self):
         """
@@ -457,11 +488,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        with patch.object(TestRunConfigGenerator,
-                          "_get_next_perf_throughput_value") as mock_method:
+        with patch.object(
+            TestRunConfigGenerator, "_get_next_perf_throughput_value"
+        ) as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_str, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs
+            )
 
     def test_none_result_before_threshold(self):
         """
@@ -491,11 +524,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        with patch.object(TestRunConfigGenerator,
-                          "_get_next_perf_throughput_value") as mock_method:
+        with patch.object(
+            TestRunConfigGenerator, "_get_next_perf_throughput_value"
+        ) as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_str, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs
+            )
 
     def test_none_result_after_threshold(self):
         """
@@ -525,11 +560,13 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         ]
         # yapf: enable
 
-        with patch.object(TestRunConfigGenerator,
-                          "_get_next_perf_throughput_value") as mock_method:
+        with patch.object(
+            TestRunConfigGenerator, "_get_next_perf_throughput_value"
+        ) as mock_method:
             mock_method.side_effect = perf_throughput_values
             self._run_and_test_run_config_generator(
-                yaml_str, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs
+            )
 
     def test_variant_naming(self):
         """
@@ -591,21 +628,28 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         expected_num_of_configs = 12
 
-        with patch.object(TestRunConfigGenerator,
-                          "_get_next_perf_throughput_value") as mock_method:
+        with patch.object(
+            TestRunConfigGenerator, "_get_next_perf_throughput_value"
+        ) as mock_method:
             mock_method.side_effect = perf_throughput_values
             run_configs = self._run_and_test_run_config_generator(
-                yaml_str, expected_config_count=expected_num_of_configs)
+                yaml_str, expected_config_count=expected_num_of_configs
+            )
 
         for i, rc in enumerate(run_configs):
-            self.assertEqual(expected_modelB_name_order[i],
-                             rc.model_run_configs()[1].model_variant_name())
+            self.assertEqual(
+                expected_modelB_name_order[i],
+                rc.model_run_configs()[1].model_variant_name(),
+            )
 
-    def _run_and_test_run_config_generator(self, yaml_str,
-                                           expected_config_count):
+    def _run_and_test_run_config_generator(self, yaml_str, expected_config_count):
         args = [
-            'model-analyzer', 'profile', '--model-repository', 'cli_repository',
-            '-f', 'path-to-config-file'
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli_repository",
+            "-f",
+            "path-to-config-file",
         ]
 
         protobuf = """
@@ -625,10 +669,12 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         profile_models = []
         for model in config.profile_models:
             profile_models.append(
-                ModelProfileSpec(model, config, MagicMock(), MagicMock()))
+                ModelProfileSpec(model, config, MagicMock(), MagicMock())
+            )
 
-        rcg = BruteRunConfigGenerator(config, MagicMock(), profile_models,
-                                      MagicMock(), ModelVariantNameManager())
+        rcg = BruteRunConfigGenerator(
+            config, MagicMock(), profile_models, MagicMock(), ModelVariantNameManager()
+        )
 
         run_configs = []
         for run_config in rcg.get_configs():
@@ -639,8 +685,9 @@ class TestRunConfigGenerator(trc.TestResultCollector):
 
         # Checks that each ModelRunConfig contains the expected number of model_configs
         for run_config in run_configs:
-            self.assertEqual(len(run_config.model_run_configs()),
-                             len(config.profile_models))
+            self.assertEqual(
+                len(run_config.model_run_configs()), len(config.profile_models)
+            )
 
         self.mock_model_config.stop()
 
@@ -649,7 +696,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
     def setUp(self):
         # Mock path validation
         self.mock_os = MockOSMethods(
-            mock_paths=['model_analyzer.config.input.config_utils'])
+            mock_paths=["model_analyzer.config.input.config_utils"]
+        )
         self.mock_os.start()
 
     def tearDown(self):
@@ -667,9 +715,8 @@ class TestRunConfigGenerator(trc.TestResultCollector):
                 model_config_names=["test_config_name"],
                 model_specific_pa_params=MagicMock(),
                 gpu_metric_values=MagicMock(),
-                non_gpu_metric_values=[{
-                    "perf_throughput": throughput_value
-                }])
+                non_gpu_metric_values=[{"perf_throughput": throughput_value}],
+            )
 
         return [measurement]
 

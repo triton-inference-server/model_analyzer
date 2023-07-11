@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,8 +16,7 @@
 
 import math
 from copy import deepcopy
-
-from typing import List, Tuple, Dict, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.coordinate_data import CoordinateData
@@ -40,14 +41,18 @@ class Neighborhood:
     #
     TRANSLATION_LIST = [0.09, 0.3, 1.0]
 
-    def __init__(self, neighborhood_config: NeighborhoodConfig,
-                 home_coordinate: Coordinate, coordinate_data: CoordinateData):
+    def __init__(
+        self,
+        neighborhood_config: NeighborhoodConfig,
+        home_coordinate: Coordinate,
+        coordinate_data: CoordinateData,
+    ):
         """
         Parameters
         ----------
-        neighborhood_config: 
+        neighborhood_config:
             NeighborhoodConfig object
-        home_coordinate: 
+        home_coordinate:
             Coordinate object to center the neighborhood around
         """
         assert type(neighborhood_config) == NeighborhoodConfig
@@ -62,9 +67,12 @@ class Neighborhood:
         self._force_slow_mode = False
 
     @classmethod
-    def calc_distance(cls, coordinate1: Union[Coordinate, List[int]],
-                      coordinate2: Union[Coordinate, List[int]]) -> float:
-        """ 
+    def calc_distance(
+        cls,
+        coordinate1: Union[Coordinate, List[int]],
+        coordinate2: Union[Coordinate, List[int]],
+    ) -> float:
+        """
         Return the euclidean distance between two coordinates
         """
 
@@ -87,8 +95,7 @@ class Neighborhood:
             return self._are_all_adjacent_neighbors_measured()
         else:
             min_initialized = self._config.get_min_initialized()
-            num_initialized = len(
-                self._get_coordinates_with_valid_measurements())
+            num_initialized = len(self._get_coordinates_with_valid_measurements())
             return num_initialized >= min_initialized
 
     def force_slow_mode(self) -> None:
@@ -136,22 +143,22 @@ class Neighborhood:
     def _calculate_new_home(self) -> Coordinate:
         step_vector = self._get_step_vector()
         step_vector_coordinate = self._translate_step_vector(
-            step_vector, Neighborhood.TRANSLATION_LIST)
+            step_vector, Neighborhood.TRANSLATION_LIST
+        )
         tmp_new_coordinate = self._home_coordinate + step_vector_coordinate
         new_coordinate = self._clamp_coordinate_to_bounds(tmp_new_coordinate)
         return new_coordinate
 
-    def _translate_step_vector(self, step_vector: List[float],
-                               translate_list: List[float]) -> Coordinate:
-
+    def _translate_step_vector(
+        self, step_vector: List[float], translate_list: List[float]
+    ) -> Coordinate:
         translated_step_vector = Coordinate([0] * len(step_vector))
         for i, v in enumerate(step_vector):
             translated_step_vector[i] = self._translate_value(v, translate_list)
 
         return translated_step_vector
 
-    def _translate_value(self, value: float,
-                         translation_list: List[float]) -> int:
+    def _translate_value(self, value: float, translation_list: List[float]) -> int:
         ret = 0
         for index, bound in enumerate(translation_list):
             if value > 0 and value > bound:
@@ -188,7 +195,8 @@ class Neighborhood:
         for coordinate in self._neighborhood:
             if not self._is_coordinate_measured(coordinate):
                 num_uncovered = self._get_num_uncovered_values(
-                    coordinate, covered_values_per_dimension)
+                    coordinate, covered_values_per_dimension
+                )
 
                 if num_uncovered > max_num_uncovered:
                     max_num_uncovered = num_uncovered
@@ -201,7 +209,7 @@ class Neighborhood:
         Find the nearest coordinate to the `coordinate_in` among the
         coordinates within the current neighborhood.
         """
-        min_distance = float('inf')
+        min_distance = float("inf")
         nearest_neighbor = self._home_coordinate
 
         for coordinate in self._neighborhood:
@@ -214,32 +222,34 @@ class Neighborhood:
 
     def _create_neighborhood(self) -> List[Coordinate]:
         """
-        Create and return a neighborhood of all Coordinates within 
+        Create and return a neighborhood of all Coordinates within
         range <_radius> that are also within all bounds
         """
 
         neighborhood = []
         potential_steps = self._get_potential_steps(
-            self._config.get_num_dimensions(), self._radius)
+            self._config.get_num_dimensions(), self._radius
+        )
 
         for potential_step in potential_steps:
-            for (i, v) in enumerate(self._home_coordinate):
+            for i, v in enumerate(self._home_coordinate):
                 potential_step[i] += v
-            if (self._is_in_bounds(potential_step)):
+            if self._is_in_bounds(potential_step):
                 neighborhood.append(Coordinate(potential_step))
         return neighborhood
 
     def _is_in_bounds(self, potential_coordinate: List[int]) -> bool:
         for i, v in enumerate(potential_coordinate):
             dim = self._config.get_dimension(i)
-            if (v > dim.get_max_idx() or v < dim.get_min_idx()):
+            if v > dim.get_max_idx() or v < dim.get_min_idx():
                 return False
         return True
 
-    def _get_potential_steps(self, num_coordinates: int,
-                             radius: int) -> List[List[int]]:
-        """ 
-        Create and return a list of all possible step vectors that are 
+    def _get_potential_steps(
+        self, num_coordinates: int, radius: int
+    ) -> List[List[int]]:
+        """
+        Create and return a list of all possible step vectors that are
         within <_radius> distance
         """
 
@@ -248,32 +258,35 @@ class Neighborhood:
         self._permute_steps_in_range(v, radius, 0, result_list)
         return result_list
 
-    def _append_combinations_to_results(self, curr_val: List[int], index: int,
-                                        result_list: List[List[int]]) -> None:
+    def _append_combinations_to_results(
+        self, curr_val: List[int], index: int, result_list: List[List[int]]
+    ) -> None:
         """
-        Given a List of integers (a potential step vector) with all positive 
-        values, permutate all combinations of positive/negative values and 
+        Given a List of integers (a potential step vector) with all positive
+        values, permutate all combinations of positive/negative values and
         append it to the result_list
 
         For example, an input of [1,0,2] will append the following:
         [1,0,2], [1,0,-2], [-1,0,2], [-1,0,-2]
         """
-        if (index + 1 == len(curr_val)):
+        if index + 1 == len(curr_val):
             result_list.append(deepcopy(curr_val))
-            if (curr_val[index]):
+            if curr_val[index]:
                 curr_val[index] = -curr_val[index]
                 result_list.append(deepcopy(curr_val))
         else:
-            self._append_combinations_to_results(curr_val, index + 1,
-                                                 result_list)
-            if (curr_val[index]):
+            self._append_combinations_to_results(curr_val, index + 1, result_list)
+            if curr_val[index]:
                 curr_val[index] = -curr_val[index]
-                self._append_combinations_to_results(curr_val, index + 1,
-                                                     result_list)
+                self._append_combinations_to_results(curr_val, index + 1, result_list)
 
-    def _permute_steps_in_range(self, curr_step: List[int], radius: int,
-                                index: int,
-                                result_list: List[List[int]]) -> None:
+    def _permute_steps_in_range(
+        self,
+        curr_step: List[int],
+        radius: int,
+        index: int,
+        result_list: List[List[int]],
+    ) -> None:
         """
         Recursively walk all combinations of steps within the desired radius
         """
@@ -283,23 +296,23 @@ class Neighborhood:
             curr_step[index] = i
 
             # Leaf (rightmost) coordinate index: Add to results if in range
-            if (index == len(curr_step) - 1):
+            if index == len(curr_step) - 1:
                 d = Neighborhood.calc_distance(base, curr_step)
-                if (d <= radius):
-                    self._append_combinations_to_results(
-                        curr_step, 0, result_list)
+                if d <= radius:
+                    self._append_combinations_to_results(curr_step, 0, result_list)
                 else:
                     return
             # Non-leaf coordinate index: Recurse
             else:
-                self._permute_steps_in_range(curr_step, radius, index + 1,
-                                             result_list)
+                self._permute_steps_in_range(curr_step, radius, index + 1, result_list)
 
     def _get_coordinates_with_valid_measurements(self) -> List[Coordinate]:
         initialized_coordinates = []
         for coordinate in self._neighborhood:
-            if coordinate != self._home_coordinate and self._coordinate_data.has_valid_measurement(
-                    coordinate):
+            if (
+                coordinate != self._home_coordinate
+                and self._coordinate_data.has_valid_measurement(coordinate)
+            ):
                 initialized_coordinates.append(deepcopy(coordinate))
         return initialized_coordinates
 
@@ -316,11 +329,12 @@ class Neighborhood:
 
         compare_constraints = not self._is_home_passing_constraints()
         return self._calculate_step_vector_from_measurements(
-            compare_constraints=compare_constraints)
+            compare_constraints=compare_constraints
+        )
 
     def _calculate_step_vector_from_measurements(
-            self, compare_constraints: bool) -> List[float]:
-
+        self, compare_constraints: bool
+    ) -> List[float]:
         home_measurement = self._get_home_measurement()
         if not home_measurement:
             raise Exception("Can't step from home if it has no measurement")
@@ -329,10 +343,10 @@ class Neighborhood:
 
         # This function should only ever be called if all are passing or none are passing
         _, p = self._get_measurements_passing_constraints()
-        assert (len(p) == 0 or len(p) == len(measurements))
+        assert len(p) == 0 or len(p) == len(measurements)
 
         if not vectors:
-            return ([0.0] * self._config.get_num_dimensions())
+            return [0.0] * self._config.get_num_dimensions()
 
         weights = []
         for m in measurements:
@@ -344,12 +358,11 @@ class Neighborhood:
                 weight = 0.0
             weights.append(weight)
 
-        return self._calculate_step_vector_from_vectors_and_weights(
-            vectors, weights)
+        return self._calculate_step_vector_from_vectors_and_weights(vectors, weights)
 
     def _calculate_step_vector_from_vectors_and_weights(
-            self, vectors: List[Coordinate],
-            weights: List[float]) -> List[float]:
+        self, vectors: List[Coordinate], weights: List[float]
+    ) -> List[float]:
         step_vector = [0.0] * self._config.get_num_dimensions()
         dim_sum_vector = [0.0] * self._config.get_num_dimensions()
 
@@ -357,7 +370,6 @@ class Neighborhood:
         #   if non zero, add weight (inverting if dimension is negative)
         #   divide by sum of coordinate of that dimension
         for vector, weight in zip(vectors, weights):
-
             for dim, v in enumerate(vector):
                 if v:
                     if v > 0:
@@ -374,7 +386,8 @@ class Neighborhood:
         return step_vector
 
     def _get_all_measurements(
-            self) -> Tuple[List[Coordinate], List[RunConfigMeasurement]]:
+        self,
+    ) -> Tuple[List[Coordinate], List[RunConfigMeasurement]]:
         """
         Gather all the visited vectors (directions from the home coordinate)
         and their corresponding measurements.
@@ -396,7 +409,8 @@ class Neighborhood:
         return vectors, measurements
 
     def _get_measurements_passing_constraints(
-            self) -> Tuple[List[Coordinate], List[RunConfigMeasurement]]:
+        self,
+    ) -> Tuple[List[Coordinate], List[RunConfigMeasurement]]:
         """
         Gather all the vectors (directions from the home coordinate)
         and their corresponding measurements that are passing constraints.
@@ -421,7 +435,6 @@ class Neighborhood:
         return self._coordinate_data.is_measured(coordinate)
 
     def _clamp_coordinate_to_bounds(self, coordinate: Coordinate) -> Coordinate:
-
         clamped_coordinate = deepcopy(coordinate)
 
         for i, v in enumerate(coordinate):
@@ -453,8 +466,10 @@ class Neighborhood:
         return covered_values_per_dimension
 
     def _get_num_uncovered_values(
-            self, coordinate: Coordinate,
-            covered_values_per_dimension: List[Dict[Coordinate, bool]]) -> int:
+        self,
+        coordinate: Coordinate,
+        covered_values_per_dimension: List[Dict[Coordinate, bool]],
+    ) -> int:
         """
         Determine how many of the coordinate dimensions in the input coordinate have values
         that are not covered in covered_values_per_dimension
@@ -481,8 +496,7 @@ class Neighborhood:
         any_passing = len(passing_vectors) != 0
         home_passing = self._is_home_passing_constraints()
 
-        return (home_passing and any_failing) or (not home_passing and
-                                                  any_passing)
+        return (home_passing and any_failing) or (not home_passing and any_passing)
 
     def _are_all_adjacent_neighbors_measured(self) -> bool:
         for neighbor in self._get_all_adjacent_neighbors():
@@ -509,8 +523,7 @@ class Neighborhood:
         return adjacent_neighbors
 
     def _get_home_measurement(self) -> Optional[RunConfigMeasurement]:
-        return self._coordinate_data.get_measurement(
-            coordinate=self._home_coordinate)
+        return self._coordinate_data.get_measurement(coordinate=self._home_coordinate)
 
     def _is_home_measured(self) -> bool:
         return self._get_home_measurement() is not None

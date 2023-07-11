@@ -26,7 +26,7 @@ The recommended way to install Model Analyzer is from the Triton SDK docker
 container available on the [NVIDIA GPU Cloud
 Catalog](https://ngc.nvidia.com/catalog/containers/nvidia:tritonserver).<br><br>
 
-**1. Choose a release version**  
+**1. Choose a release version**
 The format is `<rYY.MM>` where, `YY`=year and `MM`=month
 
 For example, the release from May of 2022 is `<r22.05>`
@@ -57,7 +57,7 @@ This ensures the Triton SDK container has access to the model
 config variants that Model Analyzer creates.<br><br>
 **Important:** You must ensure the `<path-to-output-model-repo>` is identical on both sides of the mount (or else Tritonserver cannot load the model)<br><br>
 
-**4. Run Model Analyzer with Docker Launch Mode**  
+**4. Run Model Analyzer with Docker Launch Mode**
 Be sure to use `--triton-launch-mode=docker`, when running Model Analyzer.<br><br>
 
 # Alternative Installation Methods
@@ -74,7 +74,7 @@ Be sure to use `--triton-launch-mode=docker`, when running Model Analyzer.<br><b
 ---
 
 This method allows you build a specific version of Model Analyzer's
-docker.  
+docker.
 This installation method uses `--triton-launch-mode=local` by
 default, as all the dependencies will be available.<br><br>
 
@@ -84,7 +84,7 @@ default, as all the dependencies will be available.<br><br>
 git clone https://github.com/triton-inference-server/model_analyzer.git -b <rYY.MM>
 ```
 
-**Replacing** `<rYY.MM>` with the version of Model Analyzer you want to install.  
+**Replacing** `<rYY.MM>` with the version of Model Analyzer you want to install.
 For example, `r22.05` is the release for May of 2022<br><br>
 
 **2. Build the Docker Image**
@@ -110,7 +110,7 @@ docker run -it --rm --gpus all \
 
 **Replacing** `<path-to-triton-model-repo>` with the
 **_absolute_ _path_** to the directory where the `Triton` model repository
-will be located.  
+will be located.
 **Replacing** `<path-to-output-model-repo>` with the
 **_absolute_ _path_** to the directory where the `output` model repository
 will be located.<br><br>
@@ -119,11 +119,11 @@ will be located.<br><br>
 
 ---
 
-This method allows you build a docker container using the `main` branch of Model Analyzer.  
+This method allows you build a docker container using the `main` branch of Model Analyzer.
 This installation method uses `--triton-launch-mode=local` by
 default, as all the dependencies will be available.<br><br>
 
-**1. Build Triton SDK Container from Main**  
+**1. Build Triton SDK Container from Main**
 Follow the instructions found at
 [Build SDK Image](https://github.com/triton-inference-server/server/blob/main/docs/customization_guide/test.md#build-sdk-image)<br><br>
 
@@ -151,7 +151,7 @@ docker run -it --rm --gpus all \
 
 **Replacing** `<path-to-triton-model-repo>` with the
 **_absolute_ _path_** to the directory where the `Triton` model repository
-will be located.  
+will be located.
 **Replacing** `<path-to-output-model-repo>` with the
 **_absolute_ _path_** to the directory where the `output` model repository
 will be located.<br><br>

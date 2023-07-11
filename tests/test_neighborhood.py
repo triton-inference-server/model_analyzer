@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,33 +14,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import MagicMock, patch
 from typing import List
+from unittest.mock import MagicMock, patch
 
+from model_analyzer.config.generate.coordinate import Coordinate
+from model_analyzer.config.generate.coordinate_data import CoordinateData
 from model_analyzer.config.generate.neighborhood import Neighborhood
 from model_analyzer.config.generate.search_config import NeighborhoodConfig
 from model_analyzer.config.generate.search_dimension import SearchDimension
 from model_analyzer.config.generate.search_dimensions import SearchDimensions
-from model_analyzer.config.generate.coordinate_data import CoordinateData
-from model_analyzer.config.generate.coordinate import Coordinate
 
-from .common.test_utils import construct_run_config_measurement, \
-    construct_constraint_manager
 from .common import test_result_collector as trc
+from .common.test_utils import (
+    construct_constraint_manager,
+    construct_run_config_measurement,
+)
 
 
 class TestNeighborhood(trc.TestResultCollector):
-
     def setUp(self):
-        self.constraint_manager = construct_constraint_manager("""
-            profile_models: 
+        self.constraint_manager = construct_constraint_manager(
+            """
+            profile_models:
               modelA
-            """)
+            """
+        )
 
     # Coordinates can't be sorted by default, but if we convert each one
     # to a list those can be sorted
-    def _sort_coordinates(self,
-                          coordinates: List[Coordinate]) -> List[Coordinate]:
+    def _sort_coordinates(self, coordinates: List[Coordinate]) -> List[Coordinate]:
         sorted_coordinates = coordinates
         sorted_coordinates.sort(key=lambda c: [x for x in c])
         return sorted_coordinates
@@ -67,14 +71,15 @@ class TestNeighborhood(trc.TestResultCollector):
             non_gpu_metric_values=non_gpu_metric_values,
             constraint_manager=self.constraint_manager,
             metric_objectives=metric_objectives,
-            model_config_weights=weights)
+            model_config_weights=weights,
+        )
         return rcm
 
     def test_calc_distance(self):
         a = Coordinate([1, 4, 6, 3])
         b = Coordinate([4, 2, 6, 0])
 
-        # Euclidian distance is the square root of the
+        # Euclidean distance is the square root of the
         # sum of the distances of the coordinates
         #
         # Distance = sqrt( (1-4)^2 + (4-2)^2 + (6-6)^2 + (3-0)^2)
@@ -85,68 +90,104 @@ class TestNeighborhood(trc.TestResultCollector):
 
     def test_create_neighborhood(self):
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                SearchDimension("foobar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([1, 1, 1]),
-                         coordinate_data=CoordinateData())
+        n = Neighborhood(
+            nc, home_coordinate=Coordinate([1, 1, 1]), coordinate_data=CoordinateData()
+        )
 
         # These are all values within radius of 2 from [1,1,1]
         # but within the bounds (no negative values)
         #
-        expected_neighborhood = [[0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 1, 0],
-                                 [0, 1, 1], [0, 1, 2], [0, 2, 0], [0, 2, 1],
-                                 [0, 2, 2], [1, 0, 0], [1, 0, 1], [1, 0, 2],
-                                 [1, 1, 0], [1, 1, 1], [1, 1, 2], [1, 1, 3],
-                                 [1, 2, 0], [1, 2, 1], [1, 2, 2], [1, 3, 1],
-                                 [2, 0, 0], [2, 0, 1], [2, 0, 2], [2, 1, 0],
-                                 [2, 1, 1], [2, 1, 2], [2, 2, 0], [2, 2, 1],
-                                 [2, 2, 2], [3, 1, 1]]
+        expected_neighborhood = [
+            [0, 0, 0],
+            [0, 0, 1],
+            [0, 0, 2],
+            [0, 1, 0],
+            [0, 1, 1],
+            [0, 1, 2],
+            [0, 2, 0],
+            [0, 2, 1],
+            [0, 2, 2],
+            [1, 0, 0],
+            [1, 0, 1],
+            [1, 0, 2],
+            [1, 1, 0],
+            [1, 1, 1],
+            [1, 1, 2],
+            [1, 1, 3],
+            [1, 2, 0],
+            [1, 2, 1],
+            [1, 2, 2],
+            [1, 3, 1],
+            [2, 0, 0],
+            [2, 0, 1],
+            [2, 0, 2],
+            [2, 1, 0],
+            [2, 1, 1],
+            [2, 1, 2],
+            [2, 2, 0],
+            [2, 2, 1],
+            [2, 2, 2],
+            [3, 1, 1],
+        ]
 
         expected_coordinates = [Coordinate(x) for x in expected_neighborhood]
 
-        self.assertEqual(self._sort_coordinates(n._neighborhood),
-                         self._sort_coordinates(expected_coordinates))
+        self.assertEqual(
+            self._sort_coordinates(n._neighborhood),
+            self._sort_coordinates(expected_coordinates),
+        )
 
     def test_large_neighborhood(self):
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("a1", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("b1", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("c1", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
-        dims.add_dimensions(1, [
-            SearchDimension("a2", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("b2", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("c2", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("a1", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("b1", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                SearchDimension("c1", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
+        dims.add_dimensions(
+            1,
+            [
+                SearchDimension("a2", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("b2", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                SearchDimension("c2", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
         nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([1, 1, 1, 1, 1, 1]),
-                         coordinate_data=CoordinateData())
+        n = Neighborhood(
+            nc,
+            home_coordinate=Coordinate([1, 1, 1, 1, 1, 1]),
+            coordinate_data=CoordinateData(),
+        )
 
         self.assertEqual(2328, len(n._neighborhood))
 
     def test_num_initialized(self):
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                SearchDimension("foobar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([1, 1, 1]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]), coordinate_data=cd)
 
         rcm = self._construct_rcm(throughput=100, latency=80)
 
@@ -191,63 +232,67 @@ class TestNeighborhood(trc.TestResultCollector):
 
     def test_get_all_adjacent_neighbors(self):
         """
-        Test that _get_all_adjacent_neighbors() works, and understands dimension bounds 
+        Test that _get_all_adjacent_neighbors() works, and understands dimension bounds
 
-        For this test, home is [0,1,4]. 
-        
+        For this test, home is [0,1,4].
+
         The possible adjacent neighbors are:
           [-1,1,4], [1,1,4], [0,0,4], [0,2,4], [0,1,3], [0,1,5]
-        
+
         However, [-1,1,4] and [0,1,5] are outside of the dimension bounds and should not
         be part of the returned list
         """
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("a", SearchDimension.DIMENSION_TYPE_LINEAR, min=0),
-            SearchDimension("b", SearchDimension.DIMENSION_TYPE_LINEAR, min=0),
-            SearchDimension(
-                "c", SearchDimension.DIMENSION_TYPE_LINEAR, min=1, max=4)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("a", SearchDimension.DIMENSION_TYPE_LINEAR, min=0),
+                SearchDimension("b", SearchDimension.DIMENSION_TYPE_LINEAR, min=0),
+                SearchDimension(
+                    "c", SearchDimension.DIMENSION_TYPE_LINEAR, min=1, max=4
+                ),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([0, 1, 4]),
-                         coordinate_data=CoordinateData())
+        n = Neighborhood(
+            nc, home_coordinate=Coordinate([0, 1, 4]), coordinate_data=CoordinateData()
+        )
 
         adjacent_neighbors = n._get_all_adjacent_neighbors()
         expected_list = [
             Coordinate([1, 1, 4]),
             Coordinate([0, 0, 4]),
             Coordinate([0, 2, 4]),
-            Coordinate([0, 1, 3])
+            Coordinate([0, 1, 3]),
         ]
 
         self.assertEqual(adjacent_neighbors, expected_list)
 
     def test_num_initialized_slow_mode(self):
-        """ 
+        """
         Test that _enough_coordinates_initialized() works in slow mode
 
         Start with home=[0,0,1] in slow mode.
-        Only once all of the adjacent neighbors are added should 
+        Only once all of the adjacent neighbors are added should
         enough_coordinates_initialized() return true
 
         Those adjacent neighbors are [1,0,1], [0,1,1], [0,0,0], [0,0,2]
         """
 
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                SearchDimension("foobar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([0, 0, 1]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0, 1]), coordinate_data=cd)
         n.force_slow_mode()
 
         # Start with None initialized
@@ -281,59 +326,56 @@ class TestNeighborhood(trc.TestResultCollector):
         """
 
         # Home not measured -> False
-        self._test_is_slow_mode_helper(home_measured=False,
-                                       expected_result=False)
+        self._test_is_slow_mode_helper(home_measured=False, expected_result=False)
 
         # Home passing, all passing -> False
-        self._test_is_slow_mode_helper(home_passing=True,
-                                       num_passing=3,
-                                       num_failing=0,
-                                       expected_result=False)
+        self._test_is_slow_mode_helper(
+            home_passing=True, num_passing=3, num_failing=0, expected_result=False
+        )
 
         # Same as previous, but force_slow_mode is called -> True
-        self._test_is_slow_mode_helper(force_slow=True,
-                                       home_passing=True,
-                                       num_passing=3,
-                                       num_failing=0,
-                                       expected_result=True)
+        self._test_is_slow_mode_helper(
+            force_slow=True,
+            home_passing=True,
+            num_passing=3,
+            num_failing=0,
+            expected_result=True,
+        )
 
         # Home passing, some failing -> True
-        self._test_is_slow_mode_helper(num_passing=3,
-                                       num_failing=1,
-                                       home_passing=True,
-                                       expected_result=True)
+        self._test_is_slow_mode_helper(
+            num_passing=3, num_failing=1, home_passing=True, expected_result=True
+        )
 
         # Home passing, all failing -> True
-        self._test_is_slow_mode_helper(num_passing=0,
-                                       num_failing=3,
-                                       home_passing=True,
-                                       expected_result=True)
+        self._test_is_slow_mode_helper(
+            num_passing=0, num_failing=3, home_passing=True, expected_result=True
+        )
 
         # Home failing, all failing -> False
-        self._test_is_slow_mode_helper(num_passing=0,
-                                       num_failing=3,
-                                       home_passing=False,
-                                       expected_result=False)
+        self._test_is_slow_mode_helper(
+            num_passing=0, num_failing=3, home_passing=False, expected_result=False
+        )
 
         # Home failing, some passing -> True
-        self._test_is_slow_mode_helper(num_passing=1,
-                                       num_failing=3,
-                                       home_passing=False,
-                                       expected_result=True)
+        self._test_is_slow_mode_helper(
+            num_passing=1, num_failing=3, home_passing=False, expected_result=True
+        )
 
         # Home failing, all passing -> True
-        self._test_is_slow_mode_helper(num_passing=3,
-                                       num_failing=0,
-                                       home_passing=False,
-                                       expected_result=True)
+        self._test_is_slow_mode_helper(
+            num_passing=3, num_failing=0, home_passing=False, expected_result=True
+        )
 
-    def _test_is_slow_mode_helper(self,
-                                  home_measured=True,
-                                  num_passing=1,
-                                  num_failing=1,
-                                  home_passing=True,
-                                  force_slow=False,
-                                  expected_result=False):
+    def _test_is_slow_mode_helper(
+        self,
+        home_measured=True,
+        num_passing=1,
+        num_failing=1,
+        home_passing=True,
+        force_slow=False,
+        expected_result=False,
+    ):
         total_measurements = num_failing + num_passing
 
         passing_ret_val = [[0] * num_passing, []]
@@ -341,28 +383,45 @@ class TestNeighborhood(trc.TestResultCollector):
 
         patches = []
         patches.append(
-            patch.object(Neighborhood, "_is_home_measured",
-                         MagicMock(return_value=home_measured)))
+            patch.object(
+                Neighborhood, "_is_home_measured", MagicMock(return_value=home_measured)
+            )
+        )
         patches.append(
-            patch.object(Neighborhood, "_get_measurements_passing_constraints",
-                         MagicMock(return_value=passing_ret_val)))
+            patch.object(
+                Neighborhood,
+                "_get_measurements_passing_constraints",
+                MagicMock(return_value=passing_ret_val),
+            )
+        )
         patches.append(
-            patch.object(Neighborhood, "_get_all_measurements",
-                         MagicMock(return_value=all_ret_val)))
+            patch.object(
+                Neighborhood,
+                "_get_all_measurements",
+                MagicMock(return_value=all_ret_val),
+            )
+        )
         patches.append(
-            patch.object(Neighborhood, "_is_home_passing_constraints",
-                         MagicMock(return_value=home_passing)))
+            patch.object(
+                Neighborhood,
+                "_is_home_passing_constraints",
+                MagicMock(return_value=home_passing),
+            )
+        )
 
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([1, 1]),
-                         coordinate_data=CoordinateData())
+        n = Neighborhood(
+            nc, home_coordinate=Coordinate([1, 1]), coordinate_data=CoordinateData()
+        )
 
         for p in patches:
             p.start()
@@ -377,18 +436,18 @@ class TestNeighborhood(trc.TestResultCollector):
 
     def test_get_all_measurements(self):
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                SearchDimension("foobar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([1, 1, 1]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]), coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=100, latency=50)
         rcm1 = self._construct_rcm(throughput=700, latency=350)
@@ -401,7 +460,7 @@ class TestNeighborhood(trc.TestResultCollector):
 
         expected_vectors = [
             Coordinate([1, 2, 1]) - Coordinate([1, 1, 1]),
-            Coordinate([2, 1, 1]) - Coordinate([1, 1, 1])
+            Coordinate([2, 1, 1]) - Coordinate([1, 1, 1]),
         ]
         expected_measurements = [rcm2, rcm1]
 
@@ -412,31 +471,33 @@ class TestNeighborhood(trc.TestResultCollector):
 
     def test_get_constraints_passing_measurements(self):
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                SearchDimension("foobar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([1, 1, 1]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]), coordinate_data=cd)
 
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager("""
-            profile_models: 
+        constraint_manager = construct_constraint_manager(
+            """
+            profile_models:
               modelA:
                 constraints:
                   perf_throughput:
                     min: 100
                   perf_latency_p99:
                     max: 300
-            """)
+            """
+        )
 
         rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
         rcm0.set_constraint_manager(constraint_manager)
@@ -461,7 +522,7 @@ class TestNeighborhood(trc.TestResultCollector):
 
         expected_vectors = [
             Coordinate([1, 1, 2]) - Coordinate([1, 1, 1]),
-            Coordinate([1, 2, 1]) - Coordinate([1, 1, 1])
+            Coordinate([1, 2, 1]) - Coordinate([1, 1, 1]),
         ]
         expected_measurements = [rcm3, rcm2]
 
@@ -481,39 +542,41 @@ class TestNeighborhood(trc.TestResultCollector):
           2. Apply the objective-comparison weights to any non-zero dimensions
                 [1,2,0] with weight 1.0 -> [1.0, 1.0, 0.0]
                 [0,0,1] with weight 1.2 -> [0.0, 0.0, 1.2]
-          
+
           3. Sum the results
                 [1.0, 1.0, 0.0] + [0.0, 0.0, 1.2] = [1.0, 1.0, 1.2]
-          
+
           4. Divide by the sum of the vectors:
                 [1.0, 1.0, 1.2] / [1,2,1] = [1.0, 0.5, 1.2]
         """
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                SearchDimension("foobar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([1, 1, 1]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]), coordinate_data=cd)
 
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager("""
-            profile_models: 
+        constraint_manager = construct_constraint_manager(
+            """
+            profile_models:
               modelA:
                 constraints:
                   perf_throughput:
                     min: 100
                   perf_latency_p99:
                     max: 300
-            """)
+            """
+        )
 
         rcm0 = self._construct_rcm(throughput=100, latency=50)  # pass
         rcm0.set_constraint_manager(constraint_manager)
@@ -549,40 +612,42 @@ class TestNeighborhood(trc.TestResultCollector):
              inverting the weight if coordinate is negative
                 [2,1,0] with weight 0.3 -> [0.3, 0.3, 0.0]
                 [0,1,-1] with weight -0.3 -> [0.0, -0.3, 0.3]
-          
+
           3. Sum the results
                 [0.3, 0.3, 0.0] + [0.0, -0.3, 0.3] = [0.3, 0.0, 0.3]
-          
+
           4. Divide by the sum of the absolute value of the vectors:
                 [0.3, 0.0, 0.3] / [2,2,1] = [0.15, 0.0, 0.3]
 
         """
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                SearchDimension("foobar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([1, 1, 1]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]), coordinate_data=cd)
 
         # Constraints:
         #   - Minimum throughput of 100 infer/sec
         #   - Maximum latency of 300 ms
-        constraint_manager = construct_constraint_manager("""
-            profile_models: 
+        constraint_manager = construct_constraint_manager(
+            """
+            profile_models:
               modelA:
                 constraints:
                   perf_throughput:
                     min: 100
                   perf_latency_p99:
                     max: 300
-            """)
+            """
+        )
 
         rcm0 = self._construct_rcm(throughput=500, latency=450)  # fail
         rcm0.set_constraint_manager(constraint_manager)
@@ -610,16 +675,17 @@ class TestNeighborhood(trc.TestResultCollector):
         one of the dimensions increases the measurement.
         """
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([0, 0]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]), coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=1, latency=5)
         rcm1 = self._construct_rcm(throughput=3, latency=5)
@@ -638,16 +704,17 @@ class TestNeighborhood(trc.TestResultCollector):
         dimensions increases the measurement equally.
         """
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([0, 0]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]), coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=1, latency=5)
         rcm1 = self._construct_rcm(throughput=3, latency=5)
@@ -666,16 +733,17 @@ class TestNeighborhood(trc.TestResultCollector):
         dimensions increases the measurement equally
         """
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([0, 0]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0]), coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=1, latency=5)
         rcm1 = self._construct_rcm(throughput=7, latency=5)
@@ -702,18 +770,21 @@ class TestNeighborhood(trc.TestResultCollector):
         for bounding into the defined range.
         """
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension(
-                "foo", SearchDimension.DIMENSION_TYPE_LINEAR, min=2, max=7),
-            SearchDimension(
-                "bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=2, max=7)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension(
+                    "foo", SearchDimension.DIMENSION_TYPE_LINEAR, min=2, max=7
+                ),
+                SearchDimension(
+                    "bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL, min=2, max=7
+                ),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=8, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([3, 6]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([3, 6]), coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=1, latency=5)
         rcm1 = self._construct_rcm(throughput=7, latency=5)
@@ -731,18 +802,18 @@ class TestNeighborhood(trc.TestResultCollector):
         same as the home coordinate.
         """
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                SearchDimension("foobar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
 
         nc = NeighborhoodConfig(dims, radius=3, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([1, 1, 1]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([1, 1, 1]), coordinate_data=cd)
 
         rcm0 = self._construct_rcm(throughput=10, latency=5)
         rcm1 = self._construct_rcm(throughput=10, latency=5)
@@ -775,30 +846,33 @@ class TestNeighborhood(trc.TestResultCollector):
         self._test_translate_step_vector_helper(
             input_vector=[0.35, 0.25, 0.15, 0.05],
             translation_list=[0.1, 0.2, 0.3],
-            expected_vector=[3, 2, 1, 0])
+            expected_vector=[3, 2, 1, 0],
+        )
 
         # Test negative
         self._test_translate_step_vector_helper(
             input_vector=[-0.35, -0.25, -0.15, -0.05],
             translation_list=[0.1, 0.2, 0.3],
-            expected_vector=[-3, -2, -1, 0])
+            expected_vector=[-3, -2, -1, 0],
+        )
 
         # Test boundary case. Exact match rounds down
         self._test_translate_step_vector_helper(
             input_vector=[0.099, 0.100, 0.101],
             translation_list=[0.1],
-            expected_vector=[0, 0, 1])
+            expected_vector=[0, 0, 1],
+        )
 
-    def _test_translate_step_vector_helper(self, input_vector, translation_list,
-                                           expected_vector):
+    def _test_translate_step_vector_helper(
+        self, input_vector, translation_list, expected_vector
+    ):
         dims = SearchDimensions()
         dims.add_dimensions(
-            0, [SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR)])
+            0, [SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR)]
+        )
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([0]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0]), coordinate_data=cd)
 
         input_coord = Coordinate(input_vector)
         expected_coord = Coordinate(expected_vector)
@@ -811,17 +885,17 @@ class TestNeighborhood(trc.TestResultCollector):
         Test the functionality of __test_calculate_step_vector_from_vectors_and_weights()
         """
         dims = SearchDimensions()
-        dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
-            SearchDimension("foobar",
-                            SearchDimension.DIMENSION_TYPE_EXPONENTIAL)
-        ])
+        dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+                SearchDimension("foobar", SearchDimension.DIMENSION_TYPE_EXPONENTIAL),
+            ],
+        )
         nc = NeighborhoodConfig(dims, radius=2, min_initialized=3)
         cd = CoordinateData()
-        n = Neighborhood(nc,
-                         home_coordinate=Coordinate([0, 0, 0]),
-                         coordinate_data=cd)
+        n = Neighborhood(nc, home_coordinate=Coordinate([0, 0, 0]), coordinate_data=cd)
 
         vectors = [[0, 0, 1], [1, -3, 2], [-4, 2, 0], [3, 2, 6]]
         weights = [0.5, -3.0, -1, 0]
@@ -836,6 +910,7 @@ class TestNeighborhood(trc.TestResultCollector):
         # [-2, 2, -2.5] / [8, 7, 9] = [-2/8, 2/7, -2.5/9]
 
         step_vector = n._calculate_step_vector_from_vectors_and_weights(
-            vectors, weights)
+            vectors, weights
+        )
         expected_result = [-2 / 8, 2 / 7, -2.5 / 9]
         self.assertEqual(step_vector, expected_result)

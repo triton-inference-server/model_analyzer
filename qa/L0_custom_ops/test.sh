@@ -1,4 +1,5 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/bin/bash
+# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,7 +54,7 @@ docker login -u gitlab-ci-token -p "${CI_JOB_TOKEN}" "${CI_REGISTRY}"
 
 set +e
 for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
-    # Loop 
+    # Loop
     WAIT_TIME_SECS=$WAIT_TIMEOUT
 
     # Set up logs
@@ -68,13 +69,13 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
     MODEL_ANALYZER_GLOBAL_OPTIONS="-v"
 
     # Run analyzer
-    if [[ "$LOG_PREFIX" == "c_api" ]]; then    
+    if [[ "$LOG_PREFIX" == "c_api" ]]; then
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --perf-output-path=$TRITON_LOG"
     elif [[ "$LOG_PREFIX" == "docker" ]]; then
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --triton-docker-image $TRITON_SERVER_CONTAINER_IMAGE_NAME --triton-output-path=$TRITON_LOG"
     else
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_BASE_ARGS -f $CONFIG_FILE --triton-output-path=$TRITON_LOG"
-    fi           
+    fi
 
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS -e $EXPORT_PATH --checkpoint-directory $CHECKPOINT_DIRECTORY"
 

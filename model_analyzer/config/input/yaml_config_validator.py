@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +15,8 @@
 # limitations under the License.
 
 import logging
-
 from typing import Set
+
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
@@ -32,7 +34,7 @@ class YamlConfigValidator:
     def validate(yaml_file):
         """
         Verifies the options present in the yaml config file.
-        If an error is found, the validator will throw an exception.    
+        If an error is found, the validator will throw an exception.
         """
         if not yaml_file:
             return
@@ -50,10 +52,9 @@ class YamlConfigValidator:
 
     @staticmethod
     def _is_valid_option(option):
-
         if option not in YamlConfigValidator._valid_yaml_options:
             logger.error(
-                f'{option} is not a valid yaml argument. Please be sure to use underscores and check spelling.'
+                f"{option} is not a valid yaml argument. Please be sure to use underscores and check spelling."
             )
             return False
         return True
@@ -67,8 +68,13 @@ class YamlConfigValidator:
         # If these imports are moved to the top of the file, they are imported at file load.
         # This will cause a circular dependency between ConfigCommand, ConfigCommand*, and YamlConfigValidator
         # However, importing here, only requires these files to be imported on object initialization.
-        from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-        from model_analyzer.config.input.config_command_report import ConfigCommandReport
+        from model_analyzer.config.input.config_command_profile import (
+            ConfigCommandProfile,
+        )
+        from model_analyzer.config.input.config_command_report import (
+            ConfigCommandReport,
+        )
+
         config_array = [ConfigCommandProfile(), ConfigCommandReport()]
 
         for config in config_array:

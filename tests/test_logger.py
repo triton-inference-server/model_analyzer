@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,17 +22,18 @@
 # expected value for the CLI. Default values are also verified as well as
 # values that are expected to cause failures.
 
-import unittest
-from .common import test_result_collector as trc
-from model_analyzer.log_formatter import setup_logging
 import logging
 import re
 import sys
+import unittest
 from contextlib import contextmanager
 from io import StringIO
-from model_analyzer.constants import LOGGER_NAME
-
 from unittest.mock import patch
+
+from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.log_formatter import setup_logging
+
+from .common import test_result_collector as trc
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -47,7 +50,6 @@ def captured_output():
 
 
 class TestLogger(trc.TestResultCollector):
-
     def setUp(self):
         NotImplemented
 
@@ -55,7 +57,7 @@ class TestLogger(trc.TestResultCollector):
         patch.stopall()
 
     def test_info_normal(self):
-        """ Test expected format of logger.info """
+        """Test expected format of logger.info"""
         with captured_output() as (out, err):
             setup_logging(verbose=False, quiet=False)
             logger.info("ABC")
@@ -64,7 +66,7 @@ class TestLogger(trc.TestResultCollector):
             self.assertEqual(output, expected_output)
 
     def test_info_quiet(self):
-        """ 
+        """
         Test expected format of logger.info in quiet mode
         (Nothing should be printed)
         """
@@ -76,7 +78,7 @@ class TestLogger(trc.TestResultCollector):
             self.assertEqual(output, expected_output)
 
     def test_info_verbose(self):
-        """ 
+        """
         Test expected format of logger.info in verbose mode
         (Extra date info should be added to the start of the line)
         """
@@ -84,12 +86,11 @@ class TestLogger(trc.TestResultCollector):
             setup_logging(verbose=True, quiet=False)
             logger.info("ABC")
             output = out.getvalue().strip()
-            self.assertTrue(
-                re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] ABC$", output))
+            self.assertTrue(re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] ABC$", output))
 
     def test_debug_normal(self):
-        """ 
-        Test expected format of logger.debug 
+        """
+        Test expected format of logger.debug
         (Nothing should be printed since we aren't in verbose mode)
         """
         with captured_output() as (out, err):
@@ -100,7 +101,7 @@ class TestLogger(trc.TestResultCollector):
             self.assertEqual(output, expected_output)
 
     def test_debug_quiet(self):
-        """ 
+        """
         Test expected format of logger.debug in quiet mode
         (Nothing should be printed since we aren't in verbose mode)
         """
@@ -112,7 +113,7 @@ class TestLogger(trc.TestResultCollector):
             self.assertEqual(output, expected_output)
 
     def test_debug_verbose(self):
-        """ 
+        """
         Test expected format of logger.debug in verbose mode
         (Extra date info should be added to the start of the line)
         """
@@ -121,12 +122,12 @@ class TestLogger(trc.TestResultCollector):
             logger.debug("ABC")
             output = out.getvalue().strip()
             self.assertTrue(
-                re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] DEBUG: ABC$",
-                         output))
+                re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] DEBUG: ABC$", output)
+            )
 
     def test_error_normal(self):
-        """ 
-        Test expected format of logger.error 
+        """
+        Test expected format of logger.error
         """
         with captured_output() as (out, err):
             setup_logging(verbose=False, quiet=False)
@@ -136,7 +137,7 @@ class TestLogger(trc.TestResultCollector):
             self.assertEqual(output, expected_output)
 
     def test_error_quiet(self):
-        """ 
+        """
         Test expected format of logger.error in quiet mode
         (It will be printed despite verbose mode)
         """
@@ -148,7 +149,7 @@ class TestLogger(trc.TestResultCollector):
             self.assertEqual(output, expected_output)
 
     def test_error_verbose(self):
-        """ 
+        """
         Test expected format of logger.error in verbose mode
         (Extra date info should be added to the start of the line)
         """
@@ -157,8 +158,8 @@ class TestLogger(trc.TestResultCollector):
             logger.error("ABC")
             output = out.getvalue().strip()
             self.assertTrue(
-                re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] ERROR: ABC$",
-                         output))
+                re.match("^\d\d:\d\d:\d\d \[Model Analyzer\] ERROR: ABC$", output)
+            )
 
     def test_quiet_trumps_verbose(self):
         """
@@ -173,5 +174,5 @@ class TestLogger(trc.TestResultCollector):
             self.assertEqual(output, expected_output)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-import os
 import csv
+import os
+
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class ExperimentFileWriter:
@@ -22,10 +25,15 @@ class ExperimentFileWriter:
     A file writer that collects all the results from the quick algorithm
     and the corresponding brute-force algorithm and writes them into csv files.
     """
+
     field_names = [
-        "overall_num_measurements", "overall_best_throughput",
-        "quick_num_measurements", "missing_num_measurements",
-        "quick_throughput", "radius", "min_initialized"
+        "overall_num_measurements",
+        "overall_best_throughput",
+        "quick_num_measurements",
+        "missing_num_measurements",
+        "quick_throughput",
+        "radius",
+        "min_initialized",
     ]
 
     def __init__(self, output_path, file_name="output_vgg19_libtorch.csv"):
@@ -43,10 +51,10 @@ class ExperimentFileWriter:
             with open(self._filename, mode="a") as csv_file:
                 writer = csv.DictWriter(csv_file, fieldnames=self.field_names)
 
-                overall_best_measurement = checkpoint_data.get_best_run_config_measurement(
+                overall_best_measurement = (
+                    checkpoint_data.get_best_run_config_measurement()
                 )
-                quick_best_measurement = profile_data.get_best_run_config_measurement(
-                )
+                quick_best_measurement = profile_data.get_best_run_config_measurement()
 
                 # yapf: disable
                 writer.writerow({

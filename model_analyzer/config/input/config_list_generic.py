@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .config_value import ConfigValue
-from .config_status import ConfigStatus
-from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
-
 from copy import deepcopy
+
+from model_analyzer.constants import CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+
+from .config_status import ConfigStatus
+from .config_value import ConfigValue
 
 
 class ConfigListGeneric(ConfigValue):
@@ -25,13 +27,15 @@ class ConfigListGeneric(ConfigValue):
     A generic list.
     """
 
-    def __init__(self,
-                 type_,
-                 preprocess=None,
-                 required=False,
-                 validator=None,
-                 output_mapper=None,
-                 name=None):
+    def __init__(
+        self,
+        type_,
+        preprocess=None,
+        required=False,
+        validator=None,
+        output_mapper=None,
+        name=None,
+    ):
         """
         Create a new list of numeric values.
 
@@ -61,7 +65,8 @@ class ConfigListGeneric(ConfigValue):
                 return ConfigStatus(
                     CONFIG_PARSER_FAILURE,
                     f'The value for field "{self.name()}" should be a list'
-                    ' and the length must be larger than zero.')
+                    " and the length must be larger than zero.",
+                )
 
         super().__init__(preprocess, required, validator, output_mapper, name)
 
@@ -97,9 +102,9 @@ class ConfigListGeneric(ConfigValue):
         else:
             return ConfigStatus(
                 status=CONFIG_PARSER_FAILURE,
-                message=
-                f'Value for field "{self.name()}" must be a list, value is "{value}".',
-                config_object=self)
+                message=f'Value for field "{self.name()}" must be a list, value is "{value}".',
+                config_object=self,
+            )
 
         return super().set_value(new_value)
 

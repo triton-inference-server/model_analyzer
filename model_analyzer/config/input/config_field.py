@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,24 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.model_analyzer_exceptions import \
-    TritonModelAnalyzerException
-from model_analyzer.constants import \
-    CONFIG_PARSER_FAILURE
-
 from typing import Any
+
+from model_analyzer.constants import CONFIG_PARSER_FAILURE
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 
 class ConfigField:
-
-    def __init__(self,
-                 name=None,
-                 flags=None,
-                 choices=None,
-                 description=None,
-                 default_value=None,
-                 field_type=None,
-                 parser_args=None):
+    def __init__(
+        self,
+        name=None,
+        flags=None,
+        choices=None,
+        description=None,
+        default_value=None,
+        field_type=None,
+        parser_args=None,
+    ):
         """
         Create a configuration field.
 
@@ -48,7 +49,7 @@ class ConfigField:
         field_type : ConfigValue
             type of the field
         parser_args : dict
-            Additionaly arguments to be passed to ArgumentParser.
+            Additionally arguments to be passed to ArgumentParser.
         """
 
         self._description = description

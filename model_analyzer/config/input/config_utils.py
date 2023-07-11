@@ -1,4 +1,6 @@
-# Copyright 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .config_primitive import ConfigPrimitive
-from model_analyzer.constants import CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
-from .config_status import ConfigStatus
-
 import os
 import shutil
+
+from model_analyzer.constants import CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+
+from .config_primitive import ConfigPrimitive
+from .config_status import ConfigStatus
 
 ##############
 # Validators #
@@ -47,9 +50,9 @@ def parent_path_validator(path):
     else:
         return ConfigStatus(
             status=CONFIG_PARSER_FAILURE,
-            message=
-            f"Either the parent directory for '{path}' does not exist, or Model Analyzer "
-            "does not have permissions to execute os.stat on this path.")
+            message=f"Either the parent directory for '{path}' does not exist, or Model Analyzer "
+            "does not have permissions to execute os.stat on this path.",
+        )
 
 
 def binary_path_validator(path):
@@ -73,9 +76,9 @@ def binary_path_validator(path):
     else:
         return ConfigStatus(
             status=CONFIG_PARSER_FAILURE,
-            message=
-            f"Either the binary '{path}' is not on the PATH, or Model Analyzer does "
-            "not have permissions to execute os.stat on this path.")
+            message=f"Either the binary '{path}' is not on the PATH, or Model Analyzer does "
+            "not have permissions to execute os.stat on this path.",
+        )
 
 
 def file_path_validator(path):
@@ -101,9 +104,9 @@ def file_path_validator(path):
     else:
         return ConfigStatus(
             status=CONFIG_PARSER_FAILURE,
-            message=
-            f"Either '{path}' is a nonexistent path, or Model Analyzer does "
-            "not have permissions to execute os.stat on this path")
+            message=f"Either '{path}' is a nonexistent path, or Model Analyzer does "
+            "not have permissions to execute os.stat on this path",
+        )
 
 
 ##################

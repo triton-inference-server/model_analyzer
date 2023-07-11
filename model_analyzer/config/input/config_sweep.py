@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .config_value import ConfigValue
-from model_analyzer.constants import \
-    CONFIG_PARSER_SUCCESS, CONFIG_PARSER_FAILURE
+from model_analyzer.constants import CONFIG_PARSER_FAILURE, CONFIG_PARSER_SUCCESS
+
 from .config_list_generic import ConfigListGeneric
 from .config_status import ConfigStatus
+from .config_value import ConfigValue
 
 
 class ConfigSweep(ConfigValue):
@@ -24,12 +26,14 @@ class ConfigSweep(ConfigValue):
     Representation of dictionaries in Config
     """
 
-    def __init__(self,
-                 sweep_type,
-                 preprocess=None,
-                 required=False,
-                 validator=None,
-                 output_mapper=None):
+    def __init__(
+        self,
+        sweep_type,
+        preprocess=None,
+        required=False,
+        validator=None,
+        output_mapper=None,
+    ):
         """
         sweep_type : ConfigValue
             The type of parameter that we are going to sweep on.
@@ -69,9 +73,10 @@ class ConfigSweep(ConfigValue):
 
         message = (
             f'Field "{self._name}" is a sweep parameter. If you intend to provide a sweep parameter, '
-            'fix the number one error, otherwise fix error number two: '
-            f'1. {config_statuses[0].message()}'
-            f' 2. {config_statuses[1].message()}')
+            "fix the number one error, otherwise fix error number two: "
+            f"1. {config_statuses[0].message()}"
+            f" 2. {config_statuses[1].message()}"
+        )
 
         return ConfigStatus(CONFIG_PARSER_FAILURE, message)
 

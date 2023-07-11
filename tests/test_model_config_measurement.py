@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,49 +14,50 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tests.common.test_utils import convert_non_gpu_metrics_to_data, default_encode
-from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
-
+import json
 import unittest
 from unittest.mock import patch
-from .common import test_result_collector as trc
 
-import json
+from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
+from tests.common.test_utils import convert_non_gpu_metrics_to_data, default_encode
+
+from .common import test_result_collector as trc
 
 
 class TestModelConfigMeasurement(trc.TestResultCollector):
-
     def setUp(self):
         self.model_config_name = "modelA"
-        self.model_specific_pa_params = {
-            "batch_size": 1,
-            "concurrency-range": 1
-        }
+        self.model_specific_pa_params = {"batch_size": 1, "concurrency-range": 1}
 
         self.non_gpu_metric_values = {
             "perf_throughput": 1000,
             "perf_latency_p99": 20,
-            "cpu_used_ram": 1000
+            "cpu_used_ram": 1000,
         }
 
         self.mcmA = self._construct_model_config_measurement(
-            self.model_config_name, self.model_specific_pa_params,
-            self.non_gpu_metric_values)
+            self.model_config_name,
+            self.model_specific_pa_params,
+            self.non_gpu_metric_values,
+        )
 
         mcmB_non_gpu_metric_values = {
             "perf_throughput": 2000,
             "perf_latency_p99": 40,
-            "cpu_used_ram": 1000
+            "cpu_used_ram": 1000,
         }
 
         self.mcmB = self._construct_model_config_measurement(
-            "modelB", self.model_specific_pa_params, mcmB_non_gpu_metric_values)
+            "modelB", self.model_specific_pa_params, mcmB_non_gpu_metric_values
+        )
 
         self.mcmC = self._construct_model_config_measurement(
-            "modelC", self.model_specific_pa_params, {})
+            "modelC", self.model_specific_pa_params, {}
+        )
 
         self.mcmD = self._construct_model_config_measurement(
-            "modelD", self.model_specific_pa_params, {})
+            "modelD", self.model_specific_pa_params, {}
+        )
 
     def tearDown(self):
         patch.stopall()
@@ -64,23 +67,22 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         Test that values are properly initialized
         """
         self.assertEqual(self.mcmA.model_config_name(), self.model_config_name)
-        self.assertEqual(self.mcmA.model_specific_pa_params(),
-                         self.model_specific_pa_params)
+        self.assertEqual(
+            self.mcmA.model_specific_pa_params(), self.model_specific_pa_params
+        )
         self.assertEqual(
             self.mcmA.non_gpu_data(),
-            convert_non_gpu_metrics_to_data(self.non_gpu_metric_values))
+            convert_non_gpu_metrics_to_data(self.non_gpu_metric_values),
+        )
 
     def test_get_metric_found(self):
         """
         Test that non-gpu metrics can be correctly returned
         """
-        non_gpu_data = convert_non_gpu_metrics_to_data(
-            self.non_gpu_metric_values)
+        non_gpu_data = convert_non_gpu_metrics_to_data(self.non_gpu_metric_values)
 
-        self.assertEqual(self.mcmA.get_metric("perf_throughput"),
-                         non_gpu_data[0])
-        self.assertEqual(self.mcmA.get_metric("perf_latency_p99"),
-                         non_gpu_data[1])
+        self.assertEqual(self.mcmA.get_metric("perf_throughput"), non_gpu_data[0])
+        self.assertEqual(self.mcmA.get_metric("perf_latency_p99"), non_gpu_data[1])
         self.assertEqual(self.mcmA.get_metric("cpu_used_ram"), non_gpu_data[2])
 
     def test_get_metric_not_found(self):
@@ -93,12 +95,18 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         """
         Test that non-gpu metric values can be correctly returned
         """
-        self.assertEqual(self.mcmA.get_metric_value("perf_throughput"),
-                         self.non_gpu_metric_values["perf_throughput"])
-        self.assertEqual(self.mcmA.get_metric_value("perf_latency_p99"),
-                         self.non_gpu_metric_values["perf_latency_p99"])
-        self.assertEqual(self.mcmA.get_metric_value("cpu_used_ram"),
-                         self.non_gpu_metric_values["cpu_used_ram"])
+        self.assertEqual(
+            self.mcmA.get_metric_value("perf_throughput"),
+            self.non_gpu_metric_values["perf_throughput"],
+        )
+        self.assertEqual(
+            self.mcmA.get_metric_value("perf_latency_p99"),
+            self.non_gpu_metric_values["perf_latency_p99"],
+        )
+        self.assertEqual(
+            self.mcmA.get_metric_value("cpu_used_ram"),
+            self.non_gpu_metric_values["cpu_used_ram"],
+        )
 
     def test_get_metric_value_not_found(self):
         """
@@ -111,10 +119,7 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         # Default
         self.assertEqual({"perf_throughput": 1}, self.mcmA._metric_weights)
 
-        self.mcmA.set_metric_weighting({
-            "perf_throughput": 2,
-            "perf_latency_p99": 3
-        })
+        self.mcmA.set_metric_weighting({"perf_throughput": 2, "perf_latency_p99": 3})
         expected_mw = {"perf_throughput": 2 / 5, "perf_latency_p99": 3 / 5}
         self.assertEqual(expected_mw, self.mcmA._metric_weights)
 
@@ -126,39 +131,27 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         self.mcmB.set_metric_weighting({"perf_throughput": 1})
 
         # throuhput: mcmA: 1000, mcmB: 2000
-        self.assertEqual(
-            self.mcmA.calculate_weighted_percentage_gain(self.mcmB), -50)
-        self.assertEqual(
-            self.mcmB.calculate_weighted_percentage_gain(self.mcmA), 100)
+        self.assertEqual(self.mcmA.calculate_weighted_percentage_gain(self.mcmB), -50)
+        self.assertEqual(self.mcmB.calculate_weighted_percentage_gain(self.mcmA), 100)
 
         self.mcmA.set_metric_weighting({"perf_latency_p99": 1})
         self.mcmB.set_metric_weighting({"perf_latency_p99": 1})
 
         # latency: mcmA: 20, mcmB: 40
-        self.assertEqual(
-            self.mcmA.calculate_weighted_percentage_gain(self.mcmB), 100)
-        self.assertEqual(
-            self.mcmB.calculate_weighted_percentage_gain(self.mcmA), -50)
+        self.assertEqual(self.mcmA.calculate_weighted_percentage_gain(self.mcmB), 100)
+        self.assertEqual(self.mcmB.calculate_weighted_percentage_gain(self.mcmA), -50)
 
         # This illustrates why we need to use score, not percentages to determine
         # which model is better. In both cases we will (correctly) report that
-        # mcmA/B is 25% better than the other, eventhough they are equal
+        # mcmA/B is 25% better than the other, even though they are equal
         #
         # mcmA has 50% worse throughput, but 100% better latency
         # mcmB has 100% better latency, but 50% worse throughput
-        self.mcmA.set_metric_weighting({
-            "perf_throughput": 1,
-            "perf_latency_p99": 1
-        })
-        self.mcmB.set_metric_weighting({
-            "perf_throughput": 1,
-            "perf_latency_p99": 1
-        })
+        self.mcmA.set_metric_weighting({"perf_throughput": 1, "perf_latency_p99": 1})
+        self.mcmB.set_metric_weighting({"perf_throughput": 1, "perf_latency_p99": 1})
         self.assertEqual(self.mcmA, self.mcmB)
-        self.assertEqual(
-            self.mcmA.calculate_weighted_percentage_gain(self.mcmB), 25)
-        self.assertEqual(
-            self.mcmB.calculate_weighted_percentage_gain(self.mcmA), 25)
+        self.assertEqual(self.mcmA.calculate_weighted_percentage_gain(self.mcmB), 25)
+        self.assertEqual(self.mcmB.calculate_weighted_percentage_gain(self.mcmA), 25)
 
     def test_is_better_than(self):
         """
@@ -182,10 +175,7 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         """
         # throuhput: 1000 vs. 2000 (worse), latency: 20 vs. 40 (better)
         # with latency bias mcmA is better
-        self.mcmA.set_metric_weighting({
-            "perf_throughput": 1,
-            "perf_latency_p99": 3
-        })
+        self.mcmA.set_metric_weighting({"perf_throughput": 1, "perf_latency_p99": 3})
 
         self.assertTrue(self.mcmA.is_better_than(self.mcmB))
 
@@ -214,10 +204,7 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
         """
         # throuhput: 1000 vs. 2000 (worse), latency: 20 vs. 40 (better)
         # with no bias they are equal
-        self.mcmA.set_metric_weighting({
-            "perf_throughput": 1,
-            "perf_latency_p99": 1
-        })
+        self.mcmA.set_metric_weighting({"perf_throughput": 1, "perf_latency_p99": 1})
 
         self.assertEqual(self.mcmA, self.mcmB)
 
@@ -229,24 +216,27 @@ class TestModelConfigMeasurement(trc.TestResultCollector):
 
         mcmA_from_dict = ModelConfigMeasurement.from_dict(json.loads(mcmA_json))
 
-        self.assertEqual(mcmA_from_dict.model_config_name(),
-                         self.mcmA.model_config_name())
-        self.assertEqual(mcmA_from_dict.model_specific_pa_params(),
-                         self.mcmA.model_specific_pa_params())
-        self.assertEqual(mcmA_from_dict.non_gpu_data(),
-                         self.mcmA.non_gpu_data())
+        self.assertEqual(
+            mcmA_from_dict.model_config_name(), self.mcmA.model_config_name()
+        )
+        self.assertEqual(
+            mcmA_from_dict.model_specific_pa_params(),
+            self.mcmA.model_specific_pa_params(),
+        )
+        self.assertEqual(mcmA_from_dict.non_gpu_data(), self.mcmA.non_gpu_data())
 
         # Catchall in case something new is added
         self.assertEqual(mcmA_from_dict, self.mcmA)
 
-    def _construct_model_config_measurement(self, model_config_name,
-                                            model_specific_pa_params,
-                                            non_gpu_metric_values):
+    def _construct_model_config_measurement(
+        self, model_config_name, model_specific_pa_params, non_gpu_metric_values
+    ):
         non_gpu_data = convert_non_gpu_metrics_to_data(non_gpu_metric_values)
 
-        return ModelConfigMeasurement(model_config_name,
-                                      model_specific_pa_params, non_gpu_data)
+        return ModelConfigMeasurement(
+            model_config_name, model_specific_pa_params, non_gpu_data
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

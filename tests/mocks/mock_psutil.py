@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .mock_base import MockBase
 from unittest.mock import MagicMock, patch
+
+from .mock_base import MockBase
 
 
 class MockPSUtil(MockBase):
-
     def _fill_patchers(self):
         mock_process = MagicMock()
         mock_process().cpu_percent.return_value = 5
         self._patchers.append(
-            patch('model_analyzer.perf_analyzer.perf_analyzer.psutil.Process',
-                  mock_process))
+            patch(
+                "model_analyzer.perf_analyzer.perf_analyzer.psutil.Process",
+                mock_process,
+            )
+        )

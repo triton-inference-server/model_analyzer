@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,8 +13,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 from ctypes import *
+
+import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
+
 # Provides access to functions from dcgm_agent_internal
 dcgmFP = dcgm_structs._dcgmGetFunctionPointer
 
@@ -57,9 +61,9 @@ def dcgmConnect(ip_address):
     return dcgm_handle
 
 
-def dcgmConnect_v2(ip_address,
-                   connectParams,
-                   version=dcgm_structs.c_dcgmConnectV2Params_version):
+def dcgmConnect_v2(
+    ip_address, connectParams, version=dcgm_structs.c_dcgmConnectV2Params_version
+):
     connectParams.version = version
     dcgm_handle = c_void_p()
     fn = dcgmFP("dcgmConnect_v2")
@@ -82,7 +86,7 @@ def dcgmGetAllSupportedDevices(dcgm_handle):
     fn = dcgmFP("dcgmGetAllSupportedDevices")
     ret = fn(dcgm_handle, c_gpuid_list, byref(c_count))
     dcgm_structs._dcgmCheckReturn(ret)
-    return [c_gpuid_list[i] for i in range(c_count.value)[0:int(c_count.value)]]
+    return [c_gpuid_list[i] for i in range(c_count.value)[0 : int(c_count.value)]]
 
 
 def dcgmGetAllDevices(dcgm_handle):
@@ -92,7 +96,7 @@ def dcgmGetAllDevices(dcgm_handle):
     fn = dcgmFP("dcgmGetAllDevices")
     ret = fn(dcgm_handle, c_gpuid_list, byref(c_count))
     dcgm_structs._dcgmCheckReturn(ret)
-    return [c_gpuid_list[i] for i in range(c_count.value)[0:int(c_count.value)]]
+    return [c_gpuid_list[i] for i in range(c_count.value)[0 : int(c_count.value)]]
 
 
 def dcgmGetDeviceAttributes(dcgm_handle, gpuId):
@@ -112,7 +116,7 @@ def dcgmGetEntityGroupEntities(dcgm_handle, entityGroup, flags):
     fn = dcgmFP("dcgmGetEntityGroupEntities")
     ret = fn(dcgm_handle, entityGroup, c_entityIds, byref(c_count), flags)
     dcgm_structs._dcgmCheckReturn(ret)
-    return c_entityIds[0:int(c_count.value)]
+    return c_entityIds[0 : int(c_count.value)]
 
 
 def dcgmGetNvLinkLinkStatus(dcgm_handle):
@@ -199,9 +203,9 @@ def dcgmGroupRemoveEntity(dcgm_handle, group_id, entityGroupId, entityId):
     return ret
 
 
-def dcgmGroupGetInfo(dcgm_handle,
-                     group_id,
-                     version=dcgm_structs.c_dcgmGroupInfo_version2):
+def dcgmGroupGetInfo(
+    dcgm_handle, group_id, version=dcgm_structs.c_dcgmGroupInfo_version2
+):
     fn = dcgmFP("dcgmGroupGetInfo")
 
     # support the old version of the request since the host engine does
@@ -223,7 +227,7 @@ def dcgmGroupGetAllIds(dcgmHandle):
     c_groupIdList = groupIdList()
     ret = fn(dcgmHandle, c_groupIdList, byref(c_count))
     dcgm_structs._dcgmCheckReturn(ret)
-    return map(None, c_groupIdList[0:int(c_count.value)])
+    return map(None, c_groupIdList[0 : int(c_count.value)])
 
 
 def dcgmFieldGroupCreate(dcgm_handle, fieldIds, fieldGroupName):
@@ -231,8 +235,13 @@ def dcgmFieldGroupCreate(dcgm_handle, fieldIds, fieldGroupName):
     c_num_field_ids = c_int32(len(fieldIds))
     c_field_ids = (c_uint16 * len(fieldIds))(*fieldIds)
     fn = dcgmFP("dcgmFieldGroupCreate")
-    ret = fn(dcgm_handle, c_num_field_ids, byref(c_field_ids), fieldGroupName,
-             byref(c_field_group_id))
+    ret = fn(
+        dcgm_handle,
+        c_num_field_ids,
+        byref(c_field_ids),
+        fieldGroupName,
+        byref(c_field_group_id),
+    )
     dcgm_structs._dcgmCheckReturn(ret)
     return c_field_group_id
 
@@ -321,8 +330,7 @@ def dcgmConfigGet(dcgm_handle, group_id, reqCfgType, count, status_handle):
     for index in range(0, count):
         c_config_values[index].version = dcgm_structs.dcgmDeviceConfig_version1
 
-    ret = fn(dcgm_handle, group_id, reqCfgType, count, c_config_values,
-             status_handle)
+    ret = fn(dcgm_handle, group_id, reqCfgType, count, c_config_values, status_handle)
     dcgm_structs._dcgmCheckReturn(ret)
     return map(None, c_config_values[0:count])
 
@@ -367,29 +375,50 @@ def dcgmPolicySet(dcgm_handle, group_id, policy, status_handle):
 
 # First parameter below is the return type
 dcgmFieldValueEnumeration_f = CFUNCTYPE(
-    c_int32, c_uint32, POINTER(dcgm_structs.c_dcgmFieldValue_v1), c_int32,
-    c_void_p)
+    c_int32, c_uint32, POINTER(dcgm_structs.c_dcgmFieldValue_v1), c_int32, c_void_p
+)
 dcgmFieldValueEntityEnumeration_f = CFUNCTYPE(
-    c_int32, c_uint32, c_uint32, POINTER(dcgm_structs.c_dcgmFieldValue_v1),
-    c_int32, c_void_p)
+    c_int32,
+    c_uint32,
+    c_uint32,
+    POINTER(dcgm_structs.c_dcgmFieldValue_v1),
+    c_int32,
+    c_void_p,
+)
 
 
-def dcgmGetValuesSince(dcgm_handle, groupId, fieldGroupId, sinceTimestamp,
-                       enumCB, userData):
+def dcgmGetValuesSince(
+    dcgm_handle, groupId, fieldGroupId, sinceTimestamp, enumCB, userData
+):
     fn = dcgmFP("dcgmGetValuesSince")
     c_nextSinceTimestamp = c_int64()
-    ret = fn(dcgm_handle, groupId, fieldGroupId, c_int64(sinceTimestamp),
-             byref(c_nextSinceTimestamp), enumCB, py_object(userData))
+    ret = fn(
+        dcgm_handle,
+        groupId,
+        fieldGroupId,
+        c_int64(sinceTimestamp),
+        byref(c_nextSinceTimestamp),
+        enumCB,
+        py_object(userData),
+    )
     dcgm_structs._dcgmCheckReturn(ret)
     return c_nextSinceTimestamp.value
 
 
-def dcgmGetValuesSince_v2(dcgm_handle, groupId, fieldGroupId, sinceTimestamp,
-                          enumCB, userData):
+def dcgmGetValuesSince_v2(
+    dcgm_handle, groupId, fieldGroupId, sinceTimestamp, enumCB, userData
+):
     fn = dcgmFP("dcgmGetValuesSince_v2")
     c_nextSinceTimestamp = c_int64()
-    ret = fn(dcgm_handle, groupId, fieldGroupId, c_int64(sinceTimestamp),
-             byref(c_nextSinceTimestamp), enumCB, py_object(userData))
+    ret = fn(
+        dcgm_handle,
+        groupId,
+        fieldGroupId,
+        c_int64(sinceTimestamp),
+        byref(c_nextSinceTimestamp),
+        enumCB,
+        py_object(userData),
+    )
     dcgm_structs._dcgmCheckReturn(ret)
     return c_nextSinceTimestamp.value
 
@@ -401,19 +430,25 @@ def dcgmGetLatestValues(dcgm_handle, groupId, fieldGroupId, enumCB, userData):
     return ret
 
 
-def dcgmGetLatestValues_v2(dcgm_handle, groupId, fieldGroupId, enumCB,
-                           userData):
+def dcgmGetLatestValues_v2(dcgm_handle, groupId, fieldGroupId, enumCB, userData):
     fn = dcgmFP("dcgmGetLatestValues_v2")
     ret = fn(dcgm_handle, groupId, fieldGroupId, enumCB, py_object(userData))
     dcgm_structs._dcgmCheckReturn(ret)
     return ret
 
 
-def dcgmWatchFields(dcgm_handle, groupId, fieldGroupId, updateFreq, maxKeepAge,
-                    maxKeepSamples):
+def dcgmWatchFields(
+    dcgm_handle, groupId, fieldGroupId, updateFreq, maxKeepAge, maxKeepSamples
+):
     fn = dcgmFP("dcgmWatchFields")
-    ret = fn(dcgm_handle, groupId, fieldGroupId, c_int64(updateFreq),
-             c_double(maxKeepAge), c_int32(maxKeepSamples))
+    ret = fn(
+        dcgm_handle,
+        groupId,
+        fieldGroupId,
+        c_int64(updateFreq),
+        c_double(maxKeepAge),
+        c_int32(maxKeepSamples),
+    )
     dcgm_structs._dcgmCheckReturn(ret)
     return ret
 
@@ -454,9 +489,9 @@ def dcgmHealthGet(dcgm_handle, groupId):
     return c_systems.value
 
 
-def dcgmHealthCheck(dcgm_handle,
-                    groupId,
-                    version=dcgm_structs.dcgmHealthResponse_version4):
+def dcgmHealthCheck(
+    dcgm_handle, groupId, version=dcgm_structs.dcgmHealthResponse_version4
+):
     if version != dcgm_structs.dcgmHealthResponse_version4:
         dcgm_structs._dcgmCheckReturn(dcgm_structs.DCGM_ST_VER_MISMATCH)
 
@@ -468,8 +503,7 @@ def dcgmHealthCheck(dcgm_handle,
     return c_results
 
 
-def dcgmPolicyRegister(dcgm_handle, groupId, condition, beginCallback,
-                       finishCallback):
+def dcgmPolicyRegister(dcgm_handle, groupId, condition, beginCallback, finishCallback):
     fn = dcgmFP("dcgmPolicyRegister")
     ret = fn(dcgm_handle, groupId, condition, beginCallback, finishCallback)
     dcgm_structs._dcgmCheckReturn(ret)
@@ -497,6 +531,7 @@ def helperDiagCheckReturn(ret, response):
         if response.systemError.msg != "":
             # Add systemError information to the raised exception.
             import sys
+
             info = "%s" % response.systemError.msg
             e.SetAdditionalInfo(info)
             raise e  # pylint: disable=E0710
@@ -506,9 +541,9 @@ def helperDiagCheckReturn(ret, response):
     return response
 
 
-def dcgmActionValidate_v2(dcgm_handle,
-                          runDiagInfo,
-                          runDiagVersion=dcgm_structs.dcgmRunDiag_version6):
+def dcgmActionValidate_v2(
+    dcgm_handle, runDiagInfo, runDiagVersion=dcgm_structs.dcgmRunDiag_version6
+):
     response = dcgm_structs.c_dcgmDiagResponse_v6()
     runDiagInfo.version = runDiagVersion
     response.version = dcgm_structs.dcgmDiagResponse_version6
@@ -543,11 +578,15 @@ def dcgmRunDiagnostic(dcgm_handle, group_id, diagLevel):
     return helperDiagCheckReturn(ret, response)
 
 
-def dcgmWatchPidFields(dcgm_handle, groupId, updateFreq, maxKeepAge,
-                       maxKeepSamples):
+def dcgmWatchPidFields(dcgm_handle, groupId, updateFreq, maxKeepAge, maxKeepSamples):
     fn = dcgmFP("dcgmWatchPidFields")
-    ret = fn(dcgm_handle, groupId, c_int64(updateFreq), c_double(maxKeepAge),
-             c_int32(maxKeepSamples))
+    ret = fn(
+        dcgm_handle,
+        groupId,
+        c_int64(updateFreq),
+        c_double(maxKeepAge),
+        c_int32(maxKeepSamples),
+    )
     dcgm_structs._dcgmCheckReturn(ret)
     return ret
 
@@ -580,11 +619,15 @@ def dcgmGetGroupTopology(dcgm_handle, groupId):
     return grouptopo
 
 
-def dcgmWatchJobFields(dcgm_handle, groupId, updateFreq, maxKeepAge,
-                       maxKeepSamples):
+def dcgmWatchJobFields(dcgm_handle, groupId, updateFreq, maxKeepAge, maxKeepSamples):
     fn = dcgmFP("dcgmWatchJobFields")
-    ret = fn(dcgm_handle, groupId, c_int64(updateFreq), c_double(maxKeepAge),
-             c_int32(maxKeepSamples))
+    ret = fn(
+        dcgm_handle,
+        groupId,
+        c_int64(updateFreq),
+        c_double(maxKeepAge),
+        c_int32(maxKeepSamples),
+    )
     dcgm_structs._dcgmCheckReturn(ret)
     return ret
 
@@ -657,30 +700,26 @@ def dcgmIntrospectGetHostengineCpuUtilization(dcgm_handle, waitIfNoData=True):
     return cpuUtil
 
 
-def dcgmIntrospectGetFieldsExecTime(dcgm_handle,
-                                    introspectContext,
-                                    waitIfNoData=True):
+def dcgmIntrospectGetFieldsExecTime(dcgm_handle, introspectContext, waitIfNoData=True):
     fn = dcgmFP("dcgmIntrospectGetFieldsExecTime")
 
     execTime = dcgm_structs.c_dcgmIntrospectFullFieldsExecTime_v2()
     execTime.version = dcgm_structs.dcgmIntrospectFullFieldsExecTime_version2
 
-    ret = fn(dcgm_handle, byref(introspectContext), byref(execTime),
-             waitIfNoData)
+    ret = fn(dcgm_handle, byref(introspectContext), byref(execTime), waitIfNoData)
     dcgm_structs._dcgmCheckReturn(ret)
     return execTime
 
 
-def dcgmIntrospectGetFieldsMemoryUsage(dcgm_handle,
-                                       introspectContext,
-                                       waitIfNoData=True):
+def dcgmIntrospectGetFieldsMemoryUsage(
+    dcgm_handle, introspectContext, waitIfNoData=True
+):
     fn = dcgmFP("dcgmIntrospectGetFieldsMemoryUsage")
 
     memInfo = dcgm_structs.c_dcgmIntrospectFullMemory_v1()
     memInfo.version = dcgm_structs.dcgmIntrospectFullMemory_version1
 
-    ret = fn(dcgm_handle, byref(introspectContext), byref(memInfo),
-             waitIfNoData)
+    ret = fn(dcgm_handle, byref(introspectContext), byref(memInfo), waitIfNoData)
     dcgm_structs._dcgmCheckReturn(ret)
     return memInfo
 
@@ -695,9 +734,14 @@ def dcgmEntityGetLatestValues(dcgmHandle, entityGroup, entityId, fieldIds):
     fn = dcgmFP("dcgmEntityGetLatestValues")
     field_values = (dcgm_structs.c_dcgmFieldValue_v1 * len(fieldIds))()
     id_values = (c_uint16 * len(fieldIds))(*fieldIds)
-    ret = fn(dcgmHandle, c_uint(entityGroup),
-             dcgm_fields.c_dcgm_field_eid_t(entityId), id_values,
-             c_uint(len(fieldIds)), field_values)
+    ret = fn(
+        dcgmHandle,
+        c_uint(entityGroup),
+        dcgm_fields.c_dcgm_field_eid_t(entityId),
+        id_values,
+        c_uint(len(fieldIds)),
+        field_values,
+    )
     dcgm_structs._dcgmCheckReturn(ret)
     return field_values
 
@@ -706,11 +750,17 @@ def dcgmEntitiesGetLatestValues(dcgmHandle, entities, fieldIds, flags):
     fn = dcgmFP("dcgmEntitiesGetLatestValues")
     numFvs = len(fieldIds) * len(entities)
     field_values = (dcgm_structs.c_dcgmFieldValue_v2 * numFvs)()
-    entities_values = (dcgm_structs.c_dcgmGroupEntityPair_t *
-                       len(entities))(*entities)
+    entities_values = (dcgm_structs.c_dcgmGroupEntityPair_t * len(entities))(*entities)
     field_id_values = (c_uint16 * len(fieldIds))(*fieldIds)
-    ret = fn(dcgmHandle, entities_values, c_uint(len(entities)),
-             field_id_values, c_uint(len(fieldIds)), flags, field_values)
+    ret = fn(
+        dcgmHandle,
+        entities_values,
+        c_uint(len(entities)),
+        field_id_values,
+        c_uint(len(fieldIds)),
+        flags,
+        field_values,
+    )
     dcgm_structs._dcgmCheckReturn(ret)
     return field_values
 
@@ -718,14 +768,20 @@ def dcgmEntitiesGetLatestValues(dcgmHandle, entities, fieldIds, flags):
 def dcgmSelectGpusByTopology(dcgmHandle, inputGpuIds, numGpus, hintFlags):
     fn = dcgmFP("dcgmSelectGpusByTopology")
     outputGpuIds = c_int64()
-    ret = fn(dcgmHandle, c_uint64(inputGpuIds), c_uint32(numGpus),
-             byref(outputGpuIds), c_uint64(hintFlags))
+    ret = fn(
+        dcgmHandle,
+        c_uint64(inputGpuIds),
+        c_uint32(numGpus),
+        byref(outputGpuIds),
+        c_uint64(hintFlags),
+    )
     dcgm_structs._dcgmCheckReturn(ret)
     return outputGpuIds
 
 
-def dcgmGetFieldSummary(dcgmHandle, fieldId, entityGroupType, entityId,
-                        summaryMask, startTime, endTime):
+def dcgmGetFieldSummary(
+    dcgmHandle, fieldId, entityGroupType, entityId, summaryMask, startTime, endTime
+):
     fn = dcgmFP("dcgmGetFieldSummary")
     request = dcgm_structs.c_dcgmFieldSummaryRequest_v1()
     request.version = dcgm_structs.dcgmFieldSummaryRequest_version1
@@ -766,8 +822,9 @@ def dcgmProfGetSupportedMetricGroups(dcgmHandle, groupId):
     return msg
 
 
-def dcgmProfWatchFields(dcgmHandle, fieldIds, groupId, updateFreq, maxKeepAge,
-                        maxKeepSamples):
+def dcgmProfWatchFields(
+    dcgmHandle, fieldIds, groupId, updateFreq, maxKeepAge, maxKeepSamples
+):
     msg = dcgm_structs.c_dcgmProfWatchFields_v1()
     msg.version = dcgm_structs.dcgmProfWatchFields_version1
     msg.groupId = groupId

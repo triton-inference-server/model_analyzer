@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,13 +32,13 @@ class ResultStatistics:
         ----------
         model_name: str
             The name of the model for which
-            we are getting the total number of 
+            we are getting the total number of
             configurations
 
         Returns
         -------
-        int 
-            total number of configuration 
+        int
+            total number of configuration
             searched by the model analyzer
             for a given model.
         """
@@ -49,7 +51,7 @@ class ResultStatistics:
         ----------
         model_name: str
             The name of the model for which
-            we are getting the total number of 
+            we are getting the total number of
             configurations
         total : int
             The number of configurations tried for
@@ -57,8 +59,8 @@ class ResultStatistics:
 
         Returns
         -------
-        int 
-            total number of configuration 
+        int
+            total number of configuration
             searched by the model analyzer
             for a given model.
         """
@@ -71,23 +73,24 @@ class ResultStatistics:
         ----------
         model_name: str
             The name of the model for which
-            we are getting the total number of 
+            we are getting the total number of
             measurements
 
         Returns
         -------
-        int 
-            total number of measurements 
+        int
+            total number of measurements
             searched by the model analyzer
             for a given model.
         """
 
-        return self.passing_measurements(
-            model_name) + self.failing_measurements(model_name)
+        return self.passing_measurements(model_name) + self.failing_measurements(
+            model_name
+        )
 
     def set_passing_measurements(self, model_name, passing):
         """
-        Sets the number of passing configuration 
+        Sets the number of passing configuration
         searched by the model analyzer.
 
         Parameters
@@ -113,8 +116,8 @@ class ResultStatistics:
 
         Returns
         -------
-        int 
-            passing number of measurements 
+        int
+            passing number of measurements
             searched by the model analyzer.
         """
 
@@ -122,14 +125,14 @@ class ResultStatistics:
 
     def set_failing_measurements(self, model_name, failing):
         """
-        Sets the number of failing configuration 
+        Sets the number of failing configuration
         searched by the model analyzer.
 
         Parameters
         ----------
          model_name: str
             The name of the model for which
-            we are setting the number of failing 
+            we are setting the number of failing
             measurements
         failing : int
             The total number of configs failing
@@ -143,13 +146,13 @@ class ResultStatistics:
         ----------
         model_name: str
             The name of the model for which
-            we are getting the number of failing 
+            we are getting the number of failing
             measurements
 
         Returns
         -------
-        int 
-            total number of failing measurements 
+        int
+            total number of failing measurements
             searched by the model analyzer.
         """
 

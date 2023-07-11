@@ -1,4 +1,5 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/bin/bash
+# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -92,7 +93,7 @@ else
 fi
 set -e
 
-# TEST CASE: run config-multi.yml(first model contains two configurations) and 
+# TEST CASE: run config-multi.yml(first model contains two configurations) and
 # wait for the first checkpoint file to be generated before sending a SIGINT signal.
 # The above checkpoint file ensures first config of the first model is profiled.
 # This interruption ensures the completion of the second configuration for the first model.
@@ -128,7 +129,7 @@ else
     echo -e "\n***\n*** Test Failed. model-analyzer exited with ZERO exit code when SIGINT occurred. \n***"
     cat $ANALYZER_LOG
     RET=1
-    
+
 fi
 
 # Create new EXPORT_PATH and ANALYZER_LOG

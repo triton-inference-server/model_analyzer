@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,35 +18,43 @@ import yaml
 
 
 def _get_sweep_configs():
-
     sweep_configs = []
     model_config = {
-        'profile_models': ['vgg19_libtorch'],
-        'server_output_fields': [
-            'model_name', 'gpu_uuid', 'gpu_used_memory', 'gpu_utilization'
+        "profile_models": ["vgg19_libtorch"],
+        "server_output_fields": [
+            "model_name",
+            "gpu_uuid",
+            "gpu_used_memory",
+            "gpu_utilization",
         ],
-        'gpu_output_fields': [
-            'model_name', 'satisfies_constraints', 'gpu_used_memory',
-            'gpu_utilization', 'gpu_power_usage'
+        "gpu_output_fields": [
+            "model_name",
+            "satisfies_constraints",
+            "gpu_used_memory",
+            "gpu_utilization",
+            "gpu_power_usage",
         ],
-        'inference_output_fields': [
-            'model_name', 'batch_size', 'concurrency', 'model_config_path',
-            'perf_throughput', 'perf_latency_avg', 'perf_latency_p90',
-            'perf_latency_p95', 'perf_latency_p99'
-        ]
+        "inference_output_fields": [
+            "model_name",
+            "batch_size",
+            "concurrency",
+            "model_config_path",
+            "perf_throughput",
+            "perf_latency_avg",
+            "perf_latency_p90",
+            "perf_latency_p95",
+            "perf_latency_p99",
+        ],
     }
 
-    model_config['total_param_server'] = len(
-        model_config['server_output_fields'])
-    model_config['total_param_gpu'] = len(model_config['gpu_output_fields'])
-    model_config['total_param_inference'] = len(
-        model_config['inference_output_fields'])
+    model_config["total_param_server"] = len(model_config["server_output_fields"])
+    model_config["total_param_gpu"] = len(model_config["gpu_output_fields"])
+    model_config["total_param_inference"] = len(model_config["inference_output_fields"])
     sweep_configs.append(model_config)
     return sweep_configs
 
 
 def get_all_configurations():
-
     run_params = []
     run_params += _get_sweep_configs()
     return run_params
@@ -52,17 +62,17 @@ def get_all_configurations():
 
 if __name__ == "__main__":
     for i, configuration in enumerate(get_all_configurations()):
-        total_param_server = configuration['total_param_server']
-        total_param_gpu = configuration['total_param_gpu']
-        total_param_inference = configuration['total_param_inference']
-        del configuration['total_param_server']
-        del configuration['total_param_gpu']
-        del configuration['total_param_inference']
-        with open(f'./config-{i}-param-server.txt', 'w') as file:
+        total_param_server = configuration["total_param_server"]
+        total_param_gpu = configuration["total_param_gpu"]
+        total_param_inference = configuration["total_param_inference"]
+        del configuration["total_param_server"]
+        del configuration["total_param_gpu"]
+        del configuration["total_param_inference"]
+        with open(f"./config-{i}-param-server.txt", "w") as file:
             file.write(str(total_param_server))
-        with open(f'./config-{i}-param-gpu.txt', 'w') as file:
+        with open(f"./config-{i}-param-gpu.txt", "w") as file:
             file.write(str(total_param_gpu))
-        with open(f'./config-{i}-param-inference.txt', 'w') as file:
+        with open(f"./config-{i}-param-inference.txt", "w") as file:
             file.write(str(total_param_inference))
-        with open(f'./config-{i}.yml', 'w') as file:
+        with open(f"./config-{i}.yml", "w") as file:
             yaml.dump(configuration, file)

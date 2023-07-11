@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,14 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.device.gpu_device import GPUDevice
-import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
-import model_analyzer.monitor.dcgm.dcgm_structs as structs
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+import logging
 
 import numba.cuda
-import logging
+
+import model_analyzer.monitor.dcgm.dcgm_agent as dcgm_agent
+import model_analyzer.monitor.dcgm.dcgm_structs as structs
+from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -53,20 +56,20 @@ class GPUDeviceFactory:
 
             # Start DCGM in the embedded mode to use the shared library
             dcgm_handle = dcgm_agent.dcgmStartEmbedded(
-                structs.DCGM_OPERATION_MODE_MANUAL)
+                structs.DCGM_OPERATION_MODE_MANUAL
+            )
 
             # Create a GPU device for every supported DCGM device
             dcgm_device_ids = dcgm_agent.dcgmGetAllSupportedDevices(dcgm_handle)
 
             for device_id in dcgm_device_ids:
                 device_atrributes = dcgm_agent.dcgmGetDeviceAttributes(
-                    dcgm_handle, device_id).identifiers
-                pci_bus_id = device_atrributes.pciBusId.decode('utf-8').upper()
-                device_uuid = str(device_atrributes.uuid, encoding='utf-8')
-                device_name = str(device_atrributes.deviceName,
-                                  encoding='utf-8')
-                gpu_device = GPUDevice(device_name, device_id, pci_bus_id,
-                                       device_uuid)
+                    dcgm_handle, device_id
+                ).identifiers
+                pci_bus_id = device_atrributes.pciBusId.decode("utf-8").upper()
+                device_uuid = str(device_atrributes.uuid, encoding="utf-8")
+                device_name = str(device_atrributes.deviceName, encoding="utf-8")
+                gpu_device = GPUDevice(device_name, device_id, pci_bus_id, device_uuid)
 
                 self._devices.append(gpu_device)
                 self._devices_by_bus_id[pci_bus_id] = gpu_device
@@ -96,7 +99,7 @@ class GPUDeviceFactory:
             return self._devices_by_bus_id[bus_id]
         else:
             raise TritonModelAnalyzerException(
-                f'GPU with {bus_id} bus id is either not supported by DCGM or not present.'
+                f"GPU with {bus_id} bus id is either not supported by DCGM or not present."
             )
 
     def get_device_by_cuda_index(self, index):
@@ -126,11 +129,10 @@ class GPUDeviceFactory:
 
         cuda_device = devices[index]
         device_identity = cuda_device.get_device_identity()
-        pci_domain_id = device_identity['pci_domain_id']
-        pci_device_id = device_identity['pci_device_id']
-        pci_bus_id = device_identity['pci_bus_id']
-        device_bus_id = \
-            f'{pci_domain_id:08X}:{pci_bus_id:02X}:{pci_device_id:02X}.0'
+        pci_domain_id = device_identity["pci_domain_id"]
+        pci_device_id = device_identity["pci_device_id"]
+        pci_bus_id = device_identity["pci_bus_id"]
+        device_bus_id = f"{pci_domain_id:08X}:{pci_bus_id:02X}:{pci_device_id:02X}.0"
 
         return self.get_device_by_bus_id(device_bus_id)
 
@@ -157,8 +159,7 @@ class GPUDeviceFactory:
         if uuid in self._devices_by_uuid:
             return self._devices_by_uuid[uuid]
         else:
-            raise TritonModelAnalyzerException(
-                f'GPU UUID {uuid} was not found.')
+            raise TritonModelAnalyzerException(f"GPU UUID {uuid} was not found.")
 
     def verify_requested_gpus(self, requested_gpus):
         """
@@ -174,7 +175,7 @@ class GPUDeviceFactory:
         -------
         List of GPUDevices
             list of GPUDevices corresponding to visible GPUs among requested
-        
+
         Raises
         ------
         TritonModelAnalyzerException
@@ -183,10 +184,10 @@ class GPUDeviceFactory:
         cuda_visible_gpus = self.get_cuda_visible_gpus()
 
         if len(requested_gpus) == 1:
-            if requested_gpus[0] == 'all':
+            if requested_gpus[0] == "all":
                 self._log_gpus_used(cuda_visible_gpus)
                 return cuda_visible_gpus
-            elif requested_gpus[0] == '[]':
+            elif requested_gpus[0] == "[]":
                 logger.info("No GPUs requested")
                 return []
 
@@ -204,9 +205,7 @@ class GPUDeviceFactory:
                     )
         except ValueError:
             # requested_gpus are assumed to be UUIDs
-            requested_gpus = [
-                self.get_device_by_uuid(uuid) for uuid in requested_gpus
-            ]
+            requested_gpus = [self.get_device_by_uuid(uuid) for uuid in requested_gpus]
             pass
 
         # Return the intersection of CUDA visible UUIDs and requested/supported UUIDs.
@@ -228,7 +227,8 @@ class GPUDeviceFactory:
             for cuda_device in numba.cuda.list_devices():
                 try:
                     cuda_visible_gpus.append(
-                        self.get_device_by_cuda_index(cuda_device.id))
+                        self.get_device_by_cuda_index(cuda_device.id)
+                    )
                 except TritonModelAnalyzerException:
                     # Device not supported by DCGM, log warning
                     logger.warning(

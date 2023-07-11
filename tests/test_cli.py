@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,25 +22,23 @@
 # expected value for the CLI. Default values are also verified as well as
 # values that are expected to cause failures.
 
+import copy
 import os
 import sys
-import copy
+import unittest
+from unittest.mock import MagicMock, patch
 
-from model_analyzer.config.input.config_defaults import DEFAULT_TRITON_DOCKER_IMAGE
-
-from .common import test_result_collector as trc
+import psutil
 
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
+from model_analyzer.config.input.config_defaults import DEFAULT_TRITON_DOCKER_IMAGE
 from model_analyzer.config.input.config_status import ConfigStatus
 from model_analyzer.constants import CONFIG_PARSER_SUCCESS
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
-import psutil
-import unittest
-
-from unittest.mock import MagicMock, patch
+from .common import test_result_collector as trc
 
 
 def setUp(self):
@@ -53,7 +53,7 @@ def get_test_options():
     """
     Returns the list of OptionStructs that are used for testing.
     """
-    #yapf: disable
+    # yapf: disable
     options = [
         #Boolean options
         # Options format:
@@ -171,7 +171,7 @@ def get_test_options():
         OptionStruct("noop", "yaml_profile", "triton_docker_args"),
         OptionStruct("noop", "yaml_profile", "plots")
     ]
-    #yapf: enable
+    # yapf: enable
     return options
 
 
@@ -195,13 +195,13 @@ class CLISubclass(CLI):
         return args, config
 
 
-class CLIConfigProfileStruct():
+class CLIConfigProfileStruct:
     """
     Struct class to hold the common variables shared between profile tests
     """
 
     def __init__(self):
-        #yapf: disable
+        # yapf: disable
         self.args = [
             '/usr/local/bin/model-analyzer',
             'profile',
@@ -210,52 +210,53 @@ class CLIConfigProfileStruct():
             '--profile-models',
             'bar'
         ]
-        #yapf: enable
+        # yapf: enable
         config_profile = ConfigCommandProfile()
         self.cli = CLISubclass()
-        self.cli.add_subcommand(cmd='profile', help='', config=config_profile)
+        self.cli.add_subcommand(cmd="profile", help="", config=config_profile)
 
     def parse(self):
         return self.cli.parse(self.args)
 
 
-class CLIConfigReportStruct():
+class CLIConfigReportStruct:
     """
     Struct class to hold the common variables shared between report tests
     """
 
     def __init__(self):
-        #yapf: disable
+        # yapf: disable
         self.args = [
             '/usr/local/bin/model-analyzer',
             'report',
             '--report-model-configs',
             'a, b, c'
         ]
-        #yapf: enable
+        # yapf: enable
         config_report = ConfigCommandReport()
         self.cli = CLISubclass()
-        self.cli.add_subcommand(cmd='report', help='', config=config_report)
+        self.cli.add_subcommand(cmd="report", help="", config=config_report)
 
     def parse(self):
         return self.cli.parse(self.args)
 
 
-class OptionStruct():
+class OptionStruct:
     """
     Struct that holds all of the data necessary to test a single command
     """
 
-    def __init__(self,
-                 type,
-                 stage,
-                 long_flag,
-                 short_flag=None,
-                 expected_value=None,
-                 expected_default_value=None,
-                 expected_failing_value=None,
-                 extra_commands=None):
-
+    def __init__(
+        self,
+        type,
+        stage,
+        long_flag,
+        short_flag=None,
+        expected_value=None,
+        expected_default_value=None,
+        expected_failing_value=None,
+        extra_commands=None,
+    ):
         self.long_flag = long_flag
         self.short_flag = short_flag
         self.expected_value = expected_value
@@ -270,26 +271,31 @@ class OptionStruct():
             self.cli_subcommand = CLIConfigReportStruct
 
 
-@patch('model_analyzer.config.input.config_command_profile.file_path_validator',
-       lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
 @patch(
-    'model_analyzer.config.input.config_command_profile.binary_path_validator',
-    lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
-@patch('model_analyzer.config.input.config_command_report.file_path_validator',
-       lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS))
+    "model_analyzer.config.input.config_command_profile.file_path_validator",
+    lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS),
+)
+@patch(
+    "model_analyzer.config.input.config_command_profile.binary_path_validator",
+    lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS),
+)
+@patch(
+    "model_analyzer.config.input.config_command_report.file_path_validator",
+    lambda _: ConfigStatus(status=CONFIG_PARSER_SUCCESS),
+)
 class TestCLI(trc.TestResultCollector):
     """
     Tests the methods of the CLI class
     """
 
-    @patch('model_analyzer.cli.cli.ArgumentParser.print_help')
+    @patch("model_analyzer.cli.cli.ArgumentParser.print_help")
     def test_help_message_no_args(self, mock_print_help):
         """
         Tests that model-analyzer prints the help message when no arguments are
         given
         """
 
-        sys.argv = ['/usr/local/bin/model-analyzer']
+        sys.argv = ["/usr/local/bin/model-analyzer"]
 
         cli = CLI()
 
@@ -304,32 +310,37 @@ class TestCLI(trc.TestResultCollector):
         _, config = cli.parse()
         model_repo = config.model_repository
         profile_model = config.profile_models[0].model_name()
-        self.assertEqual('foo', model_repo)
-        self.assertEqual('bar', profile_model)
+        self.assertEqual("foo", model_repo)
+        self.assertEqual("bar", profile_model)
 
     @patch(
-        'model_analyzer.config.input.config_command_report.ConfigCommandReport._load_config_file',
-        MagicMock())
+        "model_analyzer.config.input.config_command_report.ConfigCommandReport._load_config_file",
+        MagicMock(),
+    )
     @patch(
-        'model_analyzer.config.input.config_command_report.ConfigCommandReport._preprocess_and_verify_arguments',
-        MagicMock())
+        "model_analyzer.config.input.config_command_report.ConfigCommandReport._preprocess_and_verify_arguments",
+        MagicMock(),
+    )
     @patch(
-        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments',
-        MagicMock())
+        "model_analyzer.config.input.config_command_profile.ConfigCommandProfile._preprocess_and_verify_arguments",
+        MagicMock(),
+    )
     @patch(
-        'model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file',
-        MagicMock())
+        "model_analyzer.config.input.config_command_profile.ConfigCommandProfile._load_config_file",
+        MagicMock(),
+    )
     @patch(
-        'model_analyzer.config.input.config_command.ConfigCommand._check_for_illegal_config_settings',
-        MagicMock())
+        "model_analyzer.config.input.config_command.ConfigCommand._check_for_illegal_config_settings",
+        MagicMock(),
+    )
     def test_all_options(self):
-
         options = get_test_options()
         all_tested_options_set = set()
 
         for option in options:
             all_tested_options_set.add(
-                self._convert_flag_to_use_underscores(option.long_flag))
+                self._convert_flag_to_use_underscores(option.long_flag)
+            )
 
             if option.type in ["bool"]:
                 self._test_boolean_option(option)
@@ -358,9 +369,10 @@ class TestCLI(trc.TestResultCollector):
                 cli_option_set.add(key)
 
         self.assertEqual(
-            cli_option_set, all_tested_options_set,
-            "The available options for the CLI does not match the available options tested. "\
-            "If you recently added or removed a CLI option, please update the OptionStruct list above."
+            cli_option_set,
+            all_tested_options_set,
+            "The available options for the CLI does not match the available options tested. "
+            "If you recently added or removed a CLI option, please update the OptionStruct list above.",
         )
 
     def _test_boolean_option(self, option_struct):
@@ -380,7 +392,7 @@ class TestCLI(trc.TestResultCollector):
 
         # Test boolean option followed by value fails
         cli = option_struct.cli_subcommand()
-        cli.args.extend([option, 'SHOULD_FAIL'])
+        cli.args.extend([option, "SHOULD_FAIL"])
         with self.assertRaises(SystemExit):
             _, config = cli.parse()
 
@@ -388,26 +400,39 @@ class TestCLI(trc.TestResultCollector):
         long_option = option_struct.long_flag
         short_option = option_struct.short_flag
         expected_value_string = option_struct.expected_value
-        expected_value = self._convert_string_to_numeric(
-            option_struct.expected_value)
-        expected_default_value = None if option_struct.expected_default_value == None else self._convert_string_to_numeric(
-            option_struct.expected_default_value)
+        expected_value = self._convert_string_to_numeric(option_struct.expected_value)
+        expected_default_value = (
+            None
+            if option_struct.expected_default_value == None
+            else self._convert_string_to_numeric(option_struct.expected_default_value)
+        )
 
         long_option_with_underscores = self._convert_flag_to_use_underscores(
-            long_option)
+            long_option
+        )
 
-        self._test_long_flag(long_option, option_struct.cli_subcommand,
-                             expected_value_string,
-                             long_option_with_underscores, expected_value)
+        self._test_long_flag(
+            long_option,
+            option_struct.cli_subcommand,
+            expected_value_string,
+            long_option_with_underscores,
+            expected_value,
+        )
 
-        self._test_short_flag(short_option, option_struct.cli_subcommand,
-                              expected_value_string,
-                              long_option_with_underscores, expected_value)
+        self._test_short_flag(
+            short_option,
+            option_struct.cli_subcommand,
+            expected_value_string,
+            long_option_with_underscores,
+            expected_value,
+        )
 
         if expected_default_value is not None:
-            self._test_expected_default_value(option_struct.cli_subcommand,
-                                              long_option_with_underscores,
-                                              expected_default_value)
+            self._test_expected_default_value(
+                option_struct.cli_subcommand,
+                long_option_with_underscores,
+                expected_default_value,
+            )
 
     def _test_string_option(self, option_struct):
         long_option = option_struct.long_flag
@@ -426,20 +451,32 @@ class TestCLI(trc.TestResultCollector):
                 self._test_string_option(new_struct)
         else:
             long_option_with_underscores = self._convert_flag_to_use_underscores(
-                long_option)
+                long_option
+            )
 
-            self._test_long_flag(long_option, option_struct.cli_subcommand,
-                                 expected_value, long_option_with_underscores,
-                                 expected_value, extra_commands)
+            self._test_long_flag(
+                long_option,
+                option_struct.cli_subcommand,
+                expected_value,
+                long_option_with_underscores,
+                expected_value,
+                extra_commands,
+            )
 
-            self._test_short_flag(short_option, option_struct.cli_subcommand,
-                                  expected_value, long_option_with_underscores,
-                                  expected_value)
+            self._test_short_flag(
+                short_option,
+                option_struct.cli_subcommand,
+                expected_value,
+                long_option_with_underscores,
+                expected_value,
+            )
 
             if expected_default_value is not None:
-                self._test_expected_default_value(option_struct.cli_subcommand,
-                                                  long_option_with_underscores,
-                                                  expected_default_value)
+                self._test_expected_default_value(
+                    option_struct.cli_subcommand,
+                    long_option_with_underscores,
+                    expected_default_value,
+                )
 
             # Verify that a incorrect value causes a failure
             if expected_failing_value is not None:
@@ -457,71 +494,91 @@ class TestCLI(trc.TestResultCollector):
 
         # Convert expected and default values to proper types for comparison
         if option_struct.type == "intlist":
-            expected_value_converted = self._convert_string_to_int_list(
-                expected_value)
+            expected_value_converted = self._convert_string_to_int_list(expected_value)
             if expected_default_value is not None:
                 expected_default_value_converted = self._convert_string_to_int_list(
-                    expected_default_value)
+                    expected_default_value
+                )
         else:
             expected_value_converted = expected_value.split(",")
             expected_value_converted = self._convert_string_to_string_list(
-                expected_value)
+                expected_value
+            )
             if expected_default_value is not None:
                 expected_default_value_converted = self._convert_string_to_string_list(
-                    expected_default_value)
+                    expected_default_value
+                )
 
         long_option_with_underscores = self._convert_flag_to_use_underscores(
-            long_option)
+            long_option
+        )
 
-        self._test_long_flag(long_option, option_struct.cli_subcommand,
-                             expected_value, long_option_with_underscores,
-                             expected_value_converted, extra_commands)
+        self._test_long_flag(
+            long_option,
+            option_struct.cli_subcommand,
+            expected_value,
+            long_option_with_underscores,
+            expected_value_converted,
+            extra_commands,
+        )
 
-        self._test_short_flag(short_option, option_struct.cli_subcommand,
-                              expected_value, long_option_with_underscores,
-                              expected_value_converted)
+        self._test_short_flag(
+            short_option,
+            option_struct.cli_subcommand,
+            expected_value,
+            long_option_with_underscores,
+            expected_value_converted,
+        )
 
         if expected_default_value is not None:
-            self._test_expected_default_value(option_struct.cli_subcommand,
-                                              long_option_with_underscores,
-                                              expected_default_value_converted)
+            self._test_expected_default_value(
+                option_struct.cli_subcommand,
+                long_option_with_underscores,
+                expected_default_value_converted,
+            )
 
     # Helper methods
 
-    def _test_long_flag(self,
-                        long_option,
-                        cli_subcommand,
-                        expected_value_string,
-                        long_option_with_underscores,
-                        expected_value,
-                        extra_commands=None):
+    def _test_long_flag(
+        self,
+        long_option,
+        cli_subcommand,
+        expected_value_string,
+        long_option_with_underscores,
+        expected_value,
+        extra_commands=None,
+    ):
         cli = cli_subcommand()
         cli.args.extend([long_option, expected_value_string])
         if extra_commands is not None:
             cli.args.extend(extra_commands)
         _, config = cli.parse()
-        option_value = config.get_config().get(
-            long_option_with_underscores).value()
+        option_value = config.get_config().get(long_option_with_underscores).value()
         self.assertEqual(option_value, expected_value)
 
-    def _test_short_flag(self, short_option, cli_subcommand,
-                         expected_value_string, long_option_with_underscores,
-                         expected_value):
+    def _test_short_flag(
+        self,
+        short_option,
+        cli_subcommand,
+        expected_value_string,
+        long_option_with_underscores,
+        expected_value,
+    ):
         if short_option is not None:
             cli = cli_subcommand()
             cli.args.extend([short_option, expected_value_string])
             _, config = cli.parse()
-            option_value = config.get_config().get(
-                long_option_with_underscores).value()
+            option_value = config.get_config().get(long_option_with_underscores).value()
             self.assertEqual(option_value, expected_value)
 
-    def _test_expected_default_value(self, cli_subcommand,
-                                     long_option_with_underscores,
-                                     expected_default_value):
+    def _test_expected_default_value(
+        self, cli_subcommand, long_option_with_underscores, expected_default_value
+    ):
         cli = cli_subcommand()
         _, config = cli.parse()
-        option_value = config.get_config().get(
-            long_option_with_underscores).default_value()
+        option_value = (
+            config.get_config().get(long_option_with_underscores).default_value()
+        )
         self.assertEqual(option_value, expected_default_value)
 
     def _convert_flag_to_use_underscores(self, option):
@@ -543,5 +600,5 @@ class TestCLI(trc.TestResultCollector):
         return ret_val
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

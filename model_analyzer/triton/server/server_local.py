@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2022 NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .server import TritonServer
-from model_analyzer.constants import LOGGER_NAME, SERVER_OUTPUT_TIMEOUT_SECS
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
-
-from subprocess import Popen, DEVNULL, STDOUT, TimeoutExpired
-import psutil
 import logging
-import tempfile
 import os
+import tempfile
 from io import TextIOWrapper
+from subprocess import DEVNULL, STDOUT, Popen, TimeoutExpired
+
+import psutil
+
+from model_analyzer.constants import LOGGER_NAME, SERVER_OUTPUT_TIMEOUT_SECS
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
+from .server import TritonServer
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -55,8 +58,9 @@ class TritonServerLocal(TritonServer):
         self._log_file = DEVNULL
         self._is_first_time_starting_server = True
 
-        assert self._server_config['model-repository'], \
-            "Triton Server requires --model-repository argument to be set."
+        assert self._server_config[
+            "model-repository"
+        ], "Triton Server requires --model-repository argument to be set."
 
     def start(self, env=None):
         """
@@ -74,22 +78,23 @@ class TritonServerLocal(TritonServer):
             if env:
                 # Filter env variables that use env lookups
                 for variable, value in env.items():
-                    if value.find('$') == -1:
+                    if value.find("$") == -1:
                         triton_env[variable] = value
                     else:
                         # Collect the ones that need lookups to give to the shell
                         triton_env[variable] = os.path.expandvars(value)
 
             # List GPUs to be used by tritonserver
-            triton_env['CUDA_VISIBLE_DEVICES'] = ','.join(
-                [gpu.device_uuid() for gpu in self._gpus])
+            triton_env["CUDA_VISIBLE_DEVICES"] = ",".join(
+                [gpu.device_uuid() for gpu in self._gpus]
+            )
 
             if self._log_path:
                 try:
                     if self._is_first_time_starting_server:
                         if os.path.exists(self._log_path):
                             os.remove(self._log_path)
-                    self._log_file = open(self._log_path, 'a+')
+                    self._log_file = open(self._log_path, "a+")
                 except OSError as e:
                     raise TritonModelAnalyzerException(e)
             else:
@@ -99,14 +104,16 @@ class TritonServerLocal(TritonServer):
 
             # Construct Popen command
             try:
-                self._tritonserver_process = Popen(cmd,
-                                                   stdout=self._log_file,
-                                                   stderr=STDOUT,
-                                                   start_new_session=True,
-                                                   universal_newlines=True,
-                                                   env=triton_env)
+                self._tritonserver_process = Popen(
+                    cmd,
+                    stdout=self._log_file,
+                    stderr=STDOUT,
+                    start_new_session=True,
+                    universal_newlines=True,
+                    env=triton_env,
+                )
 
-                logger.debug('Triton Server started.')
+                logger.debug("Triton Server started.")
             except Exception as e:
                 raise TritonModelAnalyzerException(e)
 
@@ -120,14 +127,15 @@ class TritonServerLocal(TritonServer):
             self._tritonserver_process.terminate()
             try:
                 self._tritonserver_process.communicate(
-                    timeout=SERVER_OUTPUT_TIMEOUT_SECS)
+                    timeout=SERVER_OUTPUT_TIMEOUT_SECS
+                )
             except TimeoutExpired:
                 self._tritonserver_process.kill()
                 self._tritonserver_process.communicate()
             self._tritonserver_process = None
             if self._log_path:
                 self._log_file.close()
-            logger.debug('Stopped Triton Server.')
+            logger.debug("Stopped Triton Server.")
 
     def cpu_stats(self):
         """
@@ -140,8 +148,9 @@ class TritonServerLocal(TritonServer):
             system_memory_info = psutil.virtual_memory()
 
             # Divide by 1.0e6 to convert from bytes to MB
-            return (process_memory_info.uss //
-                    1.0e6), (system_memory_info.available // 1.0e6)
+            return (process_memory_info.uss // 1.0e6), (
+                system_memory_info.available // 1.0e6
+            )
         else:
             return 0.0, 0.0
 

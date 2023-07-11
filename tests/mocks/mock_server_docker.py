@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .mock_server import MockServerMethods
+from unittest.mock import MagicMock, Mock, patch
+
 from .mock_api_error import MockAPIError
-from unittest.mock import patch, Mock, MagicMock
+from .mock_server import MockServerMethods
 
 
 class MockServerDockerMethods(MockServerMethods):
@@ -29,31 +32,27 @@ class MockServerDockerMethods(MockServerMethods):
 
     def __init__(self):
         docker_container_attrs = {
-            'exec_run':
-                MagicMock(return_value=(None, bytes(self.TEST_MEM, 'utf-8'))),
-            'stats':
-                Mock(return_value={
-                    'memory_stats': {
-                        'usage': 0.0,
-                        'max_usage': 0.0,
-                        'limits': 0.0
-                    }
-                })
+            "exec_run": MagicMock(return_value=(None, bytes(self.TEST_MEM, "utf-8"))),
+            "stats": Mock(
+                return_value={
+                    "memory_stats": {"usage": 0.0, "max_usage": 0.0, "limits": 0.0}
+                }
+            ),
         }
         docker_client_attrs = {
-            'containers.run': Mock(return_value=Mock(**docker_container_attrs))
+            "containers.run": Mock(return_value=Mock(**docker_container_attrs))
         }
         docker_attrs = {
-            'from_env': Mock(return_value=Mock(**docker_client_attrs)),
-            'types.DeviceRequest': Mock(return_value=0)
+            "from_env": Mock(return_value=Mock(**docker_client_attrs)),
+            "types.DeviceRequest": Mock(return_value=0),
         }
         self.patcher_docker = patch(
-            'model_analyzer.triton.server.server_docker.docker',
-            Mock(**docker_attrs))
+            "model_analyzer.triton.server.server_docker.docker", Mock(**docker_attrs)
+        )
         super().__init__()
 
     def start(self):
-        """ 
+        """
         Start the patchers
         """
 
@@ -82,20 +81,23 @@ class MockServerDockerMethods(MockServerMethods):
         """
 
         self.mock.from_env.return_value.containers.run.return_value.exec_run.assert_any_call(
-            cmd=cmd, stream=stream)
+            cmd=cmd, stream=stream
+        )
 
-    def assert_server_process_start_called_with(self,
-                                                cmd,
-                                                model_repository_path,
-                                                triton_image,
-                                                device_requests,
-                                                gpus,
-                                                http_port=8000,
-                                                grpc_port=8001,
-                                                metrics_port=8002,
-                                                mounts=None,
-                                                labels=None,
-                                                shm_size=None):
+    def assert_server_process_start_called_with(
+        self,
+        cmd,
+        model_repository_path,
+        triton_image,
+        device_requests,
+        gpus,
+        http_port=8000,
+        grpc_port=8001,
+        metrics_port=8002,
+        mounts=None,
+        labels=None,
+        shm_size=None,
+    ):
         """
         Asserts that a triton container was created using the
         supplied arguments
@@ -113,16 +115,13 @@ class MockServerDockerMethods(MockServerMethods):
         ]
 
         mock_volumes = {
-            model_repository_path: {
-                'bind': model_repository_path,
-                'mode': 'ro'
-            }
+            model_repository_path: {"bind": model_repository_path, "mode": "ro"}
         }
         for mount_str in mounts:
-            host_path, dest, mode = mount_str.split(':')
-            mock_volumes[host_path] = {'bind': dest, 'mode': mode}
+            host_path, dest, mode = mount_str.split(":")
+            mock_volumes[host_path] = {"bind": dest, "mode": mode}
 
-        cmd = ' '.join(env_cmds + [cmd])
+        cmd = " ".join(env_cmds + [cmd])
         mock_ports = {http_port: 8000, grpc_port: 8001, metrics_port: 8002}
         self.mock.from_env.return_value.containers.run.assert_called_once_with(
             command=f'bash -c "{cmd}"',
@@ -136,18 +135,19 @@ class MockServerDockerMethods(MockServerMethods):
             tty=False,
             stdin_open=False,
             detach=True,
-            shm_size=shm_size)
+            shm_size=shm_size,
+        )
 
     def raise_exception_on_container_run(self):
         """
         Raises MockAPIError on container run
         """
         self.exception_on_run_patcher = patch(
-            'model_analyzer.triton.server.server_docker.docker.errors.APIError',
-            MockAPIError)
+            "model_analyzer.triton.server.server_docker.docker.errors.APIError",
+            MockAPIError,
+        )
         self.api_error_mock = self.exception_on_run_patcher.start()
-        self.mock.from_env.return_value.containers.run.side_effect = \
-            self.api_error_mock
+        self.mock.from_env.return_value.containers.run.side_effect = self.api_error_mock
 
     def stop_raise_exception_on_container_run(self):
         """
@@ -161,10 +161,8 @@ class MockServerDockerMethods(MockServerMethods):
         Asserts that stop was called on the return value of containers.run
         """
 
-        self.mock.from_env.return_value.containers.run.return_value.stop.assert_called(
-        )
-        self.mock.from_env.return_value.containers.run.return_value.remove.assert_called(
-        )
+        self.mock.from_env.return_value.containers.run.return_value.stop.assert_called()
+        self.mock.from_env.return_value.containers.run.return_value.remove.assert_called()
 
     def assert_cpu_stats_called(self):
         """
@@ -172,8 +170,9 @@ class MockServerDockerMethods(MockServerMethods):
         """
 
         self._assert_docker_exec_run_with_args(
-            cmd=
-            'bash -c "pmap -x $(pgrep tritonserver) | tail -n1 | awk \'{print $4}\'"',
-            stream=False)
+            cmd="bash -c \"pmap -x $(pgrep tritonserver) | tail -n1 | awk '{print $4}'\"",
+            stream=False,
+        )
         self._assert_docker_exec_run_with_args(
-            cmd='bash -c "free | awk \'{if(NR==2)print $7}\'"', stream=False)
+            cmd="bash -c \"free | awk '{if(NR==2)print $7}'\"", stream=False
+        )

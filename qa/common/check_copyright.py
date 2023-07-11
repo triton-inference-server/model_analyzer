@@ -1,4 +1,6 @@
-# Copyright 2020-21 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,18 +15,18 @@
 # limitations under the License.
 import argparse
 import os
-import re
 import pathlib
+import re
 
 FLAGS = None
-SKIP_EXTS = ('pt', 'log', 'png', 'pdf', 'ckpt', 'csv', 'json')
+SKIP_EXTS = ("pt", "log", "png", "pdf", "ckpt", "csv", "json")
 
-REPO_PATH_FROM_THIS_FILE = '../..'
-SKIP_PATHS = ('.git', 'VERSION', 'LICENSE')
+REPO_PATH_FROM_THIS_FILE = "../.."
+SKIP_PATHS = (".git", "VERSION", "LICENSE")
 
-COPYRIGHT_YEAR_RE = 'Copyright( \\(c\\))? 20[1-9][0-9](-(20)?[1-9][0-9])?(,((20[2-9][0-9](-(20)?[2-9][0-9])?)|([2-9][0-9](-[2-9][0-9])?)))*,? NVIDIA CORPORATION( & AFFILIATES)?. All rights reserved.'
+COPYRIGHT_YEAR_RE = "Copyright( \\(c\\))? 20[1-9][0-9](-(20)?[1-9][0-9])?(,((20[2-9][0-9](-(20)?[2-9][0-9])?)|([2-9][0-9](-[2-9][0-9])?)))*,? NVIDIA CORPORATION( & AFFILIATES)?. All rights reserved."
 
-COPYRIGHT = '''
+COPYRIGHT = """
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -37,10 +39,11 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
-repo_abs_path = pathlib.Path(__file__).parent.joinpath(
-    REPO_PATH_FROM_THIS_FILE).resolve()
+repo_abs_path = (
+    pathlib.Path(__file__).parent.joinpath(REPO_PATH_FROM_THIS_FILE).resolve()
+)
 
 copyright_year_re = re.compile(COPYRIGHT_YEAR_RE)
 
@@ -50,19 +53,20 @@ def visit(path):
         print("visiting " + path)
 
     for skip in SKIP_EXTS:
-        if path.endswith('.' + skip):
+        if path.endswith("." + skip):
             if FLAGS.verbose:
                 print("skipping due to extension: " + path)
             return True
 
     for skip in SKIP_PATHS:
         if str(pathlib.Path(path).resolve()).startswith(
-                str(repo_abs_path.joinpath(skip).resolve())):
+            str(repo_abs_path.joinpath(skip).resolve())
+        ):
             if FLAGS.verbose:
                 print("skipping due to path prefix: " + path)
             return True
 
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         first_line = True
         line = None
         try:
@@ -73,9 +77,12 @@ def visit(path):
                 # start of the file
                 if first_line:
                     first_line = False
-                    if (fline.startswith("#!") or fline.startswith("..") or
-                            fline.startswith("<!--") or
-                            fline.startswith("{{/*")):
+                    if (
+                        fline.startswith("#!")
+                        or fline.startswith("..")
+                        or fline.startswith("<!--")
+                        or fline.startswith("{{/*")
+                    ):
                         continue
                 # Skip empty lines...
                 if len(fline.strip()) != 0:
@@ -99,25 +106,32 @@ def visit(path):
         # or a year range. It is optionally allowed to have '# ' or
         # '// ' prefix.
         prefix = ""
-        if line.startswith('# '):
-            prefix = '# '
-        elif line.startswith('// '):
-            prefix = '// '
+        if line.startswith("# "):
+            prefix = "# "
+        elif line.startswith("// "):
+            prefix = "// "
         elif not line.startswith(COPYRIGHT_YEAR_RE[0]):
             print(
                 "incorrect prefix for copyright line, allowed prefixes '# ' or '// ', for "
-                + path + ": " + line)
+                + path
+                + ": "
+                + line
+            )
             return False
 
         # Check if the copyright year line matches the regex
         # and see if the year(s) are reasonable
         years = []
 
-        copyright_row = line[len(prefix):]
+        copyright_row = line[len(prefix) :]
         if copyright_year_re.match(copyright_row):
-            for year in copyright_row.split("(c) " if "(c) " in
-                                            copyright_row else "Copyright "
-                                           )[1].split(" NVIDIA ")[0].split(","):
+            for year in (
+                copyright_row.split(
+                    "(c) " if "(c) " in copyright_row else "Copyright "
+                )[1]
+                .split(" NVIDIA ")[0]
+                .split(",")
+            ):
                 if len(year) == 4:  # 2021
                     years.append(int(year))
                 elif len(year) == 2:  # 21
@@ -136,17 +150,21 @@ def visit(path):
             return False
 
         if years[0] > FLAGS.year:
-            print("copyright start year greater than current year for " + path +
-                  ": " + line)
+            print(
+                "copyright start year greater than current year for "
+                + path
+                + ": "
+                + line
+            )
             return False
         if years[-1] > FLAGS.year:
-            print("copyright end year greater than current year for " + path +
-                  ": " + line)
+            print(
+                "copyright end year greater than current year for " + path + ": " + line
+            )
             return False
         for i in range(1, len(years)):
             if years[i - 1] >= years[i]:
-                print("copyright years are not increasing for " + path + ": " +
-                      line)
+                print("copyright years are not increasing for " + path + ": " + line)
                 return False
 
         # Subsequent lines must match the copyright body.
@@ -166,7 +184,7 @@ def visit(path):
             if len(copyright_body[copyright_idx]) == 0:
                 expected = prefix.strip()
             else:
-                expected = (prefix + copyright_body[copyright_idx])
+                expected = prefix + copyright_body[copyright_idx]
             if line != expected:
                 print("incorrect copyright body for " + path)
                 print("  expected: '" + expected + "'")
@@ -175,8 +193,11 @@ def visit(path):
             copyright_idx += 1
 
         if copyright_idx != len(copyright_body):
-            print("missing " + str(len(copyright_body) - copyright_idx) +
-                  " lines of the copyright body")
+            print(
+                "missing "
+                + str(len(copyright_body) - copyright_idx)
+                + " lines of the copyright body"
+            )
             return False
 
     if FLAGS.verbose:
@@ -184,24 +205,20 @@ def visit(path):
     return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v',
-                        '--verbose',
-                        action="store_true",
-                        required=False,
-                        default=False,
-                        help='Enable verbose output')
-    parser.add_argument('-y',
-                        '--year',
-                        type=int,
-                        required=True,
-                        help='Copyright year')
-    parser.add_argument('paths',
-                        type=str,
-                        nargs='*',
-                        default=None,
-                        help='Directories or files to check')
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        required=False,
+        default=False,
+        help="Enable verbose output",
+    )
+    parser.add_argument("-y", "--year", type=int, required=True, help="Copyright year")
+    parser.add_argument(
+        "paths", type=str, nargs="*", default=None, help="Directories or files to check"
+    )
     FLAGS = parser.parse_args()
 
     if FLAGS.paths is None or len(FLAGS.paths) == 0:

@@ -1,4 +1,6 @@
-# Copyright (c) 2021-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +15,9 @@
 # limitations under the License.
 
 import argparse
-import yaml
 import sys
+
+import yaml
 
 
 class TestOutputValidator:
@@ -28,7 +31,7 @@ class TestOutputValidator:
         self._config_file = config_file
         self._analyzer_log = analyzer_log
 
-        check_function = self.__getattribute__(f'check_{test_name}')
+        check_function = self.__getattribute__(f"check_{test_name}")
 
         if check_function():
             sys.exit(0)
@@ -41,8 +44,7 @@ class TestOutputValidator:
         """
         with open(self._analyzer_log, "r") as f:
             if "perf_analyzer's measurement window is too small" in f.read():
-                print(
-                    "\n***\n*** Unexpected time window adjustment found.\n***")
+                print("\n***\n*** Unexpected time window adjustment found.\n***")
                 return False
         return True
 
@@ -54,8 +56,7 @@ class TestOutputValidator:
         with open(self._analyzer_log, "r") as f:
             log_contents = f.read()
 
-        if log_contents.find(
-                "measurement window is too small, increased to") != -1:
+        if log_contents.find("measurement window is too small, increased to") != -1:
             return True
         print("\n***\n*** Time window adjustment expected but not found.\n***")
         return False
@@ -67,8 +68,7 @@ class TestOutputValidator:
 
         with open(self._analyzer_log, "r") as f:
             if "perf_analyzer's measurement window is too small" in f.read():
-                print(
-                    "\n***\n*** Unexpected count window adjustment found.\n***")
+                print("\n***\n*** Unexpected count window adjustment found.\n***")
                 return False
         return True
 
@@ -87,25 +87,27 @@ class TestOutputValidator:
         return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f',
-                        '--config-file',
-                        type=str,
-                        required=True,
-                        help='The path to the config yaml file.')
-    parser.add_argument('--analyzer-log',
-                        type=str,
-                        required=True,
-                        help='The path to the analyzer log file.')
-    parser.add_argument('--test-name',
-                        type=str,
-                        required=True,
-                        help='The name of the test to be run.')
+    parser.add_argument(
+        "-f",
+        "--config-file",
+        type=str,
+        required=True,
+        help="The path to the config yaml file.",
+    )
+    parser.add_argument(
+        "--analyzer-log",
+        type=str,
+        required=True,
+        help="The path to the analyzer log file.",
+    )
+    parser.add_argument(
+        "--test-name", type=str, required=True, help="The name of the test to be run."
+    )
     args = parser.parse_args()
 
-    with open(args.config_file, 'r') as f:
+    with open(args.config_file, "r") as f:
         config = yaml.safe_load(f)
 
-    TestOutputValidator(config, args.config_file, args.analyzer_log,
-                        args.test_name)
+    TestOutputValidator(config, args.config_file, args.analyzer_log, args.test_name)

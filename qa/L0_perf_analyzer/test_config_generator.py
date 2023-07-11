@@ -1,4 +1,6 @@
-# Copyright (c) 2021-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +21,7 @@ class TestConfigGenerator:
     """
     This class contains functions that
     create configs for various test scenarios.
-    
+
     The `setup` function does the work common to all tests
 
     TO ADD A TEST: Simply add a member function whose name starts
@@ -30,7 +32,7 @@ class TestConfigGenerator:
         test_functions = [
             self.__getattribute__(name)
             for name in dir(self)
-            if name.startswith('generate')
+            if name.startswith("generate")
         ]
 
         for test_function in test_functions:
@@ -42,51 +44,51 @@ class TestConfigGenerator:
 
     def generate_time_window_no_adjust(self):
         model_config = {
-            'profile_models': ['vgg19_libtorch'],
-            'perf_analyzer_flags': {
-                'measurement-mode': 'time_windows',
-                'measurement-interval': 5000
-            }
+            "profile_models": ["vgg19_libtorch"],
+            "perf_analyzer_flags": {
+                "measurement-mode": "time_windows",
+                "measurement-interval": 5000,
+            },
         }
-        with open('./config-time-no-adjust.yml', 'w') as f:
+        with open("./config-time-no-adjust.yml", "w") as f:
             yaml.dump(model_config, f)
 
     def generate_time_window_adjust(self):
         model_config = {
-            'profile_models': ['vgg19_libtorch'],
-            'perf_output': True,
-            'perf_analyzer_flags': {
-                'measurement-mode': 'time_windows',
-                'measurement-interval': 50
-            }
+            "profile_models": ["vgg19_libtorch"],
+            "perf_output": True,
+            "perf_analyzer_flags": {
+                "measurement-mode": "time_windows",
+                "measurement-interval": 50,
+            },
         }
-        with open('./config-time-adjust.yml', 'w') as f:
+        with open("./config-time-adjust.yml", "w") as f:
             yaml.dump(model_config, f)
 
     def generate_count_window_no_adjust(self):
         model_config = {
-            'profile_models': ['vgg19_libtorch'],
-            'perf_analyzer_flags': {
-                'measurement-mode': 'count_windows',
-                'measurement-interval': 50
-            }
+            "profile_models": ["vgg19_libtorch"],
+            "perf_analyzer_flags": {
+                "measurement-mode": "count_windows",
+                "measurement-interval": 50,
+            },
         }
-        with open('./config-count-no-adjust.yml', 'w') as f:
+        with open("./config-count-no-adjust.yml", "w") as f:
             yaml.dump(model_config, f)
 
     def generate_additive_args(self):
         model_config = {
-            'profile_models': ['vgg19_libtorch'],
-            'perf_analyzer_flags': {
-                'measurement-mode': 'count_windows',
-                'measurement-interval': 50,
-                'streaming': True,
-                'shape': ['INPUT__0:1,2,3', 'FAKE_INPUT2:4,5,6']
-            }
+            "profile_models": ["vgg19_libtorch"],
+            "perf_analyzer_flags": {
+                "measurement-mode": "count_windows",
+                "measurement-interval": 50,
+                "streaming": True,
+                "shape": ["INPUT__0:1,2,3", "FAKE_INPUT2:4,5,6"],
+            },
         }
-        with open('./config-additive-args-count-no-adjust.yml', 'w') as f:
+        with open("./config-additive-args-count-no-adjust.yml", "w") as f:
             yaml.dump(model_config, f)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     TestConfigGenerator()

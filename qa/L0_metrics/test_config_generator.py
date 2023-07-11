@@ -1,4 +1,6 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+
 import yaml
 
 
@@ -21,7 +24,7 @@ class TestConfigGenerator:
     This class contains functions that
     create configs for various test scenarios.
 
-    TO ADD A TEST: Simply add a member function whose name starts 
+    TO ADD A TEST: Simply add a member function whose name starts
                     with 'generate'.
     """
 
@@ -38,40 +41,42 @@ class TestConfigGenerator:
 
     def setUp(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument("-m",
-                            "--profile-models",
-                            type=str,
-                            required=True,
-                            help="The models to be profiled for this test")
+        parser.add_argument(
+            "-m",
+            "--profile-models",
+            type=str,
+            required=True,
+            help="The models to be profiled for this test",
+        )
         args = parser.parse_args()
         self.profile_models = args.profile_models.split(",")
         self.test_id += 1
 
     def generate_with_cpu_metrics(self):
         model_config = {
-            "collect_cpu_metrics":
-                True,
-            "run_config_search_disable":
-                True,
+            "collect_cpu_metrics": True,
+            "run_config_search_disable": True,
             "profile_models": {
                 model: {
-                    "parameters": {
-                        "concurrency": [1]
-                    },
+                    "parameters": {"concurrency": [1]},
                     "model_config_parameters": {
-                        "instance_group": [{
-                            "count": [1],
-                            "kind": "KIND_GPU"
-                        }],
-                        "dynamic_batching": {}
-                    }
-                } for model in self.profile_models
+                        "instance_group": [{"count": [1], "kind": "KIND_GPU"}],
+                        "dynamic_batching": {},
+                    },
+                }
+                for model in self.profile_models
             },
             "inference_output_fields": [
-                "model_name", "batch_size", "concurrency", "model_config_path",
-                "instance_group", "satisfies_constraints", "perf_throughput",
-                "perf_latency_p99", "cpu_used_ram"
-            ]
+                "model_name",
+                "batch_size",
+                "concurrency",
+                "model_config_path",
+                "instance_group",
+                "satisfies_constraints",
+                "perf_throughput",
+                "perf_latency_p99",
+                "cpu_used_ram",
+            ],
         }
         self._write_file(5, 10, 9, model_config)
 
@@ -81,52 +86,50 @@ class TestConfigGenerator:
             "run_config_search_disable": True,
             "profile_models": {
                 model: {
-                    "parameters": {
-                        "concurrency": [1]
-                    },
+                    "parameters": {"concurrency": [1]},
                     "model_config_parameters": {
-                        "instance_group": [{
-                            "count": [1],
-                            "kind": "KIND_GPU"
-                        }],
-                        "dynamic_batching": {}
-                    }
-                } for model in self.profile_models
-            }
+                        "instance_group": [{"count": [1], "kind": "KIND_GPU"}],
+                        "dynamic_batching": {},
+                    },
+                }
+                for model in self.profile_models
+            },
         }
         self._write_file(5, 10, 9, model_config)
 
     def generate_perf_latency_test(self):
         model_config = {
-            "collect_cpu_metrics":
-                False,
-            "run_config_search_disable":
-                True,
+            "collect_cpu_metrics": False,
+            "run_config_search_disable": True,
             "profile_models": {
                 model: {
-                    "parameters": {
-                        "concurrency": [1]
-                    },
+                    "parameters": {"concurrency": [1]},
                     "model_config_parameters": {
-                        "instance_group": [{
-                            "count": [1],
-                            "kind": "KIND_GPU"
-                        }],
-                        "dynamic_batching": {}
-                    }
-                } for model in self.profile_models
+                        "instance_group": [{"count": [1], "kind": "KIND_GPU"}],
+                        "dynamic_batching": {},
+                    },
+                }
+                for model in self.profile_models
             },
             "inference_output_fields": [
-                "model_name", "batch_size", "concurrency", "model_config_path",
-                "instance_group", "satisfies_constraints", "perf_throughput",
-                "perf_latency_avg", "perf_latency_p90", "perf_latency_p95",
-                "perf_latency_p99"
-            ]
+                "model_name",
+                "batch_size",
+                "concurrency",
+                "model_config_path",
+                "instance_group",
+                "satisfies_constraints",
+                "perf_throughput",
+                "perf_latency_avg",
+                "perf_latency_p90",
+                "perf_latency_p95",
+                "perf_latency_p99",
+            ],
         }
         self._write_file(5, 10, 11, model_config)
 
-    def _write_file(self, total_param_server, total_param_gpu,
-                    total_param_inference, model_config):
+    def _write_file(
+        self, total_param_server, total_param_gpu, total_param_inference, model_config
+    ):
         with open(f"./config-{self.test_id}-param-server.txt", "w") as file:
             file.write(str(total_param_server))
         with open(f"./config-{self.test_id}-param-gpu.txt", "w") as file:

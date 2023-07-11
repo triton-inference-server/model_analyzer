@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +19,7 @@ from typing import Dict, List
 
 
 class GeneratorUtils:
-    ''' Class for utility functions for Generators  '''
+    """Class for utility functions for Generators"""
 
     @staticmethod
     def generate_combinations(value: object) -> List:
@@ -47,7 +49,8 @@ class GeneratorUtils:
                 # here.
                 for sweep_choice in sweep_choices:
                     sweep_parameter_list += GeneratorUtils.generate_combinations(
-                        sweep_choice)
+                        sweep_choice
+                    )
 
                 sweeped_dict[key] = sweep_parameter_list
 
@@ -59,14 +62,12 @@ class GeneratorUtils:
         # Because of this we need to ensure that in every sweep configuration,
         # one item from every list item exists.
         elif type(value) is list:
-
             # This list contains a set of lists. The return value from this
             # branch of the code is a list of lists where in each inner list
             # there is one item from every list item.
             sweep_parameter_list = []
             for item in value:
-                sweep_parameter_list_item = GeneratorUtils.generate_combinations(
-                    item)
+                sweep_parameter_list_item = GeneratorUtils.generate_combinations(item)
                 sweep_parameter_list.append(sweep_parameter_list_item)
 
             # Cartesian product of all the elements in the sweep_parameter_list
@@ -96,7 +97,7 @@ class GeneratorUtils:
     @staticmethod
     def generate_doubled_list(min_value: int, max_value: int) -> List[int]:
         """
-        Generates a list of values from min_value -> max_value doubling 
+        Generates a list of values from min_value -> max_value doubling
         min_value for each entry
 
         Parameters

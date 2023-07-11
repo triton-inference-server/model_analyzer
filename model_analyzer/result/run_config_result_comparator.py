@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict
+from typing import Dict, List
 
 
 class RunConfigResultComparator:
@@ -20,8 +22,9 @@ class RunConfigResultComparator:
     Stores information needed to compare two RunConfigResults.
     """
 
-    def __init__(self, metric_objectives_list: List[Dict[str, int]],
-                 model_weights: List[int]):
+    def __init__(
+        self, metric_objectives_list: List[Dict[str, int]], model_weights: List[int]
+    ):
         """
         Parameters
         ----------
@@ -35,10 +38,12 @@ class RunConfigResultComparator:
         self._metric_weights = []
         self._model_weights = []
         for i, metric_objectives in enumerate(metric_objectives_list):
-            self._metric_weights.append({
-                key: (val / sum(metric_objectives.values()))
-                for key, val in metric_objectives.items()
-            })
+            self._metric_weights.append(
+                {
+                    key: (val / sum(metric_objectives.values()))
+                    for key, val in metric_objectives.items()
+                }
+            )
 
             self._model_weights.append(model_weights[i])
 
@@ -50,7 +55,7 @@ class RunConfigResultComparator:
 
     def is_better_than(self, run_config_result1, run_config_result2):
         """
-        Aggregates and compares the score for two RunConfigResults 
+        Aggregates and compares the score for two RunConfigResults
 
         Parameters
         ----------
@@ -66,20 +71,20 @@ class RunConfigResultComparator:
         """
 
         agg_run_config_measurement1 = self._aggregate_run_config_measurements(
-            run_config_result1, aggregation_func=max)
+            run_config_result1, aggregation_func=max
+        )
         agg_run_config_measurement2 = self._aggregate_run_config_measurements(
-            run_config_result2, aggregation_func=max)
+            run_config_result2, aggregation_func=max
+        )
 
-        return agg_run_config_measurement1.is_better_than(
-            agg_run_config_measurement2)
+        return agg_run_config_measurement1.is_better_than(agg_run_config_measurement2)
 
-    def _aggregate_run_config_measurements(self, run_config_result,
-                                           aggregation_func):
+    def _aggregate_run_config_measurements(self, run_config_result, aggregation_func):
         """
         Returns
         -------
         (list, list)
-            A 2-tuple of average RunConfigMeasurements, 
+            A 2-tuple of average RunConfigMeasurements,
             The first is across non-gpu specific metrics
             The second is across gpu-specific measurements
         """
@@ -90,14 +95,16 @@ class RunConfigResultComparator:
 
         if run_config_result.passing_measurements():
             aggregated_run_config_measurement = aggregation_func(
-                run_config_result.passing_measurements())
+                run_config_result.passing_measurements()
+            )
         else:
             aggregated_run_config_measurement = aggregation_func(
-                run_config_result.run_config_measurements())
+                run_config_result.run_config_measurements()
+            )
 
         aggregated_run_config_measurement.set_model_config_weighting(
-            self._model_weights)
-        aggregated_run_config_measurement.set_metric_weightings(
-            self._metric_weights)
+            self._model_weights
+        )
+        aggregated_run_config_measurement.set_metric_weightings(self._metric_weights)
 
         return aggregated_run_config_measurement

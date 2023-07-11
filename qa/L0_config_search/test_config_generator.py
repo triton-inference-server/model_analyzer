@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+
 import yaml
 
 
@@ -21,7 +24,7 @@ class TestConfigGenerator:
     This class contains functions that
     create configs for various test scenarios.
 
-    TO ADD A TEST: Simply add a member function whose name starts 
+    TO ADD A TEST: Simply add a member function whose name starts
                     with 'generate'.
     """
 
@@ -38,11 +41,13 @@ class TestConfigGenerator:
 
     def setUp(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument("-m",
-                            "--profile-models",
-                            type=str,
-                            required=True,
-                            help="The models to be profiled for this test")
+        parser.add_argument(
+            "-m",
+            "--profile-models",
+            type=str,
+            required=True,
+            help="The models to be profiled for this test",
+        )
         args = parser.parse_args()
         self.profile_models = args.profile_models.split(",")
         self.test_id += 1
@@ -54,20 +59,17 @@ class TestConfigGenerator:
             "run_config_search_disable": True,
             "profile_models": {
                 model: {
-                    "parameters": {
-                        "concurrency": [1]
-                    },
+                    "parameters": {"concurrency": [1]},
                     "model_config_parameters": {
-                        "instance_group": [{
-                            "count": [1, 2],
-                            "kind": "KIND_GPU"
-                        }]
-                    }
-                } for model in self.profile_models
-            }
+                        "instance_group": [{"count": [1, 2], "kind": "KIND_GPU"}]
+                    },
+                }
+                for model in self.profile_models
+            },
         }
         total_param_count = self._calculate_total_params(
-            concurrency_count, instance_count)
+            concurrency_count, instance_count
+        )
         self._write_file(total_param_count, 1, 2, 1, model_config)
 
     def generate_max_limit_with_model_config(self):
@@ -80,16 +82,15 @@ class TestConfigGenerator:
             "profile_models": {
                 model: {
                     "model_config_parameters": {
-                        "instance_group": [{
-                            "count": [1, 2],
-                            "kind": "KIND_GPU"
-                        }]
+                        "instance_group": [{"count": [1, 2], "kind": "KIND_GPU"}]
                     }
-                } for model in self.profile_models
+                }
+                for model in self.profile_models
             },
         }
         total_param_count = self._calculate_total_params(
-            concurrency_count, instance_count)
+            concurrency_count, instance_count
+        )
         self._write_file(total_param_count, 2, 2, 1, model_config)
 
     def generate_max_limit(self):
@@ -102,7 +103,8 @@ class TestConfigGenerator:
             "profile_models": self.profile_models,
         }
         total_param_count = self._calculate_total_params(
-            concurrency_count, instance_count)
+            concurrency_count, instance_count
+        )
         self._write_file(total_param_count, 2, 8, 1, model_config)
 
     def generate_max_limit_with_param(self):
@@ -114,14 +116,14 @@ class TestConfigGenerator:
             "run_config_search_max_model_batch_size": 1,
             "profile_models": {
                 model: {
-                    "parameters": {
-                        "concurrency": [1]
-                    },
-                } for model in self.profile_models
+                    "parameters": {"concurrency": [1]},
+                }
+                for model in self.profile_models
             },
         }
         total_param_count = self._calculate_total_params(
-            concurrency_count, instance_count)
+            concurrency_count, instance_count
+        )
         self._write_file(total_param_count, 1, 6, 1, model_config)
 
     def generate_max_limit_with_param_and_model_config(self):
@@ -133,20 +135,17 @@ class TestConfigGenerator:
             "run_config_search_max_model_batch_size": 1,
             "profile_models": {
                 model: {
-                    "parameters": {
-                        "concurrency": [1]
-                    },
+                    "parameters": {"concurrency": [1]},
                     "model_config_parameters": {
-                        "instance_group": [{
-                            "count": [1, 2],
-                            "kind": "KIND_GPU"
-                        }]
-                    }
-                } for model in self.profile_models
+                        "instance_group": [{"count": [1, 2], "kind": "KIND_GPU"}]
+                    },
+                }
+                for model in self.profile_models
             },
         }
         total_param_count = self._calculate_total_params(
-            concurrency_count, instance_count)
+            concurrency_count, instance_count
+        )
         self._write_file(total_param_count, 1, 2, 1, model_config)
 
     def generate_max_limit_with_dynamic_batch_disable(self):
@@ -159,25 +158,31 @@ class TestConfigGenerator:
             "profile_models": self.profile_models,
         }
         total_param_count = self._calculate_total_params(
-            concurrency_count, instance_count)
+            concurrency_count, instance_count
+        )
         self._write_file(total_param_count, 2, 4, 1, model_config)
 
-    def _calculate_total_params(self,
-                                concurrency_count,
-                                instance_count,
-                                default_config_count=1):
+    def _calculate_total_params(
+        self, concurrency_count, instance_count, default_config_count=1
+    ):
         """
-        Given the count of concurrencies and instances to sweep over, 
-        calculate and return the total number of parameter combinations 
-        that MA will try. default_config_count indicates how many extra 
-        model configs will be run in addition to the normal sweep, 
-        and should be set to 0 if the default config is already part of 
+        Given the count of concurrencies and instances to sweep over,
+        calculate and return the total number of parameter combinations
+        that MA will try. default_config_count indicates how many extra
+        model configs will be run in addition to the normal sweep,
+        and should be set to 0 if the default config is already part of
         the sweep space.
         """
         return concurrency_count * (instance_count + default_config_count)
 
-    def _write_file(self, total_param, total_param_remote, total_models,
-                    total_models_remote, model_config):
+    def _write_file(
+        self,
+        total_param,
+        total_param_remote,
+        total_models,
+        total_models_remote,
+        model_config,
+    ):
         with open(f"./config-{self.test_id}-param.txt", "w") as file:
             file.write(str(total_param))
         with open(f"./config-{self.test_id}-param-remote.txt", "w") as file:
@@ -190,5 +195,5 @@ class TestConfigGenerator:
             yaml.dump(model_config, file)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     TestConfigGenerator()

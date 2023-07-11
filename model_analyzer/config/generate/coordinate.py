@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +15,7 @@
 # limitations under the License.
 
 from copy import deepcopy
-from typing import Iterator, Any, Union, List
+from typing import Any, Iterator, List, Union
 
 
 class Coordinate:
@@ -21,7 +23,7 @@ class Coordinate:
     Class to define a coordinate in n-dimension space
     """
 
-    def __init__(self, val: Union['Coordinate', List[int]]):
+    def __init__(self, val: Union["Coordinate", List[int]]):
         """
         val: list
             List of floats or integers corresponding to the location in space
@@ -40,7 +42,7 @@ class Coordinate:
     def __len__(self) -> int:
         return len(self._values)
 
-    def __add__(self, other: Any) -> 'Coordinate':
+    def __add__(self, other: Any) -> "Coordinate":
         if type(other) == Coordinate:
             return self._add_coordinate(other)
         elif type(other) == int or type(other) == float:
@@ -48,7 +50,7 @@ class Coordinate:
         else:
             raise Exception("Unhandled addition type")
 
-    def __sub__(self, other: Any) -> 'Coordinate':
+    def __sub__(self, other: Any) -> "Coordinate":
         if type(other) == Coordinate:
             return self._sub_coordinate(other)
         elif type(other) == int or type(other) == float:
@@ -56,13 +58,13 @@ class Coordinate:
         else:
             raise Exception("Unhandled subtraction type")
 
-    def __truediv__(self, other: Any) -> 'Coordinate':
+    def __truediv__(self, other: Any) -> "Coordinate":
         if type(other) == int or type(other) == float:
             return self._div_number(other)
         else:
             raise Exception("Unhandled division type")
 
-    def __mul__(self, other: Any) -> 'Coordinate':
+    def __mul__(self, other: Any) -> "Coordinate":
         if type(other) == int or type(other) == float:
             return self._mul_number(other)
         else:
@@ -81,41 +83,41 @@ class Coordinate:
         return False
 
     def round(self) -> None:
-        """ Rounds the coordinate in-place """
+        """Rounds the coordinate in-place"""
         for i, _ in enumerate(self._values):
             self._values[i] = round(self._values[i])
 
-    def _add_coordinate(self, other: Any) -> 'Coordinate':
+    def _add_coordinate(self, other: Any) -> "Coordinate":
         ret = Coordinate(self._values)
         for i, v in enumerate(self._values):
             ret[i] = v + other[i]
         return ret
 
-    def _add_number(self, other: Any) -> 'Coordinate':
+    def _add_number(self, other: Any) -> "Coordinate":
         ret = Coordinate(self._values)
         for i, v in enumerate(self._values):
             ret[i] = v + other
         return ret
 
-    def _sub_coordinate(self, other: Any) -> 'Coordinate':
+    def _sub_coordinate(self, other: Any) -> "Coordinate":
         ret = Coordinate(self._values)
         for i, v in enumerate(self._values):
             ret[i] = v - other[i]
         return ret
 
-    def _sub_number(self, other: Any) -> 'Coordinate':
+    def _sub_number(self, other: Any) -> "Coordinate":
         ret = Coordinate(self._values)
         for i, v in enumerate(self._values):
             ret[i] = v - other
         return ret
 
-    def _mul_number(self, other: Any) -> 'Coordinate':
+    def _mul_number(self, other: Any) -> "Coordinate":
         ret = Coordinate(self._values)
         for i, v in enumerate(self._values):
             ret[i] = v * other
         return ret
 
-    def _div_number(self, other: Any) -> 'Coordinate':
+    def _div_number(self, other: Any) -> "Coordinate":
         ret = Coordinate(self._values)
         for i, v in enumerate(self._values):
             ret[i] = v / other

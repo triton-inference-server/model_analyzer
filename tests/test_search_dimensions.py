@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,23 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.search_dimension import SearchDimension
 from model_analyzer.config.generate.search_dimensions import SearchDimensions
-from model_analyzer.config.generate.coordinate import Coordinate
+
 from .common import test_result_collector as trc
 
 
 class TestSearchDimensions(trc.TestResultCollector):
-
     def setUp(self):
         self._dims = SearchDimensions()
-        self._dims.add_dimensions(0, [
-            SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
-            SearchDimension("bar", SearchDimension.DIMENSION_TYPE_LINEAR),
-        ])
+        self._dims.add_dimensions(
+            0,
+            [
+                SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR),
+                SearchDimension("bar", SearchDimension.DIMENSION_TYPE_LINEAR),
+            ],
+        )
 
         self._dims.add_dimensions(
-            1, [SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR)])
+            1, [SearchDimension("foo", SearchDimension.DIMENSION_TYPE_LINEAR)]
+        )
 
     def test_list_behavior(self):
         """
@@ -68,8 +74,6 @@ class TestSearchDimensions(trc.TestResultCollector):
                 "foo": 1,
                 "bar": 3,
             },
-            1: {
-                "foo": 5
-            }
+            1: {"foo": 5},
         }
         self.assertEqual(vals, expected_vals)

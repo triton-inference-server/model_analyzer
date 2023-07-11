@@ -1,4 +1,5 @@
-# Copyright (c) 2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/bin/bash
+# Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,7 +36,7 @@ python3 test_config_generator.py --model-names resnet_v1_50_cpu_graphdef
 
 # Compute expected rows: concurrency * (instance count * dynamic batch size + 1)
 # concurrency:          3       ->  [1, 2, 4]; set in config-profile.yml
-# instance count:       2         ->  [1, 2]; set in config-profile.yml; 
+# instance count:       2         ->  [1, 2]; set in config-profile.yml;
 # dynamic batch size:   1       ->  [1]; now always on when searching
 # default config:       +1 is for the default configuration
 # => 3 * (2 * 1 + 1) = 9

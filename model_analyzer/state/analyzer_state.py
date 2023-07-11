@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.result.results import Results
 from model_analyzer.record.record import RecordType
+from model_analyzer.result.results import Results
 
 
 class AnalyzerState:
     """
-    All the state information needed by 
+    All the state information needed by
     Model Analyzer in one place
     """
 
@@ -33,29 +35,29 @@ class AnalyzerState:
         state = AnalyzerState()
 
         # Model Variant mapping
-        state._state_dict[
-            'ModelManager.model_variant_name_manager'] = state_dict[
-                'ModelManager.model_variant_name_manager']
+        state._state_dict["ModelManager.model_variant_name_manager"] = state_dict[
+            "ModelManager.model_variant_name_manager"
+        ]
 
         # Fill results
-        state._state_dict['ResultManager.results'] = Results.from_dict(
-            state_dict['ResultManager.results'])
+        state._state_dict["ResultManager.results"] = Results.from_dict(
+            state_dict["ResultManager.results"]
+        )
 
         # Server data
-        state._state_dict['ResultManager.server_only_data'] = {}
+        state._state_dict["ResultManager.server_only_data"] = {}
         for gpu_uuid, gpu_data_list in state_dict[
-                'ResultManager.server_only_data'].items():
+            "ResultManager.server_only_data"
+        ].items():
             metric_list = []
             for [tag, record_dict] in gpu_data_list:
                 record_type = RecordType.get(tag)
                 record = record_type.from_dict(record_dict)
                 metric_list.append(record)
-            state._state_dict['ResultManager.server_only_data'][
-                gpu_uuid] = metric_list
+            state._state_dict["ResultManager.server_only_data"][gpu_uuid] = metric_list
 
         # GPU data
-        state._state_dict['MetricsManager.gpus'] = state_dict[
-            'MetricsManager.gpus']
+        state._state_dict["MetricsManager.gpus"] = state_dict["MetricsManager.gpus"]
 
         return state
 

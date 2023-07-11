@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD
-from model_analyzer.constants import LOGGER_NAME
-
-from model_analyzer.record.record import RecordType
-
-from copy import deepcopy
-from statistics import mean
-from functools import total_ordering
 import logging
+from copy import deepcopy
+from functools import total_ordering
+from statistics import mean
+
+from model_analyzer.constants import COMPARISON_SCORE_THRESHOLD, LOGGER_NAME
+from model_analyzer.record.record import RecordType
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -32,8 +32,7 @@ class ModelConfigMeasurement:
     RunConfig run
     """
 
-    def __init__(self, model_config_name, model_specific_pa_params,
-                 non_gpu_data):
+    def __init__(self, model_config_name, model_specific_pa_params, non_gpu_data):
         """
         model_config_name : string
             The model config name that was used in the RunConfig
@@ -56,7 +55,7 @@ class ModelConfigMeasurement:
 
     def to_dict(self):
         mcm_dict = deepcopy(self.__dict__)
-        del mcm_dict['_metric_weights']
+        del mcm_dict["_metric_weights"]
 
         return mcm_dict
 
@@ -65,16 +64,19 @@ class ModelConfigMeasurement:
         model_config_measurement = ModelConfigMeasurement(None, {}, [])
 
         model_config_measurement._model_config_name = model_config_measurement_dict[
-            '_model_config_name']
-        model_config_measurement._model_specific_pa_params = model_config_measurement_dict[
-            '_model_specific_pa_params']
+            "_model_config_name"
+        ]
+        model_config_measurement._model_specific_pa_params = (
+            model_config_measurement_dict["_model_specific_pa_params"]
+        )
 
         model_config_measurement._non_gpu_data = cls._deserialize_non_gpu_data(
-            model_config_measurement,
-            model_config_measurement_dict['_non_gpu_data'])
+            model_config_measurement, model_config_measurement_dict["_non_gpu_data"]
+        )
 
-        model_config_measurement._non_gpu_data_from_tag = cls._get_non_gpu_data_from_tag(
-            model_config_measurement)
+        model_config_measurement._non_gpu_data_from_tag = (
+            cls._get_non_gpu_data_from_tag(model_config_measurement)
+        )
 
         return model_config_measurement
 
@@ -82,7 +84,7 @@ class ModelConfigMeasurement:
         """
         Sets the metric weighting for this measurement based
         on the objectives
-        
+
         Parameters
         ----------
         metric_objectives : dict of RecordTypes
@@ -122,7 +124,7 @@ class ModelConfigMeasurement:
 
     def non_gpu_data(self):
         """
-        Return a list of the non-GPU specific 
+        Return a list of the non-GPU specific
         measurement Records
         """
 
@@ -162,8 +164,8 @@ class ModelConfigMeasurement:
         Returns
         -------
         Record
-            Value of the metric Record corresponding 
-            to the tag, in this measurement, 
+            Value of the metric Record corresponding
+            to the tag, in this measurement,
             default_value if tag not found.
         """
 
@@ -173,12 +175,12 @@ class ModelConfigMeasurement:
         return metric.value()
 
     def get_weighted_score(self, other):
-        """ 
+        """
         Parameters
         ----------
         other: ModelConfigMeasurement
             set of (non_gpu) metrics to be compared against
-        
+
         Returns
         -------
         float
@@ -194,7 +196,7 @@ class ModelConfigMeasurement:
 
         If True, this means this measurement is better
         than the other.
-        
+
         Parameters
         ----------
         other: ModelConfigMeasurement
@@ -206,7 +208,7 @@ class ModelConfigMeasurement:
     def __eq__(self, other):
         """
         Check whether two sets of measurements are equivalent
-        
+
         Parameters
         ----------
         other: ModelConfigMeasurement
@@ -221,12 +223,12 @@ class ModelConfigMeasurement:
         another
 
         This is used when sorting
-        
+
         Parameters
         ----------
         other: ModelConfigMeasurement
             set of (non_gpu) metrics to be compared against
-            
+
         Returns
         -------
         bool:
@@ -237,7 +239,7 @@ class ModelConfigMeasurement:
 
     def _compare_measurements(self, other):
         """
-        Compares two ModelConfig measurements 
+        Compares two ModelConfig measurements
         based on the weighted metric objectives
 
         Parameters
@@ -266,19 +268,19 @@ class ModelConfigMeasurement:
 
     def _calculate_weighted_score(self, other):
         """
-        Calculates the weighted score between two 
+        Calculates the weighted score between two
         ModelConfig measurements based on the weighted
         metric objectives
-        
+
         Parameters
         ----------
         other : ModelConfigMeasurement
             set of (non_gpu) metrics to be compared against
-            
+
         Returns
         -------
         float
-            The weighted score. A positive value indicates 
+            The weighted score. A positive value indicates
             this ModelConfig measurement is better than the other
         """
 
@@ -303,19 +305,19 @@ class ModelConfigMeasurement:
 
     def calculate_weighted_percentage_gain(self, other):
         """
-        Calculates the weighted percentage between two 
+        Calculates the weighted percentage between two
         ModelConfig measurements based on the weighted
         metric objectives
-        
+
         Parameters
         ----------
         other : ModelConfigMeasurement
             set of (non_gpu) metrics to be compared against
-            
+
         Returns
         -------
         float
-            The weighted percentage gain. A positive value indicates 
+            The weighted percentage gain. A positive value indicates
             this ModelConfig measurement is better than the other
         """
 

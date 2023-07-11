@@ -25,7 +25,7 @@ tags, which are used in various places to configure Model Analyzer.
 These metrics come from the perf analyzer and are parsed and processed by the
 model analyzer. See the [perf analyzer
 docs](https://github.com/triton-inference-server/client/blob/main/src/c++/perf_analyzer/README.md)
-for more info on these 
+for more info on these
 
 * `perf_throughput`: The number of inferences per second measured by the perf
   analyzer.
@@ -51,7 +51,7 @@ for more info on these
 
 These are metrics captured by the tritonserver. They are recorded for each GPU
 in fixed intervals during perf analyzer runs and then aggregated across all the
-records for a run. 
+records for a run.
 
 * `gpu_used_memory`: The maximum memory used by the GPU
 * `gpu_free_memory`: The maximum memory available in the GPU
@@ -64,7 +64,7 @@ These metrics are captured using `psutil` or `docker stats`, and are also
 recorded and aggregated over fixed intervals during a perf analyzer run.
 
 * `cpu_used_ram`: The total amount of memory used by all CPUs
-* `cpu_available_ram`: The total amount of availble CPU memory.
+* `cpu_available_ram`: The total amount of available CPU memory.
 
 **Warning**: Collecting CPU metrics might affect model inference metrics such as throughput and latency. By default, CPU metrics are not collected. To collect CPU metrics, set `collect_cpu_metrics` flag to `true`, see [Configuring Model Analyzer](./config.md) for details.
 

@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from .mock_dcgm_field_group_watcher import MockDCGMFieldGroupWatcherHelper
-from .mock_dcgm_agent import MockDCGMAgent
 from .mock_base import MockBase
+from .mock_dcgm_agent import MockDCGMAgent
+from .mock_dcgm_field_group_watcher import MockDCGMFieldGroupWatcherHelper
 
 
 class MockDCGM(MockBase):
@@ -28,22 +30,22 @@ class MockDCGM(MockBase):
         patchers = self._patchers
 
         structs_imports_path = [
-            'model_analyzer.monitor.dcgm.dcgm_monitor',
-            'model_analyzer.device.gpu_device_factory'
+            "model_analyzer.monitor.dcgm.dcgm_monitor",
+            "model_analyzer.device.gpu_device_factory",
         ]
         for import_path in structs_imports_path:
-            patchers.append(
-                patch(f'{import_path}.structs._dcgmInit', MagicMock()))
+            patchers.append(patch(f"{import_path}.structs._dcgmInit", MagicMock()))
 
         dcgm_agent_imports_path = [
-            'model_analyzer.monitor.dcgm.dcgm_monitor',
-            'model_analyzer.device.gpu_device_factory'
+            "model_analyzer.monitor.dcgm.dcgm_monitor",
+            "model_analyzer.device.gpu_device_factory",
         ]
         for import_path in dcgm_agent_imports_path:
-            patchers.append(patch(f'{import_path}.dcgm_agent', MockDCGMAgent))
+            patchers.append(patch(f"{import_path}.dcgm_agent", MockDCGMAgent))
 
         patchers.append(
             patch(
-                'model_analyzer.monitor.dcgm.dcgm_monitor.dcgm_field_helpers.DcgmFieldGroupWatcher',
+                "model_analyzer.monitor.dcgm.dcgm_monitor.dcgm_field_helpers.DcgmFieldGroupWatcher",
                 MockDCGMFieldGroupWatcherHelper,
-            ))
+            )
+        )

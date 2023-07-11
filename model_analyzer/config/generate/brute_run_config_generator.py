@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,20 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Generator, Optional, Dict
+from typing import Dict, Generator, List, Optional
 
+from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
+from model_analyzer.config.generate.model_run_config_generator import (
+    ModelRunConfigGenerator,
+)
+from model_analyzer.config.generate.model_variant_name_manager import (
+    ModelVariantNameManager,
+)
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.run.model_run_config import ModelRunConfig
+from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.triton.client.client import TritonClient
 
 from .config_generator_interface import ConfigGeneratorInterface
-from model_analyzer.config.run.run_config import RunConfig
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
-from model_analyzer.config.generate.model_run_config_generator import ModelRunConfigGenerator
-from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-from model_analyzer.triton.client.client import TritonClient
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 
 class BruteRunConfigGenerator(ConfigGeneratorInterface):
@@ -33,13 +39,15 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
     Generates all RunConfigs to execute via brute force given a list of models
     """
 
-    def __init__(self,
-                 config: ConfigCommandProfile,
-                 gpus: List[GPUDevice],
-                 models: List[ModelProfileSpec],
-                 client: TritonClient,
-                 model_variant_name_manager: ModelVariantNameManager,
-                 skip_default_config: bool = False):
+    def __init__(
+        self,
+        config: ConfigCommandProfile,
+        gpus: List[GPUDevice],
+        models: List[ModelProfileSpec],
+        client: TritonClient,
+        model_variant_name_manager: ModelVariantNameManager,
+        skip_default_config: bool = False,
+    ):
         """
         Parameters
         ----------
@@ -51,9 +59,9 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
             The models to generate ModelRunConfigs for
 
         client: TritonClient
-        
+
         model_variant_name_manager: ModelVariantNameManager
-        
+
         skip_default_config: bool
         """
         self._config = config
@@ -62,8 +70,7 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         self._client = client
         self._model_variant_name_manager = model_variant_name_manager
 
-        self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(
-            models)
+        self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(models)
 
         self._num_models = len(models)
 
@@ -76,7 +83,8 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         self._skip_default_config = skip_default_config
 
     def set_last_results(
-            self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
+        self, measurements: List[Optional[RunConfigMeasurement]]
+    ) -> None:
         for index in range(self._num_models):
             self._curr_results[index].extend(measurements)
 
@@ -98,15 +106,19 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
             yield from self._generate_subset(0, default_only=False)
 
     def _should_generate_non_default_configs(self) -> bool:
-        return self._config.triton_launch_mode != 'remote'
+        return self._config.triton_launch_mode != "remote"
 
     def _generate_subset(
-            self, index: int,
-            default_only: bool) -> Generator[RunConfig, None, None]:
-        mrcg = ModelRunConfigGenerator(self._config, self._gpus,
-                                       self._models[index], self._client,
-                                       self._model_variant_name_manager,
-                                       default_only)
+        self, index: int, default_only: bool
+    ) -> Generator[RunConfig, None, None]:
+        mrcg = ModelRunConfigGenerator(
+            self._config,
+            self._gpus,
+            self._models[index],
+            self._client,
+            self._model_variant_name_manager,
+            default_only,
+        )
 
         self._curr_generators[index] = mrcg
 
@@ -131,8 +143,7 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         self._curr_results[index] = []
 
     @classmethod
-    def determine_triton_server_env(cls,
-                                    models: List[ModelProfileSpec]) -> Dict:
+    def determine_triton_server_env(cls, models: List[ModelProfileSpec]) -> Dict:
         """
         Given a list of models, return the triton environment
         """

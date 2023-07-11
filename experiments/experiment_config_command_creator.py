@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
+from config_command_experiment import ConfigCommandExperiment
+
+from model_analyzer.cli.cli import CLI
+from tests.common.test_utils import convert_to_bytes
 from tests.mocks.mock_config import MockConfig
 from tests.mocks.mock_model_config import MockModelConfig
-from tests.common.test_utils import convert_to_bytes
-from model_analyzer.cli.cli import CLI
-from config_command_experiment import ConfigCommandExperiment
-import re
 
 
 class ExperimentConfigCommandCreator:
@@ -27,14 +31,13 @@ class ExperimentConfigCommandCreator:
 
     @staticmethod
     def make_config(data_path, model_name, other_args):
-
-        ckpt = re.search('(.+)\/(\d\.ckpt)', data_path)
+        ckpt = re.search("(.+)\/(\d\.ckpt)", data_path)
         if ckpt:
             checkpoint_dir = ckpt.group(1)
         else:
             checkpoint_dir = f"{data_path}/{model_name}"
 
-        #yapf: disable
+        # yapf: disable
         args = [
             'model-analyzer', 'profile',
             '--profile-models', model_name,

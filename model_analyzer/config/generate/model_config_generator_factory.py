@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .automatic_model_config_generator import AutomaticModelConfigGenerator
-from .manual_model_config_generator import ManualModelConfigGenerator
+from typing import List
+
+from model_analyzer.config.generate.model_variant_name_manager import (
+    ModelVariantNameManager,
+)
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.triton.client.client import TritonClient
-from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-from .model_profile_spec import ModelProfileSpec
-from typing import List
+
+from .automatic_model_config_generator import AutomaticModelConfigGenerator
 from .config_generator_interface import ConfigGeneratorInterface
+from .manual_model_config_generator import ManualModelConfigGenerator
+from .model_profile_spec import ModelProfileSpec
 
 
 class ModelConfigGeneratorFactory:
@@ -30,11 +36,14 @@ class ModelConfigGeneratorFactory:
 
     @staticmethod
     def create_model_config_generator(
-            config: ConfigCommandProfile, gpus: List[GPUDevice],
-            model: ModelProfileSpec, client: TritonClient,
-            model_variant_name_manager: ModelVariantNameManager,
-            default_only: bool,
-            early_exit_enable: bool) -> ConfigGeneratorInterface:
+        config: ConfigCommandProfile,
+        gpus: List[GPUDevice],
+        model: ModelProfileSpec,
+        client: TritonClient,
+        model_variant_name_manager: ModelVariantNameManager,
+        default_only: bool,
+        early_exit_enable: bool,
+    ) -> ConfigGeneratorInterface:
         """
         Parameters
         ----------
@@ -58,16 +67,27 @@ class ModelConfigGeneratorFactory:
         A generator that implements ConfigGeneratorInterface and creates ModelConfigs
         """
 
-        remote_mode = config.triton_launch_mode == 'remote'
+        remote_mode = config.triton_launch_mode == "remote"
         search_disabled = config.run_config_search_disable
         model_config_params = model.model_config_parameters()
 
-        if (remote_mode or search_disabled or model_config_params):
-            return ManualModelConfigGenerator(config, gpus, model, client,
-                                              model_variant_name_manager,
-                                              default_only, early_exit_enable)
+        if remote_mode or search_disabled or model_config_params:
+            return ManualModelConfigGenerator(
+                config,
+                gpus,
+                model,
+                client,
+                model_variant_name_manager,
+                default_only,
+                early_exit_enable,
+            )
         else:
-            return AutomaticModelConfigGenerator(config, gpus, model, client,
-                                                 model_variant_name_manager,
-                                                 default_only,
-                                                 early_exit_enable)
+            return AutomaticModelConfigGenerator(
+                config,
+                gpus,
+                model,
+                client,
+                model_variant_name_manager,
+                default_only,
+                early_exit_enable,
+            )

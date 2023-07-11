@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +15,12 @@
 # limitations under the License.
 
 import unittest
-
-from model_analyzer.result.result_table import ResultTable
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
-from .common import test_result_collector as trc
-
 from unittest.mock import patch
+
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.result.result_table import ResultTable
+
+from .common import test_result_collector as trc
 
 TEST_HEADERS = [f"Column {i}" for i in range(10)]
 TEST_COLUMN_WIDTH = 12
@@ -54,7 +55,6 @@ TEST_CSV_STR = (
 
 
 class TestResultTableMethods(trc.TestResultCollector):
-
     def setUp(self):
         NotImplemented
 
@@ -64,22 +64,20 @@ class TestResultTableMethods(trc.TestResultCollector):
     def test_create_headers(self):
         table = ResultTable(headers=["Column 0"])
         self.assertEqual(table.headers(), ["Column 0"])
-        self.assertEqual(table.column_widths(),
-                         [len("Column 0") + ResultTable.column_padding])
+        self.assertEqual(
+            table.column_widths(), [len("Column 0") + ResultTable.column_padding]
+        )
 
     def test_add_get_methods(self):
         table = ResultTable(headers=["Column 0", "Column 1"])
 
         # add/get single result
         table.insert_row_by_index(["value 0,0", "value 0,1"])
-        self.assertEqual(table.get_row_by_index(index=0),
-                         ["value 0,0", "value 0,1"])
+        self.assertEqual(table.get_row_by_index(index=0), ["value 0,0", "value 0,1"])
         table.insert_row_by_index(["value -1,0", "value -1,1"], index=0)
-        self.assertEqual(table.get_row_by_index(index=0),
-                         ["value -1,0", "value -1,1"])
+        self.assertEqual(table.get_row_by_index(index=0), ["value -1,0", "value -1,1"])
         table.insert_row_by_index(["value 1,0", "value 1,1"], index=2)
-        self.assertEqual(table.get_row_by_index(index=2),
-                         ["value 1,0", "value 1,1"])
+        self.assertEqual(table.get_row_by_index(index=2), ["value 1,0", "value 1,1"])
 
     def test_remove_methods(self):
         table = ResultTable(headers=TEST_HEADERS)
@@ -93,13 +91,15 @@ class TestResultTableMethods(trc.TestResultCollector):
         for row in TEST_ROWS:
             table.insert_row_by_index(row)
 
-        self.assertEqual(table.get_row_by_index(index=row_idx),
-                         [f"value 4{j}" for j in range(10)])
+        self.assertEqual(
+            table.get_row_by_index(index=row_idx), [f"value 4{j}" for j in range(10)]
+        )
 
         # remove rows and check that the next one is in its place
         table.remove_row_by_index(index=row_idx)
-        self.assertEqual(table.get_row_by_index(index=row_idx),
-                         [f"value 5{j}" for j in range(10)])
+        self.assertEqual(
+            table.get_row_by_index(index=row_idx), [f"value 5{j}" for j in range(10)]
+        )
 
         # Remove all rows and then one
         with self.assertRaises(TritonModelAnalyzerException):
@@ -116,9 +116,9 @@ class TestResultTableMethods(trc.TestResultCollector):
         for row in TEST_ROWS:
             table.insert_row_by_index(row)
         self.assertEqual(
-            table.to_formatted_string(separator=',', ignore_widths=True),
-            TEST_CSV_STR)
+            table.to_formatted_string(separator=",", ignore_widths=True), TEST_CSV_STR
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

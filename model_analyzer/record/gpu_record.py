@@ -1,4 +1,6 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,19 +52,17 @@ class GPURecord(Record):
     @classmethod
     def from_dict(cls, record_dict):
         record = cls(0)
-        for key in ['_value', '_timestamp', '_device']:
+        for key in ["_value", "_timestamp", "_device"]:
             if key in record_dict:
                 setattr(record, key, record_dict[key])
         return record
 
 
 class IncreasingGPURecord(GPURecord):
-
     def _positive_is_better(self) -> bool:
         return True
 
 
 class DecreasingGPURecord(GPURecord):
-
     def _positive_is_better(self) -> bool:
         return False

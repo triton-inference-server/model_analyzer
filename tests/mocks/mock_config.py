@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import MagicMock, mock_open, patch
+
 from .mock_base import MockBase
-from unittest.mock import patch, mock_open, MagicMock
 
 
 class MockConfig(MockBase):
-
     def __init__(self, args, yaml_file_content):
         self.args = args
         self.yaml_file_content = yaml_file_content
@@ -27,6 +29,7 @@ class MockConfig(MockBase):
         patchers = self._patchers
 
         patchers.append(
-            patch("builtins.open", mock_open(read_data=self.yaml_file_content)))
+            patch("builtins.open", mock_open(read_data=self.yaml_file_content))
+        )
         patchers.append(patch("sys.argv", self.args))
-        patchers.append(patch('numba.cuda.is_available', MagicMock(True)))
+        patchers.append(patch("numba.cuda.is_available", MagicMock(True)))

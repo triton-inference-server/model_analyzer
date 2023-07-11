@@ -1,4 +1,5 @@
-# Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+#!/bin/bash
+# Copyright (c) 2020-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +24,7 @@ mkdir -p $LOGS_DIR
 
 create_logs_dir() {
     # Arguments:
-    #  $1: L0 Script name 
+    #  $1: L0 Script name
     # Check if the L0 script name is empty or not
     if [ -n "$1" ]; then
         LOGS_DIR="/logs/$1"
@@ -51,7 +52,7 @@ create_result_paths() {
             -test-name)
                 test_name=$2;
                 shift 2;;
-            -export-path) 
+            -export-path)
                 export_path=$2;
                 shift 2;;
             -checkpoints)

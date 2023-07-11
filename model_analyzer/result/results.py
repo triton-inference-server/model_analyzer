@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.run.run_config import RunConfig
-from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.constants import LOGGER_NAME
-
 import logging
+
+from model_analyzer.config.run.run_config import RunConfig
+from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -25,12 +27,12 @@ class Results:
     """
     Provides storage and accessor functions for measurements
     """
+
     RUN_CONFIG_INDEX = 0
     MEASUREMENTS_INDEX = 1
 
     def __init__(self):
-        """          
-        """
+        """ """
         self._results = {}
 
     @classmethod
@@ -38,7 +40,7 @@ class Results:
         """
         Populate the Results class based on the dictionary value
         (stored in the checkpoint)
-        
+
         The checkpoint format is:
         {models_name: { [run_config: (key, {run_config_measurements} ) ] } }
         ---results_dict-------------------------------------------
@@ -48,21 +50,26 @@ class Results:
         """
         results = Results()
 
-        for models_name, model_dict in results_dict['_results'].items():
-            for model_variants_name, run_config_tuple_list in model_dict.items(
-            ):
+        for models_name, model_dict in results_dict["_results"].items():
+            for model_variants_name, run_config_tuple_list in model_dict.items():
                 run_config = RunConfig.from_dict(
-                    run_config_tuple_list[Results.RUN_CONFIG_INDEX])
+                    run_config_tuple_list[Results.RUN_CONFIG_INDEX]
+                )
 
                 for key, measurement_dict in run_config_tuple_list[
-                        Results.MEASUREMENTS_INDEX].items():
+                    Results.MEASUREMENTS_INDEX
+                ].items():
                     run_config_measurement = RunConfigMeasurement.from_dict(
-                        measurement_dict)
+                        measurement_dict
+                    )
 
-                    results._add_run_config_measurement(models_name, run_config,
-                                                        model_variants_name,
-                                                        key,
-                                                        run_config_measurement)
+                    results._add_run_config_measurement(
+                        models_name,
+                        run_config,
+                        model_variants_name,
+                        key,
+                        run_config_measurement,
+                    )
 
         return results
 
@@ -70,7 +77,7 @@ class Results:
         """
         Given a RunConfig and a RunConfigMeasurement, add the measurement to the
         RunConfig's measurements
-        
+
         Parameters
         ----------
         run_config: RunConfig
@@ -81,9 +88,9 @@ class Results:
         model_variants_name = run_config.model_variants_name()
         key = run_config.representation()
 
-        self._add_run_config_measurement(models_name, run_config,
-                                         model_variants_name, key,
-                                         run_config_measurement)
+        self._add_run_config_measurement(
+            models_name, run_config, model_variants_name, key, run_config_measurement
+        )
 
     def contains_model(self, models_name):
         """
@@ -105,12 +112,12 @@ class Results:
         """
         Checks if the models name and model variants name
         exist in the results
-        
+
         Parameters
         ----------
         models_name : str
         model_variants_name: str
-            
+
         Returns
         -------
         bool
@@ -123,7 +130,7 @@ class Results:
     def get_list_of_models(self):
         """
         Returns the list of models profiled
-        
+
         Returns
         -------
         list of str
@@ -133,9 +140,9 @@ class Results:
 
     def get_list_of_model_config_measurement_tuples(self):
         """
-        Returns a list of model configs with their 
+        Returns a list of model configs with their
         corresponding RunConfigMeasurements
-        
+
         Returns
         -------
         list of tuples - [(ModelConfig, list of RunConfigMeasurements)]
@@ -147,11 +154,11 @@ class Results:
     def get_list_of_run_config_measurements(self):
         """
         Return a list of RunConfigMeasurements from every model/model_config
-        
+
         Parameters
         ----------
         None
-        
+
         Returns
         -------
         List of RunConfigMeasurements
@@ -160,7 +167,8 @@ class Results:
         for model_result in self._results.values():
             for model_config_result in model_result.values():
                 for measurement in model_config_result[
-                        Results.MEASUREMENTS_INDEX].values():
+                    Results.MEASUREMENTS_INDEX
+                ].values():
                     measurements.append(measurement)
 
         return measurements
@@ -168,28 +176,28 @@ class Results:
     def get_model_measurements_dict(self, models_name, suppress_warning=False):
         """
         Given a model name, return a dict with all measurements for that model.
-        
+
         Parameters
         ----------
         models_name : str
             The model name for the requested results
-            
+
         Returns
         -------
-        Dict (keyed by model_variants_name) of tuples containing a RunConfig and 
+        Dict (keyed by model_variants_name) of tuples containing a RunConfig and
         a dict of Keys:RunConfigMeasurements
             {
-                model_variants_name_1: 
+                model_variants_name_1:
                 (
-                    RunConfig1, 
+                    RunConfig1,
                     {
                         Key1: RunConfigMeasurement1
                         Key2: RunConfigMeasurement2
                     }
                 ),
-                model_variants_name_2: 
+                model_variants_name_2:
                 (
-                    RunConfig2, 
+                    RunConfig2,
                     {
                         Key3: RunConfigMeasurement3
                         Key4: RunConfigMeasurement4
@@ -199,18 +207,17 @@ class Results:
         """
         if not self.contains_model(models_name):
             if not suppress_warning:
-                logger.error(f'No results found for model: {models_name}')
+                logger.error(f"No results found for model: {models_name}")
 
             return {}
 
         return self._results[models_name]
 
-    def get_model_variants_measurements_dict(self, models_name,
-                                             model_variants_name):
+    def get_model_variants_measurements_dict(self, models_name, model_variants_name):
         """
-        Given a models name and model variants name, return a dict of all 
+        Given a models name and model variants name, return a dict of all
         associated RunConfigMeasurements
-        
+
         Parameters
         ----------
         model_name : str
@@ -220,21 +227,21 @@ class Results:
         -------
         Dict of {Key:RunConfigMeasurement}
         """
-        if not self.contains_model(
-                models_name) or not self.contains_model_variant(
-                    models_name, model_variants_name):
-            logger.error(f'No results found for variant: {model_variants_name}')
+        if not self.contains_model(models_name) or not self.contains_model_variant(
+            models_name, model_variants_name
+        ):
+            logger.error(f"No results found for variant: {model_variants_name}")
             return {}
 
         return self._results[models_name][model_variants_name][
-            Results.MEASUREMENTS_INDEX]
+            Results.MEASUREMENTS_INDEX
+        ]
 
-    def get_all_model_variant_measurements(self, models_name,
-                                           model_variants_name):
+    def get_all_model_variant_measurements(self, models_name, model_variants_name):
         """
-        Given a model name and model variant name, return the RunConfig and 
+        Given a model name and model variant name, return the RunConfig and
         a list of all associated measurement values
-        
+
         Parameters
         ----------
         models_name : str
@@ -244,26 +251,27 @@ class Results:
         -------
         Tuple - (RunConfig, list of RunConfigMeasurements)
         """
-        if not self.contains_model(
-                models_name) or not self.contains_model_variant(
-                    models_name, model_variants_name):
-            logger.error(
-                f'No results found for model variant: {model_variants_name}')
+        if not self.contains_model(models_name) or not self.contains_model_variant(
+            models_name, model_variants_name
+        ):
+            logger.error(f"No results found for model variant: {model_variants_name}")
             return (None, [])
 
         model_config_data = self._results[models_name][model_variants_name]
 
         return model_config_data[Results.RUN_CONFIG_INDEX], list(
-            model_config_data[Results.MEASUREMENTS_INDEX].values())
+            model_config_data[Results.MEASUREMENTS_INDEX].values()
+        )
 
-    def _add_run_config_measurement(self, models_name, run_config,
-                                    model_variants_name, key,
-                                    run_config_measurement):
+    def _add_run_config_measurement(
+        self, models_name, run_config, model_variants_name, key, run_config_measurement
+    ):
         if models_name not in self._results:
             self._results[models_name] = {}
 
         if model_variants_name not in self._results[models_name]:
             self._results[models_name][model_variants_name] = (run_config, {})
 
-        self._results[models_name][model_variants_name][
-            Results.MEASUREMENTS_INDEX][key] = run_config_measurement
+        self._results[models_name][model_variants_name][Results.MEASUREMENTS_INDEX][
+            key
+        ] = run_config_measurement

@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,19 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union, Optional, Tuple
-
-import sys
-import importlib_metadata
-import logging
 import argparse
+import logging
+import sys
 from argparse import ArgumentParser, Namespace
+from typing import List, Optional, Tuple, Union
+
+import importlib_metadata
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-
 from model_analyzer.constants import LOGGER_NAME, PACKAGE_NAME
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -38,7 +39,8 @@ class CLI:
         self._parser = ArgumentParser()
         self._add_global_options()
         self._subparsers = self._parser.add_subparsers(
-            help='Subcommands under Model Analyzer', dest='subcommand')
+            help="Subcommands under Model Analyzer", dest="subcommand"
+        )
 
         # Store subcommands, and their configs
         self._subcommand_configs = {}
@@ -50,26 +52,28 @@ class CLI:
         """
 
         self._parser.add_argument(
-            '-q',
-            '--quiet',
-            action='store_true',
-            help='Suppress all output except for error messages.')
+            "-q",
+            "--quiet",
+            action="store_true",
+            help="Suppress all output except for error messages.",
+        )
         self._parser.add_argument(
-            '-v',
-            '--verbose',
-            action='store_true',
-            help='Show detailed logs, messages and status.')
+            "-v",
+            "--verbose",
+            action="store_true",
+            help="Show detailed logs, messages and status.",
+        )
         self._parser.add_argument(
-            '-m',
-            '--mode',
+            "-m",
+            "--mode",
             type=str,
-            default='online',
-            choices=['online', 'offline'],
-            help='Choose a preset configuration mode.')
+            default="online",
+            choices=["online", "offline"],
+            help="Choose a preset configuration mode.",
+        )
         self._parser.add_argument(
-            '--version',
-            action='store_true',
-            help='Show the Model Analyzer version.')
+            "--version", action="store_true", help="Show the Model Analyzer version."
+        )
 
     def add_subcommand(self, cmd, help, config=None):
         """
@@ -102,7 +106,7 @@ class CLI:
         config : Config
             Model Analyzer config object.
         """
-        #configs is dictionary of config_fields objects from config_command_*
+        # configs is dictionary of config_fields objects from config_command_*
         configs = config.get_config()
         for config_field in configs.values():
             parser_args = config_field.parser_args()
@@ -113,9 +117,10 @@ class CLI:
 
             # 'store_true' and 'store_false' does not
             # allow 'type' or 'choices' parameters
-            if 'action' in parser_args and (
-                    parser_args['action'] == 'store_true' or
-                    parser_args['action'] == 'store_false'):
+            if "action" in parser_args and (
+                parser_args["action"] == "store_true"
+                or parser_args["action"] == "store_false"
+            ):
                 subparser.add_argument(
                     *config_field.flags(),
                     default=argparse.SUPPRESS,
@@ -141,21 +146,19 @@ class CLI:
             print(version)
             sys.exit(0)
         except importlib_metadata.PackageNotFoundError:
-            raise TritonModelAnalyzerException(
-                f"Version information is not available")
+            raise TritonModelAnalyzerException(f"Version information is not available")
 
     def parse(
-        self,
-        input_args: Optional[List] = None
+        self, input_args: Optional[List] = None
     ) -> Tuple[Namespace, Union[ConfigCommandProfile, ConfigCommandReport]]:
         """
-        Parse CLI options using ArgumentParsers 
+        Parse CLI options using ArgumentParsers
         and set config values.
 
         Parameters
         ----------
         input_args: List
-            The list of arguments to be parsed 
+            The list of arguments to be parsed
             (if None then command line arguments will be used)
 
         Returns

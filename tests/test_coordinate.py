@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,14 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .common import test_result_collector as trc
-
 from copy import deepcopy
+
 from model_analyzer.config.generate.coordinate import Coordinate
+
+from .common import test_result_collector as trc
 
 
 class TestCoordinate(trc.TestResultCollector):
-
     def test_basic(self):
         x = Coordinate([0, 0])
 

@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,12 +21,7 @@ class ConfigPlot:
     a single plot.
     """
 
-    def __init__(self,
-                 name,
-                 title=None,
-                 x_axis=None,
-                 y_axis=None,
-                 monotonic=False):
+    def __init__(self, name, title=None, x_axis=None, y_axis=None, monotonic=False):
         """
         Parameters
         ----------
@@ -93,7 +90,7 @@ class ConfigPlot:
         -------
         bool
             Whether or not to prune
-            decreasing points 
+            decreasing points
         """
 
         return self._monotonic
@@ -144,7 +141,7 @@ class ConfigPlot:
         -------
         monotonic: bool
             Whether or not to prune
-            decreasing points 
+            decreasing points
         """
 
         self._monotonic = monotonic
@@ -158,7 +155,7 @@ class ConfigPlot:
         ----------
         plots : list
             A list of ConfigPlots
-            
+
         Returns
         -------
         list
@@ -191,11 +188,11 @@ class ConfigPlot:
 
     def __repr__(self):
         plot_object = {
-            'name': self._name,
-            'title': self._title,
-            'x_axis': self._x_axis,
-            'y_axis': self._y_axis,
-            'monotonic': self._monotonic
+            "name": self._name,
+            "title": self._title,
+            "x_axis": self._x_axis,
+            "y_axis": self._y_axis,
+            "monotonic": self._monotonic,
         }
 
         return str(plot_object)

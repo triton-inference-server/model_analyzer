@@ -1,4 +1,6 @@
-# Copyright 2020-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,22 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+import os
+import shutil
+import sys
+from pprint import pformat
+
+from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.device.gpu_device_factory import GPUDeviceFactory
+
 from .analyzer import Analyzer
 from .cli.cli import CLI
-from .model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.constants import LOGGER_NAME
-from .triton.client.client_factory import TritonClientFactory
-from .triton.server.server_factory import TritonServerFactory
-from .state.analyzer_state_manager import AnalyzerStateManager
 from .config.input.config_command_profile import ConfigCommandProfile
 from .config.input.config_command_report import ConfigCommandReport
 from .log_formatter import setup_logging
-import sys
-import os
-import logging
-import shutil
-from pprint import pformat
+from .model_analyzer_exceptions import TritonModelAnalyzerException
+from .state.analyzer_state_manager import AnalyzerStateManager
+from .triton.client.client_factory import TritonClientFactory
+from .triton.server.server_factory import TritonServerFactory
 
 logger = logging.getLogger(LOGGER_NAME)
 
@@ -43,19 +47,20 @@ def get_client_handle(config):
         Arguments parsed from the CLI
     """
 
-    if config.client_protocol == 'http':
+    if config.client_protocol == "http":
         http_ssl_options = get_http_ssl_options(config)
         client = TritonClientFactory.create_http_client(
-            server_url=config.triton_http_endpoint,
-            ssl_options=http_ssl_options)
-    elif config.client_protocol == 'grpc':
+            server_url=config.triton_http_endpoint, ssl_options=http_ssl_options
+        )
+    elif config.client_protocol == "grpc":
         grpc_ssl_options = get_grpc_ssl_options(config)
         client = TritonClientFactory.create_grpc_client(
-            server_url=config.triton_grpc_endpoint,
-            ssl_options=grpc_ssl_options)
+            server_url=config.triton_grpc_endpoint, ssl_options=grpc_ssl_options
+        )
     else:
         raise TritonModelAnalyzerException(
-            f"Unrecognized client-protocol : {config.client_protocol}")
+            f"Unrecognized client-protocol : {config.client_protocol}"
+        )
 
     return client
 
@@ -71,10 +76,13 @@ def get_http_ssl_options(config):
     """
 
     ssl_option_keys = [
-        'ssl-https-verify-peer', 'ssl-https-verify-host',
-        'ssl-https-ca-certificates-file', 'ssl-https-client-certificate-file',
-        'ssl-https-client-certificate-type', 'ssl-https-private-key-file',
-        'ssl-https-private-key-type'
+        "ssl-https-verify-peer",
+        "ssl-https-verify-host",
+        "ssl-https-ca-certificates-file",
+        "ssl-https-client-certificate-file",
+        "ssl-https-client-certificate-type",
+        "ssl-https-private-key-file",
+        "ssl-https-private-key-type",
     ]
 
     return {
@@ -95,10 +103,10 @@ def get_grpc_ssl_options(config):
     """
 
     ssl_option_keys = [
-        'ssl-grpc-use-ssl',
-        'ssl-grpc-root-certifications-file',
-        'ssl-grpc-private-key-file',
-        'ssl-grpc-certificate-chain-file',
+        "ssl-grpc-use-ssl",
+        "ssl-grpc-root-certifications-file",
+        "ssl-grpc-private-key-file",
+        "ssl-grpc-certificate-chain-file",
     ]
 
     return {
@@ -155,22 +163,24 @@ def get_cli_and_config_options():
 
         cli = CLI()
         cli.add_subcommand(
-            cmd='profile',
-            help=
-            'Run model inference profiling based on specified CLI or config options.',
-            config=config_profile)
+            cmd="profile",
+            help="Run model inference profiling based on specified CLI or config options.",
+            config=config_profile,
+        )
         cli.add_subcommand(
-            cmd='analyze',
-            help=
-            'DEPRECATED: Aliased to profile - please use profile subcommand.',
-            config=config_profile)
-        cli.add_subcommand(cmd='report',
-                           help='Generate detailed reports for a single config',
-                           config=config_report)
+            cmd="analyze",
+            help="DEPRECATED: Aliased to profile - please use profile subcommand.",
+            config=config_profile,
+        )
+        cli.add_subcommand(
+            cmd="report",
+            help="Generate detailed reports for a single config",
+            config=config_report,
+        )
         return cli.parse()
 
     except TritonModelAnalyzerException as e:
-        logger.error(f'Model Analyzer encountered an error: {e}')
+        logger.error(f"Model Analyzer encountered an error: {e}")
         sys.exit(1)
 
 
@@ -191,22 +201,25 @@ def create_output_model_repository(config):
             raise TritonModelAnalyzerException(
                 f'Path "{config.output_model_repository_path}" already exists. '
                 'Please set or modify "--output-model-repository-path" flag or remove this directory.'
-                ' You can also allow overriding of the output directory using'
-                ' the "--override-output-model-repository" flag.')
+                " You can also allow overriding of the output directory using"
+                ' the "--override-output-model-repository" flag.'
+            )
         else:
             shutil.rmtree(config.output_model_repository_path)
-            logger.warning('Overriding the output model repo path '
-                           f'"{config.output_model_repository_path}"')
+            logger.warning(
+                "Overriding the output model repo path "
+                f'"{config.output_model_repository_path}"'
+            )
             os.mkdir(config.output_model_repository_path)
 
 
 def fail_if_server_already_running(client, config):
-    """ 
+    """
     Checks if there is already a Triton server running
     If there is and the launch mode is not 'remote' or 'c_api', throw an exception
     Else, nothing will happen
     """
-    if config.triton_launch_mode == 'remote' or config.triton_launch_mode == "c_api":
+    if config.triton_launch_mode == "remote" or config.triton_launch_mode == "c_api":
         return
 
     is_server_running = True
@@ -240,9 +253,8 @@ def main():
     server = None
     try:
         # Make calls to correct analyzer subcommand functions
-        if args.subcommand == 'profile' or args.subcommand == 'analyze':
-
-            if args.subcommand == 'profile' and not config.model_repository:
+        if args.subcommand == "profile" or args.subcommand == "analyze":
+            if args.subcommand == "profile" and not config.model_repository:
                 raise TritonModelAnalyzerException(
                     "No model repository specified. Please specify it using the YAML config file or using the --model-repository flag in CLI."
                 )
@@ -260,26 +272,24 @@ def main():
             if state_manager.exiting():
                 return
 
-            analyzer = Analyzer(config,
-                                server,
-                                state_manager,
-                                checkpoint_required=False)
-            analyzer.profile(client=client,
-                             gpus=gpus,
-                             mode=args.mode,
-                             verbose=args.verbose)
-        elif args.subcommand == 'report':
-
-            analyzer = Analyzer(config,
-                                server,
-                                AnalyzerStateManager(config=config,
-                                                     server=server),
-                                checkpoint_required=True)
+            analyzer = Analyzer(
+                config, server, state_manager, checkpoint_required=False
+            )
+            analyzer.profile(
+                client=client, gpus=gpus, mode=args.mode, verbose=args.verbose
+            )
+        elif args.subcommand == "report":
+            analyzer = Analyzer(
+                config,
+                server,
+                AnalyzerStateManager(config=config, server=server),
+                checkpoint_required=True,
+            )
             analyzer.report(mode=args.mode)
     finally:
         if server is not None:
             server.stop()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

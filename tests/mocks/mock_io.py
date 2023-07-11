@@ -1,4 +1,6 @@
-# Copyright (c) 2020,21 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .mock_base import MockBase
+from unittest.mock import MagicMock, mock_open, patch
 
-from unittest.mock import MagicMock, patch, mock_open
+from .mock_base import MockBase
 
 
 class MockIOMethods(MockBase):
@@ -32,8 +34,7 @@ class MockIOMethods(MockBase):
         for i in range(len(mock_paths)):
             path = mock_paths[i]
             data = read_data[i] if i < len(read_data) else None
-            self._patchers_open[path] = patch(f"{path}.open",
-                                              mock_open(read_data=data))
+            self._patchers_open[path] = patch(f"{path}.open", mock_open(read_data=data))
             self._patchers_print[path] = patch(f"{path}.print", MagicMock())
         super().__init__()
 
@@ -48,7 +49,7 @@ class MockIOMethods(MockBase):
 
     def _fill_patchers(self):
         """
-        Loads patchers into list 
+        Loads patchers into list
         """
 
         for patcher in self._patchers_open.values():
@@ -76,7 +77,7 @@ class MockIOMethods(MockBase):
     def assert_open_called_with_args(self, path, filename):
         """
         Asserts that file open was called
-        with given arguments 
+        with given arguments
         """
 
         self._open_mocks[path].assert_called_with(filename)
@@ -84,7 +85,7 @@ class MockIOMethods(MockBase):
     def assert_write_called_with_args(self, path, out):
         """
         Asserts that file write was called
-        with given arguments 
+        with given arguments
         """
 
         self._open_mocks[path].return_value.write.assert_called_with(out)
@@ -95,7 +96,7 @@ class MockIOMethods(MockBase):
         with given arguments
         """
 
-        self._print_mocks[path].assert_called_with(out, end='')
+        self._print_mocks[path].assert_called_with(out, end="")
 
     def reset(self):
         for mock in self._open_mocks.values():

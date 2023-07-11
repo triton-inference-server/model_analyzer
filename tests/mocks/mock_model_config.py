@@ -1,4 +1,6 @@
-# Copyright (c) 2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2021-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest.mock import MagicMock, mock_open, patch
+
 from .mock_base import MockBase
-from unittest.mock import patch, mock_open, MagicMock
 
 
 class MockModelConfig(MockBase):
-
     def __init__(self, model_file_content=None):
         self._model_file_content = model_file_content
         super().__init__()
@@ -26,18 +28,21 @@ class MockModelConfig(MockBase):
         patchers = self._patchers
 
         patchers.append(
-            patch('builtins.open',
-                  mock_open(read_data=self._model_file_content)))
+            patch("builtins.open", mock_open(read_data=self._model_file_content))
+        )
         patchers.append(
-            patch('model_analyzer.triton.model.model_config.os.path.exists',
-                  MagicMock(return_value=True)))
+            patch(
+                "model_analyzer.triton.model.model_config.os.path.exists",
+                MagicMock(return_value=True),
+            )
+        )
 
         def isfile(file_name):
-            if file_name.endswith('.pbtxt'):
+            if file_name.endswith(".pbtxt"):
                 return True
             else:
                 return False
 
         patchers.append(
-            patch('model_analyzer.triton.model.model_config.os.path.isfile',
-                  isfile))
+            patch("model_analyzer.triton.model.model_config.os.path.isfile", isfile)
+        )

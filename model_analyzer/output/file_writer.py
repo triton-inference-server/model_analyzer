@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+
 from .output_writer import OutputWriter
-from model_analyzer.model_analyzer_exceptions \
-    import TritonModelAnalyzerException
 
 
 class FileWriter(OutputWriter):
@@ -50,7 +52,7 @@ class FileWriter(OutputWriter):
             the output.
         """
 
-        write_mode = 'a+' if append else 'w+'
+        write_mode = "a+" if append else "w+"
         if self._filename:
             try:
                 with open(self._filename, write_mode) as f:
@@ -58,4 +60,4 @@ class FileWriter(OutputWriter):
             except OSError as e:
                 raise TritonModelAnalyzerException(e)
         else:
-            print(out, end='')
+            print(out, end="")

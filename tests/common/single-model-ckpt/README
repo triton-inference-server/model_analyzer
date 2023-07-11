@@ -14,7 +14,7 @@
 
 Settings used to create this checkpoint:
 
---profile-models add_sub 
+--profile-models add_sub
 -b 1,2
 -c 1,2
 --run-config-search-max-concurrency 2

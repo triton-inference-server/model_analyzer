@@ -1,4 +1,6 @@
-# Copyright (c) 2020-2021, NVIDIA CORPORATION. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2020-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +15,7 @@
 # limitations under the License.
 
 from functools import total_ordering
+
 from model_analyzer.record.gpu_record import IncreasingGPURecord
 
 
@@ -57,11 +60,11 @@ class GPUUtilization(IncreasingGPURecord):
         Parameters
         ----------
         aggregation_tag: bool
-            An optional tag that may be displayed 
-            as part of the header indicating that 
-            this record has been aggregated using 
-            max, min or average etc. 
-             
+            An optional tag that may be displayed
+            as part of the header indicating that
+            this record has been aggregated using
+            max, min or average etc.
+
         Returns
         -------
         str
@@ -94,8 +97,7 @@ class GPUUtilization(IncreasingGPURecord):
         to produce a brand new record.
         """
 
-        return GPUUtilization(device_uuid=None,
-                              value=(self.value() + other.value()))
+        return GPUUtilization(device_uuid=None, value=(self.value() + other.value()))
 
     def __sub__(self, other):
         """
@@ -103,5 +105,4 @@ class GPUUtilization(IncreasingGPURecord):
         to produce a brand new record.
         """
 
-        return GPUUtilization(device_uuid=None,
-                              value=(self.value() - other.value()))
+        return GPUUtilization(device_uuid=None, value=(self.value() - other.value()))

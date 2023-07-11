@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,30 +14,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.triton.client.client import TritonClient
-from model_analyzer.result.run_config_measurement import RunConfigMeasurement
-from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-from .config_generator_interface import ConfigGeneratorInterface
-from typing import List, Optional, Generator, Dict, Any
-from model_analyzer.constants import LOGGER_NAME
-from model_analyzer.triton.model.model_config import ModelConfig
-from .model_profile_spec import ModelProfileSpec
-from copy import deepcopy
 import abc
 import logging
+from copy import deepcopy
+from typing import Any, Dict, Generator, List, Optional
+
+from model_analyzer.config.generate.model_variant_name_manager import (
+    ModelVariantNameManager,
+)
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.constants import LOGGER_NAME
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.triton.model.model_config import ModelConfig
+
+from .config_generator_interface import ConfigGeneratorInterface
+from .model_profile_spec import ModelProfileSpec
 
 logger = logging.getLogger(LOGGER_NAME)
 
 
 class BaseModelConfigGenerator(ConfigGeneratorInterface):
-    """ Base class for generating model configs """
+    """Base class for generating model configs"""
 
-    def __init__(self, config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 model: ModelProfileSpec, client: TritonClient,
-                 model_variant_name_manager: ModelVariantNameManager,
-                 default_only: bool, early_exit_enable: bool) -> None:
+    def __init__(
+        self,
+        config: ConfigCommandProfile,
+        gpus: List[GPUDevice],
+        model: ModelProfileSpec,
+        client: TritonClient,
+        model_variant_name_manager: ModelVariantNameManager,
+        default_only: bool,
+        early_exit_enable: bool,
+    ) -> None:
         """
         Parameters
         ----------
@@ -56,7 +68,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._model_variant_name_manager = model_variant_name_manager
         self._base_model = model
         self._base_model_name = model.model_name()
-        self._remote_mode = config.triton_launch_mode == 'remote'
+        self._remote_mode = config.triton_launch_mode == "remote"
         self._cpu_only = model.cpu_only()
         self._default_only = default_only
         self._early_exit_enable = early_exit_enable
@@ -70,9 +82,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._curr_max_batch_size_throughputs: List[float] = []
 
     def _is_done(self) -> bool:
-        """ Returns true if this generator is done generating configs """
-        return self._generator_started and (self._default_only or
-                                            self._done_walking())
+        """Returns true if this generator is done generating configs"""
+        return self._generator_started and (self._default_only or self._done_walking())
 
     def get_configs(self) -> Generator[ModelConfig, None, None]:
         """
@@ -91,7 +102,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             self._step()
 
     def set_last_results(
-            self, measurements: List[Optional[RunConfigMeasurement]]) -> None:
+        self, measurements: List[Optional[RunConfigMeasurement]]
+    ) -> None:
         """
         Given the results from the last ModelConfig, make decisions
         about future configurations to generate
@@ -125,11 +137,12 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         lastest_throughput = self._curr_max_batch_size_throughputs[-1]
         return all(
             lastest_throughput > prev_throughput
-            for prev_throughput in self._curr_max_batch_size_throughputs[:-1])
+            for prev_throughput in self._curr_max_batch_size_throughputs[:-1]
+        )
 
     def _get_last_results_max_throughput(self) -> Optional[float]:
         throughputs = [
-            m.get_non_gpu_metric_value('perf_throughput')
+            m.get_non_gpu_metric_value("perf_throughput")
             for m in self._last_results
             if m is not None
         ]
@@ -142,8 +155,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         if not self._config.reload_model_disable:
             self._client.load_model(self._base_model_name)
         model_config = ModelConfig.create_from_triton_api(
-            self._client, self._base_model_name,
-            self._config.client_max_retries)
+            self._client, self._base_model_name, self._config.client_max_retries
+        )
         model_config.set_cpu_only(self._cpu_only)
         if not self._config.reload_model_disable:
             self._client.unload_model(self._base_model_name)
@@ -154,16 +167,19 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         return BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
             model=self._base_model,
-            model_variant_name_manager=self._model_variant_name_manager)
+            model_variant_name_manager=self._model_variant_name_manager,
+        )
 
     @staticmethod
     def make_model_config(
-            param_combo: dict, model: ModelProfileSpec,
-            model_variant_name_manager: ModelVariantNameManager) -> ModelConfig:
+        param_combo: dict,
+        model: ModelProfileSpec,
+        model_variant_name_manager: ModelVariantNameManager,
+    ) -> ModelConfig:
         """
         Loads the base model config from the model repository, and then applies the
         parameters in the param_combo on top to create and return a new model config
-        
+
         Parameters:
         -----------
         param_combo: dict
@@ -174,17 +190,20 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         logger_str: List[str] = []
         model_name = model.model_name()
         model_config_dict = BaseModelConfigGenerator._apply_param_combo_to_model(
-            model, param_combo, logger_str)
+            model, param_combo, logger_str
+        )
 
-        (variant_found,
-         variant_name) = model_variant_name_manager.get_model_variant_name(
-             model_name, model_config_dict, param_combo)
+        (
+            variant_found,
+            variant_name,
+        ) = model_variant_name_manager.get_model_variant_name(
+            model_name, model_config_dict, param_combo
+        )
 
-        model_config_dict['name'] = variant_name
+        model_config_dict["name"] = variant_name
         logger.info("")
         if variant_found:
-            logger.info(
-                f"Found existing model config: {model_config_dict['name']}")
+            logger.info(f"Found existing model config: {model_config_dict['name']}")
         else:
             logger.info(f"Creating model config: {model_config_dict['name']}")
         for str in logger_str:
@@ -198,47 +217,54 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
     @staticmethod
     def make_ensemble_model_config(
-            model: ModelProfileSpec,
-            ensemble_composing_model_configs: List[ModelConfig],
-            model_variant_name_manager: ModelVariantNameManager,
-            param_combo: Dict = {}) -> ModelConfig:
+        model: ModelProfileSpec,
+        ensemble_composing_model_configs: List[ModelConfig],
+        model_variant_name_manager: ModelVariantNameManager,
+        param_combo: Dict = {},
+    ) -> ModelConfig:
         """
         Loads the ensemble model spec from the model repository, and then mutates
         the names to match the ensemble composing models
-        
+
         Parameters
         ----------
         model: ModelProfileSpec
             The top-level ensemble model spec
         ensemble_composing_model_configs: List of ModelConfigs
-            The list of composing model ModelConfigs 
+            The list of composing model ModelConfigs
         model_variant_name_manager: ModelVariantNameManager
 
         """
         logger_str: List[str] = []
         model_name = model.model_name()
         model_config_dict = BaseModelConfigGenerator._apply_param_combo_to_model(
-            model, param_combo, logger_str)
+            model, param_combo, logger_str
+        )
 
         ensemble_config_dicts = [
             composing_model_config.to_dict()
             for composing_model_config in ensemble_composing_model_configs
         ]
         ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
-            ensemble_config_dicts)
+            ensemble_config_dicts
+        )
 
-        (variant_found, variant_name
+        (
+            variant_found,
+            variant_name,
         ) = model_variant_name_manager.get_ensemble_model_variant_name(
-            model_name, ensemble_key)
+            model_name, ensemble_key
+        )
 
-        model_config_dict['name'] = variant_name
+        model_config_dict["name"] = variant_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
 
         return model_config
 
     @staticmethod
-    def _apply_param_combo_to_model(model: ModelProfileSpec, param_combo: dict,
-                                    logger_str: List[str]) -> dict:
+    def _apply_param_combo_to_model(
+        model: ModelProfileSpec, param_combo: dict, logger_str: List[str]
+    ) -> dict:
         """
         Given a model, apply any parameters and return a model config dictionary
         """
@@ -247,7 +273,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             for key, value in param_combo.items():
                 if value is not None:
                     BaseModelConfigGenerator._apply_value_to_dict(
-                        key, value, model_config_dict)
+                        key, value, model_config_dict
+                    )
 
                     if value == {}:
                         logger_str.append(f"  Enabling {key}")
@@ -273,11 +300,10 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         Removes '_config_#/default' from the variant name and returns
         the model name, eg. model_name_config_10 -> model_name
         """
-        return variant_name[:variant_name.find("_config_")]
+        return variant_name[: variant_name.find("_config_")]
 
     @staticmethod
-    def create_original_config_from_variant(
-            variant_config: ModelConfig) -> ModelConfig:
+    def create_original_config_from_variant(variant_config: ModelConfig) -> ModelConfig:
         """
         Removes 'config_#/default' from the variant config and returns
         a new model config
@@ -286,7 +312,9 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
         original_config.set_model_name(
             BaseModelConfigGenerator.extract_model_name_from_variant_name(
-                variant_config.get_field("name")))
+                variant_config.get_field("name")
+            )
+        )
 
         return original_config
 
@@ -303,6 +331,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         if type(dict_in.get(key, None)) is dict and type(value) is dict:
             for subkey, subvalue in value.items():
                 BaseModelConfigGenerator._apply_value_to_dict(
-                    subkey, subvalue, dict_in.get(key, None))
+                    subkey, subvalue, dict_in.get(key, None)
+                )
         else:
             dict_in[key] = value

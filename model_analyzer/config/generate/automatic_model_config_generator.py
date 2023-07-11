@@ -1,4 +1,6 @@
-# Copyright (c) 2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,28 +14,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, Any
-from .base_model_config_generator import BaseModelConfigGenerator
-from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.device.gpu_device import GPUDevice
-from model_analyzer.triton.client.client import TritonClient
-from model_analyzer.config.generate.model_variant_name_manager import ModelVariantNameManager
-from model_analyzer.constants import LOGGER_NAME, DEFAULT_CONFIG_PARAMS
-from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
-from model_analyzer.triton.model.model_config import ModelConfig
-from .model_profile_spec import ModelProfileSpec
 import logging
+from typing import Any, Dict, List
+
+from model_analyzer.config.generate.model_variant_name_manager import (
+    ModelVariantNameManager,
+)
+from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.constants import DEFAULT_CONFIG_PARAMS, LOGGER_NAME
+from model_analyzer.device.gpu_device import GPUDevice
+from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.triton.client.client import TritonClient
+from model_analyzer.triton.model.model_config import ModelConfig
+
+from .base_model_config_generator import BaseModelConfigGenerator
+from .model_profile_spec import ModelProfileSpec
 
 logger = logging.getLogger(LOGGER_NAME)
 
 
 class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
-    """ Given a model, generates model configs in automatic search mode """
+    """Given a model, generates model configs in automatic search mode"""
 
-    def __init__(self, config: ConfigCommandProfile, gpus: List[GPUDevice],
-                 model: ModelProfileSpec, client: TritonClient,
-                 model_variant_name_manager: ModelVariantNameManager,
-                 default_only: bool, early_exit_enable: bool) -> None:
+    def __init__(
+        self,
+        config: ConfigCommandProfile,
+        gpus: List[GPUDevice],
+        model: ModelProfileSpec,
+        client: TritonClient,
+        model_variant_name_manager: ModelVariantNameManager,
+        default_only: bool,
+        early_exit_enable: bool,
+    ) -> None:
         """
         Parameters
         ----------
@@ -49,9 +61,15 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         early_exit_enable: Bool
             If true, the generator can early exit if throughput plateaus
         """
-        super().__init__(config, gpus, model, client,
-                         model_variant_name_manager, default_only,
-                         early_exit_enable)
+        super().__init__(
+            config,
+            gpus,
+            model,
+            client,
+            model_variant_name_manager,
+            default_only,
+            early_exit_enable,
+        )
 
         self._max_instance_count = config.run_config_search_max_instance_count
         self._min_instance_count = config.run_config_search_min_instance_count
@@ -124,16 +142,15 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             return DEFAULT_CONFIG_PARAMS
 
         config: Dict[str, Any] = {
-            'instance_group': [{
-                'count': self._curr_instance_count,
-                'kind': self._instance_kind
-            }]
+            "instance_group": [
+                {"count": self._curr_instance_count, "kind": self._instance_kind}
+            ]
         }
 
         if self._base_model.supports_batching():
-            config['max_batch_size'] = self._curr_max_batch_size
+            config["max_batch_size"] = self._curr_max_batch_size
 
         if self._base_model.supports_dynamic_batching():
-            config['dynamic_batching'] = {}
+            config["dynamic_batching"] = {}
 
         return config

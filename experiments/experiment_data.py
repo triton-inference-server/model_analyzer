@@ -1,4 +1,6 @@
-# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#!/usr/bin/env python3
+
+# Copyright 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +18,7 @@ import re
 
 
 class ExperimentData:
-    """ 
+    """
     Class to hold and organize measurements for run configs
     """
 
@@ -35,24 +37,25 @@ class ExperimentData:
             return
 
         ma_key, pa_key = self._extract_run_config_keys(run_config)
-        self._add_run_config_measurement_from_keys(ma_key, pa_key, run_config,
-                                                   run_config_measurement)
+        self._add_run_config_measurement_from_keys(
+            ma_key, pa_key, run_config, run_config_measurement
+        )
 
     def get_run_config_measurement(self, run_config):
-        """ 
+        """
         Get the run_config_measurement belonging to a given run_config
         """
         ma_key, pa_key = self._extract_run_config_keys(run_config)
         return self._get_run_config_measurement_from_keys(ma_key, pa_key)
 
     def get_model_config_count(self):
-        """ 
+        """
         Get the total number of model configs in the data
         """
         return len(self._data.keys())
 
     def get_run_config_measurement_count(self):
-        """ 
+        """
         Get the total number of measurements in the data
         """
         count = 0
@@ -71,13 +74,14 @@ class ExperimentData:
 
     def get_best_run_config(self):
         """
-        Get the run_config corresponding to the best overall 
+        Get the run_config corresponding to the best overall
         run_config_measurement in the data
         """
         return self._best_run_config
 
-    def _add_run_config_measurement_from_keys(self, ma_key, pa_key, run_config,
-                                              run_config_measurement):
+    def _add_run_config_measurement_from_keys(
+        self, ma_key, pa_key, run_config, run_config_measurement
+    ):
         self._update_best_trackers(run_config, run_config_measurement)
 
         curr_dict = self._data
@@ -87,16 +91,14 @@ class ExperimentData:
         curr_dict[ma_key][pa_key] = run_config_measurement
 
     def _update_best_trackers(self, run_config, run_config_measurement):
-        if run_config_measurement.is_passing_constraints() and \
-            (not self._best_run_config_measurement or (run_config_measurement > self._best_run_config_measurement)):
-
+        if run_config_measurement.is_passing_constraints() and (
+            not self._best_run_config_measurement
+            or (run_config_measurement > self._best_run_config_measurement)
+        ):
             self._best_run_config_measurement = run_config_measurement
             self._best_run_config = run_config
 
-    def _get_run_config_measurement_from_keys(self,
-                                              ma_key,
-                                              pa_key,
-                                              skip_warn=False):
+    def _get_run_config_measurement_from_keys(self, ma_key, pa_key, skip_warn=False):
         if ma_key not in self._data:
             if not skip_warn:
                 print(f"WARNING: Model config {ma_key} not in results")
@@ -113,23 +115,26 @@ class ExperimentData:
         return self._data[ma_key][pa_key]
 
     def _extract_run_config_keys(self, run_config):
-
-        model_config_key = ";".join([
-            self._extract_model_config_key(x.model_config())
-            for x in run_config.model_run_configs()
-        ])
-        perf_analyzer_key = ";".join([
-            self._extract_perf_config_key(x.perf_config())
-            for x in run_config.model_run_configs()
-        ])
+        model_config_key = ";".join(
+            [
+                self._extract_model_config_key(x.model_config())
+                for x in run_config.model_run_configs()
+            ]
+        )
+        perf_analyzer_key = ";".join(
+            [
+                self._extract_perf_config_key(x.perf_config())
+                for x in run_config.model_run_configs()
+            ]
+        )
 
         return (model_config_key, perf_analyzer_key)
 
     def _extract_model_config_key(self, model_config):
         model_config_dict = model_config.get_config()
-        max_batch_size = model_config_dict.get('max_batch_size', 0)
-        instance_group = model_config_dict.get('instance_group', [{}])
-        instance_count = instance_group[0].get('count', 0)
+        max_batch_size = model_config_dict.get("max_batch_size", 0)
+        instance_group = model_config_dict.get("instance_group", [{}])
+        instance_count = instance_group[0].get("count", 0)
         key = f"instance_count={instance_count},max_batch_size={max_batch_size}"
         return key
 
@@ -138,8 +143,8 @@ class ExperimentData:
         return self._make_pa_key_from_cli_string(pa_string)
 
     def _make_pa_key_from_cli_string(self, pa_cli_string):
-        concurrencies = re.findall('--concurrency-range=(\d+)', pa_cli_string)
-        batch_sizes = re.findall(' -b (\d+)', pa_cli_string)
+        concurrencies = re.findall("--concurrency-range=(\d+)", pa_cli_string)
+        batch_sizes = re.findall(" -b (\d+)", pa_cli_string)
 
         if len(concurrencies) != len(batch_sizes):
             raise Exception(f"concurrencies don't match batch sizes")
@@ -149,10 +154,10 @@ class ExperimentData:
             clamped_int = self._clamp_to_power_of_two(tmp_int)
             concurrencies[i] = str(clamped_int)
 
-        return ';'.join(concurrencies)
+        return ";".join(concurrencies)
 
     def _clamp_to_power_of_two(self, num):
-        """ 
+        """
         Return the smallest power of two that is >= the input
         """
         v = 1
