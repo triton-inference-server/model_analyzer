@@ -48,6 +48,7 @@ class TestPlotManager(trc.TestResultCollector):
 
         plot_manager.create_summary_plots()
 
+        # This code is commented-out but may be needed in the future.
         # Uncomment these lines to create a new output dump to compare against
         # with open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.json", "wb") as f:
         #     f.write(
@@ -75,6 +76,7 @@ class TestPlotManager(trc.TestResultCollector):
 
         plot_manager.create_summary_plots()
 
+        # This code is commented-out but may be needed in the future.
         # Uncomment these lines to create a new output dump to compare against
         # with open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.json", "wb") as f:
         #     f.write(
