@@ -24,11 +24,12 @@ from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
 from .common import test_result_collector as trc
-from .common.test_utils import ROOT_DIR, evaluate_mock_config
+from .common.test_utils import ROOT_DIR, evaluate_mock_config, convert_to_bytes, default_encode
 
 
 class TestPlotManager(trc.TestResultCollector):
     def setUp(self):
+        self.create_new_dump = False
         self._create_single_model_result_manager()
         self._create_multi_model_result_manager()
 
@@ -48,13 +49,14 @@ class TestPlotManager(trc.TestResultCollector):
 
         plot_manager.create_summary_plots()
 
-        # This code is commented-out but may be needed in the future.
-        # Uncomment these lines to create a new output dump to compare against
-        # with open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.json", "wb") as f:
-        #     f.write(
-        #         convert_to_bytes(
-        #             json.dumps(self._plot_manager_to_dict(plot_manager),
-        #                        default=default_encode)))
+        # Set self.create_new_dump to True for creating a new output dump to compare against.
+        # Default value is False.
+        if self.create_new_dump:
+            with open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.json", "wb") as f:
+                f.write(
+                    convert_to_bytes(
+                        json.dumps(self._plot_manager_to_dict(plot_manager),
+                                   default=default_encode)))
 
         with open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.json", "rb") as f:
             golden_plot_manager_dict = json.load(f)
@@ -76,13 +78,14 @@ class TestPlotManager(trc.TestResultCollector):
 
         plot_manager.create_summary_plots()
 
-        # This code is commented-out but may be needed in the future.
-        # Uncomment these lines to create a new output dump to compare against
-        # with open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.json", "wb") as f:
-        #     f.write(
-        #         convert_to_bytes(
-        #             json.dumps(self._plot_manager_to_dict(plot_manager),
-        #                        default=default_encode)))
+        # Set self.create_new_dump to True for creating a new output dump to compare against.
+        # Default value is False.
+        if self.create_new_dump:
+            with open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.json", "wb") as f:
+                f.write(
+                    convert_to_bytes(
+                        json.dumps(self._plot_manager_to_dict(plot_manager),
+                                   default=default_encode)))
 
         with open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.json", "rb") as f:
             golden_plot_manager_dict = json.load(f)
