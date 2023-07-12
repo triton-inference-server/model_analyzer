@@ -106,7 +106,6 @@ class FieldValueEncoder(json.JSONEncoder):
     # is WAR for the linting problem
     def default(self, obj):  # pylint: disable=E0202
         nested_json = []
-        i = 0
         for key in obj:
             if isinstance(key, DcgmFieldValue):
                 if (key.isBlank):

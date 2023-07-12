@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ctypes import *
+from ctypes import c_uint, c_uint16, c_uint32, c_uint64, c_char, c_char_p, \
+    c_int, c_int32, c_int64, c_ushort, c_short, c_bool, c_byte, \
+    c_longlong, c_ulong, c_double,  c_void_p
+
+from ctypes import  Structure, Union, Array, CDLL, POINTER, sizeof
+
 import sys
 import os
 import threading
