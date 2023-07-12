@@ -14,8 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ctypes import *
-
+from ctypes import (
+    c_uint32,
+    c_short,
+    c_int,
+    c_char,
+    c_ubyte,
+    c_char_p,
+    Structure,
+    POINTER,
+    addressof,
+    sizeof,
+    memmove,
+)
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
 # Provides access to functions

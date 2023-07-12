@@ -13,9 +13,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from ctypes import *
+
+from ctypes import (
+    c_uint,
+    c_uint16,
+    c_uint32,
+    c_uint64,
+    c_int,
+    c_int32,
+    c_int64,
+    c_double,
+    c_void_p,
+    py_object,
+    CFUNCTYPE,
+    POINTER,
+    byref,
+)
 
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
+import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 
 # Provides access to functions from dcgm_agent_internal
 dcgmFP = dcgm_structs._dcgmGetFunctionPointer

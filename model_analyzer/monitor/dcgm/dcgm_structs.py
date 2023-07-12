@@ -20,7 +20,31 @@ import platform
 import string
 import sys
 import threading
-from ctypes import *
+from ctypes import (
+    c_uint,
+    c_uint16,
+    c_uint32,
+    c_uint64,
+    c_char,
+    c_char_p,
+    c_int,
+    c_int32,
+    c_int64,
+    c_ushort,
+    c_short,
+    c_bool,
+    c_byte,
+    c_longlong,
+    c_ulong,
+    c_double,
+    c_void_p,
+    Structure,
+    Union,
+    Array,
+    CDLL,
+    POINTER,
+    sizeof,
+)
 
 import distro
 
