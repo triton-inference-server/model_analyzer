@@ -15,7 +15,10 @@
 from model_analyzer.constants import LOGGER_NAME
 import docker
 import logging
+import tempfile
+from io import TextIOWrapper
 from multiprocessing.pool import ThreadPool
+from subprocess import DEVNULL
 
 from .server import TritonServer
 from model_analyzer.model_analyzer_exceptions \
@@ -65,6 +68,7 @@ class TritonServerDocker(TritonServer):
         self._tritonserver_image = image
         self._tritonserver_container = None
         self._log_path = log_path
+        self._log_file = DEVNULL
         self._mounts = mounts
         self._labels = labels if labels else {}
         self._gpus = gpus
@@ -168,6 +172,8 @@ class TritonServerDocker(TritonServer):
                 self._log_pool.apply_async(self._logging_worker)
             except OSError as e:
                 raise TritonModelAnalyzerException(e)
+        else:
+            self._log_file = tempfile.NamedTemporaryFile()
 
     def _logging_worker(self):
         """
