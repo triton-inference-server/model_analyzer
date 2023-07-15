@@ -1963,11 +1963,11 @@ profile_models:
             self._evaluate_config(new_args, yaml_content, subcommand="profile")
 
         # Quick should pass
-        new_args = deepcopy(args)
-        new_args.append("--run-config-search-mode")
-        new_args.append("quick")
+        modified_args = deepcopy(args)
+        modified_args.append("--run-config-search-mode")
+        modified_args.append("quick")
 
-        self._evaluate_config(new_args, yaml_content, subcommand="profile")
+        self._evaluate_config(modified_args, yaml_content, subcommand="profile")
 
     def test_quick_search_mode(self):
         """

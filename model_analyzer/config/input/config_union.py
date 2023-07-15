@@ -94,7 +94,7 @@ class ConfigUnion(ConfigValue):
                     for message_line in message_lines:
                         message += f"\t* {message_line} \n"
 
-        return ConfigStatus(CONFIG_PARSER_FAILURE, message, self)
+            return ConfigStatus(CONFIG_PARSER_FAILURE, message, self)
 
     def set_name(self, name):
         """
