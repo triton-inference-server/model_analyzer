@@ -1955,13 +1955,17 @@ profile_models:
         self._evaluate_config(args, yaml_content, subcommand="profile")
 
         # Brute should fail
-        new_args = args + ["--run-config-search-mode", "brute"]
+        new_args = list(args)
+        new_args.append("--run-config-search-mode")
+        new_args.append("brute")
 
         with self.assertRaises(TritonModelAnalyzerException):
             self._evaluate_config(new_args, yaml_content, subcommand="profile")
 
         # Quick should pass
-        new_args = args + ["--run-config-search-mode", "quick"]
+        new_args = list(args)
+        new_args.append("--run-config-search-mode")
+        new_args.append("quick")
 
         self._evaluate_config(new_args, yaml_content, subcommand="profile")
 
@@ -2101,7 +2105,7 @@ profile_models:
         Tests that run-config-search options raise exceptions
         in quick search mode
         """
-        new_args = deepcopy(args)
+        new_args = list(args)
         new_args.append(rcs_string)
         if use_value:
             new_args.append("1")
