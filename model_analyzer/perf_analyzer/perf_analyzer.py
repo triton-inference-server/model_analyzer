@@ -216,8 +216,7 @@ class PerfAnalyzer:
         """
 
         if not self._output:
-            logger.info('perf_analyzer did not produce any output.')
-
+            logger.info("perf_analyzer did not produce any output.")
         return self._output
 
     def get_cmd(self):

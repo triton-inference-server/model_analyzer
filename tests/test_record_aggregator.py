@@ -26,7 +26,6 @@ from .common import test_result_collector as trc
 
 
 class TestRecordAggregatorMethods(trc.TestResultCollector):
-
     def tearDown(self):
         patch.stopall()
 

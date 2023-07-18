@@ -114,7 +114,7 @@ class TritonClient:
         ------
         TritonModelAnalyzerException
             If server throws Exception
-        
+
         Returns
         ------
         int or None
@@ -147,7 +147,7 @@ class TritonClient:
         TritonModelAnalyzerException
             If could not determine model readiness
             in given num_retries
-        
+
         Returns
         ------
         int or None

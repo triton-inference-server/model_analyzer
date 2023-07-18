@@ -15,17 +15,17 @@
 # limitations under the License.
 
 from ctypes import (
-    c_uint32,
-    c_short,
-    c_int,
-    c_char,
-    c_ubyte,
-    c_char_p,
-    Structure,
     POINTER,
+    Structure,
     addressof,
-    sizeof,
+    c_char,
+    c_char_p,
+    c_int,
+    c_short,
+    c_ubyte,
+    c_uint32,
     memmove,
+    sizeof,
 )
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 

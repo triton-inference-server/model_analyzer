@@ -49,6 +49,7 @@ class ConfigCommandReport(ConfigCommand):
     """
     Model Analyzer config object.
     """
+
     def __init__(self):
         super().__init__()
         self._fill_config()

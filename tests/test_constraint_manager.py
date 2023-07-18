@@ -26,7 +26,6 @@ from .common.test_utils import construct_run_config_measurement, evaluate_mock_c
 
 
 class TestConstraintManager(trc.TestResultCollector):
-
     def tearDown(self):
         patch.stopall()
 

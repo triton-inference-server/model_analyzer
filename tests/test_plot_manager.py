@@ -17,14 +17,18 @@
 import json
 import unittest
 from unittest.mock import MagicMock, patch
-
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 
 from .common import test_result_collector as trc
-from .common.test_utils import ROOT_DIR, evaluate_mock_config, convert_to_bytes, default_encode
+from .common.test_utils import (
+    ROOT_DIR,
+    convert_to_bytes,
+    default_encode,
+    evaluate_mock_config,
+)
 
 
 class TestPlotManager(trc.TestResultCollector):
@@ -55,8 +59,12 @@ class TestPlotManager(trc.TestResultCollector):
             with open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.json", "wb") as f:
                 f.write(
                     convert_to_bytes(
-                        json.dumps(self._plot_manager_to_dict(plot_manager),
-                                   default=default_encode)))
+                        json.dumps(
+                            self._plot_manager_to_dict(plot_manager),
+                            default=default_encode,
+                        )
+                    )
+                )
 
         with open(f"{ROOT_DIR}/single-model-ckpt/plot_manager.json", "rb") as f:
             golden_plot_manager_dict = json.load(f)
@@ -84,8 +92,12 @@ class TestPlotManager(trc.TestResultCollector):
             with open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.json", "wb") as f:
                 f.write(
                     convert_to_bytes(
-                        json.dumps(self._plot_manager_to_dict(plot_manager),
-                                   default=default_encode)))
+                        json.dumps(
+                            self._plot_manager_to_dict(plot_manager),
+                            default=default_encode,
+                        )
+                    )
+                )
 
         with open(f"{ROOT_DIR}/multi-model-ckpt/plot_manager.json", "rb") as f:
             golden_plot_manager_dict = json.load(f)

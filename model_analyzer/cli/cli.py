@@ -16,7 +16,7 @@
 
 import logging
 import sys
-from argparse import ArgumentParser, Namespace, SUPPRESS
+from argparse import SUPPRESS, ArgumentParser, Namespace
 from typing import List, Optional, Tuple, Union
 
 import importlib_metadata

@@ -14,20 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
+import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
+
 from ctypes import (
+    CFUNCTYPE,
+    POINTER,
+    byref,
+    c_double,
+    c_int,
+    c_int32,
+    c_int64,
     c_uint,
     c_uint16,
     c_uint32,
     c_uint64,
-    c_int,
-    c_int32,
-    c_int64,
-    c_double,
     c_void_p,
     py_object,
-    CFUNCTYPE,
-    POINTER,
-    byref,
 )
 
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs

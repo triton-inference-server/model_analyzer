@@ -50,7 +50,6 @@ def captured_output():
 
 
 class TestLogger(trc.TestResultCollector):
-
     def tearDown(self):
         patch.stopall()
 

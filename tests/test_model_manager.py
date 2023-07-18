@@ -72,7 +72,6 @@ class MetricsManagerSubclass(MetricsManager):
 
 
 class TestModelManager(trc.TestResultCollector):
-
     def tearDown(self):
         patch.stopall()
         ModelConfig._default_config_dict = {}
