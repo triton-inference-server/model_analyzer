@@ -33,7 +33,6 @@ class HTMLReport(Report):
             self._head = ""
             self._body = ""
 
-
     def head(self):
         """
         Get the head section of

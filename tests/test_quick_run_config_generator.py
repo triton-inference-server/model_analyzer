@@ -19,7 +19,6 @@ from unittest.mock import MagicMock, patch
 
 from model_analyzer.config.generate.coordinate import Coordinate
 from model_analyzer.config.generate.model_profile_spec import ModelProfileSpec
-from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
 )
@@ -36,6 +35,7 @@ from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
 )
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.triton.model.model_config import ModelConfig
 from tests.common.test_utils import evaluate_mock_config
 
 from .common import test_result_collector as trc

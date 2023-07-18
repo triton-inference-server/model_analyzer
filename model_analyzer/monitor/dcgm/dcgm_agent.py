@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
-import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
-
 from ctypes import (
     CFUNCTYPE,
     POINTER,
@@ -33,8 +30,8 @@ from ctypes import (
     py_object,
 )
 
-import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
+import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
 # Provides access to functions from dcgm_agent_internal
 dcgmFP = dcgm_structs._dcgmGetFunctionPointer

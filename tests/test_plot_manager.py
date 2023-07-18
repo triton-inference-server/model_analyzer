@@ -17,6 +17,7 @@
 import json
 import unittest
 from unittest.mock import MagicMock, patch
+
 from model_analyzer.plots.plot_manager import PlotManager
 from model_analyzer.result.constraint_manager import ConstraintManager
 from model_analyzer.result.result_manager import ResultManager

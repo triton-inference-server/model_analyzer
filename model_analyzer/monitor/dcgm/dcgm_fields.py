@@ -27,6 +27,7 @@ from ctypes import (
     memmove,
     sizeof,
 )
+
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
 # Provides access to functions
