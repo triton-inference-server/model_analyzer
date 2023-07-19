@@ -225,21 +225,78 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         - dynamic batching should be on
         - existing values from the base model config should persist if they aren't overwritten
         """
-        qrcg = self._qrcg
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "/tmp",
+            "--config-file",
+            "/tmp/my_config.yml",
+        ]
+
+        yaml_str = """
+        run_config_search_mode: quick
+        profile_models:
+          fake_model_name:
+            model_config_parameters:
+              dynamic_batching: { "preferred_batch_size": [4] }
+              optimization:
+                execution_accelerators:
+                  gpu_execution_accelerator:
+                    - name: tensorrt
+                      parameters:
+                        precision_mode: FP16
+        """
+
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
+        fake_config = {
+            "name": "fake_model_name",
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": [16]}],
+            "max_batch_size": 4,
+        }
+        with patch(
+            "model_analyzer.triton.model.model_config.ModelConfig.create_model_config_dict",
+            return_value=fake_config,
+        ):
+            mock_models = [
+                ModelProfileSpec(
+                    config.get_config()["profile_models"].value()[0],
+                    config,
+                    MagicMock(),
+                    MagicMock(),
+                )
+            ]
+
+        sc = SearchConfig(dimensions=self._dims, radius=5, min_initialized=2)
+
+        qrcg = QuickRunConfigGenerator(
+            sc,
+            config,
+            MagicMock(),
+            mock_models,
+            {},
+            MagicMock(),
+            ModelVariantNameManager(),
+        )
+
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         expected_model_config = {
-            "cpu_only": False,
-            "dynamicBatching": {},
-            "instanceGroup": [
-                {
-                    "count": 8,
-                    "kind": "KIND_GPU",
-                }
-            ],
-            "maxBatchSize": 32,
-            "name": "fake_model_name_config_0",
-            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
+            'cpu_only': False,
+            'dynamicBatching': {},
+            'instanceGroup': [{
+                'count': 8,
+                'kind': 'KIND_GPU',
+            }],
+            'maxBatchSize': 32,
+            'name': 'fake_model_name_config_0',
+            'input': [{
+                "name": "INPUT__0",
+                "dataType": "TYPE_FP32",
+                "dims": ['16']
+            }],
+            'optimization': {'executionAccelerators': {'gpuExecutionAccelerator': [{'name': 'tensorrt', 'parameters': {'precision_mode': 'FP16'}}]}}
         }
         # yapf: enable
 
@@ -249,6 +306,11 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         model_config = rc.model_run_configs()[0].model_config()
         perf_config = rc.model_run_configs()[0].perf_config()
 
+        foo = model_config.to_dict()
+        self.assertEqual(
+            model_config.to_dict()["optimization"],
+            expected_model_config["optimization"],
+        )
         self.assertEqual(model_config.to_dict(), expected_model_config)
         self.assertEqual(perf_config["concurrency-range"], 512)
         self.assertEqual(perf_config["batch-size"], 1)
