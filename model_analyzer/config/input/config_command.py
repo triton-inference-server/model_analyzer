@@ -253,7 +253,7 @@ class ConfigCommand:
         self._check_per_model_parameters(profile_models)
         self._check_per_model_model_config_parameters(profile_models)
 
-    def _check_per_model_parameters(self, profile_models: List[Dict]) -> None:
+    def _check_per_model_parameters(self, profile_models: Dict) -> None:
         for model in profile_models.values():
             if not "parameters" in model:
                 continue
@@ -267,9 +267,7 @@ class ConfigCommand:
                     "\nPlease use brute search mode or remove concurrency/batch sizes list."
                 )
 
-    def _check_per_model_model_config_parameters(
-        self, profile_models: List[Dict]
-    ) -> None:
+    def _check_per_model_model_config_parameters(self, profile_models: Dict) -> None:
         for model in profile_models.values():
             if not "model_config_parameters" in model:
                 continue
