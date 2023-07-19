@@ -306,11 +306,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         model_config = rc.model_run_configs()[0].model_config()
         perf_config = rc.model_run_configs()[0].perf_config()
 
-        foo = model_config.to_dict()
-        self.assertEqual(
-            model_config.to_dict()["optimization"],
-            expected_model_config["optimization"],
-        )
         self.assertEqual(model_config.to_dict(), expected_model_config)
         self.assertEqual(perf_config["concurrency-range"], 512)
         self.assertEqual(perf_config["batch-size"], 1)
