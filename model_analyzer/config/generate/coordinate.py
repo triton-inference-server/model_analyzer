@@ -15,9 +15,11 @@
 # limitations under the License.
 
 from copy import deepcopy
+from functools import total_ordering
 from typing import Any, Iterator, List, Union
 
 
+@total_ordering
 class Coordinate:
     """
     Class to define a coordinate in n-dimension space
@@ -81,24 +83,6 @@ class Coordinate:
             if v != other[i]:
                 return v < other[i]
         return False
-
-    def __le__(self, other: Any) -> bool:
-        for i, v in enumerate(self._values):
-            if v != other[i]:
-                return v <= other[i]
-        return True
-
-    def __gt__(self, other: Any) -> bool:
-        for i, v in enumerate(self._values):
-            if v != other[i]:
-                return v > other[i]
-        return False
-
-    def __ge__(self, other: Any) -> bool:
-        for i, v in enumerate(self._values):
-            if v != other[i]:
-                return v >= other[i]
-        return True
 
     def round(self) -> None:
         """Rounds the coordinate in-place"""
