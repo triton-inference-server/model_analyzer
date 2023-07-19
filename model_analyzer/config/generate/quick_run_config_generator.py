@@ -428,7 +428,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         model_config_params = deepcopy(model.model_config_parameters())
         if model_config_params:
-            max_batch_sizes = model_config_params.pop("max_batch_size", None)
+            model_config_params.pop("max_batch_size", None)
 
             # This is guaranteed to only generate one combination (check is in config_command)
             param_combo = GeneratorUtils.generate_combinations(model_config_params)[0]
