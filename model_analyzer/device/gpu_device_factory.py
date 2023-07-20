@@ -206,7 +206,6 @@ class GPUDeviceFactory:
         except ValueError:
             # requested_gpus are assumed to be UUIDs
             requested_gpus = [self.get_device_by_uuid(uuid) for uuid in requested_gpus]
-            pass
 
         # Return the intersection of CUDA visible UUIDs and requested/supported UUIDs.
         available_gpus = list(set(cuda_visible_gpus) & set(requested_gpus))

@@ -209,16 +209,16 @@ class PlotManager:
 
         detailed_plot_dir = os.path.join(self._plot_export_directory, "detailed")
         simple_plot_dir = os.path.join(self._plot_export_directory, "simple")
-        for model_config_name, plot in self._detailed_plots.items():
+        for model_config_name, detailed_plot in self._detailed_plots.items():
             detailed_model_config_plot_dir = os.path.join(
                 detailed_plot_dir, model_config_name
             )
             os.makedirs(detailed_model_config_plot_dir, exist_ok=True)
-            plot.save(detailed_model_config_plot_dir)
+            detailed_plot.save(detailed_model_config_plot_dir)
 
             simple_model_config_plot_dir = os.path.join(
                 simple_plot_dir, model_config_name
             )
             os.makedirs(simple_model_config_plot_dir, exist_ok=True)
-            for plot in self._simple_plots[model_config_name].values():
-                plot.save(simple_model_config_plot_dir)
+            for simple_plot in self._simple_plots[model_config_name].values():
+                simple_plot.save(simple_model_config_plot_dir)

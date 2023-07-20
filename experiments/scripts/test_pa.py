@@ -394,6 +394,7 @@ class TritonServer:
                 if "tritonserver" in proc.name().lower():
                     raise Exception("Tritonserver already running")
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                # Ignore exception
                 pass
 
         print(f"Starting tritonserver with repo={model_repo}, model={model_name}")

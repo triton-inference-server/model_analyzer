@@ -35,6 +35,7 @@ from model_analyzer.config.input.objects.config_model_profile_spec import (
     ConfigModelProfileSpec,
 )
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
+from model_analyzer.triton.model.model_config import ModelConfig
 from tests.common.test_utils import evaluate_mock_config
 
 from .common import test_result_collector as trc
@@ -73,6 +74,8 @@ def mock_ensemble_configs(*args, **kwargs):
         return fake_base_composing_config0
     elif model_name == "fake_model_B":
         return fake_base_composing_config1
+
+    return None
 
 
 def mock_composing_ensemble_configs(*args, **kwargs):
@@ -225,31 +228,18 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg = self._qrcg
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
-        # yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
-
         expected_model_config = {
-            'cpu_only': False,
-            'dynamicBatching': {},
-            'instanceGroup': [{
-                'count': 8,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 32,
-            'name': 'fake_model_name_config_0',
-            'input': [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": ['16']
-            }]
+            "cpu_only": False,
+            "dynamicBatching": {},
+            "instanceGroup": [
+                {
+                    "count": 8,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 32,
+            "name": "fake_model_name_config_0",
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
 
@@ -492,9 +482,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         self.assertIn("--percentile=96", default_run_config.representation())
 
-    def tearDown(self):
-        patch.stopall()
-
     def test_default_ensemble_config_generation(self):
         """
         Test that the default ensemble config is generated correctly
@@ -716,31 +703,18 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
-        # yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
-
         expected_model_config = {
-            'cpu_only': False,
-            'dynamicBatching': {},
-            'instanceGroup': [{
-                'count': 8,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 16,
-            'name': 'fake_model_name_config_0',
-            'input': [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": ['16']
-            }]
+            "cpu_only": False,
+            "dynamicBatching": {},
+            "instanceGroup": [
+                {
+                    "count": 8,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 16,
+            "name": "fake_model_name_config_0",
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
 
@@ -783,31 +757,18 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
-        # yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
-
         expected_model_config = {
-            'cpu_only': False,
-            'dynamicBatching': {},
-            'instanceGroup': [{
-                'count': 4,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 32,
-            'name': 'fake_model_name_config_0',
-            'input': [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": ['16']
-            }]
+            "cpu_only": False,
+            "dynamicBatching": {},
+            "instanceGroup": [
+                {
+                    "count": 4,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 32,
+            "name": "fake_model_name_config_0",
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
 
@@ -850,31 +811,18 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
-        # yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
-
         expected_model_config = {
-            'cpu_only': False,
-            'dynamicBatching': {},
-            'instanceGroup': [{
-                'count': 8,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 64,
-            'name': 'fake_model_name_config_0',
-            'input': [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": ['16']
-            }]
+            "cpu_only": False,
+            "dynamicBatching": {},
+            "instanceGroup": [
+                {
+                    "count": 8,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 64,
+            "name": "fake_model_name_config_0",
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
 
@@ -917,31 +865,18 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
-        # yapf: disable
-        fake_base_config = {
-            "name": "fake_model_name",
-            "input": [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": [16]
-            }],
-            "max_batch_size": 4
-        }
-
         expected_model_config = {
-            'cpu_only': False,
-            'dynamicBatching': {},
-            'instanceGroup': [{
-                'count': 16,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 32,
-            'name': 'fake_model_name_config_0',
-            'input': [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": ['16']
-            }]
+            "cpu_only": False,
+            "dynamicBatching": {},
+            "instanceGroup": [
+                {
+                    "count": 16,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 32,
+            "name": "fake_model_name_config_0",
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
 
@@ -1123,6 +1058,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             0
         ].composing_configs()[1]
 
+        self.assertIsInstance(model_config, ModelConfig)
         self.assertEqual(
             composing_model_A_config_0.to_dict(), expected_model_A_config_0
         )

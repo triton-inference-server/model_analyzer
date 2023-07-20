@@ -34,7 +34,6 @@ from model_analyzer.triton.model.model_config import ModelConfig
 from .brute_plus_binary_parameter_search_run_config_generator import (
     BrutePlusBinaryParameterSearchRunConfigGenerator,
 )
-from .brute_run_config_generator import BruteRunConfigGenerator
 from .config_generator_interface import ConfigGeneratorInterface
 from .quick_plus_concurrency_sweep_run_config_generator import (
     QuickPlusConcurrencySweepRunConfigGenerator,

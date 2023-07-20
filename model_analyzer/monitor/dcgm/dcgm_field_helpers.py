@@ -114,7 +114,6 @@ class FieldValueEncoder(json.JSONEncoder):
     # is WAR for the linting problem
     def default(self, obj):  # pylint: disable=E0202
         nested_json = []
-        i = 0
         for key in obj:
             if isinstance(key, DcgmFieldValue):
                 if key.isBlank:
@@ -276,7 +275,6 @@ class DcgmFieldGroupWatcher(DcgmFieldValueCollection):
         self._nextSinceTimestamp = 0
         if startTimestamp > 0:
             self._nextSinceTimestamp = startTimestamp
-        self._numValuesSeen = 0
 
         # Start watches
         self._WatchFieldGroup()
@@ -465,7 +463,6 @@ class DcgmFieldGroupEntityWatcher(DcgmFieldValueEntityCollection):
         self._nextSinceTimestamp = 0
         if startTimestamp > 0:
             self._nextSinceTimestamp = startTimestamp
-        self._numValuesSeen = 0
 
         # Start watches
         self._WatchFieldGroup()

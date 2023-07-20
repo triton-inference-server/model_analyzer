@@ -72,9 +72,6 @@ class MetricsManagerSubclass(MetricsManager):
 
 
 class TestModelManager(trc.TestResultCollector):
-    def setUp(self):
-        NotImplemented
-
     def tearDown(self):
         patch.stopall()
         ModelConfig._default_config_dict = {}
@@ -1267,7 +1264,7 @@ class TestModelManager(trc.TestResultCollector):
         dicts expected_ranges
         """
 
-        if args == None:
+        if args is None:
             args = self._args
 
         # Use mock model config or else TritonModelAnalyzerException will be thrown as it tries to read from disk

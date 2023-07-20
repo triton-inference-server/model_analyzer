@@ -24,7 +24,6 @@ class MockBase(ABC):
 
     def __init__(self):
         self._patchers = []
-        self._fill_patchers()
 
     @abstractmethod
     def _fill_patchers(self):

@@ -140,7 +140,6 @@ class TestConfig(trc.TestResultCollector):
             self.assertIsInstance(
                 model_config.raw_value().raw_value()[model_name], ConfigObject
             )
-            model_config = model_config.raw_value().raw_value()[model_name]
         else:
             self.assertIsInstance(model_config, ConfigObject)
             if check_parameters:
@@ -922,7 +921,7 @@ profile_models:
             """
         with self.assertRaises(TritonModelAnalyzerException):
             # latency_report_file is not additive
-            config = self._evaluate_config(args, yaml_content)
+            self._evaluate_config(args, yaml_content)
 
         yaml_content = """
             profile_models:
@@ -933,7 +932,7 @@ profile_models:
 
             """
         with self.assertRaises(TritonModelAnalyzerException):
-            config = self._evaluate_config(args, yaml_content)
+            self._evaluate_config(args, yaml_content)
 
     def test_config_sweep(self):
         config_sweep = ConfigSweep(ConfigPrimitive(int))
@@ -1524,7 +1523,7 @@ profile_models:
                 backend-config: test_backend_config
             """
         with self.assertRaises(TritonModelAnalyzerException):
-            config = self._evaluate_config(args, yaml_content)
+            self._evaluate_config(args, yaml_content)
 
         yaml_content = """
             profile_models:
@@ -1956,7 +1955,7 @@ profile_models:
         self._evaluate_config(args, yaml_content, subcommand="profile")
 
         # Brute should fail
-        new_args = deepcopy(args)
+        new_args = list(args)
         new_args.append("--run-config-search-mode")
         new_args.append("brute")
 
@@ -1964,7 +1963,7 @@ profile_models:
             self._evaluate_config(new_args, yaml_content, subcommand="profile")
 
         # Quick should pass
-        new_args = deepcopy(args)
+        new_args = list(args)
         new_args.append("--run-config-search-mode")
         new_args.append("quick")
 
@@ -2106,7 +2105,7 @@ profile_models:
         Tests that run-config-search options raise exceptions
         in quick search mode
         """
-        new_args = deepcopy(args)
+        new_args = list(args)
         new_args.append(rcs_string)
         if use_value:
             new_args.append("1")

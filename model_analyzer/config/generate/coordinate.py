@@ -15,9 +15,11 @@
 # limitations under the License.
 
 from copy import deepcopy
+from functools import total_ordering
 from typing import Any, Iterator, List, Union
 
 
+@total_ordering
 class Coordinate:
     """
     Class to define a coordinate in n-dimension space

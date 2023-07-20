@@ -21,7 +21,6 @@ import os
 import numba
 import psutil
 from google.protobuf.descriptor import FieldDescriptor
-from numba import cuda
 from tritonclient.grpc.model_config_pb2 import ModelConfig
 
 from model_analyzer.config.input.config_utils import (
@@ -116,6 +115,10 @@ class ConfigCommandProfile(ConfigCommand):
     """
     Model Analyzer config object.
     """
+
+    def __init__(self):
+        super().__init__()
+        self._fill_config()
 
     def _resolve_protobuf_field(self, field: FieldDescriptor) -> ConfigSweep:
         """
@@ -1289,7 +1292,7 @@ class ConfigCommandProfile(ConfigCommand):
         config values.
         """
         cpu_only = False
-        if len(self.gpus) == 0 or not cuda.is_available():
+        if len(self.gpus) == 0 or not numba.cuda.is_available():
             cpu_only = True
 
         # Set global constraints if latency budget is specified

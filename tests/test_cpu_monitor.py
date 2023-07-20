@@ -38,9 +38,6 @@ class TestCPUMonitor(trc.TestResultCollector):
         self.server_local_mock = MockServerLocalMethods()
         self.server_local_mock.start()
 
-    def tearDown(self):
-        patch.stopall()
-
     def test_record_cpu_memory(self):
         server_config = TritonServerConfig()
         server_config["model-repository"] = MODEL_REPOSITORY_PATH
@@ -97,7 +94,7 @@ class TestCPUMonitor(trc.TestResultCollector):
         cpu_monitor = CPUMonitor(server, frequency, metrics)
         cpu_monitor.start_recording_metrics()
         time.sleep(monitoring_time)
-        records = cpu_monitor.stop_recording_metrics()
+        cpu_monitor.stop_recording_metrics()
 
         # Assert no library calls
         self.server_local_mock.assert_cpu_stats_not_called()
@@ -106,6 +103,7 @@ class TestCPUMonitor(trc.TestResultCollector):
         server.stop()
 
     def tearDown(self):
+        patch.stopall()
         self.server_local_mock.stop()
 
 

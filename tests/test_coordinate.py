@@ -37,7 +37,7 @@ class TestCoordinate(trc.TestResultCollector):
     def test_out_of_range(self):
         x = Coordinate([0, 0])
         with self.assertRaises(IndexError):
-            tmp = x[2]
+            _ = x[2]
 
     def test_assignment(self):
         c1 = Coordinate([2, 4])

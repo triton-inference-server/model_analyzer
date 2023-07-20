@@ -295,6 +295,7 @@ class PerfAnalyzerConfig:
             perf_str_tokens.pop(url_index)
             perf_str_tokens.pop(url_index)
         except ValueError:
+            # Ignore ValueError exception
             pass
 
         return " ".join(perf_str_tokens)

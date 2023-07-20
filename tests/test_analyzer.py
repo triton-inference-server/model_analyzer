@@ -38,9 +38,6 @@ class TestAnalyzer(trc.TestResultCollector):
     Tests the methods of the Analyzer class
     """
 
-    def setUp(self):
-        NotImplemented
-
     def tearDown(self):
         patch.stopall()
 

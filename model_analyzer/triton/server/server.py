@@ -25,7 +25,7 @@ class TritonServer(ABC):
     """
 
     @abstractmethod
-    def start(self, env):
+    def start(self, env=None):
         """
         Starts the tritonserver
 

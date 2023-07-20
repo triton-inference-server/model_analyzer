@@ -20,6 +20,10 @@ from .mock_base import MockBase
 
 
 class MockPSUtil(MockBase):
+    def __init__(self):
+        super().__init__()
+        self._fill_patchers()
+
     def _fill_patchers(self):
         mock_process = MagicMock()
         mock_process().cpu_percent.return_value = 5

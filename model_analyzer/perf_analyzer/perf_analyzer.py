@@ -22,7 +22,7 @@ import re
 import signal
 import tempfile
 from subprocess import STDOUT, Popen
-from typing import Any, Dict, List, Tuple, Union
+from typing import Dict, List
 
 import psutil
 
@@ -42,7 +42,6 @@ from model_analyzer.record.types.gpu_used_memory import GPUUsedMemory
 from model_analyzer.record.types.gpu_utilization import GPUUtilization
 from model_analyzer.record.types.perf_client_response_wait import PerfClientResponseWait
 from model_analyzer.record.types.perf_client_send_recv import PerfClientSendRecv
-from model_analyzer.record.types.perf_latency import PerfLatency
 from model_analyzer.record.types.perf_latency_avg import PerfLatencyAvg
 from model_analyzer.record.types.perf_latency_p90 import PerfLatencyP90
 from model_analyzer.record.types.perf_latency_p95 import PerfLatencyP95
@@ -216,9 +215,9 @@ class PerfAnalyzer:
         last perf_analyzer run
         """
 
-        if self._output:
-            return self._output
-        logger.info("perf_analyzer did not produce any output.")
+        if not self._output:
+            logger.info("perf_analyzer did not produce any output.")
+        return self._output
 
     def get_cmd(self):
         """
@@ -349,7 +348,8 @@ class PerfAnalyzer:
         result = ""
         try:
             result = tmp_output.decode("utf-8")
-        except:
+        except Exception:
+            # Ignore the result on decode failed
             pass
 
         return result

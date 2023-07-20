@@ -96,7 +96,7 @@ class ModelConfig:
 
         try:
             config = ModelConfig._create_from_file(model_path).get_config()
-        except:
+        except Exception:
             if (
                 config.triton_launch_mode == "docker"
                 or config.triton_launch_mode == "local"
@@ -337,7 +337,7 @@ class ModelConfig:
                 model["modelName"]
                 for model in self.to_dict()["ensembleScheduling"]["step"]
             ]
-        except:
+        except Exception:
             raise TritonModelAnalyzerException(
                 "Cannot find composing_models. Ensemble Scheduling and/or step is not present in config protobuf."
             )
@@ -362,7 +362,7 @@ class ModelConfig:
             for composing_model in model_config_dict["ensembleScheduling"]["step"]:
                 if composing_model["modelName"] == composing_model_name:
                     composing_model["modelName"] = variant_name
-        except:
+        except Exception:
             raise TritonModelAnalyzerException(
                 "Cannot find composing_models. Ensemble Scheduling and/or step is not present in config protobuf."
             )

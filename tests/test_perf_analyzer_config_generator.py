@@ -712,10 +712,6 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             for throughput_value in throughput_values
         ]
 
-        pacg = PerfAnalyzerConfigGenerator(
-            MagicMock(), MagicMock(), MagicMock(), MagicMock(), early_exit_enable=False
-        )
-
         result = PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
             throughputs=throughputs, min_tries=4, min_gain=0.05
         )

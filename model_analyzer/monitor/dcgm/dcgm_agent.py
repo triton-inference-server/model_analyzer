@@ -13,8 +13,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from ctypes import *
 
+from ctypes import (
+    CFUNCTYPE,
+    POINTER,
+    byref,
+    c_double,
+    c_int,
+    c_int32,
+    c_int64,
+    c_uint,
+    c_uint16,
+    c_uint32,
+    c_uint64,
+    c_void_p,
+    py_object,
+)
+
+import model_analyzer.monitor.dcgm.dcgm_fields as dcgm_fields
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
 # Provides access to functions from dcgm_agent_internal
@@ -303,7 +319,6 @@ def dcgmStatusPopError(status_handle):
         return c_errorInfo
     else:
         return None
-    return c_errorInfo
 
 
 def dcgmStatusClear(status_handle):

@@ -57,6 +57,7 @@ class MockPerfAnalyzerMethods(MockBase):
             Mock(return_value=self.mock_file),
         )
         super().__init__()
+        self._fill_patchers()
 
     def start(self):
         """

@@ -14,7 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ctypes import *
+from ctypes import (
+    POINTER,
+    Structure,
+    addressof,
+    c_char,
+    c_char_p,
+    c_int,
+    c_short,
+    c_ubyte,
+    c_uint32,
+    memmove,
+    sizeof,
+)
 
 import model_analyzer.monitor.dcgm.dcgm_structs as dcgm_structs
 
@@ -830,7 +842,6 @@ def DcgmFieldGetById(fieldId):
     """
     DcgmFieldsInit()
 
-    retVal = c_dcgm_field_meta_t()
     fn = dcgmFP("DcgmFieldGetById")
     fn.restype = POINTER(c_dcgm_field_meta_t)
     c_field_meta_ptr = fn(fieldId)
@@ -858,7 +869,7 @@ def DcgmFieldGetByTag(tag):
     """
     DcgmFieldsInit()
 
-    retVal = c_dcgm_field_meta_t()
+    c_dcgm_field_meta_t()
     fn = dcgmFP("DcgmFieldGetByTag")
     fn.restype = POINTER(c_dcgm_field_meta_t)
     c_field_meta_ptr = fn(c_char_p(tag))

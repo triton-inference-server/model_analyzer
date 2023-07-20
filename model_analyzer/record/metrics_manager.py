@@ -367,6 +367,7 @@ class MetricsManager:
                         self._output_model_repo_path, variant_name
                     )
             except FileExistsError:
+                # Ignore if the file already exists
                 pass
 
     def _load_model_variants(self, run_config):

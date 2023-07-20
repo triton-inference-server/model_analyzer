@@ -135,7 +135,7 @@ class Record(metaclass=RecordType):
         -------
         Average value of the list
         """
-        return lambda values: mean(values)
+        return mean
 
     @staticmethod
     @abstractmethod
@@ -210,8 +210,8 @@ class Record(metaclass=RecordType):
         Record
         """
 
-        if isinstance(other, int) or isinstance(other, float):
-            return type(self)(value=(self.value() * other))
+        if isinstance(other, (int, float)):
+            return self.__class__(value=(self.value() * other))
         else:
             raise TypeError
 
@@ -231,8 +231,9 @@ class Record(metaclass=RecordType):
         Record
         """
 
-        if isinstance(other, int) or isinstance(other, float):
-            return type(self)(value=(self.value() / other))
+        if isinstance(other, (int, float)):
+            return self.__class__(value=(self.value() / other))
+
         else:
             raise TypeError
 

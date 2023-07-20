@@ -23,6 +23,7 @@ class MockGPUDeviceFactory(MockBase):
     def __init__(self, gpus):
         self._cuda_visible_gpus = gpus
         super().__init__()
+        self._fill_patchers()
 
     def _fill_patchers(self):
         self._patchers.append(
