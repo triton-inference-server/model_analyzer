@@ -431,7 +431,10 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_config_params.pop("max_batch_size", None)
 
             # This is guaranteed to only generate one combination (check is in config_command)
-            param_combo = GeneratorUtils.generate_combinations(model_config_params)[0]
+            param_combos = GeneratorUtils.generate_combinations(model_config_params)
+            assert len(param_combos) == 1
+
+            param_combo = param_combos[0]
         else:
             param_combo = {}
 
