@@ -283,20 +283,24 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         expected_model_config = {
-            'cpu_only': False,
-            'dynamicBatching': {},
-            'instanceGroup': [{
-                'count': 8,
-                'kind': 'KIND_GPU',
-            }],
-            'maxBatchSize': 32,
-            'name': 'fake_model_name_config_0',
-            'input': [{
-                "name": "INPUT__0",
-                "dataType": "TYPE_FP32",
-                "dims": ['16']
-            }],
-            'optimization': {'executionAccelerators': {'gpuExecutionAccelerator': [{'name': 'tensorrt', 'parameters': {'precision_mode': 'FP16'}}]}}
+            "cpu_only": False,
+            "dynamicBatching": {},
+            "instanceGroup": [
+                {
+                    "count": 8,
+                    "kind": "KIND_GPU",
+                }
+            ],
+            "maxBatchSize": 32,
+            "name": "fake_model_name_config_0",
+            "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
+            "optimization": {
+                "executionAccelerators": {
+                    "gpuExecutionAccelerator": [
+                        {"name": "tensorrt", "parameters": {"precision_mode": "FP16"}}
+                    ]
+                }
+            },
         }
         # yapf: enable
 
