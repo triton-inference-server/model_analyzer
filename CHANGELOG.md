@@ -32,47 +32,31 @@ limitations under the License.
 - Added binary concurrency search to quick search mode
 - Added binary parameter search to brute search mode
 
-[//]: <> (put here on external component update with short summary what change or link to changelog)
-
 ## 23.04 (2023-04-27)
 
 - Support for BLS models added
-
-[//]: <> (put here on external component update with short summary what change or link to changelog)
 
 ## 23.03 (2023-03-29)
 
 - Support for ensemble models added
 - Multi-model quick start guide added
 
-[//]: <> (put here on external component update with short summary what change or link to changelog)
-
 ## 22.10 (2022-11-04)
 
 - Multi-model search mode added
-
-[//]: <> (put here on external component update with short summary what change or link to changelog)
 
 ## 22.09 (2022-10-04)
 
 - Quick search mode added
 
-[//]: <> (put here on external component update with short summary what change or link to changelog)
-
 ## 22.03 (2022-03-29)
 
 - Added support to allow the user to specify a max batch size when automatically sweeping
-
-[//]: <> (put here on external component update with short summary what change or link to changelog)
 
 ## 21.11 (2021-11-19)
 
 - Added ability to automatically sweep batch size, instance count and concurrency
 
-[//]: <> (put here on external component update with short summary what change or link to changelog)
-
 ## 21.05 (2021-06-19)
 
 - Initial release of Model Analyzer
-
-[//]: <> (put here on external component update with short summary what change or link to changelog)
