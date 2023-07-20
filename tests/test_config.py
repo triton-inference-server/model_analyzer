@@ -2041,7 +2041,33 @@ profile_models:
         profile_models:
           model_1:
             model_config_parameters:
-              max batch size: 2
+              max_batch_size: 2
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand="profile")
+
+        yaml_content = """
+        profile_models:
+          model_1:
+            model_config_parameters:
+              instance_group:
+                - kind: KIND_GPU
+        """
+
+        with self.assertRaises(TritonModelAnalyzerException):
+            self._evaluate_config(args, yaml_content, subcommand="profile")
+
+        yaml_content = """
+        profile_models:
+          model_1:
+            model_config_parameters:
+               optimization:
+                 execution_accelerators:
+                   gpu_execution_accelerator:
+                     - name: tensorrt
+                       parameters:
+                       precision_mode: [FP16, FP32]
         """
 
         with self.assertRaises(TritonModelAnalyzerException):

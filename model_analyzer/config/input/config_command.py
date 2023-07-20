@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import yaml
 
+from model_analyzer.config.generate.generator_utils import GeneratorUtils
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 
 from .yaml_config_validator import YamlConfigValidator
@@ -102,6 +103,10 @@ class ConfigCommand:
         self._set_field_values(args, yaml_config)
         self._preprocess_and_verify_arguments()
         self._autofill_values()
+
+        # This is done after the model(s) are populated so that we
+        # can easily count the parameter combinations
+        self._check_quick_search_model_config_parameters_combinations()
 
     def _load_yaml_config(self, args: Namespace) -> Optional[Dict[str, List]]:
         if "config_file" in args:
@@ -198,9 +203,9 @@ class ConfigCommand:
         ):
             return
 
-        self._check_no_search_disable(args, yaml_config)
-        self._check_no_global_list_values(args, yaml_config)
-        self._check_no_per_model_list_values(args, yaml_config)
+        self._check_quick_search_no_search_disable(args, yaml_config)
+        self._check_quick_search_no_global_list_values(args, yaml_config)
+        self._check_quick_search_no_per_model_list_values(args, yaml_config)
 
     def _check_for_bls_incompatibility(
         self, args: Namespace, yaml_config: Optional[Dict[str, List]]
@@ -208,11 +213,11 @@ class ConfigCommand:
         if not self._get_config_value("bls_composing_models", args, yaml_config):
             return
 
-        self._check_no_brute_search(args, yaml_config)
-        self._check_no_multi_model(args, yaml_config)
-        self._check_no_concurrent_search(args, yaml_config)
+        self._check_bls_no_brute_search(args, yaml_config)
+        self._check_bls_no_multi_model(args, yaml_config)
+        self._check_bls_no_concurrent_search(args, yaml_config)
 
-    def _check_no_search_disable(
+    def _check_quick_search_no_search_disable(
         self, args: Namespace, yaml_config: Optional[Dict[str, List]]
     ) -> None:
         if self._get_config_value("run_config_search_disable", args, yaml_config):
@@ -221,7 +226,7 @@ class ConfigCommand:
                 "\nPlease use brute search mode or remove --run-config-search-disable."
             )
 
-    def _check_no_global_list_values(
+    def _check_quick_search_no_global_list_values(
         self, args: Namespace, yaml_config: Optional[Dict[str, List]]
     ) -> None:
         concurrency = self._get_config_value("concurrency", args, yaml_config)
@@ -233,7 +238,7 @@ class ConfigCommand:
                 "\nPlease use brute search mode or remove concurrency/batch sizes list."
             )
 
-    def _check_no_per_model_list_values(
+    def _check_quick_search_no_per_model_list_values(
         self, args: Namespace, yaml_config: Optional[Dict[str, List]]
     ) -> None:
         profile_models = self._get_config_value("profile_models", args, yaml_config)
@@ -245,6 +250,10 @@ class ConfigCommand:
         ):
             return
 
+        self._check_per_model_parameters(profile_models)
+        self._check_per_model_model_config_parameters(profile_models)
+
+    def _check_per_model_parameters(self, profile_models: Dict) -> None:
         for model in profile_models.values():
             if not "parameters" in model:
                 continue
@@ -258,17 +267,43 @@ class ConfigCommand:
                     "\nPlease use brute search mode or remove concurrency/batch sizes list."
                 )
 
+    def _check_per_model_model_config_parameters(self, profile_models: Dict) -> None:
         for model in profile_models.values():
             if not "model_config_parameters" in model:
                 continue
 
             if "max_batch_size" in model["model_config_parameters"]:
                 raise TritonModelAnalyzerException(
-                    f"\nProfiling of models in quick search mode is not supported with lists max batch sizes."
+                    f"\nProfiling of models in quick search mode is not supported with lists of max batch sizes."
                     "\nPlease use brute search mode or remove max batch size list."
                 )
 
-    def _check_no_brute_search(
+            if "instance_group" in model["model_config_parameters"]:
+                raise TritonModelAnalyzerException(
+                    f"\nProfiling of models in quick search mode is not supported with instance group as a model config parameter"
+                    "\nPlease use brute search mode or remove instance_group from 'model_config_parameters'."
+                )
+
+    def _check_quick_search_model_config_parameters_combinations(self) -> None:
+        config = self.get_config()
+        if not "profile_models" in config:
+            return
+
+        if config["run_config_search_mode"] != "quick":
+            return
+
+        profile_models = config()["profile_models"].value()
+        for model in profile_models:
+            model_config_params = deepcopy(model.model_config_parameters())
+            if model_config_params:
+                if len(GeneratorUtils.generate_combinations(model_config_params)) > 1:
+                    raise TritonModelAnalyzerException(
+                        f"\nProfiling of models in quick search mode is not supported for the specified model config parameters, "
+                        f"as more than one combination of parameters can be generated."
+                        f"\nPlease use brute search mode to profile or remove the model config parameters specified."
+                    )
+
+    def _check_bls_no_brute_search(
         self, args: Namespace, yaml_config: Optional[Dict[str, List]]
     ) -> None:
         if (
@@ -280,7 +315,7 @@ class ConfigCommand:
                 "\nPlease use quick search mode."
             )
 
-    def _check_no_multi_model(
+    def _check_bls_no_multi_model(
         self, args: Namespace, yaml_config: Optional[Dict[str, List]]
     ) -> None:
         profile_models: Union[Dict, List, str] = self._get_config_value(
@@ -298,7 +333,7 @@ class ConfigCommand:
                 f"\nProfiling of multiple models is not supported for BLS models."
             )
 
-    def _check_no_concurrent_search(
+    def _check_bls_no_concurrent_search(
         self, args: Namespace, yaml_config: Optional[Dict[str, List]]
     ) -> None:
         if self._get_config_value(

@@ -43,8 +43,10 @@ from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.model.model_config import ModelConfig
 
 from .config_generator_interface import ConfigGeneratorInterface
+from .generator_utils import GeneratorUtils
 
 logger = logging.getLogger(LOGGER_NAME)
+from copy import deepcopy
 
 
 class QuickRunConfigGenerator(ConfigGeneratorInterface):
@@ -424,17 +426,27 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             self._coordinate_to_measure, dimension_index
         )
 
+        model_config_params = deepcopy(model.model_config_parameters())
+        if model_config_params:
+            model_config_params.pop("max_batch_size", None)
+
+            # This is guaranteed to only generate one combination (check is in config_command)
+            param_combos = GeneratorUtils.generate_combinations(model_config_params)
+            assert len(param_combos) == 1
+
+            param_combo = param_combos[0]
+        else:
+            param_combo = {}
+
         kind = "KIND_CPU" if model.cpu_only() else "KIND_GPU"
         instance_count = self._calculate_instance_count(dimension_values)
 
-        param_combo: dict = {
-            "instance_group": [
-                {
-                    "count": instance_count,
-                    "kind": kind,
-                }
-            ]
-        }
+        param_combo["instance_group"] = [
+            {
+                "count": instance_count,
+                "kind": kind,
+            }
+        ]
 
         if "max_batch_size" in dimension_values:
             param_combo["max_batch_size"] = self._calculate_model_batch_size(

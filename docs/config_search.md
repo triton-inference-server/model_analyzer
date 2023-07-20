@@ -235,6 +235,10 @@ manual sweep:
 
 **Default search mode when profiling ensemble models, BLS models, or multiple models concurrently**
 
+_This mode has the following limitations:_
+
+- If model config parameters are specified, they can contain only one possible combination of parameters
+
 This mode uses a hill climbing algorithm to search the configuration space, looking for
 the maximal objective value within the specified constraints. In the majority of cases
 this will find greater than 95% of the maximum objective value (that could be found using a brute force search), while needing to search less than 10% of the configuration space.
