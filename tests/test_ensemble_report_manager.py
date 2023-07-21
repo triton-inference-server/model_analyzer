@@ -85,7 +85,7 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
             num_measurements=68,
             num_configurations=37,
             gpu_name="TITAN RTX",
-            cpu_only=False,
+            report_gpu_metrics=True,
         )
 
         self.assertEqual(summary_sentence, expected_summary_sentence)
@@ -128,7 +128,7 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
             num_measurements=68,
             num_configurations=37,
             gpu_name="TITAN RTX",
-            cpu_only=True,
+            report_gpu_metrics=False,
         )
 
         self.assertEqual(summary_sentence, expected_summary_sentence)

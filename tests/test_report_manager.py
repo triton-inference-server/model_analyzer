@@ -245,7 +245,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
 
-        dont_report_gpu_metrics = cpu_only and not always_report_gpu_metrics
+        report_gpu_metrics = always_report_gpu_metrics or not cpu_only
 
         for i in range(10, 0, -1):
             avg_non_gpu_metrics = {
@@ -259,7 +259,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 avg_gpu_metrics,
                 avg_non_gpu_metrics,
                 result_comparator,
-                cpu_only=dont_report_gpu_metrics,
+                cpu_only=not report_gpu_metrics,
             )
 
         self.report_manager.create_summaries()
@@ -269,7 +269,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             num_measurements=10,
             num_configurations=3,
             gpu_name="TITAN RTX",
-            cpu_only=dont_report_gpu_metrics,
+            report_gpu_metrics=report_gpu_metrics,
         )
 
         if mode == "online":
@@ -277,11 +277,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
         else:
             objective = "minimizing latency"
 
-        if cpu_only and not always_report_gpu_metrics:
+        if report_gpu_metrics:
             expected_summary_sentence = (
                 "In 10 measurements across 3 configurations, "
                 "<strong>test_model_config_10</strong> is <strong>100%</strong> better than the default configuration "
-                f"at {objective}, under the given constraints.<UL><LI> "
+                f"at {objective}, under the given constraints, on GPU(s) TITAN RTX.<UL><LI> "
                 "<strong>test_model_config_10</strong>: 1 GPU instance with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>"
             )
@@ -289,7 +289,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             expected_summary_sentence = (
                 "In 10 measurements across 3 configurations, "
                 "<strong>test_model_config_10</strong> is <strong>100%</strong> better than the default configuration "
-                f"at {objective}, under the given constraints, on GPU(s) TITAN RTX.<UL><LI> "
+                f"at {objective}, under the given constraints.<UL><LI> "
                 "<strong>test_model_config_10</strong>: 1 GPU instance with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>"
             )
