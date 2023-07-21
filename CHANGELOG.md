@@ -16,14 +16,14 @@ limitations under the License.
 
 # Changelog
 
-## 23.06 (2023-06-29)
+## 1.30.0 (2023-06-29)
 
 - Implemented periodic checkpointing
 - Added support for custom docker args
 - Detect and handle invalid metrics url
 - Profile will now automatically create the default detailed reports
 
-## 23.05 (2023-06-01)
+## 1.29.0 (2023-06-01)
 
 - `request-rate-range` can now be searched in brute mode
 - Capture PA errors in a log file
@@ -32,31 +32,31 @@ limitations under the License.
 - Added binary concurrency search to quick search mode
 - Added binary parameter search to brute search mode
 
-## 23.04 (2023-04-27)
+## 1.28.0 (2023-04-27)
 
-- Support for BLS models added
+- [Support for BLS models added](docs/config_search.md#bls-model-search)
 
-## 23.03 (2023-03-29)
+## 1.27.0 (2023-03-29)
 
-- Support for ensemble models added
-- Multi-model quick start guide added
+- [Support for ensemble models added](docs/config_search.md#ensemble-model-search)
+- [Multi-model quick start guide added](docs/mm_quick_start.md)
 
-## 22.10 (2022-11-04)
+## 1.21.0 (2022-11-04)
 
-- Multi-model search mode added
+- [Multi-model search mode added](docs/config_search.md#multi-model-search-mode)
 
-## 22.09 (2022-10-04)
+## 1.20.0 (2022-10-04)
 
-- Quick search mode added
+- [Quick search mode added](docs/config_search.md#quick-search-mode)
 
-## 22.03 (2022-03-29)
+## 1.14.0 (2022-03-29)
 
 - Added support to allow the user to specify a max batch size when automatically sweeping
 
-## 21.11 (2021-11-19)
+## 1.10.0 (2021-11-19)
 
-- Added ability to automatically sweep batch size, instance count and concurrency
+- [Added ability to automatically sweep batch size, instance count and concurrency](docs/config_search.md#automatic-brute-search)
 
-## 21.05 (2021-06-19)
+## 1.5.0 (2021-06-19)
 
 - Initial release of Model Analyzer
