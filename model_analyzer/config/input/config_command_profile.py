@@ -18,7 +18,7 @@ import argparse
 import logging
 import os
 
-import numba
+import numba.cuda
 import psutil
 from google.protobuf.descriptor import FieldDescriptor
 from tritonclient.grpc.model_config_pb2 import ModelConfig
@@ -37,6 +37,7 @@ from model_analyzer.triton.server.server_config import TritonServerConfig
 
 from .config_command import ConfigCommand
 from .config_defaults import (
+    DEFAULT_ALWAYS_REPORT_GPU_METRICS,
     DEFAULT_BATCH_SIZES,
     DEFAULT_CHECKPOINT_DIRECTORY,
     DEFAULT_CLIENT_PROTOCOL,
@@ -264,6 +265,16 @@ class ConfigCommandProfile(ConfigCommand):
                 default_value=DEFAULT_GPUS,
                 description="List of GPU UUIDs to be used for the profiling. "
                 "Use 'all' to profile all the GPUs visible by CUDA.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "always_report_gpu_metrics",
+                flags=["--always-report-gpu-metrics"],
+                field_type=ConfigPrimitive(bool),
+                parser_args={"action": "store_true"},
+                default_value=False,
+                description="Model Analyzer will always report GPU metrics, even when the model is `cpu_only`.",
             )
         )
         self._add_config(
