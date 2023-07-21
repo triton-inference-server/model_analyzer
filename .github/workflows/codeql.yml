@@ -27,6 +27,8 @@
 name: "CodeQL"
 
 on:
+  push:
+    branches: [ 'update_codeql_yml' ]
   pull_request:
   schedule:
     - cron: '0 1 * * 1-6'
