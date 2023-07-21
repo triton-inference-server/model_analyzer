@@ -186,7 +186,7 @@ class MetricsManager:
         cpu_only = not numba.cuda.is_available()
         self._start_monitors(cpu_only=cpu_only)
         time.sleep(self._config.duration_seconds)
-        if not cpu_only:
+        if not cpu_only or self._config.always_report_gpu_metrics:
             server_gpu_metrics = self._get_gpu_inference_metrics()
             self._result_manager.add_server_data(data=server_gpu_metrics)
         self._destroy_monitors(cpu_only=cpu_only)
@@ -244,7 +244,7 @@ class MetricsManager:
             if not self._config.perf_output
             else FileWriter(self._config.perf_output_path)
         )
-        cpu_only = run_config.cpu_only()
+        cpu_only = run_config.cpu_only() and not self._config.always_report_gpu_metrics
 
         self._print_run_config_info(run_config)
 
