@@ -358,7 +358,7 @@ class ReportManager:
         # Get GPU names and memory
         run_config = self._summary_data[report_key][0][0]
         report_gpu_metrics = (
-            self._config.report_gpu_metrics or not run_config.cpu_only()
+            self._config.always_report_gpu_metrics or not run_config.cpu_only()
         )
 
         (gpu_names, max_memories) = (None, None)

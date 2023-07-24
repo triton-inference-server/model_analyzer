@@ -56,7 +56,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             args.extend(["--report-model-configs", models])
 
         if report_gpu_metrics:
-            args.extend(["--report-gpu-metrics"])
+            args.extend(["--always-report-gpu-metrics"])
 
         yaml_str = (
             """
