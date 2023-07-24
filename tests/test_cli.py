@@ -61,7 +61,7 @@ def get_test_options():
         OptionStruct("bool", "profile","--run-config-profile-models-concurrently-enable"),
         OptionStruct("bool", "profile","--request-rate-search-enable"),
         OptionStruct("bool", "profile","--reload-model-disable"),
-    OptionStruct("bool", "profile","--early-exit-enable"),
+        OptionStruct("bool", "profile","--early-exit-enable"),
         OptionStruct("bool", "profile","--skip-summary-reports"),
         OptionStruct("bool", "profile","--skip-detailed-reports"),
         OptionStruct("bool", "profile","--always-report-gpu-metrics"),
