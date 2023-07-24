@@ -37,7 +37,6 @@ from model_analyzer.triton.server.server_config import TritonServerConfig
 
 from .config_command import ConfigCommand
 from .config_defaults import (
-    DEFAULT_ALWAYS_REPORT_GPU_METRICS,
     DEFAULT_BATCH_SIZES,
     DEFAULT_CHECKPOINT_DIRECTORY,
     DEFAULT_CLIENT_PROTOCOL,
@@ -66,6 +65,7 @@ from .config_defaults import (
     DEFAULT_PERF_ANALYZER_TIMEOUT,
     DEFAULT_PERF_MAX_AUTO_ADJUSTS,
     DEFAULT_PERF_OUTPUT_FLAG,
+    DEFAULT_REPORT_GPU_METRICS,
     DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS,
     DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS,
     DEFAULT_REQUEST_RATE_SEARCH_ENABLE,
@@ -269,12 +269,12 @@ class ConfigCommandProfile(ConfigCommand):
         )
         self._add_config(
             ConfigField(
-                "always_report_gpu_metrics",
-                flags=["--always-report-gpu-metrics"],
+                "report_gpu_metrics",
+                flags=["--report-gpu-metrics"],
                 field_type=ConfigPrimitive(bool),
                 parser_args={"action": "store_true"},
                 default_value=False,
-                description="Model Analyzer will always report GPU metrics, even when the model is `cpu_only`.",
+                description="Report GPU metrics, even when the model is `cpu_only`.",
             )
         )
         self._add_config(

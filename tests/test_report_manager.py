@@ -46,7 +46,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         num_configs_per_model=10,
         mode="online",
         subcommand="profile",
-        always_report_gpu_metrics=False,
+        report_gpu_metrics=False,
     ):
         args = ["model-analyzer", subcommand, "-f", "path-to-config-file"]
         if subcommand == "profile":
@@ -55,8 +55,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
         else:
             args.extend(["--report-model-configs", models])
 
-        if always_report_gpu_metrics:
-            args.extend(["--always-report-gpu-metrics"])
+        if report_gpu_metrics:
+            args.extend(["--report-gpu-metrics"])
 
         yaml_str = (
             """
@@ -227,17 +227,15 @@ class TestReportManagerMethods(trc.TestResultCollector):
     def test_build_summary_table(self, *args):
         for mode in ["offline", "online"]:
             for cpu_only in [True, False]:
-                for always_report_gpu_metrics in [True, False]:
-                    self.subtest_build_summary_table(
-                        mode, cpu_only, always_report_gpu_metrics
-                    )
+                for report_gpu_metrics in [True, False]:
+                    self.subtest_build_summary_table(mode, cpu_only, report_gpu_metrics)
 
-    def subtest_build_summary_table(self, mode, cpu_only, always_report_gpu_metrics):
+    def subtest_build_summary_table(self, mode, cpu_only, report_gpu_metrics):
         self._init_managers(
             models="test_model",
             mode=mode,
             subcommand="profile",
-            always_report_gpu_metrics=always_report_gpu_metrics,
+            report_gpu_metrics=report_gpu_metrics,
         )
         result_comparator = RunConfigResultComparator(
             metric_objectives_list=[{"perf_throughput": 10}], model_weights=[1]
@@ -245,7 +243,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
 
-        report_gpu_metrics = always_report_gpu_metrics or not cpu_only
+        gpu_metrics = report_gpu_metrics or not cpu_only
 
         for i in range(10, 0, -1):
             avg_non_gpu_metrics = {
@@ -259,7 +257,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 avg_gpu_metrics,
                 avg_non_gpu_metrics,
                 result_comparator,
-                cpu_only=not report_gpu_metrics,
+                cpu_only=not gpu_metrics,
             )
 
         self.report_manager.create_summaries()
@@ -269,7 +267,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             num_measurements=10,
             num_configurations=3,
             gpu_name="TITAN RTX",
-            report_gpu_metrics=report_gpu_metrics,
+            report_gpu_metrics=gpu_metrics,
         )
 
         if mode == "online":
@@ -277,7 +275,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         else:
             objective = "minimizing latency"
 
-        if report_gpu_metrics:
+        if gpu_metrics:
             expected_summary_sentence = (
                 "In 10 measurements across 3 configurations, "
                 "<strong>test_model_config_10</strong> is <strong>100%</strong> better than the default configuration "
