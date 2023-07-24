@@ -1113,7 +1113,9 @@ class ReportManager:
             key=lambda x: x.get_non_gpu_metric_value(sort_by_tag),
             reverse=True,
         )
-        cpu_only = model_config.cpu_only()
+        report_gpu_metrics = (
+            self._config.always_report_gpu_metrics or not model_config.cpu_only()
+        )
 
         if self._was_measured_with_request_rate(measurements[0]):
             first_column_header = (
@@ -1130,7 +1132,7 @@ class ReportManager:
                 "concurrency-range" if self._mode == "online" else "batch-size"
             )
 
-        if not cpu_only:
+        if report_gpu_metrics:
             headers = [
                 first_column_header,
                 "p99 Latency (ms)",
@@ -1161,7 +1163,7 @@ class ReportManager:
         detailed_table = ResultTable(headers, title="Detailed Table")
 
         # Construct table
-        if not cpu_only:
+        if report_gpu_metrics:
             for measurement in measurements:
                 row = [
                     # TODO-TMA-568: This needs to be updated because there will be multiple model configs
@@ -1224,7 +1226,11 @@ class ReportManager:
 
         gpu_cpu_string = "CPU"
 
-        if not run_config.cpu_only():
+        report_gpu_metrics = (
+            self._config.always_report_gpu_metrics or not run_config.cpu_only()
+        )
+
+        if report_gpu_metrics:
             gpu_names, max_memories = self._get_gpu_stats(measurements)
             gpu_cpu_string = f"GPU(s) {gpu_names} with total memory {max_memories}"
 

@@ -307,10 +307,10 @@ class TestReportManagerMethods(trc.TestResultCollector):
             )
 
     def test_build_detailed_info(self):
-        for cpu_only in [True, False]:
-            self._subtest_build_detailed_info(cpu_only)
+        for report_gpu_metrics in [True, False]:
+            self._subtest_build_detailed_info(report_gpu_metrics)
 
-    def _subtest_build_detailed_info(self, cpu_only):
+    def _subtest_build_detailed_info(self, report_gpu_metrics):
         self._init_managers(models="test_model_config_10", subcommand="report")
 
         result_comparator = RunConfigResultComparator(
@@ -331,7 +331,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 avg_gpu_metrics,
                 avg_non_gpu_metrics,
                 result_comparator,
-                cpu_only=cpu_only,
+                cpu_only=not report_gpu_metrics,
                 add_to_results_only=True,
             )
 
@@ -339,18 +339,18 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.report_manager._build_detailed_table("test_model_config_10")
         sentence = self.report_manager._build_detailed_info("test_model_config_10")
 
-        if cpu_only:
+        if report_gpu_metrics:
             expected_sentence = (
                 f"The model config <strong>test_model_config_10</strong> uses 1 GPU instance with "
                 f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
-                f"were obtained for the model config on CPU. "
+                f"were obtained for the model config on GPU(s) 1 x fake_gpu_name with total memory 1.0 GB. "
                 f"This model uses the platform tensorflow_graphdef."
             )
         else:
             expected_sentence = (
                 f"The model config <strong>test_model_config_10</strong> uses 1 GPU instance with "
                 f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
-                f"were obtained for the model config on GPU(s) 1 x fake_gpu_name with total memory 1.0 GB. "
+                f"were obtained for the model config on CPU. "
                 f"This model uses the platform tensorflow_graphdef."
             )
 

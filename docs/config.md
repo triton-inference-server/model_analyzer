@@ -338,6 +338,9 @@ report_model_configs: <comma-delimited-string-list>
 
 # Specify path to config YAML file
 [ config_file: <string> ]
+
+# Always report GPU metrics
+[ always_report_gpu_metrics: <bool> | default: false]
 ```
 
 ## YAML only options
