@@ -227,7 +227,7 @@ cpu_only_composing_models: <comma-delimited-string-list>
 # Enables the searching of request rate (instead of concurrency)
 [ request_rate_search_enable: <bool> | default: false]
 
-# Always report GPU metrics
+# Always report GPU metrics, even if the model(s) is cpu_only
 [ always_report_gpu_metrics: <bool> | default: false]
 
 # Skips the generation of summary reports and tables
