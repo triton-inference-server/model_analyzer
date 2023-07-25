@@ -307,15 +307,18 @@ class TestReportManagerMethods(trc.TestResultCollector):
             )
 
     def test_build_detailed_info(self):
-        for report_gpu_metrics in [True, False]:
-            self._subtest_build_detailed_info(report_gpu_metrics)
+        for cpu_only in [True, False]:
+            for report_gpu_metrics in [True, False]:
+                self._subtest_build_detailed_info(cpu_only, report_gpu_metrics)
 
-    def _subtest_build_detailed_info(self, report_gpu_metrics):
+    def _subtest_build_detailed_info(self, cpu_only, report_gpu_metrics):
         self._init_managers(models="test_model_config_10", subcommand="report")
 
         result_comparator = RunConfigResultComparator(
             metric_objectives_list=[{"perf_throughput": 10}], model_weights=[1]
         )
+
+        gpu_metrics = report_gpu_metrics or not cpu_only
 
         avg_gpu_metrics = {"gpu_uuid": {"gpu_used_memory": 6000, "gpu_utilization": 60}}
 
@@ -331,7 +334,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 avg_gpu_metrics,
                 avg_non_gpu_metrics,
                 result_comparator,
-                cpu_only=not report_gpu_metrics,
+                cpu_only=not gpu_metrics,
                 add_to_results_only=True,
             )
 
@@ -339,7 +342,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.report_manager._build_detailed_table("test_model_config_10")
         sentence = self.report_manager._build_detailed_info("test_model_config_10")
 
-        if report_gpu_metrics:
+        if gpu_metrics:
             expected_sentence = (
                 f"The model config <strong>test_model_config_10</strong> uses 1 GPU instance with "
                 f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
