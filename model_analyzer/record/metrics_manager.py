@@ -183,13 +183,13 @@ class MetricsManager:
         TritonModelAnalyzerException
         """
 
-        cpu_only = not numba.cuda.is_available()
-        self._start_monitors(cpu_only=cpu_only)
+        capture_gpu_metrics = numba.cuda.is_available()
+        self._start_monitors(capture_gpu_metrics=capture_gpu_metrics)
         time.sleep(self._config.duration_seconds)
-        if not cpu_only:
+        if capture_gpu_metrics or self._config.always_report_gpu_metrics:
             server_gpu_metrics = self._get_gpu_inference_metrics()
             self._result_manager.add_server_data(data=server_gpu_metrics)
-        self._destroy_monitors(cpu_only=cpu_only)
+        self._destroy_monitors(capture_gpu_metrics=capture_gpu_metrics)
 
     def execute_run_config(
         self, run_config: RunConfig
@@ -244,27 +244,29 @@ class MetricsManager:
             if not self._config.perf_output
             else FileWriter(self._config.perf_output_path)
         )
-        cpu_only = run_config.cpu_only()
+        capture_gpu_metrics = (
+            run_config.cpu_only() and not self._config.always_report_gpu_metrics
+        )
 
         self._print_run_config_info(run_config)
 
-        self._start_monitors(cpu_only=cpu_only)
+        self._start_monitors(capture_gpu_metrics=capture_gpu_metrics)
 
         perf_analyzer_metrics, model_gpu_metrics = self._run_perf_analyzer(
             run_config, perf_output_writer
         )
 
         if not perf_analyzer_metrics:
-            self._stop_monitors(cpu_only=cpu_only)
-            self._destroy_monitors(cpu_only=cpu_only)
+            self._stop_monitors(capture_gpu_metrics=capture_gpu_metrics)
+            self._destroy_monitors(capture_gpu_metrics=capture_gpu_metrics)
             return None
 
         # Get metrics for model inference and combine metrics that do not have GPU UUID
-        if not cpu_only and not model_gpu_metrics:
+        if capture_gpu_metrics and not model_gpu_metrics:
             model_gpu_metrics = self._get_gpu_inference_metrics()
         model_cpu_metrics = self._get_cpu_inference_metrics()
 
-        self._destroy_monitors(cpu_only=cpu_only)
+        self._destroy_monitors(capture_gpu_metrics=capture_gpu_metrics)
 
         run_config_measurement = None
         if model_gpu_metrics is not None and perf_analyzer_metrics is not None:
@@ -450,13 +452,13 @@ class MetricsManager:
 
         return measurements.get(key, None)
 
-    def _start_monitors(self, cpu_only=False):
+    def _start_monitors(self, capture_gpu_metrics=True):
         """
         Start any metrics monitors
         """
 
         self._gpu_monitor = None
-        if not cpu_only:
+        if capture_gpu_metrics:
             try:
                 self._gpu_monitor = RemoteMonitor(
                     self._config.triton_metrics_url,
@@ -483,23 +485,23 @@ class MetricsManager:
         )
         self._cpu_monitor.start_recording_metrics()
 
-    def _stop_monitors(self, cpu_only=False):
+    def _stop_monitors(self, capture_gpu_metrics=True):
         """
         Stop any metrics monitors, when we don't need
         to collect the result
         """
 
         # Stop DCGM Monitor only if there are GPUs available
-        if not cpu_only:
+        if capture_gpu_metrics:
             self._gpu_monitor.stop_recording_metrics()
         self._cpu_monitor.stop_recording_metrics()
 
-    def _destroy_monitors(self, cpu_only=False):
+    def _destroy_monitors(self, capture_gpu_metrics=True):
         """
         Destroy the monitors created by start
         """
 
-        if not cpu_only:
+        if capture_gpu_metrics:
             if self._gpu_monitor:
                 self._gpu_monitor.destroy()
         if self._cpu_monitor:

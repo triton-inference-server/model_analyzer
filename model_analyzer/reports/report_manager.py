@@ -357,35 +357,32 @@ class ReportManager:
 
         # Get GPU names and memory
         run_config = self._summary_data[report_key][0][0]
-        cpu_only = run_config.cpu_only()
-
-        (gpu_names, max_memories) = self._get_gpu_stats(
-            measurements=[v for _, v in self._summary_data[report_key]]
+        report_gpu_metrics = (
+            self._config.always_report_gpu_metrics or not run_config.cpu_only()
         )
+
+        (gpu_names, max_memories) = (None, None)
+        if report_gpu_metrics:
+            (gpu_names, max_memories) = self._get_gpu_stats(
+                measurements=[v for _, v in self._summary_data[report_key]]
+            )
 
         # Get constraints
         constraint_str = self._create_constraint_string(report_key)
 
         # Build summary table and info sentence
-        if not cpu_only:
-            table, summary_sentence = self._build_summary_table(
-                report_key=report_key,
-                num_configurations=total_configurations,
-                num_measurements=total_measurements,
-                gpu_name=gpu_names,
-            )
-        else:
-            table, summary_sentence = self._build_summary_table(
-                report_key=report_key,
-                num_configurations=total_configurations,
-                num_measurements=total_measurements,
-                cpu_only=True,
-            )
+        table, summary_sentence = self._build_summary_table(
+            report_key=report_key,
+            num_configurations=total_configurations,
+            num_measurements=total_measurements,
+            gpu_name=gpu_names,
+            report_gpu_metrics=report_gpu_metrics,
+        )
 
         # Add summary sections
         summary.add_title(title=f"{self._mode.title()} Result Summary")
         summary.add_subheading(f"Model: {' and '.join(report_key.split(','))}")
-        if not cpu_only:
+        if report_gpu_metrics:
             summary.add_paragraph(f"GPU(s): {gpu_names}")
             summary.add_paragraph(f"Total Available GPU Memory: {max_memories}")
         summary.add_paragraph(f"Constraint targets: {constraint_str}")
@@ -407,7 +404,7 @@ class ReportManager:
 
         caption_throughput = f"{throughput_plot_config.title()} curves for {num_best_configs} best configurations."
 
-        if not cpu_only:
+        if report_gpu_metrics:
             summary.add_images([throughput_plot], [caption_throughput], image_width=66)
             if self._mode == "online":
                 memory_latency_plot = os.path.join(
@@ -482,7 +479,7 @@ class ReportManager:
         num_configurations,
         num_measurements,
         gpu_name=None,
-        cpu_only=False,
+        report_gpu_metrics=True,
     ):
         """
         Creates a result table corresponding
@@ -508,20 +505,14 @@ class ReportManager:
             best_run_config,
             best_run_config_measurement,
             gpu_name,
-            cpu_only,
+            report_gpu_metrics,
             multi_model,
             is_ensemble,
             is_bls,
         )
 
-        summary_table = (
-            self._construct_summary_result_table_cpu_only(
-                sorted_measurements, multi_model, has_composing_models
-            )
-            if cpu_only
-            else self._construct_summary_result_table(
-                sorted_measurements, multi_model, has_composing_models
-            )
+        summary_table = self._construct_summary_result_table(
+            sorted_measurements, multi_model, has_composing_models, report_gpu_metrics
         )
 
         return summary_table, summary_sentence
@@ -581,7 +572,7 @@ class ReportManager:
         best_run_config,
         best_run_config_measurement,
         gpu_name,
-        cpu_only,
+        report_gpu_metrics,
         multi_model,
         is_ensemble,
         is_bls,
@@ -593,7 +584,9 @@ class ReportManager:
         objective_phrase = self._create_summary_objective_phrase(
             report_key, best_run_config_measurement
         )
-        gpu_name_phrase = self._create_summary_gpu_name_phrase(gpu_name, cpu_only)
+        gpu_name_phrase = self._create_summary_gpu_name_phrase(
+            gpu_name, report_gpu_metrics
+        )
 
         summary_sentence = (
             f"In {measurement_phrase} across {config_phrase} "
@@ -778,8 +771,20 @@ class ReportManager:
                 ret_str += "s"
         return ret_str
 
-    def _create_summary_gpu_name_phrase(self, gpu_name, cpu_only):
-        return f", on GPU(s) {gpu_name}" if not cpu_only else ""
+    def _create_summary_gpu_name_phrase(self, gpu_name, report_gpu_metrics):
+        return f", on GPU(s) {gpu_name}" if report_gpu_metrics else ""
+
+    def _construct_summary_result_table(
+        self, sorted_measurements, multi_model, has_composing_models, report_gpu_metrics
+    ):
+        if report_gpu_metrics:
+            return self._construct_summary_result_table_with_gpu(
+                sorted_measurements, multi_model, has_composing_models
+            )
+        else:
+            return self._construct_summary_result_table_cpu_only(
+                sorted_measurements, multi_model, has_composing_models
+            )
 
     def _construct_summary_result_table_cpu_only(
         self, sorted_measurements, multi_model, has_composing_models
@@ -794,7 +799,7 @@ class ReportManager:
 
         return summary_table
 
-    def _construct_summary_result_table(
+    def _construct_summary_result_table_with_gpu(
         self, sorted_measurements, multi_model, has_composing_models
     ):
         summary_table = self._create_summary_result_table_header(multi_model)
@@ -1108,7 +1113,9 @@ class ReportManager:
             key=lambda x: x.get_non_gpu_metric_value(sort_by_tag),
             reverse=True,
         )
-        cpu_only = model_config.cpu_only()
+        report_gpu_metrics = (
+            self._config.always_report_gpu_metrics or not model_config.cpu_only()
+        )
 
         if self._was_measured_with_request_rate(measurements[0]):
             first_column_header = (
@@ -1125,7 +1132,7 @@ class ReportManager:
                 "concurrency-range" if self._mode == "online" else "batch-size"
             )
 
-        if not cpu_only:
+        if report_gpu_metrics:
             headers = [
                 first_column_header,
                 "p99 Latency (ms)",
@@ -1156,7 +1163,7 @@ class ReportManager:
         detailed_table = ResultTable(headers, title="Detailed Table")
 
         # Construct table
-        if not cpu_only:
+        if report_gpu_metrics:
             for measurement in measurements:
                 row = [
                     # TODO-TMA-568: This needs to be updated because there will be multiple model configs
@@ -1219,7 +1226,11 @@ class ReportManager:
 
         gpu_cpu_string = "CPU"
 
-        if not run_config.cpu_only():
+        report_gpu_metrics = (
+            self._config.always_report_gpu_metrics or not run_config.cpu_only()
+        )
+
+        if report_gpu_metrics:
             gpu_names, max_memories = self._get_gpu_stats(measurements)
             gpu_cpu_string = f"GPU(s) {gpu_names} with total memory {max_memories}"
 

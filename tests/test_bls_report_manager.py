@@ -86,7 +86,7 @@ class TestBLSReportManagerMethods(trc.TestResultCollector):
             num_measurements=26,
             num_configurations=10,
             gpu_name="TITAN RTX",
-            cpu_only=False,
+            report_gpu_metrics=True,
         )
 
         self.assertEqual(summary_sentence, expected_summary_sentence)
@@ -132,7 +132,7 @@ class TestBLSReportManagerMethods(trc.TestResultCollector):
             num_measurements=26,
             num_configurations=10,
             gpu_name="TITAN RTX",
-            cpu_only=True,
+            report_gpu_metrics=False,
         )
 
         self.assertEqual(summary_sentence, expected_summary_sentence)

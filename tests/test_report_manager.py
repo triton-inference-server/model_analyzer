@@ -45,7 +45,8 @@ class TestReportManagerMethods(trc.TestResultCollector):
         models="test_model",
         num_configs_per_model=10,
         mode="online",
-        subcommand="analyze",
+        subcommand="profile",
+        report_gpu_metrics=False,
     ):
         args = ["model-analyzer", subcommand, "-f", "path-to-config-file"]
         if subcommand == "profile":
@@ -53,6 +54,9 @@ class TestReportManagerMethods(trc.TestResultCollector):
             args.extend(["--model-repository", "/tmp"])
         else:
             args.extend(["--report-model-configs", models])
+
+        if report_gpu_metrics:
+            args.extend(["--always-report-gpu-metrics"])
 
         yaml_str = (
             """
@@ -223,15 +227,23 @@ class TestReportManagerMethods(trc.TestResultCollector):
     def test_build_summary_table(self, *args):
         for mode in ["offline", "online"]:
             for cpu_only in [True, False]:
-                self.subtest_build_summary_table(mode, cpu_only)
+                for report_gpu_metrics in [True, False]:
+                    self.subtest_build_summary_table(mode, cpu_only, report_gpu_metrics)
 
-    def subtest_build_summary_table(self, mode, cpu_only):
-        self._init_managers(models="test_model", mode=mode, subcommand="profile")
+    def subtest_build_summary_table(self, mode, cpu_only, report_gpu_metrics):
+        self._init_managers(
+            models="test_model",
+            mode=mode,
+            subcommand="profile",
+            report_gpu_metrics=report_gpu_metrics,
+        )
         result_comparator = RunConfigResultComparator(
             metric_objectives_list=[{"perf_throughput": 10}], model_weights=[1]
         )
 
         avg_gpu_metrics = {0: {"gpu_used_memory": 6000, "gpu_utilization": 60}}
+
+        gpu_metrics = report_gpu_metrics or not cpu_only
 
         for i in range(10, 0, -1):
             avg_non_gpu_metrics = {
@@ -245,7 +257,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 avg_gpu_metrics,
                 avg_non_gpu_metrics,
                 result_comparator,
-                cpu_only,
+                cpu_only=not gpu_metrics,
             )
 
         self.report_manager.create_summaries()
@@ -255,7 +267,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             num_measurements=10,
             num_configurations=3,
             gpu_name="TITAN RTX",
-            cpu_only=cpu_only,
+            report_gpu_metrics=gpu_metrics,
         )
 
         if mode == "online":
@@ -263,11 +275,11 @@ class TestReportManagerMethods(trc.TestResultCollector):
         else:
             objective = "minimizing latency"
 
-        if cpu_only:
+        if gpu_metrics:
             expected_summary_sentence = (
                 "In 10 measurements across 3 configurations, "
                 "<strong>test_model_config_10</strong> is <strong>100%</strong> better than the default configuration "
-                f"at {objective}, under the given constraints.<UL><LI> "
+                f"at {objective}, under the given constraints, on GPU(s) TITAN RTX.<UL><LI> "
                 "<strong>test_model_config_10</strong>: 1 GPU instance with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>"
             )
@@ -275,7 +287,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
             expected_summary_sentence = (
                 "In 10 measurements across 3 configurations, "
                 "<strong>test_model_config_10</strong> is <strong>100%</strong> better than the default configuration "
-                f"at {objective}, under the given constraints, on GPU(s) TITAN RTX.<UL><LI> "
+                f"at {objective}, under the given constraints.<UL><LI> "
                 "<strong>test_model_config_10</strong>: 1 GPU instance with a max batch size of 8 on platform tensorflow_graphdef "
                 "</LI> </UL>"
             )
@@ -296,14 +308,17 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
     def test_build_detailed_info(self):
         for cpu_only in [True, False]:
-            self._subtest_build_detailed_info(cpu_only)
+            for report_gpu_metrics in [True, False]:
+                self._subtest_build_detailed_info(cpu_only, report_gpu_metrics)
 
-    def _subtest_build_detailed_info(self, cpu_only):
+    def _subtest_build_detailed_info(self, cpu_only, report_gpu_metrics):
         self._init_managers(models="test_model_config_10", subcommand="report")
 
         result_comparator = RunConfigResultComparator(
             metric_objectives_list=[{"perf_throughput": 10}], model_weights=[1]
         )
+
+        gpu_metrics = report_gpu_metrics or not cpu_only
 
         avg_gpu_metrics = {"gpu_uuid": {"gpu_used_memory": 6000, "gpu_utilization": 60}}
 
@@ -319,7 +334,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
                 avg_gpu_metrics,
                 avg_non_gpu_metrics,
                 result_comparator,
-                cpu_only=cpu_only,
+                cpu_only=not gpu_metrics,
                 add_to_results_only=True,
             )
 
@@ -327,18 +342,18 @@ class TestReportManagerMethods(trc.TestResultCollector):
         self.report_manager._build_detailed_table("test_model_config_10")
         sentence = self.report_manager._build_detailed_info("test_model_config_10")
 
-        if cpu_only:
+        if gpu_metrics:
             expected_sentence = (
                 f"The model config <strong>test_model_config_10</strong> uses 1 GPU instance with "
                 f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
-                f"were obtained for the model config on CPU. "
+                f"were obtained for the model config on GPU(s) 1 x fake_gpu_name with total memory 1.0 GB. "
                 f"This model uses the platform tensorflow_graphdef."
             )
         else:
             expected_sentence = (
                 f"The model config <strong>test_model_config_10</strong> uses 1 GPU instance with "
                 f"a max batch size of 8 and has dynamic batching enabled. 1 measurement(s) "
-                f"were obtained for the model config on GPU(s) 1 x fake_gpu_name with total memory 1.0 GB. "
+                f"were obtained for the model config on CPU. "
                 f"This model uses the platform tensorflow_graphdef."
             )
 

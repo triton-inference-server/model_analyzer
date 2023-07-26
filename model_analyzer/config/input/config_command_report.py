@@ -26,6 +26,7 @@ from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerExceptio
 
 from .config_command import ConfigCommand
 from .config_defaults import (
+    DEFAULT_ALWAYS_REPORT_GPU_METRICS,
     DEFAULT_CHECKPOINT_DIRECTORY,
     DEFAULT_EXPORT_PATH,
     DEFAULT_OFFLINE_REPORT_PLOTS,
@@ -170,6 +171,16 @@ class ConfigCommandReport(ConfigCommand):
                     ]
                 ),
                 description="Output file format for detailed report.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "always_report_gpu_metrics",
+                flags=["--always_report-gpu-metrics"],
+                field_type=ConfigPrimitive(bool),
+                parser_args={"action": "store_true"},
+                default_value=DEFAULT_ALWAYS_REPORT_GPU_METRICS,
+                description="Report GPU metrics, even when the model is `cpu_only`.",
             )
         )
 
