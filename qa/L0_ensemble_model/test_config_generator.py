@@ -50,14 +50,10 @@ class TestConfigGenerator:
             required=True,
             help="Comma separated list of models to be profiled",
         )
-        parser.add_argument(
-            "-b", "--batch-sizes", type=str, required=True, help="List of batch sizes"
-        )
 
         args = parser.parse_args()
-        self.config = {"batch_sizes": args.batch_sizes.split(",")}
+        self.config = {}
         self.config["profile_models"] = sorted(args.profile_models.split(","))
-        self.config["run_config_search_disable"] = True
 
     def generate_config(self):
         with open("config.yml", "w+") as f:

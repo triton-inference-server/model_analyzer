@@ -23,7 +23,6 @@ REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/qa_ensemble_model_repository/qa_simple_ensemble_model_repository"}
 QA_MODELS="ensemble_add_sub"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
-BATCH_SIZES="1"
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="grpc"
 PORTS=($(find_available_ports 3))
@@ -38,7 +37,7 @@ rm -rf $OUTPUT_MODEL_REPOSITORY
 create_result_paths
 SERVER_LOG=$TEST_LOG_DIR/server.log
 
-python3 test_config_generator.py --profile-models $MODEL_NAMES -b $BATCH_SIZES
+python3 test_config_generator.py --profile-models $MODEL_NAMES
 
 # Run the analyzer and check the results
 RET=0
