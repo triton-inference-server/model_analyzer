@@ -15,7 +15,7 @@
 
 source ../common/util.sh
 source ../common/check_analyzer_results.sh
-create_logs_dir "L0_ensemble_model_profile"
+create_logs_dir "L0_ensemble_model"
 
 # Set test parameters
 MODEL_ANALYZER="$(which model-analyzer)"
@@ -45,7 +45,7 @@ RET=0
 set +e
 
 MODEL_ANALYZER_ARGS="-m $MODEL_REPOSITORY -f $CONFIG_FILE"
-MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE --run-config-profile-models-concurrently-enable"
+MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --client-protocol=$CLIENT_PROTOCOL --triton-launch-mode=$TRITON_LAUNCH_MODE"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-http-endpoint localhost:${PORTS[0]} --triton-grpc-endpoint localhost:${PORTS[1]}"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --triton-metrics-url http://localhost:${PORTS[2]}/metrics"
 MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS --output-model-repository-path $OUTPUT_MODEL_REPOSITORY --override-output-model-repository"
