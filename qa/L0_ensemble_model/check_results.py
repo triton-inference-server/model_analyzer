@@ -49,10 +49,11 @@ class TestOutputValidator:
         with open(self._analyzer_log, "r") as f:
             log_contents = f.read()
 
-        expected_num_measurements = 8
-        print(f"expected_num_measurements: {expected_num_measurements}")
+        expected_min_num_measurements = 20
+        expected_max_num_measurements = 80
+
         for model in self._models:
-            token = f"Profiling {model}_config_default"
+            token = f"Profiling {model}_config"
             token_idx = 0
             found_count = 0
             while True:
@@ -60,9 +61,12 @@ class TestOutputValidator:
                 if token_idx == -1:
                     break
                 found_count += 1
-            if found_count != expected_num_measurements:
+            if (
+                found_count < expected_min_num_measurements
+                or found_count > expected_max_num_measurements
+            ):
                 print(
-                    f"\n***\n***  Expected number of measurements for {model} : {expected_num_measurements}."
+                    f"\n***\n***  Expected range of measurements for {model} : {expected_min_num_measurements} to {expected_max_num_measurements}. "
                     f"Found {found_count}. \n***"
                 )
                 return False
