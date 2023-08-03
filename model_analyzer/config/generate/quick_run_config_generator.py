@@ -330,9 +330,11 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model_index,
         ) = self._get_next_non_composing_model_config(model, start_model_index)
 
-        composing_model_configs, model_index = self._get_next_composing_model_configs(
-            model_index
-        )
+        (
+            composing_model_configs,
+            composing_variant_names,
+            model_index,
+        ) = self._get_next_composing_model_configs(model_index)
 
         # This will overwrite the empty ModelConfig created above
         if model.is_ensemble():
@@ -361,16 +363,19 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
     def _get_next_composing_model_configs(
         self, model_index: int
-    ) -> Tuple[List[ModelConfig], int]:
+    ) -> Tuple[List[ModelConfig], List[str], int]:
         composing_model_configs = []
+        variant_names = []
         for composing_model in self._composing_models:
-            composing_model_config = self._get_next_model_config(
-                composing_model, model_index
-            )
+            (
+                composing_model_config,
+                composing_variant_name,
+            ) = self._get_next_model_config(composing_model, model_index)
             model_index += 1
             composing_model_configs.append(composing_model_config)
+            composing_variant_names.append(composing_variant_name)
 
-        return (composing_model_configs, model_index)
+        return (composing_model_configs, variant_names, model_index)
 
     def _get_next_ensemble_top_level_config(
         self,

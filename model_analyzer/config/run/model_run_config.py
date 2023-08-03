@@ -59,6 +59,7 @@ class ModelRunConfig:
         self._model_config = model_config
         self._perf_config = perf_config
         self._composing_configs: List[ModelConfig] = []
+        self._composing_variant_names = List[str] = []
 
     def model_name(self) -> str:
         """
@@ -111,6 +112,13 @@ class ModelRunConfig:
         """
 
         return self._composing_configs
+
+    def composing_variant_names(self) -> List[str]:
+        """
+        Returns the list of composing configs
+        """
+
+        return self._composing_variant_names
 
     def representation(self) -> str:
         """
@@ -234,13 +242,16 @@ class ModelRunConfig:
         ]
 
     def add_composing_model_configs(
-        self, composing_model_configs: List[ModelConfig]
+        self,
+        composing_model_configs: List[ModelConfig],
+        composing_variant_names: List[str],
     ) -> None:
         """
         Adds a list of composing model configs
         """
-        for composing_model_config in composing_model_configs:
+        for i, composing_model_config in enumerate(composing_model_configs):
             self._composing_configs.append(composing_model_config)
+            self._composing_variant_names.append(composing_variant_names[i])
 
     @classmethod
     def from_dict(cls, model_run_config_dict):
