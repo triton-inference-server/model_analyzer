@@ -163,7 +163,9 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
         return model_config
 
-    def _make_direct_mode_model_config(self, param_combo: Dict) -> ModelConfig:
+    def _make_direct_mode_model_config(
+        self, param_combo: Dict
+    ) -> Tuple[ModelConfig, str]:
         return BaseModelConfigGenerator.make_model_config(
             param_combo=param_combo,
             model=self._base_model,

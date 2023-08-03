@@ -59,7 +59,7 @@ class ModelRunConfig:
         self._model_config = model_config
         self._perf_config = perf_config
         self._composing_configs: List[ModelConfig] = []
-        self._composing_variant_names = List[str] = []
+        self._composing_variant_names: List[str] = []
 
     def model_name(self) -> str:
         """

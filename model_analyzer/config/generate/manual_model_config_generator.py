@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import logging
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
@@ -125,10 +125,10 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         if last_max_throughput:
             self._curr_max_batch_size_throughputs.append(last_max_throughput)
 
-    def _get_next_model_config(self) -> ModelConfig:
+    def _get_next_model_config(self) -> Tuple[ModelConfig, str]:
         return self._configs[self._curr_config_index][self._curr_max_batch_size_index]
 
-    def _generate_model_configs(self) -> List[List[ModelConfig]]:
+    def _generate_model_configs(self) -> List[List[Tuple[ModelConfig, str]]]:
         """Generate all model config combinations"""
         if self._remote_mode:
             configs = self._generate_remote_mode_model_configs()
@@ -141,7 +141,9 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         """Generate model configs for remote mode"""
         return [[self._make_remote_model_config()]]
 
-    def _generate_direct_modes_model_configs(self) -> List[List[ModelConfig]]:
+    def _generate_direct_modes_model_configs(
+        self,
+    ) -> List[List[Tuple[ModelConfig, str]]]:
         """Generate model configs for direct (non-remote) modes"""
         model_configs = []
         for param_combo in self._non_max_batch_size_param_combos:
@@ -149,11 +151,15 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
             if self._max_batch_sizes:
                 for mbs in self._max_batch_sizes:
                     param_combo["max_batch_size"] = mbs
-                    model_config = self._make_direct_mode_model_config(param_combo)
-                    configs_with_max_batch_size.append(model_config)
+                    model_config, variant_name = self._make_direct_mode_model_config(
+                        param_combo
+                    )
+                    configs_with_max_batch_size.append((model_config, variant_name))
             else:
-                model_config = self._make_direct_mode_model_config(param_combo)
-                configs_with_max_batch_size.append(model_config)
+                model_config, variant_name = self._make_direct_mode_model_config(
+                    param_combo
+                )
+                configs_with_max_batch_size.append((model_config, variant_name))
 
             model_configs.append(configs_with_max_batch_size)
 
