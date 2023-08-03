@@ -18,6 +18,7 @@ import logging
 import os
 import time
 from collections import defaultdict
+from copy import deepcopy
 from typing import Dict, List, Optional, Tuple
 
 import numba
@@ -309,7 +310,9 @@ class MetricsManager:
         """
         for mrc in run_config.model_run_configs():
             self._create_model_variant(
-                original_name=mrc.model_name(), variant_config=mrc.model_config()
+                model_name=mrc.model_name(),
+                variant_name=mrc.variant_name(),
+                variant_config=mrc.model_config(),
             )
 
             for composing_config in mrc.composing_configs():
@@ -335,23 +338,26 @@ class MetricsManager:
                 )
 
     def _create_model_variant(
-        self, original_name, variant_config, ignore_first_config_variant=False
+        self,
+        model_name,
+        variant_name,
+        variant_config,
+        ignore_first_config_variant=False,
     ):
         """
         Creates a directory for the model config variant in the output model
         repository and fills directory with config
         """
 
-        variant_name = variant_config.get_field("name")
         if self._config.triton_launch_mode != "remote":
             model_repository = self._config.model_repository
 
-            original_model_dir = os.path.join(model_repository, original_name)
+            original_model_dir = os.path.join(model_repository, model_name)
             new_model_dir = os.path.join(self._output_model_repo_path, variant_name)
             try:
                 # Create the directory for the new model
                 os.makedirs(new_model_dir, exist_ok=True)
-                self._first_config_variant.setdefault(original_name, None)
+                self._first_config_variant.setdefault(model_name, None)
 
                 if ignore_first_config_variant:
                     variant_config.write_config_to_file(
@@ -361,11 +367,11 @@ class MetricsManager:
                     variant_config.write_config_to_file(
                         new_model_dir,
                         original_model_dir,
-                        self._first_config_variant[original_name],
+                        self._first_config_variant[model_name],
                     )
 
-                if self._first_config_variant[original_name] is None:
-                    self._first_config_variant[original_name] = os.path.join(
+                if self._first_config_variant[model_name] is None:
+                    self._first_config_variant[model_name] = os.path.join(
                         self._output_model_repo_path, variant_name
                     )
             except FileExistsError:
@@ -377,7 +383,9 @@ class MetricsManager:
         Loads all model variants in the client
         """
         for mrc in run_config.model_run_configs():
-            if not self._load_model_variant(variant_config=mrc.model_config()):
+            if not self._load_model_variant(
+                variant_config=mrc.model_config(), variant_name=mrc.variant_name()
+            ):
                 return False
 
             # Composing configs for BLS models are not automatically loaded by the top-level model
@@ -395,7 +403,7 @@ class MetricsManager:
 
         return True
 
-    def _load_model_variant(self, variant_config):
+    def _load_model_variant(self, variant_config, variant_name):
         """
         Conditionally loads a model variant in the client
         """
@@ -406,10 +414,10 @@ class MetricsManager:
 
         retval = True
         if do_load:
-            retval = self._do_load_model_variant(variant_config)
+            retval = self._do_load_model_variant(variant_config, variant_name)
         return retval
 
-    def _do_load_model_variant(self, variant_config):
+    def _do_load_model_variant(self, variant_config, variant_name):
         """
         Loads a model variant in the client
         """
@@ -418,13 +426,21 @@ class MetricsManager:
             log_file=self._server.log_file(),
         )
 
-        variant_name = variant_config.get_field("name")
-        if self._client.load_model(model_name=variant_name) == -1:
+        model_name = variant_config.get_field("name")
+
+        if (
+            self._client.load_model(
+                model_name=model_name,
+                variant_name=variant_name,
+                config=str(variant_config.get_config()),
+            )
+            == -1
+        ):
             return False
 
         if (
             self._client.wait_for_model_ready(
-                model_name=variant_name, num_retries=self._config.client_max_retries
+                model_name=model_name, num_retries=self._config.client_max_retries
             )
             == -1
         ):
@@ -705,16 +721,15 @@ class MetricsManager:
         return triton_gpus
 
     def _print_run_config_info(self, run_config):
-        for perf_config in [
-            mrc.perf_config() for mrc in run_config.model_run_configs()
-        ]:
+        for mrc in run_config.model_run_configs():
+            perf_config = mrc.perf_config()
             if perf_config["request-rate-range"]:
                 logger.info(
-                    f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, request-rate-range={perf_config['request-rate-range']}"
+                    f"Profiling {mrc.variant_name()}: client batch size={perf_config['batch-size']}, request-rate-range={perf_config['request-rate-range']}"
                 )
             else:
                 logger.info(
-                    f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
+                    f"Profiling {mrc.variant_name()}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
                 )
 
         # Vertical spacing when running multiple models at a time

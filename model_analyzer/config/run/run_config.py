@@ -107,7 +107,7 @@ class RunConfig:
 
     def model_variants_name(self):
         """Returns a single comma-joined name of the model variant names"""
-        return ",".join([mrc.model_variant_name() for mrc in self.model_run_configs()])
+        return ",".join([mrc.variant_name() for mrc in self.model_run_configs()])
 
     def composing_configs(self):
         """

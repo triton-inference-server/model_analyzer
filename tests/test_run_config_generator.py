@@ -639,7 +639,7 @@ class TestRunConfigGenerator(trc.TestResultCollector):
         for i, rc in enumerate(run_configs):
             self.assertEqual(
                 expected_modelB_name_order[i],
-                rc.model_run_configs()[1].model_variant_name(),
+                rc.model_run_configs()[1].variant_name(),
             )
 
     def _run_and_test_run_config_generator(self, yaml_str, expected_config_count):

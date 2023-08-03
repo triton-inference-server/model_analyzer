@@ -17,7 +17,7 @@
 import abc
 import logging
 from copy import deepcopy
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Dict, Generator, List, Optional, Tuple
 
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
@@ -175,10 +175,11 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         param_combo: dict,
         model: ModelProfileSpec,
         model_variant_name_manager: ModelVariantNameManager,
-    ) -> ModelConfig:
+    ) -> Tuple[ModelConfig, str]:
         """
         Loads the base model config from the model repository, and then applies the
-        parameters in the param_combo on top to create and return a new model config
+        parameters in the param_combo on top to create and returns a new model config
+        and variant name
 
         Parameters:
         -----------
@@ -200,12 +201,11 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model_name, model_config_dict, param_combo
         )
 
-        model_config_dict["name"] = variant_name
         logger.info("")
         if variant_found:
-            logger.info(f"Found existing model config: {model_config_dict['name']}")
+            logger.info(f"Found existing model config: {variant_name}")
         else:
-            logger.info(f"Creating model config: {model_config_dict['name']}")
+            logger.info(f"Creating model config: {variant_name}")
         for str in logger_str:
             logger.info(str)
         logger.info("")
@@ -213,7 +213,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
         model_config.set_cpu_only(model.cpu_only())
 
-        return model_config
+        return model_config, variant_name
 
     @staticmethod
     def make_ensemble_model_config(

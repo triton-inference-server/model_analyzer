@@ -36,6 +36,7 @@ class ModelRunConfig:
     def __init__(
         self,
         model_name: str,
+        variant_name: str,
         model_config: ModelConfig,
         perf_config: PerfAnalyzerConfig,
     ) -> None:
@@ -44,6 +45,8 @@ class ModelRunConfig:
         ----------
         model_name: str
             The name of the model
+        model_variant_name: str
+            The name of the model variant
         model_config : ModelConfig
             model config corresponding to this run
         perf_config : PerfAnalyzerConfig
@@ -52,6 +55,7 @@ class ModelRunConfig:
         """
 
         self._model_name = model_name
+        self._variant_name = variant_name
         self._model_config = model_config
         self._perf_config = perf_config
         self._composing_configs: List[ModelConfig] = []
@@ -68,7 +72,7 @@ class ModelRunConfig:
 
         return self._model_name
 
-    def model_variant_name(self) -> str:
+    def variant_name(self) -> str:
         """
         Get the model config variant name for this config.
 
@@ -78,7 +82,7 @@ class ModelRunConfig:
             Model variant name
         """
 
-        return self.model_config().get_field("name")
+        return self._variant_name
 
     def model_config(self) -> ModelConfig:
         """
@@ -240,8 +244,9 @@ class ModelRunConfig:
 
     @classmethod
     def from_dict(cls, model_run_config_dict):
-        model_run_config = ModelRunConfig(None, None, None)
+        model_run_config = ModelRunConfig(None, None, None, None)
         model_run_config._model_name = model_run_config_dict["_model_name"]
+        model_run_config._variant_name = model_run_config_dict["_variant_name"]
         model_run_config._model_config = ModelConfig.from_dict(
             model_run_config_dict["_model_config"]
         )
