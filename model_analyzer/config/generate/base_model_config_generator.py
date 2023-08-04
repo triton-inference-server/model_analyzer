@@ -123,7 +123,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _get_next_model_config(self) -> ModelConfig:
+    def _get_next_model_config(self) -> Tuple[ModelConfig, str]:
         raise NotImplementedError
 
     def _last_results_erroneous(self) -> bool:
