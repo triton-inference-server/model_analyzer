@@ -77,8 +77,11 @@ class ModelRunConfig:
         str
             Model variant name
         """
-
-        return self._model_config_variant.variant_name
+        return (
+            self._model_config_variant.variant_name
+            if self._model_config_variant
+            else ""
+        )
 
     def model_config_variant(self) -> ModelConfigVariant:
         """
@@ -247,9 +250,19 @@ class ModelRunConfig:
     def from_dict(cls, model_run_config_dict):
         model_run_config = ModelRunConfig(None, None, None)
         model_run_config._model_name = model_run_config_dict["_model_name"]
-        model_run_config._model_config_variant = ModelConfig.from_dict(
-            model_run_config_dict["_model_config_variant"]
-        )
+
+        if "_model_config_variant" in model_run_config_dict:
+            model_config = ModelConfig.from_dict(
+                model_run_config_dict["_model_config_variant"]["model_config"]
+            )
+            variant_name = model_run_config_dict["_model_config_variant"][
+                "variant_name"
+            ]
+
+            model_run_config._model_config_variant = ModelConfigVariant(
+                model_config, variant_name
+            )
+
         model_run_config._perf_config = PerfAnalyzerConfig.from_dict(
             model_run_config_dict["_perf_config"]
         )

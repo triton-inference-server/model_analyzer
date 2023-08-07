@@ -26,6 +26,7 @@ from model_analyzer.result.result_manager import ResultManager
 from model_analyzer.result.run_config_result_comparator import RunConfigResultComparator
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
 from .common import test_result_collector as trc
 from .common.test_utils import (
@@ -39,7 +40,7 @@ from .mocks.mock_matplotlib import MockMatplotlibMethods
 from .mocks.mock_os import MockOSMethods
 
 
-class TestReportManagerMethods(trc.TestResultCollector):
+class TestReportManager(trc.TestResultCollector):
     def _init_managers(
         self,
         models="test_model",
@@ -105,6 +106,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
         config_pb["name"] = model_config_name
         model_config = ModelConfig.create_from_dictionary(config_pb)
         model_config._cpu_only = cpu_only
+        model_config_variant = ModelConfigVariant(model_config, model_config_name)
 
         measurement = construct_run_config_measurement(
             model_name=model_name,
@@ -118,7 +120,7 @@ class TestReportManagerMethods(trc.TestResultCollector):
 
         perf_config = PerfAnalyzerConfig()
         perf_config.update_config({"model-name": model_config_name})
-        mrc = ModelRunConfig(model_name, model_config, perf_config)
+        mrc = ModelRunConfig(model_name, model_config_variant, perf_config)
         run_config = RunConfig({})
         run_config.add_model_run_config(mrc)
 

@@ -613,7 +613,7 @@ class ReportManager:
     def _create_ensemble_summary_sentence(self, run_config: RunConfig) -> str:
         summary_sentence = "<BR><BR>"
         best_config_name = (
-            run_config.model_run_configs()[0].model_config().get_field("name")
+            run_config.model_run_configs()[0].model_config_variant().variant_name
         )
 
         summary_sentence = (
@@ -644,7 +644,9 @@ class ReportManager:
             summary_sentence = (
                 summary_sentence
                 + "<LI> "
-                + self._create_summary_config_info(model_run_config.model_config())
+                + self._create_summary_config_info(
+                    model_run_config.model_config_variant().model_config
+                )
                 + " </LI>"
             )
 
@@ -673,7 +675,7 @@ class ReportManager:
 
     def _create_summary_config_phrase(self, best_run_config, num_configurations):
         config_names = [
-            f"<strong>{model_run_config.model_config().get_field('name')}</strong>"
+            f"<strong>{model_run_config.model_config_variant().variant_name}</strong>"
             for model_run_config in best_run_config.model_run_configs()
         ]
 
@@ -874,7 +876,7 @@ class ReportManager:
     ):
         model_config_names = ", ".join(
             [
-                model_run_config.model_config().get_field("name")
+                model_run_config.model_config_variant().variant_name
                 for model_run_config in run_config.model_run_configs()
             ]
         )
@@ -889,7 +891,7 @@ class ReportManager:
         else:
             dynamic_batching_string = self._create_summary_string(
                 [
-                    model_run_config.model_config().dynamic_batching_string()
+                    model_run_config.model_config_variant().model_config.dynamic_batching_string()
                     for model_run_config in run_config.model_run_configs()
                 ]
             )
@@ -904,7 +906,9 @@ class ReportManager:
         else:
             max_batch_sizes = ", ".join(
                 [
-                    str(model_run_config.model_config().max_batch_size())
+                    str(
+                        model_run_config.model_config_variant().model_config.max_batch_size()
+                    )
                     for model_run_config in run_config.model_run_configs()
                 ]
             )
@@ -921,7 +925,7 @@ class ReportManager:
         else:
             instance_group_strings = ", ".join(
                 [
-                    model_run_config.model_config().instance_group_string(
+                    model_run_config.model_config_variant().model_config.instance_group_string(
                         self._get_gpu_count()
                     )
                     for model_run_config in run_config.model_run_configs()
@@ -968,7 +972,7 @@ class ReportManager:
         else:
             dynamic_batching_string = self._create_summary_string(
                 [
-                    model_run_config.model_config().dynamic_batching_string()
+                    model_run_config.model_config_variant().model_config.dynamic_batching_string()
                     for model_run_config in run_config.model_run_configs()
                 ]
             )
@@ -985,7 +989,7 @@ class ReportManager:
         else:
             instance_group_string = self._create_summary_string(
                 [
-                    model_run_config.model_config().instance_group_string(
+                    model_run_config.model_config_variant().model_config.instance_group_string(
                         self._get_gpu_count()
                     )
                     for model_run_config in run_config.model_run_configs()
@@ -1002,14 +1006,16 @@ class ReportManager:
         else:
             max_batch_sizes_string = self._create_summary_string(
                 [
-                    str(model_run_config.model_config().max_batch_size())
+                    str(
+                        model_run_config.model_config_variant().model_config.max_batch_size()
+                    )
                     for model_run_config in run_config.model_run_configs()
                 ]
             )
 
         model_config_names = "<br>".join(
             [
-                model_run_config.model_config().get_field("name")
+                model_run_config.model_config_variant().variant_name
                 for model_run_config in run_config.model_run_configs()
             ]
         )
@@ -1211,7 +1217,9 @@ class ReportManager:
         run_config, measurements = self._detailed_report_data[model_config_name]
 
         # TODO-TMA-568 - add support for multi-model
-        model_config = run_config.model_run_configs()[0].model_config()
+        model_config = (
+            run_config.model_run_configs()[0].model_config_variant().model_config
+        )
         instance_group_string = self._create_instance_group_phrase(model_config)
         dynamic_batching = model_config.dynamic_batching_string()
         max_batch_size = model_config.max_batch_size()
