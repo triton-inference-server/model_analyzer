@@ -109,9 +109,16 @@ class RunConfig:
         """Returns a single comma-joined name of the model variant names"""
         return ",".join([mrc.model_variant_name() for mrc in self.model_run_configs()])
 
+    def composing_config_variants(self):
+        """
+        Returns a list of composing model config variants from the first model run config
+        (an ensemble/BLS cannot be part of a multi-model profile)
+        """
+        return self._model_run_configs[0].composing_config_variants()
+
     def composing_configs(self):
         """
-        Returns a list of composing configs from the first model config
+        Returns a list of composing model configs from the first model run config
         (an ensemble/BLS cannot be part of a multi-model profile)
         """
         return self._model_run_configs[0].composing_configs()

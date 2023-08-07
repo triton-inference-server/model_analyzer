@@ -88,11 +88,25 @@ class ModelRunConfig:
         """
         Returns
         -------
-        List of ModelConfigVariant
-            The list of ModelConfigVariants corresponding to this run.
+        ModelConfigVariant
+            The ModelConfigVariant corresponding to this run
         """
 
         return self._model_config_variant
+
+    def model_config(self) -> Optional[ModelConfig]:
+        """
+        Returns
+        -------
+        ModelConfig
+            The ModelConfig corresponding to this run
+        """
+
+        return (
+            self._model_config_variant.model_config
+            if self._model_config_variant
+            else None
+        )
 
     def perf_config(self) -> PerfAnalyzerConfig:
         """
@@ -105,12 +119,26 @@ class ModelRunConfig:
 
         return self._perf_config
 
-    def composing_config_variants(self) -> List[ModelConfigVariant]:
+    def composing_config_variants(self) -> Optional[List[ModelConfigVariant]]:
         """
-        Returns the list of composing config variants
+        Returns the list of composing model config variants
         """
 
         return self._composing_config_variants
+
+    def composing_configs(self) -> List[ModelConfig]:
+        """
+        Returns the list of composing model configs
+        """
+
+        if self._composing_config_variants:
+            composing_configs = [
+                composing_config_variant.model_config
+                for composing_config_variant in self._composing_config_variants
+            ]
+            return composing_configs
+        else:
+            return None
 
     def representation(self) -> str:
         """
@@ -296,8 +324,8 @@ class ModelRunConfig:
             ]
 
             model_run_config._composing_config_variants = [
-                ModelConfigVariant(composing_config, variant_names[i])
-                for composing_config, i in enumerate(composing_configs)
+                ModelConfigVariant(composing_config, composing_variant_names[i])
+                for i, composing_config in enumerate(composing_configs)
             ]
 
         return model_run_config
