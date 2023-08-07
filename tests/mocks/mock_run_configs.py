@@ -25,7 +25,7 @@ class MockRunConfig:
 
     def load_from_model_run_config(self, model_run_config):
         """Populate from a ModelRunConfig object"""
-        model_config = model_run_config.model_config().get_config()
+        model_config = model_run_config.model_config_variant().model_config.get_config()
         perf_config = model_run_config.perf_config()
         self._load_from_model_and_perf_config(model_config, perf_config)
 
