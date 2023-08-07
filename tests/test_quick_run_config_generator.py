@@ -292,7 +292,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             ],
             "maxBatchSize": 32,
-            "name": "fake_model_name",
+            "name": "fake_model_name_config_0",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
             "optimization": {
                 "executionAccelerators": {
@@ -362,7 +362,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             }],
             'maxBatchSize': 2,
             'sequenceBatching': {},
-            'name': 'fake_model_name1',
+            'name': 'fake_model_name1_config_0',
             'input': [{
                 "name": "INPUT__0",
                 "dataType": "TYPE_FP32",
@@ -378,7 +378,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_GPU',
             }],
             'maxBatchSize': 16,
-            'name': 'fake_model_name2',
+            'name': 'fake_model_name2_config_0',
             'input': [{
                 "name": "INPUT__2",
                 "dataType": "TYPE_FP16",
@@ -774,7 +774,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             ],
             "maxBatchSize": 16,
-            "name": "fake_model_name",
+            "name": "fake_model_name_config_0",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
@@ -828,7 +828,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             ],
             "maxBatchSize": 32,
-            "name": "fake_model_name",
+            "name": "fake_model_name_config_0",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
@@ -882,7 +882,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             ],
             "maxBatchSize": 64,
-            "name": "fake_model_name",
+            "name": "fake_model_name_config_0",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
@@ -936,7 +936,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             ],
             "maxBatchSize": 32,
-            "name": "fake_model_name",
+            "name": "fake_model_name_config_0",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
@@ -1017,7 +1017,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             }],
             'maxBatchSize': 2,
             'sequenceBatching': {},
-            'name': 'fake_model_A',
+            'name': 'fake_model_A_config_0',
             'input': [{
                 "name": "INPUT__0",
                 "dataType": "TYPE_FP32",
@@ -1033,7 +1033,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_CPU',
             }],
             'maxBatchSize': 16,
-            'name': 'fake_model_B',
+            'name': 'fake_model_B_config_0',
             'input': [{
                 "name": "INPUT__2",
                 "dataType": "TYPE_FP16",
@@ -1184,7 +1184,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             }],
             'maxBatchSize': 2,
             'dynamicBatching': {},
-            'name': 'my-model',
+            'name': 'my-model_config_0',
             'platform': 'bls',
             'input': [{
                 "name": "INPUT__0",
@@ -1201,7 +1201,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             }],
             'maxBatchSize': 8,
             'sequenceBatching': {},
-            'name': 'fake_model_A',
+            'name': 'fake_model_A_config_0',
             'input': [{
                 "name": "INPUT__0",
                 "dataType": "TYPE_FP32",
@@ -1217,7 +1217,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_GPU',
             }],
             'maxBatchSize': 32,
-            'name': 'fake_model_B',
+            'name': 'fake_model_B_config_0',
             'input': [{
                 "name": "INPUT__2",
                 "dataType": "TYPE_FP16",

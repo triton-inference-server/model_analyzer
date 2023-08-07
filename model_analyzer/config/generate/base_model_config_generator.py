@@ -203,7 +203,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model_name, model_config_dict, param_combo
         )
 
-        model_config_dict["name"] = model_name
+        model_config_dict["name"] = variant_name
         logger.info("")
         if variant_found:
             logger.info(f"Found existing model config: {variant_name}")

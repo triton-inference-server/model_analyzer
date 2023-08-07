@@ -119,14 +119,14 @@ class ModelRunConfig:
 
         return self._perf_config
 
-    def composing_config_variants(self) -> Optional[List[ModelConfigVariant]]:
+    def composing_config_variants(self) -> List[ModelConfigVariant]:
         """
         Returns the list of composing model config variants
         """
 
         return self._composing_config_variants
 
-    def composing_configs(self) -> Optional[List[ModelConfig]]:
+    def composing_configs(self) -> List[ModelConfig]:
         """
         Returns the list of composing model configs
         """
@@ -138,7 +138,7 @@ class ModelRunConfig:
             ]
             return composing_configs
         else:
-            return None
+            return []
 
     def representation(self) -> str:
         """
