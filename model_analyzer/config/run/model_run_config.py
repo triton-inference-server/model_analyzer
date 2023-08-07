@@ -19,6 +19,7 @@ from typing import Dict, List, Optional
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
+from model_analyzer.triton.model.model_config import ModelConfig
 from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
 logger = logging.getLogger(LOGGER_NAME)
@@ -267,12 +268,36 @@ class ModelRunConfig:
             model_run_config_dict["_perf_config"]
         )
 
+        # FIXME: This is for backward compatibility with older checkpoints used in unit tests
+        if "_model_config" in model_run_config_dict:
+            model_config = ModelConfig.from_dict(model_run_config_dict["_model_config"])
+            model_run_config._model_config_variant = ModelConfigVariant(
+                model_config, model_config.get_field("name")
+            )
+
         if "_composing_config_variants" in model_run_config_dict:
             model_run_config._composing_config_variants = [
                 ModelConfig.from_dict(composing_config_variant_dict)
                 for composing_config_variant_dict in model_run_config_dict[
                     "_composing_config_variants"
                 ]
+            ]
+
+        # FIXME: This is for backward compatibility with older checkpoints used in unit tests
+        if "_composing_configs" in model_run_config_dict:
+            composing_configs = [
+                ModelConfig.from_dict(composing_config_dict)
+                for composing_config_dict in model_run_config_dict["_composing_configs"]
+            ]
+
+            composing_variant_names = [
+                composing_config.get_field("name")
+                for composing_config in composing_configs
+            ]
+
+            model_run_config._composing_config_variants = [
+                ModelConfigVariant(composing_config, variant_names[i])
+                for composing_config, i in enumerate(composing_configs)
             ]
 
         return model_run_config
