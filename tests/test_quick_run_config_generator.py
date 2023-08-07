@@ -307,7 +307,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
-        model_config = rc.model_run_configs()[0].model_config_variant().model_config
+        model_config = rc.model_run_configs()[0].model_config()
         perf_config = rc.model_run_configs()[0].perf_config()
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
@@ -460,9 +460,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 2)
-        mc1 = rc.model_run_configs()[0].model_config_variant().model_config
+        mc1 = rc.model_run_configs()[0].model_config()
         pc1 = rc.model_run_configs()[0].perf_config()
-        mc2 = rc.model_run_configs()[1].model_config_variant().model_config
+        mc2 = rc.model_run_configs()[1].model_config()
         pc2 = rc.model_run_configs()[1].perf_config()
 
         self.assertEqual(mc1.to_dict(), expected_model_config1)
@@ -782,7 +782,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
-        model_config = rc.model_run_configs()[0].model_config_variant().model_config
+        model_config = rc.model_run_configs()[0].model_config()
         perf_config = rc.model_run_configs()[0].perf_config()
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
@@ -836,7 +836,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
-        model_config = rc.model_run_configs()[0].model_config_variant().model_config
+        model_config = rc.model_run_configs()[0].model_config()
         perf_config = rc.model_run_configs()[0].perf_config()
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
@@ -890,7 +890,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
-        model_config = rc.model_run_configs()[0].model_config_variant().model_config
+        model_config = rc.model_run_configs()[0].model_config()
         perf_config = rc.model_run_configs()[0].perf_config()
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
@@ -944,7 +944,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
-        model_config = rc.model_run_configs()[0].model_config_variant().model_config
+        model_config = rc.model_run_configs()[0].model_config()
         perf_config = rc.model_run_configs()[0].perf_config()
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
@@ -1112,9 +1112,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             len(run_config.model_run_configs()[0].composing_config_variants()), 2
         )
 
-        model_config = (
-            run_config.model_run_configs()[0].model_config_variant().model_config
-        )
+        model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
         composing_model_A_config_0 = (
             run_config.model_run_configs()[0]
@@ -1308,9 +1306,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             len(run_config.model_run_configs()[0].composing_config_variants()), 2
         )
 
-        model_config = (
-            run_config.model_run_configs()[0].model_config_variant().model_config
-        )
+        model_config = run_config.model_run_configs()[0].model_config()
         perf_config = run_config.model_run_configs()[0].perf_config()
         composing_model_config0 = (
             run_config.model_run_configs()[0]

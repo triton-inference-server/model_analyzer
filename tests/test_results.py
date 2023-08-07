@@ -148,7 +148,7 @@ class TestResults(trc.TestResultCollector):
         )
 
         self.assertEqual(
-            run_config.model_run_configs()[0].model_config_variant().model_config,
+            run_config.model_run_configs()[0].model_config(),
             self._run_configs[3]
             .model_run_configs()[0]
             .model_config_variant()
