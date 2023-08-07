@@ -85,7 +85,7 @@ class RunConfig:
         """
         return all(
             [
-                model_run_config.model_config().cpu_only()
+                model_run_config.model_config_variant().model_config.cpu_only()
                 for model_run_config in self._model_run_configs
             ]
         )

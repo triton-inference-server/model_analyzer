@@ -234,7 +234,7 @@ class ModelRunConfig:
             for composing_config_variant in self._composing_config_variants
         ]
 
-    def add_composing_model_configs(
+    def add_composing_model_config_variants(
         self, composing_model_config_variants: List[ModelConfigVariant]
     ) -> None:
         """
