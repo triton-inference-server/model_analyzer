@@ -84,7 +84,7 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         # Indexed as follows:
         #    _configs[_curr_config_index][_curr_max_batch_size_index]
         #
-        self._configs = self._generate_model_configs()
+        self._configs = self._generate_model_config_variants()
 
     def _done_walking(self) -> bool:
         return len(self._configs) == self._curr_config_index
