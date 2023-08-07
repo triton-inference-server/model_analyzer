@@ -203,11 +203,12 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model_name, model_config_dict, param_combo
         )
 
+        model_config_dict["name"] = model_name
         logger.info("")
         if variant_found:
-            logger.info(f"Found existing model config: {model_config_dict['name']}")
+            logger.info(f"Found existing model config: {variant_name}")
         else:
-            logger.info(f"Creating model config: {model_config_dict['name']}")
+            logger.info(f"Creating model config: {variant_name}")
         for str in logger_str:
             logger.info(str)
         logger.info("")
