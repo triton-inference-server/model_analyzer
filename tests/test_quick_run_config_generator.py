@@ -292,7 +292,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             ],
             "maxBatchSize": 32,
-            "name": "fake_model_name_config_0",
+            "name": "fake_model_name",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
             "optimization": {
                 "executionAccelerators": {
@@ -307,7 +307,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
-        model_config = rc.model_run_configs()[0].model_config()
+        model_config = rc.model_run_configs()[0].model_config_variant().model_config
         perf_config = rc.model_run_configs()[0].perf_config()
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
@@ -362,7 +362,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             }],
             'maxBatchSize': 2,
             'sequenceBatching': {},
-            'name': 'fake_model_name1_config_0',
+            'name': 'fake_model_name1',
             'input': [{
                 "name": "INPUT__0",
                 "dataType": "TYPE_FP32",
@@ -378,7 +378,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_GPU',
             }],
             'maxBatchSize': 16,
-            'name': 'fake_model_name2_config_0',
+            'name': 'fake_model_name2',
             'input': [{
                 "name": "INPUT__2",
                 "dataType": "TYPE_FP16",
@@ -460,9 +460,9 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 2)
-        mc1 = rc.model_run_configs()[0].model_config()
+        mc1 = rc.model_run_configs()[0].model_config_variant().model_config
         pc1 = rc.model_run_configs()[0].perf_config()
-        mc2 = rc.model_run_configs()[1].model_config()
+        mc2 = rc.model_run_configs()[1].model_config_variant().model_config
         pc2 = rc.model_run_configs()[1].perf_config()
 
         self.assertEqual(mc1.to_dict(), expected_model_config1)
@@ -603,17 +603,17 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         )
 
         default_run_config = qrcg._create_default_run_config()
-        ensemble_composing_configs = default_run_config.model_run_configs()[
+        ensemble_composing_config_variants = default_run_config.model_run_configs()[
             0
-        ].composing_configs()
+        ].composing_config_variants()
 
-        self.assertIn("my-model_config_default", default_run_config.representation())
+        self.assertIn("my-model", default_run_config.representation())
         self.assertEqual(
-            ensemble_composing_configs[0].get_field("name"),
+            ensemble_composing_config_variants[0].variant_name,
             "fake_model_A_config_default",
         )
         self.assertEqual(
-            ensemble_composing_configs[1].get_field("name"),
+            ensemble_composing_config_variants[1].variant_name,
             "fake_model_B_config_default",
         )
 
@@ -685,17 +685,17 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         )
 
         default_run_config = qrcg._create_default_run_config()
-        bls_composing_configs = default_run_config.model_run_configs()[
+        bls_composing_config_variants = default_run_config.model_run_configs()[
             0
-        ].composing_configs()
+        ].composing_config_variants()
 
-        self.assertIn("my-model_config_default", default_run_config.representation())
+        self.assertIn("my-model", default_run_config.representation())
         self.assertEqual(
-            bls_composing_configs[0].get_field("name"),
+            bls_composing_config_variants[0].variant_name,
             "bls_composing_modelA_config_default",
         )
         self.assertEqual(
-            bls_composing_configs[1].get_field("name"),
+            bls_composing_config_variants[1].variant_name,
             "bls_composing_modelB_config_default",
         )
 
@@ -774,7 +774,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             ],
             "maxBatchSize": 16,
-            "name": "fake_model_name_config_0",
+            "name": "fake_model_name",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
@@ -782,7 +782,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
-        model_config = rc.model_run_configs()[0].model_config()
+        model_config = rc.model_run_configs()[0].model_config_variant().model_config
         perf_config = rc.model_run_configs()[0].perf_config()
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
@@ -828,7 +828,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             ],
             "maxBatchSize": 32,
-            "name": "fake_model_name_config_0",
+            "name": "fake_model_name",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
@@ -836,7 +836,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
-        model_config = rc.model_run_configs()[0].model_config()
+        model_config = rc.model_run_configs()[0].model_config_variant().model_config
         perf_config = rc.model_run_configs()[0].perf_config()
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
@@ -882,7 +882,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             ],
             "maxBatchSize": 64,
-            "name": "fake_model_name_config_0",
+            "name": "fake_model_name",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
@@ -890,7 +890,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
-        model_config = rc.model_run_configs()[0].model_config()
+        model_config = rc.model_run_configs()[0].model_config_variant().model_config
         perf_config = rc.model_run_configs()[0].perf_config()
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
@@ -936,7 +936,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 }
             ],
             "maxBatchSize": 32,
-            "name": "fake_model_name_config_0",
+            "name": "fake_model_name",
             "input": [{"name": "INPUT__0", "dataType": "TYPE_FP32", "dims": ["16"]}],
         }
         # yapf: enable
@@ -944,7 +944,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         rc = qrcg._get_next_run_config()
 
         self.assertEqual(len(rc.model_run_configs()), 1)
-        model_config = rc.model_run_configs()[0].model_config()
+        model_config = rc.model_run_configs()[0].model_config_variant().model_config
         perf_config = rc.model_run_configs()[0].perf_config()
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
@@ -1017,7 +1017,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             }],
             'maxBatchSize': 2,
             'sequenceBatching': {},
-            'name': 'fake_model_A_config_0',
+            'name': 'fake_model_A',
             'input': [{
                 "name": "INPUT__0",
                 "dataType": "TYPE_FP32",
@@ -1033,7 +1033,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_CPU',
             }],
             'maxBatchSize': 16,
-            'name': 'fake_model_B_config_0',
+            'name': 'fake_model_B',
             'input': [{
                 "name": "INPUT__2",
                 "dataType": "TYPE_FP16",
@@ -1108,16 +1108,24 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         run_config = qrcg._get_next_run_config()
 
         self.assertEqual(len(run_config.model_run_configs()), 1)
-        self.assertEqual(len(run_config.model_run_configs()[0].composing_configs()), 2)
+        self.assertEqual(
+            len(run_config.model_run_configs()[0].composing_config_variants()), 2
+        )
 
-        model_config = run_config.model_run_configs()[0].model_config()
+        model_config = (
+            run_config.model_run_configs()[0].model_config_variant().model_config
+        )
         perf_config = run_config.model_run_configs()[0].perf_config()
-        composing_model_A_config_0 = run_config.model_run_configs()[
-            0
-        ].composing_configs()[0]
-        composing_model_B_config_0 = run_config.model_run_configs()[
-            0
-        ].composing_configs()[1]
+        composing_model_A_config_0 = (
+            run_config.model_run_configs()[0]
+            .composing_config_variants()[0]
+            .model_config
+        )
+        composing_model_B_config_0 = (
+            run_config.model_run_configs()[0]
+            .composing_config_variants()[1]
+            .model_config
+        )
 
         self.assertIsInstance(model_config, ModelConfig)
         self.assertEqual(
@@ -1178,7 +1186,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             }],
             'maxBatchSize': 2,
             'dynamicBatching': {},
-            'name': 'my-model_config_0',
+            'name': 'my-model',
             'platform': 'bls',
             'input': [{
                 "name": "INPUT__0",
@@ -1195,7 +1203,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
             }],
             'maxBatchSize': 8,
             'sequenceBatching': {},
-            'name': 'fake_model_A_config_0',
+            'name': 'fake_model_A',
             'input': [{
                 "name": "INPUT__0",
                 "dataType": "TYPE_FP32",
@@ -1211,7 +1219,7 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
                 'kind': 'KIND_GPU',
             }],
             'maxBatchSize': 32,
-            'name': 'fake_model_B_config_0',
+            'name': 'fake_model_B',
             'input': [{
                 "name": "INPUT__2",
                 "dataType": "TYPE_FP16",
@@ -1296,16 +1304,24 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         self.assertEqual(len(run_config.model_run_configs()), 1)
 
-        self.assertEqual(len(run_config.model_run_configs()[0].composing_configs()), 2)
+        self.assertEqual(
+            len(run_config.model_run_configs()[0].composing_config_variants()), 2
+        )
 
-        model_config = run_config.model_run_configs()[0].model_config()
+        model_config = (
+            run_config.model_run_configs()[0].model_config_variant().model_config
+        )
         perf_config = run_config.model_run_configs()[0].perf_config()
-        composing_model_config0 = run_config.model_run_configs()[0].composing_configs()[
-            0
-        ]
-        composing_model_config1 = run_config.model_run_configs()[0].composing_configs()[
-            1
-        ]
+        composing_model_config0 = (
+            run_config.model_run_configs()[0]
+            .composing_config_variants()[0]
+            .model_config
+        )
+        composing_model_config1 = (
+            run_config.model_run_configs()[0]
+            .composing_config_variants()[1]
+            .model_config
+        )
 
         self.assertEqual(model_config.to_dict(), expected_model_config)
         self.assertEqual(

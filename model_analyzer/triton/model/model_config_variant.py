@@ -21,8 +21,8 @@ from model_analyzer.triton.model.model_config import ModelConfig
 @dataclass
 class ModelConfigVariant:
     """
-    A dataclass that holds the ModelConfig as well as the variant names
-    for the model and any composing models
+    A dataclass that holds the ModelConfig as well as the variant name
+    for the model
     """
 
     model_config: ModelConfig

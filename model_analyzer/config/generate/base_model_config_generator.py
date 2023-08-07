@@ -221,19 +221,18 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
     @staticmethod
     def make_ensemble_model_config_variant(
         model: ModelProfileSpec,
-        ensemble_composing_model_configs: List[ModelConfig],
+        ensemble_composing_model_config_variants: List[ModelConfigVariant],
         model_variant_name_manager: ModelVariantNameManager,
         param_combo: Dict = {},
     ) -> ModelConfigVariant:
         """
-        Loads the ensemble model spec from the model repository, and then mutates
-        the names to match the ensemble composing models
+        Loads the ensemble model spec from the model repository
 
         Parameters
         ----------
         model: ModelProfileSpec
             The top-level ensemble model spec
-        ensemble_composing_model_configs: List of ModelConfigs
+        ensemble_composing_model_config_variants: List of ModelConfigVariants
             The list of composing model ModelConfigs
         model_variant_name_manager: ModelVariantNameManager
 
@@ -245,8 +244,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         )
 
         ensemble_config_dicts = [
-            composing_model_config.to_dict()
-            for composing_model_config in ensemble_composing_model_configs
+            composing_model_config_variant.model_config.to_dict()
+            for composing_model_config_variant in ensemble_composing_model_config_variants
         ]
         ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             ensemble_config_dicts
