@@ -126,7 +126,7 @@ class ModelRunConfig:
 
         return self._composing_config_variants
 
-    def composing_configs(self) -> List[ModelConfig]:
+    def composing_configs(self) -> Optional[List[ModelConfig]]:
         """
         Returns the list of composing model configs
         """

@@ -86,7 +86,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         """Returns true if this generator is done generating configs"""
         return self._generator_started and (self._default_only or self._done_walking())
 
-    def get_configs(self) -> Generator[ModelConfig, None, None]:
+    def get_configs(self) -> Generator[ModelConfigVariant, None, None]:
         """
         Returns
         -------

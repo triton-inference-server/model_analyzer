@@ -379,7 +379,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         model: ModelProfileSpec,
         composing_model_config_variants: List[ModelConfigVariant],
         model_index: int,
-    ) -> ModelConfig:
+    ) -> ModelConfigVariant:
         param_combo = self._get_next_ensemble_param_combo(model_index)
 
         model_config_variant = self._get_next_ensemble_model_config_variant(
