@@ -258,6 +258,15 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model_name, ensemble_key
         )
 
+        model_config_dict["name"] = variant_name
+        logger.info("")
+        if variant_found:
+            logger.info(f"Found existing ensemble model config: {variant_name}")
+        else:
+            logger.info(f"Creating ensemble model config: {variant_name}")
+        for str in logger_str:
+            logger.info(str)
+
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
 
         return ModelConfigVariant(model_config, variant_name)
