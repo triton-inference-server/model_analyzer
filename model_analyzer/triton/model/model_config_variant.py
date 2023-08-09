@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import List
 
 from model_analyzer.triton.model.model_config import ModelConfig
 

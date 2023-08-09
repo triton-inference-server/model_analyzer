@@ -203,8 +203,6 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model_name, model_config_dict, param_combo
         )
 
-        model_config_dict["name"] = variant_name
-        logger.info("")
         if variant_found:
             logger.info(f"Found existing model config: {variant_name}")
         else:
@@ -213,6 +211,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             logger.info(str)
         logger.info("")
 
+        model_config_dict["name"] = variant_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
         model_config.set_cpu_only(model.cpu_only())
 
@@ -226,7 +225,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         param_combo: Dict = {},
     ) -> ModelConfigVariant:
         """
-        Loads the ensemble model spec from the model repository
+        Loads the ensemble model spec from the model repository, and then mutates
+        the names to match the ensemble composing models
 
         Parameters
         ----------
@@ -258,8 +258,6 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model_name, ensemble_key
         )
 
-        model_config_dict["name"] = variant_name
-        logger.info("")
         if variant_found:
             logger.info(f"Found existing ensemble model config: {variant_name}")
         else:
@@ -267,6 +265,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         for str in logger_str:
             logger.info(str)
 
+        model_config_dict["name"] = variant_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
 
         return ModelConfigVariant(model_config, variant_name)

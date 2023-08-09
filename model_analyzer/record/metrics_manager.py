@@ -390,7 +390,7 @@ class MetricsManager:
                 for composing_config_variant in mrc.composing_configs():
                     original_composing_config = (
                         BaseModelConfigGenerator.create_original_config_from_variant(
-                            composing_config
+                            composing_config_variant
                         )
                     )
                     if not self._load_model_variant(
