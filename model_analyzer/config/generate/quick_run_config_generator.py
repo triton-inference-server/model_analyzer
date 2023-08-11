@@ -41,6 +41,7 @@ from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.triton.client.client import TritonClient
 from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
 from .config_generator_interface import ConfigGeneratorInterface
 from .generator_utils import GeneratorUtils
@@ -324,60 +325,68 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         # In addition, for Ensemble models, it is necessary to create the composing model configs
         # first, as these are needed when creating the top-level model config  - while all other
         # models want to create the top-level first
-        model_config, model_index = self._get_next_non_composing_model_config(
-            model, start_model_index
-        )
+        (
+            model_config_variant,
+            model_index,
+        ) = self._get_next_non_composing_model_config_variant(model, start_model_index)
 
-        composing_model_configs, model_index = self._get_next_composing_model_configs(
-            model_index
-        )
+        (
+            composing_model_config_variants,
+            model_index,
+        ) = self._get_next_composing_model_config_variants(model_index)
 
-        # This will overwrite the empty ModelConfig created above
+        # This will overwrite the empty ModelConfigVariant created above
         if model.is_ensemble():
-            model_config = self._get_next_ensemble_top_level_config(
-                model, composing_model_configs, model_index
+            model_config_variant = self._get_next_ensemble_top_level_config_variant(
+                model, composing_model_config_variants, model_index
             )
 
         model_run_config = self._create_next_model_run_config(
-            model, start_model_index, model_config, composing_model_configs
+            model,
+            start_model_index,
+            model_config_variant,
+            composing_model_config_variants,
         )
 
         return (model_run_config, model_index)
 
-    def _get_next_non_composing_model_config(
+    def _get_next_non_composing_model_config_variant(
         self, model: ModelProfileSpec, model_index: int
-    ) -> Tuple[ModelConfig, int]:
+    ) -> Tuple[ModelConfigVariant, int]:
         if model.is_ensemble():
-            return (ModelConfig({}), model_index)
+            return (ModelConfigVariant(ModelConfig({}), ""), model_index)
         else:
-            return (self._get_next_model_config(model, model_index), model_index + 1)
+            return (
+                self._get_next_model_config_variant(model, model_index),
+                model_index + 1,
+            )
 
-    def _get_next_composing_model_configs(
+    def _get_next_composing_model_config_variants(
         self, model_index: int
-    ) -> Tuple[List[ModelConfig], int]:
-        composing_model_configs = []
+    ) -> Tuple[List[ModelConfigVariant], int]:
+        composing_model_config_variants = []
         for composing_model in self._composing_models:
-            composing_model_config = self._get_next_model_config(
+            composing_model_config_variant = self._get_next_model_config_variant(
                 composing_model, model_index
             )
             model_index += 1
-            composing_model_configs.append(composing_model_config)
+            composing_model_config_variants.append(composing_model_config_variant)
 
-        return (composing_model_configs, model_index)
+        return (composing_model_config_variants, model_index)
 
-    def _get_next_ensemble_top_level_config(
+    def _get_next_ensemble_top_level_config_variant(
         self,
         model: ModelProfileSpec,
-        composing_model_configs: List[ModelConfig],
+        composing_model_config_variants: List[ModelConfigVariant],
         model_index: int,
-    ) -> ModelConfig:
+    ) -> ModelConfigVariant:
         param_combo = self._get_next_ensemble_param_combo(model_index)
 
-        model_config = self._get_next_ensemble_model_config(
-            model, composing_model_configs, param_combo
+        model_config_variant = self._get_next_ensemble_model_config_variant(
+            model, composing_model_config_variants, param_combo
         )
 
-        return model_config
+        return model_config_variant
 
     def _get_next_ensemble_param_combo(self, end_model_index: int) -> dict:
         """
@@ -404,24 +413,26 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         return param_combo
 
-    def _get_next_ensemble_model_config(
+    def _get_next_ensemble_model_config_variant(
         self,
         model: ModelProfileSpec,
-        composing_configs: List[ModelConfig],
+        composing_config_variants: List[ModelConfigVariant],
         param_combo: dict,
-    ) -> ModelConfig:
-        model_config = BaseModelConfigGenerator.make_ensemble_model_config(
-            model=model,
-            ensemble_composing_model_configs=composing_configs,
-            model_variant_name_manager=self._model_variant_name_manager,
-            param_combo=param_combo,
+    ) -> ModelConfigVariant:
+        model_config_variant = (
+            BaseModelConfigGenerator.make_ensemble_model_config_variant(
+                model=model,
+                ensemble_composing_model_config_variants=composing_config_variants,
+                model_variant_name_manager=self._model_variant_name_manager,
+                param_combo=param_combo,
+            )
         )
 
-        return model_config
+        return model_config_variant
 
-    def _get_next_model_config(
+    def _get_next_model_config_variant(
         self, model: ModelProfileSpec, dimension_index: int
-    ) -> ModelConfig:
+    ) -> ModelConfigVariant:
         dimension_values = self._get_coordinate_values(
             self._coordinate_to_measure, dimension_index
         )
@@ -456,35 +467,37 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         if model.supports_dynamic_batching():
             param_combo["dynamic_batching"] = {}
 
-        model_config = BaseModelConfigGenerator.make_model_config(
+        model_config_variant = BaseModelConfigGenerator.make_model_config_variant(
             param_combo=param_combo,
             model=model,
             model_variant_name_manager=self._model_variant_name_manager,
         )
-        return model_config
+
+        return model_config_variant
 
     def _create_next_model_run_config(
         self,
         model: ModelProfileSpec,
         model_index: int,
-        model_config: ModelConfig,
-        composing_model_configs: List[ModelConfig],
+        model_config_variant: ModelConfigVariant,
+        composing_model_config_variants: List[ModelConfigVariant],
     ) -> ModelRunConfig:
-        model_variant_name = model_config.get_field("name")
         perf_analyzer_config = self._get_next_perf_analyzer_config(
-            model_variant_name, model, model_index
+            model_config_variant.variant_name, model, model_index
         )
         model_run_config = ModelRunConfig(
-            model.model_name(), model_config, perf_analyzer_config
+            model.model_name(), model_config_variant, perf_analyzer_config
         )
 
         if self._composing_models:
-            model_run_config.add_composing_model_configs(composing_model_configs)
+            model_run_config.add_composing_model_config_variants(
+                composing_model_config_variants
+            )
 
         return model_run_config
 
     def _get_next_perf_analyzer_config(
-        self, model_variant_name: str, model: ModelProfileSpec, model_index: int
+        self, model_name: str, model: ModelProfileSpec, model_index: int
     ) -> PerfAnalyzerConfig:
         dimension_values = self._get_coordinate_values(
             self._coordinate_to_measure, model_index
@@ -492,9 +505,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         perf_analyzer_config = PerfAnalyzerConfig()
 
-        perf_analyzer_config.update_config_from_profile_config(
-            model_variant_name, self._config
-        )
+        perf_analyzer_config.update_config_from_profile_config(model_name, self._config)
 
         concurrency = self._calculate_concurrency(dimension_values)
 
@@ -605,73 +616,75 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
     def _create_default_ensemble_model_run_config(
         self, model: ModelProfileSpec
     ) -> ModelRunConfig:
-        default_composing_model_configs = self._create_default_composing_model_configs(
-            model
+        default_composing_model_config_variants = (
+            self._create_default_composing_model_config_variants(model)
         )
 
-        default_ensemble_model_config = (
-            BaseModelConfigGenerator.make_ensemble_model_config(
-                model=model,
-                ensemble_composing_model_configs=default_composing_model_configs,
-                model_variant_name_manager=self._model_variant_name_manager,
-            )
+        default_ensemble_model_config_variant = BaseModelConfigGenerator.make_ensemble_model_config_variant(
+            model=model,
+            ensemble_composing_model_config_variants=default_composing_model_config_variants,
+            model_variant_name_manager=self._model_variant_name_manager,
         )
 
         default_perf_analyzer_config = self._create_default_perf_analyzer_config(
-            model, default_ensemble_model_config
+            model, default_ensemble_model_config_variant.model_config
         )
 
         default_model_run_config = ModelRunConfig(
             model.model_name(),
-            default_ensemble_model_config,
+            default_ensemble_model_config_variant,
             default_perf_analyzer_config,
         )
 
-        default_model_run_config.add_composing_model_configs(
-            default_composing_model_configs
+        default_model_run_config.add_composing_model_config_variants(
+            default_composing_model_config_variants
         )
 
         return default_model_run_config
 
-    def _create_default_composing_model_configs(
+    def _create_default_composing_model_config_variants(
         self, model: ModelProfileSpec
-    ) -> List[ModelConfig]:
-        default_composing_model_configs: List[ModelConfig] = []
+    ) -> List[ModelConfigVariant]:
+        default_composing_model_config_variants: List[ModelConfigVariant] = []
         for composing_model in self._composing_models:
-            default_composing_model_configs.append(
-                BaseModelConfigGenerator.make_model_config(
+            default_composing_model_config_variants.append(
+                BaseModelConfigGenerator.make_model_config_variant(
                     param_combo={},
                     model=composing_model,
                     model_variant_name_manager=self._model_variant_name_manager,
                 )
             )
 
-        return default_composing_model_configs
+        return default_composing_model_config_variants
 
     def _create_default_model_run_config(
         self, model: ModelProfileSpec
     ) -> ModelRunConfig:
-        default_model_config = BaseModelConfigGenerator.make_model_config(
-            param_combo={},
-            model=model,
-            model_variant_name_manager=self._model_variant_name_manager,
+        default_model_config_variant = (
+            BaseModelConfigGenerator.make_model_config_variant(
+                param_combo={},
+                model=model,
+                model_variant_name_manager=self._model_variant_name_manager,
+            )
         )
 
         default_perf_analyzer_config = self._create_default_perf_analyzer_config(
-            model, default_model_config
+            model, default_model_config_variant.model_config
         )
 
         default_model_run_config = ModelRunConfig(
-            model.model_name(), default_model_config, default_perf_analyzer_config
+            model.model_name(),
+            default_model_config_variant,
+            default_perf_analyzer_config,
         )
 
-        default_composing_model_configs = self._create_default_composing_model_configs(
-            model
+        default_composing_model_config_variants = (
+            self._create_default_composing_model_config_variants(model)
         )
 
-        if default_composing_model_configs:
-            default_model_run_config.add_composing_model_configs(
-                default_composing_model_configs
+        if default_composing_model_config_variants:
+            default_model_run_config.add_composing_model_config_variants(
+                default_composing_model_config_variants
             )
 
         return default_model_run_config

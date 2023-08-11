@@ -25,7 +25,7 @@ from model_analyzer.constants import DEFAULT_CONFIG_PARAMS, LOGGER_NAME
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.triton.client.client import TritonClient
-from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
 from .base_model_config_generator import BaseModelConfigGenerator
 from .model_profile_spec import ModelProfileSpec
@@ -132,10 +132,10 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
         else:
             self._curr_max_batch_size = self._max_model_batch_size
 
-    def _get_next_model_config(self) -> ModelConfig:
+    def _get_next_model_config_variant(self) -> ModelConfigVariant:
         param_combo = self._get_curr_param_combo()
-        model_config = self._make_direct_mode_model_config(param_combo)
-        return model_config
+        model_config_variant = self._make_direct_mode_model_config_variant(param_combo)
+        return model_config_variant
 
     def _get_curr_param_combo(self) -> Dict:
         if self._default_only:

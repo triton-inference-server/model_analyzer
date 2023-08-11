@@ -84,7 +84,7 @@ class TestResults(trc.TestResultCollector):
 
     def test_get_model_measurements_dict(self):
         """
-        Test that the measurements were correctly added to the model dictionairies
+        Test that the measurements were correctly added to the model dictionaries
         """
         model_measurements = self._result.get_model_measurements_dict("modelA")
 
@@ -92,25 +92,31 @@ class TestResults(trc.TestResultCollector):
             # There were 3 runs per model config. Make sure their values all match
             base_index = index * 3
             self.assertEqual(
-                run_config.model_run_configs()[0].model_config().get_config(),
+                run_config.model_run_configs()[0]
+                .model_config_variant()
+                .model_config.get_config(),
                 self._run_configs[base_index]
                 .model_run_configs()[0]
-                .model_config()
-                .get_config(),
+                .model_config_variant()
+                .model_config.get_config(),
             )
             self.assertEqual(
-                run_config.model_run_configs()[0].model_config().get_config(),
+                run_config.model_run_configs()[0]
+                .model_config_variant()
+                .model_config.get_config(),
                 self._run_configs[base_index + 1]
                 .model_run_configs()[0]
-                .model_config()
-                .get_config(),
+                .model_config_variant()
+                .model_config.get_config(),
             )
             self.assertEqual(
-                run_config.model_run_configs()[0].model_config().get_config(),
+                run_config.model_run_configs()[0]
+                .model_config_variant()
+                .model_config.get_config(),
                 self._run_configs[base_index + 2]
                 .model_run_configs()[0]
-                .model_config()
-                .get_config(),
+                .model_config_variant()
+                .model_config.get_config(),
             )
             self.assertEqual(measurements, self._measurements[index])
 
@@ -143,7 +149,10 @@ class TestResults(trc.TestResultCollector):
 
         self.assertEqual(
             run_config.model_run_configs()[0].model_config(),
-            self._run_configs[3].model_run_configs()[0].model_config(),
+            self._run_configs[3]
+            .model_run_configs()[0]
+            .model_config_variant()
+            .model_config,
         )
         self.assertEqual(measurements, list(self._measurements[1].values()))
 

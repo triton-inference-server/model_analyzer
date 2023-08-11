@@ -847,9 +847,9 @@ class TestModelConfigGenerator(trc.TestResultCollector):
             )
 
             model_configs = []
-            for model_config in mcg.get_configs():
+            for model_config_variant in mcg.get_configs():
                 mcg.set_last_results(self._get_next_fake_results())
-                model_config_dict = model_config.get_config()
+                model_config_dict = model_config_variant.model_config.get_config()
                 model_configs.append(model_config_dict)
 
             self.assertEqual(len(expected_configs), len(model_configs))

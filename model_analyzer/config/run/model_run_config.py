@@ -20,13 +20,14 @@ from typing import Dict, List, Optional
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
 logger = logging.getLogger(LOGGER_NAME)
 
 
 class ModelRunConfig:
     """
-    Encapsulates all the information (ModelConfig + PerfConfig) needed to run
+    Encapsulates all the information (ModelConfigVariant + PerfConfig) needed to run
     a model in Perf Analyzer
     """
 
@@ -36,7 +37,7 @@ class ModelRunConfig:
     def __init__(
         self,
         model_name: str,
-        model_config: ModelConfig,
+        model_config_variant: ModelConfigVariant,
         perf_config: PerfAnalyzerConfig,
     ) -> None:
         """
@@ -44,17 +45,17 @@ class ModelRunConfig:
         ----------
         model_name: str
             The name of the model
-        model_config : ModelConfig
-            model config corresponding to this run
+        model_config_variant : ModelConfigVariant
+            model config variant corresponding to this run
         perf_config : PerfAnalyzerConfig
             List of possible run parameters to pass
             to Perf Analyzer
         """
 
         self._model_name = model_name
-        self._model_config = model_config
+        self._model_config_variant = model_config_variant
         self._perf_config = perf_config
-        self._composing_configs: List[ModelConfig] = []
+        self._composing_config_variants: List[ModelConfigVariant] = []
 
     def model_name(self) -> str:
         """
@@ -77,18 +78,35 @@ class ModelRunConfig:
         str
             Model variant name
         """
+        return (
+            self._model_config_variant.variant_name
+            if self._model_config_variant
+            else ""
+        )
 
-        return self.model_config().get_field("name")
-
-    def model_config(self) -> ModelConfig:
+    def model_config_variant(self) -> ModelConfigVariant:
         """
         Returns
         -------
-        List of ModelConfig
-            The list of ModelConfigs corresponding to this run.
+        ModelConfigVariant
+            The ModelConfigVariant corresponding to this run
         """
 
-        return self._model_config
+        return self._model_config_variant
+
+    def model_config(self) -> Optional[ModelConfig]:
+        """
+        Returns
+        -------
+        ModelConfig
+            The ModelConfig corresponding to this run
+        """
+
+        return (
+            self._model_config_variant.model_config
+            if self._model_config_variant
+            else None
+        )
 
     def perf_config(self) -> PerfAnalyzerConfig:
         """
@@ -101,12 +119,26 @@ class ModelRunConfig:
 
         return self._perf_config
 
-    def composing_configs(self) -> List[ModelConfig]:
+    def composing_config_variants(self) -> List[ModelConfigVariant]:
         """
-        Returns the list of composing configs
+        Returns the list of composing model config variants
         """
 
-        return self._composing_configs
+        return self._composing_config_variants
+
+    def composing_configs(self) -> List[ModelConfig]:
+        """
+        Returns the list of composing model configs
+        """
+
+        if self._composing_config_variants:
+            composing_configs = [
+                composing_config_variant.model_config
+                for composing_config_variant in self._composing_config_variants
+            ]
+            return composing_configs
+        else:
+            return []
 
     def representation(self) -> str:
         """
@@ -115,7 +147,7 @@ class ModelRunConfig:
         """
         repr = self.perf_config().representation()
 
-        if self._composing_configs:
+        if self._composing_config_variants:
             repr += " " + (",").join(self.get_composing_config_names())  # type: ignore
 
         return repr
@@ -124,7 +156,7 @@ class ModelRunConfig:
         """
         Returns false if client batch size is greater than model batch size. Else true
         """
-        model_config = self._model_config.get_config()
+        model_config = self._model_config_variant.model_config.get_config()
 
         max_batch_size = (
             model_config["max_batch_size"]
@@ -183,13 +215,15 @@ class ModelRunConfig:
         the given model + composing models
         """
         model_configs = (
-            [] if self.is_ensemble_model() else [self._model_config.get_config()]
+            []
+            if self.is_ensemble_model()
+            else [self._model_config_variant.model_config.get_config()]
         )
 
         model_configs.extend(
             [
-                composing_config.get_config()
-                for composing_config in self._composing_configs
+                composing_config_variant.model_config.get_config()
+                for composing_config_variant in self._composing_config_variants
             ]
         )
 
@@ -210,7 +244,7 @@ class ModelRunConfig:
         """
         Returns true if the model config is an ensemble model
         """
-        return self._model_config.is_ensemble()
+        return self._model_config_variant.model_config.is_ensemble()
 
     def is_bls_model(self) -> bool:
         """
@@ -218,41 +252,85 @@ class ModelRunConfig:
         """
         # If composing configs are present and it's not an ensemble it must be a BLS
         # Note: this will need to change if we allow ensembles to contain BLS models
-        return not self._model_config.is_ensemble() and len(self._composing_configs) > 0
+        return (
+            not self._model_config_variant.model_config.is_ensemble()
+            and len(self._composing_config_variants) > 0
+        )
 
     def get_composing_config_names(self) -> Optional[List[str]]:
         """
         Returns list of composing config names
         """
         return [
-            composing_config.get_field("name")
-            for composing_config in self._composing_configs
+            composing_config_variant.variant_name
+            for composing_config_variant in self._composing_config_variants
         ]
 
-    def add_composing_model_configs(
-        self, composing_model_configs: List[ModelConfig]
+    def add_composing_model_config_variants(
+        self, composing_model_config_variants: List[ModelConfigVariant]
     ) -> None:
         """
-        Adds a list of composing model configs
+        Adds a list of composing model config variants
         """
-        for composing_model_config in composing_model_configs:
-            self._composing_configs.append(composing_model_config)
+        for composing_model_config_variant in composing_model_config_variants:
+            self._composing_config_variants.append(composing_model_config_variant)
 
     @classmethod
     def from_dict(cls, model_run_config_dict):
         model_run_config = ModelRunConfig(None, None, None)
         model_run_config._model_name = model_run_config_dict["_model_name"]
-        model_run_config._model_config = ModelConfig.from_dict(
-            model_run_config_dict["_model_config"]
-        )
+
+        if "_model_config_variant" in model_run_config_dict:
+            model_config = ModelConfig.from_dict(
+                model_run_config_dict["_model_config_variant"]["model_config"]
+            )
+            variant_name = model_run_config_dict["_model_config_variant"][
+                "variant_name"
+            ]
+
+            model_run_config._model_config_variant = ModelConfigVariant(
+                model_config, variant_name
+            )
+
         model_run_config._perf_config = PerfAnalyzerConfig.from_dict(
             model_run_config_dict["_perf_config"]
         )
 
+        # TODO: TMA-1332: This is for backward compatibility with older checkpoints used in unit tests
+        if "_model_config" in model_run_config_dict:
+            model_config = ModelConfig.from_dict(model_run_config_dict["_model_config"])
+            model_run_config._model_config_variant = ModelConfigVariant(
+                model_config, model_config.get_field("name")
+            )
+
+        if "_composing_config_variants" in model_run_config_dict:
+            model_run_config._composing_config_variants = [
+                ModelConfigVariant(
+                    ModelConfig.from_dict(
+                        composing_config_variant_dict["model_config"]
+                    ),
+                    composing_config_variant_dict["variant_name"],
+                )
+                for composing_config_variant_dict in model_run_config_dict[
+                    "_composing_config_variants"
+                ]
+            ]
+
+        # TODO: TMA-1332: This is for backward compatibility with older checkpoints used in unit tests
         if "_composing_configs" in model_run_config_dict:
-            model_run_config._composing_configs = [
+            composing_configs = [
                 ModelConfig.from_dict(composing_config_dict)
                 for composing_config_dict in model_run_config_dict["_composing_configs"]
+            ]
+
+            composing_variant_names = [
+                composing_config.get_field("name")
+                for composing_config in composing_configs
+            ]
+
+            model_run_config._composing_config_variants = [
+                ModelConfigVariant(composing_config, composing_variant_names[i])
+                for i, composing_config in enumerate(composing_configs)
             ]
 
         return model_run_config

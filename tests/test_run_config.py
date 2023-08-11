@@ -21,6 +21,7 @@ from model_analyzer.config.run.model_run_config import ModelRunConfig
 from model_analyzer.config.run.run_config import RunConfig
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
 from .common import test_result_collector as trc
 
@@ -88,11 +89,18 @@ class TestRunConfig(trc.TestResultCollector):
         """
         cpu_only_true_mc = ModelConfig({})
         cpu_only_true_mc.set_cpu_only(True)
+        cpu_only_true_mcv = ModelConfigVariant(
+            cpu_only_true_mc, "cpu_only_true_config_default"
+        )
+
         cpu_only_false_mc = ModelConfig({})
         cpu_only_false_mc.set_cpu_only(False)
+        cpu_only_false_mcv = ModelConfigVariant(
+            cpu_only_false_mc, "cpu_only_false_config_default"
+        )
 
-        mrc1 = ModelRunConfig("model1", cpu_only_true_mc, MagicMock())
-        mrc2 = ModelRunConfig("model2", cpu_only_false_mc, MagicMock())
+        mrc1 = ModelRunConfig("model1", cpu_only_true_mcv, MagicMock())
+        mrc2 = ModelRunConfig("model2", cpu_only_false_mcv, MagicMock())
 
         rc = RunConfig({})
         rc.add_model_run_config(mrc1)
@@ -103,7 +111,7 @@ class TestRunConfig(trc.TestResultCollector):
 
     def test_mrc_with_illegal_combinations(self):
         """
-        Test ModelRunConfig with illegal comibinations
+        Test ModelRunConfig with illegal combinations
         """
         mc = ModelConfig({})
         pc = PerfAnalyzerConfig()
@@ -117,24 +125,25 @@ class TestRunConfig(trc.TestResultCollector):
                 "dynamic_batching": {"preferred_batch_size": [4, 8]},
             }
         )
-        mrc = ModelRunConfig("modelA", mc, pc)
+        mcv = ModelConfigVariant(mc, "test_model_config_default")
+        mrc = ModelRunConfig("modelA", mcv, pc)
         self.assertFalse(mrc.is_legal_combination())
 
         # Invalid client batch-size and invalid model preferred_batch_size
         pc["batch-size"] = 8
-        mrc = ModelRunConfig("modelB", mc, pc)
+        mrc = ModelRunConfig("modelB", mcv, pc)
         self.assertFalse(mrc.is_legal_combination())
 
         # Invalid client batch-size and valid model preferred_batch_size
         mc.set_config(
             {"max_batch_size": 4, "dynamic_batching": {"preferred_batch_size": [2]}}
         )
-        mrc = ModelRunConfig("modelC", mc, pc)
+        mrc = ModelRunConfig("modelC", mcv, pc)
         self.assertFalse(mrc.is_legal_combination())
 
     def test_mrc_with_legal_combinations(self):
         """
-        Test ModelRunConfig with legal comibinations
+        Test ModelRunConfig with legal combinations
         """
         mc = ModelConfig({})
         pc = PerfAnalyzerConfig()
@@ -142,14 +151,15 @@ class TestRunConfig(trc.TestResultCollector):
         # Valid client batch-size and no model preferred_batch_size
         pc["batch-size"] = 2
         mc.set_config({"max_batch_size": 8})
-        mrc = ModelRunConfig("modelA", mc, pc)
+        mcv = ModelConfigVariant(mc, "test_model_config_default")
+        mrc = ModelRunConfig("modelA", mcv, pc)
         self.assertTrue(mrc.is_legal_combination())
 
         # Valid client batch-size and valid model preferred_batch_size
         mc.set_config(
             {"max_batch_size": 8, "dynamic_batching": {"preferred_batch_size": [4]}}
         )
-        mrc = ModelRunConfig("modelB", mc, pc)
+        mrc = ModelRunConfig("modelB", mcv, pc)
         self.assertTrue(mrc.is_legal_combination())
 
     def test_composing_mrc_with_illegal_combinations(self):
@@ -158,29 +168,33 @@ class TestRunConfig(trc.TestResultCollector):
         """
         mc = ModelConfig({})
         pc = PerfAnalyzerConfig()
-        composing_model_configs = [ModelConfig({}), ModelConfig({})]
+        composing_model_config_variants = [
+            ModelConfigVariant(ModelConfig({}), "composing_model_A_config_default"),
+            ModelConfigVariant(ModelConfig({}), "composing_model_B_config_default"),
+        ]
 
         # Invalid client batch-size and valid model preferred_batch_size for composing_config[1]
         pc["batch-size"] = 2
         mc.set_config({"max_batch_size": 8, "name": "test_model"})
-        mrc = ModelRunConfig("modelC", mc, pc)
+        mcv = ModelConfigVariant(mc, "test_model_config_default")
+        mrc = ModelRunConfig("modelC", mcv, pc)
 
-        composing_model_configs[0].set_config(
+        composing_model_config_variants[0].model_config.set_config(
             {
-                "name": "composing_config_A",
+                "name": "composing_model_A",
                 "max_batch_size": 4,
                 "dynamic_batching": {"preferred_batch_size": [2]},
             }
         )
-        composing_model_configs[1].set_config(
+        composing_model_config_variants[1].model_config.set_config(
             {
-                "name": "composing_config_B",
+                "name": "composing_model_B",
                 "max_batch_size": 4,
                 "dynamic_batching": {"preferred_batch_size": [4, 8]},
             }
         )
 
-        mrc.add_composing_model_configs(composing_model_configs)
+        mrc.add_composing_model_config_variants(composing_model_config_variants)
 
         self.assertFalse(mrc.is_legal_combination())
 

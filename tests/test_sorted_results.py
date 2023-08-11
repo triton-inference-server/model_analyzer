@@ -31,7 +31,7 @@ from .common.test_utils import (
 )
 
 
-class TestSortedResultsMethods(trc.TestResultCollector):
+class TestSortedResults(trc.TestResultCollector):
     def setUp(self):
         objective_spec = {"perf_throughput": 10, "perf_latency_p99": 5}
         self.sorted_results = SortedResults()

@@ -36,6 +36,7 @@ from model_analyzer.monitor.remote_monitor import RemoteMonitor
 from model_analyzer.output.file_writer import FileWriter
 from model_analyzer.perf_analyzer.perf_analyzer import PerfAnalyzer
 from model_analyzer.result.run_config_measurement import RunConfigMeasurement
+from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
 from .record import Record, RecordType
 from .record_aggregator import RecordAggregator
@@ -309,40 +310,44 @@ class MetricsManager:
         """
         for mrc in run_config.model_run_configs():
             self._create_model_variant(
-                original_name=mrc.model_name(), variant_config=mrc.model_config()
+                original_name=mrc.model_name(),
+                variant_config=mrc.model_config_variant(),
             )
 
-            for composing_config in mrc.composing_configs():
-                variant_name = composing_config.get_field("name")
+            for composing_config_variant in mrc.composing_config_variants():
+                variant_name = composing_config_variant.variant_name
                 original_name = (
                     BaseModelConfigGenerator.extract_model_name_from_variant_name(
                         variant_name
                     )
                 )
 
-                self._create_model_variant(original_name, composing_config)
+                self._create_model_variant(original_name, composing_config_variant)
 
                 # Create a version with the original (no _config_#/default appended) name
                 original_composing_config = (
                     BaseModelConfigGenerator.create_original_config_from_variant(
-                        composing_config
+                        composing_config_variant.model_config
                     )
                 )
                 self._create_model_variant(
                     original_name,
-                    original_composing_config,
+                    ModelConfigVariant(original_composing_config, original_name),
                     ignore_first_config_variant=True,
                 )
 
     def _create_model_variant(
-        self, original_name, variant_config, ignore_first_config_variant=False
-    ):
+        self,
+        original_name: str,
+        variant_config: ModelConfigVariant,
+        ignore_first_config_variant: bool = False,
+    ) -> None:
         """
         Creates a directory for the model config variant in the output model
         repository and fills directory with config
         """
 
-        variant_name = variant_config.get_field("name")
+        variant_name = variant_config.variant_name
         if self._config.triton_launch_mode != "remote":
             model_repository = self._config.model_repository
 
@@ -354,11 +359,11 @@ class MetricsManager:
                 self._first_config_variant.setdefault(original_name, None)
 
                 if ignore_first_config_variant:
-                    variant_config.write_config_to_file(
+                    variant_config.model_config.write_config_to_file(
                         new_model_dir, original_model_dir, None
                     )
                 else:
-                    variant_config.write_config_to_file(
+                    variant_config.model_config.write_config_to_file(
                         new_model_dir,
                         original_model_dir,
                         self._first_config_variant[original_name],
@@ -377,15 +382,15 @@ class MetricsManager:
         Loads all model variants in the client
         """
         for mrc in run_config.model_run_configs():
-            if not self._load_model_variant(variant_config=mrc.model_config()):
+            if not self._load_model_variant(variant_config=mrc.model_config_variant()):
                 return False
 
             # Composing configs for BLS models are not automatically loaded by the top-level model
             if mrc.is_bls_model():
-                for composing_config in mrc.composing_configs():
+                for composing_config_variant in mrc.composing_configs():
                     original_composing_config = (
                         BaseModelConfigGenerator.create_original_config_from_variant(
-                            composing_config
+                            composing_config_variant
                         )
                     )
                     if not self._load_model_variant(
@@ -418,7 +423,7 @@ class MetricsManager:
             log_file=self._server.log_file(),
         )
 
-        variant_name = variant_config.get_field("name")
+        variant_name = variant_config.variant_name
         if self._client.load_model(model_name=variant_name) == -1:
             return False
 

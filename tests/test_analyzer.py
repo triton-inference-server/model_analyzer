@@ -28,6 +28,7 @@ from model_analyzer.result.run_config_result import RunConfigResult
 from model_analyzer.result.sorted_results import SortedResults
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 from tests.common.test_utils import evaluate_mock_config
 
 from .common import test_result_collector as trc
@@ -106,7 +107,10 @@ class TestAnalyzer(trc.TestResultCollector):
         rc1.add_model_run_config(
             ModelRunConfig(
                 "fake_model_name",
-                ModelConfig.create_from_dictionary({"name": "config1"}),
+                ModelConfigVariant(
+                    ModelConfig.create_from_dictionary({"name": "config1"}),
+                    "config1",
+                ),
                 MagicMock(),
             )
         )
@@ -114,7 +118,10 @@ class TestAnalyzer(trc.TestResultCollector):
         rc2.add_model_run_config(
             ModelRunConfig(
                 "fake_model_name",
-                ModelConfig.create_from_dictionary({"name": "config3"}),
+                ModelConfigVariant(
+                    ModelConfig.create_from_dictionary({"name": "config3"}),
+                    "config3",
+                ),
                 MagicMock(),
             )
         )
@@ -122,7 +129,10 @@ class TestAnalyzer(trc.TestResultCollector):
         rc3.add_model_run_config(
             ModelRunConfig(
                 "fake_model_name",
-                ModelConfig.create_from_dictionary({"name": "config4"}),
+                ModelConfigVariant(
+                    ModelConfig.create_from_dictionary({"name": "config4"}),
+                    "config4",
+                ),
                 MagicMock(),
             )
         )

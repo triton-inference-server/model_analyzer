@@ -43,6 +43,7 @@ from model_analyzer.result.run_config_measurement import RunConfigMeasurement
 from model_analyzer.result.run_config_result import RunConfigResult
 from model_analyzer.state.analyzer_state_manager import AnalyzerStateManager
 from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 from tests.mocks.mock_config import MockConfig
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -302,18 +303,19 @@ def construct_perf_analyzer_config(
 
 
 def construct_run_config(
-    model_name: str, model_config_name: str, pa_config_name: str
+    model_name: str, model_config_variant_name: str, pa_config_name: str
 ) -> RunConfig:
     """
     Constructs a Perf Analyzer Config
     """
 
-    model_config_dict = {"name": model_config_name}
+    model_config_dict = {"name": model_name}
     model_config = ModelConfig.create_from_dictionary(model_config_dict)
+    model_config_variant = ModelConfigVariant(model_config, model_config_variant_name)
 
     perf_config = PerfAnalyzerConfig()
     perf_config.update_config({"model-name": pa_config_name})
-    mrc = ModelRunConfig(model_name, model_config, perf_config)
+    mrc = ModelRunConfig(model_name, model_config_variant, perf_config)
     rc = RunConfig({})
     rc.add_model_run_config(mrc)
     return rc

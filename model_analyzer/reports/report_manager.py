@@ -612,9 +612,7 @@ class ReportManager:
 
     def _create_ensemble_summary_sentence(self, run_config: RunConfig) -> str:
         summary_sentence = "<BR><BR>"
-        best_config_name = (
-            run_config.model_run_configs()[0].model_config().get_field("name")
-        )
+        best_config_name = run_config.model_run_configs()[0].model_variant_name()
 
         summary_sentence = (
             summary_sentence
@@ -673,7 +671,7 @@ class ReportManager:
 
     def _create_summary_config_phrase(self, best_run_config, num_configurations):
         config_names = [
-            f"<strong>{model_run_config.model_config().get_field('name')}</strong>"
+            f"<strong>{model_run_config.model_config_variant().variant_name}</strong>"
             for model_run_config in best_run_config.model_run_configs()
         ]
 
@@ -874,7 +872,7 @@ class ReportManager:
     ):
         model_config_names = ", ".join(
             [
-                model_run_config.model_config().get_field("name")
+                model_run_config.model_config_variant().variant_name
                 for model_run_config in run_config.model_run_configs()
             ]
         )
@@ -1009,7 +1007,7 @@ class ReportManager:
 
         model_config_names = "<br>".join(
             [
-                model_run_config.model_config().get_field("name")
+                model_run_config.model_config_variant().variant_name
                 for model_run_config in run_config.model_run_configs()
             ]
         )

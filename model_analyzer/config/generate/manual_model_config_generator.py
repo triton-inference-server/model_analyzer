@@ -25,7 +25,7 @@ from model_analyzer.constants import DEFAULT_CONFIG_PARAMS, LOGGER_NAME
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
 from model_analyzer.triton.client.client import TritonClient
-from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
 from .base_model_config_generator import BaseModelConfigGenerator
 from .generator_utils import GeneratorUtils
@@ -84,7 +84,7 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         # Indexed as follows:
         #    _configs[_curr_config_index][_curr_max_batch_size_index]
         #
-        self._configs = self._generate_model_configs()
+        self._configs = self._generate_model_config_variants()
 
     def _done_walking(self) -> bool:
         return len(self._configs) == self._curr_config_index
@@ -125,39 +125,47 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         if last_max_throughput:
             self._curr_max_batch_size_throughputs.append(last_max_throughput)
 
-    def _get_next_model_config(self) -> ModelConfig:
+    def _get_next_model_config_variant(self) -> ModelConfigVariant:
         return self._configs[self._curr_config_index][self._curr_max_batch_size_index]
 
-    def _generate_model_configs(self) -> List[List[ModelConfig]]:
+    def _generate_model_config_variants(self) -> List[List[ModelConfigVariant]]:
         """Generate all model config combinations"""
         if self._remote_mode:
-            configs = self._generate_remote_mode_model_configs()
+            configs = self._generate_remote_mode_model_config_variants()
         else:
-            configs = self._generate_direct_modes_model_configs()
+            configs = self._generate_direct_modes_model_config_variants()
 
         return configs
 
-    def _generate_remote_mode_model_configs(self) -> List[List[ModelConfig]]:
+    def _generate_remote_mode_model_config_variants(
+        self,
+    ) -> List[List[ModelConfigVariant]]:
         """Generate model configs for remote mode"""
-        return [[self._make_remote_model_config()]]
+        return [[self._make_remote_model_config_variant()]]
 
-    def _generate_direct_modes_model_configs(self) -> List[List[ModelConfig]]:
+    def _generate_direct_modes_model_config_variants(
+        self,
+    ) -> List[List[ModelConfigVariant]]:
         """Generate model configs for direct (non-remote) modes"""
-        model_configs = []
+        model_config_variants = []
         for param_combo in self._non_max_batch_size_param_combos:
             configs_with_max_batch_size = []
             if self._max_batch_sizes:
                 for mbs in self._max_batch_sizes:
                     param_combo["max_batch_size"] = mbs
-                    model_config = self._make_direct_mode_model_config(param_combo)
-                    configs_with_max_batch_size.append(model_config)
+                    model_config_variant = self._make_direct_mode_model_config_variant(
+                        param_combo
+                    )
+                    configs_with_max_batch_size.append(model_config_variant)
             else:
-                model_config = self._make_direct_mode_model_config(param_combo)
-                configs_with_max_batch_size.append(model_config)
+                model_config_variant = self._make_direct_mode_model_config_variant(
+                    param_combo
+                )
+                configs_with_max_batch_size.append(model_config_variant)
 
-            model_configs.append(configs_with_max_batch_size)
+            model_config_variants.append(configs_with_max_batch_size)
 
-        return model_configs
+        return model_config_variants
 
     def _determine_max_batch_sizes_and_param_combos(self) -> None:
         """
