@@ -612,9 +612,7 @@ class ReportManager:
 
     def _create_ensemble_summary_sentence(self, run_config: RunConfig) -> str:
         summary_sentence = "<BR><BR>"
-        best_config_name = (
-            run_config.model_run_configs()[0].model_config_variant().variant_name
-        )
+        best_config_name = run_config.model_run_configs()[0].model_variant_name()
 
         summary_sentence = (
             summary_sentence

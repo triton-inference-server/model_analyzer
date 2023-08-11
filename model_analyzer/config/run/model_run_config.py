@@ -305,7 +305,12 @@ class ModelRunConfig:
 
         if "_composing_config_variants" in model_run_config_dict:
             model_run_config._composing_config_variants = [
-                ModelConfig.from_dict(composing_config_variant_dict)
+                ModelConfigVariant(
+                    ModelConfig.from_dict(
+                        composing_config_variant_dict["model_config"]
+                    ),
+                    composing_config_variant_dict["variant_name"],
+                )
                 for composing_config_variant_dict in model_run_config_dict[
                     "_composing_config_variants"
                 ]
