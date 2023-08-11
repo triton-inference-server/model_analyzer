@@ -28,7 +28,10 @@ class TestTritonServerFactory(trc.TestResultCollector):
     def setUp(self):
         # Mock path validation
         self.mock_os = MockOSMethods(
-            mock_paths=["model_analyzer.triton.server.server_factory"]
+            mock_paths=[
+                "model_analyzer.triton.server.server_factory",
+                "model_analyzer.config.input.config_utils",
+            ]
         )
         self.mock_os.start()
 
@@ -53,6 +56,7 @@ class TestTritonServerFactory(trc.TestResultCollector):
         """
 
         config = ConfigCommandProfile()
+        config.model_repository = "/fake_model_repository"
         config.triton_launch_mode = launch_mode
         config.triton_http_endpoint = "fake_address:2345"
         config.triton_grpc_endpoint = "fake_address:4567"
