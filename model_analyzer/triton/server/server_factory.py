@@ -178,8 +178,14 @@ class TritonServerFactory:
         triton_config = TritonServerConfig()
         triton_config.update_config(config.triton_server_flags)
 
-        triton_config["model-repository"] = config.model_repository
-        triton_config["strict-model-config"] = "false"
+        triton_config["model-repository"] = (
+            config.model_repository
+            if use_model_repository
+            else config.output_model_repository_path
+        )
+
+        if use_model_repository:
+            triton_config["strict-model-config"] = "false"
 
         triton_config["http-port"] = config.triton_http_endpoint.split(":")[-1]
         triton_config["grpc-port"] = config.triton_grpc_endpoint.split(":")[-1]

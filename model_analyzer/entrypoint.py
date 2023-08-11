@@ -135,7 +135,9 @@ def get_triton_handles(config, gpus):
 
     client = get_client_handle(config)
     fail_if_server_already_running(client, config)
-    server = TritonServerFactory.get_server_handle(config, gpus)
+    server = TritonServerFactory.get_server_handle(
+        config, gpus, use_model_repository=bool(config.model_repository)
+    )
 
     return client, server
 
