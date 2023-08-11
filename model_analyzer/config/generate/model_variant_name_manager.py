@@ -18,6 +18,7 @@ from copy import deepcopy
 from typing import Dict, List, Tuple
 
 from model_analyzer.constants import DEFAULT_CONFIG_PARAMS
+from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 
 
 class ModelVariantNameManager:
@@ -45,11 +46,11 @@ class ModelVariantNameManager:
 
     @staticmethod
     def make_ensemble_composing_model_key(
-        ensemble_config_dicts: List[Dict],
+        ensemble_model_config_variants: List[ModelConfigVariant],
     ) -> Dict[str, str]:
         ensemble_names = [
-            ensemble_config_dict["name"]
-            for ensemble_config_dict in ensemble_config_dicts
+            ensemble_model_config_variant.variant_name
+            for ensemble_model_config_variant in ensemble_model_config_variants
         ]
         ensemble_key = ",".join(ensemble_names)
 

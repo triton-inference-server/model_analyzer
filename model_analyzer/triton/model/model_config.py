@@ -150,7 +150,7 @@ class ModelConfig:
             num_retries=config.client_max_retries, log_file=server.log_file()
         )
 
-        if client.load_model(model_name) == -1:
+        if client.load_model_from_directory(model_name) == -1:
             server.stop()
 
             if not os.path.exists(model_path):

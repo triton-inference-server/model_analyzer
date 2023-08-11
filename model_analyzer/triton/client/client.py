@@ -17,6 +17,7 @@
 import logging
 import time
 from subprocess import DEVNULL
+from typing import Optional
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -74,16 +75,45 @@ class TritonClient:
             "Could not determine server readiness. " "Number of retries exceeded."
         )
 
-    def load_model(self, model_name):
+    def load_model_from_config(self, model_config_variant):
         """
         Request the inference server to load
         a particular model in explicit model
-        control mode.
+        control mode by passing in a model config string.
+
+        Parameters
+        ----------
+        model_config_variant : ModelConfigVariant
+            ModelConfigVariant to load on TritonServer
+
+        Returns
+        ------
+        int or None
+            Returns -1 if the failed.
+        """
+
+        model_name = model_config_variant.model_config.get_field("name")
+        config_str = str(model_config_variant.model_config.get_config())
+
+        try:
+            self._client.load_model(model_name, config=config_str)
+            logger.debug(f"Model {model_config_variant.variant_name} loaded")
+            return None
+        except Exception as e:
+            logger.info(f"Model {model_config_variant.variant_name} load failed: {e}")
+            return -1
+
+    def load_model_from_directory(self, model_name):
+        """
+        Request the inference server to load
+        a particular model in explicit model
+        control mode based on the config stored
+        in the model's directory.
 
         Parameters
         ----------
         model_name : str
-            name of the model to load from repository
+            Name of model to load on TritonServer
 
         Returns
         ------

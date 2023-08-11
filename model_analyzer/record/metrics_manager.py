@@ -424,12 +424,13 @@ class MetricsManager:
         )
 
         variant_name = variant_config.variant_name
-        if self._client.load_model(model_name=variant_name) == -1:
+        if self._client.load_model_from_config(variant_config) == -1:
             return False
 
         if (
             self._client.wait_for_model_ready(
-                model_name=variant_name, num_retries=self._config.client_max_retries
+                model_name=variant_config.model_config.get_field("name"),
+                num_retries=self._config.client_max_retries,
             )
             == -1
         ):

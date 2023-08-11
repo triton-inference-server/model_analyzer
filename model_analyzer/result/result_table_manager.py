@@ -388,9 +388,13 @@ class ResultTableManager:
 
     def _tabulate_measurements_setup(self, run_config_result):
         if run_config_result.run_config().is_ensemble_model():
+            model_config_variants = (
+                run_config_result.run_config().composing_config_variants()
+            )
             model_configs = run_config_result.run_config().composing_configs()
             composing_config_names = [
-                model_config.get_field("name") for model_config in model_configs
+                model_config_variant.variant_name
+                for model_config_variant in model_config_variants
             ]
         else:
             model_configs = [

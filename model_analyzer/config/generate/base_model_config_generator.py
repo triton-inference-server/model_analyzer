@@ -154,7 +154,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
     def _make_remote_model_config_variant(self) -> ModelConfigVariant:
         if not self._config.reload_model_disable:
-            self._client.load_model(self._base_model_name)
+            self._client.load_model_from_directory(self._base_model_name)
         model_config = ModelConfig.create_from_triton_api(
             self._client, self._base_model_name, self._config.client_max_retries
         )
@@ -211,7 +211,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             logger.info(str)
         logger.info("")
 
-        model_config_dict["name"] = variant_name
+        model_config_dict["name"] = model_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
         model_config.set_cpu_only(model.cpu_only())
 
@@ -243,12 +243,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             model, param_combo, logger_str
         )
 
-        ensemble_config_dicts = [
-            composing_model_config_variant.model_config.to_dict()
-            for composing_model_config_variant in ensemble_composing_model_config_variants
-        ]
         ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
-            ensemble_config_dicts
+            ensemble_composing_model_config_variants
         )
 
         (
@@ -265,7 +261,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         for str in logger_str:
             logger.info(str)
 
-        model_config_dict["name"] = variant_name
+        model_config_dict["name"] = model_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
 
         return ModelConfigVariant(model_config, variant_name)

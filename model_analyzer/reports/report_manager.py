@@ -642,7 +642,9 @@ class ReportManager:
             summary_sentence = (
                 summary_sentence
                 + "<LI> "
-                + self._create_summary_config_info(model_run_config.model_config())
+                + self._create_summary_config_info(
+                    model_run_config.model_config_variant()
+                )
                 + " </LI>"
             )
 
@@ -650,11 +652,13 @@ class ReportManager:
 
     def _create_composing_model_summary_sentence(self, run_config: RunConfig) -> str:
         summary_sentence = ""
-        for composing_config in run_config.model_run_configs()[0].composing_configs():
+        for composing_config_variant in run_config.model_run_configs()[
+            0
+        ].composing_config_variants():
             summary_sentence = (
                 summary_sentence
                 + "<LI> "
-                + self._create_summary_config_info(composing_config)
+                + self._create_summary_config_info(composing_config_variant)
                 + " </LI>"
             )
 
@@ -1082,8 +1086,10 @@ class ReportManager:
         else:
             return f"{non_gpu_metrics[0].value()}"
 
-    def _create_summary_config_info(self, model_config):
-        config_info = f"<strong>{model_config.get_field('name')}</strong>: "
+    def _create_summary_config_info(self, model_config_variant):
+        model_config = model_config_variant.model_config
+
+        config_info = f"<strong>{model_config_variant.variant_name}</strong>: "
         config_info = (
             config_info + f"{self._create_instance_group_phrase(model_config)} with a "
         )
@@ -1235,11 +1241,11 @@ class ReportManager:
         if run_config.is_ensemble_model():
             sentence = f"<strong>{model_config_name}</strong> is comprised of the following composing models:"
 
-            for composing_config in run_config.composing_configs():
+            for composing_config_variant in run_config.composing_config_variants():
                 sentence = (
                     sentence
                     + "<LI> "
-                    + self._create_summary_config_info(composing_config)
+                    + self._create_summary_config_info(composing_config_variant)
                     + " </LI>"
                 )
 
@@ -1250,11 +1256,11 @@ class ReportManager:
         elif run_config.is_bls_model():
             sentence = f"<strong>{model_config_name}</strong> is comprised of the following composing models:"
 
-            for composing_config in run_config.composing_configs():
+            for composing_config_variant in run_config.composing_config_variants():
                 sentence = (
                     sentence
                     + "<LI> "
-                    + self._create_summary_config_info(composing_config)
+                    + self._create_summary_config_info(composing_config_variant)
                     + " </LI>"
                 )
 

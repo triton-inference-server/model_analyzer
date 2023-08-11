@@ -483,7 +483,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         composing_model_config_variants: List[ModelConfigVariant],
     ) -> ModelRunConfig:
         perf_analyzer_config = self._get_next_perf_analyzer_config(
-            model_config_variant.variant_name, model, model_index
+            model.model_name(), model, model_index
         )
         model_run_config = ModelRunConfig(
             model.model_name(), model_config_variant, perf_analyzer_config
