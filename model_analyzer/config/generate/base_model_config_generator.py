@@ -70,6 +70,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         self._base_model = model
         self._base_model_name = model.model_name()
         self._remote_mode = config.triton_launch_mode == "remote"
+        self._c_api_mode = config.triton_launch_mode == "c_api"
         self._cpu_only = model.cpu_only()
         self._default_only = default_only
         self._early_exit_enable = early_exit_enable
@@ -171,6 +172,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             param_combo=param_combo,
             model=self._base_model,
             model_variant_name_manager=self._model_variant_name_manager,
+            c_api_mode=self._c_api_mode,
         )
 
     @staticmethod
@@ -178,6 +180,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         param_combo: dict,
         model: ModelProfileSpec,
         model_variant_name_manager: ModelVariantNameManager,
+        c_api_mode: bool,
     ) -> ModelConfigVariant:
         """
         Loads the base model config from the model repository, and then applies the
@@ -189,6 +192,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             dict of key:value pairs to apply to the model config
         model: ModelProfileSpec
         model_variant_name_manager: ModelVariantNameManager
+        c_api_mode: Set to true if mode is c_api
         """
         logger_str: List[str] = []
         model_name = model.model_name()
@@ -211,7 +215,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
             logger.info(str)
         logger.info("")
 
-        model_config_dict["name"] = model_name
+        model_config_dict["name"] = variant_name if c_api_mode else model_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
         model_config.set_cpu_only(model.cpu_only())
 
@@ -222,6 +226,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model: ModelProfileSpec,
         ensemble_composing_model_config_variants: List[ModelConfigVariant],
         model_variant_name_manager: ModelVariantNameManager,
+        c_api_mode: bool,
         param_combo: Dict = {},
     ) -> ModelConfigVariant:
         """
@@ -235,6 +240,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         ensemble_composing_model_config_variants: List of ModelConfigVariants
             The list of composing model ModelConfigs
         model_variant_name_manager: ModelVariantNameManager
+        c_api_mode: Set to true if mode is c_api
 
         """
         logger_str: List[str] = []
@@ -261,7 +267,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         for str in logger_str:
             logger.info(str)
 
-        model_config_dict["name"] = model_name
+        model_config_dict["name"] = variant_name if c_api_mode else model_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
 
         return ModelConfigVariant(model_config, variant_name)
