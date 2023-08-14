@@ -22,7 +22,7 @@ ANALYZER_LOG=${ANALYZER_LOG:="$LOGS_DIR/test.log"}
 
 mkdir -p $LOGS_DIR
 
-create_logs_dir() {
+function create_logs_dir() {
     # Arguments:
     #  $1: L0 Script name
     # Check if the L0 script name is empty or not
@@ -34,7 +34,7 @@ create_logs_dir() {
     mkdir -p "$LOGS_DIR"
 }
 
-create_result_paths() {
+function create_result_paths() {
     # Creates ANALYZER_LOG, EXPORT_PATH, CHECKPOINT_DIRECTORY and TEST_LOG_DIR
     # Arguments:
     #  -test-name <test_name>: <string> - L0 Script name (optional argument)
