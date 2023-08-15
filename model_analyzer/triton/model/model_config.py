@@ -16,7 +16,7 @@
 
 import os
 from copy import deepcopy
-from distutils.dir_util import copy_tree
+from shutil import copytree
 from typing import Any, Dict, List, Optional
 
 from google.protobuf import json_format, text_format
@@ -419,7 +419,7 @@ class ModelConfig:
                     )
         else:
             # Create first variant model as copy of source model
-            copy_tree(src_model_path, model_path)
+            copytree(src_model_path, model_path)
 
         with open(os.path.join(model_path, "config.pbtxt"), "wb") as f:
             f.write(model_config_bytes)
