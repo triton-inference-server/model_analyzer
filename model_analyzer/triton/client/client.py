@@ -17,7 +17,6 @@
 import logging
 import time
 from subprocess import DEVNULL
-from typing import Optional
 
 from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
