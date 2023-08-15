@@ -177,9 +177,27 @@ class TestResults(trc.TestResultCollector):
         ]
 
         self._measurements = []
-        self._measurements.append({"-m key_A": "1", "-m key_B": "2", "-m key_C": "3"})
-        self._measurements.append({"-m key_D": "4", "-m key_E": "5", "-m key_F": "6"})
-        self._measurements.append({"-m key_G": "7", "-m key_H": "8", "-m key_I": "9"})
+        self._measurements.append(
+            {
+                "model_config_0 -m key_A": "1",
+                "model_config_0 -m key_B": "2",
+                "model_config_0 -m key_C": "3",
+            }
+        )
+        self._measurements.append(
+            {
+                "model_config_1 -m key_D": "4",
+                "model_config_1 -m key_E": "5",
+                "model_config_1 -m key_F": "6",
+            }
+        )
+        self._measurements.append(
+            {
+                "model_config_2 -m key_G": "7",
+                "model_config_2 -m key_H": "8",
+                "model_config_2 -m key_I": "9",
+            }
+        )
 
         self._result.add_run_config_measurement(self._run_configs[0], "1")
         self._result.add_run_config_measurement(self._run_configs[1], "2")
