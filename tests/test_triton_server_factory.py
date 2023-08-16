@@ -65,7 +65,7 @@ class TestTritonServerFactory(trc.TestResultCollector):
         expected_http_port = "2345"
         expected_grpc_port = "4567"
         # Convert seconds to ms
-        expected_metrics_interval_ms = config.monitoring_interval * 1000
+        expected_metrics_interval_ms = int(config.monitoring_interval * 1000)
 
         with patch(
             "model_analyzer.triton.server.server_factory.TritonServerFactory.create_server_local"
