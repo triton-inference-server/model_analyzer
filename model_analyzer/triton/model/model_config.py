@@ -419,7 +419,7 @@ class ModelConfig:
                     )
         else:
             # Create first variant model as copy of source model
-            copytree(src_model_path, model_path)
+            copytree(src_model_path, model_path, dirs_exist_ok=True)
 
         with open(os.path.join(model_path, "config.pbtxt"), "wb") as f:
             f.write(model_config_bytes)
