@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 import time
 from subprocess import DEVNULL
@@ -92,7 +93,7 @@ class TritonClient:
         """
 
         model_name = model_config_variant.model_config.get_field("name")
-        config_str = str(model_config_variant.model_config.get_config())
+        config_str = model_config_variant.model_config.get_config_str()
 
         try:
             self._client.load_model(model_name, config=config_str)
