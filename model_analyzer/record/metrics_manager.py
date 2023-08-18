@@ -423,9 +423,9 @@ class MetricsManager:
             log_file=self._server.log_file(),
         )
 
-        model_name = variant_config._model_config.get_field("name")
+        model_name = variant_config.model_config.get_field("name")
         variant_name = variant_config.variant_name
-        config_str = variant_config._model_config.get_config_str()
+        config_str = variant_config.model_config.get_config_str()
         if (
             self._client.load_model(
                 model_name=model_name,
