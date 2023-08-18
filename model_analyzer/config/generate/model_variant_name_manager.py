@@ -48,10 +48,7 @@ class ModelVariantNameManager:
     def make_ensemble_composing_model_key(
         ensemble_model_config_variants: List[ModelConfigVariant],
     ) -> Dict[str, str]:
-        ensemble_names = [
-            ensemble_model_config_variant.variant_name
-            for ensemble_model_config_variant in ensemble_model_config_variants
-        ]
+        ensemble_names = [emcv.variant_name for emcv in ensemble_model_config_variants]
         ensemble_key = ",".join(ensemble_names)
 
         return {"key": ensemble_key}

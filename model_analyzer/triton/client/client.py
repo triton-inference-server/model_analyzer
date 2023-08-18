@@ -74,45 +74,22 @@ class TritonClient:
             "Could not determine server readiness. " "Number of retries exceeded."
         )
 
-    def load_model_from_config(self, model_config_variant):
+    def load_model(self, model_name, variant_name, config_str=None):
         """
         Request the inference server to load
         a particular model in explicit model
-        control mode by passing in a model config string.
-
-        Parameters
-        ----------
-        model_config_variant : ModelConfigVariant
-            ModelConfigVariant to load on TritonServer
-
-        Returns
-        ------
-        int or None
-            Returns -1 if the failed.
-        """
-
-        model_name = model_config_variant.model_config.get_field("name")
-        config_str = model_config_variant.model_config.get_config_str()
-
-        try:
-            self._client.load_model(model_name, config=config_str)
-            logger.debug(f"Model {model_config_variant.variant_name} loaded")
-            return None
-        except Exception as e:
-            logger.info(f"Model {model_config_variant.variant_name} load failed: {e}")
-            return -1
-
-    def load_model_from_directory(self, model_name):
-        """
-        Request the inference server to load
-        a particular model in explicit model
-        control mode based on the config stored
-        in the model's directory.
+        control mode.
 
         Parameters
         ----------
         model_name : str
-            Name of model to load on TritonServer
+            Name of the model
+
+        variant_name: str
+            Name of the model variant
+
+        config_str: str
+            Optional config string used to load the model
 
         Returns
         ------
@@ -121,11 +98,11 @@ class TritonClient:
         """
 
         try:
-            self._client.load_model(model_name)
-            logger.debug(f"Model {model_name} loaded")
+            self._client.load_model(model_name, config=config_str)
+            logger.debug(f"Model {variant_name} loaded")
             return None
         except Exception as e:
-            logger.info(f"Model {model_name} load failed: {e}")
+            logger.info(f"Model {variant_name} load failed: {e}")
             return -1
 
     def unload_model(self, model_name):

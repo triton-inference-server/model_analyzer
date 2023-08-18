@@ -392,10 +392,7 @@ class ResultTableManager:
                 run_config_result.run_config().composing_config_variants()
             )
             model_configs = run_config_result.run_config().composing_configs()
-            composing_config_names = [
-                model_config_variant.variant_name
-                for model_config_variant in model_config_variants
-            ]
+            composing_config_names = [mcv.variant_name for mcv in model_config_variants]
         else:
             model_configs = [
                 model_run_configs.model_config()
