@@ -74,7 +74,7 @@ class TritonClient:
             "Could not determine server readiness. " "Number of retries exceeded."
         )
 
-    def load_model(self, model_name, variant_name, config_str=None):
+    def load_model(self, model_name, variant_name="", config_str=None):
         """
         Request the inference server to load
         a particular model in explicit model
@@ -96,6 +96,8 @@ class TritonClient:
         int or None
             Returns -1 if the failed.
         """
+
+        variant_name = variant_name if variant_name else model_name
 
         try:
             self._client.load_model(model_name, config=config_str)

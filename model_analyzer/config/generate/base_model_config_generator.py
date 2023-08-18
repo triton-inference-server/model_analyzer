@@ -155,9 +155,7 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
     def _make_remote_model_config_variant(self) -> ModelConfigVariant:
         if not self._config.reload_model_disable:
-            self._client.load_model(
-                model_name=self._base_model_name, variant_name=self._base_model_name
-            )
+            self._client.load_model(model_name=self._base_model_name)
         model_config = ModelConfig.create_from_triton_api(
             self._client, self._base_model_name, self._config.client_max_retries
         )

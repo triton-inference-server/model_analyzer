@@ -166,12 +166,12 @@ class TestTritonClientMethods(trc.TestResultCollector):
 
         # Try to load a dummy model and expect error
         self.tritonclient_mock.raise_exception_on_load()
-        self.assertTrue(client.load_model("dummy", "dummy"), -1)
+        self.assertTrue(client.load_model("dummy"), -1)
 
         self.tritonclient_mock.reset()
 
         # Load the test model
-        client.load_model(TEST_MODEL_NAME, TEST_MODEL_NAME)
+        client.load_model(TEST_MODEL_NAME)
         client.wait_for_model_ready(TEST_MODEL_NAME, num_retries=1, sleep_time=0.1)
 
         # Try to unload a dummy model and expect error
