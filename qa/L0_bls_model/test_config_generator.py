@@ -60,7 +60,9 @@ class TestConfigGenerator:
         args = parser.parse_args()
         self.config = {}
         self.config["profile_models"] = sorted(args.profile_models.split(","))
-        self.config["bls_composing_models"] = sorted(args.profile_models.split(","))
+        self.config["bls_composing_models"] = sorted(
+            args.bls_composing_models.split(",")
+        )
 
     def generate_config(self):
         with open("config.yml", "w+") as f:
