@@ -32,7 +32,7 @@ input [
 ]
 output [
   {
-    name: "OUTPUT"
+    name: "OUTPUT0"
     data_type: TYPE_FP32
     dims: [ 4 ]
   }

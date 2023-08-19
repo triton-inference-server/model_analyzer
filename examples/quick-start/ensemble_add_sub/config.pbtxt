@@ -56,7 +56,7 @@ ensemble_scheduling {
         value: "INPUT1"
       }
       output_map {
-        key: "OUTPUT"
+        key: "OUTPUT0"
         value: "OUTPUT0"
       }
     },
@@ -72,7 +72,7 @@ ensemble_scheduling {
         value: "INPUT1"
       }
       output_map {
-        key: "OUTPUT"
+        key: "OUTPUT1"
         value: "OUTPUT1"
       }
     }

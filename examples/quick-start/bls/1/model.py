@@ -81,27 +81,35 @@ class TritonPythonModel:
             # Get INPUT1
             in_1 = pb_utils.get_input_tensor_by_name(request, "INPUT1")
 
-            # Get Model Name
-            model_name = pb_utils.get_input_tensor_by_name(request, "MODEL_NAME")
-
-            # Model Name string
-            model_name_string = model_name.as_numpy()[0]
-
-            # Create inference request object
-            infer_request = pb_utils.InferenceRequest(
-                model_name=model_name_string,
-                requested_output_names=["OUTPUT"],
+            # Create inference request object for "add" model
+            infer_request_add = pb_utils.InferenceRequest(
+                model_name="add",
+                requested_output_names=["OUTPUT0"],
                 inputs=[in_0, in_1],
             )
 
             # Perform synchronous blocking inference request
-            infer_response = infer_request.exec()
+            infer_response_add = infer_request_add.exec()
 
-            # Make sure that the inference response doesn't have an error. If
-            # it has an error and you can't proceed with your model execution
-            # you can raise an exception.
-            if infer_response.has_error():
-                raise pb_utils.TritonModelException(infer_response.error().message())
+            if infer_response_add.has_error():
+                raise pb_utils.TritonModelException(
+                    infer_response_add.error().message()
+                )
+
+            # Create inference request object for "sub" model
+            infer_request_sub = pb_utils.InferenceRequest(
+                model_name="sub",
+                requested_output_names=["OUTPUT1"],
+                inputs=[in_0, in_1],
+            )
+
+            # Perform synchronous blocking inference request
+            infer_response_sub = infer_request_sub.exec()
+
+            if infer_response_sub.has_error():
+                raise pb_utils.TritonModelException(
+                    infer_response_sub.error().message()
+                )
 
             # Create InferenceResponse. You can set an error here in case
             # there was a problem with handling this inference request.
@@ -115,7 +123,10 @@ class TritonPythonModel:
             # outputs with correct output names, we can just pass the list
             # of outputs to the InferenceResponse object.
             inference_response = pb_utils.InferenceResponse(
-                output_tensors=infer_response.output_tensors()
+                output_tensors=[
+                    pb_utils.get_output_tensor_by_name(infer_response_add, "OUTPUT0"),
+                    pb_utils.get_output_tensor_by_name(infer_response_sub, "OUTPUT1"),
+                ]
             )
             responses.append(inference_response)
 

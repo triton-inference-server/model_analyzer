@@ -17,25 +17,28 @@ backend: "python"
 
 input [
   {
-    name: "MODEL_NAME"
-    data_type: TYPE_STRING
-    dims: [ 1 ]
-  },
-  {
     name: "INPUT0"
     data_type: TYPE_FP32
     dims: [ 4 ]
-  },
+  }
+]
+input [
   {
     name: "INPUT1"
     data_type: TYPE_FP32
     dims: [ 4 ]
   }
 ]
-
 output [
   {
-    name: "OUTPUT"
+    name: "OUTPUT0"
+    data_type: TYPE_FP32
+    dims: [ 4 ]
+  }
+]
+output [
+  {
+    name: "OUTPUT1"
     data_type: TYPE_FP32
     dims: [ 4 ]
   }

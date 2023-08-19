@@ -49,11 +49,13 @@ class TritonPythonModel:
         # You must parse model_config. JSON string is not parsed here
         self.model_config = model_config = json.loads(args["model_config"])
 
-        # Get OUTPUT configuration
-        output_config = pb_utils.get_output_config_by_name(model_config, "OUTPUT")
+        # Get OUTPUT0 configuration
+        output0_config = pb_utils.get_output_config_by_name(model_config, "OUTPUT0")
 
         # Convert Triton types to numpy types
-        self.output_dtype = pb_utils.triton_string_to_numpy(output_config["data_type"])
+        self.output0_dtype = pb_utils.triton_string_to_numpy(
+            output0_config["data_type"]
+        )
 
     def execute(self, requests):
         """`execute` MUST be implemented in every Python model. `execute`
@@ -77,7 +79,7 @@ class TritonPythonModel:
           be the same as `requests`
         """
 
-        output_dtype = self.output_dtype
+        output0_dtype = self.output0_dtype
 
         responses = []
 
@@ -93,7 +95,7 @@ class TritonPythonModel:
 
             # Create output tensors. You need pb_utils.Tensor
             # objects to create pb_utils.InferenceResponse.
-            out_tensor_0 = pb_utils.Tensor("OUTPUT", out_0.astype(output_dtype))
+            out_tensor_0 = pb_utils.Tensor("OUTPUT0", out_0.astype(output0_dtype))
 
             # Create InferenceResponse. You can set an error here in case
             # there was a problem with handling this inference request.
