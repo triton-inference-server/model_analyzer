@@ -387,14 +387,9 @@ class MetricsManager:
 
             # Composing configs for BLS models are not automatically loaded by the top-level model
             if mrc.is_bls_model():
-                for composing_config_variant in mrc.composing_configs():
-                    original_composing_config = (
-                        BaseModelConfigGenerator.create_original_config_from_variant(
-                            composing_config_variant
-                        )
-                    )
+                for composing_config_variant in mrc.composing_config_variants():
                     if not self._load_model_variant(
-                        variant_config=original_composing_config
+                        variant_config=composing_config_variant
                     ):
                         return False
 
