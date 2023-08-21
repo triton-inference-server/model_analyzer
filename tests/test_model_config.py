@@ -200,7 +200,7 @@ ensemble_scheduling {
             "model_analyzer.triton.model.model_config.open", mock_open()
         ) as mocked_file:
             with patch(
-                "model_analyzer.triton.model.model_config.copy_tree", MagicMock()
+                "model_analyzer.triton.model.model_config.copytree", MagicMock()
             ):
                 model_config.write_config_to_file(model_output_path, "/mock/path", None)
             content = mocked_file().write.call_args.args[0]
@@ -232,7 +232,7 @@ ensemble_scheduling {
         "model_analyzer.triton.model.model_config.os.listdir",
         MagicMock(return_value=["1", "config.pbtxt", "output0_labels.txt"]),
     )
-    @patch("model_analyzer.triton.model.model_config.copy_tree")
+    @patch("model_analyzer.triton.model.model_config.copytree")
     @patch("model_analyzer.triton.model.model_config.os.symlink")
     def test_write_config_to_file_with_relative_path(self, mock_os_symlink, *args):
         """
