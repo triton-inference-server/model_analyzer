@@ -207,7 +207,7 @@ class PerfAnalyzerConfig:
 
             params.update({"protocol": profile_config.client_protocol, "url": url})
 
-            metrics_interval = (
+            metrics_interval = int(
                 profile_config.monitoring_interval * SECONDS_TO_MILLISECONDS_MULTIPLIER
             )
             params.update(

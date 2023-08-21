@@ -129,11 +129,11 @@ class TritonServerFactory:
             server = TritonServerFactory._get_remote_server_handle(config)
         elif config.triton_launch_mode == "local":
             server = TritonServerFactory._get_local_server_handle(
-                config, gpus, use_model_repository
+                config, gpus, use_model_repository=True
             )
         elif config.triton_launch_mode == "docker":
             server = TritonServerFactory._get_docker_server_handle(
-                config, gpus, use_model_repository
+                config, gpus, use_model_repository=True
             )
         elif config.triton_launch_mode == "c_api":
             server = TritonServerFactory._get_c_api_server_handle(
@@ -180,11 +180,11 @@ class TritonServerFactory:
 
         triton_config["model-repository"] = (
             config.model_repository
-            if use_model_repository
+            if use_model_repository and config.model_repository
             else config.output_model_repository_path
         )
 
-        if use_model_repository:
+        if use_model_repository and config.model_repository:
             triton_config["strict-model-config"] = "false"
 
         triton_config["http-port"] = config.triton_http_endpoint.split(":")[-1]

@@ -100,7 +100,7 @@ class ModelRunConfigGenerator(ConfigGeneratorInterface):
         for model_config_variant in self._mcg.get_configs():
             self._pacg = PerfAnalyzerConfigGenerator(
                 self._config,
-                model_config_variant.variant_name,
+                model_config_variant.model_config.get_field("name"),
                 self._model_pa_flags,
                 self._model_parameters,
                 self._pacg_early_exit_enable,

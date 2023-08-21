@@ -21,6 +21,8 @@ from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
 )
 from model_analyzer.constants import DEFAULT_CONFIG_PARAMS
+from model_analyzer.triton.model.model_config import ModelConfig
+from model_analyzer.triton.model.model_config_variant import ModelConfigVariant
 from tests.common.test_utils import default_encode
 
 from .common import test_result_collector as trc
@@ -142,8 +144,8 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         """
         Test that a default ensemble config is returned
         """
-        sub_configA = {"name": "modelA_config_default"}
-        sub_configB = {"name": "modelB_config_default"}
+        sub_configA = ModelConfigVariant(ModelConfig({}), "modelA_config_default")
+        sub_configB = ModelConfigVariant(ModelConfig({}), "modelB_config_default")
 
         ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             [sub_configA, sub_configB]
@@ -159,8 +161,8 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         """
         Test that we can increment the ensemble config numbers
         """
-        sub_configA = {"name": "modelA_config_0"}
-        sub_configB = {"name": "modelB_config_0"}
+        sub_configA = ModelConfigVariant(ModelConfig({}), "modelA_config_0")
+        sub_configB = ModelConfigVariant(ModelConfig({}), "modelB_config_0")
 
         ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             [sub_configA, sub_configB]
@@ -172,7 +174,7 @@ class TestModelVariantNameManager(trc.TestResultCollector):
 
         self.assertEqual(name, (False, "ensemble_model_config_0"))
 
-        sub_configB = {"name": "modelB_config_1"}
+        sub_configB = ModelConfigVariant(ModelConfig({}), "modelB_config_1")
 
         ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             [sub_configA, sub_configB]
@@ -184,7 +186,7 @@ class TestModelVariantNameManager(trc.TestResultCollector):
 
         self.assertEqual(name, (False, "ensemble_model_config_1"))
 
-        sub_configA = {"name": "modelA_config_1"}
+        sub_configA = ModelConfigVariant(ModelConfig({}), "modelA_config_1")
 
         ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             [sub_configA, sub_configB]
@@ -201,8 +203,8 @@ class TestModelVariantNameManager(trc.TestResultCollector):
         Calling with the same model name/ensemble key multiple times
         should result in the same config name being returned
         """
-        sub_configA = {"name": "modelA_config_0"}
-        sub_configB = {"name": "modelB_config_0"}
+        sub_configA = ModelConfigVariant(ModelConfig({}), "modelA_config_0")
+        sub_configB = ModelConfigVariant(ModelConfig({}), "modelB_config_0")
 
         ensemble_key = ModelVariantNameManager.make_ensemble_composing_model_key(
             [sub_configA, sub_configB]

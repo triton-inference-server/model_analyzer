@@ -26,7 +26,7 @@ from .common import test_result_collector as trc
 from .common.test_utils import ROOT_DIR, evaluate_mock_config
 
 
-class TestBLSReportManagerMethods(trc.TestResultCollector):
+class TestBLSReportManager(trc.TestResultCollector):
     def _init_managers(
         self,
         models="test_model",

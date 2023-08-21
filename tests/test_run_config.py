@@ -61,13 +61,22 @@ class TestRunConfig(trc.TestResultCollector):
         pc1.update_config({"model-name": "TestModel1"})
         pc2 = PerfAnalyzerConfig()
         pc2.update_config({"model-name": "TestModel2"})
-        mrc1 = ModelRunConfig("model1", MagicMock(), pc1)
-        mrc2 = ModelRunConfig("model2", MagicMock(), pc2)
+        mrc1 = ModelRunConfig(
+            "model1", ModelConfigVariant(MagicMock(), "model1_config_0"), pc1
+        )
+        mrc2 = ModelRunConfig(
+            "model2", ModelConfigVariant(MagicMock(), "model2_config_0"), pc2
+        )
         rc = RunConfig({})
         rc.add_model_run_config(mrc1)
         rc.add_model_run_config(mrc2)
 
-        expected_representation = pc1.representation() + pc2.representation()
+        expected_representation = (
+            "model1_config_0 "
+            + pc1.representation()
+            + "model2_config_0 "
+            + pc2.representation()
+        )
         self.assertEqual(rc.representation(), expected_representation)
 
     def test_representation_mrc_removal(self):
@@ -78,10 +87,12 @@ class TestRunConfig(trc.TestResultCollector):
         pc.update_config({"model-name": "TestModel1"})
         pc.update_config({"measurement-request-count": "500"})
 
-        mrc = ModelRunConfig("model1", MagicMock(), pc)
+        mrc = ModelRunConfig(
+            "model1", ModelConfigVariant(MagicMock(), "model1_config_0"), pc
+        )
 
-        expected_represenation = "-m TestModel1"
-        self.assertEqual(mrc.representation(), expected_represenation)
+        expected_representation = "model1_config_0 -m TestModel1"
+        self.assertEqual(mrc.representation(), expected_representation)
 
     def test_cpu_only(self):
         """

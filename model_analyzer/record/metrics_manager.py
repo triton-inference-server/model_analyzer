@@ -387,14 +387,9 @@ class MetricsManager:
 
             # Composing configs for BLS models are not automatically loaded by the top-level model
             if mrc.is_bls_model():
-                for composing_config_variant in mrc.composing_configs():
-                    original_composing_config = (
-                        BaseModelConfigGenerator.create_original_config_from_variant(
-                            composing_config_variant
-                        )
-                    )
+                for composing_config_variant in mrc.composing_config_variants():
                     if not self._load_model_variant(
-                        variant_config=original_composing_config
+                        variant_config=composing_config_variant
                     ):
                         return False
 
@@ -423,13 +418,23 @@ class MetricsManager:
             log_file=self._server.log_file(),
         )
 
+        model_name = variant_config.model_config.get_field("name")
         variant_name = variant_config.variant_name
-        if self._client.load_model(model_name=variant_name) == -1:
+        config_str = variant_config.model_config.get_config_str()
+        if (
+            self._client.load_model(
+                model_name=model_name,
+                variant_name=variant_name,
+                config_str=config_str,
+            )
+            == -1
+        ):
             return False
 
         if (
             self._client.wait_for_model_ready(
-                model_name=variant_name, num_retries=self._config.client_max_retries
+                model_name=variant_config.model_config.get_field("name"),
+                num_retries=self._config.client_max_retries,
             )
             == -1
         ):
@@ -710,16 +715,15 @@ class MetricsManager:
         return triton_gpus
 
     def _print_run_config_info(self, run_config):
-        for perf_config in [
-            mrc.perf_config() for mrc in run_config.model_run_configs()
-        ]:
+        for model_run_config in run_config.model_run_configs():
+            perf_config = model_run_config.perf_config()
             if perf_config["request-rate-range"]:
                 logger.info(
-                    f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, request-rate-range={perf_config['request-rate-range']}"
+                    f"Profiling {model_run_config.model_variant_name()}: client batch size={perf_config['batch-size']}, request-rate-range={perf_config['request-rate-range']}"
                 )
             else:
                 logger.info(
-                    f"Profiling {perf_config['model-name']}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
+                    f"Profiling {model_run_config.model_variant_name()}: client batch size={perf_config['batch-size']}, concurrency={perf_config['concurrency-range']}"
                 )
 
         # Vertical spacing when running multiple models at a time
