@@ -54,7 +54,14 @@ class TestConfigGenerator:
             "--bls-composing-models",
             type=str,
             required=True,
-            help="Comma separated list of models to be profiled",
+            help="Comma separated list of BLS composing models",
+        )
+        parser.add_argument(
+            "-i",
+            "--input-json-file",
+            type=str,
+            required=True,
+            help="Input data JSON file path",
         )
 
         args = parser.parse_args()
@@ -63,6 +70,7 @@ class TestConfigGenerator:
         self.config["bls_composing_models"] = sorted(
             args.bls_composing_models.split(",")
         )
+        self.config["perf_analyzer_flags"] = {"input-data": args.input_json_file}
 
     def generate_config(self):
         with open("config.yml", "w+") as f:

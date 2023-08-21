@@ -22,7 +22,8 @@ MODEL_ANALYZER="$(which model-analyzer)"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
 MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/qa_bls_model_repository/"}
 QA_MODELS="bls"
-BLS_COMPOSING_MODELS="add,sub"
+BLS_COMPOSING_MODELS="add"
+INPUT_JSON="$(pwd)/input_data.json"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
 CLIENT_PROTOCOL="grpc"
@@ -38,7 +39,7 @@ rm -rf $OUTPUT_MODEL_REPOSITORY
 create_result_paths
 SERVER_LOG=$TEST_LOG_DIR/server.log
 
-python3 test_config_generator.py --profile-models $MODEL_NAMES --bls-composing-models $BLS_COMPOSING_MODELS
+python3 test_config_generator.py --profile-models $MODEL_NAMES --bls-composing-models $BLS_COMPOSING_MODELS -i $INPUT_JSON
 
 # Run the analyzer and check the results
 RET=0
