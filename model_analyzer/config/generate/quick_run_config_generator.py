@@ -91,6 +91,8 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
 
         self._triton_env = BruteRunConfigGenerator.determine_triton_server_env(models)
 
+        self._c_api_mode = config.triton_launch_mode == "c_api"
+
         # This tracks measured results for all coordinates
         self._coordinate_data = CoordinateData()
 
@@ -425,6 +427,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                 ensemble_composing_model_config_variants=composing_config_variants,
                 model_variant_name_manager=self._model_variant_name_manager,
                 param_combo=param_combo,
+                c_api_mode=self._c_api_mode,
             )
         )
 
@@ -471,6 +474,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             param_combo=param_combo,
             model=model,
             model_variant_name_manager=self._model_variant_name_manager,
+            c_api_mode=self._c_api_mode,
         )
 
         return model_config_variant
@@ -483,7 +487,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
         composing_model_config_variants: List[ModelConfigVariant],
     ) -> ModelRunConfig:
         perf_analyzer_config = self._get_next_perf_analyzer_config(
-            model_config_variant.variant_name, model, model_index
+            model.model_name(), model, model_index
         )
         model_run_config = ModelRunConfig(
             model.model_name(), model_config_variant, perf_analyzer_config
@@ -624,6 +628,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
             model=model,
             ensemble_composing_model_config_variants=default_composing_model_config_variants,
             model_variant_name_manager=self._model_variant_name_manager,
+            c_api_mode=self._c_api_mode,
         )
 
         default_perf_analyzer_config = self._create_default_perf_analyzer_config(
@@ -652,6 +657,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                     param_combo={},
                     model=composing_model,
                     model_variant_name_manager=self._model_variant_name_manager,
+                    c_api_mode=self._c_api_mode,
                 )
             )
 
@@ -665,6 +671,7 @@ class QuickRunConfigGenerator(ConfigGeneratorInterface):
                 param_combo={},
                 model=model,
                 model_variant_name_manager=self._model_variant_name_manager,
+                c_api_mode=self._c_api_mode,
             )
         )
 

@@ -145,7 +145,8 @@ class ModelRunConfig:
         Returns a representation string for the ModelRunConfig that can be used
         as a key to uniquely identify it
         """
-        repr = self.perf_config().representation()
+        repr = self.model_variant_name()
+        repr += " " + self.perf_config().representation()
 
         if self._composing_config_variants:
             repr += " " + (",").join(self.get_composing_config_names())  # type: ignore

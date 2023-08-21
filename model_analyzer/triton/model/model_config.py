@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
 from copy import deepcopy
 from distutils.dir_util import copy_tree
@@ -150,7 +151,7 @@ class ModelConfig:
             num_retries=config.client_max_retries, log_file=server.log_file()
         )
 
-        if client.load_model(model_name) == -1:
+        if client.load_model(model_name=model_name) == -1:
             server.stop()
 
             if not os.path.exists(model_path):
@@ -437,6 +438,17 @@ class ModelConfig:
         return json_format.MessageToDict(
             self._model_config, preserving_proto_field_name=True
         )
+
+    def get_config_str(self):
+        """
+        Get the model config json str
+
+        Returns
+        -------
+        str
+            A JSON string containing the model configuration.
+        """
+        return json.dumps(self.get_config())
 
     def set_config(self, config):
         """
