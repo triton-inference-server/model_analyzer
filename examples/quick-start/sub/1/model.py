@@ -53,9 +53,7 @@ class TritonPythonModel:
         output_config = pb_utils.get_output_config_by_name(model_config, "OUTPUT")
 
         # Convert Triton types to numpy types
-        self.output_dtype = pb_utils.triton_string_to_numpy(
-            output_config["data_type"]
-        )
+        self.output_dtype = pb_utils.triton_string_to_numpy(output_config["data_type"])
 
     def execute(self, requests):
         """`execute` MUST be implemented in every Python model. `execute`
