@@ -455,8 +455,6 @@ class TestModelConfigGenerator(trc.TestResultCollector):
     def test_remote_yes_params_specified(self):
         """
         Test remote mode with model_config_parameters specified
-
-        It should always return a single empty config in remote mode
         """
 
         # yapf: disable
@@ -473,7 +471,14 @@ class TestModelConfigGenerator(trc.TestResultCollector):
                             count: [1,2]
             """)
 
-        expected_configs = [{}]
+        expected_configs = [
+            {'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}], 'max_batch_size': 1},
+            {'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}], 'max_batch_size': 4},
+            {'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}], 'max_batch_size': 16},
+            {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 1},
+            {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 4},
+            {'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}], 'max_batch_size': 16}
+        ]
         # yapf: enable
 
         self._run_and_test_model_config_generator(yaml_str, expected_configs)
@@ -481,19 +486,24 @@ class TestModelConfigGenerator(trc.TestResultCollector):
     def test_remote_no_params_specified(self):
         """
         Test remote mode with no model_config_parameters specified
-
-        It should always return a single empty config in remote mode
         """
 
         # yapf: disable
         yaml_str = ("""
             triton_launch_mode: remote
-            run_config_search_max_instance_count: 16
+            run_config_search_max_instance_count: 4
+            run_config_search_min_model_batch_size: 8
+            run_config_search_max_model_batch_size: 8
             profile_models:
                 - my-model
             """)
 
-        expected_configs = [{}]
+        expected_configs = [
+            {'max_batch_size': 8, 'instance_group': [{'count': 1, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 2, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 3, 'kind': 'KIND_GPU'}],'dynamic_batching': {}},
+            {'max_batch_size': 8, 'instance_group': [{'count': 4, 'kind': 'KIND_GPU'}],'dynamic_batching': {}}
+        ]
         # yapf: enable
 
         self._run_and_test_model_config_generator(yaml_str, expected_configs)

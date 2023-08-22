@@ -67,11 +67,10 @@ class ModelConfigGeneratorFactory:
         A generator that implements ConfigGeneratorInterface and creates ModelConfigs
         """
 
-        remote_mode = config.triton_launch_mode == "remote"
         search_disabled = config.run_config_search_disable
         model_config_params = model.model_config_parameters()
 
-        if remote_mode or search_disabled or model_config_params:
+        if search_disabled or model_config_params:
             return ManualModelConfigGenerator(
                 config,
                 gpus,

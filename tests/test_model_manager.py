@@ -257,24 +257,31 @@ class TestModelManager(trc.TestResultCollector):
     def test_remote_mode(self):
         """
         Test remote mode
-
-        In remote mode all model_config_parameters (ie. instance count) are ignored
         """
 
         expected_ranges = [
             {
-                "instances": [None],
-                "kind": [None],
+                "instances": [1, 2],
+                "kind": ["KIND_GPU"],
+                "batching": [0],
+                "batch_sizes": [1],
+                "max_batch_size": [8],
+                "concurrency": [1, 2, 4, 8, 16],
+            },
+            {
+                "instances": [1],
+                "kind": ["KIND_CPU"],
                 "batching": [None],
                 "batch_sizes": [1],
-                "concurrency": [1, 2, 4, 8, 16, 32, 64, 128, 256, 512],
-            }
+                "max_batch_size": [8],
+                "concurrency": [1, 2, 4, 8, 16],
+            },
         ]
 
         yaml_str = """
             profile_models: test_model
-            run_config_search_max_concurrency: 512
-            run_config_search_max_instance_count: 7
+            run_config_search_max_concurrency: 16
+            run_config_search_max_instance_count: 2
             run_config_search_min_model_batch_size: 8
             run_config_search_max_model_batch_size: 8
             run_config_search_disable: False

@@ -130,23 +130,14 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
 
     def _generate_model_config_variants(self) -> List[List[ModelConfigVariant]]:
         """Generate all model config combinations"""
-        if self._remote_mode:
-            configs = self._generate_remote_mode_model_config_variants()
-        else:
-            configs = self._generate_direct_modes_model_config_variants()
+        configs = self._generate_all_modes_model_config_variants()
 
         return configs
 
-    def _generate_remote_mode_model_config_variants(
+    def _generate_all_modes_model_config_variants(
         self,
     ) -> List[List[ModelConfigVariant]]:
-        """Generate model configs for remote mode"""
-        return [[self._make_remote_model_config_variant()]]
-
-    def _generate_direct_modes_model_config_variants(
-        self,
-    ) -> List[List[ModelConfigVariant]]:
-        """Generate model configs for direct (non-remote) modes"""
+        """Generate model configs for all modes"""
         model_config_variants = []
         for param_combo in self._non_max_batch_size_param_combos:
             configs_with_max_batch_size = []
@@ -171,9 +162,6 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
         """
         Determine self._max_batch_sizes and self._non_max_batch_size_param_combos
         """
-        if self._remote_mode:
-            return
-
         if self._default_only:
             self._non_max_batch_size_param_combos = [DEFAULT_CONFIG_PARAMS]
         else:
