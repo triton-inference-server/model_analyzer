@@ -70,7 +70,7 @@ class TestConfigGenerator:
         total_param_count = self._calculate_total_params(
             concurrency_count, instance_count
         )
-        self._write_file(total_param_count, 1, 2, 1, model_config)
+        self._write_file(total_param_count, total_param_count, 2, 2, model_config)
 
     def generate_max_limit_with_model_config(self):
         concurrency_count = 2
@@ -91,7 +91,7 @@ class TestConfigGenerator:
         total_param_count = self._calculate_total_params(
             concurrency_count, instance_count
         )
-        self._write_file(total_param_count, 2, 2, 1, model_config)
+        self._write_file(total_param_count, total_param_count, 2, 2, model_config)
 
     def generate_max_limit(self):
         concurrency_count = 2
@@ -105,7 +105,7 @@ class TestConfigGenerator:
         total_param_count = self._calculate_total_params(
             concurrency_count, instance_count
         )
-        self._write_file(total_param_count, 2, 8, 1, model_config)
+        self._write_file(total_param_count, total_param_count, 8, 8, model_config)
 
     def generate_max_limit_with_param(self):
         concurrency_count = 1  # 1 because concurrency parameter is 1 entry below
@@ -124,7 +124,7 @@ class TestConfigGenerator:
         total_param_count = self._calculate_total_params(
             concurrency_count, instance_count
         )
-        self._write_file(total_param_count, 1, 6, 1, model_config)
+        self._write_file(total_param_count, total_param_count, 6, 6, model_config)
 
     def generate_max_limit_with_param_and_model_config(self):
         concurrency_count = 1  # 1 because concurrency parameter is 1 entry below
@@ -146,7 +146,7 @@ class TestConfigGenerator:
         total_param_count = self._calculate_total_params(
             concurrency_count, instance_count
         )
-        self._write_file(total_param_count, 1, 2, 1, model_config)
+        self._write_file(total_param_count, total_param_count, 2, 2, model_config)
 
     def generate_max_limit_with_dynamic_batch_disable(self):
         concurrency_count = 2
@@ -160,7 +160,7 @@ class TestConfigGenerator:
         total_param_count = self._calculate_total_params(
             concurrency_count, instance_count
         )
-        self._write_file(total_param_count, 2, 4, 1, model_config)
+        self._write_file(total_param_count, total_param_count, 4, 4, model_config)
 
     def _calculate_total_params(
         self, concurrency_count, instance_count, default_config_count=1
