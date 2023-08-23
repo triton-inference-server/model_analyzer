@@ -81,11 +81,10 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
                 cat $SERVER_LOG
                 RET=1
             fi
-        else
-            NUM_MODELS_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-models.txt
-            NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-param.txt
         fi
 
+        NUM_MODELS_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-models.txt
+        NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-param.txt
         TEST_OUTPUT_NUM_ROWS=`cat $NUM_ROW_OUTPUT_FILE`
         TEST_MODELS_NUM=`cat $NUM_MODELS_OUTPUT_FILE`
         MODEL_ANALYZER_SUBCOMMAND="profile"
