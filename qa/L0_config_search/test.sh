@@ -70,9 +70,6 @@ for launch_mode in $TRITON_LAUNCH_MODES; do
         MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ARGS $MODEL_ANALYZER_PORTS"
 
         if [ $launch_mode == 'remote' ]; then
-            NUM_ROW_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-param-$launch_mode.txt
-            NUM_MODELS_OUTPUT_FILE=`echo $config | sed 's/\.yml//'`-models-$launch_mode.txt
-
             # For remote launch, set server args and start server
             SERVER=`which tritonserver`
             SERVER_ARGS="--model-repository=$MODEL_REPOSITORY --model-control-mode=explicit --http-port $http_port --grpc-port $grpc_port --metrics-port $metrics_port"

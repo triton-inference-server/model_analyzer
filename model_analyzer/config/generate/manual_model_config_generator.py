@@ -130,14 +130,7 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
 
     def _generate_model_config_variants(self) -> List[List[ModelConfigVariant]]:
         """Generate all model config combinations"""
-        configs = self._generate_all_modes_model_config_variants()
 
-        return configs
-
-    def _generate_all_modes_model_config_variants(
-        self,
-    ) -> List[List[ModelConfigVariant]]:
-        """Generate model configs for all modes"""
         model_config_variants = []
         for param_combo in self._non_max_batch_size_param_combos:
             configs_with_max_batch_size = []
