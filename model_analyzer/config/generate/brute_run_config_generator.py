@@ -102,11 +102,7 @@ class BruteRunConfigGenerator(ConfigGeneratorInterface):
         if not self._skip_default_config:
             yield from self._generate_subset(0, default_only=True)
 
-        if self._should_generate_non_default_configs():
-            yield from self._generate_subset(0, default_only=False)
-
-    def _should_generate_non_default_configs(self) -> bool:
-        return self._config.triton_launch_mode != "remote"
+        yield from self._generate_subset(0, default_only=False)
 
     def _generate_subset(
         self, index: int, default_only: bool
