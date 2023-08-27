@@ -56,7 +56,7 @@ docker pull nvcr.io/nvidia/tritonserver:23.07-py3-sdk
 
 ```
 docker run -it --gpus 1 \
-      --shm-size 1G \
+      --shm-size 2G \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
       -v <path-to-output-model-repo>:<path-to-output-model-repo> \
@@ -69,7 +69,7 @@ will be located.
 This ensures the Triton SDK container has access to the model
 config variants that Model Analyzer creates.<br><br>
 **Important:** You must ensure the absolutes paths are identical on both sides of the mounts (or else Tritonserver cannot load the model)<br><br>
-**Important:** The example above uses a single GPU. If you are running on multiple GPUs, you need to increase the shared memory size accordingly<br><br>
+**Important:** The example above uses a single GPU. If you are running on multiple GPUs, you may need to increase the shared memory size accordingly<br><br>
 
 ## `Step 3:` Profile the `bls` model
 
@@ -88,7 +88,7 @@ bls_composing_models: add
 perf_analyzer_flags:
   input-data: <path-to-examples-bls_input_data.json>
 triton_launch_mode: docker
-triton_docker_shm_size: 1G
+triton_docker_shm_size: 2G
 output_model_repository_path: <path-to-output-model-repo>/<output_dir>
 export_path: profile_results
 ```
@@ -127,40 +127,41 @@ The measured data and summary report will be placed inside the
 $HOME
 |-- model_analyzer
     |-- profile_results
+        |-- perf_analyzer_error.log
         |-- plots
         |   |-- detailed
-        |   |   |-- bls_config_4
+        |   |   |-- bls_config_7
         |   |   |   `-- latency_breakdown.png
-        |   |   |-- bls_config_5
+        |   |   |-- bls_config_8
         |   |   |   `-- latency_breakdown.png
-        |   |   `-- bls_config_6
+        |   |   `-- bls_config_9
         |   |       `-- latency_breakdown.png
         |   `-- simple
         |       |-- bls
         |       |   |-- gpu_mem_v_latency.png
         |       |   `-- throughput_v_latency.png
-        |       |-- bls_config_4
+        |       |-- bls_config_7
         |       |   |-- cpu_mem_v_latency.png
         |       |   |-- gpu_mem_v_latency.png
         |       |   |-- gpu_power_v_latency.png
         |       |   `-- gpu_util_v_latency.png
-        |       |-- bls_config_5
+        |       |-- bls_config_8
         |       |   |-- cpu_mem_v_latency.png
         |       |   |-- gpu_mem_v_latency.png
         |       |   |-- gpu_power_v_latency.png
         |       |   `-- gpu_util_v_latency.png
-        |       `-- bls_config_6
+        |       `-- bls_config_9
         |           |-- cpu_mem_v_latency.png
         |           |-- gpu_mem_v_latency.png
         |           |-- gpu_power_v_latency.png
         |           `-- gpu_util_v_latency.png
         |-- reports
         |   |-- detailed
-        |   |   |-- bls_config_4
+        |   |   |-- bls_config_7
         |   |   |   `-- detailed_report.pdf
-        |   |   |-- bls_config_5
+        |   |   |-- bls_config_8
         |   |   |   `-- detailed_report.pdf
-        |   |   `-- bls_config_6
+        |   |   `-- bls_config_9
         |   |       `-- detailed_report.pdf
         |   `-- summaries
         |       `-- bls
@@ -171,4 +172,4 @@ $HOME
             `-- metrics-server-only.csv
 ```
 
-**Note:** Above configurations, bls_config_4, bls_config_5, and bls_config_6 are generated as the top configurations when running profiling on a single Tesla V100 GPU. However, running on different GPUs or multiple GPUs may result in different top configurations.
+**Note:** Above configurations, bls_config_7, bls_config_8, and bls_config_9 are generated as the top configurations when running profiling on a single Tesla V100 GPU. However, running on multiple GPUs or different model GPUs may result in different top configurations.

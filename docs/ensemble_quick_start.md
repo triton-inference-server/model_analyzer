@@ -166,4 +166,4 @@ $HOME
             `-- metrics-server-only.csv
 ```
 
-**Note:** Above configurations, ensemble_add_sub_config_5, ensemble_add_sub_config_6, and ensemble_add_sub_config_7 are generated as the top configurations when running profiling on a single Tesla V100 GPU. However, running on different GPUs or multiple GPUs may result in different top configurations.
+**Note:** Above configurations, ensemble_add_sub_config_5, ensemble_add_sub_config_6, and ensemble_add_sub_config_7 are generated as the top configurations when running profiling on a single Tesla V100 GPU. However, running on multiple GPUs or different model GPUs may result in different top configurations.
