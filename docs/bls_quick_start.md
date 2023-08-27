@@ -73,7 +73,10 @@ config variants that Model Analyzer creates.<br><br>
 
 ## `Step 3:` Profile the `bls` model
 
-The examples/quick-start directory is an example Triton Model Repository that contains the BLS model `bls` which calculates the sum of two inputs using `add` model.
+---
+
+The [examples/quick-start](../examples/quick-start) directory is an example
+[Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md) that contains the BLS model `bls` which calculates the sum of two inputs using `add` model.
 
 An example model analyzer YAML config that performs a BLS model search
 
@@ -92,9 +95,11 @@ export_path: profile_results
 
 **Important:** You must specify an `<output_dir>` subdirectory. You cannot have `output_model_repository_path` point directly to `<path-to-output-model-repo>`
 
-**Important:** If you already ran this earlier in the container, you can use the `override_output_model_repository: true` option to overwrite the earlier results.
+**Important:** If you already ran this earlier in the container, you can overwrite earlier results by adding the `override_output_model_repository: true` field to the YAML file.
 
 **Important**: All models must be in the same repository
+
+**Important:** [`bls`](../examples/quick-start/bls) model takes "MODEL_NAME" as one of its inputs. We must include "add" in the input data JSON file as "MODEL_NAME" for this example to function. Otherwise, Perf Analyzer will produce random data for "MODEL_NAME," resulting in failed inferences.
 
 Run the Model Analyzer `profile` subcommand inside the container with:
 
@@ -104,13 +109,7 @@ model-analyzer -f /path/to/config.yml
 
 ---
 
-The `--run-config-profile-models-concurrently-enable` option tells Model Analyzer to load and optimize both models concurrently using the [Quick Search](config_search.md#quick-search-mode) algorithm.
-
-This will profile both models concurrently finding the maximal throughput gain for both models by iterating across instance group counts and batch sizes. By default, the algorithm is attempting to find the best balance of gains for each model, not the best combined total throughput.
-
-After the quick search completes, Model Analyzer will then sweep concurrencies for the top three (default) configurations and then create a summary report and CSV outputs. We can specify the top-N configurations by using `--num-configs-per-model`.
-
----
+The Model analyzer uses [Quick Search](config_search.md#quick-search-mode) algorithm for profiling the BLS model. After the quick search is completed, Model Analyzer will then sweep concurrencies for the top three configurations and then create a summary report and CSV outputs.
 
 Here is an example result summary, run on a Tesla V100 GPU:
 
@@ -171,3 +170,5 @@ $HOME
             |-- metrics-model-inference.csv
             `-- metrics-server-only.csv
 ```
+
+**Note:** Above configurations, bls_config_4, bls_config_5, and bls_config_6 are generated as the top configurations when running profiling on a single Tesla V100 GPU. However, running on different GPUs or multiple GPUs may result in different top configurations.

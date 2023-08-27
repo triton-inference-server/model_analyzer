@@ -103,13 +103,8 @@ model-analyzer profile \
 
 ---
 
-The `--run-config-profile-models-concurrently-enable` option tells Model Analyzer to load and optimize both models concurrently using the [Quick Search](config_search.md#quick-search-mode) algorithm.
+The Model analyzer uses [Quick Search](config_search.md#quick-search-mode) algorithm for profiling the Ensemble model. After the quick search is completed, Model Analyzer will then sweep concurrencies for the top three configurations and then create a summary report and CSV outputs.
 
-This will profile both models concurrently finding the maximal throughput gain for both models by iterating across instance group counts and batch sizes. By default, the algorithm is attempting to find the best balance of gains for each model, not the best combined total throughput.
-
-After the quick search completes, Model Analyzer will then sweep concurrencies for the top three (default) configurations and then create a summary report and CSV outputs. We can specify the top-N configurations by using `--num-configs-per-model`.
-
----
 
 Here is an example result summary, run on a Tesla V100 GPU:
 
@@ -170,3 +165,5 @@ $HOME
             |-- metrics-model-inference.csv
             `-- metrics-server-only.csv
 ```
+
+**Note:** Above configurations, ensemble_add_sub_config_5, ensemble_add_sub_config_6, and ensemble_add_sub_config_7 are generated as the top configurations when running profiling on a single Tesla V100 GPU. However, running on different GPUs or multiple GPUs may result in different top configurations.
