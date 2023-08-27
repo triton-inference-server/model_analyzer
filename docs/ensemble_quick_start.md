@@ -18,7 +18,7 @@ limitations under the License.
 
 The steps below will guide you through using Model Analyzer in Docker mode to profile and analyze a simple ensemble model: ensemble_add_sub.
 
-## `Step 1:` Download the ensemble_add_sub, add, sub models
+## `Step 1:` Download the ensemble model `ensemble_add_sub` and composing models `add`, `sub`
 
 ---
 
@@ -34,7 +34,7 @@ mkdir <new_dir> && cd <new_dir>
 git init && git remote add -f origin https://github.com/triton-inference-server/model_analyzer.git
 ```
 
-**3. Enable sparse checkout, and download the examples directory, which contains the ensemble_add_sub model**
+**3. Enable sparse checkout, and download the examples directory, which contains the ensemble_add_sub, add and sub**
 
 ```
 git config core.sparseCheckout true && \
@@ -42,7 +42,7 @@ echo 'examples' >> .git/info/sparse-checkout && \
 git pull origin main
 ```
 
-**3. Create a version directory in ensemble_add_sub directory**
+**3. Add a version directory to ensemble_add_sub**
 
 ```
 mkdir examples/quick/ensemble_add_sub/1
