@@ -70,10 +70,7 @@ docker run -it --gpus 1 \
 ```
 
 **Replacing** `<path-to-output-model-repo>` with the
-**_absolute_ _path_** to the directory where the output model repository
-will be located.
-This ensures the Triton SDK container has access to the model
-config variants that Model Analyzer creates.<br><br>
+**_absolute_ _path_** to the directory where the output model repository will be located. This ensures the Triton SDK container has access to the model config variants that Model Analyzer creates.<br><br>
 **Important:** You must ensure the absolutes paths are identical on both sides of the mounts (or else Tritonserver cannot load the model)<br><br>
 **Important:** The example above uses a single GPU. If you are running on multiple GPUs, you may need to increase the shared memory size accordingly<br><br>
 
@@ -81,8 +78,7 @@ config variants that Model Analyzer creates.<br><br>
 
 ---
 
-The [examples/quick-start](../examples/quick-start) directory is an example
-[Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md) that contains the ensemble model `ensemble_add_sub`, which calculates the sum and difference of two inputs using `add` and `sub` models. 
+The [examples/quick-start](../examples/quick-start) directory is an example [Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md) that contains the ensemble model `ensemble_add_sub`, which calculates the sum and difference of two inputs using `add` and `sub` models. 
 
 Run the Model Analyzer `profile` subcommand inside the container with:
 
