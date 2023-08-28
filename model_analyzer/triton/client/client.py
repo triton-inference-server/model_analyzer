@@ -207,6 +207,12 @@ class TritonClient:
         """
         return self._client.is_server_ready()
 
+    def get_model_repository_index(self):
+        """
+        Returns the JSON dict holding the model repository index.
+        """
+        return self._client.get_model_repository_index(as_json=True)
+
     def _check_for_triton_log_errors(self, log_file):
         if not log_file or log_file == DEVNULL:
             return
