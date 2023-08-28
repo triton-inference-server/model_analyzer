@@ -78,7 +78,7 @@ docker run -it --gpus 1 \
 
 ---
 
-The [examples/quick-start](../examples/quick-start) directory is an example [Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md) that contains the ensemble model `ensemble_add_sub`, which calculates the sum and difference of two inputs using `add` and `sub` models. 
+The [examples/quick-start](../examples/quick-start) directory is an example [Triton Model Repository](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_repository.md) that contains the ensemble model `ensemble_add_sub`, which calculates the sum and difference of two inputs using `add` and `sub` models.
 
 Run the Model Analyzer `profile` subcommand inside the container with:
 
