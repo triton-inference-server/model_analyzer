@@ -399,13 +399,11 @@ class Analyzer:
         cli.parse(args)
         return config
 
-    def _warn_if_other_models_loaded_on_remote_server(
-        self, client: TritonClient
-    ) -> None:
+    def _warn_if_other_models_loaded_on_remote_server(self, client):
         repository_index = client.get_model_repository_index()
         profile_model_names = [pm.model_name() for pm in self._config.profile_models]
 
-        for model in repository_index["models"]:
+        for model in repository_index:
             if model["name"] not in profile_model_names:
                 model_name = model["name"]
                 logger.warning(

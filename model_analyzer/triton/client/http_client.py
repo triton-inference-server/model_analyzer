@@ -93,3 +93,9 @@ class TritonHTTPClient(TritonClient):
             ssl_context_factory=ssl_context_factory,
             insecure=insecure,
         )
+
+    def get_model_repository_index(self):
+        """
+        Returns the JSON dict holding the model repository index.
+        """
+        return self._client.get_model_repository_index()

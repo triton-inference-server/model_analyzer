@@ -78,3 +78,9 @@ class TritonGRPCClient(TritonClient):
         self.wait_for_model_ready(model_name, num_retries)
         model_config_dict = self._client.get_model_config(model_name, as_json=True)
         return model_config_dict["config"]
+
+    def get_model_repository_index(self):
+        """
+        Returns the JSON dict holding the model repository index.
+        """
+        return self._client.get_model_repository_index(as_json=True)["models"]
