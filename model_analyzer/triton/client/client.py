@@ -105,6 +105,10 @@ class TritonClient:
             return None
         except Exception as e:
             logger.info(f"Model {variant_name} load failed: {e}")
+            if hasattr(e, "_msg") and "polling is enabled" in e._msg:
+                raise TritonModelAnalyzerException(
+                    "The remote Tritonserver needs to be launched in EXPLICIT mode"
+                )
             return -1
 
     def unload_model(self, model_name):
