@@ -69,7 +69,7 @@ will be located.
 This ensures the Triton SDK container has access to the model
 config variants that Model Analyzer creates.<br><br>
 **Important:** You must ensure the absolutes paths are identical on both sides of the mounts (or else Tritonserver cannot load the model)<br><br>
-**Important:** The example above uses a single GPU. If you are running on multiple GPUs, you may need to increase the shared memory size accordingly<br><br>
+**Important:** The example above uses a single GPU. If you are running on multiple GPUs, you need to increase the shared memory size accordingly<br><br>
 
 ## `Step 3:` Profile the `bls` model
 
