@@ -55,7 +55,7 @@ mkdir examples/quick/ensemble_add_sub/1
 **1. Pull the SDK container:**
 
 ```
-docker pull nvcr.io/nvidia/tritonserver:23.07-py3-sdk
+docker pull nvcr.io/nvidia/tritonserver:23.09-py3-sdk
 ```
 
 **2. Run the SDK container**
@@ -66,7 +66,7 @@ docker run -it --gpus 1 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
       -v <path-to-output-model-repo>:<path-to-output-model-repo> \
-      --net=host nvcr.io/nvidia/tritonserver:23.07-py3-sdk
+      --net=host nvcr.io/nvidia/tritonserver:23.09-py3-sdk
 ```
 
 **Replacing** `<path-to-output-model-repo>` with the

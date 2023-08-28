@@ -49,7 +49,7 @@ git pull origin main
 **1. Pull the SDK container:**
 
 ```
-docker pull nvcr.io/nvidia/tritonserver:23.07-py3-sdk
+docker pull nvcr.io/nvidia/tritonserver:23.09-py3-sdk
 ```
 
 **2. Run the SDK container**
@@ -60,7 +60,7 @@ docker run -it --gpus 1 \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
       -v <path-to-output-model-repo>:<path-to-output-model-repo> \
-      --net=host nvcr.io/nvidia/tritonserver:23.07-py3-sdk
+      --net=host nvcr.io/nvidia/tritonserver:23.09-py3-sdk
 ```
 
 **Replacing** `<path-to-output-model-repo>` with the
@@ -100,7 +100,7 @@ export_path: profile_results
 Run the Model Analyzer `profile` subcommand inside the container with:
 
 ```
-model-analyzer -f /path/to/config.yml
+model-analyzer profile -f /path/to/config.yml
 ```
 
 ---
