@@ -148,14 +148,6 @@ _This will perform an Automatic Brute Search with instance group counts: 3-5, ba
 
 ---
 
-### **Interaction with Remote Triton Launch Mode**
-
-When the triton launch mode is remote, _\*\*only concurrency or request rate values can be swept._\*\*<br>
-
-Model Analyzer will ignore any model config parameters because we have no way of accessing and modifying the model repository of the remote Triton Server.
-
----
-
 ## Manual Brute Search
 
 **Default brute search mode when any model config parameters or parameters are specified**
