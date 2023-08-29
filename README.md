@@ -76,6 +76,14 @@ See the [Single Model Quick Start](docs/quick_start.md) for a guide on how to us
 ### **Multi Model**
 
 See the [Multi-model Quick Start](docs/mm_quick_start.md) for a guide on how to use Model Analyzer to profile, analyze and report on two models running concurrently on the same GPU.
+
+### **Ensemble Model**
+
+See the [Ensemble Model Quick Start](docs/ensemble_quick_start.md) for a guide on how to use Model Analyzer to profile, analyze and report on a simple Ensemble model.
+
+### **BLS Model**
+
+See the [BLS Model Quick Start](docs/bls_quick_start.md) for a guide on how to use Model Analyzer to profile, analyze and report on a simple BLS model.
 <br><br>
 
 # Documentation
