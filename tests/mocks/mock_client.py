@@ -16,6 +16,8 @@
 
 from unittest.mock import ANY, MagicMock, Mock, patch
 
+from tritonclient.http import InferenceServerException
+
 from .mock_base import MockBase
 
 
@@ -140,8 +142,12 @@ class MockTritonClientMethods(MockBase):
         InferenceServerException
         """
 
-        self.grpc_mock.return_value.load_model.side_effect = Exception
-        self.http_mock.return_value.load_model.side_effect = Exception
+        self.grpc_mock.return_value.load_model.side_effect = InferenceServerException(
+            ""
+        )
+        self.http_mock.return_value.load_model.side_effect = InferenceServerException(
+            ""
+        )
 
     def raise_exception_on_unload(self):
         """
