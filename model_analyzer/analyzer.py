@@ -116,6 +116,9 @@ class Analyzer:
         self._create_metrics_manager(client, gpus)
         self._create_model_manager(client, gpus)
 
+        if self._config.triton_launch_mode == "remote":
+            self._warn_if_other_models_loaded_on_remote_server(client)
+
         if self._config.model_repository:
             self._get_server_only_metrics(client, gpus)
             self._profile_models()
@@ -395,3 +398,15 @@ class Analyzer:
         cli.add_subcommand(cmd="report", help="", config=config)
         cli.parse(args)
         return config
+
+    def _warn_if_other_models_loaded_on_remote_server(self, client):
+        repository_index = client.get_model_repository_index()
+        profile_model_names = [pm.model_name() for pm in self._config.profile_models]
+
+        for model in repository_index:
+            if model["name"] not in profile_model_names:
+                model_name = model["name"]
+                logger.warning(
+                    f"A model not being profiled ({model_name}) is loaded on the remote Tritonserver. "
+                    "This could impact the profile results."
+                )
