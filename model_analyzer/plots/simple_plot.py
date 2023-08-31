@@ -156,6 +156,10 @@ class SimplePlot:
                 list(t) for t in zip(*sorted(zip(data["x_data"], data["y_data"])))
             )
 
+            model_config_name = self.truncate_longer_model_config_name(
+                model_config_name
+            )
+
             if self._monotonic:
                 filtered_x, filtered_y = [x_data[0]], [y_data[0]]
                 for i in range(1, len(x_data)):
@@ -183,6 +187,35 @@ class SimplePlot:
             # plot h lines
         self._ax.legend()
         self._ax.grid()
+
+    def truncate_longer_model_config_name(self, model_config_name):
+        """
+        Truncates the model configuration name if its length exceeds the threshold length.
+        ex: long_model_name_config_4  -->   long_mod..._config_4
+
+        Parameters
+        ----------
+        model_config_name: string
+
+        Returns
+        -------
+        string
+            The truncated model configuration name,
+            or the original name if it is shorter than the threshold length.
+        """
+
+        max_model_config_name_len = 35
+        if len(model_config_name) > max_model_config_name_len:
+            max_config_name_len = 12
+            model_config_name = (
+                model_config_name[
+                    : (max_model_config_name_len - max_config_name_len - 3)
+                ]
+                + "..."
+                + model_config_name[-max_config_name_len:]
+            )
+
+        return model_config_name
 
     def data(self):
         """
