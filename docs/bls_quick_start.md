@@ -59,14 +59,10 @@ docker run -it --gpus 1 \
       --shm-size 2G \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v $(pwd)/examples/quick-start:$(pwd)/examples/quick-start \
-      -v <path-to-output-model-repo>:<path-to-output-model-repo> \
       --net=host nvcr.io/nvidia/tritonserver:23.09-py3-sdk
 ```
 
-**Replacing** `<path-to-output-model-repo>` with the
-**_absolute_ _path_** to the directory where the output model repository will be located. This ensures the Triton SDK container has access to the model config variants that Model Analyzer creates.<br><br>
-**Important:** You must ensure the absolutes paths are identical on both sides of the mounts (or else Tritonserver cannot load the model)<br><br>
-**Important:** The example above uses a single GPU. If you are running on multiple GPUs, you need to increase the shared memory size accordingly<br><br>
+**Important:** The example above uses a single GPU. If you are running on multiple GPUs, you may need to increase the shared memory size accordingly<br><br>
 
 ## `Step 3:` Profile the `bls` model
 
