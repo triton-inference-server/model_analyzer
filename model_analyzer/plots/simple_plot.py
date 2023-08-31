@@ -203,14 +203,14 @@ class SimplePlot:
         """
 
         max_model_config_name_len = 35
+
         if len(model_config_name) > max_model_config_name_len:
-            max_config_name_len = 11
-            model_config_name = (
-                model_config_name[
-                    : (max_model_config_name_len - max_config_name_len - 3)
-                ]
+            config_name = model_config_name[model_config_name.rfind("config_") :]
+
+            return (
+                model_config_name[: (max_model_config_name_len - len(config_name) - 3)]
                 + "..."
-                + model_config_name[-max_config_name_len:]
+                + config_name
             )
 
         return model_config_name
