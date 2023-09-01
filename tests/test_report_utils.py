@@ -16,8 +16,8 @@
 
 import unittest
 from unittest.mock import patch
-from model_analyzer.reports.report_utils import truncate_model_config_name
 
+from model_analyzer.reports.report_utils import truncate_model_config_name
 
 from .common import test_result_collector as trc
 
@@ -39,25 +39,21 @@ class TestReportUtils(trc.TestResultCollector):
         model_config_name = "ensemble_model_23"
         result = truncate_model_config_name(model_config_name)
         self.assertEqual(model_config_name, result)
-        self.assertEqual(len(result), 17)
 
         # Test: Model config name ends with 'config_#'
         model_config_name = "long_pytorch_platform_handler_config_10"
         result = truncate_model_config_name(model_config_name)
         self.assertEqual(result, "long_pytorch_platform_h...config_10")
-        self.assertEqual(len(result), 35)
 
         # Test: Model config name ends with 'config_default'.
         model_config_name = "long_pytorch_platform_handler_config_default"
         result = truncate_model_config_name(model_config_name)
         self.assertEqual(result, "long_pytorch_platf...config_default")
-        self.assertEqual(len(result), 35)
 
         # Test: Model config name includes the "config" keyword in the model name
         model_config_name = "long_config_pytorch_platform_handler_config_128"
         result = truncate_model_config_name(model_config_name)
         self.assertEqual(result, "long_config_pytorch_pl...config_128")
-        self.assertEqual(len(result), 35)
 
 
 if __name__ == "__main__":
