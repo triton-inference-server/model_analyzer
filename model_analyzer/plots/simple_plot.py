@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 
 from model_analyzer.perf_analyzer.perf_config import PerfAnalyzerConfig
 from model_analyzer.record.metrics_manager import MetricsManager
+from model_analyzer.reports.report_utils import truncate_model_config_name
 
 
 class SimplePlot:
@@ -155,6 +156,8 @@ class SimplePlot:
             x_data, y_data = (
                 list(t) for t in zip(*sorted(zip(data["x_data"], data["y_data"])))
             )
+
+            model_config_name = truncate_model_config_name(model_config_name)
 
             if self._monotonic:
                 filtered_x, filtered_y = [x_data[0]], [y_data[0]]
