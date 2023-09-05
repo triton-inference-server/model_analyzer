@@ -21,8 +21,9 @@ from model_analyzer.triton.model.model_config import ModelConfig
 class ModelConfigVariant:
     """
     A dataclass that holds the ModelConfig as well as the variant name
-    for the model
+    and cpu_only flag for the model
     """
 
     model_config: ModelConfig
     variant_name: str
+    cpu_only: bool = False

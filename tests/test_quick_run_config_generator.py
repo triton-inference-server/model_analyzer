@@ -283,7 +283,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         expected_model_config = {
-            "cpu_only": False,
             "dynamicBatching": {},
             "instanceGroup": [
                 {
@@ -355,7 +354,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         }
 
         expected_model_config1 = {
-            'cpu_only': False,
             'instanceGroup': [{
                 'count': 3,
                 'kind': 'KIND_GPU',
@@ -371,7 +369,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         }
 
         expected_model_config2 = {
-            'cpu_only': False,
             'dynamicBatching': {},
             'instanceGroup': [{
                 'count': 6,
@@ -765,7 +762,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         expected_model_config = {
-            "cpu_only": False,
             "dynamicBatching": {},
             "instanceGroup": [
                 {
@@ -819,7 +815,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         expected_model_config = {
-            "cpu_only": False,
             "dynamicBatching": {},
             "instanceGroup": [
                 {
@@ -873,7 +868,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         expected_model_config = {
-            "cpu_only": False,
             "dynamicBatching": {},
             "instanceGroup": [
                 {
@@ -927,7 +921,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         qrcg._coordinate_to_measure = Coordinate([5, 7])
 
         expected_model_config = {
-            "cpu_only": False,
             "dynamicBatching": {},
             "instanceGroup": [
                 {
@@ -995,7 +988,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         Also,
         - sequence batching should be on for model A
         - dynamic batching should be on for model B
-        - cpu_only should be set for model B
         - existing values from the base model config should persist if they aren't overwritten
         - existing values for perf-analyzer config should persist if they aren't overwritten
         """
@@ -1010,7 +1002,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         # yapf: disable
         expected_model_A_config_0 = {
-            'cpu_only': False,
             'instanceGroup': [{
                 'count': 3,
                 'kind': 'KIND_GPU',
@@ -1026,7 +1017,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         }
 
         expected_model_B_config_0 = {
-            'cpu_only': True,
             'dynamicBatching': {},
             'instanceGroup': [{
                 'count': 6,
@@ -1177,7 +1167,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
 
         # yapf: disable
         expected_model_config = {
-            'cpu_only': False,
             'instanceGroup': [{
                 'count': 3,
                 'kind': 'KIND_GPU',
@@ -1194,7 +1183,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         }
 
         expected_composing_model_config0 = {
-            'cpu_only': False,
             'instanceGroup': [{
                 'count': 5,
                 'kind': 'KIND_GPU',
@@ -1210,7 +1198,6 @@ class TestQuickRunConfigGenerator(trc.TestResultCollector):
         }
 
         expected_composing_model_config1 = {
-            'cpu_only': False,
             'dynamicBatching': {},
             'instanceGroup': [{
                 'count': 7,

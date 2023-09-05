@@ -159,11 +159,10 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
         model_config = ModelConfig.create_from_triton_api(
             self._client, self._base_model_name, self._config.client_max_retries
         )
-        model_config.set_cpu_only(self._cpu_only)
         if not self._config.reload_model_disable:
             self._client.unload_model(self._base_model_name)
 
-        return ModelConfigVariant(model_config, self._base_model_name)
+        return ModelConfigVariant(model_config, self._base_model_name, self._cpu_only)
 
     def _make_direct_mode_model_config_variant(
         self, param_combo: Dict
@@ -217,9 +216,8 @@ class BaseModelConfigGenerator(ConfigGeneratorInterface):
 
         model_config_dict["name"] = variant_name if c_api_mode else model_name
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
-        model_config.set_cpu_only(model.cpu_only())
 
-        return ModelConfigVariant(model_config, variant_name)
+        return ModelConfigVariant(model_config, variant_name, model.cpu_only())
 
     @staticmethod
     def make_ensemble_model_config_variant(

@@ -35,7 +35,7 @@ class ModelConfigGeneratorFactory:
     """
 
     @staticmethod
-    def create_model_config_generator(
+    def create_model_conf8ig_generator(
         config: ConfigCommandProfile,
         gpus: List[GPUDevice],
         model: ModelProfileSpec,
