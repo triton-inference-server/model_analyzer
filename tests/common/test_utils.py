@@ -120,7 +120,7 @@ def load_request_rate_result_manager() -> Tuple[ResultManager, ConfigCommandProf
     dir_path = f"{ROOT_DIR}/request-rate-ckpt/"
     yaml_str = f"""
         request_rate_search_enable: true
-        profile_models: vgg19_libtorch
+        profile_models: add_sub
     """
     return _load_result_manager_helper(dir_path, yaml_str)
 

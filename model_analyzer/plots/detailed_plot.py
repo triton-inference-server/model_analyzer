@@ -168,7 +168,6 @@ class DetailedPlot:
 
         # Sort the data by request rate or concurrency
         if "request_rate" in self._data and self._data["request_rate"][0]:
-            print(f"\n\nFound request rate: {self._data['request_rate']}\n\n")
             sort_indices = list(
                 zip(*sorted(enumerate(self._data["request_rate"]), key=lambda x: x[1]))
             )[0]
