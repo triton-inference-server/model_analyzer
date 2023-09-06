@@ -14,14 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 from typing import List
 
 from model_analyzer.config.generate.model_variant_name_manager import (
     ModelVariantNameManager,
 )
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
-from model_analyzer.constants import LOGGER_NAME
 from model_analyzer.device.gpu_device import GPUDevice
 from model_analyzer.triton.client.client import TritonClient
 
@@ -29,8 +27,6 @@ from .automatic_model_config_generator import AutomaticModelConfigGenerator
 from .config_generator_interface import ConfigGeneratorInterface
 from .manual_model_config_generator import ManualModelConfigGenerator
 from .model_profile_spec import ModelProfileSpec
-
-logger = logging.getLogger(LOGGER_NAME)
 
 
 class ModelConfigGeneratorFactory:
@@ -75,8 +71,6 @@ class ModelConfigGeneratorFactory:
         model_config_params = model.model_config_parameters()
 
         if search_disabled or model_config_params:
-            logger.info("Starting manual brute search")
-            logger.info("")
             return ManualModelConfigGenerator(
                 config,
                 gpus,
@@ -87,8 +81,6 @@ class ModelConfigGeneratorFactory:
                 early_exit_enable,
             )
         else:
-            logger.info("Starting automatic brute search")
-            logger.info("")
             return AutomaticModelConfigGenerator(
                 config,
                 gpus,

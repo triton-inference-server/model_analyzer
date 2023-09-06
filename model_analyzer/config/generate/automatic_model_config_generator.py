@@ -36,6 +36,8 @@ logger = logging.getLogger(LOGGER_NAME)
 class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
     """Given a model, generates model configs in automatic search mode"""
 
+    _log_first_run = False
+
     def __init__(
         self,
         config: ConfigCommandProfile,
@@ -70,6 +72,12 @@ class AutomaticModelConfigGenerator(BaseModelConfigGenerator):
             default_only,
             early_exit_enable,
         )
+
+        if not AutomaticModelConfigGenerator._log_first_run:
+            logger.info("")
+            logger.info("Starting automatic brute search")
+            logger.info("")
+            AutomaticModelConfigGenerator._log_first_run = True
 
         self._max_instance_count = config.run_config_search_max_instance_count
         self._min_instance_count = config.run_config_search_min_instance_count
