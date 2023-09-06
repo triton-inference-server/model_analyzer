@@ -26,7 +26,7 @@ from .common import test_result_collector as trc
 from .common.test_utils import ROOT_DIR, evaluate_mock_config
 
 
-class TestEnsembleReportManagerMethods(trc.TestResultCollector):
+class TestEnsembleReportManager(trc.TestResultCollector):
     def _init_managers(
         self,
         models="test_model",
@@ -67,23 +67,23 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
         """
         Ensures the summary report sentence and table are accurate for a basic ensemble model (loaded from a checkpoint)
         """
-        self._init_managers(models="ensemble_python_resnet50", subcommand="profile")
+        self._init_managers(models="ensemble_add_sub", subcommand="profile")
 
         self.report_manager.create_summaries()
 
         expected_summary_sentence = (
-            "In 68 measurements across 37 configurations, <strong>ensemble_python_resnet50_config_28</strong> "
-            "is <strong>285%</strong> better than the default configuration at maximizing throughput, "
-            "under the given constraints, on GPU(s) TITAN RTX.<BR><BR><strong>ensemble_python_resnet50_config_28</strong> is comprised of the following composing models: "
-            "<UL> <LI> <strong>preprocess_config_9</strong>: "
-            "4 GPU instances with a max batch size of 8 on platform python </LI><LI> <strong>resnet50_trt_config_8</strong>: "
-            "2 GPU instances with a max batch size of 8 on platform tensorrt_plan </LI> </UL>"
+            "In 21 measurements across 5 configurations, <strong>ensemble_add_sub_config_1</strong> "
+            "is <strong>1%</strong> better than the default configuration at maximizing throughput, "
+            "under the given constraints, on GPU(s) TITAN RTX.<BR><BR><strong>ensemble_add_sub_config_1</strong> is comprised of the following composing models: "
+            "<UL> <LI> <strong>add_config_0</strong>: "
+            "1 GPU instance with a max batch size of 0 on platform python </LI><LI> <strong>sub_config_1</strong>: "
+            "2 GPU instances with a max batch size of 0 on platform python </LI> </UL>"
         )
 
         summary_table, summary_sentence = self.report_manager._build_summary_table(
-            report_key="ensemble_python_resnet50",
-            num_measurements=68,
-            num_configurations=37,
+            report_key="ensemble_add_sub",
+            num_measurements=21,
+            num_configurations=5,
             gpu_name="TITAN RTX",
             report_gpu_metrics=True,
         )
@@ -92,17 +92,17 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
 
         # Check the first row of the table
         self.assertEqual(
-            summary_table._rows[0][0], "ensemble_python_resnet50_config_28"
+            summary_table._rows[0][0], "ensemble_add_sub_config_1"
         )  # model config name
-        self.assertEqual(summary_table._rows[0][1], "(8, 8)")  # max batch size
+        self.assertEqual(summary_table._rows[0][1], "(0, 0)")  # max batch size
         self.assertEqual(
-            summary_table._rows[0][2], "(Enabled, Enabled)"
+            summary_table._rows[0][2], "(Disabled, Disabled)"
         )  # dynamic batching
-        self.assertEqual(summary_table._rows[0][3], "(4:GPU, 2:GPU)")  # instance count
-        self.assertEqual(summary_table._rows[0][4], "1104.425")  # p99 latency
-        self.assertEqual(summary_table._rows[0][5], "63.9635")  # throughput
-        self.assertEqual(summary_table._rows[0][6], 2801)  # max gpu memory
-        self.assertEqual(summary_table._rows[0][7], 2.7)  # GPU utilization
+        self.assertEqual(summary_table._rows[0][3], "(1:GPU, 2:GPU)")  # instance count
+        self.assertEqual(summary_table._rows[0][4], "3.655")  # p99 latency
+        self.assertEqual(summary_table._rows[0][5], "2865.88")  # throughput
+        self.assertEqual(summary_table._rows[0][6], 870)  # max gpu memory
+        self.assertEqual(summary_table._rows[0][7], 0.0)  # GPU utilization
 
     def test_ensemble_summary_cpu_only(self):
         """
@@ -110,23 +110,23 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
         when the cpu only flag is set
         """
 
-        self._init_managers(models="ensemble_python_resnet50", subcommand="profile")
+        self._init_managers(models="ensemble_add_sub", subcommand="profile")
 
         self.report_manager.create_summaries()
 
         expected_summary_sentence = (
-            "In 68 measurements across 37 configurations, <strong>ensemble_python_resnet50_config_28</strong> "
-            "is <strong>285%</strong> better than the default configuration at maximizing throughput, "
-            "under the given constraints.<BR><BR><strong>ensemble_python_resnet50_config_28</strong> is comprised of the following composing models: "
-            "<UL> <LI> <strong>preprocess_config_9</strong>: "
-            "4 GPU instances with a max batch size of 8 on platform python </LI><LI> <strong>resnet50_trt_config_8</strong>: "
-            "2 GPU instances with a max batch size of 8 on platform tensorrt_plan </LI> </UL>"
+            "In 21 measurements across 5 configurations, <strong>ensemble_add_sub_config_1</strong> "
+            "is <strong>1%</strong> better than the default configuration at maximizing throughput, "
+            "under the given constraints.<BR><BR><strong>ensemble_add_sub_config_1</strong> is comprised of the following composing models: "
+            "<UL> <LI> <strong>add_config_0</strong>: "
+            "1 GPU instance with a max batch size of 0 on platform python </LI><LI> <strong>sub_config_1</strong>: "
+            "2 GPU instances with a max batch size of 0 on platform python </LI> </UL>"
         )
 
         summary_table, summary_sentence = self.report_manager._build_summary_table(
-            report_key="ensemble_python_resnet50",
-            num_measurements=68,
-            num_configurations=37,
+            report_key="ensemble_add_sub",
+            num_measurements=21,
+            num_configurations=5,
             gpu_name="TITAN RTX",
             report_gpu_metrics=False,
         )
@@ -135,36 +135,34 @@ class TestEnsembleReportManagerMethods(trc.TestResultCollector):
 
         # Check the first row of the table
         self.assertEqual(
-            summary_table._rows[0][0], "ensemble_python_resnet50_config_28"
+            summary_table._rows[0][0], "ensemble_add_sub_config_1"
         )  # model config name
-        self.assertEqual(summary_table._rows[0][1], "8, 8")  # max batch size
+        self.assertEqual(summary_table._rows[0][1], "0, 0")  # max batch size
         self.assertEqual(
-            summary_table._rows[0][2], "(Enabled, Enabled)"
+            summary_table._rows[0][2], "(Disabled, Disabled)"
         )  # dynamic batching
-        self.assertEqual(summary_table._rows[0][3], "4:GPU, 2:GPU")  # instance count
-        self.assertEqual(summary_table._rows[0][4], "1104.425")  # p99 latency
-        self.assertEqual(summary_table._rows[0][5], "63.9635")  # throughput
+        self.assertEqual(summary_table._rows[0][3], "1:GPU, 2:GPU")  # instance count
+        self.assertEqual(summary_table._rows[0][4], "3.655")  # p99 latency
+        self.assertEqual(summary_table._rows[0][5], "2865.88")  # throughput
 
     def test_ensemble_detailed(self):
         """
         Ensures the detailed report sentence is accurate for a basic ensemble model (loaded from a checkpoint)
         """
-        self._init_managers(
-            models="ensemble_python_resnet50_config_28", subcommand="report"
-        )
+        self._init_managers(models="ensemble_add_sub_config_1", subcommand="report")
 
         self.report_manager._add_detailed_report_data()
-        self.report_manager._build_detailed_table("ensemble_python_resnet50_config_28")
+        self.report_manager._build_detailed_table("ensemble_add_sub_config_1")
         detailed_sentence = self.report_manager._build_detailed_info(
-            "ensemble_python_resnet50_config_28"
+            "ensemble_add_sub_config_1"
         )
 
         expected_detailed_sentence = (
-            "<strong>ensemble_python_resnet50_config_28</strong> is comprised of the "
-            "following composing models:<LI> <strong>preprocess_config_9</strong>: "
-            "4 GPU instances with a max batch size of 8 on platform python </LI><LI> "
-            "<strong>resnet50_trt_config_8</strong>: 2 GPU instances with a max batch size of 8 "
-            "on platform tensorrt_plan </LI><br>10 measurement(s) were obtained for the model config "
+            "<strong>ensemble_add_sub_config_1</strong> is comprised of the "
+            "following composing models:<LI> <strong>add_config_0</strong>: "
+            "1 GPU instance with a max batch size of 0 on platform python </LI><LI> "
+            "<strong>sub_config_1</strong>: 2 GPU instances with a max batch size of 0 "
+            "on platform python </LI><br>5 measurement(s) were obtained for the model config "
             "on GPU(s)  with total memory 0 GB."
         )
 
