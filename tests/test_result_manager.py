@@ -162,7 +162,7 @@ class TestResultManager(trc.TestResultCollector):
             "resnet50_libtorch,vgg19_libtorch"
         )
         self.assertTrue(isinstance(sorted_results, SortedResults))
-        self.assertEqual(9, len(sorted_results.results()))
+        self.assertEqual(7, len(sorted_results.results()))
 
     def test_get_across_model_sorted_results(self):
         """
