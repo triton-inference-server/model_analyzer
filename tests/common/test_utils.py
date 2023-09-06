@@ -98,7 +98,7 @@ def load_ensemble_result_manager() -> Tuple[ResultManager, ConfigCommandProfile]
     as the ConfigCommandProfile used to fake the profile step
     """
     dir_path = f"{ROOT_DIR}/ensemble-ckpt/"
-    yaml_str = "profile_models: ensemble_python_resnet50"
+    yaml_str = "profile_models: ensemble_add_sub"
     return _load_result_manager_helper(dir_path, yaml_str)
 
 
@@ -108,7 +108,7 @@ def load_bls_result_manager() -> Tuple[ResultManager, ConfigCommandProfile]:
     as the ConfigCommandProfile used to fake the profile step
     """
     dir_path = f"{ROOT_DIR}/bls-ckpt/"
-    yaml_str = "profile_models: FaceDetectionBLS"
+    yaml_str = "profile_models: bls"
     return _load_result_manager_helper(dir_path, yaml_str)
 
 
