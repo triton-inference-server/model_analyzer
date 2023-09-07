@@ -19,8 +19,8 @@ create_logs_dir "L0_results"
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
-CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2022_08_02"}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/opt/triton-model-analyzer/examples/quick-start"}
+CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2023_09_07"}
 QA_MODELS="resnet50_libtorch"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
 FILENAME_SERVER_ONLY="server-metrics.csv"
@@ -33,7 +33,7 @@ GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 create_result_paths
 
-cp $CHECKPOINT_REPOSITORY/resnet50_vgg19.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
+cp $CHECKPOINT_REPOSITORY/add_sub.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 rm -rf $OUTPUT_MODEL_REPOSITORY
 
 
