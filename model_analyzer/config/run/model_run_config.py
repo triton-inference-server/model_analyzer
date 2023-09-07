@@ -297,13 +297,6 @@ class ModelRunConfig:
             model_run_config_dict["_perf_config"]
         )
 
-        # TODO: TMA-1332: This is for backward compatibility with older checkpoints used in unit tests
-        if "_model_config" in model_run_config_dict:
-            model_config = ModelConfig.from_dict(model_run_config_dict["_model_config"])
-            model_run_config._model_config_variant = ModelConfigVariant(
-                model_config, model_config.get_field("name")
-            )
-
         if "_composing_config_variants" in model_run_config_dict:
             model_run_config._composing_config_variants = [
                 ModelConfigVariant(
@@ -315,23 +308,6 @@ class ModelRunConfig:
                 for composing_config_variant_dict in model_run_config_dict[
                     "_composing_config_variants"
                 ]
-            ]
-
-        # TODO: TMA-1332: This is for backward compatibility with older checkpoints used in unit tests
-        if "_composing_configs" in model_run_config_dict:
-            composing_configs = [
-                ModelConfig.from_dict(composing_config_dict)
-                for composing_config_dict in model_run_config_dict["_composing_configs"]
-            ]
-
-            composing_variant_names = [
-                composing_config.get_field("name")
-                for composing_config in composing_configs
-            ]
-
-            model_run_config._composing_config_variants = [
-                ModelConfigVariant(composing_config, composing_variant_names[i])
-                for i, composing_config in enumerate(composing_configs)
             ]
 
         return model_run_config
