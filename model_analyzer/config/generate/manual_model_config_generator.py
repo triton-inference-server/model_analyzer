@@ -38,6 +38,8 @@ from copy import deepcopy
 class ManualModelConfigGenerator(BaseModelConfigGenerator):
     """Given a model, generates model configs in manual search mode"""
 
+    _log_first_run = False
+
     def __init__(
         self,
         config: ConfigCommandProfile,
@@ -71,6 +73,12 @@ class ManualModelConfigGenerator(BaseModelConfigGenerator):
             default_only,
             early_exit_enable,
         )
+
+        if not ManualModelConfigGenerator._log_first_run:
+            logger.info("")
+            logger.info("Starting manual brute search")
+            logger.info("")
+            ManualModelConfigGenerator._log_first_run = True
 
         self._search_disabled = config.run_config_search_disable
         self._curr_config_index = 0
