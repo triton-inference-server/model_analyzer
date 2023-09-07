@@ -59,7 +59,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
 
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -e $EXPORT_PATH -f $CONFIG_FILE"
 
-    TEST_OUTPUT_NUM_ROWS=16
+    TEST_OUTPUT_NUM_ROWS=47
     run_analyzer
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"
