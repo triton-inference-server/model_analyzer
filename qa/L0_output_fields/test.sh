@@ -22,8 +22,8 @@ python3 config_generator.py
 # Set test parameters
 MODEL_ANALYZER="`which model-analyzer`"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/libtorch_model_store"}
-CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2022_08_02"}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/opt/triton-model-analyzer/examples/quick-start"}
+CHECKPOINT_REPOSITORY=${CHECKPOINT_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/model_analyzer_checkpoints/2023_09_07"}
 FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
@@ -31,7 +31,7 @@ GPUS=(`get_all_gpus_uuids`)
 OUTPUT_MODEL_REPOSITORY=${OUTPUT_MODEL_REPOSITORY:=`get_output_directory`}
 CHECKPOINT_DIRECTORY="."
 
-cp $CHECKPOINT_REPOSITORY/resnet50_vgg19.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
+cp $CHECKPOINT_REPOSITORY/add_sub.ckpt $CHECKPOINT_DIRECTORY/0.ckpt
 
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="--checkpoint-directory $CHECKPOINT_DIRECTORY --filename-server-only=$FILENAME_SERVER_ONLY"
 MODEL_ANALYZER_ANALYZE_BASE_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS --filename-model-inference=$FILENAME_INFERENCE_MODEL --filename-model-gpu=$FILENAME_GPU_MODEL"
@@ -59,7 +59,7 @@ for CONFIG_FILE in ${LIST_OF_CONFIG_FILES[@]}; do
 
     MODEL_ANALYZER_ARGS="$MODEL_ANALYZER_ANALYZE_BASE_ARGS -e $EXPORT_PATH -f $CONFIG_FILE"
 
-    TEST_OUTPUT_NUM_ROWS=16
+    TEST_OUTPUT_NUM_ROWS=47
     run_analyzer
     if [ $? -ne 0 ]; then
         echo -e "\n***\n*** Test Failed. model-analyzer exited with non-zero exit code. \n***"

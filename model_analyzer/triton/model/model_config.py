@@ -50,24 +50,14 @@ class ModelConfig:
         """
 
         self._model_config = model_config
-        self._cpu_only = False
 
     def to_dict(self):
         model_config_dict = json_format.MessageToDict(self._model_config)
-        model_config_dict["cpu_only"] = self._cpu_only
         return model_config_dict
 
     @classmethod
     def from_dict(cls, model_config_dict):
-        if "cpu_only" in model_config_dict:
-            cpu_only = model_config_dict["cpu_only"]
-            del model_config_dict["cpu_only"]
-            model_config = ModelConfig.create_from_dictionary(model_config_dict)
-            model_config._cpu_only = cpu_only
-        else:
-            model_config = ModelConfig.create_from_dictionary(model_config_dict)
-
-        return model_config
+        return ModelConfig.create_from_dictionary(model_config_dict)
 
     @staticmethod
     def create_model_config_dict(config, client, gpus, model_repository, model_name):
@@ -289,27 +279,6 @@ class ModelConfig:
         model_config = ModelConfig.create_from_dictionary(model_config_dict)
 
         return model_config
-
-    def set_cpu_only(self, cpu_only):
-        """
-        Parameters
-        ----------
-        bool
-            Whether this model config has only
-            CPU instance groups
-        """
-
-        self._cpu_only = cpu_only
-
-    def cpu_only(self):
-        """
-        Returns
-        -------
-        bool
-            Whether the model should be run on CPU only
-        """
-
-        return self._cpu_only
 
     def is_ensemble(self) -> bool:
         """

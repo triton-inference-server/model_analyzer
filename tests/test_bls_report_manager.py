@@ -67,24 +67,23 @@ class TestBLSReportManager(trc.TestResultCollector):
         """
         Ensures the summary report sentence and table are accurate for a basic bls model (loaded from a checkpoint)
         """
-        self._init_managers(models="FaceDetectionBLS", subcommand="profile")
+        self._init_managers(models="bls", subcommand="profile")
 
         self.report_manager.create_summaries()
 
         expected_summary_sentence = (
-            "In 26 measurements across 10 configurations, <strong>FaceDetectionBLS_config_7</strong> "
-            "is <strong>12%</strong> better than the default configuration at maximizing throughput, "
-            "under the given constraints, on GPU(s) TITAN RTX.<UL><LI> <strong>FaceDetectionBLS_config_7</strong>: 8 GPU instances with a max batch size of 0 on platform bls "
+            "In 54 measurements across 9 configurations, <strong>bls_config_6</strong> "
+            "is <strong>1111%</strong> better than the default configuration at maximizing throughput, "
+            "under the given constraints, on GPU(s) TITAN RTX.<UL><LI> <strong>bls_config_6</strong>: 8 GPU instances with a max batch size of 0 on platform python "
             "</LI><BR>Which is comprised of the following composing models: "
-            "<UL><LI> <strong>FaceDetectionPreprocessing_config_5</strong>: 6 GPU instances with a max batch size of 0 on platform sdk_backend "
-            "</LI><LI> <strong>FaceDetectionModel_config_4</strong>: 5 GPU instances with a max batch size of 8 on platform tensorrt_plan "
-            "</LI><LI> <strong>FaceDetectionPostprocessing_config_0</strong>: 1 GPU instance with a max batch size of 0 on platform sdk_backend </LI> </UL>"
+            "<UL><LI> <strong>add_config_4</strong>: 6 GPU instances with a max batch size of 0 on platform python "
+            "</LI><LI> <strong>sub_config_0</strong>: 1 GPU instance with a max batch size of 0 on platform python </LI> </UL>"
         )
 
         summary_table, summary_sentence = self.report_manager._build_summary_table(
-            report_key="FaceDetectionBLS",
-            num_measurements=26,
-            num_configurations=10,
+            report_key="bls",
+            num_measurements=54,
+            num_configurations=9,
             gpu_name="TITAN RTX",
             report_gpu_metrics=True,
         )
@@ -92,20 +91,16 @@ class TestBLSReportManager(trc.TestResultCollector):
         self.assertEqual(summary_sentence, expected_summary_sentence)
 
         # Check the first row of the table
+        self.assertEqual(summary_table._rows[0][0], "bls_config_6")  # model config name
+        self.assertEqual(summary_table._rows[0][1], "(0, 0)")  # max batch size
         self.assertEqual(
-            summary_table._rows[0][0], "FaceDetectionBLS_config_7"
-        )  # model config name
-        self.assertEqual(summary_table._rows[0][1], "(0, 8, 0)")  # max batch size
-        self.assertEqual(
-            summary_table._rows[0][2], "(Disabled, Enabled, Disabled)"
+            summary_table._rows[0][2], "(Disabled, Disabled)"
         )  # dynamic batching
-        self.assertEqual(
-            summary_table._rows[0][3], "(6:GPU, 5:GPU, 1:GPU)"
-        )  # instance count
-        self.assertEqual(summary_table._rows[0][4], "7.439")  # p99 latency
-        self.assertEqual(summary_table._rows[0][5], "3183.7")  # throughput
-        self.assertEqual(summary_table._rows[0][6], 1314)  # max gpu memory
-        self.assertEqual(summary_table._rows[0][7], 57.7)  # GPU utilization
+        self.assertEqual(summary_table._rows[0][3], "(6:GPU, 1:GPU)")  # instance count
+        self.assertEqual(summary_table._rows[0][4], "2.215")  # p99 latency
+        self.assertEqual(summary_table._rows[0][5], "10077.3")  # throughput
+        self.assertEqual(summary_table._rows[0][6], 874)  # max gpu memory
+        self.assertEqual(summary_table._rows[0][7], 0.0)  # GPU utilization
 
     def test_bls_summary_cpu_only(self):
         """
@@ -113,24 +108,23 @@ class TestBLSReportManager(trc.TestResultCollector):
         when the cpu only flag is set
         """
 
-        self._init_managers(models="FaceDetectionBLS", subcommand="profile")
+        self._init_managers(models="bls", subcommand="profile")
 
         self.report_manager.create_summaries()
 
         expected_summary_sentence = (
-            "In 26 measurements across 10 configurations, <strong>FaceDetectionBLS_config_7</strong> "
-            "is <strong>12%</strong> better than the default configuration at maximizing throughput, "
-            "under the given constraints.<UL><LI> <strong>FaceDetectionBLS_config_7</strong>: 8 GPU instances with a max batch size of 0 on platform bls "
+            "In 54 measurements across 9 configurations, <strong>bls_config_6</strong> "
+            "is <strong>1111%</strong> better than the default configuration at maximizing throughput, "
+            "under the given constraints.<UL><LI> <strong>bls_config_6</strong>: 8 GPU instances with a max batch size of 0 on platform python "
             "</LI><BR>Which is comprised of the following composing models: "
-            "<UL><LI> <strong>FaceDetectionPreprocessing_config_5</strong>: 6 GPU instances with a max batch size of 0 on platform sdk_backend "
-            "</LI><LI> <strong>FaceDetectionModel_config_4</strong>: 5 GPU instances with a max batch size of 8 on platform tensorrt_plan "
-            "</LI><LI> <strong>FaceDetectionPostprocessing_config_0</strong>: 1 GPU instance with a max batch size of 0 on platform sdk_backend </LI> </UL>"
+            "<UL><LI> <strong>add_config_4</strong>: 6 GPU instances with a max batch size of 0 on platform python "
+            "</LI><LI> <strong>sub_config_0</strong>: 1 GPU instance with a max batch size of 0 on platform python </LI> </UL>"
         )
 
         summary_table, summary_sentence = self.report_manager._build_summary_table(
-            report_key="FaceDetectionBLS",
-            num_measurements=26,
-            num_configurations=10,
+            report_key="bls",
+            num_measurements=54,
+            num_configurations=9,
             gpu_name="TITAN RTX",
             report_gpu_metrics=False,
         )
@@ -138,38 +132,31 @@ class TestBLSReportManager(trc.TestResultCollector):
         self.assertEqual(summary_sentence, expected_summary_sentence)
 
         # Check the first row of the table
+        self.assertEqual(summary_table._rows[0][0], "bls_config_6")  # model config name
+        self.assertEqual(summary_table._rows[0][1], "0, 0")  # max batch size
         self.assertEqual(
-            summary_table._rows[0][0], "FaceDetectionBLS_config_7"
-        )  # model config name
-        self.assertEqual(summary_table._rows[0][1], "0, 8, 0")  # max batch size
-        self.assertEqual(
-            summary_table._rows[0][2], "(Disabled, Enabled, Disabled)"
+            summary_table._rows[0][2], "(Disabled, Disabled)"
         )  # dynamic batching
-        self.assertEqual(
-            summary_table._rows[0][3], "6:GPU, 5:GPU, 1:GPU"
-        )  # instance count
-        self.assertEqual(summary_table._rows[0][4], "7.439")  # p99 latency
-        self.assertEqual(summary_table._rows[0][5], "3183.7")  # throughput
+        self.assertEqual(summary_table._rows[0][3], "6:GPU, 1:GPU")  # instance count
+        self.assertEqual(summary_table._rows[0][4], "2.215")  # p99 latency
+        self.assertEqual(summary_table._rows[0][5], "10077.3")  # throughput
 
     def test_bls_detailed(self):
         """
         Ensures the detailed report sentence is accurate for a BLS model (loaded from a checkpoint)
         """
-        self._init_managers(models="FaceDetectionBLS_config_7", subcommand="report")
+        self._init_managers(models="bls_config_6", subcommand="report")
 
         self.report_manager._add_detailed_report_data()
-        self.report_manager._build_detailed_table("FaceDetectionBLS_config_7")
-        detailed_sentence = self.report_manager._build_detailed_info(
-            "FaceDetectionBLS_config_7"
-        )
+        self.report_manager._build_detailed_table("bls_config_6")
+        detailed_sentence = self.report_manager._build_detailed_info("bls_config_6")
 
         expected_detailed_sentence = (
-            "<strong>FaceDetectionBLS_config_7</strong> is comprised of the "
-            "following composing models:<LI> <strong>FaceDetectionPreprocessing_config_5</strong>: "
-            "6 GPU instances with a max batch size of 0 on platform sdk_backend </LI><LI> "
-            "<strong>FaceDetectionModel_config_4</strong>: 5 GPU instances with a max batch size of 8 "
-            "on platform tensorrt_plan </LI><LI> <strong>FaceDetectionPostprocessing_config_0</strong>: "
-            "1 GPU instance with a max batch size of 0 on platform sdk_backend </LI><br>5 measurement(s) "
+            "<strong>bls_config_6</strong> is comprised of the "
+            "following composing models:<LI> <strong>add_config_4</strong>: "
+            "6 GPU instances with a max batch size of 0 on platform python </LI><LI> "
+            "<strong>sub_config_0</strong>: 1 GPU instance with a max batch size of 0 "
+            "on platform python </LI><br>12 measurement(s) "
             "were obtained for the model config on GPU(s)  with total memory 0 GB."
         )
 

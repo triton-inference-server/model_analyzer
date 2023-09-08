@@ -105,8 +105,9 @@ class TestReportManager(trc.TestResultCollector):
         config_pb = self.model_config.copy()
         config_pb["name"] = model_config_name
         model_config = ModelConfig.create_from_dictionary(config_pb)
-        model_config._cpu_only = cpu_only
-        model_config_variant = ModelConfigVariant(model_config, model_config_name)
+        model_config_variant = ModelConfigVariant(
+            model_config, model_config_name, cpu_only
+        )
 
         measurement = construct_run_config_measurement(
             model_name=model_name,

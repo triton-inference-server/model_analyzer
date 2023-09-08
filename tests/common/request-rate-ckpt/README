@@ -1,4 +1,4 @@
-# Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,4 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-This checkpoint was created by running the Ensemble Quick Start.
+Settings used to create this checkpoint:
+
+--profile-models add_sub
+--request-rate 16,32
+--run-config-search-max-instance-count 2
+--run-config-search-max-model-batch-size 2
+--request-rate-search-enable

@@ -99,15 +99,13 @@ class TestRunConfig(trc.TestResultCollector):
         Test that cpu_only() is only true if all ModelConfigs are cpu_only()
         """
         cpu_only_true_mc = ModelConfig({})
-        cpu_only_true_mc.set_cpu_only(True)
         cpu_only_true_mcv = ModelConfigVariant(
-            cpu_only_true_mc, "cpu_only_true_config_default"
+            cpu_only_true_mc, "cpu_only_true_config_default", True
         )
 
         cpu_only_false_mc = ModelConfig({})
-        cpu_only_false_mc.set_cpu_only(False)
         cpu_only_false_mcv = ModelConfigVariant(
-            cpu_only_false_mc, "cpu_only_false_config_default"
+            cpu_only_false_mc, "cpu_only_false_config_default", False
         )
 
         mrc1 = ModelRunConfig("model1", cpu_only_true_mcv, MagicMock())

@@ -20,7 +20,7 @@ import yaml
 def _get_sweep_configs():
     sweep_configs = []
     model_config = {
-        "profile_models": ["vgg19_libtorch"],
+        "profile_models": ["add_sub"],
         "server_output_fields": [
             "model_name",
             "gpu_uuid",
