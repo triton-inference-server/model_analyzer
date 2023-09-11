@@ -254,7 +254,7 @@ def main():
     try:
         # Make calls to correct analyzer subcommand functions
         if args.subcommand == "profile" or args.subcommand == "analyze":
-            if args.subcommand == "profile" and not config.model_repository:
+            if _is_a_model_repository_required(args, config):
                 raise TritonModelAnalyzerException(
                     "No model repository specified. Please specify it using the YAML config file or using the --model-repository flag in CLI."
                 )
@@ -289,6 +289,15 @@ def main():
     finally:
         if server is not None:
             server.stop()
+
+
+def _is_a_model_repository_required(args, config):
+    model_repository_required = (
+        args.subcommand == "profile"
+        and not config.model_repository
+        and not config.triton_launch_mode == "remote"
+    )
+    return model_repository_required
 
 
 if __name__ == "__main__":

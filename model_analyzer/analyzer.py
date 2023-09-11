@@ -119,7 +119,7 @@ class Analyzer:
         if self._config.triton_launch_mode == "remote":
             self._warn_if_other_models_loaded_on_remote_server(client)
 
-        if self._config.model_repository:
+        if self._config.model_repository or self._config.triton_launch_mode == "remote":
             self._get_server_only_metrics(client, gpus)
             self._profile_models()
 
