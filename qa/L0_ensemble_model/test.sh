@@ -20,7 +20,7 @@ create_logs_dir "L0_ensemble_model"
 # Set test parameters
 MODEL_ANALYZER="$(which model-analyzer)"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/qa_ensemble_model_repository/qa_simple_ensemble_model_repository"}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/opt/triton-model-analyzer/examples/quick-start"}
 QA_MODELS="ensemble_add_sub"
 MODEL_NAMES="$(echo $QA_MODELS | sed 's/ /,/g')"
 TRITON_LAUNCH_MODE=${TRITON_LAUNCH_MODE:="local"}
@@ -33,6 +33,7 @@ FILENAME_SERVER_ONLY="server-metrics.csv"
 FILENAME_INFERENCE_MODEL="model-metrics-inference.csv"
 FILENAME_GPU_MODEL="model-metrics-gpu.csv"
 
+mkdir -p $MODEL_REPOSITORY/ensemble_add_sub/1
 rm -rf $OUTPUT_MODEL_REPOSITORY
 create_result_paths
 SERVER_LOG=$TEST_LOG_DIR/server.log
