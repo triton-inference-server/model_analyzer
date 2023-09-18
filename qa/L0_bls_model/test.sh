@@ -20,7 +20,7 @@ create_logs_dir "L0_bls_model"
 # Set test parameters
 MODEL_ANALYZER="$(which model-analyzer)"
 REPO_VERSION=${NVIDIA_TRITON_SERVER_VERSION}
-MODEL_REPOSITORY=${MODEL_REPOSITORY:="/mnt/nvdl/datasets/inferenceserver/$REPO_VERSION/qa_bls_model_repository/"}
+MODEL_REPOSITORY=${MODEL_REPOSITORY:="/opt/triton-model-analyzer/examples/quick-start"}
 QA_MODELS="bls"
 BLS_COMPOSING_MODELS="add"
 INPUT_JSON="$(pwd)/input_data.json"
