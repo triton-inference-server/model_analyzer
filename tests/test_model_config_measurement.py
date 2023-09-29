@@ -16,7 +16,7 @@
 
 import json
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from model_analyzer.result.model_config_measurement import ModelConfigMeasurement
 from tests.common.test_utils import convert_non_gpu_metrics_to_data, default_encode
