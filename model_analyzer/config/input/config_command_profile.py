@@ -36,62 +36,7 @@ from model_analyzer.record.record import RecordType
 from model_analyzer.triton.server.server_config import TritonServerConfig
 
 from .config_command import ConfigCommand
-from .config_defaults import (
-    DEFAULT_ALWAYS_REPORT_GPU_METRICS,
-    DEFAULT_BATCH_SIZES,
-    DEFAULT_CHECKPOINT_DIRECTORY,
-    DEFAULT_CLIENT_PROTOCOL,
-    DEFAULT_COLLECT_CPU_METRICS,
-    DEFAULT_DURATION_SECONDS,
-    DEFAULT_EXPORT_PATH,
-    DEFAULT_FILENAME_MODEL_GPU,
-    DEFAULT_FILENAME_MODEL_INFERENCE,
-    DEFAULT_FILENAME_SERVER_ONLY,
-    DEFAULT_GPU_OUTPUT_FIELDS,
-    DEFAULT_GPUS,
-    DEFAULT_INFERENCE_OUTPUT_FIELDS,
-    DEFAULT_MAX_RETRIES,
-    DEFAULT_MODEL_WEIGHTING,
-    DEFAULT_MONITORING_INTERVAL,
-    DEFAULT_NUM_CONFIGS_PER_MODEL,
-    DEFAULT_NUM_TOP_MODEL_CONFIGS,
-    DEFAULT_OFFLINE_OBJECTIVES,
-    DEFAULT_OFFLINE_PLOTS,
-    DEFAULT_ONLINE_OBJECTIVES,
-    DEFAULT_ONLINE_PLOTS,
-    DEFAULT_OUTPUT_MODEL_REPOSITORY,
-    DEFAULT_OVERRIDE_OUTPUT_REPOSITORY_FLAG,
-    DEFAULT_PERF_ANALYZER_CPU_UTIL,
-    DEFAULT_PERF_ANALYZER_PATH,
-    DEFAULT_PERF_ANALYZER_TIMEOUT,
-    DEFAULT_PERF_MAX_AUTO_ADJUSTS,
-    DEFAULT_PERF_OUTPUT_FLAG,
-    DEFAULT_REQUEST_RATE_GPU_OUTPUT_FIELDS,
-    DEFAULT_REQUEST_RATE_INFERENCE_OUTPUT_FIELDS,
-    DEFAULT_REQUEST_RATE_SEARCH_ENABLE,
-    DEFAULT_RUN_CONFIG_MAX_BINARY_SEARCH_STEPS,
-    DEFAULT_RUN_CONFIG_MAX_CONCURRENCY,
-    DEFAULT_RUN_CONFIG_MAX_INSTANCE_COUNT,
-    DEFAULT_RUN_CONFIG_MAX_MODEL_BATCH_SIZE,
-    DEFAULT_RUN_CONFIG_MAX_REQUEST_RATE,
-    DEFAULT_RUN_CONFIG_MIN_CONCURRENCY,
-    DEFAULT_RUN_CONFIG_MIN_INSTANCE_COUNT,
-    DEFAULT_RUN_CONFIG_MIN_MODEL_BATCH_SIZE,
-    DEFAULT_RUN_CONFIG_MIN_REQUEST_RATE,
-    DEFAULT_RUN_CONFIG_PROFILE_MODELS_CONCURRENTLY_ENABLE,
-    DEFAULT_RUN_CONFIG_SEARCH_DISABLE,
-    DEFAULT_RUN_CONFIG_SEARCH_MODE,
-    DEFAULT_SERVER_OUTPUT_FIELDS,
-    DEFAULT_SKIP_DETAILED_REPORTS,
-    DEFAULT_SKIP_SUMMARY_REPORTS,
-    DEFAULT_TRITON_DOCKER_IMAGE,
-    DEFAULT_TRITON_GRPC_ENDPOINT,
-    DEFAULT_TRITON_HTTP_ENDPOINT,
-    DEFAULT_TRITON_INSTALL_PATH,
-    DEFAULT_TRITON_LAUNCH_MODE,
-    DEFAULT_TRITON_METRICS_URL,
-    DEFAULT_TRITON_SERVER_PATH,
-)
+from .config_defaults import *
 from .config_enum import ConfigEnum
 from .config_field import ConfigField
 from .config_list_generic import ConfigListGeneric
@@ -626,6 +571,24 @@ class ConfigCommandProfile(ConfigCommand):
         )
         self._add_config(
             ConfigField(
+                "prompt_length",
+                flags=["--prompt-length"],
+                field_type=ConfigListNumeric(int),
+                description="Comma-delimited list of prompt length values or ranges <start:end:step>"
+                " to be used during profiling LLMs",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "max_token_count",
+                flags=["--max-token-count"],
+                field_type=ConfigListNumeric(int),
+                description="Comma-delimited list of max token values or ranges <start:end:step>"
+                " to be used during profiling LLMs",
+            )
+        )
+        self._add_config(
+            ConfigField(
                 "reload_model_disable",
                 field_type=ConfigPrimitive(bool),
                 parser_args={"action": "store_true"},
@@ -839,6 +802,52 @@ class ConfigCommandProfile(ConfigCommand):
                 parser_args={"action": "store_true"},
                 default_value=DEFAULT_REQUEST_RATE_SEARCH_ENABLE,
                 description="Enables the searching of request rate (instead of concurrency).",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "llm_search_enable",
+                flags=["--llm-search-enable"],
+                field_type=ConfigPrimitive(bool),
+                parser_args={"action": "store_true"},
+                default_value=DEFAULT_LLM_SEARCH_ENABLE,
+                description="Enables searching values are important to LLMs: prompt length, max token, etc...",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_min_prompt_length",
+                flags=["--run-config-search-min-prompt-length"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_RUN_CONFIG_MIN_PROMPT_LENGTH,
+                description="Min prompt length that run config search should start with.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_max_prompt_length",
+                flags=["--run-config-search-max-prompt-length"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_RUN_CONFIG_MAX_PROMPT_LENGTH,
+                description="Max prompt length that run config search will not go beyond.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_min_token_count",
+                flags=["--run-config-search-min-token-count"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_RUN_CONFIG_MIN_TOKEN_COUNT,
+                description="Min token count that run config search should start with.",
+            )
+        )
+        self._add_config(
+            ConfigField(
+                "run_config_search_max_token_count",
+                flags=["--run-config-search-max-token-count"],
+                field_type=ConfigPrimitive(int),
+                default_value=DEFAULT_RUN_CONFIG_MAX_TOKEN_COUNT,
+                description="Max token count that run config search will not go beyond.",
             )
         )
 
