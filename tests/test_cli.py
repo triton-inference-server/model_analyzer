@@ -34,7 +34,6 @@ import model_analyzer.config.input.config_defaults as config_defaults
 from model_analyzer.cli.cli import CLI
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.config.input.config_command_report import ConfigCommandReport
-from model_analyzer.config.input.config_defaults import DEFAULT_TRITON_DOCKER_IMAGE
 from model_analyzer.config.input.config_status import ConfigStatus
 from model_analyzer.constants import CONFIG_PARSER_SUCCESS
 from model_analyzer.model_analyzer_exceptions import TritonModelAnalyzerException
@@ -111,7 +110,7 @@ def get_test_options():
         OptionStruct("string", "profile", "--client-protocol", None, ["http", "grpc"], "grpc", "SHOULD_FAIL"),
         OptionStruct("string", "profile", "--perf-analyzer-path", None, ".", "perf_analyzer", None),
         OptionStruct("string", "profile", "--perf-output-path", None, ".", None, None),
-        OptionStruct("string", "profile", "--triton-docker-image", None, "test_image", DEFAULT_TRITON_DOCKER_IMAGE, None),
+        OptionStruct("string", "profile", "--triton-docker-image", None, "test_image", config_defaults.DEFAULT_TRITON_DOCKER_IMAGE, None),
         OptionStruct("string", "profile", "--triton-http-endpoint", None, "localhost:4000", "localhost:8000", None),
         OptionStruct("string", "profile", "--triton-grpc-endpoint", None, "localhost:4001", "localhost:8001", None),
         OptionStruct("string", "profile", "--triton-metrics-url", None, "localhost:4002", "http://localhost:8002/metrics", None),
