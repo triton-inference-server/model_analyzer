@@ -18,9 +18,10 @@ import json
 import logging
 import tempfile
 from copy import deepcopy
-from typing import Generator, List, Optional
+from typing import Dict, Generator, List, Optional, Tuple
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
+from model_analyzer.config.input.config_defaults import DEFAULT_INPUT_JSON_PATH
 from model_analyzer.constants import (
     LOGGER_NAME,
     THROUGHPUT_MINIMUM_CONSECUTIVE_NON_PARAMETER_TRIES,
@@ -114,6 +115,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             )
         )
 
+        self._input_json_filename = DEFAULT_INPUT_JSON_PATH + "/input-data.json"
+
         self._generate_perf_configs()
 
     @staticmethod
@@ -205,7 +208,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         else:
             return {}
 
-    def _modify_prompt_in_input_dict(self, prompt_length: int) -> dict:
+    def _modify_prompt_in_input_dict(self, prompt_length: int) -> Dict:
         modified_input_dict = deepcopy(self._llm_input_dict)
 
         modified_prompt = ["hi"] * prompt_length
@@ -273,49 +276,62 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             )
 
     def _generate_perf_configs(self) -> None:
-        for unmodified_params in utils.generate_parameter_combinations(
+        for (
+            unmodified_non_parameter_combination
+        ) in utils.generate_parameter_combinations(
             self._perf_config_non_parameter_values
         ):
-            configs_with_concurrency = []
+            all_perf_configs_for_a_given_parameter = []
             for parameter in self._parameters:
-                params = deepcopy(unmodified_params)
-                new_perf_config = PerfAnalyzerConfig()
+                perf_config = self._create_base_perf_config()
 
-                new_perf_config.update_config_from_profile_config(
-                    self._model_name, self._cli_config
+                (
+                    prompt_length,
+                    modified_non_parameter_combination,
+                ) = self._extract_prompt_length(unmodified_non_parameter_combination)
+
+                self._update_perf_config_based_on_non_parameter_combination(
+                    perf_config, modified_non_parameter_combination
                 )
+                self._update_perf_config_based_on_parameter(perf_config, parameter)
+                self._update_perf_config_based_on_perf_analyzer_flags(perf_config)
+                self._update_perf_config_for_llm_model(perf_config, prompt_length)
 
-                if self._cli_config.is_llm_model():
-                    prompt_length = params.pop("prompt-length")
+                all_perf_configs_for_a_given_parameter.append(perf_config)
+            self._configs.append(all_perf_configs_for_a_given_parameter)
 
-                new_perf_config.update_config(params)
+    def _create_base_perf_config(self) -> PerfAnalyzerConfig:
+        perf_config = PerfAnalyzerConfig()
+        perf_config.update_config_from_profile_config(
+            self._model_name, self._cli_config
+        )
 
-                new_perf_config = self._update_config_based_on_parameter(
-                    new_perf_config, parameter
-                )
+        return perf_config
 
-                # User provided flags can override the search parameters
-                new_perf_config.update_config(self._perf_analyzer_flags)
+    def _extract_prompt_length(
+        self, unmodified_parameter_combination: List[Dict]
+    ) -> Tuple[int, List[Dict]]:
+        if self._cli_config.is_llm_model():
+            modified_parameter_combination = deepcopy(unmodified_parameter_combination)
+            prompt_length = modified_parameter_combination.pop("prompt-length")
 
-                if self._cli_config.is_llm_model():
-                    modified_input_dict = self._modify_prompt_in_input_dict(
-                        prompt_length
-                    )
+            return prompt_length, modified_parameter_combination
+        else:
+            return None, unmodified_parameter_combination
 
-                    # Write new input dict to temp file
-                    temp_input_data_path = "./temp-input-data.json"
-                    temp_input_data = open(temp_input_data_path, "w")
-                    json.dump(modified_input_dict, temp_input_data)
-                    temp_input_data.close()
+    def _update_perf_config_based_on_non_parameter_combination(
+        self, perf_config: PerfAnalyzerConfig, non_parameter_combination: Dict
+    ) -> None:
+        perf_config.update_config(non_parameter_combination)
 
-                    new_perf_config.update_config({"input-data": temp_input_data_path})
+    def _update_perf_config_based_on_perf_analyzer_flags(
+        self, perf_config: PerfAnalyzerConfig
+    ) -> None:
+        perf_config.update_config(self._perf_analyzer_flags)
 
-                configs_with_concurrency.append(new_perf_config)
-            self._configs.append(configs_with_concurrency)
-
-    def _update_config_based_on_parameter(
+    def _update_perf_config_based_on_parameter(
         self, perf_config: PerfAnalyzerConfig, parameter: int
-    ) -> PerfAnalyzerConfig:
+    ) -> None:
         if self._cli_config.is_llm_model():
             perf_config.update_config({"periodic-concurrency-range": parameter})
         elif self._cli_config.is_request_rate_specified(self._model_parameters):
@@ -323,7 +339,21 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         else:
             perf_config.update_config({"concurrency-range": parameter})
 
-        return perf_config
+    def _update_perf_config_for_llm_model(
+        self, perf_config: PerfAnalyzerConfig, prompt_length: int
+    ) -> None:
+        if not self._cli_config.is_llm_model():
+            return
+
+        modified_input_dict = self._modify_prompt_in_input_dict(prompt_length)
+        self._write_modified_input_dict_to_file(modified_input_dict)
+
+        perf_config.update_config({"input-data": self._input_json_filename})
+
+    def _write_modified_input_dict_to_file(self, modified_input_dict: Dict) -> None:
+        temp_input_data = open(self._input_json_filename, "w")
+        json.dump(modified_input_dict, temp_input_data)
+        temp_input_data.close()
 
     def _create_non_parameter_perf_config_values(self) -> dict:
         perf_config_values = {

@@ -23,6 +23,7 @@ from model_analyzer.config.input.config_command_report import ConfigCommandRepor
 from model_analyzer.config.input.config_defaults import (
     DEFAULT_BATCH_SIZES,
     DEFAULT_CLIENT_PROTOCOL,
+    DEFAULT_INPUT_JSON_PATH,
     DEFAULT_MEASUREMENT_MODE,
     DEFAULT_MONITORING_INTERVAL,
     DEFAULT_OUTPUT_MODEL_REPOSITORY,
@@ -287,7 +288,7 @@ def construct_perf_analyzer_config(
 
     if llm_search_mode:
         pa_config._args["max-token-count"] = max_token_count
-        pa_config._args["input-data"] = "./temp-input-data.json"
+        pa_config._args["input-data"] = DEFAULT_INPUT_JSON_PATH + "/input-data.json"
 
     pa_config._args["measurement-mode"] = DEFAULT_MEASUREMENT_MODE
 
