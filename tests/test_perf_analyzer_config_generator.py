@@ -593,6 +593,40 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             yaml_str, expected_configs, pa_cli_args
         )
 
+    def test_llm_search_prompt_length(self):
+        """
+        Test LLM Search:
+            - Prompt length 1->1024
+
+        Concurrency and max token count set to 1
+        """
+
+        # yapf: disable
+        yaml_str = ("""
+            perf_analyzer_flags:
+                input-data: input_data.json
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        prompt_lengths = utils.generate_doubled_list(1, 1024)
+        expected_configs = [
+            construct_perf_analyzer_config(llm_search_mode=True)
+            for pl in prompt_lengths
+        ]
+
+        pa_cli_args = [
+            "--llm-search-enable",
+            "--run-config-search-max-concurrency",
+            "1",
+            "--run-config-search-max-token-count",
+            "1",
+        ]
+        self._run_and_test_perf_analyzer_config_generator(
+            yaml_str, expected_configs, pa_cli_args
+        )
+
     def test_perf_analyzer_config_ssl_options(self):
         """
         Test Perf Analyzer SSL options:
