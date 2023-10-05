@@ -237,9 +237,11 @@ def construct_perf_analyzer_config(
     batch_size=DEFAULT_BATCH_SIZES,
     concurrency=1,
     request_rate=None,
+    max_token_count=1,
     launch_mode=DEFAULT_TRITON_LAUNCH_MODE,
     client_protocol=DEFAULT_CLIENT_PROTOCOL,
     perf_analyzer_flags=None,
+    llm_search_mode=False,
 ):
     """
     Constructs a Perf Analyzer Config
@@ -262,6 +264,8 @@ def construct_perf_analyzer_config(
         The client protocol for this PA configuration
     perf_analyzer_flags: dict
         A dict of any additional PA flags to be set
+    llm_search_mode: bool
+        Indicates we should use LLM search parameters
 
     Returns
     -------
@@ -276,8 +280,14 @@ def construct_perf_analyzer_config(
 
     if request_rate:
         pa_config._args["request-rate-range"] = request_rate
+    elif llm_search_mode:
+        pa_config._args["periodic-concurrency-range"] = concurrency
     else:
         pa_config._args["concurrency-range"] = concurrency
+
+    if llm_search_mode:
+        pa_config._args["max-token-count"] = max_token_count
+        pa_config._args["input-data"] = "./temp-input-data.json"
 
     pa_config._args["measurement-mode"] = DEFAULT_MEASUREMENT_MODE
 

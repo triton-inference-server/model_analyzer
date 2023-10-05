@@ -23,7 +23,7 @@ from typing import Generator, List, Optional
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
 from model_analyzer.constants import (
     LOGGER_NAME,
-    THROUGHPUT_MINIMUM_CONSECUTIVE_BATCH_SIZE_TRIES,
+    THROUGHPUT_MINIMUM_CONSECUTIVE_NON_PARAMETER_TRIES,
     THROUGHPUT_MINIMUM_CONSECUTIVE_PARAMETER_TRIES,
     THROUGHPUT_MINIMUM_GAIN,
 )
@@ -65,7 +65,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             custom perf analyzer configuration
 
         model_parameters: Dict
-            model constraints for batch_sizes, concurrency and/or request rate
+            model constraints for batch sizes, concurrency, request rate, prompt length, etc..
 
         early_exit_enable: Bool
             If true, this class can early exit during search of concurrency/request rate
@@ -75,10 +75,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         # All configs are pregenerated in _configs[][]
         # Indexed as follows:
-        #    _configs[_curr_batch_size_index][_curr_parameter_index]
+        #    _configs[_curr_non_parameter_index][_curr_parameter_index]
         #
+        self._curr_non_parameter_index = 0
         self._curr_parameter_index = 0
-        self._curr_batch_size_index = 0
         self._configs: List[List[PerfAnalyzerConfig]] = []
         self._parameter_warning_printed = False
 
@@ -88,11 +88,9 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
 
         self._last_results: List[RunConfigMeasurement] = []
         self._parameter_results: List[Optional[RunConfigMeasurement]] = []
-        self._batch_size_results: List[Optional[RunConfigMeasurement]] = []
+        self._non_parameter_results: List[Optional[RunConfigMeasurement]] = []
 
         self._model_name = model_name
-
-        self._batch_sizes = sorted(model_parameters["batch_sizes"])
         self._cli_config = cli_config
 
         self._perf_analyzer_flags = self._set_perf_analyzer_flags(
@@ -103,8 +101,18 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._model_parameters = model_parameters
         self._parameters = self._create_parameter_list()
 
+        self._batch_sizes = sorted(model_parameters["batch_sizes"])
         self._prompt_lengths = self._create_prompt_length_list()
         self._max_token_counts = self._create_max_token_count_list()
+
+        self._perf_config_non_parameter_values = (
+            self._create_non_parameter_perf_config_values()
+        )
+        self._non_parameter_count = len(
+            utils.generate_parameter_combinations(
+                self._perf_config_non_parameter_values
+            )
+        )
 
         self._generate_perf_configs()
 
@@ -147,7 +155,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 break
 
             self._generator_started = True
-            config = self._configs[self._curr_batch_size_index][
+            config = self._configs[self._curr_non_parameter_index][
                 self._curr_parameter_index
             ]
             yield (config)
@@ -265,12 +273,8 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             )
 
     def _generate_perf_configs(self) -> None:
-        perf_config_non_parameter_values = (
-            self._create_non_parameter_perf_config_values()
-        )
-
         for unmodified_params in utils.generate_parameter_combinations(
-            perf_config_non_parameter_values
+            self._perf_config_non_parameter_values
         ):
             configs_with_concurrency = []
             for parameter in self._parameters:
@@ -336,15 +340,15 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._step_parameter()
 
         if self._done_walking_parameters():
-            self._add_best_throughput_to_batch_sizes()
+            self._add_best_throughput_to_non_parameter_results()
             self._reset_parameters()
-            self._step_batch_size()
+            self._step_non_parameter()
 
-    def _add_best_throughput_to_batch_sizes(self) -> None:
+    def _add_best_throughput_to_non_parameter_results(self) -> None:
         if self._parameter_results:
             # type is List[Optional[RCM]]
             best = max(self._parameter_results)  # type: ignore
-            self._batch_size_results.append(best)
+            self._non_parameter_results.append(best)
 
     def _reset_parameters(self) -> None:
         self._curr_parameter_index = 0
@@ -354,11 +358,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
     def _step_parameter(self) -> None:
         self._curr_parameter_index += 1
 
-    def _step_batch_size(self) -> None:
-        self._curr_batch_size_index += 1
+    def _step_non_parameter(self) -> None:
+        self._curr_non_parameter_index += 1
 
     def _done_walking(self) -> bool:
-        return self._done_walking_batch_sizes()
+        return self._done_walking_non_parameters()
 
     def _done_walking_parameters(self) -> bool:
         if len(self._parameters) == self._curr_parameter_index:
@@ -377,11 +381,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             return True
         return False
 
-    def _done_walking_batch_sizes(self) -> bool:
-        if len(self._batch_sizes) == self._curr_batch_size_index:
+    def _done_walking_non_parameters(self) -> bool:
+        if self._non_parameter_count == self._curr_non_parameter_index:
             return True
 
-        if self._early_exit_enable and not self._batch_size_throughput_gain_valid():
+        if self._early_exit_enable and not self._non_parameter_throughput_gain_valid():
             logger.info(
                 "No longer increasing client batch size as throughput has plateaued"
             )
@@ -400,10 +404,10 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             min_gain=THROUGHPUT_MINIMUM_GAIN,
         )
 
-    def _batch_size_throughput_gain_valid(self) -> bool:
-        """Check if any of the last X batch_size results resulted in valid gain"""
+    def _non_parameter_throughput_gain_valid(self) -> bool:
+        """Check if any of the last X non-parameter results resulted in valid gain"""
         return PerfAnalyzerConfigGenerator.throughput_gain_valid_helper(
-            throughputs=self._batch_size_results,
-            min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_BATCH_SIZE_TRIES,
+            throughputs=self._non_parameter_results,
+            min_tries=THROUGHPUT_MINIMUM_CONSECUTIVE_NON_PARAMETER_TRIES,
             min_gain=THROUGHPUT_MINIMUM_GAIN,
         )
