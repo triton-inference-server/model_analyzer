@@ -276,29 +276,37 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             )
 
     def _generate_perf_configs(self) -> None:
-        for (
-            unmodified_non_parameter_combination
-        ) in utils.generate_parameter_combinations(
+        all_non_parameter_combinations = utils.generate_parameter_combinations(
             self._perf_config_non_parameter_values
-        ):
+        )
+        for unmodified_non_parameter_combination in all_non_parameter_combinations:
             all_perf_configs_for_a_given_parameter = []
             for parameter in self._parameters:
-                perf_config = self._create_base_perf_config()
-
-                (
-                    prompt_length,
-                    modified_non_parameter_combination,
-                ) = self._extract_prompt_length(unmodified_non_parameter_combination)
-
-                self._update_perf_config_based_on_non_parameter_combination(
-                    perf_config, modified_non_parameter_combination
+                new_perf_config = self._create_new_perf_config(
+                    parameter, unmodified_non_parameter_combination
                 )
-                self._update_perf_config_based_on_parameter(perf_config, parameter)
-                self._update_perf_config_based_on_perf_analyzer_flags(perf_config)
-                self._update_perf_config_for_llm_model(perf_config, prompt_length)
+                all_perf_configs_for_a_given_parameter.append(new_perf_config)
 
-                all_perf_configs_for_a_given_parameter.append(perf_config)
             self._configs.append(all_perf_configs_for_a_given_parameter)
+
+    def _create_new_perf_config(
+        self, parameter: int, unmodified_non_parameter_combination: List[Dict]
+    ) -> PerfAnalyzerConfig:
+        perf_config = self._create_base_perf_config()
+
+        (
+            prompt_length,
+            modified_non_parameter_combination,
+        ) = self._extract_prompt_length(unmodified_non_parameter_combination)
+
+        self._update_perf_config_based_on_non_parameter_combination(
+            perf_config, modified_non_parameter_combination
+        )
+        self._update_perf_config_based_on_parameter(perf_config, parameter)
+        self._update_perf_config_based_on_perf_analyzer_flags(perf_config)
+        self._update_perf_config_for_llm_model(perf_config, prompt_length)
+
+        return perf_config
 
     def _create_base_perf_config(self) -> PerfAnalyzerConfig:
         perf_config = PerfAnalyzerConfig()
