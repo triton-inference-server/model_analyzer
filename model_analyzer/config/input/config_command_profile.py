@@ -498,6 +498,8 @@ class ConfigCommandProfile(ConfigCommand):
                                 "batch_sizes": ConfigListNumeric(type_=int),
                                 "concurrency": ConfigListNumeric(type_=int),
                                 "request_rate": ConfigListNumeric(type_=int),
+                                "prompt_length": ConfigListNumeric(type_=int),
+                                "max_token_count": ConfigListNumeric(type_=int),
                             }
                         ),
                         "objectives": objectives_scheme,
@@ -1419,6 +1421,8 @@ class ConfigCommandProfile(ConfigCommand):
                     "batch_sizes": self.batch_sizes,
                     "concurrency": self.concurrency,
                     "request_rate": self.request_rate,
+                    "prompt_length": self.prompt_length,
+                    "max_token_count": self.max_token_count,
                 }
             else:
                 new_model["parameters"] = {}
@@ -1442,6 +1446,24 @@ class ConfigCommandProfile(ConfigCommand):
                     )
                 else:
                     new_model["parameters"].update({"request_rate": self.request_rate})
+
+                if "prompt_length" in model.parameters():
+                    new_model["parameters"].update(
+                        {"prompt_length": model.parameters()["prompt_length"]}
+                    )
+                else:
+                    new_model["parameters"].update(
+                        {"prompt_length": self.prompt_length}
+                    )
+
+                if "max_token_count" in model.parameters():
+                    new_model["max_token_count"].update(
+                        {"max_token_count": model.parameters()["max_token_count"]}
+                    )
+                else:
+                    new_model["parameters"].update(
+                        {"max_token_count": self.prompt_length}
+                    )
 
             if (
                 new_model["parameters"]["request_rate"]
@@ -1522,4 +1544,18 @@ class ConfigCommandProfile(ConfigCommand):
             or self.request_rate_search_enable
             or self.get_config()["run_config_search_min_request_rate"].is_set_by_user()
             or self.get_config()["run_config_search_max_request_rate"].is_set_by_user()
+        )
+
+    def is_llm_model(self) -> bool:
+        """
+        Returns true the user has enabled llm search or set any llm search value
+        """
+        return (
+            self.llm_search_enable
+            or self.get_config()["run_config_search_min_prompt_length"].is_set_by_user()
+            or self.get_config()["run_config_search_max_prompt_length"].is_set_by_user()
+            or self.get_config()["run_config_search_min_token_count"].is_set_by_user()
+            or self.get_config()["run_config_search_max_token_count"].is_set_by_user()
+            or self.get_config()["prompt_length"].is_set_by_user()
+            or self.get_config()["max_token_count"].is_set_by_user()
         )

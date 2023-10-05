@@ -41,7 +41,11 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
         super().__init__(methodname)
         self._perf_throughput = 1
 
-    def test_set_last_results(self):
+    @patch(
+        "model_analyzer.config.input.config_command_profile.ConfigCommandProfile.is_llm_model",
+        return_value=False,
+    )
+    def test_set_last_results(self, *args):
         """
         Test set_last_results() with multi model
 
@@ -60,8 +64,26 @@ class TestPerfAnalyzerConfigGenerator(trc.TestResultCollector):
             ["modelA", "modelB"], [{"perf_throughput": 10}, {"perf_throughput": 2}]
         )
 
+        args = [
+            "model-analyzer",
+            "profile",
+            "--model-repository",
+            "cli_repository",
+            "-f",
+            "path-to-config-file",
+        ]
+
+        # yapf: disable
+        yaml_str = ("""
+            profile_models:
+                - my-model
+            """)
+        # yapf: enable
+
+        config = evaluate_mock_config(args, yaml_str, subcommand="profile")
+
         pacg = PerfAnalyzerConfigGenerator(
-            MagicMock(), MagicMock(), MagicMock(), MagicMock(), early_exit_enable=False
+            config, MagicMock(), MagicMock(), MagicMock(), early_exit_enable=False
         )
 
         pacg.set_last_results([measurement1, measurement2, measurement3])

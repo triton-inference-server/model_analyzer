@@ -288,12 +288,24 @@ class TestConfig(trc.TestResultCollector):
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "model_1",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
             ),
             ConfigModelProfileSpec(
                 "model_2",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
             ),
         ]
@@ -430,12 +442,20 @@ profile_models:
                     "batch_sizes": [1],
                     "concurrency": [1, 2, 3, 4],
                     "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
                 },
                 objectives={"perf_throughput": 10},
             ),
             ConfigModelProfileSpec(
                 "vgg_19_graphdef",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
             ),
         ]
@@ -489,6 +509,8 @@ profile_models:
                     "batch_sizes": [1],
                     "concurrency": [1, 2, 3, 4],
                     "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
                 },
                 objectives={"perf_throughput": 10},
             ),
@@ -498,6 +520,8 @@ profile_models:
                     "concurrency": [1, 2, 3, 4],
                     "batch_sizes": [2, 4, 6],
                     "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
                 },
                 objectives={"perf_throughput": 10},
             ),
@@ -569,6 +593,8 @@ profile_models:
                     "batch_sizes": [1],
                     "concurrency": [1, 2, 3, 4],
                     "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
                 },
                 objectives={"perf_throughput": 10, "gpu_used_memory": 5},
                 constraints={
@@ -579,7 +605,13 @@ profile_models:
             ),
             ConfigModelProfileSpec(
                 "vgg_19_graphdef",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
             ),
         ]
@@ -697,7 +729,13 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "instance_group": [[{"kind": ["KIND_GPU"], "count": [1]}]]
@@ -722,7 +760,13 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "instance_group": [[{"kind": ["KIND_GPU"], "count": [1]}]]
@@ -758,7 +802,13 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "instance_group": [
@@ -801,7 +851,13 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "instance_group": [
@@ -831,7 +887,13 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "input": [
@@ -874,7 +936,13 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
                 perf_analyzer_flags={
                     "measurement-interval": 10000,
@@ -900,7 +968,13 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
                 perf_analyzer_flags={
                     "measurement-interval": 10000,
@@ -1171,7 +1245,13 @@ profile_models:
         expected_model_configs = [
             ConfigModelProfileSpec(
                 "vgg_16_graphdef",
-                parameters={"batch_sizes": [1], "concurrency": [], "request_rate": []},
+                parameters={
+                    "batch_sizes": [1],
+                    "concurrency": [],
+                    "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
+                },
                 objectives={"perf_throughput": 10},
                 model_config_parameters={
                     "instance_group": [[{"kind": ["KIND_GPU"], "count": [1]}]]
@@ -1215,6 +1295,8 @@ profile_models:
                     "batch_sizes": [16, 32],
                     "concurrency": [2, 4],
                     "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
                 },
                 objectives={"perf_throughput": 10, "gpu_used_memory": 5},
                 constraints={
@@ -1263,6 +1345,8 @@ profile_models:
                     "batch_sizes": [16, 32],
                     "concurrency": [2, 4],
                     "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
                 },
                 objectives={"gpu_used_memory": 10},
                 constraints={"perf_latency_p99": {"max": 8000}},
@@ -1307,6 +1391,8 @@ profile_models:
                     "batch_sizes": [16, 32],
                     "concurrency": [2, 4],
                     "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
                 },
                 objectives={"gpu_used_memory": 10},
                 constraints={"perf_latency_p99": {"max": 8000}},
@@ -1362,6 +1448,8 @@ profile_models:
                     "batch_sizes": [16, 32],
                     "concurrency": [5, 6, 7],
                     "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
                 },
                 objectives={"gpu_used_memory": 10},
                 constraints={
@@ -1375,6 +1463,8 @@ profile_models:
                     "batch_sizes": [1, 2],
                     "concurrency": [2, 4],
                     "request_rate": [],
+                    "prompt_length": [],
+                    "max_token_count": [],
                 },
                 objectives={"perf_throughput": 10, "perf_latency_p99": 5},
                 constraints={"perf_latency_p99": {"max": 8000}},

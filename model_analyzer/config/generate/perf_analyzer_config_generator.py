@@ -14,7 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
+import tempfile
+from copy import deepcopy
 from typing import Generator, List, Optional
 
 from model_analyzer.config.input.config_command_profile import ConfigCommandProfile
@@ -88,13 +91,21 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         self._batch_size_results: List[Optional[RunConfigMeasurement]] = []
 
         self._model_name = model_name
-        self._perf_analyzer_flags = model_perf_analyzer_flags
 
         self._batch_sizes = sorted(model_parameters["batch_sizes"])
         self._cli_config = cli_config
 
+        self._perf_analyzer_flags = self._set_perf_analyzer_flags(
+            model_perf_analyzer_flags
+        )
+
+        self._llm_input_dict = self._create_input_dict(model_perf_analyzer_flags)
         self._model_parameters = model_parameters
         self._parameters = self._create_parameter_list()
+
+        self._prompt_lengths = self._create_prompt_length_list()
+        self._max_token_counts = self._create_max_token_count_list()
+
         self._generate_perf_configs()
 
     @staticmethod
@@ -168,6 +179,32 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._last_results = measurement
             self._parameter_results.extend(measurement)
 
+    def _set_perf_analyzer_flags(self, model_perf_analyzer_flags: dict) -> dict:
+        # For LLM models we will be creating custom input data based on prompt length
+        if self._cli_config.is_llm_model():
+            perf_analyzer_flags = deepcopy(model_perf_analyzer_flags)
+            perf_analyzer_flags.pop("input-data")
+            return perf_analyzer_flags
+        else:
+            return model_perf_analyzer_flags
+
+    def _create_input_dict(self, model_perf_analyzer_flags: dict) -> dict:
+        if self._cli_config.is_llm_model():
+            with open(model_perf_analyzer_flags["input-data"], "r") as f:
+                input_dict = json.load(f)
+
+            return input_dict
+        else:
+            return {}
+
+    def _modify_prompt_in_input_dict(self, prompt_length: int) -> dict:
+        modified_input_dict = deepcopy(self._llm_input_dict)
+
+        modified_prompt = ["hi"] * prompt_length
+        modified_input_dict["data"][0]["PROMPT"] = modified_prompt
+
+        return modified_input_dict
+
     def _create_parameter_list(self) -> List[int]:
         # The two possible parameters are request rate or concurrency
         # Concurrency is the default and will be used unless the user specifies
@@ -199,39 +236,99 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
                 self._cli_config.run_config_search_max_concurrency,
             )
 
+    def _create_prompt_length_list(self) -> List[int]:
+        if not self._cli_config.is_llm_model():
+            return []
+
+        if self._model_parameters["prompt_length"]:
+            return sorted(self._model_parameters["prompt_length"])
+        elif self._cli_config.run_config_search_disable:
+            return [1]
+        else:
+            return utils.generate_doubled_list(
+                self._cli_config.run_config_search_min_prompt_length,
+                self._cli_config.run_config_search_max_prompt_length,
+            )
+
+    def _create_max_token_count_list(self) -> List[int]:
+        if not self._cli_config.is_llm_model():
+            return []
+
+        if self._model_parameters["max_token_count"]:
+            return sorted(self._model_parameters["max_token_count"])
+        elif self._cli_config.run_config_search_disable:
+            return [1]
+        else:
+            return utils.generate_doubled_list(
+                self._cli_config.run_config_search_min_token_count,
+                self._cli_config.run_config_search_max_token_count,
+            )
+
     def _generate_perf_configs(self) -> None:
         perf_config_non_parameter_values = (
             self._create_non_parameter_perf_config_values()
         )
 
-        for params in utils.generate_parameter_combinations(
+        for unmodified_params in utils.generate_parameter_combinations(
             perf_config_non_parameter_values
         ):
             configs_with_concurrency = []
             for parameter in self._parameters:
+                params = deepcopy(unmodified_params)
                 new_perf_config = PerfAnalyzerConfig()
 
                 new_perf_config.update_config_from_profile_config(
                     self._model_name, self._cli_config
                 )
 
+                if self._cli_config.is_llm_model():
+                    prompt_length = params.pop("prompt-length")
+
                 new_perf_config.update_config(params)
 
-                if self._cli_config.is_request_rate_specified(self._model_parameters):
-                    new_perf_config.update_config({"request-rate-range": parameter})
-                else:
-                    new_perf_config.update_config({"concurrency-range": parameter})
+                new_perf_config = self._update_config_based_on_parameter(
+                    new_perf_config, parameter
+                )
 
                 # User provided flags can override the search parameters
                 new_perf_config.update_config(self._perf_analyzer_flags)
 
+                if self._cli_config.is_llm_model():
+                    modified_input_dict = self._modify_prompt_in_input_dict(
+                        prompt_length
+                    )
+
+                    # Write new input dict to temp file
+                    temp_input_data_path = "./temp-input-data.json"
+                    temp_input_data = open(temp_input_data_path, "w")
+                    json.dump(modified_input_dict, temp_input_data)
+                    temp_input_data.close()
+
+                    new_perf_config.update_config({"input-data": temp_input_data_path})
+
                 configs_with_concurrency.append(new_perf_config)
             self._configs.append(configs_with_concurrency)
+
+    def _update_config_based_on_parameter(
+        self, perf_config: PerfAnalyzerConfig, parameter: int
+    ) -> PerfAnalyzerConfig:
+        if self._cli_config.is_llm_model():
+            perf_config.update_config({"periodic-concurrency-range": parameter})
+        elif self._cli_config.is_request_rate_specified(self._model_parameters):
+            perf_config.update_config({"request-rate-range": parameter})
+        else:
+            perf_config.update_config({"concurrency-range": parameter})
+
+        return perf_config
 
     def _create_non_parameter_perf_config_values(self) -> dict:
         perf_config_values = {
             "batch-size": self._batch_sizes,
         }
+
+        if self._cli_config.is_llm_model():
+            perf_config_values["max-token-count"] = self._max_token_counts
+            perf_config_values["prompt-length"] = self._prompt_lengths
 
         return perf_config_values
 
