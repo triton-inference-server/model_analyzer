@@ -16,7 +16,6 @@
 
 import json
 import logging
-import tempfile
 from copy import deepcopy
 from typing import Dict, Generator, List, Optional, Tuple
 
@@ -290,7 +289,7 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._configs.append(all_perf_configs_for_a_given_parameter)
 
     def _create_new_perf_config(
-        self, parameter: int, unmodified_non_parameter_combination: List[Dict]
+        self, parameter: int, unmodified_non_parameter_combination: Dict
     ) -> PerfAnalyzerConfig:
         perf_config = self._create_base_perf_config()
 
@@ -317,15 +316,15 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return perf_config
 
     def _extract_prompt_length(
-        self, unmodified_parameter_combination: List[Dict]
-    ) -> Tuple[int, List[Dict]]:
+        self, unmodified_parameter_combination: Dict
+    ) -> Tuple[int, Dict]:
         if self._cli_config.is_llm_model():
             modified_parameter_combination = deepcopy(unmodified_parameter_combination)
             prompt_length = modified_parameter_combination.pop("prompt-length")
 
             return prompt_length, modified_parameter_combination
         else:
-            return None, unmodified_parameter_combination
+            return 0, unmodified_parameter_combination
 
     def _update_perf_config_based_on_non_parameter_combination(
         self, perf_config: PerfAnalyzerConfig, non_parameter_combination: Dict
