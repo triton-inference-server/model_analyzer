@@ -189,8 +189,13 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
             self._last_results = measurement
             self._parameter_results.extend(measurement)
 
-    def _set_perf_analyzer_flags(self, model_perf_analyzer_flags: dict) -> dict:
-        # For LLM models we will be creating custom input data based on prompt length
+    def _set_perf_analyzer_flags(
+        self, model_perf_analyzer_flags: Optional[dict] = None
+    ) -> dict:
+        if model_perf_analyzer_flags is None:
+            model_perf_analyzer_flags = {}
+
+        # For LLM models we will be creating custom input-data based on prompt length
         if self._cli_config.is_llm_model():
             perf_analyzer_flags = deepcopy(model_perf_analyzer_flags)
             perf_analyzer_flags.pop("input-data")
@@ -198,7 +203,12 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         else:
             return model_perf_analyzer_flags
 
-    def _create_input_dict(self, model_perf_analyzer_flags: dict) -> dict:
+    def _create_input_dict(
+        self, model_perf_analyzer_flags: Optional[dict] = None
+    ) -> dict:
+        if model_perf_analyzer_flags is None:
+            model_perf_analyzer_flags = {}
+
         if self._cli_config.is_llm_model():
             with open(model_perf_analyzer_flags["input-data"], "r") as f:
                 input_dict = json.load(f)
@@ -316,8 +326,11 @@ class PerfAnalyzerConfigGenerator(ConfigGeneratorInterface):
         return perf_config
 
     def _extract_prompt_length(
-        self, unmodified_parameter_combination: Dict
+        self, unmodified_parameter_combination: Optional[Dict] = None
     ) -> Tuple[int, Dict]:
+        if unmodified_parameter_combination is None:
+            unmodified_parameter_combination = {}
+
         if self._cli_config.is_llm_model():
             modified_parameter_combination = deepcopy(unmodified_parameter_combination)
             prompt_length = modified_parameter_combination.pop("prompt-length")
