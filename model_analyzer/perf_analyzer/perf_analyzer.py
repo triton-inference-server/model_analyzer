@@ -95,8 +95,8 @@ class PerfAnalyzer:
     ]
 
     llm_metric_table = [
-        ["perf_latency_avg",           "Avg first token latency",     AvgFirstTokenLatency,     "1000"],
-        ["perf_latency_avg",           "Avg token latency",           AvgTokenLatency,          "1000"]
+        ["avg_first_latency",           "Avg first token latency",     AvgFirstTokenLatency,     "1000"],
+        ["avg_avg_latency",           "Avg token latency",           AvgTokenLatency,          "1000"]
     ]
     # yapf: enable
 
