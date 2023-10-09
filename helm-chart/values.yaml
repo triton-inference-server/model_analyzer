@@ -41,4 +41,4 @@ images:
 
   triton:
     image: nvcr.io/nvidia/tritonserver
-    tag: 23.09-py3
+    tag: 23.10-py3
